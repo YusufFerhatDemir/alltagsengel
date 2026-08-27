@@ -6,6 +6,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import {
   assertErlaubt,
   DRINGLICHKEIT_WERTE,
@@ -14,6 +15,7 @@ import {
   QUELLE_TYP_WERTE,
   type Dringlichkeit,
   type PunktKategorie,
+  type ProtokollStatus,
   type QuelleTyp,
   type UebergabePunkt,
 } from './types'
@@ -51,16 +53,44 @@ export function berechneHandlungsbedarf(
   return gesetzt ?? false
 }
 
+/**
+ * Nachtrag und Protokollstatus muessen zusammenpassen.
+ *
+ * Die Datenbank kennt nur eine der beiden Richtungen: trg_uebergabe_punkt_guard
+ * blockt einen regulaeren Punkt (nachtrag = false) am abgeschlossenen
+ * Protokoll. Die Gegenrichtung — nachtrag = true an einem noch OFFENEN
+ * Protokoll — laesst der Trigger durch, obwohl sie fachlich falsch ist: ein
+ * Nachtrag ist definitionsgemaess die Ergaenzung NACH der Uebergabe. Stuende
+ * das Kennzeichen frei setzbar am offenen Protokoll, koennte ein Punkt, der
+ * regulaer waehrend der Schicht erfasst wurde, im Nachweis wie eine spaetere
+ * Ergaenzung aussehen (oder umgekehrt) — genau die Unterscheidung, auf die
+ * eine MD-Pruefung schaut.
+ */
+export function validateNachtrag(protokollStatus: ProtokollStatus, nachtrag: boolean): void {
+  if (nachtrag && protokollStatus !== 'abgeschlossen') {
+    throw new UserFacingError(
+      'Ein Nachtrag ist nur zu einem abgeschlossenen Protokoll möglich. Solange das Protokoll offen ist, wird der Punkt regulär erfasst.',
+      409,
+    )
+  }
+  if (!nachtrag && protokollStatus === 'abgeschlossen') {
+    throw new UserFacingError(
+      'Das Protokoll ist abgeschlossen — neue Punkte sind nur noch als Nachtrag möglich.',
+      409,
+    )
+  }
+}
+
 export function validatePunktEingabe(params: CreatePunktParams): void {
-  if (!params.inhalt?.trim()) throw new Error('Der Inhalt des Übergabepunktes ist ein Pflichtfeld.')
+  if (!params.inhalt?.trim()) throw new UserFacingError('Der Inhalt des Übergabepunktes ist ein Pflichtfeld.')
   assertErlaubt(params.kategorie, PUNKT_KATEGORIE_WERTE, 'kategorie')
   assertErlaubt(params.dringlichkeit, DRINGLICHKEIT_WERTE, 'dringlichkeit')
   assertErlaubt(params.quelleTyp, QUELLE_TYP_WERTE, 'quelle_typ')
   if (params.quelleId && !params.quelleTyp) {
-    throw new Error('Zu einer Quell-ID muss auch der Quelltyp angegeben werden.')
+    throw new UserFacingError('Zu einer Quell-ID muss auch der Quelltyp angegeben werden.')
   }
   if (!params.erstelltVonName?.trim()) {
-    throw new Error('Der Name der erfassenden Person ist ein Pflichtfeld.')
+    throw new UserFacingError('Der Name der erfassenden Person ist ein Pflichtfeld.')
   }
 }
 
@@ -69,6 +99,12 @@ export async function createPunkt(
   params: CreatePunktParams,
 ): Promise<UebergabePunkt> {
   validatePunktEingabe(params)
+
+  // Der Protokollstatus entscheidet, ob der Punkt regulaer oder Nachtrag ist.
+  // Bewusst hier und nicht nur in der Route: createPunkt ist die einzige
+  // Stelle, die alle Aufrufer (Route, Automatisierung, Tests) durchlaufen.
+  const status = await ladeProtokollStatus(supabase, params.protokollId, params.organizationId)
+  validateNachtrag(status, params.nachtrag ?? false)
 
   const kategorie = params.kategorie ?? 'sonstiges'
   const dringlichkeit = params.dringlichkeit ?? 'normal'
@@ -154,11 +190,11 @@ export async function updatePunkt(
   assertErlaubt(params.kategorie, PUNKT_KATEGORIE_WERTE, 'kategorie')
   assertErlaubt(params.dringlichkeit, DRINGLICHKEIT_WERTE, 'dringlichkeit')
   if (params.inhalt !== undefined && !params.inhalt.trim()) {
-    throw new Error('Der Inhalt des Übergabepunktes ist ein Pflichtfeld.')
+    throw new UserFacingError('Der Inhalt des Übergabepunktes ist ein Pflichtfeld.')
   }
 
   const punkt = await getPunkt(supabase, id, organizationId)
-  if (!punkt) throw new Error('Übergabepunkt nicht gefunden.')
+  if (!punkt) throw new UserFacingError('Übergabepunkt nicht gefunden.', 404)
   await assertProtokollOffen(supabase, punkt.protokoll_id, organizationId)
 
   const kategorie = params.kategorie ?? punkt.kategorie
@@ -240,7 +276,7 @@ export async function deletePunkt(
   organizationId: string,
 ): Promise<void> {
   const punkt = await getPunkt(supabase, id, organizationId)
-  if (!punkt) throw new Error('Übergabepunkt nicht gefunden.')
+  if (!punkt) throw new UserFacingError('Übergabepunkt nicht gefunden.', 404)
   await assertProtokollOffen(supabase, punkt.protokoll_id, organizationId)
 
   const { error } = await supabase
@@ -265,8 +301,31 @@ export async function assertProtokollOffen(
     .maybeSingle()
 
   if (error) throw new Error(`Protokollstatus konnte nicht geprüft werden: ${error.message}`)
-  if (!data) throw new Error('Übergabeprotokoll nicht gefunden.')
+  if (!data) throw new UserFacingError('Übergabeprotokoll nicht gefunden.', 404)
   if (data.status === 'abgeschlossen') {
-    throw new Error('Das Protokoll ist abgeschlossen — Änderungen sind nur noch als Nachtrag möglich.')
+    throw new UserFacingError('Das Protokoll ist abgeschlossen — Änderungen sind nur noch als Nachtrag möglich.', 409)
   }
+}
+
+/**
+ * Status des zugehoerigen Protokolls — mit Mandantenfilter, wenn die
+ * Organisation bekannt ist. Beim user-scoped Client (Engel) fehlt sie
+ * bewusst; dort grenzt RLS (org_fence + engel_uebergabe_protokolle_select)
+ * die sichtbaren Protokolle bereits ein.
+ */
+async function ladeProtokollStatus(
+  supabase: SupabaseClient,
+  protokollId: string,
+  organizationId?: string,
+): Promise<ProtokollStatus> {
+  let query = supabase
+    .from('uebergabe_protokolle')
+    .select('status')
+    .eq('id', protokollId)
+  if (organizationId) query = query.eq('organization_id', organizationId)
+  const { data, error } = await query.maybeSingle()
+
+  if (error) throw new Error(`Protokollstatus konnte nicht geprüft werden: ${error.message}`)
+  if (!data) throw new UserFacingError('Übergabeprotokoll nicht gefunden.', 404)
+  return data.status as ProtokollStatus
 }

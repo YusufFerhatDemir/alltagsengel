@@ -6,6 +6,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import {
   assertDatum,
   assertErlaubt,
@@ -75,10 +76,10 @@ export function validateProtokollEingabe(params: CreateProtokollParams): void {
   assertDatum(params.datum)
   assertErlaubt(params.schicht, SCHICHT_WERTE, 'schicht')
   if (!params.uebergeberName?.trim()) {
-    throw new Error('Der Name der übergebenden Person ist ein Pflichtfeld.')
+    throw new UserFacingError('Der Name der übergebenden Person ist ein Pflichtfeld.')
   }
   if (!params.uebergeberId) {
-    throw new Error('Die übergebende Person muss angemeldet sein.')
+    throw new UserFacingError('Die übergebende Person muss angemeldet sein.')
   }
 }
 
@@ -94,10 +95,10 @@ export function validateAbschluss(
 ): void {
   assertErlaubt(status, PROTOKOLL_STATUS_WERTE, 'status')
   if (status === 'abgeschlossen') {
-    throw new Error('Das Protokoll ist bereits abgeschlossen und kann nicht erneut abgeschlossen werden.')
+    throw new UserFacingError('Das Protokoll ist bereits abgeschlossen und kann nicht erneut abgeschlossen werden.', 409)
   }
   if (punkteAnzahl === 0 && !zusammenfassung?.trim()) {
-    throw new Error('Abschluss nicht möglich: Das Protokoll enthält weder Übergabepunkte noch eine Zusammenfassung.')
+    throw new UserFacingError('Abschluss nicht möglich: Das Protokoll enthält weder Übergabepunkte noch eine Zusammenfassung.')
   }
 }
 
@@ -125,7 +126,7 @@ export async function createProtokoll(
 
   if (error) {
     if (error.code === '23505') {
-      throw new Error('Für diesen Tag, diese Schicht und diese Tour existiert bereits ein Übergabeprotokoll.')
+      throw new UserFacingError('Für diesen Tag, diese Schicht und diese Tour existiert bereits ein Übergabeprotokoll.', 409)
     }
     throw new Error(`Übergabeprotokoll konnte nicht angelegt werden: ${error.message}`)
   }
@@ -189,9 +190,9 @@ export async function updateProtokoll(
   params: UpdateProtokollParams,
 ): Promise<UebergabeProtokoll> {
   const bestand = await getProtokoll(supabase, id, organizationId)
-  if (!bestand) throw new Error('Übergabeprotokoll nicht gefunden.')
+  if (!bestand) throw new UserFacingError('Übergabeprotokoll nicht gefunden.', 404)
   if (bestand.status === 'abgeschlossen') {
-    throw new Error('Ein abgeschlossenes Übergabeprotokoll ist unveränderlich. Neue Informationen als Nachtrag erfassen.')
+    throw new UserFacingError('Ein abgeschlossenes Übergabeprotokoll ist unveränderlich. Neue Informationen als Nachtrag erfassen.', 409)
   }
 
   const updates: Record<string, unknown> = {}
@@ -224,7 +225,7 @@ export async function abschliessenProtokoll(
   zusammenfassung?: string | null,
 ): Promise<UebergabeProtokoll> {
   const bestand = await getProtokoll(supabase, id, organizationId)
-  if (!bestand) throw new Error('Übergabeprotokoll nicht gefunden.')
+  if (!bestand) throw new UserFacingError('Übergabeprotokoll nicht gefunden.', 404)
 
   const { count, error: countError } = await supabase
     .from('uebergabe_punkte')
@@ -260,9 +261,9 @@ export async function deleteProtokoll(
   organizationId: string,
 ): Promise<void> {
   const bestand = await getProtokoll(supabase, id, organizationId)
-  if (!bestand) throw new Error('Übergabeprotokoll nicht gefunden.')
+  if (!bestand) throw new UserFacingError('Übergabeprotokoll nicht gefunden.', 404)
   if (bestand.status === 'abgeschlossen') {
-    throw new Error('Ein abgeschlossenes Übergabeprotokoll kann nicht gelöscht werden.')
+    throw new UserFacingError('Ein abgeschlossenes Übergabeprotokoll kann nicht gelöscht werden.', 409)
   }
 
   const { error } = await supabase
