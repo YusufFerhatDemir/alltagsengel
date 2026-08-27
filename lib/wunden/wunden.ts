@@ -5,7 +5,9 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { heuteBerlin } from '@/lib/utils/timezone'
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import {
+  assertDatumNichtInZukunft,
   assertErlaubt,
   KOERPERSEITE_WERTE,
   WUND_STATUS_WERTE,
@@ -19,8 +21,8 @@ import {
 
 function assertDekubitusGrad(wundTyp: WundTyp | undefined, grad: number | null | undefined): void {
   if (grad === null || grad === undefined) return
-  if (wundTyp !== 'dekubitus') throw new Error('Dekubitus-Grad ist nur bei Wundtyp "dekubitus" erlaubt.')
-  if (!Number.isInteger(grad) || grad < 1 || grad > 4) throw new Error('Dekubitus-Grad muss zwischen I (1) und IV (4) liegen.')
+  if (wundTyp !== 'dekubitus') throw new UserFacingError('Dekubitus-Grad ist nur bei Wundtyp "dekubitus" erlaubt.')
+  if (!Number.isInteger(grad) || grad < 1 || grad > 4) throw new UserFacingError('Dekubitus-Grad muss zwischen I (1) und IV (4) liegen.')
 }
 
 export interface CreateWoundParams {
@@ -37,10 +39,11 @@ export interface CreateWoundParams {
 }
 
 export async function createWound(supabase: SupabaseClient, params: CreateWoundParams): Promise<Wound> {
-  if (!params.lokalisation?.trim()) throw new Error('Lokalisation ist ein Pflichtfeld.')
+  if (!params.lokalisation?.trim()) throw new UserFacingError('Lokalisation ist ein Pflichtfeld.')
   assertErlaubt(params.wundTyp, WUND_TYP_WERTE, 'wund_typ')
   assertErlaubt(params.koerperseite ?? null, KOERPERSEITE_WERTE, 'koerperseite')
   assertDekubitusGrad(params.wundTyp, params.dekubitusGrad)
+  assertDatumNichtInZukunft(params.entstandenAm, 'Entstehungsdatum')
 
   const { data, error } = await supabase
     .from('wounds')
@@ -119,8 +122,30 @@ export async function updateWound(
   assertErlaubt(patch.wundTyp, WUND_TYP_WERTE, 'wund_typ')
   assertErlaubt(patch.status, WUND_STATUS_WERTE, 'status')
   assertErlaubt(patch.koerperseite ?? null, KOERPERSEITE_WERTE, 'koerperseite')
+  assertDatumNichtInZukunft(patch.entstandenAm, 'Entstehungsdatum')
+  assertDatumNichtInZukunft(patch.abgeheiltAm, 'Abheilungsdatum')
   if (patch.lokalisation !== undefined && !patch.lokalisation.trim()) {
-    throw new Error('Lokalisation darf nicht leer sein.')
+    throw new UserFacingError('Lokalisation darf nicht leer sein.')
+  }
+
+  // Dekubitus-Grad-Konsistenz gilt auch bei Teil-Updates: ohne mitgesendeten
+  // wundTyp muss der BESTEHENDE Typ geprüft werden, sonst rutscht z.B. ein
+  // Grad bei einer Nicht-Dekubitus-Wunde nur über den kryptischen
+  // DB-Constraint-Fehler durch statt über eine verständliche Meldung.
+  if (patch.dekubitusGrad !== undefined) {
+    let effektiverTyp = patch.wundTyp
+    if (effektiverTyp === undefined) {
+      const { data: bestehend, error: ladeError } = await supabase
+        .from('wounds')
+        .select('wund_typ')
+        .eq('id', id)
+        .eq('organization_id', organizationId)
+        .maybeSingle()
+      if (ladeError) throw new Error(`Wunde konnte nicht geladen werden: ${ladeError.message}`)
+      if (!bestehend) throw new UserFacingError('Wunde nicht gefunden.', 404)
+      effektiverTyp = (bestehend as { wund_typ: WundTyp }).wund_typ
+    }
+    assertDekubitusGrad(effektiverTyp, patch.dekubitusGrad)
   }
 
   const update: Record<string, unknown> = {}
@@ -141,10 +166,10 @@ export async function updateWound(
       update.abgeheilt_am = null
     }
   } else if (patch.abgeheiltAm !== undefined) {
-    throw new Error('abgeheilt_am kann nur zusammen mit status="abgeheilt" gesetzt werden.')
+    throw new UserFacingError('abgeheilt_am kann nur zusammen mit status="abgeheilt" gesetzt werden.')
   }
 
-  if (Object.keys(update).length === 0) throw new Error('Keine Änderungen übergeben.')
+  if (Object.keys(update).length === 0) throw new UserFacingError('Keine Änderungen übergeben.')
 
   const { data, error } = await supabase
     .from('wounds')

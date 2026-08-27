@@ -41,6 +41,7 @@ export const POST = withTracking(async function POST(request: Request, { params 
     const behandlung = await createTreatment(admin, {
       organizationId,
       woundId: id,
+      wundStatus: wunde.status,
       durchgefuehrtVon: userId,
       durchgefuehrtAm: body.durchgefuehrtAm ?? null,
       massnahme: body.massnahme,

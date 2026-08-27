@@ -38,6 +38,7 @@ export const POST = withTracking(async function POST(request: Request, { params 
     const assessment = await createAssessment(admin, {
       organizationId,
       woundId: id,
+      wundStatus: wunde.status,
       erhobenVon: userId,
       erhobenAm: body.erhobenAm ?? null,
       laengeCm: body.laengeCm ?? null,

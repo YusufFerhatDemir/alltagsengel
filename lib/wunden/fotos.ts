@@ -5,18 +5,48 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { WoundPhoto, WoundPhotoMitUrl } from './types'
+import { UserFacingError } from '@/lib/api/user-facing-error'
+import { assertZeitstempelNichtInZukunft, type WoundPhoto, type WoundPhotoMitUrl, type WundStatus } from './types'
 import { sanitizeStorageName } from '@/lib/file-upload-validation'
 
 export const WOUND_PHOTOS_BUCKET = 'wound-photos'
 export const MAX_FOTO_BYTES = 10 * 1024 * 1024
 export const ERLAUBTE_FOTO_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'] as const
 
+// Magic-Bytes je erlaubtem MIME-Type — der Client-MIME-Type ist reine
+// Behauptung (Content-Type-Header), erst diese Signatur belegt den
+// tatsächlichen Dateiinhalt serverseitig.
+interface Signatur {
+  offset: number
+  bytes: readonly number[]
+}
+
+const FTYP_BYTES = [0x66, 0x74, 0x79, 0x70] // ASCII 'ftyp'
+
+const MAGIC_BYTES: Record<(typeof ERLAUBTE_FOTO_MIME_TYPES)[number], readonly Signatur[]> = {
+  'image/jpeg': [{ offset: 0, bytes: [0xff, 0xd8, 0xff] }],
+  'image/png': [{ offset: 0, bytes: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a] }],
+  'image/webp': [
+    { offset: 0, bytes: [0x52, 0x49, 0x46, 0x46] }, // 'RIFF'
+    { offset: 8, bytes: [0x57, 0x45, 0x42, 0x50] }, // 'WEBP'
+  ],
+  'image/heic': [{ offset: 4, bytes: FTYP_BYTES }], // ISOBMFF-Box: 'ftyp' ab Byte 4
+}
+
+function magicBytesPassenZuMime(buffer: ArrayBuffer, mime: (typeof ERLAUBTE_FOTO_MIME_TYPES)[number]): boolean {
+  const bytes = new Uint8Array(buffer)
+  return MAGIC_BYTES[mime].every(({ offset, bytes: signatur }) =>
+    signatur.every((b, i) => bytes[offset + i] === b)
+  )
+}
+
 // sanitizeFileName entfernt — zentralisiert in lib/file-upload-validation.ts (sanitizeStorageName)
 
 export interface UploadWoundPhotoParams {
   organizationId: string
   woundId: string
+  /** Aktueller Status der Wunde — steuert die Sperr-Logik für abgeheilte Wunden. */
+  wundStatus: WundStatus
   assessmentId?: string | null
   aufgenommenVon: string
   aufgenommenAm?: string | null
@@ -25,13 +55,24 @@ export interface UploadWoundPhotoParams {
 }
 
 export async function uploadWoundPhoto(admin: SupabaseClient, params: UploadWoundPhotoParams): Promise<WoundPhoto> {
+  if (params.wundStatus === 'abgeheilt') {
+    throw new UserFacingError(
+      'Wunde ist als abgeheilt markiert. Für ein neues Foto muss der Status zuerst geändert werden.',
+      409,
+    )
+  }
+  assertZeitstempelNichtInZukunft(params.aufgenommenAm, 'Aufnahmezeitpunkt')
+
   const mime = params.datei.type
   if (!ERLAUBTE_FOTO_MIME_TYPES.includes(mime as (typeof ERLAUBTE_FOTO_MIME_TYPES)[number])) {
-    throw new Error(`Dateityp "${mime || 'unbekannt'}" nicht erlaubt. Erlaubt: JPEG, PNG, WebP, HEIC.`)
+    throw new UserFacingError(`Dateityp "${mime || 'unbekannt'}" nicht erlaubt. Erlaubt: JPEG, PNG, WebP, HEIC.`)
   }
-  if (params.datei.arrayBuffer.byteLength === 0) throw new Error('Die Datei ist leer.')
+  if (params.datei.arrayBuffer.byteLength === 0) throw new UserFacingError('Die Datei ist leer.')
   if (params.datei.arrayBuffer.byteLength > MAX_FOTO_BYTES) {
-    throw new Error('Foto ist größer als 10 MB.')
+    throw new UserFacingError('Foto ist größer als 10 MB.')
+  }
+  if (!magicBytesPassenZuMime(params.datei.arrayBuffer, mime as (typeof ERLAUBTE_FOTO_MIME_TYPES)[number])) {
+    throw new UserFacingError('Dateiinhalt entspricht nicht dem angegebenen Dateityp.')
   }
 
   const dateipfad = `${params.organizationId}/${params.woundId}/${Date.now()}-${sanitizeStorageName(params.datei.name, { maxLen: 120, fallback: 'foto' })}`

@@ -56,6 +56,7 @@ export const POST = withTracking(async function POST(request: Request, { params 
     const foto = await uploadWoundPhoto(admin, {
       organizationId,
       woundId: id,
+      wundStatus: wunde.status,
       assessmentId,
       aufgenommenVon: userId,
       aufgenommenAm: formData.get('aufgenommenAm')?.toString() || null,

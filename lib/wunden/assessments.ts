@@ -5,9 +5,11 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import { berechnePushScore } from './push-score'
 import {
   assertErlaubt,
+  assertZeitstempelNichtInZukunft,
   EXSUDAT_ART_WERTE,
   EXSUDAT_MENGE_WERTE,
   GERUCH_WERTE,
@@ -15,21 +17,34 @@ import {
   type ExsudatMenge,
   type Geruch,
   type WoundAssessment,
+  type WundStatus,
 } from './types'
 
 function assertProzent(wert: number | null | undefined, feld: string): void {
   if (wert === null || wert === undefined) return
-  if (!Number.isInteger(wert) || wert < 0 || wert > 100) throw new Error(`${feld} muss eine ganze Zahl zwischen 0 und 100 sein.`)
+  if (!Number.isInteger(wert) || wert < 0 || wert > 100) throw new UserFacingError(`${feld} muss eine ganze Zahl zwischen 0 und 100 sein.`)
 }
 
 function assertMass(wert: number | null | undefined, feld: string): void {
   if (wert === null || wert === undefined) return
-  if (typeof wert !== 'number' || Number.isNaN(wert) || wert < 0) throw new Error(`${feld} muss eine Zahl ≥ 0 sein.`)
+  if (typeof wert !== 'number' || Number.isNaN(wert) || wert < 0) throw new UserFacingError(`${feld} muss eine Zahl ≥ 0 sein.`)
+}
+
+/** Wirft, wenn die Wunde bereits abgeheilt ist — Verlaufsdokumentation ist dann abgeschlossen. */
+function assertWundeBeschreibbar(wundStatus: WundStatus): void {
+  if (wundStatus === 'abgeheilt') {
+    throw new UserFacingError(
+      'Wunde ist als abgeheilt markiert. Für ein neues Assessment muss der Status zuerst geändert werden.',
+      409,
+    )
+  }
 }
 
 export interface CreateAssessmentParams {
   organizationId: string
   woundId: string
+  /** Aktueller Status der Wunde — steuert die Sperr-Logik für abgeheilte Wunden. */
+  wundStatus: WundStatus
   erhobenVon: string
   erhobenAm?: string | null
   laengeCm?: number | null
@@ -50,6 +65,7 @@ export interface CreateAssessmentParams {
 }
 
 export async function createAssessment(supabase: SupabaseClient, params: CreateAssessmentParams): Promise<WoundAssessment> {
+  assertWundeBeschreibbar(params.wundStatus)
   assertMass(params.laengeCm, 'Länge')
   assertMass(params.breiteCm, 'Breite')
   assertMass(params.tiefeCm, 'Tiefe')
@@ -58,15 +74,16 @@ export async function createAssessment(supabase: SupabaseClient, params: CreateA
   assertProzent(params.nekrosePct, 'Nekroseanteil')
   assertProzent(params.epithelPct, 'Epithelanteil')
   const summe = (params.granulationPct ?? 0) + (params.fibrinPct ?? 0) + (params.nekrosePct ?? 0) + (params.epithelPct ?? 0)
-  if (summe > 100) throw new Error('Die Wundgrund-Anteile dürfen zusammen 100 % nicht überschreiten.')
+  if (summe > 100) throw new UserFacingError('Die Wundgrund-Anteile dürfen zusammen 100 % nicht überschreiten.')
   assertErlaubt(params.exsudatMenge ?? null, EXSUDAT_MENGE_WERTE, 'exsudat_menge')
   assertErlaubt(params.exsudatArt ?? null, EXSUDAT_ART_WERTE, 'exsudat_art')
   assertErlaubt(params.geruch ?? null, GERUCH_WERTE, 'geruch')
   if (params.schmerzNrs !== null && params.schmerzNrs !== undefined) {
     if (!Number.isInteger(params.schmerzNrs) || params.schmerzNrs < 0 || params.schmerzNrs > 10) {
-      throw new Error('Schmerz (NRS) muss eine ganze Zahl zwischen 0 und 10 sein.')
+      throw new UserFacingError('Schmerz (NRS) muss eine ganze Zahl zwischen 0 und 10 sein.')
     }
   }
+  assertZeitstempelNichtInZukunft(params.erhobenAm, 'Erhebungszeitpunkt')
 
   const push = berechnePushScore({
     laengeCm: params.laengeCm ?? null,

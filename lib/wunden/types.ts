@@ -3,6 +3,9 @@
 // Spiegelt die Check-Constraints aus 20260818010000_wunddokumentation.sql.
 // ═══════════════════════════════════════════════════════════════
 
+import { UserFacingError } from '@/lib/api/user-facing-error'
+import { heuteBerlin } from '@/lib/utils/timezone'
+
 export const WUND_TYP_WERTE = [
   'dekubitus', 'ulcus_cruris', 'diabetisches_fusssyndrom', 'op_wunde', 'traumatische_wunde', 'sonstige',
 ] as const
@@ -171,12 +174,39 @@ export interface WoundPhotoMitUrl extends WoundPhoto {
 }
 
 /**
- * Wirft bei unbekanntem Wert eine deutschsprachige Fehlermeldung, bevor die
- * DB-Check-Constraints denselben Verstoß kryptischer melden würden.
+ * Wirft bei unbekanntem Wert eine deutschsprachige, für den Client sichtbare
+ * Fehlermeldung, bevor die DB-Check-Constraints denselben Verstoß
+ * kryptischer melden würden.
  */
 export function assertErlaubt<T extends string>(wert: T | null | undefined, erlaubt: readonly T[], feld: string): void {
   if (wert === null || wert === undefined) return
   if (!erlaubt.includes(wert)) {
-    throw new Error(`Ungültiger Wert "${wert}" für ${feld}. Erlaubt: ${erlaubt.join(', ')}.`)
+    throw new UserFacingError(`Ungültiger Wert "${wert}" für ${feld}. Erlaubt: ${erlaubt.join(', ')}.`)
   }
+}
+
+/** Toleranz gegen Uhrenabweichungen zwischen Client und Server. */
+const ZUKUNFT_TOLERANZ_MS = 5 * 60 * 1000
+
+/**
+ * Wirft, wenn ein Zeitstempel (timestamptz-Spalte, z.B. erhoben_am) mehr als
+ * die Toleranz in der Zukunft liegt. Verhindert dokumentierte Wundbefunde,
+ * die formal noch nicht stattgefunden haben.
+ */
+export function assertZeitstempelNichtInZukunft(wert: string | null | undefined, feld: string): void {
+  if (!wert) return
+  const zeit = new Date(wert)
+  if (Number.isNaN(zeit.getTime())) throw new UserFacingError(`${feld} ist kein gültiger Zeitstempel.`)
+  if (zeit.getTime() > Date.now() + ZUKUNFT_TOLERANZ_MS) {
+    throw new UserFacingError(`${feld} darf nicht in der Zukunft liegen.`)
+  }
+}
+
+/**
+ * Wirft, wenn ein reines Datum (date-Spalte, z.B. entstanden_am) nach dem
+ * heutigen Tag in der Zeitzone Europe/Berlin liegt.
+ */
+export function assertDatumNichtInZukunft(wert: string | null | undefined, feld: string): void {
+  if (!wert) return
+  if (wert > heuteBerlin()) throw new UserFacingError(`${feld} darf nicht in der Zukunft liegen.`)
 }
