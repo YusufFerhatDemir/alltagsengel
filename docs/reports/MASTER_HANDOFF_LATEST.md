@@ -1,4 +1,4 @@
-# MASTER HANDOFF -- Stand 27.08.2026, nach Phase 8.4 (Production Readiness)
+# MASTER HANDOFF -- Stand 27.08.2026, nach Phase 8.5 (Pruefinfrastruktur + Altbefunde)
 
 Dieses Dokument ist die einzige Wahrheitsquelle fuer den technischen Zustand
 beider Produkte. Jede neue Session liest zuerst diese Datei.
@@ -47,9 +47,9 @@ Dokument nicht den Stand, der tatsaechlich deployed ist -- dann zuerst
 
 | Anker | Bedeutung | Wert |
 |---|---|---|
-| **CODE_HEAD** | lokaler `main`-HEAD | `a224175` (Phase 8.4 Production Readiness) |
-| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | `a224175` |
-| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | `a224175` |
+| **CODE_HEAD** | lokaler `main`-HEAD | `aa76da3` (Phase 8.5, Track 4) |
+| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | `aa76da3` |
+| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | `aa76da3` |
 
 Pruefbefehl:
 
@@ -64,7 +64,16 @@ git rev-parse HEAD && git rev-parse origin/main
 > darueber hinaus -- insbesondere jeder Commit, der Code anfasst -- bedeutet:
 > dieses Dokument ist aelter als der deployte Stand.
 
-**Letzter Code-Commit** (der letzte Commit, der Anwendungscode anfasst): `a224175`
+**Letzter Code-Commit** (der letzte Commit, der Anwendungscode anfasst): `aa76da3`
+
+**Phase-8.5-Commits (Alltagsengel):**
+
+| Commit | Inhalt |
+|---|---|
+| `bd4d8b7` | T-0: Schema-Drift-Check in CI + Precommit-Guard (warn-only); Falsch-Gruen beim Schema-Abruf geschlossen |
+| `fbc05cc` | Tests fuer 5 ungetestete lib-Kernmodule; Sanitizer-Leck `permission denied for relation/view` geschlossen |
+| `2147320` | Mitgliedschafts-Orakel im Coach-Freigabeweg gedeckelt; Apple-App-Site-Association Content-Type |
+| `aa76da3` | Altbefunde F-1 und F-2 geschlossen, C-1 belegt; neuer Befund RL-1 gefixt |
 
 **Phase-8.4-Commits (Alltagsengel):**
 
@@ -212,6 +221,110 @@ git rev-parse HEAD && git rev-parse origin/main
 | Anforderungskatalog DiPA | `5b7fe21` | 60 Tests, 6 pure functions |
 | P1-4 Testabdeckung Welle 6 | `0e8418f` | 358 neue Tests, 15 Dateien |
 | Client-Upload-Validierung | `354b056` | SVG blockiert, HEIC erlaubt |
+
+---
+
+## 4a0. Zuletzt erledigte Arbeiten -- Phase 8.5, Pruefinfrastruktur + Altbefunde (27.08.2026)
+
+**Track 0 — Schema-Drift-Check verdrahtet** (`bd4d8b7`)
+
+Der Check lief bisher nur von Hand. Er haengt jetzt an zwei Stellen:
+CI (`.github/workflows/ci.yml`, Schritt im `verify`-Job) und
+`scripts/precommit-guard.sh` — beide **warn-only**, weil Schema-Drift P2 ist
+und kein Merge- oder Commit-Blocker sein soll.
+
+Dabei ein **Falsch-Gruen im Check selbst** geschlossen: `scripts/schema-drift-check.mjs`
+las das Live-Schema ohne Fehlerbehandlung. Ein HTTP 401 oder eine leere
+OpenAPI-Antwort ergab ein leeres Schema — der Check uebersprang dann jede
+Tabelle und meldete `✅ OK ... gegen 0 Live-Tabellen`. Jetzt: harter Abbruch,
+und ohne Zugangsdaten eine laute `ÜBERSPRUNGEN`-Meldung statt eines gruenen
+Laufs (vier Pfade einzeln geprueft).
+
+> **Aktivierung in CI offen:** der Check braucht ein echtes PostgREST. Die
+> Shadow-DB ist ein lokales Postgres ohne API-Schicht. Solange die Secrets
+> `SCHEMA_DRIFT_SUPABASE_URL` + `SCHEMA_DRIFT_SUPABASE_SECRET_KEY` nicht
+> gesetzt sind, meldet der Schritt in jedem Lauf sichtbar `ÜBERSPRUNGEN —
+> NICHTS GEPRÜFT` (belegt in Run 33056319318). Lokal laeuft er vollstaendig:
+> 1.307 Dateien gegen 333 Live-Tabellen, 0 Befunde.
+
+**Track 2 — Tests fuer 5 ungetestete lib-Kernmodule** (`fbc05cc`)
+
+166 der 421 `lib/`-Module hatten keinen Import in irgendeinem Test. Mehrere
+davon galten als "getestet", weil eine Security-Suite ihren QUELLTEXT liest
+und darin greppt — ein Grep sieht, dass eine Pruefung im Code steht, nicht
+ob sie das Richtige durchlaesst. Nach Prioritaet (billing > payments >
+dunning > invoices > sepa > camt > datev > auth) getestet:
+
+| Modul | Tests | Was jetzt bewacht ist |
+|---|---|---|
+| `lib/abrechnung/edifact-validator.ts` | 37 | IK-/KVNR-Pruefziffern, Zaehlerabweichungen (UNZ/UNH, UNT), Summenabgleich ELS↔IAF↔GES, Testdatei-Indikator, doppelte Belegnummern |
+| `lib/billing/tarif-verifizierung-service.ts` | 31 | Beleg eines FREMDEN Mandanten → 403, Beleg fremder Zeile → 400, Ruecknahme loest die Belegzuordnung, Org-Fence beider Preistabellen |
+| `lib/billing/datev/export-service.ts` | 26 | fail-closed: bei fehlgeschlagener Pruefung landet NICHTS im Storage; Duplikat-Gate, Periodenfehler, Org-Fence in Liste und Download |
+| `lib/api/cron-auth.ts` | 23 | 10 abgelehnte Header-Formen, `Bearer undefined` ohne gesetztes Geheimnis, Laengenpruefung vor `timingSafeEqual` |
+| `lib/abrechnung/versand-guard.ts` | 10 | wirft statt `return false`; gelb blockiert nicht, `erstversand` blockiert sich nicht selbst |
+
+Der geteilte Supabase-Doppelgaenger (`__tests__/helpers/supabase-fake.ts`) hat
+jetzt einen **Storage-Rekorder**. Ohne ihn laesst sich bei einem fail-closed-Pfad
+nur der geworfene Fehler pruefen — nicht die eigentliche Aussage: *es wurde
+nichts abgelegt*.
+
+**Dabei gefunden und gefixt:** `lib/utils/api-error.ts` maskierte
+`permission denied for table|schema|function`. Postgres schreibt je nach
+Objektart aber auch `... for relation`, `... for view`, `... for sequence` —
+diese Meldungen gingen samt Tabellennamen an den Client.
+
+**Track 3 — TODO/FIXME/HACK** (`2147320`)
+
+Vollscan ueber `lib/`, `app/`, `components/`, `supabase/`: **im Quellcode
+kein einziges echtes TODO/FIXME/HACK.** Die Treffer waren
+(a) BIC-Testwerte, die die Zeichenfolge zufaellig enthalten (`QNTODEB2XXX`),
+(b) ein veralteter Git-Worktree unter `.claude/worktrees/` (untracked,
+detached `c8b5cf3`, nicht angefasst — moeglicherweise eine Parallel-Session),
+(c) zwei Hinweise in bereits angewendeten Migrationen (nicht editierbar,
+Historie).
+
+Zwei echte offene Punkte kamen dabei heraus:
+
+| # | Befund | Status |
+|---|---|---|
+| **CO-1** | Mitgliedschafts-Orakel: ein angemeldeter Coach-Nutzer konnte per Ausprobieren feststellen, ob eine beliebige E-Mail ein PflegeCoach-Konto hat. In `20260916000000` als bekannte, offene Einschraenkung vermerkt. | **GEFIXT** — Deckel 10 Suchen/Stunde **je Nutzer** (nicht je IP: geteilt im Praxis-Netz, wechselbar im Mobilfunk), persistent ueber Instanzen. 6 Tests. |
+| **DL-1** | `.well-known/apple-app-site-association` wurde live als `application/octet-stream` ausgeliefert (Datei ohne Endung). Apple verlangt `application/json` — Universal Links konnten gar nicht verifizieren. | **GEFIXT + LIVE BELEGT** (`content-type: application/json`, `x-vercel-id: fra1::mt2nn-…`). |
+
+> **DL-2 bleibt offen (BUSINESS_INPUT_REQUIRED):** beide Deep-Link-Dateien
+> tragen Platzhalter — `assetlinks.json` den Text
+> `TODO:REPLACE_WITH_ACTUAL_SHA256_FINGERPRINT`, die AASA die appID
+> `TEAMID.care.alltagsengel.app`. Der echte SHA-256-Fingerabdruck des
+> Android-Signaturschluessels und die Apple-Team-ID liegen ausserhalb des
+> Repos (`keystore.properties` ist gitignored). **Nicht erfindbar** —
+> Deep Links verifizieren bis dahin nicht, Links oeffnen im Browser statt in
+> der App. Kein Datenrisiko.
+
+**Track 4 — Altbefunde F-1, F-2, C-1** (`aa76da3`)
+
+| # | Frage | Ergebnis |
+|---|---|---|
+| **F-1** | fixbar ohne Geschaeftslogik-Entscheidung? | **JA, gefixt.** Die Entscheidung faellt ohnehin die Datenbank (`uq_zahlungseingaenge_org_buchungshash`, 20261003000000) — sie wurde nur mit einem nackten `23505` durchgesetzt, landete in `nichtGespeichert` und setzte den ganzen Import auf `fehler`, obwohl nichts fehlte. Jetzt: Dublette innerhalb derselben Datei wird vorher erkannt, gezaehlt (`dateiDublettenUebersprungen`) und benannt. 4 Tests inkl. Gegenprobe. |
+| **F-2** | fixbar? | **TEILWEISE, der eindeutige Teil ist gefixt.** Dass eine Ruecklastschrift NICHT auf den regulaeren Stufenabstand wartet, ist Absicht — die Gate-Punkte 5/9/10 wuerden hier das Falsche tun. Eine **manuelle Mahnsperre** (`block_dunning`) ist etwas anderes: sie wurde stillschweigend uebergangen, der Kunde sprang beim Aufheben der Sperre ohne Zwischenschritt auf `mahnung_1`. Jetzt: Stufe bleibt stehen, Grund steht im Ergebnis und im Audit-Trail. Zusaetzlich der fehlende Org-Fence auf allen drei Mahn-Schreibzugriffen. 6 Tests inkl. Gegenprobe (rot ohne Fix). |
+| **C-1** | echter Sicherheitsbefund? | **NEIN — die Bezeichnung ueberzeichnet.** Richtig ist, dass `pruefeMandantengrenze()` aus `camt-preflight.ts` nur im DRY_RUN-Weg laeuft. Ein Mandantenleck folgt daraus nicht: jede schreibende Abfrage dahinter (`matchBuchung`, `verarbeiteRuecklastschrift`) traegt ihren eigenen `organization_id`-Filter. Neu belegt fuer den teuersten Weg — die Ruecklastschrift mit fuenf Schreibwirkungen: 5 Tests am echten Route-Handler gegen echtes Postgres, Rechnung/Mandat/Lastschriftposten des fremden Mandanten bleiben unberuehrt. **Bleibt als Komfortbefund:** im buchenden Weg fehlt die fruehe, lesbare Warnung. |
+
+**RL-1 (neu, beim Belegen von C-1 gefunden) — GEFIXT:**
+`verarbeiteRuecklastschrift()` gab `erkannt: true` vorbelegt zurueck und setzte
+es beim Ausgang „keine Lastschrift gefunden" **nie zurueck**. Der Aufrufer
+entscheidet daran, ob die Buchung als verarbeitet oder als Klaerfall zaehlt —
+eine nicht zuordenbare Ruecklastschrift kam deshalb als
+`ruecklastschrift_verarbeitet` und als „zugeordnet" in der Antwort an, obwohl
+nichts storniert, nichts wieder geoeffnet und keine Gebuehr gebucht wurde:
+**Geld zurueck, Rechnung weiter `bezahlt`, niemand zustaendig.** Jetzt
+`erkannt: false` (auch nach einem Abbruch mitten im Vorgang), und die Route
+legt fuer diesen Fall einen echten **Klaerfall** an — dieselbe Behandlung, die
+der normale Zahlungsweg an derselben Stelle schon hatte. Ein bestehender Test
+hielt die Fehlbehandlung fest (`expect(r.erkannt).toBe(true)`) und wurde auf
+den korrigierten Vertrag gezogen.
+
+**Verifikation Phase 8.5:** Typecheck 0 Fehler, vitest 6.262 + node:test 2.211
+= **8.473 Tests gruen**, Schema-Drift 0 Befunde, CI gruen.
+
+**REAL_ACTIONS_EXECUTED: NONE**
 
 ---
 
@@ -385,7 +498,20 @@ auf PGlite -- Shim erweitert, zwei neue Suiten, zwei echte Bugs gefunden.
 
 ## 5. Gefundene und behobene Produktionsbefunde
 
-**36 Befunde insgesamt** ueber Phasen 6A--8.4 gefunden und behoben bzw. benannt.
+**41 Befunde insgesamt** ueber Phasen 6A--8.5 gefunden und behoben bzw. benannt.
+
+### Phase 8.5 -- 5 Befunde (4 gefixt, 1 BUSINESS_INPUT_REQUIRED)
+
+| # | Track | Befund | Schwere |
+|---|---|---|---|
+| **RL-1** | 4 | Nicht zuordenbare Ruecklastschrift galt als verarbeitet: `erkannt` war auf `true` vorbelegt und wurde nie zurueckgesetzt. Geld zurueck, Rechnung weiter `bezahlt`, kein Klaerfall. | **P1 Geld / GEFIXT** |
+| **SD-1** | 0 | `schema-drift-check.mjs` meldete bei 401 oder leerer OpenAPI-Antwort `✅ OK ... gegen 0 Live-Tabellen` — ein nicht durchgefuehrter Check sah aus wie ein bestandener. | MITTEL / **GEFIXT** |
+| **AE-1** | 2 | `safeDbError()` maskierte nur `permission denied for table\|schema\|function`; `... for relation/view/sequence` ging samt Tabellenname an den Client. | GERING / **GEFIXT** |
+| **CO-1** | 3 | Mitgliedschafts-Orakel im Coach-Freigabeweg ohne Rate-Limit (in `20260916000000` als offen vermerkt). | GERING / **GEFIXT** |
+| **DL-2** | 3 | Deep-Link-Dateien tragen Platzhalter (Android-Fingerabdruck, Apple-Team-ID). Verifizierung schlaegt fehl, Links oeffnen im Browser. | GERING / **BUSINESS_INPUT_REQUIRED** |
+
+Zusaetzlich aus Phase 8/8.2 geschlossen: **F-1** (gefixt), **F-2** (der
+eindeutige Teil gefixt), **C-1** (geprueft — kein Mandantenleck, siehe 4a0).
 
 ### Phase 8.4 -- 3 Befunde, alle gefixt
 
@@ -408,7 +534,7 @@ auf PGlite -- Shim erweitert, zwei neue Suiten, zwei echte Bugs gefunden.
 
 | # | Track | Befund | Schwere |
 |---|---|---|---|
-| **C-1** | 7 | Cross-Tenant-Check fehlt im Live-Import-Route (Preflight prueft, Live-Route nicht) | MITTEL / Beobachtung |
+| **C-1** | 7 | Cross-Tenant-Check fehlt im Live-Import-Route (Preflight prueft, Live-Route nicht) | **GEPRUEFT in 8.5: kein Mandantenleck** — alle Schreibwege sind org-gefenced, 5 Tests am echten Handler. Bleibt als Komfortbefund (fehlende fruehe Warnung). |
 | **D-3** | 12 | Format-Validierung Beraternummer/Mandantennummer fehlte | MITTEL / **GEFIXT** |
 | **C-2** | 7 | CdtDbtInd-Fallback auf CRDT bei fehlendem Tag | GERING / Beobachtung |
 | **C-3** | 7 | Sts-Fallback auf BOOK bei fehlendem Tag | GERING / Beobachtung |
@@ -420,8 +546,8 @@ auf PGlite -- Shim erweitert, zwei neue Suiten, zwei echte Bugs gefunden.
 
 | # | Track | Befund | Schwere |
 |---|---|---|---|
-| **F-1** | 5 | CAMT: Datei-interne Dublette nicht erkannt. DB-UNIQUE faengt, aber mit kryptischem `23505`. | Beobachtung |
-| **F-2** | 7 | Ruecklastschrift umgeht das Mahn-Gate. Setzt Mahnstufe direkt, ohne `advanceDunning()`. | Beobachtung |
+| **F-1** | 5 | CAMT: Datei-interne Dublette nicht erkannt. DB-UNIQUE faengt, aber mit kryptischem `23505`. | **GESCHLOSSEN in 8.5** (`aa76da3`) |
+| **F-2** | 7 | Ruecklastschrift umgeht das Mahn-Gate. Setzt Mahnstufe direkt, ohne `advanceDunning()`. | **TEILS GESCHLOSSEN in 8.5** — Mahnsperre wird respektiert; der Stufenabstand bleibt bewusst uebersprungen (`aa76da3`) |
 | **F-3** | 8 | `zuordnung_ohne_betrag` ist toter Zweig (DB CHECK constraint). | Beobachtung |
 | **A-1** | 1--4 | `gesetzt_am` fehlte -- echte Sperre als „Quelle unlesbar" gemeldet. Gefixt. | P3 Diagnose |
 | **A-2** | 1--4 | Regressionstest scannte Volltext statt Import-Zeilen. Gefixt. | Test |
