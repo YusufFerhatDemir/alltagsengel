@@ -89,6 +89,16 @@ export interface UpdateArbeitszeitParams {
   bemerkung?: string | null
 }
 
+/**
+ * Felder, die den dokumentierten Zeitnachweis selbst veraendern. Genau diese
+ * sind an einer gesperrten Arbeitszeit tabu; `gesperrt` und `bemerkung`
+ * gehoeren nicht dazu, damit das Entsperren ueberhaupt moeglich bleibt.
+ */
+const NACHWEIS_FELDER: Array<keyof UpdateArbeitszeitParams> = [
+  'startZeit', 'endZeit', 'pauseMinuten', 'istMinuten', 'sollMinuten',
+  'status', 'bestaetigtVon', 'bestaetigtAm',
+]
+
 export async function updateArbeitszeit(
   supabase: SupabaseClient,
   id: string,
@@ -97,6 +107,38 @@ export async function updateArbeitszeit(
 ): Promise<PersonalArbeitszeit> {
   assertErlaubt(patch.status, ARBEITSZEIT_STATUS_WERTE, 'status')
   assertPlausibleZeiten({ istMinuten: patch.istMinuten, pauseMinuten: patch.pauseMinuten })
+
+  // Sperr-Logik VOR dem Schreiben.
+  //
+  // Der DB-Trigger log_arbeitszeit_korrektur blockt nur den Fall
+  // `OLD.gesperrt = true AND NEW.gesperrt = true`. Wer im selben UPDATE
+  // `gesperrt: false` mitschickt, faellt aus dieser Bedingung heraus — die
+  // Sperre liess sich also durch das Anhaengen eines einzigen Feldes
+  // umgehen und der abgerechnete Zeitnachweis im selben Zug veraendern.
+  // Hier wird deshalb der Bestand gelesen und entschieden.
+  const { data: bestand, error: ladeFehler } = await supabase
+    .from('personal_arbeitszeiten')
+    .select('gesperrt')
+    .eq('id', id)
+    .eq('organization_id', organizationId)
+    .maybeSingle()
+  if (ladeFehler) throw new Error(`Arbeitszeit konnte nicht geladen werden: ${ladeFehler.message}`)
+  if (!bestand) throw new UserFacingError('Arbeitszeit nicht gefunden.', 404)
+
+  if (bestand.gesperrt) {
+    const beruehrteNachweisfelder = NACHWEIS_FELDER.filter(feld => patch[feld] !== undefined)
+    if (beruehrteNachweisfelder.length > 0) {
+      throw new UserFacingError(
+        'Gesperrte Arbeitszeit kann nicht bearbeitet werden. Erst entsperren, dann korrigieren.',
+        409,
+      )
+    }
+    // Reines Entsperren (ggf. mit Bemerkung) bleibt erlaubt — sonst waere
+    // eine einmal gesperrte Zeit fuer immer eingefroren.
+    if (patch.gesperrt !== false) {
+      throw new UserFacingError('Gesperrte Arbeitszeit kann nicht bearbeitet werden.', 409)
+    }
+  }
 
   const update: Record<string, unknown> = {}
   if (patch.startZeit !== undefined) update.start_zeit = patch.startZeit

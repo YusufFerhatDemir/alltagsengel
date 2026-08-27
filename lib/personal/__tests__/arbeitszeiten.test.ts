@@ -19,10 +19,22 @@ function insertClient() {
   return { supabase: supabase as never, inserts }
 }
 
+/**
+ * `updateArbeitszeit` liest seit der Sperr-Haertung den Bestand, bevor es
+ * schreibt (select → eq → eq → maybeSingle). Der Doppelgaenger bildet
+ * deshalb BEIDE Ketten ab; `existing` ist zugleich der gelesene Bestand.
+ */
 function updateClient(existing: Record<string, unknown>, failMsg?: string) {
   const updates: Array<Record<string, unknown>> = []
   const supabase = {
     from: () => ({
+      select: () => {
+        const lese: any = {
+          eq: () => lese,
+          maybeSingle: async () => ({ data: existing, error: null }),
+        }
+        return lese
+      },
       update(payload: Record<string, unknown>) {
         updates.push(payload)
         const kette: any = {

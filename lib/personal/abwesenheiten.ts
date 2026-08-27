@@ -20,8 +20,52 @@ export interface CreateAbwesenheitParams {
   status?: AbwesenheitStatus
 }
 
+/**
+ * Zeitraum-Regeln, ohne Datenbank testbar.
+ *
+ * Ungeprueft rutschten hier bisher `end_date` VOR `start_date` und beliebige
+ * Datumsformate durch. Beides faellt erst spaeter auf: `genehmigenAbwesenheit`
+ * rechnet aus genau diesen Feldern die Urlaubstage aus, die dem Konto
+ * belastet werden — ein verdrehter Zeitraum ergibt dort einen negativen
+ * Rohwert, der ueber `Math.max(1, …)` still zu einem Tag wird.
+ */
+export function assertZeitraum(startDate: string, endDate: string): void {
+  const ISO = /^\d{4}-\d{2}-\d{2}$/
+  if (!ISO.test(startDate ?? '')) throw new UserFacingError('Startdatum muss im Format YYYY-MM-DD vorliegen.')
+  if (!ISO.test(endDate ?? '')) throw new UserFacingError('Enddatum muss im Format YYYY-MM-DD vorliegen.')
+  // Kalendarisch echtes Datum — '2026-02-31' passt auf das Muster, existiert aber nicht.
+  for (const [feld, wert] of [['Startdatum', startDate], ['Enddatum', endDate]] as const) {
+    const d = new Date(`${wert}T00:00:00Z`)
+    if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== wert) {
+      throw new UserFacingError(`${feld} ist kein gültiges Kalenderdatum.`)
+    }
+  }
+  // Lexikografischer Vergleich ist bei ISO-Daten identisch zum zeitlichen.
+  if (endDate < startDate) {
+    throw new UserFacingError('Das Enddatum darf nicht vor dem Startdatum liegen.')
+  }
+}
+
 export async function createAbwesenheit(supabase: SupabaseClient, params: CreateAbwesenheitParams): Promise<Abwesenheit> {
   assertErlaubt(params.absenceType, ABWESENHEIT_TYP_WERTE, 'absence_type')
+  assertErlaubt(params.status, ABWESENHEIT_STATUS_WERTE, 'status')
+  assertZeitraum(params.startDate, params.endDate)
+
+  // Ein Antrag entsteht IMMER als 'beantragt'. Waere 'genehmigt' direkt
+  // setzbar, liefe die Genehmigung an genehmigenAbwesenheit vorbei — und
+  // damit an der Vier-Augen-Pruefung, der Restanspruchspruefung und der
+  // Buchung auf das Urlaubskonto.
+  if (params.status && params.status !== 'beantragt') {
+    throw new UserFacingError(
+      'Eine Abwesenheit wird immer als Antrag angelegt. Genehmigung und Ablehnung laufen über den jeweiligen Vorgang.',
+      409,
+    )
+  }
+
+  // Halbe Tage gibt es nur an einem einzelnen Tag.
+  if (params.halberTag && params.startDate !== params.endDate) {
+    throw new UserFacingError('Ein halber Tag ist nur für einen einzelnen Tag möglich.')
+  }
 
   const { data, error } = await supabase
     .from('absences')
@@ -88,6 +132,11 @@ export async function updateAbwesenheit(
   patch: UpdateAbwesenheitParams,
 ): Promise<Abwesenheit> {
   assertErlaubt(patch.absenceType, ABWESENHEIT_TYP_WERTE, 'absence_type')
+  // Nur pruefbar, wenn BEIDE Enden im Patch stehen — ein einseitig
+  // verschobenes Ende wird unten gegen den Bestand geprueft.
+  if (patch.startDate !== undefined && patch.endDate !== undefined) {
+    assertZeitraum(patch.startDate, patch.endDate)
+  }
 
   const update: Record<string, unknown> = {}
   if (patch.absenceType !== undefined) update.absence_type = patch.absenceType
@@ -107,13 +156,22 @@ export async function updateAbwesenheit(
   // tatsächlich freigegebenen Daten ab (zu viel oder zu wenig gebucht).
   const { data: bestand, error: ladeFehler } = await supabase
     .from('absences')
-    .select('status')
+    .select('status, start_date, end_date')
     .eq('id', id)
     .eq('organization_id', organizationId)
     .single()
-  if (ladeFehler || !bestand) throw new UserFacingError('Abwesenheit nicht gefunden.')
+  if (ladeFehler || !bestand) throw new UserFacingError('Abwesenheit nicht gefunden.', 404)
   if (bestand.status !== 'beantragt') {
-    throw new UserFacingError('Nur beantragte Abwesenheiten können bearbeitet werden. Bereits entschiedene Anträge sind unveränderlich.')
+    throw new UserFacingError('Nur beantragte Abwesenheiten können bearbeitet werden. Bereits entschiedene Anträge sind unveränderlich.', 409)
+  }
+
+  // Einseitige Verschiebung: das nicht mitgeschickte Ende kommt aus dem
+  // Bestand, sonst liesse sich der Zeitraum ueber zwei Aufrufe verdrehen.
+  if (patch.startDate !== undefined || patch.endDate !== undefined) {
+    assertZeitraum(
+      patch.startDate ?? bestand.start_date,
+      patch.endDate ?? bestand.end_date,
+    )
   }
 
   const { data, error } = await supabase
@@ -255,6 +313,13 @@ export async function ablehnenAbwesenheit(
     .eq('status', 'beantragt')
     .select('*')
     .single()
-  if (error || !data) throw new Error(`Abwesenheit konnte nicht abgelehnt werden: ${error?.message ?? 'Nur beantragte Abwesenheiten können abgelehnt werden.'}`)
+  // Kein Treffer heisst hier: der Antrag existiert nicht (mehr) im Status
+  // 'beantragt' — `.single()` meldet das als PGRST116. Das ist eine
+  // Fachmeldung, kein Infrastrukturfehler; als nackter Error verwischte der
+  // Sanitizer sie zu einem 500er.
+  if ((error && error.code === 'PGRST116') || (!error && !data)) {
+    throw new UserFacingError('Nur beantragte Abwesenheiten können abgelehnt werden.', 409)
+  }
+  if (error || !data) throw new Error(`Abwesenheit konnte nicht abgelehnt werden: ${error?.message ?? 'unbekannt'}`)
   return data as Abwesenheit
 }

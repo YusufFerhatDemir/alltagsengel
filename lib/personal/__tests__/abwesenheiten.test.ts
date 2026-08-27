@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { createAbwesenheit, genehmigenAbwesenheit, ablehnenAbwesenheit, updateAbwesenheit } from '../abwesenheiten'
+import { assertZeitraum, createAbwesenheit, genehmigenAbwesenheit, ablehnenAbwesenheit, updateAbwesenheit } from '../abwesenheiten'
+import { UserFacingError } from '../../api/user-facing-error'
 import { erstelleFakeSupabase } from '@/__tests__/helpers/supabase-fake'
 
 function insertClient() {
@@ -202,4 +203,82 @@ test('genehmigenAbwesenheit: wiederholt die Buchung, wenn eine parallele Genehmi
   const kontoUpdates = aufrufe.filter(a => a.tabelle === 'personal_urlaubskonto' && a.operation === 'update')
   assert.equal(kontoUpdates.length, 2)
   assert.equal((kontoUpdates[1].payload as any).genommen_tage, 11) // 6 (frischer Stand) + 5 Tage
+})
+
+// ═══════════════════════════════════════════════════════════════
+// Zeitraum- und Statusregeln (Härtung 27.08.2026)
+// ═══════════════════════════════════════════════════════════════
+
+const ZEITRAUM_BASIS = {
+  organizationId: 'org-1',
+  caregiverId: 'cg-1',
+  absenceType: 'vacation' as const,
+  erstelltVon: 'user-1',
+}
+
+test('assertZeitraum: weist ein Ende vor dem Start ab', () => {
+  assert.throws(
+    () => assertZeitraum('2026-09-10', '2026-09-01'),
+    (err: unknown) => err instanceof UserFacingError && /Enddatum darf nicht vor dem Startdatum/.test((err as Error).message),
+  )
+})
+
+test('assertZeitraum: akzeptiert einen eintägigen Zeitraum', () => {
+  assert.doesNotThrow(() => assertZeitraum('2026-09-01', '2026-09-01'))
+})
+
+test('assertZeitraum: erzwingt ISO-Datumsformat', () => {
+  assert.throws(() => assertZeitraum('01.09.2026', '2026-09-02'), /YYYY-MM-DD/)
+  assert.throws(() => assertZeitraum('2026-09-01', '2026-9-2'), /YYYY-MM-DD/)
+})
+
+test('assertZeitraum: weist ein nicht existierendes Kalenderdatum ab', () => {
+  // Passt auf das Muster, gibt es aber nicht — Date() würde still auf den
+  // 3. März rollen und der Antrag bekäme einen anderen Zeitraum als erfasst.
+  assert.throws(() => assertZeitraum('2026-02-31', '2026-03-05'), /gültiges Kalenderdatum/)
+  assert.throws(() => assertZeitraum('2026-09-01', '2026-13-01'), /gültiges Kalenderdatum/)
+})
+
+test('createAbwesenheit: weist einen verdrehten Zeitraum ab', async () => {
+  const { supabase, inserts } = insertClient()
+  await assert.rejects(
+    () => createAbwesenheit(supabase, { ...ZEITRAUM_BASIS, startDate: '2026-09-10', endDate: '2026-09-01' }),
+    (err: unknown) => err instanceof UserFacingError,
+  )
+  assert.equal(inserts.length, 0)
+})
+
+test('createAbwesenheit: legt IMMER als Antrag an — vorgenehmigt geht nicht', async () => {
+  const { supabase, inserts } = insertClient()
+  await assert.rejects(
+    () => createAbwesenheit(supabase, {
+      ...ZEITRAUM_BASIS, startDate: '2026-09-01', endDate: '2026-09-05',
+      status: 'genehmigt',
+    }),
+    (err: unknown) => err instanceof UserFacingError && /immer als Antrag/.test((err as Error).message),
+  )
+  assert.equal(inserts.length, 0, 'Eine vorgenehmigte Abwesenheit umginge Urlaubskonto und Vier-Augen-Prüfung')
+})
+
+test('createAbwesenheit: ein halber Tag gilt nur für einen einzelnen Tag', async () => {
+  const { supabase } = insertClient()
+  await assert.rejects(
+    () => createAbwesenheit(supabase, {
+      ...ZEITRAUM_BASIS, startDate: '2026-09-01', endDate: '2026-09-05', halberTag: true,
+    }),
+    (err: unknown) => err instanceof UserFacingError && /halber Tag/.test((err as Error).message),
+  )
+
+  const ok = insertClient()
+  await createAbwesenheit(ok.supabase, {
+    ...ZEITRAUM_BASIS, startDate: '2026-09-01', endDate: '2026-09-01', halberTag: true,
+  })
+  assert.equal(ok.inserts[0].halber_tag, true)
+})
+
+test('createAbwesenheit: der reguläre Antrag geht unverändert durch', async () => {
+  const { supabase, inserts } = insertClient()
+  await createAbwesenheit(supabase, { ...ZEITRAUM_BASIS, startDate: '2026-09-01', endDate: '2026-09-05' })
+  assert.equal(inserts[0].status, 'beantragt')
+  assert.equal(inserts[0].start_date, '2026-09-01')
 })
