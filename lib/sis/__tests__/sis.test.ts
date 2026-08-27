@@ -6,6 +6,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import {
   abschliessenAssessment,
   createAssessment,
@@ -17,6 +18,17 @@ import {
 import { upsertThemenfeld } from '../themenfelder'
 import { upsertRisiko } from '../risikomatrix'
 import { relevanteThemenfelder, SIS_RISIKO_WERTE, type SisStatus } from '../types'
+
+/** Wirft die Kernaussage von Punkt 7 der Härtung ein: Validierungsfehler
+ * müssen als UserFacingError markiert sein, sonst sanitisiert sie
+ * apiErrorResponse() in Production zu einem nichtssagenden 500er. */
+async function assertUserFacingRejection(promise: Promise<unknown>, pattern: RegExp): Promise<void> {
+  await assert.rejects(promise, (err: unknown) => {
+    assert.ok(err instanceof UserFacingError, `erwartet UserFacingError, erhalten ${(err as Error)?.constructor?.name}`)
+    assert.match((err as Error).message, pattern)
+    return true
+  })
+}
 
 /**
  * Minimaler Supabase-Doppelgänger: liefert `kopf` als sis_assessments-Zeile,
@@ -303,6 +315,58 @@ test('wiedereroeffnenAssessment nur aus abgeschlossen, sperren nie rückwärts',
   await assert.rejects(
     () => sperreAssessment(gesperrt.supabase, 'sis-1', 'org-1'),
     /ist nicht erlaubt/
+  )
+})
+
+// ── UserFacingError-Pflicht (Punkt 7 der Härtung) ─────────────────
+// apiErrorResponse() liefert nur UserFacingError-Meldungen an den Client;
+// alles andere wird zu 'Interner Serverfehler' sanitisiert. Fachliche
+// Validierungsfehler MÜSSEN deshalb UserFacingError sein, sonst verschwindet
+// die eigentliche Fehlermeldung für den Nutzer in Production.
+
+test('validateSisUebergang wirft UserFacingError', () => {
+  assert.throws(() => validateSisUebergang('gesperrt', 'entwurf'), (err: unknown) => {
+    assert.ok(err instanceof UserFacingError)
+    return true
+  })
+})
+
+test('createAssessment: ungültiger Typ wirft UserFacingError', async () => {
+  const { supabase } = sisClient(KOPF_ENTWURF)
+  await assertUserFacingRejection(
+    createAssessment(supabase, {
+      organizationId: 'org-1', clientId: 'client-1', erhobenVon: 'user-1', erstelltVon: 'user-1',
+      assessmentTyp: 'quartalsgespraech' as never,
+    }),
+    /Ungültiger Wert für assessment_typ/,
+  )
+})
+
+test('upsertThemenfeld: Feld außerhalb der Versorgungsform wirft UserFacingError', async () => {
+  const { supabase } = sisClient({ ...KOPF_ENTWURF, versorgungsform: 'stationaer' })
+  await assertUserFacingRejection(
+    upsertThemenfeld(supabase, { organizationId: 'org-1', assessmentId: 'sis-1', feldNr: 6 }),
+    /nicht vorgesehen/,
+  )
+})
+
+test('abschliessenAssessment: fehlende Einschätzung wirft UserFacingError', async () => {
+  const kinder = vollstaendigeKinder()
+  kinder.themenfelder[2].einschaetzung_pflege = '   '
+  const { supabase } = sisClient(KOPF_ENTWURF, kinder)
+  await assertUserFacingRejection(
+    abschliessenAssessment(supabase, 'sis-1', 'org-1', 'user-1'),
+    /Themenfeld 3/,
+  )
+})
+
+test('abschliessenAssessment: unbewertete Risikomatrix wirft UserFacingError', async () => {
+  const kinder = vollstaendigeKinder()
+  kinder.risikomatrix[1] = { risiko: 'sturz', risiko_vorhanden: 'unklar', weitere_einschaetzung: false }
+  const { supabase } = sisClient(KOPF_ENTWURF, kinder)
+  await assertUserFacingRejection(
+    abschliessenAssessment(supabase, 'sis-1', 'org-1', 'user-1'),
+    /Risikomatrix unbewertet für sturz/,
   )
 })
 

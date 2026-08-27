@@ -4,6 +4,8 @@
 // supabase/migrations/20260818010000_sis_strukturierte_informationssammlung.sql
 // ═══════════════════════════════════════════════════════════════
 
+import { UserFacingError } from '@/lib/api/user-facing-error'
+
 export type SisAssessmentTyp = 'erstgespraech' | 'folgegespraech' | 'wiederaufnahme' | 'anlassbezogen'
 export type SisVersorgungsform = 'ambulant' | 'stationaer' | 'tagespflege'
 export type SisStatus = 'entwurf' | 'abgeschlossen' | 'gesperrt'
@@ -106,7 +108,7 @@ export interface SisAssessmentDetail extends SisAssessment {
 export function assertSisWert<T extends string>(wert: T | undefined | null, erlaubt: readonly T[], feld: string): void {
   if (wert === undefined || wert === null) return
   if (!erlaubt.includes(wert)) {
-    throw new Error(`Ungültiger Wert für ${feld}: "${wert}". Erlaubt: ${erlaubt.join(', ')}`)
+    throw new UserFacingError(`Ungültiger Wert für ${feld}: "${wert}". Erlaubt: ${erlaubt.join(', ')}`)
   }
 }
 

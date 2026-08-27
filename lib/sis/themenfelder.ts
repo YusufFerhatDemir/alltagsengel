@@ -30,7 +30,7 @@ export async function upsertThemenfeld(supabase: SupabaseClient, params: UpsertT
 
   if (!relevanteThemenfelder(kopf.versorgungsform).includes(params.feldNr)) {
     const titel = SIS_THEMENFELDER.find(t => t.nr === params.feldNr)?.titel ?? `Feld ${params.feldNr}`
-    throw new Error(`Themenfeld ${params.feldNr} (${titel}) ist bei Versorgungsform "${kopf.versorgungsform}" nicht vorgesehen.`)
+    throw new UserFacingError(`Themenfeld ${params.feldNr} (${titel}) ist bei Versorgungsform "${kopf.versorgungsform}" nicht vorgesehen.`)
   }
 
   const payload: Record<string, unknown> = {
