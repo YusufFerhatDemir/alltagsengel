@@ -1,0 +1,73 @@
+# Workflow-Engine-Verarbeitung (wf_events/wf_warteschlange/wf_dead_letter)
+# — alle 5 Minuten.
+#
+# WARUM NICHT ALS VERCEL-CRON
+# Der Takt gehoert nach vercel.json, dort ist er aber nicht erlaubt: ein
+# Deployment mit `*/5 * * * *` wird von Vercel mit Verweis auf die
+# Cron-Preisstaffel abgelehnt (der Tarif dieses Projekts loest Cron-Jobs
+# nur einmal taeglich aus). Gleiches Muster wie beim Zustellungs-Retry
+# (siehe .github/workflows/zustellung-retry.yml).
+#
+# In vercel.json steht der Lauf trotzdem, als taeglicher Rueckfall um
+# 02:00. Dieser Workflow liefert den eigentlichen Takt.
+#
+# VORAUSSETZUNG
+# Repository-Secret `CRON_SECRET` mit demselben Wert wie die
+# gleichnamige Umgebungsvariable in Vercel. Fehlt das Secret, endet der
+# Lauf mit einer Warnung und einem Eintrag in der Job-Zusammenfassung —
+# nicht mit einem Fehler (288 rote Laeufe taeglich waeren nur Rauschen).
+# Ein fehlgeschlagener AUFRUF (HTTP != 200) bleibt dagegen rot.
+
+name: Workflow-Engine
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: workflow-engine
+  cancel-in-progress: false
+
+jobs:
+  verarbeitung:
+    name: Warteschlange verarbeiten
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Cron-Secret pruefen
+        id: secret
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "${CRON_SECRET}" ]; then
+            echo "::warning::Repository-Secret CRON_SECRET fehlt — die Workflow-Engine wird NICHT verarbeitet."
+            {
+              echo "### Verarbeitung uebersprungen"
+              echo ""
+              echo "Das Repository-Secret \`CRON_SECRET\` ist nicht gesetzt."
+              echo "Es muss denselben Wert haben wie die Umgebungsvariable \`CRON_SECRET\` in Vercel."
+              echo "Bis dahin laeuft die Verarbeitung nur ueber den taeglichen Vercel-Cron um 02:00."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "vorhanden=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "vorhanden=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Lauf ausloesen
+        if: steps.secret.outputs.vorhanden == 'true'
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          BASIS: ${{ vars.PRODUCTION_URL || 'https://alltagsengel.care' }}
+        run: |
+          HTTP_STATUS=$(curl -s -o /tmp/workflow.json -w "%{http_code}" \
+            --max-time 120 \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${BASIS}/api/cron/workflow-engine") || HTTP_STATUS=000
+
+          jq . /tmp/workflow.json 2>/dev/null || cat /tmp/workflow.json
+
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "::error::Verarbeitung fehlgeschlagen (HTTP $HTTP_STATUS)"
+            exit 1
+          fi
