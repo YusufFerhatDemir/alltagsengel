@@ -155,6 +155,14 @@ export async function updateAnamnese(
   if (existing.gesperrt) {
     throw new UserFacingError('Gesperrte Anamnese kann nicht bearbeitet werden.')
   }
+  // Der Übergang entwurf → abgeschlossen läuft selbst über diese Funktion
+  // (patch.status) und ist an dieser Stelle noch möglich, weil existing.status
+  // dabei noch 'entwurf' ist. Jeder weitere Aufruf danach — egal ob Feld- oder
+  // erneuter Statusänderung — ist eine Bearbeitung einer bereits abgeschlossenen
+  // Anamnese und muss blockiert werden (analog lib/sis/assessments.ts).
+  if (existing.status !== 'entwurf') {
+    throw new UserFacingError('Nur eine Anamnese im Entwurf kann bearbeitet werden.')
+  }
   assertErlaubt(patch.anamneseTyp, ANAMNESE_TYP_WERTE, 'anamnese_typ')
 
   const update: Record<string, unknown> = mapFelder(patch)

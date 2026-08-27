@@ -32,8 +32,10 @@ export function validierePlausibilitaet(typ: VitalTyp, wert: number, wertSekunda
     if (wertSekundaer == null || !Number.isFinite(wertSekundaer)) {
       throw new Error(`${cfg.label}: ${cfg.labelSekundaer} ist ein Pflichtfeld.`)
     }
-    if (wertSekundaer < cfg.plausibelMin || wertSekundaer > cfg.plausibelMax) {
-      throw new Error(`${cfg.label}: ${cfg.labelSekundaer} ${wertSekundaer} ${cfg.einheit} liegt außerhalb des plausiblen Bereichs (${cfg.plausibelMin}–${cfg.plausibelMax}).`)
+    const minSek = cfg.plausibelMinSekundaer ?? cfg.plausibelMin
+    const maxSek = cfg.plausibelMaxSekundaer ?? cfg.plausibelMax
+    if (wertSekundaer < minSek || wertSekundaer > maxSek) {
+      throw new Error(`${cfg.label}: ${cfg.labelSekundaer} ${wertSekundaer} ${cfg.einheit} liegt außerhalb des plausiblen Bereichs (${minSek}–${maxSek}).`)
     }
     if (wertSekundaer >= wert) {
       throw new Error(`${cfg.label}: Diastolisch (${wertSekundaer}) muss unter systolisch (${wert}) liegen.`)
