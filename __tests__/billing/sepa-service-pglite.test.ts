@@ -134,14 +134,24 @@ async function legeRechnung(opts: {
   betragEuro: number
   bezahltEuro?: number
   status?: string
+  /**
+   * Festschreibung. Standard ist festgeschrieben, weil der Standardstatus
+   * 'freigegeben' ist — den gibt es im Status-Automaten ueberhaupt nur
+   * ueber freezeInvoice(). Ein Test, der eine NICHT festgeschriebene
+   * Rechnung braucht, setzt das ausdruecklich auf false.
+   */
+  festgeschrieben?: boolean
+  /** Soft-Delete-Zeitpunkt; Standard: nicht geloescht. */
+  geloescht?: boolean
 }): Promise<string> {
   rechnungsZaehler++
   const id = `f0000000-0000-4000-8000-${String(rechnungsZaehler).padStart(12, '0')}`
   await db.query(
     `INSERT INTO public.invoices
        (id, organization_id, client_id, invoice_number, invoice_number_formatted,
-        period_start, period_end, total_amount, paid_amount, status, dunning_level)
-     VALUES ($1, $2, $3, $4, $4, '2026-07-01', '2026-07-31', $5, $6, $7, 'offen')`,
+        period_start, period_end, total_amount, paid_amount, status, dunning_level,
+        frozen_at, deleted_at)
+     VALUES ($1, $2, $3, $4, $4, '2026-07-01', '2026-07-31', $5, $6, $7, 'offen', $8, $9)`,
     [
       id,
       opts.org,
@@ -150,6 +160,8 @@ async function legeRechnung(opts: {
       opts.betragEuro,
       opts.bezahltEuro ?? 0,
       opts.status ?? 'freigegeben',
+      opts.festgeschrieben === false ? null : '2026-08-01T09:00:00Z',
+      opts.geloescht ? '2026-08-05T09:00:00Z' : null,
     ] as never[],
   )
   return id
@@ -720,6 +732,235 @@ describe('createSepaBatch — Sammelauftrag', () => {
     ).rejects.toThrow(/Keine einziehbaren Rechnungen/)
 
     expect(await zaehle('sepa_batch_items')).toBe(1)
+  })
+
+  /**
+   * BEFUND B-5 — die Sperrliste war die falsche Richtung.
+   *
+   * B-3 hatte eine Liste NICHT einziehbarer Status eingefuehrt
+   * ('entwurf', 'storniert', 'abgeschrieben', 'akzeptiert', 'bezahlt').
+   * Damit war jeder Status einziehbar, der zufaellig nicht daraufstand —
+   * und der Status-Automat kennt fuenfzehn. Durchgerutscht sind unter
+   * anderem 'geprueft' (nicht festgeschrieben, nie beim Kunden),
+   * 'strittig' (der Kunde bestreitet die Forderung gerade),
+   * 'korrektur_erforderlich' (die Rechnung ist bekannt falsch) und
+   * 'gekuerzt' (der offene Betrag steht noch nicht fest).
+   *
+   * Jeder dieser Faelle bedeutet eine Abbuchung, die dem Unternehmen
+   * nicht zusteht. Jetzt gilt eine Erlaubnisliste: ein Status muss hier
+   * bewusst freigeschaltet werden, sonst wird nicht eingezogen.
+   */
+  it('zieht geprueft/strittig/korrektur_erforderlich/gekuerzt/abgelehnt NICHT ein', async () => {
+    const gesperrt: string[] = []
+    for (const [i, status] of [
+      'geprueft',
+      'strittig',
+      'korrektur_erforderlich',
+      'gekuerzt',
+      'abgelehnt',
+      'erneut_eingereicht',
+    ].entries()) {
+      gesperrt.push(
+        await legeRechnung({
+          org: ORG_A,
+          klient: KLIENT_A,
+          nummer: `RE-2026-01${String(i).padStart(2, '0')}`,
+          betragEuro: 40 + i,
+          status,
+        }),
+      )
+    }
+
+    const r = await createSepaBatch(admin, {
+      organizationId: ORG_A,
+      invoiceIds: [rechnung1, ...gesperrt],
+      requestedCollectionDate: '2026-09-01',
+      actorId: ADMIN_A,
+    })
+
+    // Nur die freigegebene Rechnung geht durch.
+    expect(r.totalItems).toBe(1)
+    expect(r.totalCents).toBe(12000)
+    expect(r.skipped.map(s => s.invoiceId).sort()).toEqual([...gesperrt].sort())
+    for (const s of r.skipped) expect(s.reason).toMatch(/kein Einzug/)
+  })
+
+  it('zieht die vier freigegebenen Status ein', async () => {
+    // Gegenprobe zur Erlaubnisliste: sie darf nicht so eng sein, dass der
+    // normale Privatkundenweg (versendet, teilweise bezahlt) still steht.
+    const ids: string[] = []
+    for (const [i, status] of [
+      'uebermittelt',
+      'quittiert',
+      'teilweise_bezahlt',
+    ].entries()) {
+      ids.push(
+        await legeRechnung({
+          org: ORG_A,
+          klient: KLIENT_A,
+          nummer: `RE-2026-02${String(i).padStart(2, '0')}`,
+          betragEuro: 100,
+          bezahltEuro: status === 'teilweise_bezahlt' ? 40 : 0,
+          status,
+        }),
+      )
+    }
+
+    const r = await createSepaBatch(admin, {
+      organizationId: ORG_A,
+      invoiceIds: [rechnung1, ...ids],
+      requestedCollectionDate: '2026-09-01',
+      actorId: ADMIN_A,
+    })
+
+    expect(r.totalItems).toBe(4)
+    // 120 + 100 + 100 + (100 - 40) = 380 EUR; der Teilzahler nur mit Restbetrag.
+    expect(r.totalCents).toBe(38000)
+  })
+
+  /**
+   * BEFUND B-6 — der Einzug war der einzige Aussenweg ohne Festschreibungstor.
+   *
+   * Im ganzen Haus gilt: ohne `frozen_at` verlaesst nichts das Haus
+   * (lib/billing/versand/rechnung-versand.ts prueft es, das Pilot-
+   * Kontrollzentrum meldet Verstoesse als rot). Der Lastschrifteinzug
+   * hat es als einziger nie geprueft. Eine Rechnung ohne Festschreibung
+   * ist inhaltlich noch aenderbar — ihr Betrag ist nicht verbindlich,
+   * darf also auch nicht vom Konto des Kunden geholt werden.
+   */
+  it('zieht eine nicht festgeschriebene Rechnung NICHT ein', async () => {
+    const ohneFestschreibung = await legeRechnung({
+      org: ORG_A,
+      klient: KLIENT_A,
+      nummer: 'RE-2026-0300',
+      betragEuro: 90,
+      status: 'freigegeben',
+      festgeschrieben: false,
+    })
+
+    const r = await createSepaBatch(admin, {
+      organizationId: ORG_A,
+      invoiceIds: [rechnung1, ohneFestschreibung],
+      requestedCollectionDate: '2026-09-01',
+      actorId: ADMIN_A,
+    })
+
+    expect(r.totalItems).toBe(1)
+    expect(r.skipped).toEqual([
+      { invoiceId: ohneFestschreibung, reason: 'Nicht festgeschrieben — kein Einzug' },
+    ])
+  })
+
+  /**
+   * BEFUND B-7 — geloeschte Rechnungen wurden eingezogen.
+   *
+   * `invoices.deleted_at` ist der Soft-Delete des Hauses; der Versandweg
+   * filtert darauf. Der Einzug las die Rechnungen ohne diesen Filter. Eine
+   * Rechnung, die in der Oberflaeche nicht mehr existiert, holte also
+   * weiterhin Geld vom Konto des Kunden — und niemand konnte den Vorgang
+   * der Rechnung zuordnen, weil sie nirgends mehr auftaucht.
+   */
+  it('zieht eine geloeschte Rechnung NICHT ein', async () => {
+    const geloescht = await legeRechnung({
+      org: ORG_A,
+      klient: KLIENT_A,
+      nummer: 'RE-2026-0400',
+      betragEuro: 80,
+      status: 'freigegeben',
+      geloescht: true,
+    })
+
+    const r = await createSepaBatch(admin, {
+      organizationId: ORG_A,
+      invoiceIds: [rechnung1, geloescht],
+      requestedCollectionDate: '2026-09-01',
+      actorId: ADMIN_A,
+    })
+
+    expect(r.totalItems).toBe(1)
+    const items = await zeilen<{ invoice_id: string }>(
+      'SELECT invoice_id FROM public.sepa_batch_items',
+    )
+    expect(items.map(i => i.invoice_id)).toEqual([rechnung1])
+  })
+
+  /**
+   * BEFUND B-8 — die Sperre gegen den doppelten Einzug war ein Wettlauf.
+   *
+   * B-4 hat den doppelten Einzug in TypeScript gesperrt, aber als
+   * Lesen-dann-Schreiben: zwei gleichzeitige Laeufe mit derselben
+   * Rechnung sehen beide eine leere Liste und legen beide einen Posten
+   * an. Eine Datenbank-Bedingung gab es dafuer nicht.
+   *
+   * Hier wird der Wettlauf nachgestellt, indem der konkurrierende Posten
+   * direkt vor dem Nachpruefen eingefuegt wird — genau das Fenster, das
+   * ein paralleler Lauf hat. Erwartet wird: der Lauf nimmt sich selbst
+   * vollstaendig zurueck (Batch UND Posten), und der aeltere Posten
+   * bleibt allein stehen. Zurueckgenommen wird der ganze Lauf, weil die
+   * pain.008-Datei mit allen Posten erzeugt wurde — ein Lauf ohne eine
+   * seiner Positionen waere in sich falsch.
+   */
+  it('nimmt sich zurueck, wenn ein paralleler Lauf dieselbe Rechnung zuerst hatte', async () => {
+    const FREMD_BATCH = 'ba000000-0000-4000-8000-00000000b111'
+    const FREMD_ITEM = '17000000-0000-4000-8000-000000001111'
+
+    // Konkurrenz-Batch mit AELTEREM Posten — er muss gewinnen.
+    await db.query(
+      `INSERT INTO public.sepa_batches
+         (id, organization_id, batch_number, batch_date, total_items, total_cents,
+          status, requested_collection_date)
+       VALUES ($1, $2, 'SEPA-PARALLEL', '2026-08-20', 1, 12000, 'erstellt', '2026-09-01')`,
+      [FREMD_BATCH, ORG_A] as never[],
+    )
+
+    const originalInsert = (admin as unknown as { from: (t: string) => unknown }).from
+    let eingeschleust = false
+    ;(admin as unknown as { from: (t: string) => unknown }).from = function (tabelle: string) {
+      const bauer = originalInsert.call(this, tabelle) as Record<string, unknown>
+      if (tabelle === 'sepa_batch_items' && !eingeschleust) {
+        const echterInsert = (bauer.insert as (v: unknown) => unknown).bind(bauer)
+        bauer.insert = async (werte: unknown) => {
+          const r = await echterInsert(werte)
+          if (!eingeschleust) {
+            eingeschleust = true
+            // Der parallele Lauf war schneller: sein Posten ist AELTER.
+            await db.query(
+              `INSERT INTO public.sepa_batch_items
+                 (id, organization_id, batch_id, invoice_id, mandate_id, amount_cents,
+                  end_to_end_id, status, created_at)
+               SELECT $1, $2, $3, $4, mandate_id, amount_cents, 'AE-PARALLEL', 'offen',
+                      created_at - interval '1 minute'
+                 FROM public.sepa_batch_items WHERE invoice_id = $4 LIMIT 1`,
+              [FREMD_ITEM, ORG_A, FREMD_BATCH, rechnung1] as never[],
+            )
+          }
+          return r
+        }
+      }
+      return bauer
+    } as never
+
+    try {
+      await expect(
+        createSepaBatch(admin, {
+          organizationId: ORG_A,
+          invoiceIds: [rechnung1],
+          requestedCollectionDate: '2026-09-15',
+          actorId: ADMIN_A,
+        }),
+      ).rejects.toThrow(/Paralleler Zugriff/)
+    } finally {
+      ;(admin as unknown as { from: unknown }).from = originalInsert as never
+    }
+
+    // Nur der aeltere Posten steht noch — es wurde genau EINMAL eingezogen.
+    const items = await zeilen<{ id: string; batch_id: string }>(
+      'SELECT id, batch_id FROM public.sepa_batch_items',
+    )
+    expect(items).toHaveLength(1)
+    expect(items[0].id).toBe(FREMD_ITEM)
+    // Der eigene Batch ist restlos verschwunden — keine Karteileiche.
+    expect(await zaehle('sepa_batches', `id <> '${FREMD_BATCH}'`)).toBe(0)
   })
 
   it('nimmt eine zurueckgegebene Rechnung wieder auf', async () => {
