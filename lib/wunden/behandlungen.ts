@@ -3,22 +3,35 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { WoundMaterial, WoundTreatment } from './types'
+import { UserFacingError } from '@/lib/api/user-facing-error'
+import { assertZeitstempelNichtInZukunft, type WoundMaterial, type WoundTreatment, type WundStatus } from './types'
 
 function normalisiereMaterialien(materialien: unknown): WoundMaterial[] {
   if (materialien === undefined || materialien === null) return []
-  if (!Array.isArray(materialien)) throw new Error('materialien muss eine Liste sein.')
+  if (!Array.isArray(materialien)) throw new UserFacingError('materialien muss eine Liste sein.')
   return materialien.map((m, i) => {
     const name = typeof m?.name === 'string' ? m.name.trim() : ''
-    if (!name) throw new Error(`Material ${i + 1}: name ist Pflichtfeld.`)
+    if (!name) throw new UserFacingError(`Material ${i + 1}: name ist Pflichtfeld.`)
     const menge = typeof m?.menge === 'string' && m.menge.trim() ? m.menge.trim() : undefined
     return menge ? { name, menge } : { name }
   })
 }
 
+/** Wirft, wenn die Wunde bereits abgeheilt ist — Verbandwechsel wird dann nicht mehr protokolliert. */
+function assertWundeBeschreibbar(wundStatus: WundStatus): void {
+  if (wundStatus === 'abgeheilt') {
+    throw new UserFacingError(
+      'Wunde ist als abgeheilt markiert. Für einen neuen Verbandwechsel muss der Status zuerst geändert werden.',
+      409,
+    )
+  }
+}
+
 export interface CreateTreatmentParams {
   organizationId: string
   woundId: string
+  /** Aktueller Status der Wunde — steuert die Sperr-Logik für abgeheilte Wunden. */
+  wundStatus: WundStatus
   durchgefuehrtVon: string
   durchgefuehrtAm?: string | null
   massnahme: string
@@ -30,7 +43,9 @@ export interface CreateTreatmentParams {
 }
 
 export async function createTreatment(supabase: SupabaseClient, params: CreateTreatmentParams): Promise<WoundTreatment> {
-  if (!params.massnahme?.trim()) throw new Error('Maßnahme ist ein Pflichtfeld.')
+  assertWundeBeschreibbar(params.wundStatus)
+  if (!params.massnahme?.trim()) throw new UserFacingError('Maßnahme ist ein Pflichtfeld.')
+  assertZeitstempelNichtInZukunft(params.durchgefuehrtAm, 'Durchführungszeitpunkt')
 
   const { data, error } = await supabase
     .from('wound_treatments')
