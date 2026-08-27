@@ -30,6 +30,38 @@ function assertNachrichtGueltig(
   assertErlaubt(data.kategorie, NACHRICHTEN_KATEGORIE_WERTE, 'kategorie')
 }
 
+/**
+ * Mandantenschutz für Empfänger-IDs aus dem Request-Body (app/admin/nachrichten,
+ * app/engel/nachrichten übergeben sie als frei eingetragene UUID-Liste).
+ * Läuft über Service-Role (createAdminClient) — RLS greift hier NICHT, ohne
+ * diese Prüfung könnte eine Nachricht Empfänger einer fremden Organisation
+ * referenzieren (organization_id der Zeile bliebe trotzdem die des Absenders).
+ */
+async function assertEmpfaengerGehoerenZuOrg(
+  supabase: SupabaseClient,
+  empfaengerIds: string[],
+  organizationId: string,
+): Promise<void> {
+  const eindeutig = [...new Set(empfaengerIds)]
+  if (eindeutig.length === 0) return
+
+  const [mitglieder, caregivers] = await Promise.all([
+    supabase.from('organization_members').select('user_id').eq('organization_id', organizationId).in('user_id', eindeutig),
+    supabase.from('caregivers').select('user_id').eq('organization_id', organizationId).in('user_id', eindeutig),
+  ])
+  if (mitglieder.error) throw new Error(`Empfänger konnten nicht geprüft werden: ${mitglieder.error.message}`)
+  if (caregivers.error) throw new Error(`Empfänger konnten nicht geprüft werden: ${caregivers.error.message}`)
+
+  const bekannt = new Set([
+    ...(mitglieder.data ?? []).map((m: { user_id: string }) => m.user_id),
+    ...(caregivers.data ?? []).map((c: { user_id: string }) => c.user_id),
+  ])
+  const unbekannt = eindeutig.filter(id => !bekannt.has(id))
+  if (unbekannt.length > 0) {
+    throw new UserFacingError('Ein oder mehrere Empfänger gehören nicht zu dieser Organisation.')
+  }
+}
+
 export async function listPosteingang(
   supabase: SupabaseClient,
   filter: ListPosteingangFilter,
@@ -82,6 +114,7 @@ export async function createNachricht(
   },
 ): Promise<OpsNachricht> {
   assertNachrichtGueltig(params.data, params.empfaengerIds)
+  await assertEmpfaengerGehoerenZuOrg(supabase, params.empfaengerIds, params.organizationId)
   const { data: nachricht, error: nErr } = await supabase
     .from('ops_nachrichten')
     .insert({ ...params.data, betreff: params.data.betreff.trim(), inhalt: params.data.inhalt.trim(), organization_id: params.organizationId })
@@ -119,6 +152,7 @@ export async function createAntwort(
     .maybeSingle()
   if (pErr || !parent) throw new UserFacingError('Eltern-Nachricht nicht gefunden oder gehoert nicht zur Organisation.')
   assertNachrichtGueltig(params.data, params.empfaengerIds)
+  await assertEmpfaengerGehoerenZuOrg(supabase, params.empfaengerIds, params.organizationId)
 
   const { data: nachricht, error: nErr } = await supabase
     .from('ops_nachrichten')
