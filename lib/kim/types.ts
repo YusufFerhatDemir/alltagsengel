@@ -87,7 +87,8 @@ export interface KimAttachment {
 }
 
 export interface KimAttachmentMitUrl extends KimAttachment {
-  signed_url: string
+  /** null, wenn fuer diesen Anhang keine signierte URL erzeugt werden konnte. */
+  signed_url: string | null
 }
 
 export interface KimAddress {
