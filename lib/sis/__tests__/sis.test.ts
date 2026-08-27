@@ -199,6 +199,14 @@ test('upsertRisiko schreibt per Upsert und respektiert die Sperre', async () => 
   )
 })
 
+test('upsertRisiko weist eine bereits abgeschlossene (aber noch nicht gesperrte) SIS zurück', async () => {
+  const abgeschlossen = sisClient({ ...KOPF_ENTWURF, status: 'abgeschlossen' })
+  await assert.rejects(
+    () => upsertRisiko(abgeschlossen.supabase, { organizationId: 'org-1', assessmentId: 'sis-1', risiko: 'sturz' }),
+    /nur im Entwurf/
+  )
+})
+
 // ── Anlage ───────────────────────────────────────────────────────
 
 test('createAssessment initialisiert Themenfelder und Risikomatrix', async () => {
