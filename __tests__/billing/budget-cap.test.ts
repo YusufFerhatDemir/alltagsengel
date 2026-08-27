@@ -24,6 +24,9 @@ import {
   deckelAusLage,
   UnbekannterBudgetTypError,
   BudgetLageNichtErmittelbarError,
+  uebertragVerfallsdatum,
+  uebertragGiltNoch,
+  UEBERTRAG_VERFALL_MONAT_TAG,
   type BudgetLage,
 } from '@/lib/billing/core/budget-cap'
 import { createInvoiceDraft, wendeBudgetDeckelAn } from '@/lib/billing/core/invoice-engine'
@@ -747,5 +750,326 @@ describe('deckelAusLage', () => {
     const r = deckelAusLage(lage, 500)
     expect(r.budgetAnteilEuro).toBe(262)   // 2 × 131
     expect(r.privatAnteilEuro).toBe(238)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 5 — Befunde vom 27.08.2026
+// ---------------------------------------------------------------------------
+//
+// Drei Wege, auf denen der Deckel eine falsche Budgetlage bekam:
+//   B) der gedeckelte Privatanteil zaehlte weiter als Kassenverbrauch,
+//   C) geloeschte Rechnungen verbrauchten dauerhaft Budget,
+//   D) der § 45b-Uebertrag wurde ganzjaehrig gewaehrt, obwohl er am 30.06.
+//      verfaellt.
+// Der Doppelgaenger `fakeSupabase` ist derselbe wie oben — geprueft wird
+// ausschliesslich, was aus den gelesenen Zeilen wird.
+
+describe('uebertragVerfallsdatum / uebertragGiltNoch (§ 45b Abs. 1 S. 4)', () => {
+  it('nimmt den gepflegten Verfallstag aus client_budgets', () => {
+    expect(uebertragVerfallsdatum('2026-06-30', 2026)).toBe('2026-06-30')
+  })
+
+  it('schneidet einen Zeitstempel auf den Kalendertag', () => {
+    expect(uebertragVerfallsdatum('2026-06-30T23:59:59Z', 2026)).toBe('2026-06-30')
+  })
+
+  it('faellt auf den gesetzlichen Stichtag zurueck, wenn nichts gepflegt ist', () => {
+    // Kein geratener Ersatzwert, sondern die Regel selbst: ohne Stichtag
+    // waere der Uebertrag unbegrenzt gueltig.
+    expect(uebertragVerfallsdatum(null, 2026)).toBe(`2026-${UEBERTRAG_VERFALL_MONAT_TAG}`)
+    expect(uebertragVerfallsdatum('', 2026)).toBe('2026-06-30')
+    expect(uebertragVerfallsdatum('unsinn', 2026)).toBe('2026-06-30')
+  })
+
+  it('gilt fuer den gesamten Juni und ab Juli nicht mehr', () => {
+    expect(uebertragGiltNoch('2026-01', '2026-06-30')).toBe(true)
+    expect(uebertragGiltNoch('2026-06', '2026-06-30')).toBe(true)
+    expect(uebertragGiltNoch('2026-07', '2026-06-30')).toBe(false)
+    expect(uebertragGiltNoch('2026-12', '2026-06-30')).toBe(false)
+  })
+})
+
+describe('ermittleBudgetLage — Uebertrag verfaellt zum 30.06. (Befund D)', () => {
+  const mitUebertrag = (expires: string | null) => fakeSupabase({
+    client_budgets: {
+      data: {
+        annual_amount: 1572,
+        carryover_amount: 300,
+        carryover_expires: expires,
+        combined_annual_amount: 0,
+      },
+      error: null,
+    },
+    invoices: { data: [], error: null },
+  })
+
+  it('gewaehrt den Uebertrag im Juni noch', async () => {
+    const { client } = mitUebertrag('2026-06-30')
+    const lage = await ermittleBudgetLage(client, {
+      clientId: CLIENT, organizationId: ORG, periodMonth: '2026-06', topf: 'entlastung',
+    })
+    expect(lage.uebertragEuro).toBe(300)
+    expect(lage.uebertragVerfallen).toBe(false)
+    expect(lage.uebertragVerfaelltAm).toBe('2026-06-30')
+  })
+
+  it('streicht ihn ab Juli — vorher erhoehte er den Deckel ganzjaehrig', async () => {
+    const { client } = mitUebertrag('2026-06-30')
+    const lage = await ermittleBudgetLage(client, {
+      clientId: CLIENT, organizationId: ORG, periodMonth: '2026-07', topf: 'entlastung',
+    })
+    expect(lage.uebertragEuro).toBe(0)
+    expect(lage.uebertragVerfallen).toBe(true)
+  })
+
+  it('unterscheidet „verfallen" von „gab es nie"', async () => {
+    const { client } = fakeSupabase({
+      client_budgets: {
+        data: { annual_amount: 1572, carryover_amount: 0, carryover_expires: '2026-06-30', combined_annual_amount: 0 },
+        error: null,
+      },
+      invoices: { data: [], error: null },
+    })
+    const lage = await ermittleBudgetLage(client, {
+      clientId: CLIENT, organizationId: ORG, periodMonth: '2026-07', topf: 'entlastung',
+    })
+    expect(lage.uebertragEuro).toBe(0)
+    expect(lage.uebertragVerfallen).toBe(false)
+  })
+
+  it('wendet den gesetzlichen Stichtag auch ohne gepflegtes carryover_expires an', async () => {
+    const { client } = mitUebertrag(null)
+    const juni = await ermittleBudgetLage(client, {
+      clientId: CLIENT, organizationId: ORG, periodMonth: '2026-06', topf: 'entlastung',
+    })
+    const juli = await ermittleBudgetLage(client, {
+      clientId: CLIENT, organizationId: ORG, periodMonth: '2026-07', topf: 'entlastung',
+    })
+    expect(juni.uebertragEuro).toBe(300)
+    expect(juli.uebertragEuro).toBe(0)
+  })
+
+  it('fuehrt fuer § 42a gar keinen Verfallstag — dort gibt es keinen Uebertrag', async () => {
+    const { client } = mitUebertrag('2026-06-30')
+    const lage = await ermittleBudgetLage(client, {
+      clientId: CLIENT, organizationId: ORG, periodMonth: '2026-07', topf: 'verhinderung',
+    })
+    expect(lage.uebertragEuro).toBe(0)
+    expect(lage.uebertragVerfaelltAm).toBeNull()
+    expect(lage.uebertragVerfallen).toBe(false)
+  })
+
+  it('der Deckel folgt dem Verfall — Juli hat 300 EUR weniger Spielraum', async () => {
+    const { client } = mitUebertrag('2026-06-30')
+    const juni = await ermittleBudgetLage(client, {
+      clientId: CLIENT, organizationId: ORG, periodMonth: '2026-06', topf: 'entlastung',
+    })
+    const juli = await ermittleBudgetLage(client, {
+      clientId: CLIENT, organizationId: ORG, periodMonth: '2026-07', topf: 'entlastung',
+    })
+    expect(deckelAusLage(juni, 0).limitJahrEuro).toBe(1872)
+    expect(deckelAusLage(juli, 0).limitJahrEuro).toBe(1572)
+  })
+})
+
+describe('ermittleBudgetLage — gedeckelter Privatanteil (Befund B)', () => {
+  it('zaehlt nur den Kassenanteil, nicht die volle Positionssumme', async () => {
+    // Januar: 300 EUR Leistungen, auf 131 EUR Kassenanteil gedeckelt,
+    // 169 EUR privat. Die Positionen tragen weiterhin budget_type
+    // 'entlastung' — `wendeBudgetDeckelAn()` fasst sie nicht an.
+    const { client } = fakeSupabase({
+      client_budgets: { data: null, error: null },
+      invoices: {
+        data: [{
+          id: 'inv-1', status: 'bezahlt', period_start: '2026-01-01',
+          budget_amount: 131, correction_of: null, correction_type: null,
+        }],
+        error: null,
+      },
+      invoice_items: {
+        data: [{ invoice_id: 'inv-1', amount: 300, budget_type: 'entlastung' }],
+        error: null,
+      },
+    })
+    const lage = await ermittleBudgetLage(client, {
+      clientId: CLIENT, organizationId: ORG, periodMonth: '2026-02', topf: 'entlastung',
+    })
+    // Vorher: 300 — der Klient verlor 169 EUR Budget, die er privat bezahlt hat.
+    expect(lage.verbrauchtJahrEuro).toBe(131)
+    expect(lage.verbrauchtBisMonatEuro).toBe(131)
+    // Februar: kumulierter Anspruch 262, verbraucht 131 → 131 verfuegbar.
+    expect(deckelAusLage(lage, 200).verfuegbarEuro).toBe(131)
+  })
+
+  it('nimmt die Positionssumme, wenn budget_amount nicht gefuehrt wird', async () => {
+    // Korrekturrechnungen setzen den Kopfbetrag nicht — dann ist die
+    // Positionssumme die einzige belastbare Groesse.
+    const { client } = fakeSupabase({
+      client_budgets: { data: null, error: null },
+      invoices: {
+        data: [{ id: 'inv-1', status: 'bezahlt', period_start: '2026-01-01', budget_amount: null }],
+        error: null,
+      },
+      invoice_items: {
+        data: [{ invoice_id: 'inv-1', amount: 90, budget_type: 'entlastung' }],
+        error: null,
+      },
+    })
+    const lage = await ermittleBudgetLage(client, {
+      clientId: CLIENT, organizationId: ORG, periodMonth: '2026-02', topf: 'entlastung',
+    })
+    expect(lage.verbrauchtJahrEuro).toBe(90)
+  })
+
+  it('nimmt die Positionssumme, wenn die Rechnung mehrere Toepfe mischt', async () => {
+    // Dann sagt der Kopfbetrag nichts ueber den geprueften Topf aus.
+    const { client } = fakeSupabase({
+      client_budgets: { data: null, error: null },
+      invoices: {
+        data: [{ id: 'inv-1', status: 'bezahlt', period_start: '2026-01-01', budget_amount: 500 }],
+        error: null,
+      },
+      invoice_items: {
+        data: [
+          { invoice_id: 'inv-1', amount: 80, budget_type: 'entlastung' },
+          { invoice_id: 'inv-1', amount: 420, budget_type: 'verhinderung' },
+        ],
+        error: null,
+      },
+    })
+    const lage = await ermittleBudgetLage(client, {
+      clientId: CLIENT, organizationId: ORG, periodMonth: '2026-02', topf: 'entlastung',
+    })
+    expect(lage.verbrauchtJahrEuro).toBe(80)
+  })
+
+  it('deckelt gegen die Positionssumme, falls der Kopfbetrag darueber laege', async () => {
+    const { client } = fakeSupabase({
+      client_budgets: { data: null, error: null },
+      invoices: {
+        data: [{ id: 'inv-1', status: 'bezahlt', period_start: '2026-01-01', budget_amount: 999 }],
+        error: null,
+      },
+      invoice_items: {
+        data: [{ invoice_id: 'inv-1', amount: 100, budget_type: 'entlastung' }],
+        error: null,
+      },
+    })
+    const lage = await ermittleBudgetLage(client, {
+      clientId: CLIENT, organizationId: ORG, periodMonth: '2026-02', topf: 'entlastung',
+    })
+    expect(lage.verbrauchtJahrEuro).toBe(100)
+  })
+
+  it('eine vollstaendig gedeckelte Rechnung (budget_amount 0) verbraucht nichts', async () => {
+    const { client } = fakeSupabase({
+      client_budgets: { data: null, error: null },
+      invoices: {
+        data: [{ id: 'inv-1', status: 'bezahlt', period_start: '2026-01-01', budget_amount: 0 }],
+        error: null,
+      },
+      invoice_items: {
+        data: [{ invoice_id: 'inv-1', amount: 250, budget_type: 'entlastung' }],
+        error: null,
+      },
+    })
+    const lage = await ermittleBudgetLage(client, {
+      clientId: CLIENT, organizationId: ORG, periodMonth: '2026-02', topf: 'entlastung',
+    })
+    expect(lage.verbrauchtJahrEuro).toBe(0)
+  })
+})
+
+describe('ermittleBudgetLage — geloeschte und ersetzte Rechnungen (Befund C/E)', () => {
+  it('filtert geloeschte Rechnungen bereits in der Abfrage (deleted_at IS NULL)', async () => {
+    // Ohne diesen Filter verbrauchte ein geloeschter Entwurf dauerhaft
+    // Budget, obwohl die Rechnungs-RPC ihn ueber die Idempotenz
+    // (`deleted_at IS NULL`) gar nicht mehr kennt.
+    const { client, from } = fakeSupabase({
+      client_budgets: { data: null, error: null },
+      invoices: { data: [], error: null },
+    })
+    await ermittleBudgetLage(client, {
+      clientId: CLIENT, organizationId: ORG, periodMonth: '2026-03', topf: 'entlastung',
+    })
+    const invoiceKette = from.mock.results
+      .map(r => r.value as Record<string, { mock: { calls: unknown[][] } }>)
+      .find(k => (k.is as { mock: { calls: unknown[][] } }).mock.calls.length > 0)
+    expect(invoiceKette).toBeDefined()
+    expect((invoiceKette!.is as unknown as { mock: { calls: unknown[][] } }).mock.calls[0])
+      .toEqual(['deleted_at', null])
+  })
+
+  it('zaehlt eine Korrekturrechnung statt des ersetzten Originals', async () => {
+    // correctInvoice() schreibt den vollstaendigen korrigierten Betrag, nicht
+    // die Differenz. Zaehlte man beide, verbrauchte eine Korrektur das
+    // Budget ein zweites Mal.
+    const { client } = fakeSupabase({
+      client_budgets: { data: null, error: null },
+      invoices: {
+        data: [
+          { id: 'inv-1', status: 'freigegeben', period_start: '2026-01-01', budget_amount: 200, correction_of: null, correction_type: null },
+          { id: 'inv-k', status: 'entwurf', period_start: '2026-01-01', budget_amount: null, correction_of: 'inv-1', correction_type: 'korrektur' },
+        ],
+        error: null,
+      },
+      invoice_items: {
+        data: [
+          { invoice_id: 'inv-1', amount: 200, budget_type: 'entlastung' },
+          { invoice_id: 'inv-k', amount: 120, budget_type: 'entlastung' },
+        ],
+        error: null,
+      },
+    })
+    const lage = await ermittleBudgetLage(client, {
+      clientId: CLIENT, organizationId: ORG, periodMonth: '2026-02', topf: 'entlastung',
+    })
+    expect(lage.verbrauchtJahrEuro).toBe(120)
+  })
+
+  it('eine Gutschrift ersetzt das Original NICHT', async () => {
+    const { client } = fakeSupabase({
+      client_budgets: { data: null, error: null },
+      invoices: {
+        data: [
+          { id: 'inv-1', status: 'freigegeben', period_start: '2026-01-01', budget_amount: 200, correction_of: null, correction_type: null },
+          { id: 'inv-g', status: 'entwurf', period_start: '2026-01-01', budget_amount: null, correction_of: 'inv-1', correction_type: 'gutschrift' },
+        ],
+        error: null,
+      },
+      invoice_items: {
+        data: [{ invoice_id: 'inv-1', amount: 200, budget_type: 'entlastung' }],
+        error: null,
+      },
+    })
+    const lage = await ermittleBudgetLage(client, {
+      clientId: CLIENT, organizationId: ORG, periodMonth: '2026-02', topf: 'entlastung',
+    })
+    expect(lage.verbrauchtJahrEuro).toBe(200)
+  })
+
+  it('ein storniertes Original bleibt storniert, auch wenn eine Korrektur darauf zeigt', async () => {
+    const { client } = fakeSupabase({
+      client_budgets: { data: null, error: null },
+      invoices: {
+        data: [
+          { id: 'inv-1', status: 'storniert', period_start: '2026-01-01', budget_amount: 200 },
+          { id: 'inv-k', status: 'entwurf', period_start: '2026-01-01', budget_amount: null, correction_of: 'inv-1', correction_type: 'korrektur' },
+        ],
+        error: null,
+      },
+      invoice_items: {
+        data: [
+          { invoice_id: 'inv-1', amount: 200, budget_type: 'entlastung' },
+          { invoice_id: 'inv-k', amount: 120, budget_type: 'entlastung' },
+        ],
+        error: null,
+      },
+    })
+    const lage = await ermittleBudgetLage(client, {
+      clientId: CLIENT, organizationId: ORG, periodMonth: '2026-02', topf: 'entlastung',
+    })
+    expect(lage.verbrauchtJahrEuro).toBe(120)
   })
 })

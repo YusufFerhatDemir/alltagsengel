@@ -333,12 +333,21 @@ export interface BudgetLage {
   jahr: number
   periodMonth: string
   jahresanspruchEuro: number
-  monatsanspruchEuro: number | null
+  /** Uebertrag, soweit im Abrechnungsmonat noch nutzbar (EUR). */
   uebertragEuro: number
+  monatsanspruchEuro: number | null
   verbrauchtBisMonatEuro: number
   verbrauchtJahrEuro: number
   /** Woher Anspruch und Uebertrag stammen — fuer den Audit-Trail. */
   anspruchQuelle: 'client_budgets' | 'gesetzlich'
+  /** Stichtag, an dem der § 45b-Uebertrag verfaellt — `null` bei § 42a. */
+  uebertragVerfaelltAm: string | null
+  /**
+   * true, wenn ein Uebertrag hinterlegt war, im Abrechnungsmonat aber nicht
+   * mehr gilt. Steht getrennt neben `uebertragEuro: 0`, damit der Audit-Trail
+   * „verfallen" von „gab es nie" unterscheiden kann.
+   */
+  uebertragVerfallen: boolean
 }
 
 /** Rechnungsstatus, die keinen Anspruch verbrauchen. */
@@ -350,15 +359,87 @@ function letzterTagDesMonats(periodMonth: string): string {
   return `${periodMonth}-${String(tag).padStart(2, '0')}`
 }
 
+// ---------------------------------------------------------------------------
+// § 45b-Uebertrag: Verfall zum 30.06.
+// ---------------------------------------------------------------------------
+
+/**
+ * Stichtag, an dem ein Uebertrag aus dem Vorjahr verfaellt (Monat-Tag).
+ *
+ * § 45b Abs. 1 S. 4 SGB XI: nicht verbrauchte Betraege des Entlastungs-
+ * betrags koennen in das folgende Kalenderhalbjahr uebertragen werden und
+ * sind bis zum 30. Juni des Folgejahres zu verwenden. Danach verfallen sie.
+ *
+ * § 42a (VP/KZP) kennt gar keinen Uebertrag — dort ist der Wert nie gesetzt.
+ */
+export const UEBERTRAG_VERFALL_MONAT_TAG = '06-30'
+
+/**
+ * Verfallstag des Uebertrags fuer ein Leistungsjahr.
+ *
+ * `client_budgets.carryover_expires` wird von `uebertrageJahresbudgets()`
+ * gepflegt. Fehlt der Wert (Altbestand, manuell angelegte Zeile), gilt der
+ * gesetzliche Stichtag — das ist kein geratener Ersatzwert, sondern die
+ * Regel selbst. Ihn wegzulassen hiesse, den Uebertrag unbegrenzt zu gewaehren.
+ */
+export function uebertragVerfallsdatum(
+  gespeichert: string | null | undefined,
+  jahr: number,
+): string {
+  const wert = String(gespeichert ?? '').trim().slice(0, 10)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(wert)) return wert
+  return `${jahr}-${UEBERTRAG_VERFALL_MONAT_TAG}`
+}
+
+/**
+ * Steht der Uebertrag im Abrechnungsmonat noch zur Verfuegung?
+ *
+ * Massgeblich ist der ERSTE Tag des Abrechnungsmonats: Leistungen aus dem
+ * Juni sind bis zum 30.06. erbracht und duerfen den Uebertrag noch nutzen,
+ * Leistungen aus dem Juli nicht mehr. Wer stattdessen auf das Rechnungs-
+ * datum abstellte, liesse den Verfall davon abhaengen, wann jemand den
+ * Rechnungslauf startet.
+ */
+export function uebertragGiltNoch(periodMonth: string, verfallsdatum: string): boolean {
+  return `${periodMonth}-01` <= verfallsdatum
+}
 /**
  * Liest Anspruch, Uebertrag und bereits fakturierten Verbrauch.
  *
- * **Warum der Verbrauch aus `invoice_items` kommt und nicht aus
- * `client_budgets.used_amount`:** `used_amount` wird per Trigger aus
- * `service_records` fortgeschrieben — also aus Leistungen, die zum Zeitpunkt
- * der Rechnung bereits gezaehlt sind. Als Vorher-Wert wuerde es die gerade
- * abzurechnenden Leistungen doppelt zaehlen. `invoice_items.amount` ist das,
- * was tatsaechlich in Rechnung gestellt wurde.
+ * **Warum der Verbrauch nicht aus `client_budgets.used_amount` kommt:**
+ * `used_amount` wird per Trigger aus `service_records` fortgeschrieben — also
+ * aus Leistungen, die zum Zeitpunkt der Rechnung bereits gezaehlt sind. Als
+ * Vorher-Wert wuerde es die gerade abzurechnenden Leistungen doppelt zaehlen.
+ *
+ * **Warum der Verbrauch je Rechnung aus `invoices.budget_amount` kommt und
+ * nicht aus der Summe der `invoice_items` (Befund 27.08.2026):**
+ * `wendeBudgetDeckelAn()` verschiebt den Ueberschuss einer gedeckelten
+ * Rechnung von `budget_amount` nach `private_amount` — die POSITIONEN bleiben
+ * dabei unveraendert und tragen weiter den Kassen-`budget_type`. Wer den
+ * Verbrauch aus den Positionen summiert, zaehlt also auch den Teil mit, den
+ * der Klient privat bezahlt hat. Beispiel: 300 EUR Leistungen im Januar,
+ * gedeckelt auf 131 EUR Kassenanteil und 169 EUR privat. Im Februar meldete
+ * die Positionssumme 300 EUR Verbrauch gegen einen kumulierten Anspruch von
+ * 262 EUR — verfuegbar 0, obwohl tatsaechlich erst 131 EUR verbraucht waren.
+ * Der Klient verlor Monat fuer Monat Budget, das er nie in Anspruch genommen
+ * hatte. `budget_amount` ist der Betrag, der der Pflegekasse tatsaechlich in
+ * Rechnung gestellt wurde.
+ *
+ * Die Positionen werden trotzdem gelesen: sie sagen, zu WELCHEM Topf eine
+ * Rechnung gehoert (`invoices` fuehrt keinen budget_type). Nur wenn alle
+ * Positionen einer Rechnung im geprueften Topf liegen, gilt ihr
+ * `budget_amount`; sonst wird die Positionssumme genommen.
+ *
+ * **Gelöschte Rechnungen** (`deleted_at`) zaehlen nicht mehr mit. Sie taten es
+ * vorher — ein geloeschter Entwurf verbrauchte dauerhaft Budget, obwohl die
+ * Rechnungs-RPC ihn ueber die Idempotenz gar nicht mehr kennt.
+ *
+ * **Ersetzte Rechnungen**: eine Korrekturrechnung (`correction_type =
+ * 'korrektur'`) traegt den vollstaendigen korrigierten Betrag, nicht die
+ * Differenz. Zaehlte man Original UND Korrektur, verbrauchte eine Korrektur
+ * das Budget ein zweites Mal. Das Original faellt deshalb heraus, sobald eine
+ * Korrekturrechnung darauf zeigt. Eine Gutschrift (`'gutschrift'`) ersetzt
+ * nichts und laesst das Original stehen.
  *
  * Fail-closed: jeder Lesefehler wirft. Aufrufer rufen diese Funktion **vor**
  * der Rechnungs-RPC auf, damit im Fehlerfall nichts angelegt ist.
@@ -387,7 +468,7 @@ export async function ermittleBudgetLage(
   // ── 2. Individueller Anspruch aus client_budgets ────────────────────
   const { data: budgetZeile, error: budgetError } = await supabase
     .from('client_budgets')
-    .select('annual_amount, carryover_amount, combined_annual_amount')
+    .select('annual_amount, carryover_amount, carryover_expires, combined_annual_amount')
     .eq('client_id', clientId)
     .eq('organization_id', organizationId)
     .eq('year', jahr)
@@ -401,17 +482,32 @@ export async function ermittleBudgetLage(
 
   let jahresanspruchEuro: number
   let uebertragEuro = 0
+  let uebertragVerfaelltAm: string | null = null
+  let uebertragVerfallen = false
   let anspruchQuelle: BudgetLage['anspruchQuelle'] = 'gesetzlich'
 
   if (topf === 'entlastung') {
     const individuell = Number(budgetZeile?.annual_amount ?? 0)
     jahresanspruchEuro = individuell > 0 ? individuell : gesetz.entlastungJaehrlich
-    uebertragEuro = Math.max(0, Number(budgetZeile?.carryover_amount ?? 0))
     anspruchQuelle = individuell > 0 ? 'client_budgets' : 'gesetzlich'
+
+    // § 45b Abs. 1 S. 4 SGB XI: der Uebertrag aus dem Vorjahr ist bis zum
+    // 30.06. zu verwenden. Er wurde hier bisher ganzjaehrig gewaehrt — eine
+    // Rechnung fuer Oktober bekam denselben erhoehten Deckel wie eine fuer
+    // Maerz, obwohl der Anspruch im Juli erloschen war.
+    const rohUebertrag = Math.max(0, Number(budgetZeile?.carryover_amount ?? 0))
+    uebertragVerfaelltAm = uebertragVerfallsdatum(
+      budgetZeile?.carryover_expires as string | null | undefined,
+      jahr,
+    )
+    const giltNoch = uebertragGiltNoch(periodMonth, uebertragVerfaelltAm)
+    uebertragEuro = giltNoch ? rohUebertrag : 0
+    uebertragVerfallen = !giltNoch && rohUebertrag > 0
   } else {
     const individuell = Number(budgetZeile?.combined_annual_amount ?? 0)
     jahresanspruchEuro = individuell > 0 ? individuell : gesetz.vpKzpKombiniert
     anspruchQuelle = individuell > 0 ? 'client_budgets' : 'gesetzlich'
+    // § 42a kennt keinen Uebertrag — kein Verfallstag zu fuehren.
   }
 
   // Der Monatsanspruch wird NICHT aus client_budgets abgeleitet:
@@ -428,11 +524,12 @@ export async function ermittleBudgetLage(
   // ── 3. Bereits fakturierter Verbrauch ───────────────────────────────
   const { data: rechnungen, error: rechnungenError } = await supabase
     .from('invoices')
-    .select('id, status, period_start')
+    .select('id, status, period_start, budget_amount, correction_of, correction_type')
     .eq('client_id', clientId)
     .eq('organization_id', organizationId)
     .gte('period_start', jahresBeginn)
     .lte('period_start', jahresEnde)
+    .is('deleted_at', null)
 
   if (rechnungenError) {
     throw new BudgetLageNichtErmittelbarError(
@@ -440,15 +537,23 @@ export async function ermittleBudgetLage(
     )
   }
 
-  const relevant = (rechnungen ?? []).filter(
+  const nichtStorniert = (rechnungen ?? []).filter(
     r => !NICHT_VERBRAUCHENDE_STATUS.has(String(r.status ?? ''))
   )
+
+  // Originale, auf die eine Korrekturrechnung zeigt, sind ersetzt.
+  const ersetzt = new Set(
+    nichtStorniert
+      .filter(r => String(r.correction_type ?? '') === 'korrektur' && r.correction_of)
+      .map(r => String(r.correction_of))
+  )
+  const relevant = nichtStorniert.filter(r => !ersetzt.has(String(r.id)))
 
   let verbrauchtJahrEuro = 0
   let verbrauchtBisMonatEuro = 0
 
   if (relevant.length > 0) {
-    const startNachId = new Map(relevant.map(r => [String(r.id), String(r.period_start ?? '')]))
+    const rechnungNachId = new Map(relevant.map(r => [String(r.id), r]))
 
     const { data: posten, error: postenError } = await supabase
       .from('invoice_items')
@@ -461,7 +566,13 @@ export async function ermittleBudgetLage(
       )
     }
 
+    /** Positionslage je Rechnung: Summe im geprueften Topf + Fremdanteil. */
+    const lageJeRechnung = new Map<string, { summeImTopf: number; nurImTopf: boolean }>()
+
     for (const p of posten ?? []) {
+      const rechnungId = String(p.invoice_id)
+      if (!rechnungNachId.has(rechnungId)) continue
+
       let postenTopf: BudgetTopf
       try {
         postenTopf = budgetTopfFuer(String(p.budget_type ?? ''))
@@ -470,15 +581,44 @@ export async function ermittleBudgetLage(
         // still weiten. Er zaehlt konservativ auf den geprueften Topf.
         postenTopf = topf
       }
-      if (postenTopf !== topf) continue
 
       const betrag = Number(p.amount ?? 0)
-      if (!Number.isFinite(betrag)) continue
+      const eintrag = lageJeRechnung.get(rechnungId)
+        ?? { summeImTopf: 0, nurImTopf: true }
 
-      verbrauchtJahrEuro += betrag
-      const start = startNachId.get(String(p.invoice_id)) ?? ''
+      if (postenTopf === topf) {
+        if (Number.isFinite(betrag)) eintrag.summeImTopf += betrag
+      } else {
+        eintrag.nurImTopf = false
+      }
+
+      lageJeRechnung.set(rechnungId, eintrag)
+    }
+
+    for (const [rechnungId, lage] of lageJeRechnung) {
+      const rechnung = rechnungNachId.get(rechnungId)
+      if (!rechnung) continue
+
+      const kassenBetrag = Number(rechnung.budget_amount)
+      // `budget_amount` gilt nur, wenn die ganze Rechnung im geprueften Topf
+      // liegt — sonst enthaelt der Kopfbetrag auch fremde Toepfe. Ist er
+      // nicht gesetzt (Korrekturrechnungen fuehren ihn nicht), bleibt die
+      // Positionssumme massgeblich. `Math.min` deckelt zusaetzlich gegen
+      // einen Kopfbetrag, der ueber der Positionssumme laege.
+      const verbrauch =
+        lage.nurImTopf
+          && rechnung.budget_amount !== null
+          && rechnung.budget_amount !== undefined
+          && Number.isFinite(kassenBetrag)
+          ? Math.min(kassenBetrag, lage.summeImTopf)
+          : lage.summeImTopf
+
+      if (verbrauch === 0) continue
+
+      verbrauchtJahrEuro += verbrauch
+      const start = String(rechnung.period_start ?? '')
       if (start && start <= monatsEnde) {
-        verbrauchtBisMonatEuro += betrag
+        verbrauchtBisMonatEuro += verbrauch
       }
     }
   }
@@ -493,6 +633,8 @@ export async function ermittleBudgetLage(
     verbrauchtBisMonatEuro: aufCent(verbrauchtBisMonatEuro),
     verbrauchtJahrEuro: aufCent(verbrauchtJahrEuro),
     anspruchQuelle,
+    uebertragVerfaelltAm,
+    uebertragVerfallen,
   }
 }
 

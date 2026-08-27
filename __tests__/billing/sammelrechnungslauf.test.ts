@@ -156,6 +156,7 @@ function nachweis(over: Partial<Row> = {}): Row {
     status: 'signed',
     amount: 45,
     proof_status: 'UNTERSCHRIEBEN',
+    billing_status: 'OFFEN',
     signature_hash: null,
     ...over,
   }
@@ -256,6 +257,50 @@ describe('Gruppenbildung', () => {
     }
     const { gruppen } = await ermittleGruppen(stub(store), { organizationId: ORG, periodMonth: MONAT })
     expect(gruppen[0].recordIds).toHaveLength(1)
+  })
+
+  // ── Storno (Befund 27.08.2026) ───────────────────────────────
+  // Ein Storno schreibt nur proof_status/billing_status; service_records.status
+  // bleibt auf 'signed' stehen, weil das status-Werteset keinen Storno-Wert
+  // kennt. Der Lauf zaehlte die Zeile dadurch weiter als abrechenbar und
+  // kuendigte Positionen an, die die RPC seit v10 weglaesst.
+
+  it('laesst einen ueber proof_status stornierten Nachweis aus der Gruppe', async () => {
+    const store: Store = {
+      service_records: [
+        nachweis(),
+        nachweis({ date: `${MONAT}-16`, proof_status: 'STORNIERT', billing_status: 'STORNIERT' }),
+      ],
+    }
+    const { gruppen } = await ermittleGruppen(stub(store), { organizationId: ORG, periodMonth: MONAT })
+    expect(gruppen).toHaveLength(1)
+    expect(gruppen[0].recordIds).toHaveLength(1)
+    expect(gruppen[0].erfassterBetragEuro).toBe(45)
+  })
+
+  it('laesst auch aus, wenn nur billing_status auf STORNIERT steht', async () => {
+    const store: Store = {
+      service_records: [nachweis(), nachweis({ date: `${MONAT}-16`, billing_status: 'STORNIERT' })],
+    }
+    const { gruppen } = await ermittleGruppen(stub(store), { organizationId: ORG, periodMonth: MONAT })
+    expect(gruppen[0].recordIds).toHaveLength(1)
+  })
+
+  it('bildet gar keine Gruppe, wenn alle Nachweise storniert sind', async () => {
+    const store: Store = {
+      service_records: [nachweis({ proof_status: 'STORNIERT', billing_status: 'STORNIERT' })],
+    }
+    const { gruppen } = await ermittleGruppen(stub(store), { organizationId: ORG, periodMonth: MONAT })
+    expect(gruppen).toHaveLength(0)
+  })
+
+  it('haelt Altbestand ohne Storno-Spalten weiter abrechenbar', async () => {
+    // NULL ist kein Storno — dieselbe COALESCE-Semantik wie in der RPC.
+    const store: Store = {
+      service_records: [nachweis({ proof_status: null, billing_status: null })],
+    }
+    const { gruppen } = await ermittleGruppen(stub(store), { organizationId: ORG, periodMonth: MONAT })
+    expect(gruppen).toHaveLength(1)
   })
 
   it('schraenkt auf clientIds ein', async () => {

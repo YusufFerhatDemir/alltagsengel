@@ -20,6 +20,9 @@ import {
   mitStatusSync,
   PROOF_STATUS_ZU_RECORD_STATUS,
   RECORD_STATUS_WERTE,
+  istStorniert,
+  ohneStornierte,
+  STORNO_WERT,
 } from '@/lib/leistungsnachweis/status-sync'
 
 describe('statusFuerProofStatus — Abbildung Nachweis → status', () => {
@@ -170,5 +173,83 @@ describe('DB-Trigger deckt sich mit der TypeScript-Abbildung', () => {
     )
     expect(rollback).toContain('DROP TRIGGER IF EXISTS trg_sync_record_status')
     expect(rollback).toContain('DROP FUNCTION IF EXISTS public.sync_service_record_status')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════
+// Fix 2 (27.08.2026): Storno — die Kehrseite derselben Lücke
+// ═══════════════════════════════════════════════════════════════════
+// Weil 'STORNIERT' kein status-Gegenstück hat, bleibt ein stornierter
+// Nachweis auf status='signed'. Jede Abfrage, die „abrechenbar" allein
+// über `status IN ('signed','complete')` bestimmt, nahm ihn deshalb mit
+// — bis hin zu create_invoice_draft_atomic v9. istStorniert() ist der
+// TypeScript-Spiegel des Filters aus v10 (Migration 20261013000000).
+
+describe('istStorniert / ohneStornierte', () => {
+  it('erkennt ein Storno im proof_status', () => {
+    expect(istStorniert({ proof_status: 'STORNIERT' })).toBe(true)
+  })
+
+  it('erkennt ein Storno im billing_status', () => {
+    expect(istStorniert({ billing_status: 'STORNIERT' })).toBe(true)
+  })
+
+  it('nutzt denselben Wert, den der DB-CHECK kennt', () => {
+    expect(STORNO_WERT).toBe('STORNIERT')
+    expect(istStorniert({ proof_status: STORNO_WERT })).toBe(true)
+  })
+
+  it('haelt einen unterschriebenen Nachweis abrechenbar', () => {
+    expect(istStorniert({ proof_status: 'UNTERSCHRIEBEN', billing_status: 'OFFEN' })).toBe(false)
+  })
+
+  it('behandelt NULL/leer NICHT als Storno — das ist Altbestand', () => {
+    // Dieselbe COALESCE-Semantik wie in der RPC: ausgeschlossen wird nur
+    // ein ausdrückliches Storno, keine fehlende Angabe.
+    expect(istStorniert({ proof_status: null, billing_status: null })).toBe(false)
+    expect(istStorniert({})).toBe(false)
+    expect(istStorniert(null)).toBe(false)
+    expect(istStorniert(undefined)).toBe(false)
+  })
+
+  it('ignoriert umgebende Leerzeichen', () => {
+    expect(istStorniert({ proof_status: ' STORNIERT ' })).toBe(true)
+  })
+
+  it('unterscheidet Gross-/Kleinschreibung — der CHECK kennt nur Grossbuchstaben', () => {
+    expect(istStorniert({ proof_status: 'storniert' })).toBe(false)
+  })
+
+  it('ohneStornierte entfernt genau die stornierten Zeilen', () => {
+    const zeilen = [
+      { id: 'a', proof_status: 'UNTERSCHRIEBEN', billing_status: 'OFFEN' },
+      { id: 'b', proof_status: 'STORNIERT', billing_status: 'STORNIERT' },
+      { id: 'c', proof_status: 'ABGESCHLOSSEN', billing_status: 'STORNIERT' },
+      { id: 'd', proof_status: null, billing_status: null },
+    ]
+    expect(ohneStornierte(zeilen).map(z => z.id)).toEqual(['a', 'd'])
+  })
+})
+
+describe('DB und TypeScript kennen dasselbe Storno-Wort', () => {
+  it('der Filter aus v10 steht wortgleich in der Migration', () => {
+    const sql = readFileSync(
+      join(process.cwd(), 'supabase/migrations/20261013000000_rechnung_stornierte_nachweise.sql'),
+      'utf8',
+    )
+    // Vier service_records-Zugriffe (Zaehlung, Unterschriftspruefung,
+    // Positionsschleife, Statusfortschreibung) — je zwei Bedingungen.
+    const treffer = sql.match(/COALESCE\((sr\.)?(proof|billing)_status, ''\)\s*<> 'STORNIERT'/g) ?? []
+    expect(treffer).toHaveLength(8)
+    expect(sql).toContain(`<> '${STORNO_WERT}'`)
+  })
+
+  it('die Rollback-Datei stellt den Stand OHNE den Filter wieder her', () => {
+    const sql = readFileSync(
+      join(process.cwd(), 'supabase/migrations/20261013000001_rollback_rechnung_stornierte_nachweise.sql'),
+      'utf8',
+    )
+    const funktion = sql.slice(sql.indexOf('CREATE OR REPLACE FUNCTION'))
+    expect(funktion).not.toContain("<> 'STORNIERT'")
   })
 })

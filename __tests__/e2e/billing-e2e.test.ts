@@ -875,12 +875,17 @@ describe('Szenario 10: Voller Abrechnungsflow', () => {
         // Budgetdeckel (ermittleBudgetLage): liest client_budgets und die
         // Bestandsrechnungen des Kalenderjahres, bevor die RPC laeuft.
         gte: vi.fn().mockReturnThis(),
-        lte: vi.fn().mockResolvedValue({ data: [], error: null }),
+        lte: vi.fn().mockReturnThis(),
         in: vi.fn().mockResolvedValue({ data: [], error: null }),
         // Faelligkeits-Nachlauf (setzeFaelligkeitFallsLeer): laedt die Rechnung
         // und setzt due_date, solange sie leer ist.
         update: vi.fn().mockReturnThis(),
-        is: vi.fn().mockResolvedValue({ error: null }),
+        // .is() schliesst inzwischen ZWEI Ketten ab: den Faelligkeits-Update
+        // (.update().eq().is('due_date', null)) und die Bestandsrechnungen des
+        // Jahres (… .lte().is('deleted_at', null)) — geloeschte Rechnungen
+        // verbrauchen kein Budget mehr. Die Antwort deckt beide: `error` fuer
+        // den Update, `data` fuer die Liste.
+        is: vi.fn().mockResolvedValue({ data: [], error: null }),
         maybeSingle: vi.fn().mockResolvedValue({
           data: {
             id: 'inv-new',
@@ -935,7 +940,8 @@ describe('Szenario 10: Voller Abrechnungsflow', () => {
         // kaeme der Tarif-Fehler der RPC gar nicht erst zustande.
         maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
         gte: vi.fn().mockReturnThis(),
-        lte: vi.fn().mockResolvedValue({ data: [], error: null }),
+        lte: vi.fn().mockReturnThis(),
+        is: vi.fn().mockResolvedValue({ data: [], error: null }),
       };
       const mock = {
         from: vi.fn(() => mockChain),

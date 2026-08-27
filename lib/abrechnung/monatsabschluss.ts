@@ -23,6 +23,7 @@
 // ═══════════════════════════════════════════════════════════════
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { centRunden } from '@/lib/geld'
+import { ohneStornierte } from '@/lib/leistungsnachweis/status-sync'
 
 // ── Ergebnis-Typen ─────────────────────────────────────────────
 export interface AbschlussWarnung {
@@ -247,7 +248,7 @@ export async function erstelleMonatsabschluss(
   const { data: records, error: rErr } = await supabase
     .from('service_records')
     .select(
-      'id, verordnung_id, client_id, date, duration_minutes, service_type, amount, status, client_signature'
+      'id, verordnung_id, client_id, date, duration_minutes, service_type, amount, status, client_signature, proof_status, billing_status'
     )
     .eq('organization_id', organizationId)
     .in('verordnung_id', verordnungIds)
@@ -255,7 +256,13 @@ export async function erstelleMonatsabschluss(
     .lte('date', periodEnd)
     .in('status', ['complete', 'signed', 'invoiced'])
   if (rErr) throw new Error(`Einsätze konnten nicht geladen werden: ${rErr.message}`)
-  const recs = records || []
+  // Ein Storno schreibt nur proof_status/billing_status; service_records.status
+  // bleibt auf 'signed' bzw. 'invoiced' stehen (kein Storno-Wert im
+  // status-Werteset, siehe lib/leistungsnachweis/status-sync.ts). Ohne diesen
+  // Filter zählte der Monatsabschluss widerrufene Leistungen als abrechenbar
+  // und wies ihren Betrag in der Gesamtsumme aus — dieselbe Regel wie in
+  // create_invoice_draft_atomic v10 (Migration 20261013000000).
+  const recs = ohneStornierte(records || [])
 
   // ── 3) Digitale Unterschriften (service_signatures) dazuladen ──
   const recordIds = recs.map(r => r.id)

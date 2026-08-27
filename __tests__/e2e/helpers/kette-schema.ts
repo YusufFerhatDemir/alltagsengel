@@ -174,6 +174,11 @@ ALTER TABLE public.service_records
   ADD COLUMN IF NOT EXISTS client_signer_name TEXT,               -- 20260706_monatsabschluss…
   ADD COLUMN IF NOT EXISTS caregiver_confirmed_at TIMESTAMPTZ,    -- 20260706_monatsabschluss…
   ADD COLUMN IF NOT EXISTS is_locked BOOLEAN DEFAULT false,       -- 20260706_monatsabschluss…
+  -- 20260808200000: billing_status. Fehlte hier, obwohl live vorhanden — und
+  -- ein Testschema, das lockerer ist als die Produktion, beweist nichts. Die
+  -- Spalte traegt (zusammen mit proof_status) das Storno eines
+  -- Leistungsnachweises; die status-Spalte bleibt dabei auf signed stehen.
+  ADD COLUMN IF NOT EXISTS billing_status TEXT DEFAULT 'OFFEN',    -- 20260808200000
   ADD COLUMN IF NOT EXISTS bundesland TEXT;                       -- 20260808120002
 
 -- billing_tariffs ─────────────────────────────────────────────────────

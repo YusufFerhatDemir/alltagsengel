@@ -138,3 +138,61 @@ export function mitStatusSync<T extends Record<string, unknown>>(
   if (!neuerStatus) return updates
   return { ...updates, status: neuerStatus }
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// Storno — die eine Stelle, an der „nicht abrechenbar" definiert ist
+// ═══════════════════════════════════════════════════════════════════
+//
+// BEFUND (P0, 27.08.2026)
+// Weil 'STORNIERT' kein status-Gegenstück hat (siehe oben), bleibt ein
+// stornierter Nachweis auf status='signed' stehen. Jede Abfrage, die
+// „abrechenbar" allein über `status IN ('signed','complete')` bestimmt,
+// nimmt ihn damit mit — auch create_invoice_draft_atomic bis v9. Die
+// Leistung wurde widerrufen und stand trotzdem auf der Rechnung.
+//
+// Der Riegel sitzt jetzt in der RPC (Migration 20261013000000, v10). Die
+// TypeScript-Seite muss GENAUSO rechnen: eine Vorprüfung, die den Nachweis
+// noch als abrechenbar zählt, verspricht eine Rechnungsposition, die die
+// Datenbank anschliessend weglässt — im besten Fall eine zu kleine
+// Rechnung, im schlechteren ein „Keine abrechenbaren Leistungen" auf einem
+// Lauf, den die Oberfläche als vollständig angekündigt hat.
+//
+// NULL/leer zählt bewusst NICHT als Storno: das ist Altbestand von vor
+// Einführung der Spalten und bleibt abrechenbar. Ausgeschlossen wird nur
+// ein ausdrückliches Storno — genau wie das COALESCE in der RPC.
+
+/** Der eine Wert, der in proof_status und billing_status Storno bedeutet. */
+export const STORNO_WERT = 'STORNIERT'
+
+/** Felder eines Nachweises, soweit für die Storno-Frage nötig. */
+export interface StornoFelder {
+  proof_status?: string | null
+  billing_status?: string | null
+}
+
+/**
+ * Ist dieser Leistungsnachweis storniert — und damit nicht abrechenbar?
+ *
+ * Spiegelt den Filter aus create_invoice_draft_atomic v10:
+ *   COALESCE(proof_status,'')   <> 'STORNIERT'
+ *   COALESCE(billing_status,'') <> 'STORNIERT'
+ */
+export function istStorniert(nachweis: StornoFelder | null | undefined): boolean {
+  if (!nachweis) return false
+  return (
+    String(nachweis.proof_status ?? '').trim() === STORNO_WERT
+    || String(nachweis.billing_status ?? '').trim() === STORNO_WERT
+  )
+}
+
+/**
+ * Filtert stornierte Nachweise aus einer Liste.
+ *
+ * Für Auswertungen, die die Spalten mitgelesen haben. Wo `proof_status`
+ * und `billing_status` NICHT im select stehen, sind beide undefined und
+ * es wird nichts entfernt — deshalb gehören sie in jedes select, das
+ * „abrechenbar" beantwortet.
+ */
+export function ohneStornierte<T extends StornoFelder>(nachweise: readonly T[]): T[] {
+  return nachweise.filter(n => !istStorniert(n))
+}
