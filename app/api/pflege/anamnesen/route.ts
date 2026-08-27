@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePflegeAdmin } from '@/lib/pflege/api-auth'
+import { clientGehoertZuOrg } from '@/lib/clients/organization-guard'
 import { createAnamnese, listAnamnesen } from '@/lib/pflege/anamnesen'
 import type { AnamneseStatus, AnamneseTyp } from '@/lib/pflege/types'
 import { withTracking } from '@/lib/monitoring/tracker'
@@ -50,6 +51,9 @@ export const POST = withTracking(async function POST(request: Request) {
     void _bodyErstelltVon
 
     const admin = createAdminClient()
+    if (!(await clientGehoertZuOrg(admin, clientId, organizationId))) {
+      return NextResponse.json({ error: 'Klient nicht gefunden oder gehört nicht zur Organisation.' }, { status: 404 })
+    }
     const anamnese = await createAnamnese(admin, {
       // Fachfelder zuerst — die vertrauenswürdigen Werte darunter gewinnen immer.
       ...felder,

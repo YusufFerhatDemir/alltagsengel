@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePflegeAdmin } from '@/lib/pflege/api-auth'
+import { clientGehoertZuOrg } from '@/lib/clients/organization-guard'
 import { createPeriode, listPerioden } from '@/lib/pflege/doku-perioden'
 import type { PeriodenStatus } from '@/lib/pflege/types'
 import { withTracking } from '@/lib/monitoring/tracker'
@@ -38,6 +39,9 @@ export const POST = withTracking(async function POST(request: Request) {
     }
 
     const admin = createAdminClient()
+    if (!(await clientGehoertZuOrg(admin, body.clientId, auth.ctx.organizationId))) {
+      return NextResponse.json({ error: 'Klient nicht gefunden oder gehört nicht zur Organisation.' }, { status: 404 })
+    }
     const periode = await createPeriode(admin, {
       organizationId: auth.ctx.organizationId,
       clientId: body.clientId,
