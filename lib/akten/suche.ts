@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { postgrestWert } from './dokumente'
 import type { AktenDokument, DokumentKategorie, DokumentStatus, DokumentTyp } from './types'
 
 export interface AktenSucheParams {
@@ -42,8 +43,8 @@ export async function sucheDokumente(supabase: SupabaseClient, params: AktenSuch
   if (params.von) query = query.gte('created_at', params.von)
   if (params.bis) query = query.lte('created_at', params.bis)
   if (params.suchtext) {
-    const q = params.suchtext.replace(/[%,]/g, '')
-    query = query.or(`titel.ilike.%${q}%,dateiname.ilike.%${q}%,interne_bemerkung.ilike.%${q}%`)
+    const s = postgrestWert(params.suchtext)
+    query = query.or(`titel.ilike.${s},dateiname.ilike.${s},interne_bemerkung.ilike.${s}`)
   }
 
   const { data, error } = await query

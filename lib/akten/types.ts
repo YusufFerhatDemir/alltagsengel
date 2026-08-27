@@ -4,21 +4,34 @@
 // supabase/migrations/20260809010000_dokumentenmanagement_akten.sql
 // ═══════════════════════════════════════════════════════════════
 
-export type DokumentTyp =
-  | 'vertrag' | 'verordnung' | 'genehmigung' | 'vollmacht'
-  | 'abtretungserklaerung' | 'pflegegradbescheid' | 'kostentraegerzusage'
-  | 'ausweis' | 'fuehrerschein' | 'fuehrungszeugnis' | 'erste_hilfe'
-  | 'qualifikation' | 'zertifikat' | 'schulung' | 'leistungsnachweis'
-  | 'rechnung' | 'schriftverkehr' | 'bescheinigung' | 'kuendigung'
-  | 'arbeitsvertrag' | 'zusatzvereinbarung' | 'datenschutzerklaerung'
-  | 'einwilligung' | 'foto' | 'sonstiges'
+// Konstanten sind die Quelle der Wahrheit — sowohl fuer den Typ (per
+// `typeof …[number]`) als auch fuer die Laufzeit-Validierung an der
+// API-Grenze (assertDokumentEnum in dokumente.ts). Ohne das laueft ein
+// ungueltiger Wert aus dem Client ungeprueft bis zum DB-CHECK-Constraint
+// durch und der Nutzer sieht nur eine sanitisierte 500-Antwort statt einer
+// erklaerenden 400.
+export const DOKUMENT_TYPEN = [
+  'vertrag', 'verordnung', 'genehmigung', 'vollmacht',
+  'abtretungserklaerung', 'pflegegradbescheid', 'kostentraegerzusage',
+  'ausweis', 'fuehrerschein', 'fuehrungszeugnis', 'erste_hilfe',
+  'qualifikation', 'zertifikat', 'schulung', 'leistungsnachweis',
+  'rechnung', 'schriftverkehr', 'bescheinigung', 'kuendigung',
+  'arbeitsvertrag', 'zusatzvereinbarung', 'datenschutzerklaerung',
+  'einwilligung', 'foto', 'sonstiges',
+] as const
+export type DokumentTyp = typeof DOKUMENT_TYPEN[number]
 
-export type DokumentKategorie =
-  | 'stammdaten' | 'vertrag' | 'pflege' | 'abrechnung' | 'personal'
-  | 'qualifikation' | 'genehmigung' | 'korrespondenz' | 'allgemein'
+export const DOKUMENT_KATEGORIEN = [
+  'stammdaten', 'vertrag', 'pflege', 'abrechnung', 'personal',
+  'qualifikation', 'genehmigung', 'korrespondenz', 'allgemein',
+] as const
+export type DokumentKategorie = typeof DOKUMENT_KATEGORIEN[number]
 
-export type DokumentStatus = 'entwurf' | 'aktiv' | 'archiviert' | 'gesperrt' | 'abgelaufen'
-export type DokumentSichtbarkeit = 'intern' | 'kunde' | 'engel' | 'alle'
+export const DOKUMENT_STATUS_WERTE = ['entwurf', 'aktiv', 'archiviert', 'gesperrt', 'abgelaufen'] as const
+export type DokumentStatus = typeof DOKUMENT_STATUS_WERTE[number]
+
+export const DOKUMENT_SICHTBARKEIT_WERTE = ['intern', 'kunde', 'engel', 'alle'] as const
+export type DokumentSichtbarkeit = typeof DOKUMENT_SICHTBARKEIT_WERTE[number]
 
 export interface AktenDokument {
   id: string

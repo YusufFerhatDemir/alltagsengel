@@ -113,6 +113,24 @@ const AUSNAHMEN = new Set([
   'lib/pilot/control-center.ts:dunning_email_queue.block_dunning',
   'lib/pilot/control-center.ts:dunning_email_queue.dunning_level',
   'lib/pilot/control-center.ts:dunning_email_queue.next_dunning_at',
+
+  // ── 27.08.2026 — nachgeprueft, beide falsch zugeordnet (Kategorie b/a) ──
+  //
+  // abrechnung-metriken.ts: zaehlerFuer(admin, 'tabelle', ..., q => q.is(...))
+  // baut die Abfrage in zaehle() ueber `.from(tabelle)` (Variable, kein
+  // Literal) — der Zuordner sieht das nicht und haengt die Filter am letzten
+  // LITERALEN .from('billing_audit_trail') weiter oben auf. Echte Tabellen
+  // (per Live-Schema-Abgleich bestaetigt): invoices.deleted_at,
+  // dunning_entries.dunning_level, payments.deleted_at,
+  // invoice_email_log.status.
+  'lib/monitoring/abrechnung-metriken.ts:billing_audit_trail.deleted_at',
+  'lib/monitoring/abrechnung-metriken.ts:billing_audit_trail.dunning_level',
+  'lib/monitoring/abrechnung-metriken.ts:billing_audit_trail.status',
+  //
+  // invoice-engine.ts:625 — der Treffer steht in einem ERKLAERTEXT (Kommentar
+  // zum CAS-Guard), nicht im Code. Der echte Filter `.is('frozen_at', null)`
+  // steht bei Zeile 644 auf `.from('invoices')` (die Spalte existiert dort).
+  'lib/billing/core/invoice-engine.ts:invoice_line_snapshots.frozen_at',
 ])
 
 /**
