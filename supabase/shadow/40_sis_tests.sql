@@ -251,6 +251,33 @@ SELECT pg_temp.check_test('Trigger', 'updated_at wird beim UPDATE fortgeschriebe
   'true', (SELECT (updated_at > created_at)::text FROM public.sis_themenfelder
         WHERE assessment_id = :SIS_A ::uuid AND feld_nr = 1));
 
+-- Abschluss (ohne Sperre): status='abgeschlossen', gesperrt bleibt false —
+-- muss dennoch bereits vollstaendig dicht sein (20261007000000-Haertung).
+UPDATE public.sis_assessments SET status = 'entwurf', gesperrt = false WHERE id = :SIS_A ::uuid;
+UPDATE public.sis_assessments SET status = 'abgeschlossen', abgeschlossen_am = now(), abgeschlossen_von = :ADMIN_A ::uuid
+  WHERE id = :SIS_A ::uuid;
+
+SELECT pg_temp.check_test('Trigger Abschluss', 'Abgeschlossener Kopfsatz (gesperrt=false) nicht änderbar',
+  'geblockt', pg_temp.versuche(
+    'UPDATE public.sis_assessments SET bemerkung = ''nachträglich'' WHERE id = ' || quote_literal(:SIS_A) || '::uuid'));
+SELECT pg_temp.check_test('Trigger Abschluss', 'Themenfeld unter abgeschlossenem Kopf nicht änderbar',
+  'geblockt', pg_temp.versuche(
+    'UPDATE public.sis_themenfelder SET bemerkung = ''nachträglich'' WHERE assessment_id = ' || quote_literal(:SIS_A) || '::uuid AND feld_nr = 3'));
+SELECT pg_temp.check_test('Trigger Abschluss', 'Risikozeile unter abgeschlossenem Kopf nicht löschbar',
+  'geblockt', pg_temp.versuche(
+    'DELETE FROM public.sis_risikomatrix WHERE assessment_id = ' || quote_literal(:SIS_A) || '::uuid AND risiko = ''ernaehrung'''));
+SELECT pg_temp.check_test('Trigger Abschluss', 'Kein neues Themenfeld unter abgeschlossenem Kopf',
+  'geblockt', pg_temp.versuche(
+    'INSERT INTO public.sis_themenfelder (organization_id, assessment_id, feld_nr) VALUES ('
+    || quote_literal(:ORG_A) || '::uuid, ' || quote_literal(:SIS_A) || '::uuid, 6) ON CONFLICT DO NOTHING'));
+SELECT pg_temp.check_test('Trigger Abschluss', 'Wiedereröffnung (abgeschlossen → entwurf) bleibt möglich',
+  'durchgelassen', pg_temp.versuche(
+    'UPDATE public.sis_assessments SET status = ''entwurf'', abgeschlossen_am = NULL, abgeschlossen_von = NULL WHERE id = ' || quote_literal(:SIS_A) || '::uuid'));
+
+-- Erneut abschließen und diesmal sperren, um den Sperr-Pfad wie zuvor zu prüfen
+UPDATE public.sis_assessments SET status = 'abgeschlossen', abgeschlossen_am = now(), abgeschlossen_von = :ADMIN_A ::uuid
+  WHERE id = :SIS_A ::uuid;
+
 -- Sperre setzen, danach ist ALLES dicht (Kopf + Kinder)
 UPDATE public.sis_assessments SET status = 'gesperrt', gesperrt = true WHERE id = :SIS_A ::uuid;
 
