@@ -18,10 +18,28 @@ export interface KonfliktPruefung {
  * seinen Ausgangszustand nicht — z. B. reine 'create'-Aktion) kann kein
  * Konflikt erkannt werden; das Update wird dann unkonditioniert
  * angewendet (bestehendes Verhalten vor Block 20).
+ *
+ * Fail-closed in die andere Richtung: liegt ein `basisUpdatedAt` vor,
+ * laesst sich der Server-Stand aber nicht ermitteln oder nicht als Datum
+ * lesen, gilt das als Konflikt. Andernfalls entschiede ein fehlender
+ * Zeitstempel zugunsten der lokalen Aenderung — und genau dann sind
+ * Server-Daten still weg.
  */
 export function hatKonflikt({ serverUpdatedAt, basisUpdatedAt }: KonfliktPruefung): boolean {
-  if (!basisUpdatedAt || !serverUpdatedAt) return false
-  return new Date(basisUpdatedAt).getTime() !== new Date(serverUpdatedAt).getTime()
+  // Kein Basis-Snapshot: der Client behauptet gar keinen Ausgangszustand
+  // (reine 'create'-Aktion). Es gibt nichts zu vergleichen.
+  if (!basisUpdatedAt) return false
+
+  // Ab hier behauptet der Client, auf einem bestimmten Stand aufzusetzen.
+  // Laesst sich das NICHT bestaetigen, ist das ein Konflikt und kein
+  // Freifahrtschein: bisher gewann bei fehlendem oder unlesbarem
+  // Server-Zeitstempel die lokale Aenderung kommentarlos und ueberschrieb
+  // damit potenziell neuere Server-Daten.
+  const basis = new Date(basisUpdatedAt).getTime()
+  const server = serverUpdatedAt ? new Date(serverUpdatedAt).getTime() : NaN
+  if (Number.isNaN(basis) || Number.isNaN(server)) return true
+
+  return basis !== server
 }
 
 export interface KonfliktEntscheidung {
