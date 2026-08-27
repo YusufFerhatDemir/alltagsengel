@@ -16,7 +16,13 @@
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { hatPortalBereichZugriff, erlaubteClientIds } from '../angehoerige/portal-helpers'
+import {
+  hatPortalBereichZugriff,
+  erlaubteClientIds,
+  zugaengeMitBereich,
+  zugangFuer,
+  protokollEintraege,
+} from '../angehoerige/portal-helpers'
 import { FREIGABE_BEREICHE, type AngehoerigenZugang, type FreigabeBereich } from '../angehoerige/types'
 
 /** Zugangs-Doppelgänger — nur die Felder, die die beiden Funktionen lesen. */
@@ -167,5 +173,75 @@ describe('erlaubteClientIds', () => {
         )
       }
     }
+  })
+})
+
+// ───────────────────────────────────────────────────────────────
+// Nachtrag 27.08.2026 — die Bereichsliste ist ein ungeprüftes text[]
+//
+// `freigegebene_bereiche` hat in der Datenbank keine Werteprüfung
+// (CHECK nur auf „nicht leer"). Es kann also ein unbekannter Wert
+// darin stehen, und nach einem Schema-Ausrutscher auch etwas, das gar
+// kein Array ist. Vorher lief `.includes()` direkt darauf: ein
+// Nicht-Array hätte die Route mit einer Ausnahme beendet, ein
+// unbekannter Wert wäre schlicht ignoriert worden. Beides fällt jetzt
+// fail-closed aus — und der neue Helfer zugaengeMitBereich() ist die
+// eine Stelle, an der das entschieden wird.
+describe('unbrauchbare Bereichslisten', () => {
+  const kaputt: unknown[] = [null, undefined, 'termine', 42, { termine: true }]
+
+  test('ein Nicht-Array gibt nichts frei und wirft nicht', () => {
+    for (const wert of kaputt) {
+      const z = [zugang('k1', wert as FreigabeBereich[])]
+      for (const b of FREIGABE_BEREICHE) {
+        assert.equal(
+          hatPortalBereichZugriff(z, b), false,
+          `${JSON.stringify(wert)} öffnete ${b}`,
+        )
+      }
+      assert.deepEqual(erlaubteClientIds(z, 'termine'), [])
+      assert.deepEqual(zugaengeMitBereich(z, 'termine'), [])
+    }
+  })
+
+  test('unbekannte Bereichswerte zählen nicht', () => {
+    const z = [zugang('k1', ['stammdaten', 'abrechnung'] as unknown as FreigabeBereich[])]
+    for (const b of FREIGABE_BEREICHE) {
+      assert.equal(hatPortalBereichZugriff(z, b), false, `${b} war offen`)
+    }
+  })
+
+  test('ein unbekannter Wert neben einem echten hebt den echten nicht auf', () => {
+    const z = [zugang('k1', ['termine', 'unfug'] as unknown as FreigabeBereich[])]
+    assert.equal(hatPortalBereichZugriff(z, 'termine'), true)
+    assert.equal(hatPortalBereichZugriff(z, 'dokumente'), false)
+  })
+})
+
+// ───────────────────────────────────────────────────────────────
+describe('zugaengeMitBereich und zugangFuer', () => {
+  test('liefert genau die Zugänge, die den Bereich tragen', () => {
+    const z = [zugang('k1', ['termine']), zugang('k2', ['dokumente'])]
+    assert.deepEqual(zugaengeMitBereich(z, 'termine').map(x => x.client_id), ['k1'])
+    assert.deepEqual(zugaengeMitBereich(z, 'nachrichten'), [])
+  })
+
+  test('zugangFuer findet den TRAGENDEN Zugang, nicht irgendeinen', () => {
+    const z = [zugang('k1', ['termine']), zugang('k2', ['dokumente'])]
+    assert.equal(zugangFuer(z, 'dokumente', 'k2')?.client_id, 'k2')
+    assert.equal(zugangFuer(z, 'dokumente', 'k1'), undefined)
+  })
+
+  test('protokollEintraege erzeugt je freigegebenem Klienten genau einen Eintrag', () => {
+    const z = [zugang('k1', ['termine']), zugang('k2', ['termine']), zugang('k3', ['dokumente'])]
+    const e = protokollEintraege(z, 'termine', 'termine_eingesehen')
+    assert.deepEqual(e.map(x => x.client_id), ['k1', 'k2'])
+    assert.deepEqual(e.map(x => x.zugang_id), ['zugang-k1', 'zugang-k2'])
+    assert.ok(e.every(x => x.aktion === 'termine_eingesehen'))
+  })
+
+  test('ohne Freigabe entsteht kein Protokolleintrag', () => {
+    const z = [zugang('k1', ['dokumente'])]
+    assert.deepEqual(protokollEintraege(z, 'leistungen', 'leistungen_eingesehen'), [])
   })
 })

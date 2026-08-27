@@ -88,6 +88,10 @@ export async function widerrufeZugang(
   adminUserId: string,
   grund?: string,
 ): Promise<AngehoerigenZugang> {
+  // Compare-and-Swap auf `status='aktiv'`: zwei gleichzeitige Widerrufe
+  // hätten sonst beide „erfolgreich" gemeldet und der zweite hätte
+  // Grund und Zeitpunkt des ersten überschrieben — im Nachweis stünde
+  // dann der falsche Vorgang.
   const { data, error } = await sb
     .from('angehoerigen_zugaenge')
     .update({
@@ -99,9 +103,57 @@ export async function widerrufeZugang(
     })
     .eq('id', id)
     .eq('organization_id', orgId)
+    .eq('status', 'aktiv')
     .select()
-    .single()
+    .maybeSingle()
   if (error) throw new Error(`Zugang widerrufen: ${error.message}`)
+  if (!data) throw new Error('Zugang nicht gefunden oder bereits widerrufen.')
+  return data as AngehoerigenZugang
+}
+
+/**
+ * Hebt einen Widerruf wieder auf.
+ *
+ * BEFUND (27.08.2026): Ein widerrufener Zugang war eine Sackgasse. Der
+ * Unique-Index `unique_user_client` verhindert einen zweiten Zugang für
+ * dasselbe Paar (user_id, client_id), und es gab keinen Weg zurück —
+ * ein versehentlicher Widerruf sperrte den Angehörigen dauerhaft aus,
+ * ohne dass die Oberfläche das erklärt hätte (der neue Anlegeversuch
+ * kam als HTTP 500 mit roher Postgres-Meldung zurück).
+ *
+ * Die Bereichsliste muss neu angegeben werden: der Umfang von damals
+ * still wieder in Kraft zu setzen, wäre genau die Art stiller
+ * Rechteerweiterung, die dieses Modul verhindern soll.
+ */
+export async function reaktiviereZugang(
+  sb: SupabaseClient,
+  orgId: string,
+  id: string,
+  bereiche: string[] | undefined,
+  pflegeberichteFreigegeben: boolean,
+  gueltigBis: string | null,
+): Promise<AngehoerigenZugang> {
+  validiereBereiche((bereiche ?? []) as string[])
+
+  const { data, error } = await sb
+    .from('angehoerigen_zugaenge')
+    .update({
+      status: 'aktiv' as FreigabeStatus,
+      freigegebene_bereiche: bereiche,
+      pflegeberichte_freigegeben: pflegeberichteFreigegeben,
+      gueltig_bis: gueltigBis,
+      widerrufen_von: null,
+      widerrufen_am: null,
+      widerruf_grund: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .eq('organization_id', orgId)
+    .neq('status', 'aktiv')
+    .select()
+    .maybeSingle()
+  if (error) throw new Error(`Zugang reaktivieren: ${error.message}`)
+  if (!data) throw new Error('Zugang nicht gefunden oder bereits aktiv.')
   return data as AngehoerigenZugang
 }
 
@@ -114,6 +166,10 @@ export async function aktualisiereFreigaben(
 ): Promise<AngehoerigenZugang> {
   validiereBereiche(bereiche)
 
+  // Nur ein AKTIVER Zugang lässt sich in seinen Freigaben ändern.
+  // Vorher liess sich ein widerrufener Zugang weiter umkonfigurieren —
+  // ein Widerruf, der sich per Freigabe-Update aushebeln lässt, ist
+  // kein Widerruf. Die Reaktivierung ist der ausdrückliche Weg zurück.
   const { data, error } = await sb
     .from('angehoerigen_zugaenge')
     .update({
@@ -123,9 +179,11 @@ export async function aktualisiereFreigaben(
     })
     .eq('id', id)
     .eq('organization_id', orgId)
+    .eq('status', 'aktiv')
     .select()
-    .single()
+    .maybeSingle()
   if (error) throw new Error(`Freigaben aktualisieren: ${error.message}`)
+  if (!data) throw new Error('Zugang nicht gefunden oder nicht aktiv.')
   return data as AngehoerigenZugang
 }
 
