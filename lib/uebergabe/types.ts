@@ -4,6 +4,8 @@
 // supabase/migrations/20260903000000_uebergabeprotokolle.sql.
 // ═══════════════════════════════════════════════════════════════
 
+import { UserFacingError } from '@/lib/api/user-facing-error'
+
 export const SCHICHT_WERTE = [
   'frueh', 'spaet', 'nacht', 'wochenende', 'bereitschaft', 'sonstige',
 ] as const
@@ -127,13 +129,13 @@ export function assertErlaubt<T extends string>(
 ): void {
   if (wert === null || wert === undefined) return
   if (!erlaubt.includes(wert)) {
-    throw new Error(`Ungültiger Wert "${wert}" für ${feld}. Erlaubt: ${erlaubt.join(', ')}.`)
+    throw new UserFacingError(`Ungültiger Wert "${wert}" für ${feld}. Erlaubt: ${erlaubt.join(', ')}.`)
   }
 }
 
 /** ISO-Datum (YYYY-MM-DD) — alles andere wäre in der DB ohnehin ungültig. */
 export function assertDatum(datum: string, feld = 'datum'): void {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(datum)) {
-    throw new Error(`${feld} muss im Format YYYY-MM-DD vorliegen.`)
+    throw new UserFacingError(`${feld} muss im Format YYYY-MM-DD vorliegen.`)
   }
 }
