@@ -1,5 +1,6 @@
 import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { getDokument } from '@/lib/akten/dokumente'
 import type { OpsAufgabeAnhang } from './types'
 
 export async function listAnhaenge(
@@ -21,6 +22,17 @@ export async function createAnhang(
   params: { organizationId: string; aufgabeId: string; dokumentId: string; hinzugefuegtVon?: string },
 ): Promise<OpsAufgabeAnhang> {
   if (!params.dokumentId?.trim()) throw new UserFacingError('Dokument-ID ist ein Pflichtfeld.')
+
+  // dokument_id hat nur eine einfache FK auf akten_dokumente(id) — ohne
+  // diese Pruefung liesse sich mit einer erratenen/bekannten fremden
+  // Dokument-ID ein Anhang anlegen, der auf ein Dokument einer ANDEREN
+  // Organisation zeigt (weder Composite-FK noch Trigger faengt das ab,
+  // siehe Audit ops-anhaenge-cross-org-dokument-id).
+  const dokument = await getDokument(supabase, params.dokumentId, params.organizationId)
+  if (!dokument) {
+    throw new UserFacingError('Dokument nicht gefunden oder gehoert nicht zur Organisation.')
+  }
+
   const { data, error } = await supabase
     .from('ops_aufgaben_anhaenge')
     .insert({
