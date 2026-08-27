@@ -47,9 +47,9 @@ Dokument nicht den Stand, der tatsaechlich deployed ist -- dann zuerst
 
 | Anker | Bedeutung | Wert |
 |---|---|---|
-| **CODE_HEAD** | lokaler `main`-HEAD | `aa76da3` (Phase 8.5, Track 4) |
-| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | `aa76da3` |
-| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | `aa76da3` |
+| **CODE_HEAD** | lokaler `main`-HEAD | `175ee7f` (Phase 8.6, Geldwege) |
+| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | `175ee7f` |
+| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | `175ee7f` |
 
 Pruefbefehl:
 
@@ -64,7 +64,18 @@ git rev-parse HEAD && git rev-parse origin/main
 > darueber hinaus -- insbesondere jeder Commit, der Code anfasst -- bedeutet:
 > dieses Dokument ist aelter als der deployte Stand.
 
-**Letzter Code-Commit** (der letzte Commit, der Anwendungscode anfasst): `aa76da3`
+**Letzter Code-Commit** (der letzte Commit, der Anwendungscode anfasst): `175ee7f`
+
+**Phase-8.6-Commits (Alltagsengel):**
+
+| Commit | Inhalt |
+|---|---|
+| `fc47b46` | SEPA-Einzug: Erlaubnisliste, frozen_at-Tor, Soft-Delete-Filter, CAS-Guard (B-5..B-8) |
+| `8f63d93` | Rechnungsversand: PDF-Fehlschlag protokolliert (V-1), CAS-Guard Festschreibung |
+| `0220501` | Tests 3 Kernmodule (require-admin, transport, fehlerprotokoll) + FP-1/2/3 |
+| `ee44ac4` | IK mandantenfest (IK-1/IK-2), budget_type-Umbuchung gestoppt (SR-1) |
+| `ae5eeff` | Admin-Routen-Invariante (163 Faelle) |
+| `175ee7f` | Docs: Phase 8.6 im MASTER_HANDOFF |
 
 **Phase-8.5-Commits (Alltagsengel):**
 
@@ -127,8 +138,8 @@ git rev-parse HEAD && git rev-parse origin/main
 | HEAD | siehe **CODE_HEAD** oben |
 | Letzter Code-Commit | Phase 8, alle 10 Tracks abgeschlossen |
 | Typecheck | **0 Fehler** (`npx tsc --noEmit`, Exit 0) |
-| Tests | vitest **6.089** + node:test **2.211** = **8.300** (vorher 8.228, **+72**) |
-| Testlaeufe | node:test 2.211 gruen / 0 rot -- vitest 6.017 gruen / 38 uebersprungen / 0 rot (nacheinander gelaufen, nicht gleichzeitig, nicht parallel zum Typecheck) |
+| Tests | vitest **6.527** + node:test **2.211** = **8.738** (vorher 8.300, **+438**) |
+| Testlaeufe | node:test 2.211 gruen / 0 rot -- vitest 6.527 gruen / 0 rot (nacheinander gelaufen, nicht gleichzeitig, nicht parallel zum Typecheck) |
 | CI | **GRUEN auf `ae080be`** (4/4 Checks: Typecheck/Lint/Tests/Build, E2E, Health Check, Wiederholungslauf) |
 | lint:forbidden | **0 Treffer** (24.608 Dateien, FULL-Scan, Exit 0) |
 | check:schema-drift | **0 Befunde** (1.305 Dateien gegen 331 Live-Tabellen) |
@@ -172,7 +183,7 @@ git rev-parse HEAD && git rev-parse origin/main
 ### Alltagsengel (nnwyktkqibdjxgimjyuq)
 
 - Status: ACTIVE_HEALTHY
-- Migrationen: 226+ angewendet -- **inkl. `20261004000000`** (neu in 6B) und **`20261005000000`** (Phase 8.4 LIVE)
+- Migrationen: 227+ angewendet -- **inkl. `20261004000000`** (neu in 6B), **`20261005000000`** (Phase 8.4 LIVE) und **`20261006000000`** (Phase 8.6 LIVE)
 - Tabellen: 310, davon **310 mit RLS** (100 %)
 - org_fence RESTRICTIVE: alle relevanten Tabellen, 2 dokumentierte Ausnahmen
   (`organization_members`: Multi-Org-Verwaltung; `state_waitlist`: oeffentlich)
@@ -216,6 +227,7 @@ git rev-parse HEAD && git rev-parse origin/main
 | Storage Bucket Hardening (7 Buckets) | `354b056` | `storage.buckets` zeigt Limits+MIME |
 | CAMT Dublettensperre DB | `20261003000000` | UNIQUE INDEX existiert live |
 | **ChairMatch Pricing** (Phase 7) | `20260824_pricing_schema` | Alle Spalten live vorhanden; `anon` auf beiden Tabellen HTTP 401. |
+| **SEPA Doppeleinzug-Sperre** (Phase 8.6) | `20261006000000` | Partieller UNIQUE-Index `uq_sepa_batch_items_invoice_offen` existiert live; 0 Duplikate vor Anlage; `WHERE status IN ('offen','eingezogen')` |
 | **CAMT-Trockenlauf schreibt nichts** (Phase 7) | -- | Gegen echtes Postgres (PGlite): Zeilenzahlen vor/nach identisch, plus Gegenprobe |
 | CAMT Parser App-seitig | diverse | 961-Zeilen E2E-Suite gruen |
 | Anforderungskatalog DiPA | `5b7fe21` | 60 Tests, 6 pure functions |
@@ -328,7 +340,8 @@ fest und wertet eine reine `auth.getUser()`-Pruefung ausdruecklich NICHT als
 Schranke -- unter `/api/admin` ist auch jeder Kunde angemeldet.
 
 **Stand:** Typecheck 0 Fehler, vitest 6.527 gruen, `npm run test:unit` 2.211
-gruen. Eine Migration wartet auf den SQL-Editor: `20261006000000`.
+gruen. Migration `20261006000000` via Supabase MCP `apply_migration`
+LIVE_VERIFIZIERT (partieller UNIQUE-Index existiert, 0 Duplikate).
 
 ---
 
