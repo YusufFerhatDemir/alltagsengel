@@ -1172,6 +1172,33 @@ export async function correctInvoice(
     }
   }
 
+  // ── Budget-Topf der Korrektur = Budget-Topf des Originals ────────────
+  // Die Positionen der Korrekturrechnung trugen bisher `budget_type: null`.
+  // Damit konnte `ermittleBudgetLage()` sie keinem Topf zuordnen und zaehlte
+  // sie — ueber den konservativen Fallback fuer unbekannte Werte — gegen
+  // JEDEN geprueften Topf: dieselbe Korrektur verbrauchte einmal § 45b und
+  // einmal § 42a. Der Topf ist bekannt, er steht an den Positionen des
+  // Originals; er wird deshalb uebernommen. Nur wenn das Original selbst
+  // keinen eindeutigen Topf hat, bleibt es bei null.
+  const { data: originalPosten, error: originalPostenError } = await supabase
+    .from('invoice_items')
+    .select('budget_type')
+    .eq('invoice_id', invoiceId);
+
+  if (originalPostenError) {
+    throw new Error(
+      `Positionen der Originalrechnung nicht lesbar (${originalPostenError.message}) — `
+      + `der Budget-Topf der Korrektur waere unbelegt.`
+    );
+  }
+
+  const topfWerte = new Set(
+    (originalPosten ?? [])
+      .map(p => String(p.budget_type ?? '').trim())
+      .filter(w => w !== '')
+  );
+  const korrekturBudgetType = topfWerte.size === 1 ? [...topfWerte][0] : null;
+
   // Korrekturnummer generieren
   const korrekturNummer = await generateInvoiceNumber(
     supabase,
@@ -1215,7 +1242,7 @@ export async function correctInvoice(
     date: c.leistungsdatum,
     duration_minutes: null,
     amount: c.gesamtpreisCent / 100,
-    budget_type: null,
+    budget_type: korrekturBudgetType,
     organization_id: original.organization_id,
   }));
 

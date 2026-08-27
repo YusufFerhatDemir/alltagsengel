@@ -79,3 +79,75 @@ test('pruefeBudget: kein Budget hinterlegt (Selbstzahler) → Hinweis, kein Bloc
   assert.equal(ergebnis.blockiert, false)
   assert.ok(ergebnis.warnung?.includes('Selbstzahler'))
 })
+
+// ═══════════════════════════════════════════════════════════════════
+// § 45b-Übertrag verfällt am 30.06. (Befund 27.08.2026)
+// ═══════════════════════════════════════════════════════════════════
+//
+// `available` schlug den carryover ganzjährig auf. Im zweiten Halbjahr
+// rechnete die Prüfung damit gegen ein Budget, das es nicht mehr gibt:
+// die 95-/100-Prozent-Schwellen schlugen zu spät oder gar nicht an, und
+// die Disposition gab Einsätze frei, die niemand mehr bezahlt.
+//
+// pruefeBudget() stellt auf HEUTE ab (Planungsprüfung, kein Abrechnungs-
+// monat). Die Fälle unten setzen carryover_expires deshalb relativ zum
+// heutigen Tag, statt ein festes Datum zu unterstellen.
+
+function tagVerschoben(tage: number): string {
+  const d = new Date()
+  d.setUTCDate(d.getUTCDate() + tage)
+  return d.toISOString().slice(0, 10)
+}
+
+test('pruefeBudget: noch nicht verfallener Übertrag erhöht das verfügbare Budget', async () => {
+  // 1000 Anspruch + 1000 Übertrag = 2000 verfügbar, 1000 verbraucht → 50%.
+  const supabase = mockClientBudgets({
+    annual_amount: 1000, carryover_amount: 1000, carryover_expires: tagVerschoben(30),
+    used_amount: 1000, combined_annual_amount: 0, combined_used_amount: 0,
+  })
+  const ergebnis = await pruefeBudget(supabase, 'client-1', 'org-1', 'entlastung')
+  assert.equal(ergebnis.prozent, 50)
+  assert.equal(ergebnis.blockiert, false)
+})
+
+test('pruefeBudget: verfallener Übertrag zählt nicht mehr mit → Block', async () => {
+  // Dieselben Zahlen, Übertrag gestern verfallen: 1000 verfügbar,
+  // 1000 verbraucht → 100% und Block. Vorher meldete dieser Fall 50%.
+  const supabase = mockClientBudgets({
+    annual_amount: 1000, carryover_amount: 1000, carryover_expires: tagVerschoben(-1),
+    used_amount: 1000, combined_annual_amount: 0, combined_used_amount: 0,
+  })
+  const ergebnis = await pruefeBudget(supabase, 'client-1', 'org-1', 'entlastung')
+  assert.equal(ergebnis.prozent, 100)
+  assert.equal(ergebnis.blockiert, true)
+})
+
+test('pruefeBudget: Übertrag gilt am Verfallstag selbst noch', async () => {
+  const supabase = mockClientBudgets({
+    annual_amount: 1000, carryover_amount: 1000, carryover_expires: tagVerschoben(0),
+    used_amount: 1000, combined_annual_amount: 0, combined_used_amount: 0,
+  })
+  const ergebnis = await pruefeBudget(supabase, 'client-1', 'org-1', 'entlastung')
+  assert.equal(ergebnis.prozent, 50)
+})
+
+test('pruefeBudget: ohne carryover_expires gilt der gesetzliche 30.06.', async () => {
+  // Kein geratener Ersatzwert, sondern § 45b Abs. 1 S. 4 SGB XI selbst.
+  const imErstenHalbjahr = new Date().toISOString().slice(5, 10) <= '06-30'
+  const supabase = mockClientBudgets({
+    annual_amount: 1000, carryover_amount: 1000, carryover_expires: null,
+    used_amount: 1000, combined_annual_amount: 0, combined_used_amount: 0,
+  })
+  const ergebnis = await pruefeBudget(supabase, 'client-1', 'org-1', 'entlastung')
+  assert.equal(ergebnis.prozent, imErstenHalbjahr ? 50 : 100)
+})
+
+test('pruefeBudget: § 42a kennt keinen Übertrag — carryover bleibt dort außen vor', async () => {
+  const supabase = mockClientBudgets({
+    annual_amount: 0, carryover_amount: 5000, carryover_expires: tagVerschoben(30),
+    used_amount: 0, combined_annual_amount: 1000, combined_used_amount: 1000,
+  })
+  const ergebnis = await pruefeBudget(supabase, 'client-1', 'org-1', 'verhinderungspflege')
+  assert.equal(ergebnis.prozent, 100)
+  assert.equal(ergebnis.blockiert, true)
+})

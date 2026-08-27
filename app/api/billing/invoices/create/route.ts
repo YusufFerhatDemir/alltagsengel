@@ -6,6 +6,7 @@ import { createInvoiceDraft } from '@/lib/billing/core'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { ohneStornierte } from '@/lib/leistungsnachweis/status-sync'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -147,9 +148,15 @@ export const POST = withTracking(async function POST(request: Request) {
       budgetTypes = [budgetType]
     } else {
       // Alle Budget-Typen mit abrechenbaren Leistungen ermitteln
-      const { data: records, error: recError } = await admin
+      // proof_status/billing_status muessen mitgelesen werden: ein Storno
+      // laesst service_records.status auf 'signed' stehen (kein Gegenstueck
+      // im status-Werteset). Ohne diese Spalten saehe ein vollstaendig
+      // stornierter Monat hier abrechenbar aus, und die RPC braeche danach
+      // mit 'Keine abrechenbaren Leistungen' ab — dieselbe Regel wie in
+      // create_invoice_draft_atomic v10 (Migration 20261013000000).
+      const { data: alleRecords, error: recError } = await admin
         .from('service_records')
-        .select('budget_type')
+        .select('budget_type, proof_status, billing_status')
         .eq('client_id', clientId)
         .in('status', ['signed', 'complete'])
         .gte('date', periodStart)
@@ -159,7 +166,9 @@ export const POST = withTracking(async function POST(request: Request) {
         return safeApiError(recError, request)
       }
 
-      if (!records || records.length === 0) {
+      const records = ohneStornierte(alleRecords || [])
+
+      if (records.length === 0) {
         return NextResponse.json(
           { error: 'Keine abrechenbaren Leistungen fuer diesen Zeitraum.' },
           { status: 404 }

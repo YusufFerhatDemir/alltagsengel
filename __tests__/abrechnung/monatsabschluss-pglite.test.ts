@@ -111,21 +111,26 @@ async function legeEinsatz(opts: {
   status?: string
   unterschrift?: string | null
   serviceType?: string
+  /** proof_status — 'STORNIERT' laesst `status` bewusst unveraendert. */
+  proofStatus?: string | null
+  billingStatus?: string | null
 }): Promise<string> {
   const id = neueId('50000000')
   await db.query(
     `INSERT INTO public.service_records
        (id, organization_id, client_id, caregiver_id, date, start_time, end_time,
         duration_minutes, service_type, budget_type, amount, client_signature,
-        caregiver_initials, status, verordnung_id)
+        caregiver_initials, status, verordnung_id, proof_status, billing_status)
      VALUES ($1, $2, $3, $4, $5, '09:00', '10:00', $6, $7, 'entlastung', 0, $8,
-             'AB', $9, $10)`,
+             'AB', $9, $10, $11, $12)`,
     [
       id, opts.org, opts.klient, ENGEL, opts.datum, opts.minuten,
       opts.serviceType ?? LEISTUNGSART,
       opts.unterschrift === undefined ? 'sig-data' : opts.unterschrift,
       opts.status ?? 'complete',
       opts.verordnung,
+      opts.proofStatus === undefined ? 'UNTERSCHRIEBEN' : opts.proofStatus,
+      opts.billingStatus === undefined ? 'OFFEN' : opts.billingStatus,
     ] as never[],
   )
   return id
@@ -284,6 +289,59 @@ describe('Auswahl der Einsaetze', () => {
     expect(r.verordnungen_geprueft).toBe(1)
     expect(r.gruppen).toEqual([])
     expect(r.positionen_abrechenbar).toBe(0)
+  })
+
+  // ── Storno (Befund 27.08.2026) ─────────────────────────────────────
+  // Ein Storno schreibt nur proof_status/billing_status. `status` bleibt auf
+  // 'signed' bzw. 'invoiced' stehen, weil das status-Werteset keinen
+  // Storno-Wert kennt. Der Monatsabschluss zaehlte die widerrufene Leistung
+  // dadurch als abrechenbar und wies ihren Betrag in der Gesamtsumme aus.
+
+  it('zaehlt einen ueber proof_status stornierten Einsatz nicht mehr mit', async () => {
+    await legeEinsatz({ org: ORG_A, klient: KLIENT_A, verordnung, datum: '2026-07-05', minuten: 60 })
+    await legeEinsatz({
+      org: ORG_A, klient: KLIENT_A, verordnung, datum: '2026-07-06', minuten: 60,
+      status: 'signed', proofStatus: 'STORNIERT', billingStatus: 'STORNIERT',
+    })
+
+    const r = await lauf({ dryRun: true })
+    expect(r.gruppen[0].positionen[0].einsaetze).toBe(1)
+    expect(r.gruppen[0].positionen[0].minuten).toBe(60)
+    // 60 Min zu 30,00 EUR/Std — nicht 120 Min zu 60,00 EUR.
+    expect(r.gesamt_cent).toBe(3000)
+  })
+
+  it('schliesst auch aus, wenn nur billing_status auf STORNIERT steht', async () => {
+    await legeEinsatz({ org: ORG_A, klient: KLIENT_A, verordnung, datum: '2026-07-05', minuten: 60 })
+    await legeEinsatz({
+      org: ORG_A, klient: KLIENT_A, verordnung, datum: '2026-07-06', minuten: 60,
+      billingStatus: 'STORNIERT',
+    })
+
+    const r = await lauf({ dryRun: true })
+    expect(r.gruppen[0].positionen[0].einsaetze).toBe(1)
+  })
+
+  it('haelt Altbestand ohne Storno-Angaben weiter abrechenbar', async () => {
+    await legeEinsatz({
+      org: ORG_A, klient: KLIENT_A, verordnung, datum: '2026-07-05', minuten: 60,
+      proofStatus: null, billingStatus: null,
+    })
+
+    const r = await lauf({ dryRun: true })
+    expect(r.gruppen[0].positionen[0].einsaetze).toBe(1)
+  })
+
+  it('laesst eine Gruppe ganz weg, wenn alle Einsaetze storniert sind', async () => {
+    await legeEinsatz({
+      org: ORG_A, klient: KLIENT_A, verordnung, datum: '2026-07-05', minuten: 60,
+      status: 'signed', proofStatus: 'STORNIERT', billingStatus: 'STORNIERT',
+    })
+
+    const r = await lauf({ dryRun: true })
+    expect(r.gruppen).toEqual([])
+    expect(r.positionen_abrechenbar).toBe(0)
+    expect(r.gesamt_cent).toBe(0)
   })
 
   it('greift nicht auf Verordnungen anderer Mandanten zu', async () => {

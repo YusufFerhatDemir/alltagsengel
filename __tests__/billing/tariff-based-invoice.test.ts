@@ -73,13 +73,15 @@ const createMockSupabase = () => ({
     }
     if (table === 'invoices') {
       // Zwei Lesewege auf derselben Tabelle:
-      //   • Liste der Bestandsrechnungen des Jahres (Budgetdeckel) — endet auf .lte()
+      //   • Liste der Bestandsrechnungen des Jahres (Budgetdeckel) — endet auf
+      //     .is('deleted_at', null); geloeschte Rechnungen verbrauchen kein Budget
       //   • Einzelzeile (Faelligkeit + Deckelung) — endet auf .maybeSingle()
       const kette: any = {};
       kette.select = () => kette;
       kette.eq = () => kette;
       kette.gte = () => kette;
-      kette.lte = vi.fn().mockResolvedValue({ data: [], error: null });
+      kette.lte = () => kette;
+      kette.is = vi.fn().mockResolvedValue({ data: [], error: null });
       kette.maybeSingle = vi.fn().mockResolvedValue({
         data: {
           id: 'inv-1',

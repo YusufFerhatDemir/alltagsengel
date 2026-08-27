@@ -6,6 +6,7 @@ import {
   VP_KZP_KOMBINIERT_EUR,
 } from '@/lib/config/budget-constants'
 import type { BudgetTyp } from '@/lib/config/budget-constants'
+import { uebertragVerfallsdatum } from '@/lib/billing/core/budget-cap'
 
 export interface FreigabeErgebnis {
   caregiverId: string
@@ -216,7 +217,7 @@ export async function pruefeBudget(
   const year = parseInt(heuteBerlin().slice(0, 4), 10)
   const { data: budget, error } = await supabase
     .from('client_budgets')
-    .select('annual_amount, carryover_amount, used_amount, combined_annual_amount, combined_used_amount')
+    .select('annual_amount, carryover_amount, carryover_expires, used_amount, combined_annual_amount, combined_used_amount')
     .eq('client_id', clientId)
     .eq('organization_id', organizationId)
     .eq('year', year)
@@ -248,7 +249,22 @@ export async function pruefeBudget(
     ? Number(budget.combined_annual_amount ?? 0) || defaultAmount
     : Number(budget.annual_amount ?? 0) || defaultAmount
   // § 42a kennt keinen Übertrag — carryover zählt nur beim Entlastungsbetrag.
-  const available = anspruch + (istVp ? 0 : Number(budget.carryover_amount ?? 0))
+  //
+  // Und auch dort nur bis zum 30.06. (§ 45b Abs. 1 S. 4 SGB XI): der Übertrag
+  // aus dem Vorjahr verfällt zur Jahresmitte. Er wurde hier bisher ganzjährig
+  // aufgeschlagen — im Dezember sah ein längst erloschener Anspruch noch wie
+  // freies Budget aus, und die 95-/100-Prozent-Schwellen schlugen zu spät oder
+  // gar nicht an. Dieselbe Regel wie im Rechnungsweg
+  // (lib/billing/core/budget-cap.ts, uebertragGiltNoch).
+  const heute = heuteBerlin()
+  const verfaelltAm = uebertragVerfallsdatum(
+    (budget as { carryover_expires?: string | null }).carryover_expires,
+    year,
+  )
+  const uebertrag = istVp || heute > verfaelltAm
+    ? 0
+    : Math.max(0, Number(budget.carryover_amount ?? 0))
+  const available = anspruch + uebertrag
   const used = Number((istVp ? budget.combined_used_amount : budget.used_amount) ?? 0)
   const pct = available > 0 ? Math.round((used / available) * 100) : 0
 

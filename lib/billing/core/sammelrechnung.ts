@@ -60,6 +60,7 @@ import { budgetTypeToRechtsgrundlage, TarifNichtVerifiziertError, type TarifStat
 import { tarifLeistungsart } from '../leistungsarten';
 import { logBillingAction } from './audit';
 import { validateTransition, isValidInvoiceStatus, type InvoiceStatus } from './status-machine';
+import { ohneStornierte } from '@/lib/leistungsnachweis/status-sync';
 
 // ---------------------------------------------------------------------------
 // Vokabular
@@ -263,6 +264,7 @@ export interface SammelrechnungNachweis {
   status: string;
   amount: number | null;
   proof_status: string | null;
+  billing_status: string | null;
   signature_hash: string | null;
 }
 
@@ -343,6 +345,16 @@ export function ueberspringCodeFuerFehler(err: unknown): { code: UeberspringCode
  * Kein deleted_at-Filter: `service_records` fuehrt die Spalte nicht, und die
  * RPC filtert ebenfalls nicht danach. Ein Filter waere hier ein 42703 und
  * damit ein still leerer Lauf.
+ *
+ * STORNIERTE Nachweise fallen dagegen heraus — genau wie in der RPC seit v10
+ * (Migration 20261013000000). Ein Storno laesst `status` auf 'signed' stehen,
+ * die Zeile saehe hier sonst weiter abrechenbar aus und der Lauf kuendigte
+ * Positionen an, die die Datenbank anschliessend weglaesst.
+ *
+ * Gefiltert wird in JavaScript und nicht per `.neq()`: in SQL ist
+ * `NULL <> 'STORNIERT'` selbst NULL, ein `.neq()` wuerde also den ganzen
+ * Altbestand ohne proof_status/billing_status mit ausschliessen. Die RPC
+ * rechnet mit COALESCE — `istStorniert()` tut dasselbe.
  */
 export async function ermittleGruppen(
   supabase: SupabaseClient,
@@ -352,7 +364,7 @@ export async function ermittleGruppen(
 
   let query = supabase
     .from('service_records')
-    .select('id, client_id, budget_type, service_type, date, status, amount, proof_status, signature_hash')
+    .select('id, client_id, budget_type, service_type, date, status, amount, proof_status, billing_status, signature_hash')
     .eq('organization_id', params.organizationId)
     .in('status', ['signed', 'complete'])
     .gte('date', von)
@@ -370,7 +382,7 @@ export async function ermittleGruppen(
   }
 
   const nachSchluessel = new Map<string, SammelrechnungNachweis[]>();
-  for (const r of data || []) {
+  for (const r of ohneStornierte(data || [])) {
     // budget_type ist der zweite Teil des Rasters. Fehlt er, kann die Zeile
     // keiner Rechnung zugeordnet werden — sie taucht als eigene Gruppe mit
     // unbekanntem Budget-Typ auf, statt still zu verschwinden.
