@@ -76,6 +76,21 @@ export interface SpeicherAntwort {
 
 export type SpeicherGeber = (aufruf: SpeicherAufruf) => SpeicherAntwort | undefined
 
+// ── RPC ────────────────────────────────────────────────────────────
+// Warum aufgezeichnet: bei Idempotenz- und CAS-Pfaden ist die
+// entscheidende Aussage haeufig „die RPC wurde NICHT gerufen" — etwa
+// dass ein zweiter manueller Retry kein zweites Workflow-Event
+// ausloest. Ein RPC-Stub ohne Protokoll kann das nicht belegen.
+
+export interface RpcAufruf {
+  name: string
+  args: Record<string, unknown> | undefined
+  /** Laufende Nummer ueber alle RPC-Aufrufe, ab 0. */
+  nr: number
+}
+
+export type RpcGeber = (aufruf: RpcAufruf) => FakeAntwort | undefined
+
 export interface FakeSupabase {
   /** In die zu pruefende Funktion zu reichen. */
   client: never
@@ -83,12 +98,16 @@ export interface FakeSupabase {
   aufrufe: FakeAufruf[]
   /** Alle Storage-Aufrufe in Reihenfolge. */
   speicherAufrufe: SpeicherAufruf[]
+  /** Alle RPC-Aufrufe in Reihenfolge. */
+  rpcAufrufe: RpcAufruf[]
   /** Alle Aufrufe auf eine Tabelle. */
   auf(tabelle: string): FakeAufruf[]
   /** Der erste Aufruf auf eine Tabelle mit dieser Operation. */
   ersterAuf(tabelle: string, operation?: Operation): FakeAufruf | undefined
   /** Alle Storage-Aufrufe einer Operation. */
   speicherAuf(operation: SpeicherAufruf['operation']): SpeicherAufruf[]
+  /** Alle Aufrufe einer bestimmten RPC. */
+  rpcAuf(name: string): RpcAufruf[]
 }
 
 /** Obergrenze gegen Endlosschleifen im Pruefling. */
@@ -134,9 +153,11 @@ const KETTEN_METHODEN = [
 export function erstelleFakeSupabase(
   antwortGeber: AntwortGeber,
   speicherGeber?: SpeicherGeber,
+  rpcGeber?: RpcGeber,
 ): FakeSupabase {
   const aufrufe: FakeAufruf[] = []
   const speicherAufrufe: SpeicherAufruf[] = []
+  const rpcAufrufe: RpcAufruf[] = []
   const zaehlerProTabelle = new Map<string, number>()
 
   function from(tabelle: string) {
@@ -261,14 +282,24 @@ export function erstelleFakeSupabase(
     },
   }
 
+  async function rpc(name: string, args?: Record<string, unknown>) {
+    const aufruf: RpcAufruf = { name, args, nr: rpcAufrufe.length }
+    rpcAufrufe.push(aufruf)
+    // Ohne rpcGeber das bisherige Verhalten: leere Erfolgsantwort.
+    const a = rpcGeber?.(aufruf) ?? {}
+    return { data: a.data ?? null, error: a.error ?? null }
+  }
+
   return {
-    client: { from, storage, rpc: async () => ({ data: null, error: null }) } as never,
+    client: { from, storage, rpc } as never,
     aufrufe,
     speicherAufrufe,
+    rpcAufrufe,
     auf: (tabelle: string) => aufrufe.filter(a => a.tabelle === tabelle),
     ersterAuf: (tabelle: string, operation?: Operation) =>
       aufrufe.find(a => a.tabelle === tabelle && (!operation || a.operation === operation)),
     speicherAuf: (operation: SpeicherAufruf['operation']) =>
       speicherAufrufe.filter(a => a.operation === operation),
+    rpcAuf: (name: string) => rpcAufrufe.filter(a => a.name === name),
   }
 }

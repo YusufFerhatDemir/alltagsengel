@@ -1,6 +1,6 @@
 import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { ladeQualityDashboard } from '@/lib/analytics/quality'
 import { standardZeitraumAktuellerMonat } from '@/lib/analytics/kpi'
@@ -22,7 +22,13 @@ export const GET = withTracking(async function GET(request: Request) {
   const zeitraum = von && bis ? { von, bis } : standardZeitraumAktuellerMonat()
 
   try {
-    const supabase = await createClient()
+    // Service-Role statt RLS-Client: pflege_massnahmen und vital_sign_thresholds
+    // haben keine RLS-Policy für pdl/qm (nur admin/superadmin + Engel), obwohl
+    // beide Rollen hier per requireOpsAdmin('berichte.lesen') zugriffsberechtigt
+    // sind — ohne Service-Role zeigte das Dashboard "offene Maßnahmen" für
+    // PDL/QM still immer als 0 und Vitalalarme ohne die client-spezifischen
+    // Grenzwerte (Fallback auf Standardwerte).
+    const supabase = createAdminClient()
     const dashboard = await ladeQualityDashboard(supabase, auth.ctx.organizationId, zeitraum)
     return NextResponse.json(dashboard)
   } catch (e: any) {

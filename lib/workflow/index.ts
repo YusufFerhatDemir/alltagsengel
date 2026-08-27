@@ -1,4 +1,5 @@
 export * from './types'
+export * from './validierung'
 export * from './events'
 export * from './regeln'
 export * from './ausfuehrungen'

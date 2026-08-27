@@ -50,9 +50,20 @@ export default function WorkflowWarteschlangePage() {
   useEffect(() => { setLoading(true); load() }, [filterStatus])
 
   async function retry(id: string) {
+    setError(null)
     try {
       const res = await fetch(`/api/ops/workflow/warteschlange/${id}/retry`, { method: 'POST' })
-      if (!res.ok) { setError('Fehler beim Wiederholen'); return }
+      if (!res.ok) {
+        // Die Route begruendet eine Ablehnung inzwischen konkret — etwa
+        // dass der Eintrag laengst erledigt ist. Diese Meldung zu
+        // verwerfen und "Fehler beim Wiederholen" anzuzeigen, laesst den
+        // Nutzer raten. Der haeufigste Fall ist eine veraltete Liste,
+        // deshalb wird danach neu geladen.
+        const err = await res.json().catch(() => ({}))
+        setError(err.error || 'Fehler beim Wiederholen')
+        await load()
+        return
+      }
       await load()
     } catch { setError('Netzwerkfehler') }
   }

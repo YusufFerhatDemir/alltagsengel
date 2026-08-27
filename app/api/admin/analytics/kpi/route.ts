@@ -1,6 +1,6 @@
 import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { ladeKpiDashboard, standardZeitraumAktuellerMonat } from '@/lib/analytics/kpi'
 import { withTracking } from '@/lib/monitoring/tracker'
@@ -15,7 +15,10 @@ export const GET = withTracking(async function GET(request: Request) {
   const zeitraum = von && bis ? { von, bis } : standardZeitraumAktuellerMonat()
 
   try {
-    const supabase = await createClient()
+    // Service-Role statt RLS-Client: satisfaction_calls hat keine
+    // RLS-Policy für pdl/qm (nur is_admin()) — ohne Service-Role zeigte der
+    // Zufriedenheits-KPI für PDL/QM still immer 0/leer.
+    const supabase = createAdminClient()
     const dashboard = await ladeKpiDashboard(supabase, auth.ctx.organizationId, zeitraum)
     return NextResponse.json(dashboard)
   } catch (e: any) {
