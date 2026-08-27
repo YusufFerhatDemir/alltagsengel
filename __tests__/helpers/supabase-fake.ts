@@ -53,15 +53,42 @@ export interface FakeAntwort {
 
 export type AntwortGeber = (aufruf: FakeAufruf) => FakeAntwort | undefined
 
+// ── Storage ────────────────────────────────────────────────────────────
+// Warum mit im Doppelgaenger: bei fail-closed-Pfaden ist die interessante
+// Aussage nicht „es kam ein Fehler", sondern „es wurde NICHTS abgelegt".
+// Ohne aufgezeichnete Uploads laesst sich das nicht pruefen — ein Test
+// koennte dann nur den geworfenen Fehler sehen und wuerde eine Datei, die
+// trotzdem im Bucket landet, uebersehen.
+
+export interface SpeicherAufruf {
+  bucket: string
+  operation: 'upload' | 'download' | 'createSignedUrl' | 'remove'
+  pfad: string
+  /** Bei upload: der uebergebene Inhalt. */
+  inhalt?: unknown
+  optionen?: unknown
+}
+
+export interface SpeicherAntwort {
+  data?: unknown
+  error?: { message: string } | null
+}
+
+export type SpeicherGeber = (aufruf: SpeicherAufruf) => SpeicherAntwort | undefined
+
 export interface FakeSupabase {
   /** In die zu pruefende Funktion zu reichen. */
   client: never
   /** Alle Aufrufe in Reihenfolge. */
   aufrufe: FakeAufruf[]
+  /** Alle Storage-Aufrufe in Reihenfolge. */
+  speicherAufrufe: SpeicherAufruf[]
   /** Alle Aufrufe auf eine Tabelle. */
   auf(tabelle: string): FakeAufruf[]
   /** Der erste Aufruf auf eine Tabelle mit dieser Operation. */
   ersterAuf(tabelle: string, operation?: Operation): FakeAufruf | undefined
+  /** Alle Storage-Aufrufe einer Operation. */
+  speicherAuf(operation: SpeicherAufruf['operation']): SpeicherAufruf[]
 }
 
 /** Obergrenze gegen Endlosschleifen im Pruefling. */
@@ -104,8 +131,12 @@ const KETTEN_METHODEN = [
   'order', 'limit', 'range', 'returns', 'abortSignal',
 ] as const
 
-export function erstelleFakeSupabase(antwortGeber: AntwortGeber): FakeSupabase {
+export function erstelleFakeSupabase(
+  antwortGeber: AntwortGeber,
+  speicherGeber?: SpeicherGeber,
+): FakeSupabase {
   const aufrufe: FakeAufruf[] = []
+  const speicherAufrufe: SpeicherAufruf[] = []
   const zaehlerProTabelle = new Map<string, number>()
 
   function from(tabelle: string) {
@@ -209,11 +240,35 @@ export function erstelleFakeSupabase(antwortGeber: AntwortGeber): FakeSupabase {
     return kette
   }
 
+  function speicherAntwort(aufruf: SpeicherAufruf): { data: unknown; error: { message: string } | null } {
+    speicherAufrufe.push(aufruf)
+    const a = speicherGeber?.(aufruf) ?? {}
+    return { data: a.data ?? null, error: a.error ?? null }
+  }
+
+  const storage = {
+    from(bucket: string) {
+      return {
+        upload: async (pfad: string, inhalt: unknown, optionen?: unknown) =>
+          speicherAntwort({ bucket, operation: 'upload', pfad, inhalt, optionen }),
+        download: async (pfad: string) =>
+          speicherAntwort({ bucket, operation: 'download', pfad }),
+        createSignedUrl: async (pfad: string, optionen?: unknown) =>
+          speicherAntwort({ bucket, operation: 'createSignedUrl', pfad, optionen }),
+        remove: async (pfade: string[]) =>
+          speicherAntwort({ bucket, operation: 'remove', pfad: pfade.join(',') }),
+      }
+    },
+  }
+
   return {
-    client: { from, rpc: async () => ({ data: null, error: null }) } as never,
+    client: { from, storage, rpc: async () => ({ data: null, error: null }) } as never,
     aufrufe,
+    speicherAufrufe,
     auf: (tabelle: string) => aufrufe.filter(a => a.tabelle === tabelle),
     ersterAuf: (tabelle: string, operation?: Operation) =>
       aufrufe.find(a => a.tabelle === tabelle && (!operation || a.operation === operation)),
+    speicherAuf: (operation: SpeicherAufruf['operation']) =>
+      speicherAufrufe.filter(a => a.operation === operation),
   }
 }
