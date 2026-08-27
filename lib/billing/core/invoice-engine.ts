@@ -620,9 +620,19 @@ export async function freezeInvoice(
     }
   }
 
-  // Rechnung einfrieren
+  // Rechnung einfrieren.
+  //
+  // CAS-Guard `.is('frozen_at', null)`: die Pruefung ganz oben ist ein
+  // Lesen-dann-Schreiben. Zwei gleichzeitige Laeufe sehen beide frozen_at
+  // = NULL. In der Praxis stolpert der Zweite schon am Snapshot
+  // (unique_invoice_version auf invoice_snapshots, Migration
+  // 20260806200000) — aber das ist ein Nebeneffekt einer fremden
+  // Bedingung, kein Vorsatz. Steht die Bedingung hier, kann die
+  // Festschreibung selbst nicht mehr doppelt schreiben, und der zweite
+  // Lauf bekommt die fachliche Meldung statt eines Datenbankfehlers.
+  // Dasselbe Muster steht in createCreditNote/releaseCreditNote.
   const frozenAt = new Date().toISOString();
-  const { error: updateError } = await supabase
+  const { data: eingefroren, error: updateError } = await supabase
     .from('invoices')
     .update({
       status: 'freigegeben',
@@ -630,10 +640,19 @@ export async function freezeInvoice(
       version,
       invoice_number_formatted: formattedNumber,
     })
-    .eq('id', invoiceId);
+    .eq('id', invoiceId)
+    .is('frozen_at', null)
+    .select('id');
 
   if (updateError) {
     throw new Error(`Rechnung konnte nicht eingefroren werden: ${updateError.message}`);
+  }
+
+  if (Array.isArray(eingefroren) && eingefroren.length === 0) {
+    throw new Error(
+      'Rechnung wurde zwischenzeitlich festgeschrieben (paralleler Zugriff). '
+      + 'Es wurde nichts geaendert.'
+    );
   }
 
   // Audit-Trail
