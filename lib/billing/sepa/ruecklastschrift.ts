@@ -23,6 +23,13 @@ export interface RuecklastschriftResult {
   mandateId: string | null;
   mandatGesperrt: boolean;
   gebuehrCent: number;
+  /**
+   * Die neue Mahnstufe — `null`, wenn keine gesetzt wurde. Der Grund dafuer
+   * steht dann in `mahnstufeUebersprungen`.
+   */
+  neueMahnstufe: string | null;
+  /** Warum die Mahnstufe NICHT erhoeht wurde. `null`, wenn sie erhoeht wurde. */
+  mahnstufeUebersprungen: string | null;
   fehler: string | null;
 }
 
@@ -49,7 +56,7 @@ const MAX_RUECKLASTSCHRIFTEN_BEVOR_SPERRE = 2;
  * 3. Rechnung wieder auf "offen" setzen
  * 4. Ruecklastschriftgebuehr buchen
  * 5. Mandat-Status pruefen (bei Mehrfach-Ruecklastschrift → sperren)
- * 6. Mahnstufe setzen
+ * 6. Mahnstufe setzen — ausser bei gesetzter Mahnsperre (siehe Schritt 7)
  */
 export async function verarbeiteRuecklastschrift(
   supabase: SupabaseClient,
@@ -66,6 +73,8 @@ export async function verarbeiteRuecklastschrift(
     mandateId: null,
     mandatGesperrt: false,
     gebuehrCent: 0,
+    neueMahnstufe: null,
+    mahnstufeUebersprungen: null,
     fehler: null,
   };
 
@@ -132,6 +141,16 @@ export async function verarbeiteRuecklastschrift(
     }
 
     if (!sepaItem) {
+      // `erkannt` steuert beim Aufrufer, ob die Buchung als verarbeitet
+      // oder als Klaerfall zaehlt (app/api/billing/camt/import/route.ts).
+      // Es war auf `true` vorbelegt und wurde hier nie zurueckgesetzt: eine
+      // Ruecklastschrift, zu der KEINE Lastschrift gefunden wurde, kam
+      // damit als 'ruecklastschrift_verarbeitet' und als „zugeordnet" in
+      // der Antwort an — obwohl nichts storniert, nichts wieder geoeffnet
+      // und keine Gebuehr gebucht wurde. Das Geld war zurueck, die
+      // Rechnung galt weiter als bezahlt, und niemand bekam den Fall auf
+      // den Tisch.
+      result.erkannt = false;
       result.fehler = 'Keine zugehoerige SEPA-Lastschrift gefunden';
       return result;
     }
@@ -302,13 +321,39 @@ export async function verarbeiteRuecklastschrift(
     }
 
     // 7. Mahnstufe hochsetzen
+    //
+    // BEFUND F-2 (Phase 8): dieser Weg setzt die Mahnstufe direkt, ohne
+    // durch `advanceDunning()` und dessen Gate zu laufen. Das ist zum Teil
+    // Absicht — eine geplatzte Lastschrift ist ein eigenes Ereignis und soll
+    // NICHT auf den regulaeren Stufenabstand warten muessen. Genau diese
+    // Punkte des Gates (5 Faelligkeit, 9 Stufenabstand, 10 Doppelmahnung)
+    // wuerden hier das Falsche tun.
+    //
+    // Eine manuelle Mahnsperre ist etwas anderes. Sie wird gesetzt, wenn ein
+    // Fall bewusst aus dem automatischen Mahnlauf genommen wurde
+    // (Ratenvereinbarung, Klaerung mit der Kasse, Trauerfall). Wird die Stufe
+    // trotzdem stillschweigend hochgezaehlt, springt der Kunde beim Aufheben
+    // der Sperre ohne Zwischenschritt auf mahnung_1 — ohne dass jemals eine
+    // Erinnerung hinausging und ohne dass irgendwo ablesbar ist, warum.
+    // Deshalb hier: nicht erhoehen, aber den Grund mitgeben, statt still
+    // nichts zu tun.
+    //
+    // Der Mandanten-Fence auf allen drei Abfragen ist Absicht: der Aufrufer
+    // uebergibt einen Admin-Client, der RLS umgeht. `sepaItem` stammt zwar
+    // bereits aus einer mandantengefencten Suche — aber eine Sperre, die nur
+    // ueber die Herkunft einer Variablen gilt, haelt keine Umbauten aus.
     const { data: dunning } = await supabase
       .from('dunning_entries')
-      .select('id, dunning_level')
+      .select('id, dunning_level, block_dunning, block_reason')
       .eq('invoice_id', sepaItem.invoice_id)
+      .eq('organization_id', organizationId)
       .single();
 
-    if (dunning) {
+    if (dunning?.block_dunning) {
+      result.mahnstufeUebersprungen =
+        `Mahnsperre gesetzt (${dunning.block_reason || 'kein Grund hinterlegt'}) — `
+        + 'Stufe unveraendert. Die Ruecklastschrift ist gebucht, die Gebuehr ebenfalls.';
+    } else if (dunning) {
       const ESCALATION_LEVELS = ['offen', 'erinnerung', 'mahnung_1', 'mahnung_2', 'letzte_mahnung'];
       const currentIdx = ESCALATION_LEVELS.indexOf(dunning.dunning_level || 'offen');
       const newIdx = Math.max(currentIdx + 1, 2);
@@ -320,12 +365,18 @@ export async function verarbeiteRuecklastschrift(
           dunning_level: newLevel,
           last_dunning_at: new Date().toISOString(),
         })
-        .eq('id', dunning.id);
+        .eq('id', dunning.id)
+        .eq('organization_id', organizationId);
 
       await supabase
         .from('invoices')
         .update({ dunning_level: newLevel })
-        .eq('id', sepaItem.invoice_id);
+        .eq('id', sepaItem.invoice_id)
+        .eq('organization_id', organizationId);
+
+      result.neueMahnstufe = newLevel;
+    } else {
+      result.mahnstufeUebersprungen = 'Kein Mahnvorgang zu dieser Rechnung — Stufe nicht gesetzt.';
     }
 
     // Audit
@@ -339,11 +390,16 @@ export async function verarbeiteRuecklastschrift(
         mandateId: sepaItem.mandate_id,
         mandatGesperrt: result.mandatGesperrt,
         gebuehrCent: result.gebuehrCent,
+        neueMahnstufe: result.neueMahnstufe,
+        mahnstufeUebersprungen: result.mahnstufeUebersprungen,
       },
       actorId,
     });
 
   } catch (e) {
+    // Ein Abbruch mitten im Vorgang ist kein erledigter Vorgang. Auch hier
+    // muss der Aufrufer einen Klaerfall sehen, keine Erfolgsmeldung.
+    result.erkannt = false;
     result.fehler = e instanceof Error ? e.message : String(e);
   }
 

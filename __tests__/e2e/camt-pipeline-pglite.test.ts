@@ -787,6 +787,59 @@ describe('Fall 10: Duplikate', () => {
     expect(await zaehle('zahlungseingaenge')).toBe(2)
   })
 
+  // ── Befund F-1 (Phase 8) ──
+  //
+  // Die Pruefung oben vergleicht gegen die DATENBANK. Steht dieselbe
+  // Buchung ZWEIMAL in derselben Datei, ist sie in beiden Faellen „noch
+  // nicht verbucht" — beide Zeilen liefen bis zum INSERT durch. Die zweite
+  // scheiterte dort am UNIQUE-Index (20261003000000) mit einem nackten
+  // 23505, landete in `nichtGespeichert` und setzte den ganzen Import auf
+  // Status 'fehler', obwohl nichts fehlte.
+  it('BEFUND F-1: eine in DERSELBEN Datei doppelte Buchung wird einmal verbucht', async () => {
+    await leereStrecke()
+    const doppelt = ntry({ betrag: '33.00', ref: 'REF-F1', e2e: 'E2E-F1', zweck: 'Beitrag' })
+
+    const r = await importiere(auszug(doppelt + doppelt, 'M-F1'), 'f1.xml')
+
+    expect(r.status).toBe(201)
+    expect(r.body.buchungenGesamt).toBe(1)
+    expect(await zaehle('zahlungseingaenge')).toBe(1)
+  })
+
+  it('BEFUND F-1: der Import bleibt dabei "verarbeitet" — kein Fehlerstatus ohne Fehler', async () => {
+    const [imp] = await zeilen<{ status: string }>('SELECT status FROM public.camt_imports')
+    expect(imp.status).toBe('verarbeitet')
+  })
+
+  it('BEFUND F-1: die uebersprungene Zeile wird gezaehlt, nicht verschluckt', async () => {
+    await leereStrecke()
+    const doppelt = ntry({ betrag: '33.00', ref: 'REF-F2', e2e: 'E2E-F2', zweck: 'Beitrag' })
+
+    const r = await importiere(auszug(doppelt + doppelt + ntry({ betrag: '8.00', ref: 'REF-F2B' }), 'M-F2'), 'f2.xml')
+
+    expect(r.body.dateiDublettenUebersprungen).toBe(1)
+    // Die datei-interne Dublette ist KEINE bereits verbuchte Zeile — die
+    // beiden Zaehler duerfen nicht durcheinandergehen.
+    expect(r.body.dublettenUebersprungen).toBe(0)
+    expect(r.body.nichtGespeichert).toEqual([])
+    expect(await zaehle('zahlungseingaenge')).toBe(2)
+  })
+
+  it('BEFUND F-1: zwei UNTERSCHIEDLICHE Buchungen derselben Datei bleiben beide', async () => {
+    // Gegenprobe: der Deckel darf nicht mehr wegnehmen als die Dublette.
+    // Unterschied ist allein die Buchungsreferenz — genau das, was die
+    // Bank je Buchung eindeutig vergibt.
+    await leereStrecke()
+    const eins = ntry({ betrag: '33.00', ref: 'REF-F3A', e2e: 'E2E-F3', zweck: 'Beitrag' })
+    const zwei = ntry({ betrag: '33.00', ref: 'REF-F3B', e2e: 'E2E-F3', zweck: 'Beitrag' })
+
+    const r = await importiere(auszug(eins + zwei, 'M-F3'), 'f3.xml')
+
+    expect(r.body.dateiDublettenUebersprungen).toBe(0)
+    expect(r.body.buchungenGesamt).toBe(2)
+    expect(await zaehle('zahlungseingaenge')).toBe(2)
+  })
+
   it('sind ALLE Buchungen schon bekannt, antwortet die Route mit 409', async () => {
     await leereStrecke()
     const b = ntry({ betrag: '42.00', ref: 'REF-Z3', e2e: 'E2E-Z3', zweck: 'Beitrag' })
@@ -895,6 +948,106 @@ describe('Fall 11: Mandantengrenze', () => {
     expect(await zaehle('invoices', "status = 'bezahlt'")).toBe(1)
     expect(await zaehle('payments', `organization_id = '${ORG_B}'`)).toBe(1)
     expect(await zaehle('payments', `organization_id = '${ORG_A}'`)).toBe(0)
+  })
+})
+
+// ═════════════════════════════════════════════════════════════════════
+// Befund C-1 (Phase 8.2): „Cross-Tenant-Check fehlt im Live-Import".
+//
+// Richtig ist: die Mandantengrenzen-Pruefung aus camt-preflight.ts laeuft
+// nur im DRY_RUN-Weg, im buchenden Weg nicht. Was daraus NICHT folgt, ist
+// ein Mandantenleck — jede schreibende Abfrage dahinter traegt ihren
+// eigenen organization_id-Filter. Fall 11 zeigt das fuer den Zahlungsweg.
+//
+// Offen blieb der teuerste Weg: die Ruecklastschrift. Sie oeffnet eine
+// Rechnung wieder, storniert eine Zahlung, bucht eine Gebuehr, sperrt ein
+// Mandat und hebt die Mahnstufe — fuenf Schreibwirkungen auf einen
+// fremden Kunden, falls der Fence dort faellt. Genau das pruefen die zwei
+// Faelle hier.
+describe('Befund C-1: Ruecklastschrift ueber die Mandantengrenze', () => {
+  const MANDAT_B = 'aaaa1111-0000-4000-8000-00000000cb01'
+  const BATCH_B = 'aaaa2222-0000-4000-8000-00000000cb01'
+  let rechnungB: string
+
+  beforeAll(async () => {
+    await leereStrecke()
+    rechnungB = await legeRechnung({
+      org: ORG_B, klient: KLIENT_B, nummer: 'RE-2026-0090', betragEuro: 77, status: 'bezahlt',
+    })
+    await db.exec(`
+      UPDATE public.invoices SET paid_amount = 77 WHERE id = '${rechnungB}';
+
+      INSERT INTO public.sepa_mandates
+        (id, organization_id, client_id, mandate_reference, mandate_date,
+         debtor_name, debtor_iban, status)
+      VALUES ('${MANDAT_B}', '${ORG_B}', '${KLIENT_B}', 'MANDAT-ORG-B', '2026-01-01',
+              'Berta Fremdorg', '${IBAN_KUNDE}', 'aktiv');
+
+      INSERT INTO public.sepa_batches
+        (id, organization_id, batch_number, requested_collection_date)
+      VALUES ('${BATCH_B}', '${ORG_B}', 'SEPA-B-1', '2026-08-10');
+
+      INSERT INTO public.sepa_batch_items
+        (organization_id, batch_id, invoice_id, mandate_id, amount_cents,
+         end_to_end_id, status)
+      VALUES ('${ORG_B}', '${BATCH_B}', '${rechnungB}', '${MANDAT_B}', 7700,
+              'E2E-LS-ORG-B', 'eingezogen');
+    `)
+  })
+
+  it('Mandant A importiert eine Ruecklastschrift auf den Posten von Mandant B — ohne Wirkung dort', async () => {
+    halter.auth = { organizationId: ORG_A, userId: ADMIN_A }
+    const r = await importiere(auszug(ntry({
+      betrag: '77.00', richtung: 'DBIT', ref: 'REF-RL-B', e2e: 'E2E-LS-ORG-B',
+      mndt: 'MANDAT-ORG-B', extra: '<RvslInd>true</RvslInd>',
+    }), 'M-CB'), 'cross-rl.xml')
+
+    // Der Import selbst laeuft durch — die Buchung wird als unklare
+    // Ruecklastschrift abgelegt, nicht als Treffer.
+    expect(r.status).toBe(201)
+    expect(r.body.zugeordnet).toBe(0)
+    expect(r.body.klaerfaelle).toBe(1)
+    const [erg] = r.body.ergebnisse as { status: string }[]
+    expect(erg.status).toBe('ruecklastschrift_unklar')
+  })
+
+  it('die nicht zuzuordnende Ruecklastschrift wird ein bearbeitbarer Klaerfall bei Mandant A', async () => {
+    // Ohne diese Zeile waere der Fall nur eine Zahl in der Antwort: Geld
+    // zurueck, Rechnung weiter „bezahlt", niemand zustaendig.
+    const [k] = await zeilen<{ organization_id: string; status: string; grund: string }>(
+      'SELECT organization_id, status, grund FROM public.klaerfaelle',
+    )
+    expect(k.organization_id).toBe(ORG_A)
+    expect(k.status).toBe('offen')
+    expect(k.grund).toMatch(/Rücklastschrift konnte keiner SEPA-Lastschrift zugeordnet werden/)
+  })
+
+  it('die Rechnung von Mandant B bleibt bezahlt und ungemahnt', async () => {
+    const [inv] = await zeilen<{ status: string; dunning_level: string | null }>(
+      `SELECT status, dunning_level FROM public.invoices WHERE id = '${rechnungB}'`,
+    )
+    expect(inv.status).toBe('bezahlt')
+    expect(inv.dunning_level ?? 'offen').toBe('offen')
+  })
+
+  it('Mandat und Lastschriftposten von Mandant B bleiben unangetastet', async () => {
+    const [m] = await zeilen<{ status: string }>(
+      `SELECT status FROM public.sepa_mandates WHERE id = '${MANDAT_B}'`,
+    )
+    expect(m.status).toBe('aktiv')
+
+    const [item] = await zeilen<{ status: string }>(
+      `SELECT status FROM public.sepa_batch_items WHERE end_to_end_id = 'E2E-LS-ORG-B'`,
+    )
+    expect(item.status).toBe('eingezogen')
+  })
+
+  it('keine Gebuehr und keine Zeile landet bei Mandant B', async () => {
+    expect(await zaehle('payment_differences', `organization_id = '${ORG_B}'`)).toBe(0)
+    expect(await zaehle('zahlungseingaenge', `organization_id = '${ORG_B}'`)).toBe(0)
+    // Die eigene Zeile von Mandant A gibt es sehr wohl — sie ist der Beleg,
+    // dass der Weg gelaufen ist und nicht vorher abgebrochen hat.
+    expect(await zaehle('zahlungseingaenge', `organization_id = '${ORG_A}'`)).toBe(1)
   })
 })
 

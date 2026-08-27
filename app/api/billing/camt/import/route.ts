@@ -171,14 +171,39 @@ export async function POST(req: NextRequest) {
     const bekannt = new Set(
       (bekannteZeilen ?? []).map(z => (z as { quelldatei_hash: string }).quelldatei_hash),
     );
-    const neueBuchungen = zuVerarbeiten.filter(b => !bekannt.has(b.buchungsHash));
-    const dublettenUebersprungen = zuVerarbeiten.length - neueBuchungen.length;
+    const nochNichtVerbucht = zuVerarbeiten.filter(b => !bekannt.has(b.buchungsHash));
+    const dublettenUebersprungen = zuVerarbeiten.length - nochNichtVerbucht.length;
+
+    // ── Dublette INNERHALB derselben Datei ──
+    //
+    // BEFUND F-1 (Phase 5): die Pruefung oben vergleicht gegen die
+    // Datenbank. Steht dieselbe Buchung ZWEIMAL im selben Auszug, ist sie
+    // in beiden Faellen „noch nicht verbucht" — beide Zeilen liefen bis
+    // hierher durch. Die zweite scheiterte dann am UNIQUE-Index
+    // uq_zahlungseingaenge_org_buchungshash (20261003000000) mit einem
+    // nackten `23505`, landete in `nichtGespeichert` und setzte den ganzen
+    // Import auf Status 'fehler' — obwohl nichts fehlt.
+    //
+    // Die Entscheidung selbst faellt weiterhin die Datenbank; hier wird sie
+    // nur vorweggenommen, damit sie einen lesbaren Namen bekommt. Der
+    // Buchungshash deckt Betrag, Waehrung, beide Daten, Zahler-IBAN,
+    // Verwendungszweck, EndToEndId UND Buchungsreferenz ab — zwei
+    // Bankbuchungen mit identischer Buchungsreferenz gibt es nicht.
+    // Behalten wird die erste Zeile, gezaehlt wird jede weitere.
+    const gesehen = new Set<string>();
+    const neueBuchungen = nochNichtVerbucht.filter(b => {
+      if (gesehen.has(b.buchungsHash)) return false;
+      gesehen.add(b.buchungsHash);
+      return true;
+    });
+    const dateiDublettenUebersprungen = nochNichtVerbucht.length - neueBuchungen.length;
 
     if (neueBuchungen.length === 0) {
       return NextResponse.json(
         {
           error: 'Alle Buchungen dieses Auszugs sind bereits verbucht.',
           dublettenUebersprungen,
+          dateiDublettenUebersprungen,
         },
         { status: 409 },
       );
@@ -278,8 +303,26 @@ export async function POST(req: NextRequest) {
           istRuecklastschrift: true,
           ruecklastschriftGrund: buchung.ruecklastschriftGrund,
         });
-        if (rlResult.erkannt) zugeordnet++;
-        else klaerfaelle++;
+        if (rlResult.erkannt) {
+          zugeordnet++;
+        } else {
+          // Eine nicht zuzuordnende Ruecklastschrift ist der teuerste
+          // offene Posten im ganzen Import: das Geld ist zurueckgegangen,
+          // die zugehoerige Rechnung steht aber weiter auf 'bezahlt'.
+          // Vorher wurde sie nur gezaehlt — es entstand keine Zeile, die
+          // jemand haette abarbeiten koennen. Der normale Zahlungsweg legt
+          // an derselben Stelle einen Klaerfall an; hier fehlte er.
+          klaerfaelle++;
+          await supabase.from('klaerfaelle').insert({
+            organization_id: organizationId,
+            zahlungseingang_id: ze.id,
+            grund:
+              `Rücklastschrift konnte keiner SEPA-Lastschrift zugeordnet werden`
+              + `${rlResult.fehler ? `: ${rlResult.fehler}` : '.'}`,
+            vorschlaege: [],
+            status: 'offen',
+          });
+        }
         continue;
       }
 
@@ -339,6 +382,7 @@ export async function POST(req: NextRequest) {
         buchungen: neueBuchungen.length,
         vorgemerkt_uebersprungen: vorgemerkt.length,
         dubletten_uebersprungen: dublettenUebersprungen,
+        datei_dubletten_uebersprungen: dateiDublettenUebersprungen,
         ausgehende_uebersprungen: ausgehendeUebersprungen,
         nicht_gespeichert: nichtGespeichert.length,
         zugeordnet,
@@ -358,6 +402,8 @@ export async function POST(req: NextRequest) {
       // Ebenso die bereits bekannten Buchungen aus einem ueberlappenden
       // Auszug: sie fehlen absichtlich, das muss ablesbar sein.
       dublettenUebersprungen,
+      // Und die Zeilen, die in DIESER Datei doppelt standen (F-1).
+      dateiDublettenUebersprungen,
       ausgehendeUebersprungen,
       nichtGespeichert,
       zugeordnet,
