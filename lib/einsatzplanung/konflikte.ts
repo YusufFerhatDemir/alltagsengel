@@ -17,11 +17,13 @@
 // die Sorte Drift, die den Trigger und die UI auseinanderlaufen lässt.
 //
 // KEINE zweite Wahrheit gegenüber dem Trigger: die Mitarbeiter-Überschneidung
-// hat exakt dieselbe Semantik (gleiches Datum, echte Zeitüberlappung, Status
-// STORNIERT/cancelled/NO_SHOW zählen nicht). Zusätzlich — und darüber hinaus —
-// wird die Klienten-Überschneidung erkannt, die der Trigger NICHT kennt: zwei
-// Betreuungskräfte gleichzeitig bei derselben Person. Das ist fachlich nicht
-// immer falsch (Doppelbesetzung beim Transfer), deshalb warnt sie nur.
+// hat exakt dieselbe Semantik (gleiches Datum ODER gleiche Serie, echte
+// Zeitüberlappung, Status STORNIERT/cancelled/NO_SHOW zählen nicht — inkl. des
+// Serien-Zweigs mit Wochentag + Gültigkeitsfenster, siehe unten). Zusätzlich —
+// und darüber hinaus — wird die Klienten-Überschneidung erkannt, die der
+// Trigger NICHT kennt: zwei Betreuungskräfte gleichzeitig bei derselben
+// Person. Das ist fachlich nicht immer falsch (Doppelbesetzung beim
+// Transfer), deshalb warnt sie nur.
 // ═══════════════════════════════════════════════════════════════
 
 /** Status, die keinen Konflikt mehr auslösen — identisch zum DB-Trigger. */
@@ -32,6 +34,11 @@ export interface KonfliktEinsatz {
   client_id: string | null
   caregiver_id: string | null
   assignment_date: string | null
+  /** Wochentag einer Serie ohne Einzeldatum (0/7=So … 6=Sa, wie in `assignments.weekday`). */
+  weekday?: number | null
+  /** Gültigkeitsfenster einer Serie — nur relevant, wenn `weekday` gesetzt ist. */
+  valid_from?: string | null
+  valid_until?: string | null
   start_time: string | null
   end_time: string | null
   status: string | null
@@ -99,26 +106,83 @@ function zeitraum(e: KonfliktEinsatz): string {
   return `${(e.start_time ?? '').slice(0, 5)}–${(e.end_time ?? '').slice(0, 5)}`
 }
 
+const WOCHENTAGE = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag']
+
+function wochentagName(tag: number): string {
+  return WOCHENTAGE[tag === 7 ? 0 : tag] ?? `Wochentag ${tag}`
+}
+
+/** 'jeden Montag' bzw. 'am 2026-08-27' — für die Konfliktmeldung. */
+function zeitpunkt(e: KonfliktEinsatz): string {
+  if (e.assignment_date) return `am ${e.assignment_date}`
+  if (e.weekday != null) return `jeden ${wochentagName(e.weekday)}`
+  return ''
+}
+
+/**
+ * Heutiges Datum als 'YYYY-MM-DD' — Fallback für ein leeres Gültigkeits-
+ * fenster, exakt wie `CURRENT_DATE` im DB-Trigger.
+ */
+function isoHeute(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
+/**
+ * Überschneiden sich zwei Gültigkeitsfenster einer Serie? Fehlender Start
+ * gilt ab heute, fehlendes Ende gilt unbegrenzt — dieselbe COALESCE-Regel
+ * wie im DB-Trigger (`check_assignment_overlap`, Serien-Zweig).
+ */
+function serienfensterUeberschneiden(
+  aVon: string | null | undefined, aBis: string | null | undefined,
+  bVon: string | null | undefined, bBis: string | null | undefined,
+  heute: string,
+): boolean {
+  const vonA = aVon ?? heute
+  const bisA = aBis ?? '9999-12-31'
+  const vonB = bVon ?? heute
+  const bisB = bBis ?? '9999-12-31'
+  return vonA <= bisB && vonB <= bisA
+}
+
 /**
  * Findet alle Überschneidungen eines Kandidaten mit einem Bestand.
  *
- * Es wird ausschließlich gegen Einsätze MIT `assignment_date` geprüft. Eine
- * Serie (weekday + recurrence_rule) hat kein einzelnes Datum; der Trigger
- * behandelt sie über einen eigenen Zweig, und ohne die Serienauflösung hier
- * nachzubauen wäre jede Aussage dazu geraten. Das ist bewusst offen gelassen
- * und in der Antwort der Route benannt.
+ * Zwei Fälle, exakt wie im DB-Trigger `check_assignment_overlap`:
+ *  - Kandidat hat ein `assignment_date`: geprüft wird nur gegen Einsätze mit
+ *    demselben Datum.
+ *  - Kandidat hat stattdessen einen `weekday` (Serie ohne Einzeldatum): ge-
+ *    prüft wird nur gegen andere Serien mit demselben Wochentag, deren
+ *    Gültigkeitsfenster sich überschneidet — nie gegen datierte Einsätze,
+ *    weil ohne Serienauflösung nicht feststeht, ob sie je zusammenfallen.
+ * `heute` steuert den COALESCE-Fallback für ein offenes Gültigkeitsfenster
+ * und ist nur für Tests von außen vorgebbar.
  */
 export function findeKonflikte(
   kandidat: KonfliktEinsatz,
   bestand: KonfliktEinsatz[],
+  heute: string = isoHeute(),
 ): Konflikt[] {
-  if (!kandidat.assignment_date || !istAktiv(kandidat.status)) return []
+  if (!istAktiv(kandidat.status)) return []
+  const istSerie = !kandidat.assignment_date && kandidat.weekday != null
+  if (!kandidat.assignment_date && !istSerie) return []
 
   const konflikte: Konflikt[] = []
   for (const vorhanden of bestand) {
     if (vorhanden.id === kandidat.id) continue
     if (!istAktiv(vorhanden.status)) continue
-    if (vorhanden.assignment_date !== kandidat.assignment_date) continue
+
+    if (istSerie) {
+      if (vorhanden.assignment_date || vorhanden.weekday == null) continue
+      if (vorhanden.weekday !== kandidat.weekday) continue
+      if (!serienfensterUeberschneiden(
+        vorhanden.valid_from, vorhanden.valid_until,
+        kandidat.valid_from, kandidat.valid_until,
+        heute,
+      )) continue
+    } else {
+      if (vorhanden.assignment_date !== kandidat.assignment_date) continue
+    }
+
     if (!zeitenUeberschneiden(
       kandidat.start_time, kandidat.end_time,
       vorhanden.start_time, vorhanden.end_time,
@@ -129,8 +193,8 @@ export function findeKonflikte(
         art: 'mitarbeiter',
         gegenId: vorhanden.id,
         meldung:
-          `${name(vorhanden.caregiver_name, 'Die Betreuungskraft')} hat am ` +
-          `${kandidat.assignment_date} bereits einen Einsatz von ${zeitraum(vorhanden)} ` +
+          `${name(vorhanden.caregiver_name, 'Die Betreuungskraft')} hat ${zeitpunkt(kandidat)} ` +
+          `bereits einen Einsatz von ${zeitraum(vorhanden)} ` +
           `bei ${name(vorhanden.client_name, 'einem anderen Klienten')}.`,
       })
       continue
@@ -141,8 +205,8 @@ export function findeKonflikte(
         art: 'klient',
         gegenId: vorhanden.id,
         meldung:
-          `${name(vorhanden.client_name, 'Der Klient')} hat am ` +
-          `${kandidat.assignment_date} zur selben Zeit (${zeitraum(vorhanden)}) bereits ` +
+          `${name(vorhanden.client_name, 'Der Klient')} hat ${zeitpunkt(kandidat)} ` +
+          `zur selben Zeit (${zeitraum(vorhanden)}) bereits ` +
           `einen Einsatz mit ${name(vorhanden.caregiver_name, 'einer anderen Betreuungskraft')}.`,
       })
     }

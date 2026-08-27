@@ -187,12 +187,20 @@ export const POST = withTracking(async function POST(req: NextRequest) {
   // angebotener Übersteuerungsweg wäre eine Zusage, die die Datenbank nicht
   // einhält. Die Klienten-Überschneidung kennt der Trigger nicht und ist
   // fachlich nicht immer falsch (Doppelbesetzung beim Transfer) — sie warnt.
-  if (assignment_date) {
+  //
+  // Gilt auch für Serien (weekday statt assignment_date): der Trigger prüft
+  // sie über einen eigenen Zweig (Wochentag + Gültigkeitsfenster), den
+  // `ladeKonflikte`/`findeKonflikte` exakt nachbilden — vorher lief eine
+  // Serie hier ungeprüft durch und der Nutzer sah nur die rohe DB-Meldung.
+  if (assignment_date || weekday != null) {
     const konflikte = await ladeKonflikte(admin, organizationId, {
       id: '',
       client_id,
       caregiver_id,
       assignment_date,
+      weekday,
+      valid_from,
+      valid_until,
       start_time,
       end_time,
       status: assignmentStatus || 'GEPLANT',
@@ -326,10 +334,10 @@ export const PATCH = withTracking(async function PATCH(req: NextRequest) {
     // Greift, sobald sich Mitarbeiter, Datum oder Uhrzeit ändern. Nicht
     // veränderte Werte kommen aus dem Bestand — sonst würde ein reiner
     // Datumswechsel gegen den alten Tag geprüft und liefe ins Leere.
-    if (updates.caregiver_id || updates.assignment_date || updates.start_time || updates.end_time || updates.client_id) {
+    if (updates.caregiver_id || updates.assignment_date || updates.weekday != null || updates.start_time || updates.end_time || updates.client_id) {
       const { data: bestand } = await admin
         .from('assignments')
-        .select('client_id, caregiver_id, assignment_date, start_time, end_time, status')
+        .select('client_id, caregiver_id, assignment_date, weekday, valid_from, valid_until, start_time, end_time, status')
         .eq('id', id)
         .eq('organization_id', organizationId)
         .maybeSingle()
@@ -337,6 +345,9 @@ export const PATCH = withTracking(async function PATCH(req: NextRequest) {
       const caregiverId = updates.caregiver_id ?? bestand?.caregiver_id ?? null
       const clientId = updates.client_id ?? bestand?.client_id ?? null
       const datum = updates.assignment_date ?? bestand?.assignment_date ?? null
+      const wochentag = updates.weekday ?? bestand?.weekday ?? null
+      const gueltigVon = updates.valid_from ?? bestand?.valid_from ?? null
+      const gueltigBis = updates.valid_until ?? bestand?.valid_until ?? null
       const startZeit = updates.start_time ?? bestand?.start_time ?? null
       const endeZeit = updates.end_time ?? bestand?.end_time ?? null
 
@@ -362,12 +373,15 @@ export const PATCH = withTracking(async function PATCH(req: NextRequest) {
       // gegen Bestand + Änderung zusammen, damit ein reiner Zeitwechsel nicht
       // gegen die alten Werte läuft. Der eigene Datensatz zählt nicht mit
       // (Abgleich über `id` in findeKonflikte).
-      if (datum) {
+      if (datum || wochentag != null) {
         const konflikte = await ladeKonflikte(admin, organizationId, {
           id,
           client_id: clientId,
           caregiver_id: caregiverId,
           assignment_date: datum,
+          weekday: wochentag,
+          valid_from: gueltigVon,
+          valid_until: gueltigBis,
           start_time: startZeit,
           end_time: endeZeit,
           status: updates.status ?? bestand?.status ?? null,
