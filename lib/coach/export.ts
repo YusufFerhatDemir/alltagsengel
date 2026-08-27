@@ -9,8 +9,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type {
-  CoachActivity, CoachActivityLog, CoachAssessment, CoachConsent,
-  CoachGoal, CoachMeasurement, CoachReport, CoachUser,
+  CoachActivity, CoachActivityLog, CoachAnspruchspruefung, CoachAssessment, CoachConsent,
+  CoachGoal, CoachMeasurement, CoachReport, CoachShare, CoachUser,
 } from './types'
 import { COACH_PRODUKT_NAME, COACH_PRODUKT_VERSION } from './version'
 
@@ -27,6 +27,8 @@ export interface CoachExportInput {
   activityLog: CoachActivityLog[]
   measurements: CoachMeasurement[]
   reports: CoachReport[]
+  shares: CoachShare[]
+  anspruchspruefungen: CoachAnspruchspruefung[]
 }
 
 /**
@@ -111,6 +113,25 @@ export function buildExport(input: CoachExportInput) {
       zeitraum_bis: r.zeitraum_bis,
       erstellt_am: r.erstellt_am,
       inhalt: r.inhalt,
+    })),
+    // Wer Zugriff auf die eigenen Daten hat (Angehörige/Pflegedienst) und die
+    // Antworten der eigenen Anspruchsprüfung — beides wird bei der Löschung
+    // mitgezählt (app/api/coach/loeschung/route.ts), gehört also auch in den
+    // Art.-20-Export davor.
+    freigaben: input.shares.map(s => ({
+      empfaenger_rolle: s.empfaenger_rolle,
+      erstellt_am: s.erstellt_am,
+      widerrufen_am: s.widerrufen_am,
+    })),
+    anspruchspruefungen: input.anspruchspruefungen.map(a => ({
+      pflegegrad: a.pflegegrad,
+      pflegegrad_beantragt: a.pflegegrad_beantragt,
+      haeusliche_versorgung: a.haeusliche_versorgung,
+      nutzung_durch: a.nutzung_durch,
+      ergebnis: a.ergebnis,
+      kriterien_version: a.kriterien_version,
+      hinweise: a.hinweise,
+      geprueft_am: a.geprueft_am,
     })),
   }
 }

@@ -5,8 +5,33 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { validateAbschluss, validateProtokollEingabe, type CreateProtokollParams } from '../protokolle'
+import {
+  caregiverIdsGehoerenZuOrg,
+  validateAbschluss,
+  validateProtokollEingabe,
+  type CreateProtokollParams,
+} from '../protokolle'
 import type { Schicht } from '../types'
+
+function fakeCaregiversClient(gefunden: { id: string }[]) {
+  const calls: Array<{ table: string; filters: Array<[string, unknown]> }> = []
+  const supabase = {
+    from(table: string) {
+      const filters: Array<[string, unknown]> = []
+      const kette: any = {
+        select: () => kette,
+        eq: (spalte: string, wert: unknown) => { filters.push([spalte, wert]); return kette },
+        in: async (spalte: string, werte: unknown) => {
+          filters.push([spalte, werte])
+          calls.push({ table, filters })
+          return { data: gefunden, error: null }
+        },
+      }
+      return kette
+    },
+  }
+  return { supabase: supabase as never, calls }
+}
 
 function basis(overrides: Partial<CreateProtokollParams> = {}): CreateProtokollParams {
   return {
@@ -56,4 +81,30 @@ test('validateAbschluss lässt Punkte ODER Zusammenfassung genügen', () => {
 
 test('validateAbschluss verhindert den doppelten Abschluss', () => {
   assert.throws(() => validateAbschluss('abgeschlossen', 5, 'egal'), /bereits abgeschlossen/)
+})
+
+test('caregiverIdsGehoerenZuOrg gibt true zurück, wenn eine leere Liste übergeben wird', async () => {
+  const { supabase, calls } = fakeCaregiversClient([])
+  assert.equal(await caregiverIdsGehoerenZuOrg(supabase, [], 'org-1'), true)
+  assert.equal(calls.length, 0)
+})
+
+test('caregiverIdsGehoerenZuOrg gibt true zurück, wenn alle IDs zur Organisation gehören', async () => {
+  const { supabase, calls } = fakeCaregiversClient([{ id: 'cg-1' }, { id: 'cg-2' }])
+  const ergebnis = await caregiverIdsGehoerenZuOrg(supabase, ['cg-1', 'cg-2'], 'org-1')
+  assert.equal(ergebnis, true)
+  assert.equal(calls[0].table, 'caregivers')
+  assert.deepEqual(calls[0].filters, [['organization_id', 'org-1'], ['id', ['cg-1', 'cg-2']]])
+})
+
+test('caregiverIdsGehoerenZuOrg gibt false zurück, wenn eine ID zu einer fremden Organisation gehört', async () => {
+  const { supabase } = fakeCaregiversClient([{ id: 'cg-1' }])
+  const ergebnis = await caregiverIdsGehoerenZuOrg(supabase, ['cg-1', 'cg-fremd'], 'org-1')
+  assert.equal(ergebnis, false)
+})
+
+test('caregiverIdsGehoerenZuOrg dedupliziert, bevor sie zählt', async () => {
+  const { supabase } = fakeCaregiversClient([{ id: 'cg-1' }])
+  const ergebnis = await caregiverIdsGehoerenZuOrg(supabase, ['cg-1', 'cg-1'], 'org-1')
+  assert.equal(ergebnis, true)
 })

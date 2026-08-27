@@ -18,7 +18,7 @@ export const GET = withTracking(async function GET(request: NextRequest) {
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 
-  const [consents, assessments, goals, activities, log, messungen, berichte] = await Promise.all([
+  const [consents, assessments, goals, activities, log, messungen, berichte, freigaben, anspruchspruefungen] = await Promise.all([
     auth.supabase.from('coach_consents').select('*').eq('coach_user_id', auth.coachUser.id).order('erteilt_am', { ascending: true }),
     auth.supabase.from('coach_assessments').select('*').eq('coach_user_id', auth.coachUser.id).order('erhoben_am', { ascending: true }),
     auth.supabase.from('coach_goals').select('*').eq('coach_user_id', auth.coachUser.id).order('created_at', { ascending: true }),
@@ -26,9 +26,12 @@ export const GET = withTracking(async function GET(request: NextRequest) {
     auth.supabase.from('coach_activity_log').select('*').eq('coach_user_id', auth.coachUser.id).order('datum', { ascending: true }),
     auth.supabase.from('coach_measurements').select('*').eq('coach_user_id', auth.coachUser.id).order('erhoben_am', { ascending: true }),
     auth.supabase.from('coach_reports').select('*').eq('coach_user_id', auth.coachUser.id).order('erstellt_am', { ascending: true }),
+    auth.supabase.from('coach_shares').select('*').eq('owner_coach_user_id', auth.coachUser.id).order('erstellt_am', { ascending: true }),
+    auth.supabase.from('coach_anspruchspruefungen').select('*').eq('coach_user_id', auth.coachUser.id).order('geprueft_am', { ascending: true }),
   ])
 
-  const fehler = consents.error || assessments.error || goals.error || activities.error || log.error || messungen.error || berichte.error
+  const fehler = consents.error || assessments.error || goals.error || activities.error || log.error
+    || messungen.error || berichte.error || freigaben.error || anspruchspruefungen.error
   if (fehler) return NextResponse.json({ error: 'Export konnte nicht erstellt werden.' }, { status: 500 })
 
   if (request.nextUrl.searchParams.get('format') === 'fhir') {
@@ -59,6 +62,8 @@ export const GET = withTracking(async function GET(request: NextRequest) {
     activityLog: log.data ?? [],
     measurements: messungen.data ?? [],
     reports: berichte.data ?? [],
+    shares: freigaben.data ?? [],
+    anspruchspruefungen: anspruchspruefungen.data ?? [],
   })
 
   const dateiname = `pflegecoach-export-${heuteBerlin()}.json`

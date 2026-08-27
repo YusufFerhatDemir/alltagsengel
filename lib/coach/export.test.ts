@@ -53,6 +53,7 @@ const coachUser: CoachUser = {
 const leer = {
   exportiertAm: '2026-08-09T12:00:00Z', coachUser,
   consents: [], assessments: [], goals: [], activities: [], activityLog: [], measurements: [], reports: [],
+  shares: [], anspruchspruefungen: [],
 }
 
 test('buildExport: Format, Version und Nutzerblock', () => {
@@ -90,8 +91,22 @@ test('buildExport: konform zum veröffentlichten Schema (export.schema.json)', (
     activityLog: [{ id: 'l1', activity_id: 'ak1', coach_user_id: 'cu1', datum: '2026-08-03', status: 'erledigt', notiz: null, created_at: '' }],
     measurements: [{ id: 'm1', coach_user_id: 'cu1', instrument: 'belastung_kurz', messzeitpunkt: 't0', antworten: { erschoepfung: 1 }, summenwert: 7, erhoben_am: '2026-08-04T10:00:00Z', created_at: '' }],
     reports: [{ id: 'r1', coach_user_id: 'cu1', report_typ: 'verlaufsbericht', zeitraum_von: '2026-05-01', zeitraum_bis: '2026-08-01', inhalt: {}, erstellt_am: '2026-08-05T10:00:00Z' }],
+    shares: [{ id: 's1', owner_coach_user_id: 'cu1', grantee_user_id: 'u2', empfaenger_rolle: 'angehoerig', erstellt_am: '2026-08-06T10:00:00Z', widerrufen_am: null }],
+    anspruchspruefungen: [{ id: 'ap1', coach_user_id: 'cu1', pflegegrad: 2, pflegegrad_beantragt: false, haeusliche_versorgung: true, nutzung_durch: 'pflegebeduerftig', ergebnis: 'anspruch_moeglich', kriterien_version: '2026-08-v1', hinweise: [], geprueft_am: '2026-08-07T10:00:00Z' }],
   })
   assert.deepEqual(validiere(schema, voll), [])
+})
+
+test('buildExport: Freigaben und Anspruchsprüfung stehen im Export (gehören zum Löschumfang)', () => {
+  const ex = buildExport({
+    ...leer,
+    shares: [{ id: 's1', owner_coach_user_id: 'cu1', grantee_user_id: 'u2', empfaenger_rolle: 'pflegedienst', erstellt_am: '2026-08-06T10:00:00Z', widerrufen_am: null }],
+    anspruchspruefungen: [{ id: 'ap1', coach_user_id: 'cu1', pflegegrad: 3, pflegegrad_beantragt: false, haeusliche_versorgung: false, nutzung_durch: 'angehoerig', ergebnis: 'kein_anspruch', kriterien_version: '2026-08-v1', hinweise: ['x'], geprueft_am: '2026-08-07T10:00:00Z' }],
+  })
+  assert.equal(ex.freigaben.length, 1)
+  assert.equal(ex.freigaben[0].empfaenger_rolle, 'pflegedienst')
+  assert.equal(ex.anspruchspruefungen.length, 1)
+  assert.equal(ex.anspruchspruefungen[0].ergebnis, 'kein_anspruch')
 })
 
 test('Schema-Validator schlägt bei Verstößen wirklich an (Selbsttest)', () => {

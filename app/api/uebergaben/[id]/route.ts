@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { requireUebergabeAdmin, requireUebergabeUser } from '@/lib/uebergabe/api-auth'
-import { deleteProtokoll, getProtokoll, updateProtokoll } from '@/lib/uebergabe/protokolle'
+import { caregiverIdsGehoerenZuOrg, deleteProtokoll, getProtokoll, updateProtokoll } from '@/lib/uebergabe/protokolle'
 import { listPunkte } from '@/lib/uebergabe/punkte'
-import { listKenntnisnahmen } from '@/lib/uebergabe/kenntnisnahmen'
+import { listKenntnisnahmen, offeneKenntnisnahmen } from '@/lib/uebergabe/kenntnisnahmen'
 import { safeErrorResponse } from '@/lib/utils/api-error'
 import { withTracking } from '@/lib/monitoring/tracker'
 
@@ -25,7 +25,12 @@ export const GET = withTracking(async function GET(_request: Request, { params }
       listKenntnisnahmen(supabase, id, auth.ctx.organizationId),
     ])
 
-    return NextResponse.json({ protokoll: { ...protokoll, punkte, kenntnisnahmen } })
+    // Der eigentliche Nachweis ist nicht "wurde übergeben", sondern "wurde
+    // vom Folgedienst zur Kenntnis genommen" — deshalb die Differenz
+    // zwischen vorgesehenen Empfängern und tatsächlichen Quittungen.
+    const ausstehendeKenntnisnahmen = offeneKenntnisnahmen(protokoll.uebernehmer_caregiver_ids, kenntnisnahmen)
+
+    return NextResponse.json({ protokoll: { ...protokoll, punkte, kenntnisnahmen, ausstehendeKenntnisnahmen } })
   } catch (err) {
     return safeErrorResponse(err, 400)
   }
@@ -39,11 +44,17 @@ export const PATCH = withTracking(async function PATCH(request: Request, { param
     const body = await request.json()
 
     const supabase = auth.ctx.istAdmin ? createAdminClient() : await createClient()
+
+    const uebernehmerCaregiverIds = Array.isArray(body.uebernehmerCaregiverIds)
+      ? body.uebernehmerCaregiverIds
+      : undefined
+    if (uebernehmerCaregiverIds && !(await caregiverIdsGehoerenZuOrg(supabase, uebernehmerCaregiverIds, auth.ctx.organizationId))) {
+      return NextResponse.json({ error: 'Eine oder mehrere Betreuungskräfte gehören nicht zur Organisation.' }, { status: 404 })
+    }
+
     const protokoll = await updateProtokoll(supabase, id, auth.ctx.organizationId, {
       zusammenfassung: body.zusammenfassung,
-      uebernehmerCaregiverIds: Array.isArray(body.uebernehmerCaregiverIds)
-        ? body.uebernehmerCaregiverIds
-        : undefined,
+      uebernehmerCaregiverIds,
     })
 
     return NextResponse.json({ protokoll })

@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { requireUebergabeUser } from '@/lib/uebergabe/api-auth'
 import { deletePunkt, setErledigt, updatePunkt } from '@/lib/uebergabe/punkte'
+import { clientGehoertZuOrg } from '@/lib/clients/organization-guard'
 import { safeErrorResponse } from '@/lib/utils/api-error'
 import { withTracking } from '@/lib/monitoring/tracker'
 
@@ -25,6 +26,10 @@ export const PATCH = withTracking(async function PATCH(
         supabase, punktId, auth.ctx.organizationId, Boolean(body.erledigt), auth.ctx.userId,
       )
       return NextResponse.json({ punkt })
+    }
+
+    if (body.clientId && !(await clientGehoertZuOrg(supabase, body.clientId, auth.ctx.organizationId))) {
+      return NextResponse.json({ error: 'Klient nicht gefunden oder gehört nicht zur Organisation.' }, { status: 404 })
     }
 
     const punkt = await updatePunkt(supabase, punktId, auth.ctx.organizationId, {

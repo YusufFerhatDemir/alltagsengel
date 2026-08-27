@@ -4,7 +4,7 @@
   "title": "Digitaler PflegeCoach — Datenexport",
   "description": "Maschinenlesbarer Self-Service-Export aller Nutzerdaten (DiPAV Anlage 2 / Art. 20 DSGVO). Kodierungen: Selbsteinschätzungen 0=selbständig…4=umfassende Unterstützung; Wochentage 1=Montag…7=Sonntag; Belastungs-Items 0=nie…3=fast immer.",
   "type": "object",
-  "required": ["format", "version", "produkt", "exportiert_am", "hinweis", "nutzer", "einwilligungen", "assessments", "ziele", "aktivitaeten", "erledigungen", "messungen", "berichte"],
+  "required": ["format", "version", "produkt", "exportiert_am", "hinweis", "nutzer", "einwilligungen", "assessments", "ziele", "aktivitaeten", "erledigungen", "messungen", "berichte", "freigaben", "anspruchspruefungen"],
   "properties": {
     "format": { "const": "de.alltagsengel.pflegecoach.export" },
     "version": { "const": "1.0" },
@@ -135,6 +135,35 @@
           "zeitraum_bis": { "type": ["string", "null"] },
           "erstellt_am": { "type": "string" },
           "inhalt": { "type": "object" }
+        }
+      }
+    },
+    "freigaben": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["empfaenger_rolle", "erstellt_am"],
+        "properties": {
+          "empfaenger_rolle": { "enum": ["angehoerig", "pflegedienst"] },
+          "erstellt_am": { "type": "string" },
+          "widerrufen_am": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "anspruchspruefungen": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["ergebnis", "kriterien_version", "geprueft_am"],
+        "properties": {
+          "pflegegrad": { "type": ["integer", "null"] },
+          "pflegegrad_beantragt": { "type": "boolean" },
+          "haeusliche_versorgung": { "type": ["boolean", "null"] },
+          "nutzung_durch": { "enum": ["pflegebeduerftig", "angehoerig", "gemeinsam", null] },
+          "ergebnis": { "enum": ["anspruch_moeglich", "anspruch_unklar", "kein_anspruch"] },
+          "kriterien_version": { "type": "string" },
+          "hinweise": { "type": "array", "items": { "type": "string" } },
+          "geprueft_am": { "type": "string" }
         }
       }
     }
