@@ -1,11 +1,9 @@
 import { NextResponse } from 'next/server'
-import { safeApiError } from '@/lib/api/error-sanitizer'
+import { apiErrorResponse, safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { legeHkpVerordnungAn, listeHkpVerordnungen } from '@/lib/abrechnung/sgb-v/verordnung-service'
-import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
-const log = logger.child('billing/sgb-v/verordnungen')
 
 /** GET /api/billing/sgb-v/verordnungen — Liste der HKP-Verordnungen (§ 37 SGB V). */
 export const GET = withTracking(async function GET(request: Request) {
@@ -49,8 +47,6 @@ export const POST = withTracking(async function POST(request: Request) {
 
     return NextResponse.json({ id }, { status: 201 })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    log.error('Fehler', { message })
-    return NextResponse.json({ error: message }, { status: 400 })
+    return apiErrorResponse(err, request)
   }
 })

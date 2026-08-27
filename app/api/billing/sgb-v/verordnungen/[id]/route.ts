@@ -1,11 +1,9 @@
 import { NextResponse } from 'next/server'
-import { safeApiError } from '@/lib/api/error-sanitizer'
+import { apiErrorResponse, safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { genehmigeHkpVerordnung, ladeHkpVerordnung } from '@/lib/abrechnung/sgb-v/verordnung-service'
-import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
-const log = logger.child('billing/sgb-v/verordnungen/[id]')
 
 /** GET /api/billing/sgb-v/verordnungen/[id] */
 export const GET = withTracking(async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -38,8 +36,6 @@ export const PATCH = withTracking(async function PATCH(request: Request, { param
     }, auth.ctx.userId)
     return NextResponse.json({ success: true })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    log.error('] Fehler', { message })
-    return NextResponse.json({ error: message }, { status: 400 })
+    return apiErrorResponse(err, request)
   }
 })
