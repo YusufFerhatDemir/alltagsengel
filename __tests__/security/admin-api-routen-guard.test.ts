@@ -41,6 +41,12 @@ const GUARDS = [
   'requireSigUser',
   'requireAngehAdmin',
   'requireOpsAdmin',
+  // Duenne Huelle um requireOpsAdmin('bonus.verwalten'). Eigener Helfer,
+  // weil das Bonusmodul ueber Verguetung entscheidet und deshalb genau die
+  // Antwort geben muss, die die bonus_*-Policies live geben (is_admin()) —
+  // vorher stand dort berichte.lesen und liess pdl/qm/buchhaltung in eine
+  // stille Leerliste bzw. einen erfundenen Serverfehler laufen.
+  'requireBonusVerwaltung',
   'checkAdmin',
   'handleVerifizierungPatch',
   'handleDetailGet',

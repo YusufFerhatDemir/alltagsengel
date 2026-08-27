@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAktenUser } from '@/lib/akten/api-auth'
 import { getSignedDokumentUrl } from '@/lib/akten/dokumente'
-import { bucketForZuordnung } from '@/lib/akten/types'
+import { bucketForZuordnung, darfAusgeliefertWerden, ausliefernAbgelehntGrund } from '@/lib/akten/types'
 import { logAktenZugriff } from '@/lib/akten/zugriff-log'
 import { withTracking } from '@/lib/monitoring/tracker'
 
@@ -32,8 +32,13 @@ export const GET = withTracking(async function GET(request: Request, { params }:
     if (error || !dokument) {
       return NextResponse.json({ error: 'Dokument nicht gefunden oder kein Zugriff.' }, { status: 404 })
     }
-    if (dokument.status === 'archiviert') {
-      return NextResponse.json({ error: 'Dokument ist archiviert.' }, { status: 403 })
+    // BEFUND (28.08.2026): geprueft wurde allein auf 'archiviert'. 'gesperrt'
+    // ist ein eigener Wert desselben CHECK-Constraints — ein ausdruecklich
+    // gesperrtes Dokument liess sich weiterhin herunterladen. Die Liste der
+    // nicht auslieferbaren Status liegt jetzt an EINER Stelle
+    // (lib/akten/types.ts) und ist fail-closed gegen unbekannte Werte.
+    if (!darfAusgeliefertWerden(dokument.status)) {
+      return NextResponse.json({ error: ausliefernAbgelehntGrund(dokument.status) }, { status: 403 })
     }
 
     const bucket = bucketForZuordnung(dokument.client_id, dokument.caregiver_id)

@@ -109,11 +109,24 @@ export default function AdminBonusesPage() {
   }
 
   async function regelToggle(id: string, aktiv: boolean) {
-    await fetch('/api/admin/analytics/bonuses/regeln', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, aktiv }),
-    })
+    // Die Antwort wurde bisher gar nicht ausgewertet: schlug das Umschalten
+    // fehl (fehlende Berechtigung, RLS, Netz), lud die Seite kommentarlos
+    // die unveraenderte Liste nach — das Kaestchen sprang zurueck und
+    // niemand erfuhr warum.
+    setRegelnError(null)
+    try {
+      const res = await fetch('/api/admin/analytics/bonuses/regeln', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, aktiv }),
+      })
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}))
+        setRegelnError(json.error || `Regel konnte nicht umgeschaltet werden (HTTP ${res.status}).`)
+      }
+    } catch (err: any) {
+      setRegelnError(err?.message || 'Regel konnte nicht umgeschaltet werden.')
+    }
     await loadRegeln()
   }
 
@@ -123,7 +136,7 @@ export default function AdminBonusesPage() {
   const [laufBis, setLaufBis] = useState(aktuellerMonatBis())
   const [laufRunning, setLaufRunning] = useState(false)
   const [laufError, setLaufError] = useState<string | null>(null)
-  const [laufErgebnis, setLaufErgebnis] = useState<{ anzahl: number; erfuellt: number; ergebnisse: { caregiverId: string; erfuellt: boolean; messwert: number; punkte: number; begruendung: string }[] } | null>(null)
+  const [laufErgebnis, setLaufErgebnis] = useState<{ anzahl: number; erfuellt: number; uebersprungen?: number; gespeichert?: number; ergebnisse: { caregiverId: string; erfuellt: boolean; messwert: number; punkte: number; begruendung: string; uebersprungen?: boolean; hinweis?: string }[] } | null>(null)
 
   async function berechnungslaufStarten() {
     if (!laufRegelId) { setLaufError('Bitte eine Regel wählen.'); return }
@@ -149,13 +162,19 @@ export default function AdminBonusesPage() {
   const [berechnungen, setBerechnungen] = useState<BonusBerechnung[]>([])
   const [berechnungenLoading, setBerechnungenLoading] = useState(false)
   const [freigabeBusyId, setFreigabeBusyId] = useState<string | null>(null)
+  const [freigabeError, setFreigabeError] = useState<string | null>(null)
 
   const loadBerechnungen = useCallback(async () => {
     setBerechnungenLoading(true)
     try {
       const res = await fetch('/api/admin/analytics/bonuses/historie')
-      const json = await res.json()
-      if (res.ok) setBerechnungen(json)
+      const json = await res.json().catch(() => ({}))
+      // Ein Fehler beim Laden liess die Liste vorher einfach leer stehen —
+      // von „keine Berechnungen" nicht zu unterscheiden.
+      if (res.ok) { setBerechnungen(json); setFreigabeError(null) }
+      else setFreigabeError(json.error || `Liste konnte nicht geladen werden (HTTP ${res.status}).`)
+    } catch (err: any) {
+      setFreigabeError(err?.message || 'Liste konnte nicht geladen werden.')
     } finally {
       setBerechnungenLoading(false)
     }
@@ -165,13 +184,25 @@ export default function AdminBonusesPage() {
 
   async function entscheiden(berechnungId: string, entscheidung: 'freigegeben' | 'abgelehnt') {
     setFreigabeBusyId(berechnungId)
+    setFreigabeError(null)
     try {
-      await fetch('/api/admin/analytics/bonuses/freigeben', {
+      // Die Antwort wurde bisher VOLLSTAENDIG ignoriert. Eine Freigabe ist
+      // eine Verguetungsentscheidung — scheiterte sie (bereits entschieden,
+      // fehlende Berechtigung, Nachweiszeile nicht schreibbar), lud die
+      // Seite die Liste nach, alles sah unveraendert aus, und es gab
+      // keinerlei Hinweis darauf, dass nichts passiert ist.
+      const res = await fetch('/api/admin/analytics/bonuses/freigeben', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ berechnungId, entscheidung }),
       })
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}))
+        setFreigabeError(json.error || `Entscheidung konnte nicht gespeichert werden (HTTP ${res.status}).`)
+      }
       await loadBerechnungen()
+    } catch (err: any) {
+      setFreigabeError(err?.message || 'Entscheidung konnte nicht gespeichert werden.')
     } finally {
       setFreigabeBusyId(null)
     }
@@ -396,6 +427,16 @@ export default function AdminBonusesPage() {
           {laufErgebnis && (
             <>
               <p style={{ fontSize: 13, color: 'var(--ink3)' }}>{laufErgebnis.erfuellt} von {laufErgebnis.anzahl} Kräften haben das Kriterium erfüllt.</p>
+              {/* Bereits entschiedene Prämien werden vom Lauf bewusst nicht
+                  überschrieben. Ohne diesen Hinweis sähe ein Lauf, der nichts
+                  gespeichert hat, aus wie ein Lauf, der alles neu gerechnet hat. */}
+              {(laufErgebnis.uebersprungen ?? 0) > 0 && (
+                <Banner tone="warn">
+                  {laufErgebnis.uebersprungen} von {laufErgebnis.anzahl} Berechnungen wurden NICHT gespeichert,
+                  weil sie im gewählten Zeitraum bereits entschieden sind (freigegeben, abgelehnt oder ausgezahlt).
+                  Die angezeigten Messwerte sind das Ergebnis eines neuen Laufs, nicht der gespeicherte Stand.
+                </Banner>
+              )}
               <div className="admin-table-wrap">
                 <table className="admin-table">
                   <thead><tr><th>Mitarbeiter</th><th>Erfüllt</th><th>Messwert</th><th>Punkte</th><th>Begründung</th></tr></thead>
@@ -406,7 +447,14 @@ export default function AdminBonusesPage() {
                         <td>{e.erfuellt ? <StatusBadge label="Ja" color="#5CB882" /> : <StatusBadge label="Nein" color="#D04B3B" />}</td>
                         <td>{e.messwert}</td>
                         <td style={{ fontWeight: 700, color: 'var(--gold2)' }}>{e.punkte}</td>
-                        <td style={{ fontSize: 13 }}>{e.begruendung}</td>
+                        <td style={{ fontSize: 13 }}>
+                          {e.begruendung}
+                          {e.uebersprungen && (
+                            <span style={{ display: 'block', color: '#B8860B', fontWeight: 600 }}>
+                              Nicht gespeichert: {e.hinweis}
+                            </span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -419,6 +467,7 @@ export default function AdminBonusesPage() {
 
       {tab === 'freigaben' && (
         <div>
+          {freigabeError && <Banner tone="danger">{freigabeError}</Banner>}
           {berechnungenLoading ? <p>Laden…</p> : (
             <>
               <h2>Offen zur Freigabe ({berechnungen.filter(b => b.status === 'berechnet').length})</h2>

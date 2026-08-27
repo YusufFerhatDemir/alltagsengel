@@ -65,7 +65,12 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   '/admin/dienstplan':                { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
   '/admin/arbeitszeiten':             { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
   '/admin/applications':              { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
-  '/admin/bonuses':                   { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
+  // Boni sind Verguetung, nicht Personalstammdaten: die Seite oeffnete sich
+  // fuer die PDL (personal.lesen), die Schnittstelle liess zusaetzlich QM und
+  // Buchhaltung herein (berichte.lesen) — und die Datenbank wies alle drei ab
+  // (bonus_*-Policies stehen live auf is_admin()). Drei Antworten auf
+  // dieselbe Frage; die der Datenbank gilt.
+  '/admin/bonuses':                   { lesen: 'bonus.verwalten', schreiben: 'bonus.verwalten' },
   '/admin/urlaub':                    { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
   '/admin/mitarbeitergespraeche':     { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
   '/admin/einsatzfreigabe':           { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
@@ -185,6 +190,11 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
 
   // Verwaltungs-API
   '/api/admin/analytics':             { lesen: 'berichte.lesen' },
+  // Laengerer Praefix schlaegt den kuerzeren: das Bonusmodul liegt zwar
+  // unter /analytics, ist aber keine Auswertung — es legt Praemienregeln
+  // an und gibt Zahlungen frei. Muss dieselbe Antwort geben wie
+  // /admin/bonuses und wie die bonus_*-Policies.
+  '/api/admin/analytics/bonuses':     { lesen: 'bonus.verwalten', schreiben: 'bonus.verwalten' },
   '/api/admin/aerzte':                { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
   '/api/admin/angehoerige':           { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
   '/api/admin/clients':               { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },

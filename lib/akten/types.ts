@@ -30,6 +30,44 @@ export type DokumentKategorie = typeof DOKUMENT_KATEGORIEN[number]
 export const DOKUMENT_STATUS_WERTE = ['entwurf', 'aktiv', 'archiviert', 'gesperrt', 'abgelaufen'] as const
 export type DokumentStatus = typeof DOKUMENT_STATUS_WERTE[number]
 
+/**
+ * Status, in denen KEINE Datei mehr ausgeliefert wird.
+ *
+ * BEFUND (28.08.2026): der Download-Weg prüfte allein auf 'archiviert'.
+ * 'gesperrt' ist ein eigener Wert desselben CHECK-Constraints (live
+ * gelesen: entwurf|aktiv|archiviert|gesperrt|abgelaufen) — ein ausdrücklich
+ * gesperrtes Dokument liess sich weiterhin herunterladen und über eine
+ * signierte URL ausliefern. Der Wert heisst gesperrt; dann muss er auch
+ * sperren, sonst ist die Statusauswahl der Akte reine Anzeige.
+ *
+ * 'abgelaufen' steht bewusst NICHT hier: eine abgelaufene Genehmigung ist
+ * nicht mehr gültig, aber weiterhin einsehbar — genau darauf beruht die
+ * Ablaufwarnung, die zum Nachfordern auffordert.
+ *
+ * Vom booleschen Kennzeichen `gesperrt` ist das getrennt: das bedeutet in
+ * diesem Modul Beweissicherung (Schreibsperre gegen Bearbeiten, Löschen
+ * und Versionieren) und lässt das Lesen für die Verwaltung ausdrücklich zu.
+ * Für Dritte gilt das nicht — im Angehörigenportal sperrt es auch das
+ * Lesen (Commit 48d6f3b).
+ */
+export const DOKUMENT_STATUS_OHNE_AUSLIEFERUNG: readonly DokumentStatus[] = ['archiviert', 'gesperrt']
+
+/** Darf eine Datei in diesem Status noch ausgeliefert werden? Unbekannter Wert ⇒ nein (fail-closed). */
+export function darfAusgeliefertWerden(status: string | null | undefined): boolean {
+  const s = String(status ?? '').trim()
+  if (!s) return true // Altbestand ohne Status bleibt lesbar.
+  if ((DOKUMENT_STATUS_OHNE_AUSLIEFERUNG as readonly string[]).includes(s)) return false
+  return (DOKUMENT_STATUS_WERTE as readonly string[]).includes(s)
+}
+
+/** Klartext für den abgewiesenen Status — die Meldung nennt den Grund. */
+export function ausliefernAbgelehntGrund(status: string | null | undefined): string {
+  const s = String(status ?? '').trim()
+  if (s === 'archiviert') return 'Dokument ist archiviert.'
+  if (s === 'gesperrt') return 'Dokument ist gesperrt.'
+  return `Dokument hat einen unbekannten Status („${s}") und wird nicht ausgeliefert.`
+}
+
 export const DOKUMENT_SICHTBARKEIT_WERTE = ['intern', 'kunde', 'engel', 'alle'] as const
 export type DokumentSichtbarkeit = typeof DOKUMENT_SICHTBARKEIT_WERTE[number]
 

@@ -28,6 +28,13 @@ import { ROLLEN, ROLLEN_MATRIX } from '@/lib/auth/rollen'
 const MIGRATIONS_DIR = path.join(__dirname, '..', '..', 'supabase', 'migrations')
 const MIGRATION = '20260924000000_rollenkonzept_least_privilege.sql'
 const ROLLBACK = '20260924000001_rollback_rollenkonzept_least_privilege.sql'
+/**
+ * Nachtrag 28.08.2026: 'bonus.verwalten' als Vorbehalt der Administration
+ * (siehe lib/analytics/bonus-auth.ts). Die Matrix wird in einer eigenen
+ * Migration neu gesetzt — der Gleichstand SQL ↔ TypeScript ist unten die
+ * eigentliche Zusage und faellt sonst genau hier auf.
+ */
+const MIGRATION_BONUS = '20261014000000_rollenmatrix_bonus_verwalten.sql'
 
 const ADMIN_ID = '00000000-0000-4000-8000-00000000a001'
 const SUPER_ID = '00000000-0000-4000-8000-00000000a002'
@@ -123,6 +130,7 @@ beforeAll(async () => {
   `)
 
   await db.exec(fs.readFileSync(path.join(MIGRATIONS_DIR, MIGRATION), 'utf-8'))
+  await db.exec(fs.readFileSync(path.join(MIGRATIONS_DIR, MIGRATION_BONUS), 'utf-8'))
 
   await db.exec(`INSERT INTO public.profiles (id, role) VALUES ('${PDL_ID}', 'pdl')`)
 })

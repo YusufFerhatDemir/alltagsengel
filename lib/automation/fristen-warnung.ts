@@ -17,7 +17,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { sammleFristen, type FristItem, type FristEntitaetTyp } from './fristen-sammler'
-import { rollentraegerDerOrg } from './org-empfaenger'
+import { rollentraegerDerOrg, BETRIEBS_EMPFAENGER_ROLLEN } from './org-empfaenger'
 import type { BenachrichtigungBezugTyp, BenachrichtigungKategorie } from '@/lib/ops/types'
 import { logger } from '@/lib/logger'
 const log = logger.child('fristen-warnung')
@@ -109,7 +109,7 @@ export async function warneVorFristablauf(
   let gewarnt = 0
   let geprueft = 0
 
-  const pdlIds = await rollentraegerDerOrg(supabase, organizationId, ['admin', 'superadmin'])
+  const pdlIds = await rollentraegerDerOrg(supabase, organizationId, [...BETRIEBS_EMPFAENGER_ROLLEN])
 
   for (const item of fristen) {
     const schwelle = schwelleFuer(item.tageVerbleibend)

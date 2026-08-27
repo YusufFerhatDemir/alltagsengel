@@ -86,10 +86,55 @@ describe('Vorbehaltsbereiche', () => {
     }
   })
 
-  it('fuehrt tarife.schreiben, benutzer.verwalten und system.verwalten als Vorbehalt', () => {
+  it('fuehrt tarife.schreiben, benutzer.verwalten, system.verwalten und bonus.verwalten als Vorbehalt', () => {
     expect([...NUR_ADMINISTRATION].sort()).toEqual([
-      'benutzer.verwalten', 'system.verwalten', 'tarife.schreiben',
+      'benutzer.verwalten', 'bonus.verwalten', 'system.verwalten', 'tarife.schreiben',
     ])
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════
+// Boni sind Verguetung, keine Auswertung (Befund 28.08.2026)
+// ═══════════════════════════════════════════════════════════════════════
+// Das Bonusmodul hing an drei verschiedenen Antworten: die Seite an
+// personal.lesen/.schreiben (admin + pdl), die Schnittstelle an
+// berichte.lesen (zusaetzlich qm + buchhaltung) — und die Datenbank an
+// is_admin() (admin + superadmin). Fuer die Rollen dazwischen bedeutete
+// das keine zusaetzlichen Rechte, aber eine falsche Auskunft: Lesewege
+// gaben still eine LEERE Liste zurueck, Schreibwege 'Interner
+// Serverfehler' statt eines ehrlichen 403.
+describe('Bonusverwaltung liegt bei der Administration', () => {
+  it.each(['pdl', 'qm', 'buchhaltung', 'engel', 'fahrer', 'kunde', 'angehoerige'] as const)(
+    '%s darf keine Boni verwalten',
+    r => { expect(hatBerechtigung(r, 'bonus.verwalten')).toBe(false) },
+  )
+
+  it.each(['admin', 'superadmin'] as const)('%s darf Boni verwalten', r => {
+    expect(hatBerechtigung(r, 'bonus.verwalten')).toBe(true)
+  })
+
+  it('gibt fuer Seite und Schnittstelle dieselbe Antwort', () => {
+    for (const pfad of ['/admin/bonuses', '/api/admin/analytics/bonuses']) {
+      for (const methode of ['GET', 'POST', 'PATCH'] as const) {
+        expect(berechtigungFuerPfad(pfad, methode), `${pfad} ${methode}`).toBe('bonus.verwalten')
+      }
+    }
+  })
+
+  it('laesst den laengeren Bonus-Praefix den kuerzeren Analytics-Praefix schlagen', () => {
+    // Ohne diese Zusage faellt /api/admin/analytics/bonuses/freigeben auf
+    // berichte.lesen zurueck — und damit wieder auf pdl/qm/buchhaltung.
+    expect(berechtigungFuerPfad('/api/admin/analytics/bonuses/freigeben', 'POST')).toBe('bonus.verwalten')
+    expect(berechtigungFuerPfad('/api/admin/analytics/kpi', 'GET')).toBe('berichte.lesen')
+  })
+
+  it.each(['pdl', 'qm', 'buchhaltung'] as const)('sperrt %s aus dem Bonusbereich aus', r => {
+    expect(darfPfad(r, '/admin/bonuses')).toBe(false)
+  })
+
+  it('laesst die Administration in den Bonusbereich', () => {
+    expect(darfPfad('admin', '/admin/bonuses')).toBe(true)
+    expect(darfPfad('superadmin', '/admin/bonuses')).toBe(true)
   })
 })
 

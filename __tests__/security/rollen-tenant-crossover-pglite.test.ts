@@ -529,8 +529,16 @@ describe('PGlite: Rollenmodell gegen zwei Mandanten', () => {
       //     nicht. Das ist fail-closed (zu wenig Zugriff, nicht zu viel),
       //     aber es heisst: eine Server-Komponente, die diese Tabellen
       //     mit dem Nutzer-Client liest, saehe fuer das QM nichts.
+      //   bonus.verwalten — die drei Tabellen bonus_regeln,
+      //     bonus_berechnungen und bonus_freigaben sind live geschuetzt,
+      //     aber ueber is_admin() (aus pg_policies gelesen, 28.08.2026),
+      //     nicht ueber darf('bonus.verwalten'). Beide sagen dasselbe
+      //     (admin|superadmin); der Anwendungs-Guard prueft gegen die
+      //     TypeScript-Matrix (lib/analytics/bonus-auth.ts). Die
+      //     Berechtigung existiert damit auf beiden Seiten, taucht aber
+      //     in keinem Policy-Ausdruck als Zeichenkette auf.
       expect(offen.sort()).toEqual(
-        ['benutzer.verwalten', 'berichte.lesen', 'qm.lesen', 'qm.schreiben', 'system.verwalten'].sort(),
+        ['benutzer.verwalten', 'berichte.lesen', 'bonus.verwalten', 'qm.lesen', 'qm.schreiben', 'system.verwalten'].sort(),
       )
     })
   })

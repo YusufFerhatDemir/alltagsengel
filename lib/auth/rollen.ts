@@ -108,6 +108,14 @@ export const BERECHTIGUNGEN = [
   'system.verwalten',
   // Auswertungen und Kennzahlen
   'berichte.lesen',
+  // Bonusregeln, Berechnungslaeufe und Freigaben (Block 19).
+  // Eigene Berechtigung, weil hier ueber die VERGUETUNG von Mitarbeitenden
+  // entschieden wird: wer die Regel schreibt, bestimmt wer Geld bekommt,
+  // und wer freigibt, loest die Zahlung aus. Die Datenbank sieht das
+  // genauso — saemtliche bonus_*-Policies stehen live auf is_admin(),
+  // also admin|superadmin. Ohne eigene Berechtigung liefe die
+  // Schnittstelle der Datenbank voraus (siehe lib/analytics/bonus-auth.ts).
+  'bonus.verwalten',
 ] as const
 
 export type Berechtigung = (typeof BERECHTIGUNGEN)[number]
@@ -126,6 +134,7 @@ export const NUR_ADMINISTRATION: readonly Berechtigung[] = [
   'tarife.schreiben',
   'benutzer.verwalten',
   'system.verwalten',
+  'bonus.verwalten',
 ]
 
 // ───────────────────────────────────────────────────────────────────────
