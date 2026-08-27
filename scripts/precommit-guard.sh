@@ -9,6 +9,9 @@
 #   5. Klassische Secret-Patterns im Diff: "AKIA…", "sk_live_…", "sk-proj-…",
 #      "re_…" (Resend), "sb_secret_…" (Supabase), Bearer-Tokens längerer Art, etc.
 #
+# Warnt (blockiert NICHT):
+#   6. Schema-Drift — Code, der live nicht existierende Spalten anspricht.
+#
 # Wird sowohl von ./deploy.sh als auch (manuell) vom Git-Pre-Commit-Hook
 # aufgerufen. Exit-Code 0 = ok, 1 = blockiert.
 
@@ -93,6 +96,26 @@ if [ -n "$diff_output" ]; then
       echo "$hits" | sed 's/^/    /' >&2
     fi
   done
+fi
+
+# ── 3. Schema-Drift (warn-only) ───────────────────────────────────────
+# Findet Code, der Spalten anspricht, die es live nicht gibt. PostgREST
+# lehnt so eine Abfrage komplett ab (42703) — im Code sieht das aus wie
+# „keine Daten"; genau so waren Budget-Anlage, Mahnungsversand und
+# DATEV-Export monatelang still tot.
+#
+# BLOCKIERT NICHT. Schema-Drift ist P2 und der Check braucht Netz; ein
+# Aussetzer darf keinen Commit verhindern. Er läuft nur, wenn überhaupt
+# .ts/.tsx unter app/ oder lib/ gestaged sind, und lässt sich mit
+# SKIP_SCHEMA_DRIFT=1 abschalten.
+if [ "${SKIP_SCHEMA_DRIFT:-0}" != "1" ]; then
+  relevante="$(echo "$files" | grep -E '^(app|lib)/.*\.tsx?$' || true)"
+  if [ -n "$relevante" ]; then
+    echo "${DIM}precommit-guard: Schema-Drift-Check (warn-only) …${RESET}"
+    if ! node "$(dirname "${BASH_SOURCE[0]}")/schema-drift-check.mjs" --warn-only; then
+      echo "${YELLOW}⚠ Schema-Drift-Check nicht durchgelaufen — Commit geht trotzdem durch.${RESET}" >&2
+    fi
+  fi
 fi
 
 if [ "$violations" -gt 0 ]; then
