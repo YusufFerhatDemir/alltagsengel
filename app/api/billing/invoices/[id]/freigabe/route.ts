@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { erzeugeSendeToken, entwerteSendeToken, erstversandFreigabe } from '@/lib/pilot/send-gate'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // ═══════════════════════════════════════════════════════════════
 // Einmal-Freigabe für den ersten echten Rechnungsversand
@@ -31,7 +32,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(req: NextRequest) {
+export const GET = withTracking(async function GET(req: NextRequest) {
   try {
     const auth = await requireOpsAdmin('abrechnung.lesen')
     if (!auth.ok) return auth.response
@@ -39,9 +40,9 @@ export async function GET(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})
 
-export async function POST(
+export const POST = withTracking(async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -88,9 +89,9 @@ export async function POST(
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})
 
-export async function DELETE(req: NextRequest) {
+export const DELETE = withTracking(async function DELETE(req: NextRequest) {
   try {
     const auth = await requireOpsAdmin('abrechnung.schreiben')
     if (!auth.ok) return auth.response
@@ -112,4 +113,4 @@ export async function DELETE(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

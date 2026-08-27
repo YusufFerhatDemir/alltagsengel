@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { heuteBerlin } from '@/lib/utils/timezone';
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
 import { safeDbError } from '@/lib/utils/api-error'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // ═══════════════════════════════════════════════════════════════
 // GET /api/pricing
@@ -26,7 +27,7 @@ import { safeDbError } from '@/lib/utils/api-error'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   try {
     // ── Auth: Bearer-Token (Native App) oder Cookie-Session (Web) ──
     let authorized = false
@@ -83,4 +84,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

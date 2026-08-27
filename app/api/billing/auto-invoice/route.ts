@@ -7,6 +7,7 @@ import { requireCaregiverSession } from '@/lib/native-auth'
 import { createInvoiceDraft } from '@/lib/billing/core'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('auto-invoice')
 
 // ═══════════════════════════════════════════════════════════════
@@ -84,7 +85,7 @@ async function authorize(request: Request): Promise<AuthContext> {
   return { ok: false, status: 401, error: 'Nicht autorisiert' }
 }
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const auth = await authorize(request)
     if (!auth.ok) {
@@ -315,4 +316,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

@@ -7,8 +7,9 @@ import {
   verifiziereSignatur,
 } from '@/lib/signaturen/signaturen'
 import { logAuditEvent } from '@/lib/audit-log'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function PATCH(
+export const PATCH = withTracking(async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -78,4 +79,4 @@ export async function PATCH(
     const status = msg.includes('nicht gefunden') ? 404 : msg.includes('kann nicht') ? 409 : 500
     return NextResponse.json({ error: msg }, { status })
   }
-}
+})

@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logAuditEvent } from '@/lib/audit-log'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('admin/fixierungen')
 
 export const runtime = 'nodejs'
@@ -26,7 +27,7 @@ function nurErlaubteFelder(roh: Record<string, unknown>): Record<string, unknown
 }
 
 /** PATCH — Maßnahme aktualisieren oder beenden (status='beendet' setzt ende_am/beendigungsgrund voraus). */
-export async function PATCH(
+export const PATCH = withTracking(async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -83,10 +84,10 @@ export async function PATCH(
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})
 
 /** DELETE — Maßnahme archivieren (Soft-Delete). */
-export async function DELETE(
+export const DELETE = withTracking(async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -130,4 +131,4 @@ export async function DELETE(
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

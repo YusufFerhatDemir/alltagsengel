@@ -6,6 +6,7 @@ import { getActiveOrgId } from '@/lib/organizations/server'
 import { pruefeZertifikat, speichereAbsenderZertifikat } from '@/lib/abrechnung/zertifikate'
 import { protokolliereRotation } from '@/lib/abrechnung/credentials'
 import { logAuditEvent } from '@/lib/audit-log'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -14,7 +15,7 @@ export const dynamic = 'force-dynamic'
  * GET /api/admin/abrechnung/zertifikat
  * Liste aller hinterlegten Zertifikate (Absender + Empfänger-Cache).
  */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   try {
@@ -35,7 +36,7 @@ export async function GET(request: Request) {
   } catch (e) {
     return safeApiError(e, request)
   }
-}
+})
 
 /**
  * POST /api/admin/abrechnung/zertifikat
@@ -44,7 +45,7 @@ export async function GET(request: Request) {
  *   passwort: PKCS#12-Passwort (wird NUR zur Validierung genutzt,
  *             nicht gespeichert — dauerhaft als Env SECON_ZERT_PASSWORT)
  */
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   const auth = await requireAdminMitOrg('system.verwalten')
   if (!auth.ok) return auth.response
   try {
@@ -118,4 +119,4 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

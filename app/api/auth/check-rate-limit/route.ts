@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('api:auth')
 
 interface RateLimitEntry {
@@ -80,7 +81,7 @@ async function getVerifiedUser(): Promise<{ id: string; email?: string | null } 
   }
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     const { email, action } = await req.json()
     const ip = getClientIP(req)
@@ -237,4 +238,4 @@ export async function POST(req: NextRequest) {
     // FAIL-OPEN bei Rate Limiter Fehler (Login nicht blockieren)
     return NextResponse.json({ allowed: true })
   }
-}
+})

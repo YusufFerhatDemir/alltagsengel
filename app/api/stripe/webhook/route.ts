@@ -3,6 +3,7 @@ import type Stripe from 'stripe'
 import { stripe } from '@/lib/stripe/client'
 import { syncSubscriptionToDb, downgradeToFree } from '@/lib/stripe/helpers'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -12,7 +13,7 @@ export const dynamic = 'force-dynamic'
  * Verarbeitet Stripe-Events. Signatur wird geprüft, Body muss roh (unparsed) sein.
  * Idempotent: syncSubscriptionToDb/downgradeToFree upserten über organization_id.
  */
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   const body = await req.text()
   const sig = req.headers.get('stripe-signature')
 
@@ -71,4 +72,4 @@ export async function POST(req: NextRequest) {
 
   // Immer 200 zurückgeben (Stripe wiederholt sonst).
   return NextResponse.json({ received: true })
-}
+})

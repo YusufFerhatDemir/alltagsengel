@@ -3,8 +3,9 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { retryDeadLetter } from '@/lib/workflow/dead-letter'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function POST(
+export const POST = withTracking(async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -22,4 +23,4 @@ export async function POST(
   } catch (e: any) {
     return apiErrorResponse(e)
   }
-}
+})

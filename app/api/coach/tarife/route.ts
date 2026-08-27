@@ -22,13 +22,14 @@
 
 import { NextResponse } from 'next/server'
 import { alleTarife, istVerkaufBereit, jahresErsparnis, proMonatCent, verkaufMoeglich } from '@/lib/coach/pricing'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 // Kein Caching: Die Freigabe kann per Env-Variable umgelegt werden und
 // muss dann sofort greifen — auch in die sperrende Richtung.
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const bereit = verkaufMoeglich()
 
   if (!bereit) {
@@ -61,4 +62,4 @@ export async function GET() {
       ? { betrag_cent: ersparnis.betragCent, prozent: ersparnis.prozent }
       : null,
   })
-}
+})

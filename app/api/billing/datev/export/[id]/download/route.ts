@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireOpsAdmin } from '@/lib/ops/api-auth';
 import { downloadDatevExport } from '@/lib/billing/datev/export-service';
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * GET /api/billing/datev/export/[id]/download
@@ -11,7 +12,7 @@ import { downloadDatevExport } from '@/lib/billing/datev/export-service';
  * liefern wir die CSV direkt. Fuer ein ZIP-Bundle kann spaeter
  * JSZip oder archiver ergaenzt werden.
  */
-export async function GET(
+export const GET = withTracking(async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -35,4 +36,4 @@ export async function GET(
     const msg = e instanceof Error ? e.message : String(e);
     return NextResponse.json({ error: msg }, { status: 400 });
   }
-}
+})

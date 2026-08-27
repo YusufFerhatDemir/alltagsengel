@@ -25,6 +25,7 @@ import {
 } from '@/lib/fhir/import'
 import { exceptionOutcome, invalidOutcome, toFhirErrorResponse } from '@/lib/fhir/operation-outcome'
 import { logFhirAuditEvent } from '@/lib/fhir/audit'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 interface ImportDecision {
   index: number
@@ -39,7 +40,7 @@ function generateCustomerNumber(): string {
   return `KD-${yy}${p.month}-${rand}`
 }
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return toFhirErrorResponse(auth.response)
 
@@ -158,4 +159,4 @@ export async function POST(request: Request) {
   })
 
   return NextResponse.json({ results })
-}
+})

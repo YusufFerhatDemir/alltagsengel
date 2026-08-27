@@ -1,13 +1,14 @@
 import { handleVerifizierungPatch, handleDetailGet } from '@/lib/billing/tarif-verifizierung-service'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * GET /api/billing/tariffs/[id]/verifizierung
  * Aktueller Stand, Audit-Historie und hinterlegte Belege eines Tarifs.
  */
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withTracking(async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   return handleDetailGet('billing_tariffs', id)
-}
+})
 
 /**
  * PATCH /api/billing/tariffs/[id]/verifizierung
@@ -27,7 +28,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
  *
  * Body: { status: 'verified' | 'unverified' | 'blocked', quelle: string, belegId?: string }
  */
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withTracking(async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   return handleVerifizierungPatch(request, 'billing_tariffs', id)
-}
+})

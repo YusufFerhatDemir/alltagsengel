@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logAuditEvent } from '@/lib/audit-log'
 import { erzeugeRechnungsPaket, RechnungsPaketError } from '@/lib/pdf/rechnung-paket'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // ═══════════════════════════════════════════════════════════════
 // POST /api/admin/invoices/[id]/generate-pdf
@@ -20,7 +21,7 @@ import { erzeugeRechnungsPaket, RechnungsPaketError } from '@/lib/pdf/rechnung-p
 // Audit-Trail um erzeugeRechnungsPaket() herum.
 // ═══════════════════════════════════════════════════════════════
 
-export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export const POST = withTracking(async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
   const { userId, organizationId: orgId } = auth.ctx
@@ -61,4 +62,4 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
     return safeApiError(err, req)
   }
-}
+})

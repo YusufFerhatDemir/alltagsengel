@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { kimKanalStatus, versucheKimOperation } from '@/lib/kim/adapter'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -18,13 +19,13 @@ export const dynamic = 'force-dynamic'
  * genau das ist der erwartete Zustand, und der Aufruf beweist, dass die
  * Sperre greift, statt sie nur zu behaupten.
  */
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const auth = await requireAdminMitOrg('system.verwalten')
   if (!auth.ok) return auth.response
   return NextResponse.json(kimKanalStatus())
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireAdminMitOrg('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -51,4 +52,4 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ ...ergebnis, kanal: kimKanalStatus() })
-}
+})

@@ -16,11 +16,12 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { credentialUebersicht, ladeRotationen, CREDENTIAL_KATALOG } from '@/lib/abrechnung/credentials'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireAdminMitOrg('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -44,4 +45,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

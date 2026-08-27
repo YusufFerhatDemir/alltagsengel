@@ -22,6 +22,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { NextRequest } from 'next/server'
+import { handlerRumpfOderFehler } from '../helpers/route-quelle'
 
 // ── Testzustand ────────────────────────────────────────────────
 let aktuellerUser: { id: string } | null = null
@@ -362,8 +363,12 @@ describe('Bewertungssystem: Quelltext-Invarianten', () => {
   })
 
   it('Auth-Check steht am Anfang beider Handler', () => {
-    expect(routeSrc).toMatch(/export async function GET[\s\S]{0,600}getUser\(\)/)
-    expect(routeSrc).toMatch(/export async function POST[\s\S]{0,600}getUser\(\)/)
+    // Nicht der Dateianfang zaehlt, sondern der Anfang jedes Rumpfes:
+    // der Auth-Check muss VOR der ersten Datenlesung stehen.
+    for (const h of ['GET', 'POST'] as const) {
+      const rumpf = handlerRumpfOderFehler(routeSrc, h, 'app/api/reviews/route.ts')
+      expect(rumpf.slice(0, 600), `${h}: getUser() nicht am Anfang`).toContain('getUser()')
+    }
   })
 
   it('GET holt die aktive Org, statt ungefenced zu lesen', () => {

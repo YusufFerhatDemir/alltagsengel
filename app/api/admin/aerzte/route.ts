@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logAuditEvent } from '@/lib/audit-log'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('admin/aerzte')
 
 export const runtime = 'nodejs'
@@ -42,7 +43,7 @@ function validiereFelder(eingabe: Record<string, unknown>): string | null {
 }
 
 /** GET — alle Aerzte der aktiven Organisation. */
-export async function GET(request: NextRequest) {
+export const GET = withTracking(async function GET(request: NextRequest) {
   const auth = await requireOpsAdmin('stammdaten.lesen')
   if (!auth.ok) return auth.response
 
@@ -64,10 +65,10 @@ export async function GET(request: NextRequest) {
   } catch (e) {
     return safeApiError(e, request)
   }
-}
+})
 
 /** POST — neuen Arzt anlegen. */
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   const auth = await requireOpsAdmin('stammdaten.schreiben')
   if (!auth.ok) return auth.response
 
@@ -116,4 +117,4 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

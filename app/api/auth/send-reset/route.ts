@@ -5,13 +5,14 @@ import { sendEmailNotification } from '@/lib/notifications'
 import { getClientIp } from '@/lib/rate-limit'
 import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { authLogger as log } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * POST /api/auth/send-reset
  * Sends a custom password reset email via Resend.
  * First checks if user exists via profiles table, then generates recovery link.
  */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     // NIEDRIG-8 (Security-Audit 2026-08-19): ohne Limit liess sich ueber
     // diesen Endpunkt ein fremdes Postfach mit Reset-Mails fluten.
@@ -111,4 +112,4 @@ export async function POST(request: Request) {
     log.errorWithException('send-reset error', err)
     return NextResponse.json({ success: true })
   }
-}
+})

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { logger } from '@/lib/logger'
 import { cronAuthHeader, pruefeCronGeheimnis } from '@/lib/api/cron-auth'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('cron:drip')
 
 // ═══════════════════════════════════════════════════════════
@@ -12,7 +13,7 @@ const log = logger.child('cron:drip')
 // Geschützt durch CRON_SECRET.
 // ═══════════════════════════════════════════════════════════
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const abweisung = pruefeCronGeheimnis(request)
   if (abweisung) return abweisung
 
@@ -39,4 +40,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

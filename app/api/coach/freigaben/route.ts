@@ -12,15 +12,16 @@ import {
   normalisiereEmail,
   type CoachFreigabeZeile,
 } from '@/lib/coach/freigabe'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 
   const { data, error } = await auth.supabase.rpc('coach_freigaben_liste')
   if (error) return NextResponse.json({ error: 'Freigaben konnten nicht geladen werden.' }, { status: 500 })
   return NextResponse.json({ freigaben: (data ?? []) as CoachFreigabeZeile[] })
-}
+})
 
 /**
  * Neue Freigabe erteilen (oder eine widerrufene für dieselbe Person
@@ -30,7 +31,7 @@ export async function GET() {
  * Reihenfolge der Prüfungen bewusst: erst die eigene Einwilligung (eigener
  * Fehler, sofort erkennbar), dann erst der Empfänger-Lookup (fremde Daten).
  */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 
@@ -128,4 +129,4 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ ok: true })
-}
+})

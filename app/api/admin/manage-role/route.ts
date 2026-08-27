@@ -5,6 +5,7 @@ import { logAuditEvent } from '@/lib/audit-log'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { ROLLEN, ROLLEN_BEZEICHNUNG, istRolle, istVerwaltungsrolle, type Rolle } from '@/lib/auth/rollen'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * Rollen, die ueber diese Route vergeben werden duerfen.
@@ -17,7 +18,7 @@ import { ROLLEN, ROLLEN_BEZEICHNUNG, istRolle, istVerwaltungsrolle, type Rolle }
  */
 const VERGEBBAR: readonly Rolle[] = ROLLEN.filter(r => r !== 'superadmin')
 
-export async function POST(request: NextRequest) {
+export const POST = withTracking(async function POST(request: NextRequest) {
   try {
     // 1. Auth prüfen
     const supabase = await createClient()
@@ -151,4 +152,4 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

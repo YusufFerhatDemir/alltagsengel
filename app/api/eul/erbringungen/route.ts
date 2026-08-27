@@ -18,8 +18,9 @@ import { heuteBerlin } from '@/lib/utils/timezone'
 import {
   istEulDurchfuehrungsform, istEulLeistungsart, pruefeNachweisVollstaendig,
 } from '@/lib/coach/eul'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
@@ -38,9 +39,9 @@ export async function GET(request: Request) {
   const { data, error } = await query
   if (error) return NextResponse.json({ error: 'Nachweise konnten nicht geladen werden.' }, { status: 500 })
   return NextResponse.json({ erbringungen: data ?? [] })
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
@@ -100,4 +101,4 @@ export async function POST(request: Request) {
   })
 
   return NextResponse.json({ erbringung: data, vollstaendigkeit })
-}
+})

@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server'
 import { requireCoachUser } from '@/lib/coach/api-auth'
 import type { ConsentTyp } from '@/lib/coach/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 const CONSENT_TYPEN: ConsentTyp[] = ['gesundheitsdaten_art9', 'wissenschaftliche_auswertung', 'datenfreigabe']
 
 /** Aktuelle Version der Einwilligungstexte — bei Textänderung hochzählen. */
 const CONSENT_TEXT_VERSION = '2026-08-v1'
 
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 
@@ -19,7 +20,7 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: 'Einwilligungen konnten nicht geladen werden.' }, { status: 500 })
   return NextResponse.json({ consents: data ?? [], textVersion: CONSENT_TEXT_VERSION })
-}
+})
 
 /**
  * Einwilligung erteilen ODER widerrufen (append-only, versioniert):
@@ -28,7 +29,7 @@ export async function GET() {
  *    widerrufen_am, zusätzlich wird der Widerruf als eigene Zeile
  *    protokolliert (nachweisbar, Art. 7 Abs. 1/3 DSGVO).
  */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 
@@ -64,4 +65,4 @@ export async function POST(request: Request) {
 
   if (error) return NextResponse.json({ error: 'Einwilligung konnte nicht gespeichert werden.' }, { status: 400 })
   return NextResponse.json({ consent: data })
-}
+})

@@ -5,8 +5,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAktenAdmin } from '@/lib/akten/api-auth'
 import { getVertrag, updateVertrag } from '@/lib/akten/vertraege'
 import type { VertragsStatus } from '@/lib/akten/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withTracking(async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const auth = await requireAktenAdmin('stammdaten.lesen')
@@ -21,9 +22,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withTracking(async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const auth = await requireAktenAdmin('stammdaten.schreiben')
@@ -53,4 +54,4 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   } catch (err) {
     return apiErrorResponse(err, request)
   }
-}
+})

@@ -3,8 +3,9 @@ import { NextResponse } from 'next/server'
 import { getDunningOverview } from '@/lib/billing/core'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET() {
+export const GET = withTracking(async function GET() {
   try {
     const auth = await requireOpsAdmin('abrechnung.lesen')
     if (!auth.ok) return auth.response
@@ -26,4 +27,4 @@ export async function GET() {
   } catch (err) {
     return safeApiError(err)
   }
-}
+})

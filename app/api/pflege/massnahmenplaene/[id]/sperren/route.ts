@@ -3,9 +3,10 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePflegeAdmin } from '@/lib/pflege/api-auth'
 import { entsperrePlan, sperrePlan } from '@/lib/pflege/massnahmenplaene'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /** POST { gesperrt: boolean } — sperrt oder entsperrt einen Maßnahmenplan. */
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const POST = withTracking(async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const auth = await requirePflegeAdmin('pflege.schreiben')
@@ -23,4 +24,4 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   } catch (err) {
     return apiErrorResponse(err, request)
   }
-}
+})

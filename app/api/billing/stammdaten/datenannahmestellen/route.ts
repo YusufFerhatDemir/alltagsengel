@@ -9,6 +9,7 @@ import {
 } from '@/lib/abrechnung/stammdaten'
 import { logBillingAction } from '@/lib/billing/core/audit'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('stammdaten/datenannahmestellen')
 
 export const runtime = 'nodejs'
@@ -43,7 +44,7 @@ function nurErlaubteFelder(roh: Record<string, unknown>): DatenannahmestelleEing
  * Liefert bewusst KEINE Zugangsdaten im Klartext: `sftp_key_url` wird nur als
  * Ja/Nein gemeldet, ein SSH-Key gehoert nicht in eine API-Antwort.
  */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireAdminMitOrg('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
@@ -73,10 +74,10 @@ export async function GET(request: Request) {
   } catch (e) {
     return safeApiError(e, request)
   }
-}
+})
 
 /** POST — einzelne Datenannahmestelle oder Massenimport (`dryRun` per Vorgabe an). */
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   const auth = await requireAdminMitOrg('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
@@ -130,10 +131,10 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})
 
 /** DELETE — Soft-Delete. Global gepflegte Stellen sind nicht loeschbar. */
-export async function DELETE(req: NextRequest) {
+export const DELETE = withTracking(async function DELETE(req: NextRequest) {
   const auth = await requireAdminMitOrg('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
@@ -169,4 +170,4 @@ export async function DELETE(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

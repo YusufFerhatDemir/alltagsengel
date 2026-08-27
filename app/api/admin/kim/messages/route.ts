@@ -4,8 +4,9 @@ import { createClient } from '@/lib/supabase/server'
 import { requireKimAdmin } from '@/lib/kim/api-auth'
 import { createDraftMessage, listMessages } from '@/lib/kim/message-service'
 import type { KimMessageFilter, CreateKimMessageInput } from '@/lib/kim/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(req: NextRequest) {
+export const GET = withTracking(async function GET(req: NextRequest) {
   const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -28,9 +29,9 @@ export async function GET(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})
 
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -44,4 +45,4 @@ export async function POST(req: NextRequest) {
     const status = msg.includes('Pflichtfeld') ? 400 : 500
     return NextResponse.json({ error: msg }, { status })
   }
-}
+})

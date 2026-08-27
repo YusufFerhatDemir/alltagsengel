@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { versendeRechnungPerEmail } from '@/lib/billing/versand/rechnung-versand'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * POST /api/billing/invoices/[id]/versenden
@@ -28,7 +29,7 @@ import { versendeRechnungPerEmail } from '@/lib/billing/versand/rechnung-versand
  *   'fehlgeschlagen' — Resend hat abgelehnt
  * Alle drei kommen mit HTTP 200 zurueck; `status` im Body ist die Wahrheit.
  */
-export async function POST(
+export const POST = withTracking(async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -82,4 +83,4 @@ export async function POST(
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

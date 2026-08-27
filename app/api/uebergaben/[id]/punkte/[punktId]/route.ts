@@ -4,8 +4,9 @@ import { createClient } from '@/lib/supabase/server'
 import { requireUebergabeUser } from '@/lib/uebergabe/api-auth'
 import { deletePunkt, setErledigt, updatePunkt } from '@/lib/uebergabe/punkte'
 import { safeErrorResponse } from '@/lib/utils/api-error'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function PATCH(
+export const PATCH = withTracking(async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string; punktId: string }> },
 ) {
@@ -37,9 +38,9 @@ export async function PATCH(
   } catch (err) {
     return safeErrorResponse(err, 400)
   }
-}
+})
 
-export async function DELETE(
+export const DELETE = withTracking(async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string; punktId: string }> },
 ) {
@@ -54,4 +55,4 @@ export async function DELETE(
   } catch (err) {
     return safeErrorResponse(err, 400)
   }
-}
+})

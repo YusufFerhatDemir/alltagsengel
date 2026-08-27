@@ -3,9 +3,10 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePflegeAdmin } from '@/lib/pflege/api-auth'
 import { sperreAssessment } from '@/lib/sis'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /** POST — sperrt eine SIS endgültig (kein Entsperren vorgesehen). */
-export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const POST = withTracking(async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const auth = await requirePflegeAdmin('pflege.schreiben')
@@ -18,4 +19,4 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
   } catch (err) {
     return apiErrorResponse(err, _request)
   }
-}
+})

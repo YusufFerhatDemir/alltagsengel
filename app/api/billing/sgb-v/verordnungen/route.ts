@@ -4,10 +4,11 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { legeHkpVerordnungAn, listeHkpVerordnungen } from '@/lib/abrechnung/sgb-v/verordnung-service'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('billing/sgb-v/verordnungen')
 
 /** GET /api/billing/sgb-v/verordnungen — Liste der HKP-Verordnungen (§ 37 SGB V). */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
@@ -18,10 +19,10 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 /** POST /api/billing/sgb-v/verordnungen — neue HKP-Verordnung anlegen. */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
@@ -52,4 +53,4 @@ export async function POST(request: Request) {
     log.error('Fehler', { message })
     return NextResponse.json({ error: message }, { status: 400 })
   }
-}
+})

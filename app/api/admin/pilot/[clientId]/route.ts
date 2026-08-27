@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { ermittleKundenKette } from '@/lib/pilot/kundenkette'
 import { ermittleVoraussetzungen } from '@/lib/pilot/voraussetzungen'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -19,7 +20,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
  * Die Kunden-Abfrage filtert auf die aktive Organisation — eine fremde
  * clientId liefert 404, nicht die Daten eines anderen Mandanten.
  */
-export async function GET(
+export const GET = withTracking(async function GET(
   _request: Request,
   { params }: { params: Promise<{ clientId: string }> },
 ) {
@@ -46,4 +47,4 @@ export async function GET(
   } catch (e) {
     return safeApiError(e, _request)
   }
-}
+})

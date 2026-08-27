@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { RECHNUNGS_PDF_URL_TTL_SEKUNDEN } from '@/lib/pdf/rechnung-paket'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('rechnungen/pdf')
 
 /**
@@ -24,7 +25,7 @@ const log = logger.child('rechnungen/pdf')
  * Zugriff: nur die eigene Rechnung (clients.user_id = auth.uid()) oder ein
  * Administrator.
  */
-export async function GET(
+export const GET = withTracking(async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -113,4 +114,4 @@ export async function GET(
   } catch (err) {
     return safeApiError(err, _request)
   }
-}
+})

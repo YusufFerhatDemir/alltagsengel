@@ -3,6 +3,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireCaregiverSession } from '@/lib/native-auth'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('api/native/signatures')
 
 // ═══════════════════════════════════════════════════════════════
@@ -27,7 +28,7 @@ const log = logger.child('api/native/signatures')
 //   }
 // ═══════════════════════════════════════════════════════════════
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const auth = await requireCaregiverSession(request)
     if (!auth.ok) {
@@ -118,4 +119,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

@@ -19,11 +19,12 @@ import {
   BETRIEBS_KANAELE, BESTAETIGUNG_ECHTBETRIEB, KANAL_LABEL,
   type BetriebsKanal, type Betriebsmodus,
 } from '@/lib/abrechnung/betriebsmodus'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireAdminMitOrg('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -43,9 +44,9 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireAdminMitOrg('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -90,4 +91,4 @@ export async function POST(request: Request) {
     const fachlich = /Pflicht|Bestätigung|nicht möglich|Begründung|Format/i.test(message)
     return NextResponse.json({ error: message }, { status: fachlich ? 400 : 500 })
   }
-}
+})

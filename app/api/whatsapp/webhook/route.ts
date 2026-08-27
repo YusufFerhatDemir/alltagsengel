@@ -32,6 +32,7 @@ import { vorgangsId } from '@/lib/notifications/delivery-log'
 import { DEFAULT_ORG_ID } from '@/lib/organizations/types'
 import { isLowConfidenceReply, sanitizeNames, HOLDING_REPLY } from '@/lib/whatsapp/confidence'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('wa-webhook')
 
 /**
@@ -76,7 +77,7 @@ function getServiceClient() {
  * Meta ruft auf mit ?hub.mode=subscribe&hub.verify_token=...&hub.challenge=...
  * Wir müssen das challenge zurückgeben wenn der Token stimmt.
  */
-export async function GET(req: NextRequest) {
+export const GET = withTracking(async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const mode = searchParams.get('hub.mode')
   const token = searchParams.get('hub.verify_token')
@@ -89,7 +90,7 @@ export async function GET(req: NextRequest) {
     return new NextResponse(challenge, { status: 200 })
   }
   return new NextResponse('Verification failed', { status: 403 })
-}
+})
 
 /**
  * POST — eingehende Nachricht oder Status-Update.
@@ -105,7 +106,7 @@ export async function GET(req: NextRequest) {
  *   }]
  * }
  */
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   // ROH-Body zuerst lesen — für die Signaturprüfung zwingend nötig.
   const rawBody = await req.text()
 
@@ -139,7 +140,7 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ ok: true })
-}
+})
 
 type IncomingMessage = {
   from: string

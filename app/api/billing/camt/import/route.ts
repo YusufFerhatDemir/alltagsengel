@@ -8,6 +8,7 @@ import { logBillingAction } from '@/lib/billing/core/audit';
 import { safeApiError } from '@/lib/api/error-sanitizer';
 import { camtImportModus } from '@/lib/billing/camt/camt-modus';
 import { camtPreflight } from '@/lib/billing/camt/camt-preflight';
+import { withTracking } from '@/lib/monitoring/tracker'
 
 const MAX_CAMT_BYTES = 20 * 1024 * 1024;
 
@@ -15,7 +16,7 @@ const MAX_CAMT_BYTES = 20 * 1024 * 1024;
  * POST /api/billing/camt/import
  * CAMT-Datei hochladen, parsen und automatisch matchen.
  */
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     const auth = await requireOpsAdmin('abrechnung.schreiben');
     if (!auth.ok) return auth.response;
@@ -414,4 +415,4 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req);
   }
-}
+})

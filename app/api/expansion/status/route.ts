@@ -21,13 +21,14 @@ import {
 } from '@/lib/expansion/state-settings'
 import { DEFAULT_ORG_ID } from '@/lib/organizations/types'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('expansion/status')
 
 export const dynamic = 'force-dynamic'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-export async function GET(request: NextRequest) {
+export const GET = withTracking(async function GET(request: NextRequest) {
   try {
     const params = request.nextUrl.searchParams
     const plz = params.get('plz')
@@ -69,4 +70,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

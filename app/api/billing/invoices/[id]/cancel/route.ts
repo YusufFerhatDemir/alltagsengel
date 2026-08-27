@@ -5,12 +5,13 @@ import { NextResponse } from 'next/server'
 import { cancelInvoice } from '@/lib/billing/core'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * POST /api/billing/invoices/[id]/cancel
  * Rechnung stornieren. Nur fuer Administratoren.
  */
-export async function POST(
+export const POST = withTracking(async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -68,4 +69,4 @@ export async function POST(
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

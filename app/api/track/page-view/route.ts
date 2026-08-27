@@ -19,6 +19,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 const MAX_PFAD = 500
 const MAX_TEXT = 1000
@@ -30,7 +31,7 @@ function kuerze(wert: unknown, max: number): string | null {
   return s.slice(0, max)
 }
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   // Tracking darf die App nie stoeren: jeder Fehlerpfad endet in { ok: true }.
   try {
     const ip = getClientIp(request)
@@ -72,4 +73,4 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ ok: true })
   }
-}
+})

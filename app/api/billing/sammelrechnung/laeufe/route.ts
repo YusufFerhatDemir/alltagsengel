@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { ladeLaeufe, ladeLauf, brichLaufAb } from '@/lib/billing/core'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // ═══════════════════════════════════════════════════════════════
 // SAMMELRECHNUNGSLÄUFE — Betriebsstatus
@@ -28,7 +29,7 @@ export const dynamic = 'force-dynamic'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
   const { organizationId } = auth.ctx
@@ -61,9 +62,9 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
   const { organizationId, userId } = auth.ctx
@@ -88,4 +89,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

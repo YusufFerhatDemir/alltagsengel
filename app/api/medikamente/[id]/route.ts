@@ -8,8 +8,9 @@ import {
   aktualisiereMedikament,
   setzeMedikamentStatus,
 } from '@/lib/medikamente/medikamente'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(
+export const GET = withTracking(async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -25,9 +26,9 @@ export async function GET(
   } catch (e) {
     return safeApiError(e, _req)
   }
-}
+})
 
-export async function PATCH(
+export const PATCH = withTracking(async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -79,9 +80,9 @@ export async function PATCH(
     const status = msg.includes('Ungültig') ? 400 : 500
     return NextResponse.json({ error: msg }, { status })
   }
-}
+})
 
-export async function DELETE(
+export const DELETE = withTracking(async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -109,4 +110,4 @@ export async function DELETE(
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

@@ -38,6 +38,7 @@ import { alleTarife, istVerkaufBereit, verkaufMoeglich } from '@/lib/coach/prici
 import { beendeZugang, massgeblicheBestellung, setzeStatus, verbucheZahlung } from '@/lib/coach/verkauf-server'
 import { sendeKuendigungsbestaetigung, sendeWiderrufsbestaetigung } from '@/lib/emails/coach-bestellung'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('coach-abo')
 
 export const runtime = 'nodejs'
@@ -49,7 +50,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://alltagsengel.care'
 // GET
 // ═══════════════════════════════════════════════════════════════
 
-export async function GET() {
+export const GET = withTracking(async function GET() {
   // Kein schreibzugriff: Der Vertragsstand muss auch nach einem Widerruf
   // der Art.-9-Einwilligung abrufbar bleiben — sonst käme niemand mehr an
   // seine eigenen Rechnungen und könnte nicht mehr kündigen.
@@ -108,13 +109,13 @@ export async function GET() {
     verkauf_moeglich: verkaufMoeglich(),
     tarife,
   })
-}
+})
 
 // ═══════════════════════════════════════════════════════════════
 // POST
 // ═══════════════════════════════════════════════════════════════
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 
@@ -140,7 +141,7 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 // ─── Kündigung zum Laufzeitende ────────────────────────────────
 

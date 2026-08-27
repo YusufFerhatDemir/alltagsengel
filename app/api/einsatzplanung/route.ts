@@ -11,6 +11,7 @@ import { logBillingAction } from '@/lib/billing/core/audit'
 import { logAuditEvent } from '@/lib/audit-log'
 import { safeErrorResponse, safeDbError } from '@/lib/utils/api-error'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('einsatzplanung')
 
 async function requireStaff(supabase: Awaited<ReturnType<typeof createClient>>) {
@@ -24,7 +25,7 @@ async function requireStaff(supabase: Awaited<ReturnType<typeof createClient>>) 
   return { ok: true as const, userId: user.id, role: profile.role }
 }
 
-export async function GET(req: NextRequest) {
+export const GET = withTracking(async function GET(req: NextRequest) {
   const supabase = await createClient()
   const auth = await requireStaff(supabase)
   if (!auth.ok) return auth.response
@@ -68,9 +69,9 @@ export async function GET(req: NextRequest) {
 
   if (error) return safeDbError(error)
   return NextResponse.json(data)
-}
+})
 
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   const supabase = await createClient()
   const auth = await requireStaff(supabase)
   if (!auth.ok) return auth.response
@@ -270,9 +271,9 @@ export async function POST(req: NextRequest) {
   }).catch(err => log.errorWithException('Audit-Log fehlgeschlagen', err))
 
   return NextResponse.json({ ...data, warnungen: warnungen.length > 0 ? warnungen : undefined }, { status: 201 })
-}
+})
 
-export async function PATCH(req: NextRequest) {
+export const PATCH = withTracking(async function PATCH(req: NextRequest) {
   const supabase = await createClient()
   const auth = await requireStaff(supabase)
   if (!auth.ok) return auth.response
@@ -444,4 +445,4 @@ export async function PATCH(req: NextRequest) {
   }).catch(err => log.errorWithException('Audit-Log fehlgeschlagen', err))
 
   return NextResponse.json({ ...data, warnungen: patchWarnungen.length > 0 ? patchWarnungen : undefined })
-}
+})

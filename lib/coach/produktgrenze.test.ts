@@ -20,6 +20,11 @@ import assert from 'node:assert/strict'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import {
+  HANDLER_NAMEN,
+  exportiertHandler,
+  handlerRumpfOderFehler,
+} from '../../__tests__/helpers/route-quelle'
 
 const WURZEL = fileURLToPath(new URL('../../', import.meta.url))
 const PRODUKT_UI = join(WURZEL, 'app/pflegecoach')
@@ -141,10 +146,10 @@ test('DiPA-spezifische Seiten und Routen sind an die Schalter gebunden', () => {
 
 test('Anspruchs-Route antwortet ohne DiPA-Modus mit 404 in jedem Handler', () => {
   const text = readFileSync(join(WURZEL, 'app/api/coach/anspruch/route.ts'), 'utf8')
-  const handler = text.split(/export async function /).slice(1)
-  assert.ok(handler.length >= 2, 'Es werden mindestens GET und POST erwartet')
-  for (const block of handler) {
-    const name = block.slice(0, block.indexOf('('))
+  const namen = HANDLER_NAMEN.filter(n => exportiertHandler(text, n))
+  assert.ok(namen.length >= 2, 'Es werden mindestens GET und POST erwartet')
+  for (const name of namen) {
+    const block = handlerRumpfOderFehler(text, name, 'app/api/coach/anspruch/route.ts')
     assert.match(block, /if \(!dipaModus\(\)\)/, `Handler ${name} ohne dipaModus()-Prüfung`)
     assert.match(block, /status: 404/, `Handler ${name} verrät die Existenz statt 404 zu liefern`)
   }
@@ -198,18 +203,24 @@ const OHNE_EINWILLIGUNGSPRUEFUNG: Record<string, string> = {
 
 test('jede schreibende Coach-Route prüft die Pflicht-Einwilligung', () => {
   const luecken: string[] = []
+  let geprueft = 0
   for (const pfad of dateienUnter(COACH_API, ['route.ts'])) {
     const text = readFileSync(pfad, 'utf8')
-    for (const block of text.split(/export async function /).slice(1)) {
-      const name = block.slice(0, block.indexOf('('))
-      if (!SCHREIB_METHODEN.includes(name)) continue
+    for (const name of SCHREIB_METHODEN) {
+      if (!exportiertHandler(text, name)) continue
       const schluessel = `${relativ(pfad)}:${name}`
+      geprueft++
       if (schluessel in OHNE_EINWILLIGUNGSPRUEFUNG) continue
+      const block = handlerRumpfOderFehler(text, name, relativ(pfad))
       if (!/requireCoachUser\(\{[^}]*schreibzugriff:\s*true/.test(block)) {
         luecken.push(schluessel)
       }
     }
   }
+  // Ohne diese Zusicherung ist der Test gruen, sobald die Erkennung ins
+  // Leere laeuft — etwa weil die Handler in einer neuen Form exportiert
+  // werden. Ein Scanner, der nichts findet, bestaetigt alles.
+  assert.ok(geprueft > 0, 'Scanner hat keine schreibende Coach-Route gefunden')
   assert.deepEqual(
     luecken, [],
     'Schreibroute ohne Einwilligungsprüfung (requireCoachUser({ schreibzugriff: true })) — ' +
@@ -225,7 +236,7 @@ test('die Ausnahmeliste enthält keine verwaisten Einträge', () => {
     const [datei, methode] = schluessel.split(':')
     const text = readFileSync(join(WURZEL, datei), 'utf8')
     assert.ok(
-      text.includes(`export async function ${methode}`),
+      exportiertHandler(text, methode),
       `Ausnahme ${schluessel} zeigt auf einen Handler, den es nicht (mehr) gibt`
     )
   }

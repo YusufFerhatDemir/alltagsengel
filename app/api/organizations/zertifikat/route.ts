@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOrgRole } from '@/lib/organizations/server'
 import { pruefeZertifikat, ZERTIFIKAT_BUCKET } from '@/lib/abrechnung/zertifikate'
 import { datumBerlin } from '@/lib/utils/timezone';
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -14,7 +15,7 @@ export const dynamic = 'force-dynamic'
  * multipart/form-data: organization_id, datei (.p12 oder .pem), passwort (bei .p12)
  * Nur Owner/Admin der Organisation.
  */
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     // Falscher Content-Type laesst formData() werfen. Ohne diesen eigenen
     // Zweig landete das im aeusseren catch und die Route antwortete mit
@@ -113,4 +114,4 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { erstelleSgbVKorrektur, fuehreSgbVKorrekturAus, type SgbVKorrekturTyp } from '@/lib/abrechnung/sgb-v/storno-korrektur'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('billing/sgb-v/laeufe/[id]')
 
 const TYPEN: SgbVKorrekturTyp[] = ['storno', 'teilstorno', 'korrekturabrechnung']
@@ -15,7 +16,7 @@ const TYPEN: SgbVKorrekturTyp[] = ['storno', 'teilstorno', 'korrekturabrechnung'
  * den Korrekturlauf) — die zweistufige API steht in storno-korrektur.ts
  * bereit, falls eine Freigabe zwischen Anlage und Ausführung nötig wird.
  */
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const POST = withTracking(async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
@@ -46,4 +47,4 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     log.error('/storno] Fehler', { message })
     return NextResponse.json({ error: message }, { status: 400 })
   }
-}
+})

@@ -24,8 +24,9 @@ import { logFhirAuditEvent } from '@/lib/fhir/audit'
 import type { ClientFhirRow, FhirResource, ServiceRecordFhirRow } from '@/lib/fhir/types'
 import type { VitalSign } from '@/lib/vitals/types'
 import type { PflegeMassnahme, PflegeMassnahmenplan } from '@/lib/pflege/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return toFhirErrorResponse(auth.response)
 
@@ -102,4 +103,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

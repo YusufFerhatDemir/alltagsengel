@@ -6,9 +6,10 @@ import { listAufgaben, createAufgabe } from '@/lib/ops/aufgaben'
 import { logAktivitaet } from '@/lib/ops/aktivitaetslog'
 import type { AufgabenStatus, AufgabenKategorie, AufgabenPrioritaet } from '@/lib/ops/types'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('api:ops')
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('einsatz.lesen')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
@@ -35,9 +36,9 @@ export async function GET(request: Request) {
   } catch (e: any) {
     return apiErrorResponse(e, request)
   }
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireOpsAdmin('einsatz.schreiben')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
@@ -59,4 +60,4 @@ export async function POST(request: Request) {
   } catch (e: any) {
     return apiErrorResponse(e, request)
   }
-}
+})

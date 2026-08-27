@@ -9,6 +9,7 @@ import {
 import { versandFlagsStand } from '@/lib/config/versand-flags'
 import { protokolliereVersandFlags } from '@/lib/config/versand-flags-audit'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // ═══════════════════════════════════════════════════════════════
 // SAMMELRECHNUNGSLAUF (Batch-Invoicing)
@@ -52,7 +53,7 @@ function leseMonat(wert: unknown): string | null {
   return typeof wert === 'string' && /^\d{4}-\d{2}$/.test(wert) ? wert : null
 }
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
   const { organizationId, userId } = auth.ctx
@@ -76,9 +77,9 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
   const { organizationId, userId } = auth.ctx
@@ -151,4 +152,4 @@ export async function POST(request: Request) {
     }
     return safeApiError(err, request)
   }
-}
+})

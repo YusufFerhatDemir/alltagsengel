@@ -9,6 +9,7 @@ import { tarifLeistungsart, bekannteLeistungsarten } from '@/lib/billing/leistun
 import { pruefeBudget } from '@/lib/personal/einsatzfreigabe'
 import type { BudgetTyp } from '@/lib/config/budget-constants'
 import { logAuditEventOrWarn } from '@/lib/audit-log'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * service_records.budget_type ist ein anderes Vokabular als
@@ -93,7 +94,7 @@ async function protokolliere(
   })
 }
 
-export async function GET(req: NextRequest) {
+export const GET = withTracking(async function GET(req: NextRequest) {
   const supabase = await createClient()
   const auth = await requireAuth(supabase)
   if (!auth.ok) return auth.response
@@ -156,9 +157,9 @@ export async function GET(req: NextRequest) {
   const { data, error } = await query
   if (error) return safeDbError(error)
   return NextResponse.json(data)
-}
+})
 
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   const supabase = await createClient()
   const auth = await requireAuth(supabase)
   if (!auth.ok) return auth.response
@@ -260,7 +261,7 @@ export async function POST(req: NextRequest) {
   })
 
   return NextResponse.json(budgetWarnung ? { ...data, budget_warnung: budgetWarnung } : data, { status: 201 })
-}
+})
 
 // duration_minutes fehlt bewusst: GENERATED-Spalte, siehe POST oben.
 // Ein UPDATE darauf scheitert genauso wie ein INSERT.
@@ -271,7 +272,7 @@ const ERLAUBTE_PATCH_FELDER = new Set([
   'caregiver_initials', 'gps_end_lat', 'gps_end_lng',
 ])
 
-export async function PATCH(req: NextRequest) {
+export const PATCH = withTracking(async function PATCH(req: NextRequest) {
   const supabase = await createClient()
   const auth = await requireAuth(supabase)
   if (!auth.ok) return auth.response
@@ -417,4 +418,4 @@ export async function PATCH(req: NextRequest) {
   })
 
   return NextResponse.json(data)
-}
+})

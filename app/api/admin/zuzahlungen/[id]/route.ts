@@ -4,6 +4,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('admin/zuzahlungen')
 
 export const runtime = 'nodejs'
@@ -24,7 +25,7 @@ function nurErlaubteFelder(roh: Record<string, unknown>): Record<string, unknown
 }
 
 /** PATCH — Zuzahlung aktualisieren (u. a. als bezahlt markieren, Befreiung eintragen). */
-export async function PATCH(
+export const PATCH = withTracking(async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -65,4 +66,4 @@ export async function PATCH(
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logger } from '@/lib/logger'
 import { euroZuCent } from '@/lib/geld'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('billing/invoices')
 
 /**
@@ -18,7 +19,7 @@ const log = logger.child('billing/invoices')
  *   ?status=        Filter auf Rechnungsstatus
  *   ?limit=         max. 500, Default 100
  */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
   const { organizationId } = auth.ctx
@@ -127,4 +128,4 @@ export async function GET(request: Request) {
   })
 
   return NextResponse.json({ rows: filtered })
-}
+})

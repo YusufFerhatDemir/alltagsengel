@@ -6,6 +6,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logger } from '@/lib/logger'
 import { pruefeObergrenze, pruefeObergrenzenStapel, meldungenAus } from '@/lib/billing/obergrenzen'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('api:billing')
 
 /**
@@ -14,7 +15,7 @@ const log = logger.child('api:billing')
  * Personal (admin/superadmin/pdl/buero) — Tarifpreise sind keine Kunden-
  * oder Engel-Information.
  */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -83,13 +84,13 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 /**
  * POST /api/billing/tariffs
  * Neuen Tarif anlegen. Nur für Administratoren.
  */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     // Auth-Prüfung
     const supabase = await createClient()
@@ -271,4 +272,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

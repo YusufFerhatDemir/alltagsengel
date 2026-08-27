@@ -5,12 +5,13 @@ import {
   erfasseHkpLeistung, listeHkpLeistungsnachweise, pruefeVollstaendigkeit,
 } from '@/lib/abrechnung/sgb-v/leistungsnachweis-service'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * GET /api/billing/sgb-v/leistungsnachweise?von=...&bis=...&verordnungId=...&pruefen=1
  * `pruefen=1` liefert zusätzlich die Vollständigkeitsprüfung für den Zeitraum.
  */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
@@ -32,10 +33,10 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 /** POST /api/billing/sgb-v/leistungsnachweise — Leistung erfassen. */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
@@ -65,4 +66,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

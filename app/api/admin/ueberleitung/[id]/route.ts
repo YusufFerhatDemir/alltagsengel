@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logAuditEvent } from '@/lib/audit-log'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('admin/ueberleitung')
 
 export const runtime = 'nodejs'
@@ -25,7 +26,7 @@ function nurErlaubteFelder(roh: Record<string, unknown>): Record<string, unknown
 }
 
 /** GET — einzelnen Überleitungsbogen laden. */
-export async function GET(
+export const GET = withTracking(async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -52,10 +53,10 @@ export async function GET(
   } catch (e) {
     return safeApiError(e, _req)
   }
-}
+})
 
 /** PATCH — Überleitungsbogen aktualisieren/abschließen. */
-export async function PATCH(
+export const PATCH = withTracking(async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -103,4 +104,4 @@ export async function PATCH(
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

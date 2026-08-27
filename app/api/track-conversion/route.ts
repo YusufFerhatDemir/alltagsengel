@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import crypto from 'node:crypto'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * Server-seitiges Conversion-Tracking.
@@ -40,7 +41,7 @@ function normalizePhone(phone: string): string {
   return phone.replace(/\D/g, '')
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     const ip =
       req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
@@ -77,4 +78,4 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     return safeApiError(err, req)
   }
-}
+})

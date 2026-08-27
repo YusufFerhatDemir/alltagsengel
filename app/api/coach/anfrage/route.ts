@@ -31,6 +31,7 @@ import { getClientIp, escapeHtml } from '@/lib/rate-limit'
 import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { COACH_PRODUKT_VERSION, COACH_SUPPORT_EMAIL } from '@/lib/coach/version'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('coach-anfrage')
 
 const MAX_LEN = { name: 120, email: 200, telefon: 40, nachricht: 2000 }
@@ -42,7 +43,7 @@ const ROLLEN: Record<string, string> = {
   beruflich: 'Beruflich / für eine Einrichtung',
 }
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const ip = getClientIp(request)
     if (!(await rateLimitPersistent(`coach-anfrage:${ip}`, 5, 10 * 60 * 1000))) {
@@ -156,4 +157,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

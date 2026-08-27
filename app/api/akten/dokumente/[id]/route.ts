@@ -6,8 +6,9 @@ import { requireAktenAdmin } from '@/lib/akten/api-auth'
 import { getDokument, softDeleteDokument, updateDokument } from '@/lib/akten/dokumente'
 import { logAktenZugriff } from '@/lib/akten/zugriff-log'
 import type { DokumentKategorie, DokumentSichtbarkeit, DokumentStatus } from '@/lib/akten/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withTracking(async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const auth = await requireAktenAdmin('stammdaten.lesen')
@@ -27,9 +28,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withTracking(async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const auth = await requireAktenAdmin('stammdaten.schreiben')
@@ -61,9 +62,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   } catch (err) {
     return apiErrorResponse(err, request)
   }
-}
+})
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = withTracking(async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const auth = await requireAktenAdmin('stammdaten.schreiben')
@@ -77,4 +78,4 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   } catch (err) {
     return apiErrorResponse(err, _request)
   }
-}
+})

@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logAuditEvent } from '@/lib/audit-log'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('admin/mitarbeitergespraeche')
 
 export const runtime = 'nodejs'
@@ -25,7 +26,7 @@ function nurErlaubteFelder(roh: Record<string, unknown>): Record<string, unknown
 }
 
 /** GET — Mitarbeitergespräche, optional gefiltert nach Mitarbeiter. */
-export async function GET(request: NextRequest) {
+export const GET = withTracking(async function GET(request: NextRequest) {
   const auth = await requireOpsAdmin('personal.lesen')
   if (!auth.ok) return auth.response
 
@@ -52,10 +53,10 @@ export async function GET(request: NextRequest) {
   } catch (e) {
     return safeApiError(e, request)
   }
-}
+})
 
 /** POST — neues Mitarbeitergespräch anlegen. */
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   const auth = await requireOpsAdmin('personal.schreiben')
   if (!auth.ok) return auth.response
 
@@ -106,4 +107,4 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

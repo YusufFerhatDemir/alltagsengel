@@ -3,6 +3,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { ladeVersandProtokoll, type VersandKanal } from '@/lib/abrechnung/versand-protokoll'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -14,7 +15,7 @@ const KANAELE: VersandKanal[] = ['sftp_105', 'sftp_302', 'kim', 'manuell']
  *
  * Nachweis aller Übermittlungsversuche — auch der abgebrochenen.
  */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireAdminMitOrg('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
@@ -40,4 +41,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

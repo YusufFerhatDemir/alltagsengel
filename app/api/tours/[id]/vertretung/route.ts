@@ -9,9 +9,10 @@ import {
   uebersetzeDbFehler,
 } from '@/lib/touren/server'
 import { TOUR_SELECT, type TourZeile } from '@/lib/touren/select'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // ── GET /api/tours/[id]/vertretung — Kandidaten vorschlagen ──────
-export async function GET(
+export const GET = withTracking(async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -37,11 +38,11 @@ export async function GET(
     clientIds: [...new Set((tour.tour_stops ?? []).map(s => s.client_id).filter((c): c is string => !!c))],
   })
   return NextResponse.json(kandidaten)
-}
+})
 
 // ── POST /api/tours/[id]/vertretung — Tour übertragen ────────────
 // body: { neuer_caregiver_id, grund, force_override? }
-export async function POST(
+export const POST = withTracking(async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -175,4 +176,4 @@ export async function POST(
     ...(aktualisiert as unknown as TourZeile),
     warnungen: warnungen.length > 0 ? warnungen : undefined,
   })
-}
+})

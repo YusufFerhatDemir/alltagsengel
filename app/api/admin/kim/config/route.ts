@@ -4,8 +4,9 @@ import { createClient } from '@/lib/supabase/server'
 import { requireKimAdmin } from '@/lib/kim/api-auth'
 import { getActiveProviderConfig, listProviderConfigs, setActiveProviderConfig } from '@/lib/kim/provider-config-service'
 import type { SetProviderConfigInput } from '@/lib/kim/provider-config-service'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -19,9 +20,9 @@ export async function GET(request: Request) {
   } catch (e) {
     return safeApiError(e, request)
   }
-}
+})
 
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -36,4 +37,4 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

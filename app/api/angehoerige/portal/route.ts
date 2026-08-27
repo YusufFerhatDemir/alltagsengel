@@ -6,8 +6,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requirePortalAccess } from '@/lib/angehoerige/portal-helpers'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const auth = await requirePortalAccess()
   if (!auth.ok) return auth.response
 
@@ -64,4 +65,4 @@ export async function GET() {
       letzte_leistungen: letzteLeistungen ?? [],
     },
   })
-}
+})

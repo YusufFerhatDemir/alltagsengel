@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyAngelNewBooking, notifyCustomerBookingAccepted, type BookingNotifyData } from '@/lib/notifications'
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // ─── Row-Formen des bookings-Selects (inkl. eingebetteter Joins) ───
 interface BookingProfile {
@@ -42,7 +43,7 @@ function firstOrSelf<T>(v: T | T[] | null | undefined): T | null {
  *
  * Triggers in-app + email notifications for booking events.
  */
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -136,4 +137,4 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     return safeApiError(err, req)
   }
-}
+})

@@ -22,13 +22,14 @@ import { NextResponse } from 'next/server'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { schalterStand } from '@/lib/coach/schalter'
 import { EINGANGSBLOCKER, LEISTUNGSANSPRUCH, REGULATORIK_STAND } from '@/lib/coach/regulatorik'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 // Kein Caching: Ein Schalter kann per Deployment umgelegt werden und muss
 // dann sofort im Bericht stehen — vor allem in die alarmierende Richtung.
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -66,4 +67,4 @@ export async function GET() {
     },
     regulatorik_stand: REGULATORIK_STAND,
   })
-}
+})

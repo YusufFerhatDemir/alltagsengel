@@ -8,9 +8,10 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { logBillingAction } from '@/lib/billing/core/audit'
 import { meldeAbrechnungsfehler } from '@/lib/automation/abrechnung-fehler-aufgabe'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('dta/preflight')
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -91,4 +92,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

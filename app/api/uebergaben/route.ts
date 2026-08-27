@@ -5,8 +5,9 @@ import { requireUebergabeUser } from '@/lib/uebergabe/api-auth'
 import { createProtokoll, listProtokolle } from '@/lib/uebergabe/protokolle'
 import type { ProtokollStatus, Schicht } from '@/lib/uebergabe/types'
 import { safeErrorResponse } from '@/lib/utils/api-error'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   try {
     const auth = await requireUebergabeUser()
     if (!auth.ok) return auth.response
@@ -30,9 +31,9 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeErrorResponse(err, 400)
   }
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const auth = await requireUebergabeUser()
     if (!auth.ok) return auth.response
@@ -60,4 +61,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeErrorResponse(err, 400)
   }
-}
+})

@@ -4,8 +4,9 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAktenAdmin } from '@/lib/akten/api-auth'
 import { createKontaktperson, listKontaktpersonen } from '@/lib/akten/kontaktpersonen'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   try {
     const auth = await requireAktenAdmin('stammdaten.lesen')
     if (!auth.ok) return auth.response
@@ -21,9 +22,9 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const auth = await requireAktenAdmin('stammdaten.schreiben')
     if (!auth.ok) return auth.response
@@ -63,4 +64,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return apiErrorResponse(err, request)
   }
-}
+})

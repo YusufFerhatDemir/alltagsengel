@@ -5,13 +5,14 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logAuditEvent } from '@/lib/audit-log'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('admin/fixierungen/ueberwachung')
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 /** GET — Überwachungseinträge einer Maßnahme. */
-export async function GET(
+export const GET = withTracking(async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -47,10 +48,10 @@ export async function GET(
   } catch (e) {
     return safeApiError(e, _req)
   }
-}
+})
 
 /** POST — neue Überwachungskontrolle protokollieren. */
-export async function POST(
+export const POST = withTracking(async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -114,4 +115,4 @@ export async function POST(
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

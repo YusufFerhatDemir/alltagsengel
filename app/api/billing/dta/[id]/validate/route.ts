@@ -5,8 +5,9 @@ import { NextResponse } from 'next/server'
 import { preFlightValidierung } from '@/lib/abrechnung/kassenabrechnung-engine'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function POST(
+export const POST = withTracking(async function POST(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -59,4 +60,4 @@ export async function POST(
   } catch (err) {
     return safeApiError(err, _request)
   }
-}
+})

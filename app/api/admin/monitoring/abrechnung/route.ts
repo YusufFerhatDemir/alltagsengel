@@ -23,6 +23,7 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sammleAbrechnungsMetriken } from '@/lib/monitoring/abrechnung-metriken'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -31,7 +32,7 @@ const STUNDEN_MIN = 1
 const STUNDEN_MAX = 720
 const STUNDEN_STANDARD = 24
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -59,4 +60,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

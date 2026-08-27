@@ -19,8 +19,9 @@ import { NextResponse } from 'next/server'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { werteNutzungAus, type NutzungsZeile } from '@/lib/coach/nachweise'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -50,4 +51,4 @@ export async function GET(request: Request) {
     hinweis:
       'Nutzungskennzahlen auf Basis pseudonymisierter Ereignisse. Keine Aussage über Wirksamkeit — Bewertung ausschließlich nach Evaluationskonzept.',
   })
-}
+})

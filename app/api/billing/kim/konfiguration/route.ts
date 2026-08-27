@@ -3,6 +3,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { ladeKonfigurationen, erstelleKonfiguration } from '@/lib/kim/config'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * GET /api/billing/kim/konfiguration
@@ -12,7 +13,7 @@ import { ladeKonfigurationen, erstelleKonfiguration } from '@/lib/kim/config'
  * KEINE Verbindung zu einem Postfach oder Provider statt — nur Speichern/
  * Auflisten (s. lib/kim/config.ts).
  */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   const { organizationId } = auth.ctx
@@ -24,9 +25,9 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   const { organizationId, userId } = auth.ctx
@@ -40,4 +41,4 @@ export async function POST(request: Request) {
     const message = err instanceof Error ? err.message : 'Interner Serverfehler'
     return NextResponse.json({ error: message }, { status: 400 })
   }
-}
+})

@@ -4,8 +4,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePersonalAdmin } from '@/lib/personal/api-auth'
 import { genehmigenAbwesenheit } from '@/lib/personal/abwesenheiten'
 import { writeAuditLog } from '@/lib/personal/audit'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function POST(
+export const POST = withTracking(async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -34,4 +35,4 @@ export async function POST(
   } catch (e: any) {
     return apiErrorResponse(e)
   }
-}
+})

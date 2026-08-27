@@ -3,12 +3,13 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { requireOpsAdmin } from '@/lib/ops/api-auth';
 import { getKontenzuordnungen, upsertKontenzuordnung, pruefeDebitorennummer } from '@/lib/billing/datev/kontenrahmen';
 import { logBillingAction } from '@/lib/billing/core/audit';
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * GET /api/billing/datev/kontenzuordnung
  * Alle Kontenzuordnungen laden.
  */
-export async function GET() {
+export const GET = withTracking(async function GET() {
   try {
     const auth = await requireOpsAdmin('abrechnung.lesen');
     if (!auth.ok) return auth.response;
@@ -20,14 +21,14 @@ export async function GET() {
     const msg = e instanceof Error ? e.message : String(e);
     return NextResponse.json({ error: msg }, { status: 400 });
   }
-}
+})
 
 /**
  * POST /api/billing/datev/kontenzuordnung
  * Kontenzuordnung erstellen/aendern.
  * Body: { clientId: string, debitorennummer: string }
  */
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     const auth = await requireOpsAdmin('abrechnung.schreiben');
     if (!auth.ok) return auth.response;
@@ -69,4 +70,4 @@ export async function POST(req: NextRequest) {
     const msg = e instanceof Error ? e.message : String(e);
     return NextResponse.json({ error: msg }, { status: 400 });
   }
-}
+})

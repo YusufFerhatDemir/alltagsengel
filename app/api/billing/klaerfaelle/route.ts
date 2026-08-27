@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireOpsAdmin } from '@/lib/ops/api-auth';
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * GET /api/billing/klaerfaelle
  * Offene Klaerfaelle abrufen.
  */
-export async function GET(req: NextRequest) {
+export const GET = withTracking(async function GET(req: NextRequest) {
   try {
     const auth = await requireOpsAdmin('abrechnung.lesen');
     if (!auth.ok) return auth.response;
@@ -39,4 +40,4 @@ export async function GET(req: NextRequest) {
     const msg = e instanceof Error ? e.message : String(e);
     return NextResponse.json({ error: msg }, { status: 400 });
   }
-}
+})

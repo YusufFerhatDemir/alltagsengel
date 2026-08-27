@@ -4,9 +4,10 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('api:notify-admin-registration')
 
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     // Auth-Check: Nur authentifizierte User dürfen diese Route aufrufen
     const authSupabase = await createClient()
@@ -72,4 +73,4 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     return safeApiError(err, req)
   }
-}
+})

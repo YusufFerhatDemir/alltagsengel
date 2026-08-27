@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logAuditEvent } from '@/lib/audit-log'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('admin/lagerungsprotokoll')
 
 export const runtime = 'nodejs'
@@ -24,7 +25,7 @@ function nurErlaubteFelder(roh: Record<string, unknown>): Record<string, unknown
 }
 
 /** GET — Lagerungsprotokolle, optional gefiltert nach Klient. */
-export async function GET(request: NextRequest) {
+export const GET = withTracking(async function GET(request: NextRequest) {
   const auth = await requireOpsAdmin('pflege.lesen')
   if (!auth.ok) return auth.response
 
@@ -51,10 +52,10 @@ export async function GET(request: NextRequest) {
   } catch (e) {
     return safeApiError(e, request)
   }
-}
+})
 
 /** POST — neue Umlagerung protokollieren. */
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   const auth = await requireOpsAdmin('pflege.schreiben')
   if (!auth.ok) return auth.response
 
@@ -107,10 +108,10 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})
 
 /** DELETE — Lagerungseintrag archivieren (Soft-Delete). */
-export async function DELETE(req: NextRequest) {
+export const DELETE = withTracking(async function DELETE(req: NextRequest) {
   const auth = await requireOpsAdmin('pflege.schreiben')
   if (!auth.ok) return auth.response
 
@@ -154,4 +155,4 @@ export async function DELETE(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

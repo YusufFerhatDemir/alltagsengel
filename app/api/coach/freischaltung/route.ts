@@ -25,6 +25,7 @@ import {
   pruefeCodeGueltigkeit, codePraefix,
 } from '@/lib/coach/freischaltung'
 import { dipaModus, freischaltungPflicht } from '@/lib/coach/config'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 const FEHLER_UNGUELTIG = 'Dieser Code ist nicht gültig. Bitte prüfen Sie Ihre Eingabe.'
 
@@ -48,7 +49,7 @@ function nichtVerfuegbar(): NextResponse {
 }
 
 /** Eigener Freischaltstatus. */
-export async function GET() {
+export const GET = withTracking(async function GET() {
   if (!freischaltungAktiv()) return nichtVerfuegbar()
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
@@ -67,10 +68,10 @@ export async function GET() {
     freigeschaltet: istFreigeschaltet(data ?? [], heute),
     pflicht: freischaltungPflicht(),
   })
-}
+})
 
 /** Code einlösen. */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   if (!freischaltungAktiv()) return nichtVerfuegbar()
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
@@ -156,4 +157,4 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ freischaltung, freigeschaltet: true })
-}
+})

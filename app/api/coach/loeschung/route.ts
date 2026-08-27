@@ -24,11 +24,12 @@
 
 import { NextResponse } from 'next/server'
 import { requireCoachUser } from '@/lib/coach/api-auth'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 const BESTAETIGUNG = 'LOESCHEN'
 
 /** Vorschau: was würde gelöscht? */
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 
@@ -74,13 +75,13 @@ export async function GET() {
     },
     bestaetigungswort: BESTAETIGUNG,
   })
-}
+})
 
 /**
  * Löscht alle PflegeCoach-Daten des Nutzers.
  * Das Alltagsengel-Konto bleibt bestehen.
  */
-export async function DELETE(request: Request) {
+export const DELETE = withTracking(async function DELETE(request: Request) {
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 
@@ -115,4 +116,4 @@ export async function DELETE(request: Request) {
   }
 
   return NextResponse.json({ geloescht: true })
-}
+})

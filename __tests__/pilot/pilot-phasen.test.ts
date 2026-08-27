@@ -28,6 +28,7 @@ import {
   type VorgangStatus,
 } from '@/lib/pilot/pilot-phasen'
 import { erstelleFakeSupabase, hatFilter, type FakeAufruf } from '../helpers/supabase-fake'
+import { exportiertHandler } from '../helpers/route-quelle'
 
 const ORG = '11111111-1111-4111-8111-111111111111'
 const WURZEL = join(__dirname, '..', '..')
@@ -169,9 +170,9 @@ describe('Keine Ausführung', () => {
   it('die Route hat weiterhin kein POST/PUT/PATCH/DELETE', () => {
     const quelle = readFileSync(join(WURZEL, 'app/api/admin/pilot/route.ts'), 'utf8')
     for (const methode of ['POST', 'PUT', 'PATCH', 'DELETE']) {
-      expect(quelle).not.toContain(`export async function ${methode}`)
+      expect(exportiertHandler(quelle, methode), `${methode} darf es nicht geben`).toBe(false)
     }
-    expect(quelle).toContain('export async function GET')
+    expect(exportiertHandler(quelle, 'GET')).toBe(true)
   })
 
   it('die Seite hat kein Formular und keinen Klick-Handler', () => {

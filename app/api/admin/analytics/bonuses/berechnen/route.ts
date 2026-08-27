@@ -3,8 +3,9 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { fuehreBerechnungslaufDurch } from '@/lib/analytics/bonusEngine'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireOpsAdmin('berichte.lesen')
   if (!auth.ok) return auth.response
   try {
@@ -24,4 +25,4 @@ export async function POST(request: Request) {
   } catch (e: any) {
     return apiErrorResponse(e, request)
   }
-}
+})

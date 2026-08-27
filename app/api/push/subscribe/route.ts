@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('api:push')
 
 /**
  * POST /api/push/subscribe
  * Saves a push subscription for the authenticated user.
  */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -43,13 +44,13 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 /**
  * DELETE /api/push/subscribe
  * Removes a push subscription.
  */
-export async function DELETE(request: Request) {
+export const DELETE = withTracking(async function DELETE(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -72,4 +73,4 @@ export async function DELETE(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

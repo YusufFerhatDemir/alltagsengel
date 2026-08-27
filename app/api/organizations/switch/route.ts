@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ACTIVE_ORG_COOKIE } from '@/lib/organizations/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -14,7 +15,7 @@ export const dynamic = 'force-dynamic'
  * (serverseitiger Kontext) und app_metadata.org_id (RLS-Kontext im JWT —
  * greift nach dem nächsten Token-Refresh).
  */
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
@@ -49,4 +50,4 @@ export async function POST(req: NextRequest) {
   })
 
   return NextResponse.json({ ok: true, active_org_id: orgId })
-}
+})

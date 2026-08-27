@@ -3,8 +3,9 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { deleteAktion } from '@/lib/workflow/regeln'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function DELETE(
+export const DELETE = withTracking(async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string; aktionId: string }> }
 ) {
@@ -18,4 +19,4 @@ export async function DELETE(
   } catch (e: any) {
     return apiErrorResponse(e)
   }
-}
+})

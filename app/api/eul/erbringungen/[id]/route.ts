@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { createClient } from '@/lib/supabase/server'
 import { pruefeNachweisVollstaendig } from '@/lib/coach/eul'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * Nachweis ändern oder bestätigen.
@@ -10,7 +11,7 @@ import { pruefeNachweisVollstaendig } from '@/lib/coach/eul'
  * deshalb wird sie erst gesetzt, wenn er vollständig ist, und ein bereits
  * bestätigter Nachweis lässt sich inhaltlich nicht mehr ändern.
  */
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withTracking(async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
   const { id } = await params
@@ -91,10 +92,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   if (error) return NextResponse.json({ error: 'Nachweis konnte nicht geändert werden.' }, { status: 400 })
   return NextResponse.json({ erbringung: data })
-}
+})
 
 /** Nur unbestätigte Nachweise dürfen gelöscht werden. */
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = withTracking(async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
   const { id } = await params
@@ -113,4 +114,4 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     return NextResponse.json({ error: 'Nachweis nicht gefunden oder bereits bestätigt.' }, { status: 409 })
   }
   return NextResponse.json({ geloescht: true })
-}
+})

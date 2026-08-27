@@ -21,6 +21,7 @@ import { bundeslandFuerPlz, normalizeBundesland, normalizePlz } from '@/lib/expa
 import { bundeslandEinstellungen } from '@/lib/expansion/state-settings'
 import { istBundeslandCode } from '@/lib/expansion/types'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('expansion/waitlist')
 
 export const dynamic = 'force-dynamic'
@@ -28,7 +29,7 @@ export const dynamic = 'force-dynamic'
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const INTERESSEN = ['kasse', 'privat', 'beides', 'mitarbeit'] as const
 
-export async function POST(request: NextRequest) {
+export const POST = withTracking(async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => null)
     if (!body || typeof body !== 'object') {
@@ -118,9 +119,9 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
-export async function GET(request: NextRequest) {
+export const GET = withTracking(async function GET(request: NextRequest) {
   const auth = await requireExpansionAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -146,4 +147,4 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json({ eintraege: data ?? [] })
-}
+})

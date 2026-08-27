@@ -4,6 +4,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('admin/zuzahlungen')
 
 export const runtime = 'nodejs'
@@ -27,7 +28,7 @@ function nurErlaubteFelder(roh: Record<string, unknown>): Record<string, unknown
 }
 
 /** GET — Zuzahlungen, optional gefiltert nach Klient/Jahr; inkl. Jahresstand (§61-28-Tage-Grenze). */
-export async function GET(request: NextRequest) {
+export const GET = withTracking(async function GET(request: NextRequest) {
   const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
@@ -69,10 +70,10 @@ export async function GET(request: NextRequest) {
   } catch (e) {
     return safeApiError(e, request)
   }
-}
+})
 
 /** POST — neue Zuzahlung erfassen. */
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
@@ -116,4 +117,4 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

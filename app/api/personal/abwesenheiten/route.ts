@@ -4,8 +4,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePersonalAdmin } from '@/lib/personal/api-auth'
 import { createAbwesenheit, listAbwesenheiten } from '@/lib/personal/abwesenheiten'
 import type { AbwesenheitStatus, AbwesenheitTyp } from '@/lib/personal/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(req: NextRequest) {
+export const GET = withTracking(async function GET(req: NextRequest) {
   try {
     const auth = await requirePersonalAdmin('personal.lesen')
     if (!auth.ok) return auth.response
@@ -30,9 +31,9 @@ export async function GET(req: NextRequest) {
   } catch (e: any) {
     return apiErrorResponse(e, req)
   }
-}
+})
 
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     const auth = await requirePersonalAdmin('personal.schreiben')
     if (!auth.ok) return auth.response
@@ -50,4 +51,4 @@ export async function POST(req: NextRequest) {
   } catch (e: any) {
     return apiErrorResponse(e, req)
   }
-}
+})

@@ -5,8 +5,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { berlinParts } from '@/lib/utils/timezone'
 import { uebertrageJahresbudgets } from '@/lib/budget/auto-budget'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function POST(req: Request) {
+export const POST = withTracking(async function POST(req: Request) {
   const supabase = await createClient()
   const { data: { user }, error } = await supabase.auth.getUser()
   if (error || !user) {
@@ -45,4 +46,4 @@ export async function POST(req: Request) {
     nachJahr,
     ...result,
   })
-}
+})

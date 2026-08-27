@@ -24,10 +24,11 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { entferneGeraet, registriereGeraet } from '@/lib/notifications/push'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 const log = logger.child('api:push')
 
-export async function POST(request: NextRequest) {
+export const POST = withTracking(async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -66,9 +67,9 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
-export async function DELETE(request: NextRequest) {
+export const DELETE = withTracking(async function DELETE(request: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -86,4 +87,4 @@ export async function DELETE(request: NextRequest) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

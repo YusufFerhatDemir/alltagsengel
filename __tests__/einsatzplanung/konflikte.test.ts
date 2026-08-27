@@ -9,6 +9,7 @@ import {
   konfliktIds,
   type KonfliktEinsatz,
 } from '../../lib/einsatzplanung/konflikte'
+import { handlerRumpfOderFehler } from '../helpers/route-quelle'
 
 // ═══════════════════════════════════════════════════════════
 // Bereich 3 der Lückenanalyse (P2)
@@ -180,11 +181,11 @@ const ROUTE = join(process.cwd(), 'app/api/einsatzplanung/route.ts')
 const routeQuelle = readFileSync(ROUTE, 'utf-8')
 
 function abschnitt(name: 'POST' | 'PATCH'): string {
-  const start = routeQuelle.indexOf(`export async function ${name}(`)
-  expect(start, `${name}-Handler nicht gefunden`).toBeGreaterThan(-1)
-  const rest = routeQuelle.slice(start + 1)
-  const next = rest.indexOf('\nexport async function ')
-  return next === -1 ? rest : rest.slice(0, next)
+  // Zerlegung liegt in __tests__/helpers/route-quelle.ts — die Routen
+  // exportieren ihre Handler durch `withTracking` gewrappt, und ein
+  // Scanner, der sie nicht findet, prueft stillschweigend einen leeren
+  // String und bestaetigt alles.
+  return handlerRumpfOderFehler(routeQuelle, name, ROUTE)
 }
 
 describe('/api/einsatzplanung: Konfliktprüfung verdrahtet', () => {

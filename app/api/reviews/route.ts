@@ -10,6 +10,7 @@ import {
   istAdminUser,
   MAX_KOMMENTAR_LAENGE,
 } from '@/lib/reviews'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // ═══════════════════════════════════════════════════════════════
 // BEWERTUNGS-API
@@ -33,7 +34,7 @@ function pruefeTeilnote(wert: unknown): { ok: true; wert: number | null } | { ok
 }
 
 // POST: Bewertung erstellen
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -139,10 +140,10 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     return safeApiError(err, req)
   }
-}
+})
 
 // GET: Bewertungen abrufen
-export async function GET(req: NextRequest) {
+export const GET = withTracking(async function GET(req: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -175,4 +176,4 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     return safeApiError(err, req)
   }
-}
+})

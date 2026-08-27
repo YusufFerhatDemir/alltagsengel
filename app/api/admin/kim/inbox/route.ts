@@ -8,8 +8,9 @@ import { listMessages } from '@/lib/kim/message-service'
 import { fetchAndStoreInbound } from '@/lib/kim/inbox-service'
 import { resolveOrgProvider } from '@/lib/kim/provider-config-service'
 import { ermittleVersandModus, KimBetriebsmodusError } from '@/lib/kim/versandmodus'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(req: NextRequest) {
+export const GET = withTracking(async function GET(req: NextRequest) {
   const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -28,10 +29,10 @@ export async function GET(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})
 
 /** Ruft neue Nachrichten vom aktiven Provider ab ("Postfach abrufen"). */
-export async function POST() {
+export const POST = withTracking(async function POST() {
   const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -48,4 +49,4 @@ export async function POST() {
     const msg = e instanceof Error ? e.message : 'Unbekannter Fehler'
     return NextResponse.json({ error: msg }, { status: 500 })
   }
-}
+})

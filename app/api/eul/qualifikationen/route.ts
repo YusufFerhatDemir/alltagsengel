@@ -11,10 +11,11 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { createClient } from '@/lib/supabase/server'
 import { EUL_QUALITAETSKRITERIEN, pruefeEulFreigabe } from '@/lib/coach/eul'
 import { heuteBerlin } from '@/lib/utils/timezone';
+import { withTracking } from '@/lib/monitoring/tracker'
 
 const KRITERIUM_KEYS = EUL_QUALITAETSKRITERIEN.map(k => k.key)
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
@@ -45,9 +46,9 @@ export async function GET(request: Request) {
   }))
 
   return NextResponse.json({ qualifikationen: zeilen, freigaben, kriterien: EUL_QUALITAETSKRITERIEN })
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
@@ -83,4 +84,4 @@ export async function POST(request: Request) {
 
   if (error) return NextResponse.json({ error: 'Nachweis konnte nicht gespeichert werden.' }, { status: 400 })
   return NextResponse.json({ qualifikation: data })
-}
+})

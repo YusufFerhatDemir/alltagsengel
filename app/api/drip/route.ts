@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendRawEmail } from '@/lib/notifications'
 import { logger } from '@/lib/logger'
 import { pruefeCronGeheimnis } from '@/lib/api/cron-auth'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('api:drip')
 
 // ═══════════════════════════════════════════════════════════
@@ -142,7 +143,7 @@ const templates = {
   },
 }
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const abweisung = pruefeCronGeheimnis(request)
   if (abweisung) return abweisung
 
@@ -229,4 +230,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

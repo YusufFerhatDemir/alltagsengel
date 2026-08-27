@@ -8,8 +8,9 @@ import {
   aktualisiereFreigaben,
   protokolliereZugriff,
 } from '@/lib/angehoerige/angehoerige'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(
+export const GET = withTracking(async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -28,9 +29,9 @@ export async function GET(
   } catch (err) {
     return safeApiError(err, _req)
   }
-}
+})
 
-export async function PATCH(
+export const PATCH = withTracking(async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -76,4 +77,4 @@ export async function PATCH(
   } catch (err) {
     return safeApiError(err, req)
   }
-}
+})

@@ -6,8 +6,9 @@ import { requireWundenAdmin } from '@/lib/wunden/api-auth'
 import { createWound, listWounds, zusammenfassungWunden } from '@/lib/wunden/wunden'
 import { logAuditEvent } from '@/lib/audit-log'
 import type { WundStatus, WundTyp } from '@/lib/wunden/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   try {
     const auth = await requireWundenAdmin('pflege.lesen')
     if (!auth.ok) return auth.response
@@ -26,9 +27,9 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const auth = await requireWundenAdmin('pflege.schreiben')
     if (!auth.ok) return auth.response
@@ -80,4 +81,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return apiErrorResponse(err, request)
   }
-}
+})

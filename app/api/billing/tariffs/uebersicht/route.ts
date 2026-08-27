@@ -8,6 +8,7 @@ import {
   normalisiereStatus,
   type QuellTabelle,
 } from '@/lib/billing/core/tarif-verifizierung'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 interface UebersichtZeile {
   id: string
@@ -41,7 +42,7 @@ interface UebersichtZeile {
  * fail-closed blockiert — genau diese Luecke hat Migration 20260902000000
  * beschrieben.
  */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('tarife.lesen')
   if (!auth.ok) return auth.response
   const orgId = auth.ctx.organizationId
@@ -181,4 +182,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

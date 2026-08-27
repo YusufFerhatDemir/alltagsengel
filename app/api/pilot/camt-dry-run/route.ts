@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { camtPilotLauf, pilotBerichtText } from '@/lib/pilot/camt-pilot'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // ═══════════════════════════════════════════════════════════════
 // POST /api/pilot/camt-dry-run
@@ -31,7 +32,7 @@ export const dynamic = 'force-dynamic'
 /** Obergrenze der Datei. Ein camt.053 eines Monats liegt weit darunter. */
 const MAX_BYTES = 10 * 1024 * 1024
 
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     const auth = await requireOpsAdmin('abrechnung.lesen')
     if (!auth.ok) return auth.response
@@ -72,4 +73,4 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server'
 import { requireCoachUser } from '@/lib/coach/api-auth'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * Freigabe widerrufen. Idempotent: eine bereits widerrufene Zeile ist kein
  * Fehler (Doppelklick/erneuter Versuch soll nicht scheitern) — nur eine
  * fremde oder nicht existierende Zeile ist es.
  */
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withTracking(async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
   const { id } = await params
@@ -33,4 +34,4 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   if (error) return NextResponse.json({ error: 'Freigabe konnte nicht widerrufen werden.' }, { status: 500 })
   return NextResponse.json({ ok: true })
-}
+})

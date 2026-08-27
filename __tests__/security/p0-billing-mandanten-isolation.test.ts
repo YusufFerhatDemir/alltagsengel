@@ -30,6 +30,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import path from 'node:path'
+import { handlerRumpfOderFehler } from '../helpers/route-quelle'
 
 const REPO_ROOT = path.resolve(__dirname, '../..')
 const read = (rel: string) => readFileSync(path.join(REPO_ROOT, rel), 'utf-8')
@@ -55,7 +56,13 @@ const ROUTES = billingRoutes()
 function handlerMit(src: string, marker: string): string {
   const at = src.indexOf(marker)
   if (at === -1) return src
-  const start = src.lastIndexOf('export async function', at)
+  // Rueckwaerts bis zum Kopf des Handlers, in dem der Marker steht.
+  // Beide Export-Formen (roh und withTracking-gewrappt) beginnen mit
+  // `export`; der Rumpf davor gehoert einem anderen Handler.
+  const start = Math.max(
+    src.lastIndexOf('export async function', at),
+    src.lastIndexOf('export const', at),
+  )
   return src.slice(start === -1 ? 0 : start, at)
 }
 
@@ -295,9 +302,7 @@ describe('P0-4: DTA-Export prueft die Org-Zugehoerigkeit des Laufs', () => {
 describe('P0-5: tariffs GET erzwingt Rollen-Pruefung (MITTEL-Befund Finale Abnahme)', () => {
   const REL = 'app/api/billing/tariffs/route.ts'
   const src = read(REL)
-  const getStart = src.indexOf('export async function GET')
-  const postStart = src.indexOf('export async function POST')
-  const get = src.slice(getStart, postStart === -1 ? undefined : postStart)
+  const get = handlerRumpfOderFehler(src, 'GET', REL)
 
   it('lehnt unauthentifizierte Requests mit 401 ab, bevor Tarife geladen werden', () => {
     const authAt = get.indexOf('if (!user)')

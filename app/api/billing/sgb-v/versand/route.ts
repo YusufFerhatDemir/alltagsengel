@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { erzeugeUndVersendeSgbV, sgbVKanalStatus } from '@/lib/abrechnung/sgb-v/versand'
 import { monatBerlin } from '@/lib/utils/timezone'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -19,13 +20,13 @@ export const dynamic = 'force-dynamic'
  * Klartext-Begründung. Das ist kein Fehler, sondern der Nachweis, dass der
  * Versuch stattgefunden hat und woran er hängt.
  */
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const auth = await requireAdminMitOrg('abrechnung.lesen')
   if (!auth.ok) return auth.response
   return NextResponse.json(sgbVKanalStatus())
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireAdminMitOrg('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
@@ -62,4 +63,4 @@ export async function POST(request: Request) {
       { status: message.includes('existiert bereits') ? 409 : 500 },
     )
   }
-}
+})

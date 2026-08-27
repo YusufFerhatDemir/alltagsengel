@@ -5,6 +5,7 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { ermittleSgbVReadiness } from '@/lib/abrechnung/sgb-v/readiness'
 import type { SgbVFormat } from '@/lib/abrechnung/sgb-v/versionen'
 import { monatBerlin } from '@/lib/utils/timezone';
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * GET /api/billing/sgb-v/readiness?monat=2026-08&format=edifact_slga_slla
@@ -12,7 +13,7 @@ import { monatBerlin } from '@/lib/utils/timezone';
  * Blocker-Übersicht für die Abrechnung nach § 302 SGB V — getrennt in intern
  * lösbare und extern zu beschaffende Voraussetzungen.
  */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
   const { organizationId } = auth.ctx
@@ -35,4 +36,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

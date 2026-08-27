@@ -4,8 +4,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePersonalAdmin } from '@/lib/personal/api-auth'
 import { listAuditLog } from '@/lib/personal/audit'
 import type { AuditEntitaetTyp, AuditAktion } from '@/lib/personal/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(req: NextRequest) {
+export const GET = withTracking(async function GET(req: NextRequest) {
   try {
     const auth = await requirePersonalAdmin('personal.lesen')
     if (!auth.ok) return auth.response
@@ -30,4 +31,4 @@ export async function GET(req: NextRequest) {
   } catch (e: any) {
     return apiErrorResponse(e, req)
   }
-}
+})

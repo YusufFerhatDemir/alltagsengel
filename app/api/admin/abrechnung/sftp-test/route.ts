@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { testeVerbindung, type TransportConfig } from '@/lib/abrechnung/transport'
 import { ZERTIFIKAT_BUCKET } from '@/lib/abrechnung/zertifikate'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -20,7 +21,7 @@ function sftpPasswortEnvName(name: string): string {
  * Body: { id: '<datenannahmestellen.id>' }
  * Testet die SFTP-Verbindung (Login + Verzeichnis-Check, kein Upload).
  */
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   const auth = await requireAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   try {
@@ -86,4 +87,4 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

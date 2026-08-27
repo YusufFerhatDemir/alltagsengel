@@ -13,6 +13,7 @@ import { modulAktivFuerPlz } from '@/lib/expansion/state-settings'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { one } from '@/lib/supabase/join'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('leistungsnachweis')
 
 // ═══════════════════════════════════════════════════════════════
@@ -80,7 +81,7 @@ function timeFmt(t: string | null | undefined): string {
   return String(t).slice(0, 5)
 }
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   try {
     const url = new URL(request.url)
     let clientId = url.searchParams.get('client_id')
@@ -476,7 +477,7 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 // ── Unterschrift-Box: Bild einbetten ODER Text-Fallback ODER leer ──
 async function drawSignatureBox(

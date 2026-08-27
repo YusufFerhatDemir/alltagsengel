@@ -23,6 +23,7 @@
  */
 
 import { NextResponse } from 'next/server'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -59,7 +60,7 @@ const ZEITBUDGET_MS = {
   tabelle: 800,
 } as const
 
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const checks: CheckResult[] = []
   const start = performance.now()
 
@@ -112,7 +113,7 @@ export async function GET() {
       },
     },
   )
-}
+})
 
 // ---------------------------------------------------------------------------
 // Einzelne Checks

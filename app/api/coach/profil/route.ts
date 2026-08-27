@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireCoachSession, requireCoachUser } from '@/lib/coach/api-auth'
 import { hatAktiveEinwilligung, PFLICHT_CONSENT } from '@/lib/coach/consent'
 import type { CoachRolle, CoachSchriftgrad } from '@/lib/coach/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 const ROLLEN: CoachRolle[] = ['pflegebeduerftig', 'angehoerig', 'pflegedienst']
 const SCHRIFTGRADE: CoachSchriftgrad[] = ['normal', 'gross', 'sehr_gross']
@@ -15,7 +16,7 @@ const SCHRIFTGRADE: CoachSchriftgrad[] = ['normal', 'gross', 'sehr_gross']
  * laufen zu lassen. Ohne Profil ist das Feld `false` (es gibt dann noch
  * keine Einwilligung; das Onboarding holt sie ein).
  */
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const session = await requireCoachSession()
   if (!session.ok) return session.response
 
@@ -41,10 +42,10 @@ export async function GET() {
     profil: data,
     einwilligung_aktiv: hatAktiveEinwilligung(consents ?? [], PFLICHT_CONSENT),
   })
-}
+})
 
 /** Onboarding: Profil anlegen (einmalig, user_id ist UNIQUE). */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const session = await requireCoachSession()
   if (!session.ok) return session.response
 
@@ -81,10 +82,10 @@ export async function POST(request: Request) {
     )
   }
   return NextResponse.json({ profil: data })
-}
+})
 
 /** Profil-/Barrierefreiheits-Einstellungen ändern. */
-export async function PATCH(request: Request) {
+export const PATCH = withTracking(async function PATCH(request: Request) {
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 
@@ -115,4 +116,4 @@ export async function PATCH(request: Request) {
 
   if (error) return NextResponse.json({ error: 'Profil konnte nicht aktualisiert werden.' }, { status: 400 })
   return NextResponse.json({ profil: data })
-}
+})

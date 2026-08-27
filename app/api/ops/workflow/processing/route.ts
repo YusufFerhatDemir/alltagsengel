@@ -4,8 +4,9 @@ import { istCronGeheimnis } from '@/lib/api/cron-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { processPending, checkFristen } from '@/lib/workflow/processing'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   // Konstantzeit-Vergleich im gemeinsamen Helfer; fail-closed, wenn
   // CRON_SECRET nicht gesetzt ist. Der Header heisst hier bewusst weiter
   // `x-cron-secret` — die Aufrufer dieser Route kennen kein Bearer-Schema.
@@ -43,4 +44,4 @@ export async function POST(request: Request) {
   } catch (e: any) {
     return apiErrorResponse(e, request)
   }
-}
+})

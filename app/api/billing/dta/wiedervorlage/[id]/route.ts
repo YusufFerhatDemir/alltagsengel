@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { aktualisiereWiedervorlage, type WiedervorlageStatus } from '@/lib/abrechnung/wiedervorlage'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -20,7 +21,7 @@ const STATUS: WiedervorlageStatus[] = [
  * Unzulässige Statuswechsel (z. B. 'offen' → 'erledigt', ohne dass je etwas
  * eingereicht wurde) werden mit 409 abgelehnt.
  */
-export async function PATCH(
+export const PATCH = withTracking(async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -56,4 +57,4 @@ export async function PATCH(
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

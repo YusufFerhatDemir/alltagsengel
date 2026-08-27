@@ -4,8 +4,9 @@ import { createClient } from '@/lib/supabase/server'
 import { requireSigAdmin } from '@/lib/signaturen/api-auth'
 import { listeSignaturen, fordereSignaturAn } from '@/lib/signaturen/signaturen'
 import { SIGNATUR_STATUS_WERTE, type SignaturStatus } from '@/lib/signaturen/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(req: NextRequest) {
+export const GET = withTracking(async function GET(req: NextRequest) {
   const auth = await requireSigAdmin('einsatz.lesen')
   if (!auth.ok) return auth.response
 
@@ -25,9 +26,9 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     return safeApiError(err, req)
   }
-}
+})
 
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   const auth = await requireSigAdmin('einsatz.schreiben')
   if (!auth.ok) return auth.response
 
@@ -41,4 +42,4 @@ export async function POST(req: NextRequest) {
     const status = msg.includes('Pflichtfeld') || msg.includes('muss') ? 400 : 500
     return NextResponse.json({ error: msg }, { status })
   }
-}
+})

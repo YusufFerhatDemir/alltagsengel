@@ -4,6 +4,7 @@ import { stripe } from '@/lib/stripe/client'
 import { preisIdFuerPlan, isPaidPlan } from '@/lib/stripe/config'
 import { getOrCreateStripeCustomer } from '@/lib/stripe/helpers'
 import { requireOrgRole } from '@/lib/organizations/server'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -16,7 +17,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://alltagsengel.care'
  * Erstellt eine Stripe-Checkout-Session für ein neues Abo und gibt die URL zurück.
  * Nur Owner/Admin der Organisation.
  */
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null)
     const orgId = String(body?.orgId || '')
@@ -49,4 +50,4 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { fuehreTaeglicheAutomatisierungAus } from '@/lib/automation'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * POST /api/admin/automatisierung
@@ -12,7 +13,7 @@ import { fuehreTaeglicheAutomatisierungAus } from '@/lib/automation'
  * Organisation (WS7) — für Tests und um nicht auf den nächtlichen Cron
  * warten zu müssen. Admin-only.
  */
-export async function POST() {
+export const POST = withTracking(async function POST() {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
@@ -31,4 +32,4 @@ export async function POST() {
 
   const ergebnis = await fuehreTaeglicheAutomatisierungAus(createAdminClient(), organizationId, user.id)
   return NextResponse.json(ergebnis)
-}
+})

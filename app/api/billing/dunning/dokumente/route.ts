@@ -4,8 +4,9 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { createMahnungDocument, generateMahnungEmail } from '@/lib/billing/dunning/mahnung-pdf'
 import type { DunningLevel } from '@/lib/billing/core/dunning'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     const auth = await requireOpsAdmin('abrechnung.schreiben')
     if (!auth.ok) return auth.response
@@ -41,4 +42,4 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

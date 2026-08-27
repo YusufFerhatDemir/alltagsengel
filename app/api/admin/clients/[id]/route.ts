@@ -11,6 +11,7 @@ import {
   STAMMDATEN_SET,
   pruefeStammdaten,
 } from '@/lib/clients/stammdaten'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * Lokaler Guard dieser Route. Prueft seit dem Rollenkonzept eine
@@ -63,7 +64,7 @@ async function requireAdmin(berechtigung: Berechtigung = 'stammdaten.lesen') {
  *   stand ohnehin schon in jedem Eintrag und ist für die Nachvollziehbarkeit
  *   von Rechnungen und Nachweisen nötig).
  */
-export async function PATCH(
+export const PATCH = withTracking(async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -156,4 +157,4 @@ export async function PATCH(
   } catch (err) {
     return safeApiError(err, req)
   }
-}
+})

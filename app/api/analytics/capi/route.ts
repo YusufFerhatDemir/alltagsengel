@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * Welle-1 CAPI-Stub (Conversions API für Meta + TikTok).
@@ -38,7 +39,7 @@ const ALLOWED_EVENTS = new Set([
   'Purchase',
 ])
 
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     // NIEDRIG-8 (Security-Audit 2026-08-19): oeffentlicher Schreibendpunkt
     // ohne Limit. 60 Events/Minute pro IP — gleiche Groessenordnung wie
@@ -71,4 +72,4 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ ok: false }, { status: 400 })
   }
-}
+})

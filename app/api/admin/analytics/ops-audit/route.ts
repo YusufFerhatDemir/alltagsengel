@@ -4,8 +4,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { ladeOpsAudit, alsCsv, type OpsAuditQuelle } from '@/lib/analytics/opsAudit'
 import { logAuditEventOrWarn } from '@/lib/audit-log'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('berichte.lesen')
   if (!auth.ok) return auth.response
 
@@ -61,4 +62,4 @@ export async function GET(request: Request) {
   } catch (e: any) {
     return apiErrorResponse(e, request)
   }
-}
+})

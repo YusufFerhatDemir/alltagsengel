@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest'
 import { readFileSync } from 'fs'
 import { join } from 'path'
+import { handlerRumpfOderFehler } from '../helpers/route-quelle'
 
 function src(path: string): string {
   return readFileSync(join(process.cwd(), path), 'utf-8')
@@ -13,7 +14,7 @@ function src(path: string): string {
 describe('D1: force_override Audit-Trail', () => {
   test('PATCH /einsatzplanung hat Audit-Trail für force_override', () => {
     const code = src('app/api/einsatzplanung/route.ts')
-    const patchHandler = code.slice(code.indexOf('export async function PATCH'))
+    const patchHandler = handlerRumpfOderFehler(code, 'PATCH', 'app/api/einsatzplanung/route.ts')
     expect(patchHandler).toContain('logBillingAction')
     expect(patchHandler).toContain('force_override')
     expect(patchHandler).toContain('overridden_checks')

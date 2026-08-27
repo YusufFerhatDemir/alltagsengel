@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireCaregiverSession } from '@/lib/native-auth'
 import { checkWithinRadius } from '@/lib/geo'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('api/native/geo-events')
 
 // ═══════════════════════════════════════════════════════════════
@@ -27,7 +28,7 @@ const log = logger.child('api/native/geo-events')
 //   }
 // ═══════════════════════════════════════════════════════════════
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const auth = await requireCaregiverSession(request)
     if (!auth.ok) {
@@ -136,4 +137,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server'
 import { requireCoachUser } from '@/lib/coach/api-auth'
 import { berechneEmpfehlungen, EMPFEHLUNG_DISCLAIMER } from '@/lib/coach/empfehlungen'
 import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * Regelbasierte, ORGANISATORISCHE Anpassungs-Hinweise (kein Medizinprodukt-
  * Feature — Details in lib/coach/empfehlungen.ts). Berechnung serverseitig
  * aus den eigenen Daten des Nutzers, nichts wird gespeichert.
  */
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 
@@ -37,4 +38,4 @@ export async function GET() {
   })
 
   return NextResponse.json({ empfehlungen, hinweis: EMPFEHLUNG_DISCLAIMER })
-}
+})

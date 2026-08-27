@@ -25,6 +25,7 @@ import { invalidateStateCache } from '@/lib/expansion/state-settings'
 import { normalizeBundesland } from '@/lib/expansion/plz-bundesland'
 import { BUNDESLAND_NAMEN, type StateActivationResult } from '@/lib/expansion/types'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('expansion/activate')
 
 export const dynamic = 'force-dynamic'
@@ -33,7 +34,7 @@ interface RouteContext {
   params: Promise<{ bundesland: string }>
 }
 
-export async function POST(request: NextRequest, context: RouteContext) {
+export const POST = withTracking(async function POST(request: NextRequest, context: RouteContext) {
   const auth = await requireExpansionAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -109,9 +110,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
       : `${ergebnis?.waitlist_count ?? 0} Eintrag/Einträge auf der Warteliste warten auf `
         + 'Benachrichtigung. Der Versand startet erst nach ausdrücklicher Bestätigung.',
   })
-}
+})
 
-export async function DELETE(request: NextRequest, context: RouteContext) {
+export const DELETE = withTracking(async function DELETE(request: NextRequest, context: RouteContext) {
   const auth = await requireExpansionAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -167,4 +168,4 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
         + 'Werbung, Registrierung, Warteliste und Privatleistungen laufen weiter.'
       : 'Die Kassenabrechnung war für dieses Bundesland nicht aktiv.',
   })
-}
+})

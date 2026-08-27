@@ -4,8 +4,9 @@ import { createClient } from '@/lib/supabase/server'
 import { requireMedUser } from '@/lib/medikamente/api-auth'
 import { listeEingaben, erfasseEingabe } from '@/lib/medikamente/medikamente'
 import type { EingabeFilter } from '@/lib/medikamente/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(req: NextRequest) {
+export const GET = withTracking(async function GET(req: NextRequest) {
   const auth = await requireMedUser()
   if (!auth.ok) return auth.response
 
@@ -31,9 +32,9 @@ export async function GET(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})
 
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   const auth = await requireMedUser()
   if (!auth.ok) return auth.response
 
@@ -48,4 +49,4 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

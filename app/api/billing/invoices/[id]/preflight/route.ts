@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { pruefeRechnungVersandbereit, darfVersenden } from '@/lib/billing/preflight/rechnung-preflight'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // ═══════════════════════════════════════════════════════════════
 // GET /api/billing/invoices/[id]/preflight
@@ -23,7 +24,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(
+export const GET = withTracking(async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -55,4 +56,4 @@ export async function GET(
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

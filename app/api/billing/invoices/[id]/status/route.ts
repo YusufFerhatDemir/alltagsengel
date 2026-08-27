@@ -9,6 +9,7 @@ import {
   type InvoiceStatus,
 } from '@/lib/billing/core'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * POST /api/billing/invoices/[id]/status
@@ -25,7 +26,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
  * Storno laeuft NICHT hierueber — dafuer gibt es /cancel, weil dort zusaetzlich
  * ein Stornobeleg mit negativen Betraegen erzeugt werden muss.
  */
-export async function POST(
+export const POST = withTracking(async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -109,4 +110,4 @@ export async function POST(
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

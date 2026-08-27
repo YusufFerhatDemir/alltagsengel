@@ -4,8 +4,9 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generateZugferdPdf } from '@/lib/billing/xrechnung'
 import { logAuditEvent } from '@/lib/audit-log'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(
+export const GET = withTracking(async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -76,4 +77,4 @@ export async function GET(
   } catch (err) {
     return safeApiError(err, req)
   }
-}
+})

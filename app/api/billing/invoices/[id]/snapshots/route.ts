@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('api:billing')
 
 /**
@@ -12,7 +13,7 @@ const log = logger.child('api:billing')
  * Alle Snapshots einer Rechnung (Versionshistorie).
  * Authentifizierung erforderlich, kein Admin nötig.
  */
-export async function GET(
+export const GET = withTracking(async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -72,4 +73,4 @@ export async function GET(
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

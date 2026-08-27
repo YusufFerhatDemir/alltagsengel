@@ -4,10 +4,11 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { genehmigeHkpVerordnung, ladeHkpVerordnung } from '@/lib/abrechnung/sgb-v/verordnung-service'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('billing/sgb-v/verordnungen/[id]')
 
 /** GET /api/billing/sgb-v/verordnungen/[id] */
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withTracking(async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
@@ -20,10 +21,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 /** PATCH /api/billing/sgb-v/verordnungen/[id] — Kassengenehmigung eintragen. */
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withTracking(async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
@@ -41,4 +42,4 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     log.error('] Fehler', { message })
     return NextResponse.json({ error: message }, { status: 400 })
   }
-}
+})

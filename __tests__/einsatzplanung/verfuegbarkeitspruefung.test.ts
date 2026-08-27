@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { handlerRumpfOderFehler } from '../helpers/route-quelle'
 
 // ═══════════════════════════════════════════════════════════
 // Track 6 / Bereich 3 der Lückenanalyse
@@ -20,11 +21,11 @@ const quelle = readFileSync(ROUTE, 'utf-8')
 
 /** Grobe Zerlegung der Datei in ihre Handler-Abschnitte. */
 function abschnitt(name: 'POST' | 'PATCH'): string {
-  const start = quelle.indexOf(`export async function ${name}(`)
-  expect(start, `${name}-Handler nicht gefunden`).toBeGreaterThan(-1)
-  const rest = quelle.slice(start + 1)
-  const next = rest.indexOf('\nexport async function ')
-  return next === -1 ? rest : rest.slice(0, next)
+  // Zerlegung liegt in __tests__/helpers/route-quelle.ts — die Routen
+  // exportieren ihre Handler durch `withTracking` gewrappt, und ein
+  // Scanner, der sie nicht findet, prueft stillschweigend einen leeren
+  // String und bestaetigt alles.
+  return handlerRumpfOderFehler(quelle, name, ROUTE)
 }
 
 describe('/api/einsatzplanung: Abwesenheits- und Verfügbarkeitsprüfung', () => {

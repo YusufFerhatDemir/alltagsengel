@@ -3,8 +3,9 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePflegeAdmin } from '@/lib/pflege/api-auth'
 import { updateMassnahme } from '@/lib/pflege/massnahmen'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withTracking(async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const auth = await requirePflegeAdmin('pflege.schreiben')
@@ -31,4 +32,4 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   } catch (err) {
     return apiErrorResponse(err, request)
   }
-}
+})

@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { stimmeMoneyPathAb, abstimmBerichtText } from '@/lib/pilot/reconciliation'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // ═══════════════════════════════════════════════════════════════
 // GET /api/pilot/abstimmung
@@ -27,7 +28,7 @@ export const dynamic = 'force-dynamic'
 
 const MAX_LIMIT = 5000
 
-export async function GET(req: NextRequest) {
+export const GET = withTracking(async function GET(req: NextRequest) {
   try {
     const auth = await requireOpsAdmin('abrechnung.lesen')
     if (!auth.ok) return auth.response
@@ -50,4 +51,4 @@ export async function GET(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

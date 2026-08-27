@@ -5,8 +5,9 @@ import { requireUebergabeUser } from '@/lib/uebergabe/api-auth'
 import { getProtokoll } from '@/lib/uebergabe/protokolle'
 import { createPunkt, listPunkte } from '@/lib/uebergabe/punkte'
 import { safeErrorResponse } from '@/lib/utils/api-error'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withTracking(async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const auth = await requireUebergabeUser()
     if (!auth.ok) return auth.response
@@ -18,9 +19,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   } catch (err) {
     return safeErrorResponse(err, 400)
   }
-}
+})
 
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const POST = withTracking(async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const auth = await requireUebergabeUser()
     if (!auth.ok) return auth.response
@@ -61,4 +62,4 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   } catch (err) {
     return safeErrorResponse(err, 400)
   }
-}
+})

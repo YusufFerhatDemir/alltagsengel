@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireOpsAdmin } from '@/lib/ops/api-auth';
 import { manuellZuordnen } from '@/lib/billing/matching/matching-engine';
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * POST /api/billing/klaerfaelle/[id]/zuordnen
  * Klaerfall manuell einer Rechnung zuordnen.
  * Body: { invoiceId: string }
  */
-export async function POST(
+export const POST = withTracking(async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -38,4 +39,4 @@ export async function POST(
     const msg = e instanceof Error ? e.message : String(e);
     return NextResponse.json({ error: msg }, { status: 400 });
   }
-}
+})

@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireOpsAdmin } from '@/lib/ops/api-auth';
 import { erstelleDatevExport, getDatevExportListe, DatevPruefungFehlgeschlagen } from '@/lib/billing/datev/export-service';
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * GET /api/billing/datev/export
  * Liste aller DATEV-Exporte.
  */
-export async function GET() {
+export const GET = withTracking(async function GET() {
   try {
     const auth = await requireOpsAdmin('abrechnung.lesen');
     if (!auth.ok) return auth.response;
@@ -19,14 +20,14 @@ export async function GET() {
     const msg = e instanceof Error ? e.message : String(e);
     return NextResponse.json({ error: msg }, { status: 400 });
   }
-}
+})
 
 /**
  * POST /api/billing/datev/export
  * Neuen DATEV-Export erstellen.
  * Body: { zeitraumVon: string, zeitraumBis: string, force?: boolean }
  */
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     const auth = await requireOpsAdmin('abrechnung.schreiben');
     if (!auth.ok) return auth.response;
@@ -82,4 +83,4 @@ export async function POST(req: NextRequest) {
     const msg = e instanceof Error ? e.message : String(e);
     return NextResponse.json({ error: msg }, { status: 400 });
   }
-}
+})

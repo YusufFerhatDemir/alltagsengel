@@ -6,9 +6,10 @@ import { ladeAbrechnungslauf } from '@/lib/abrechnung/sgb-v/abrechnungslauf'
 import { ladeSgbVRuecklaeufer } from '@/lib/abrechnung/sgb-v/ruecklaufer-service'
 import { ladeWarteschlange } from '@/lib/abrechnung/sgb-v/transport-adapter'
 import { ladeSgbVKorrekturHistorie } from '@/lib/abrechnung/sgb-v/storno-korrektur'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /** GET /api/billing/sgb-v/laeufe/[id] — Detail inkl. Rückläufer, Queue, Korrekturhistorie. */
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withTracking(async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
@@ -28,4 +29,4 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

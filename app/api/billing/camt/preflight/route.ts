@@ -4,6 +4,7 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { camtPreflight } from '@/lib/billing/camt/camt-preflight'
 import { baueCamtPreflightBericht } from '@/lib/billing/camt/camt-preflight-bericht'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // ═══════════════════════════════════════════════════════════════
 // POST /api/billing/camt/preflight
@@ -30,7 +31,7 @@ const MAX_CAMT_BYTES = 20 * 1024 * 1024
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     const auth = await requireOpsAdmin('abrechnung.lesen')
     if (!auth.ok) return auth.response
@@ -83,4 +84,4 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

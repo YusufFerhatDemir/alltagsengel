@@ -12,6 +12,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
+import { exportiertHandler } from '../helpers/route-quelle'
 
 const WURZEL = process.cwd()
 const lesen = (p: string) => readFileSync(join(WURZEL, p), 'utf8')
@@ -134,6 +135,8 @@ describe('Gegenprobe: keine neue Route ohne Guard oder Limit', () => {
     return false
   }
 
+  const SCHREIBEND = ['POST', 'PUT', 'PATCH', 'DELETE'] as const
+
   function routen(verzeichnis: string, treffer: string[] = []): string[] {
     for (const e of readdirSync(join(WURZEL, verzeichnis), { withFileTypes: true })) {
       const rel = `${verzeichnis}/${e.name}`
@@ -145,10 +148,16 @@ describe('Gegenprobe: keine neue Route ohne Guard oder Limit', () => {
 
   it('jede schreibende Route hat einen Guard, ein Secret oder ein Rate-Limit', () => {
     const ohne: string[] = []
+    let geprueft = 0
     for (const datei of routen('app/api')) {
       const src = lesen(datei)
-      if (!/export async function (POST|PUT|PATCH|DELETE)/.test(src)) continue
+      // Erkennung ueber den gemeinsamen Helfer: die Routen exportieren
+      // ihre Handler durch `withTracking` gewrappt. Ein Muster, das nur
+      // die rohe Form kennt, wuerde hier jede Datei ueberspringen — der
+      // Test bliebe gruen und pruefte nichts.
+      if (!SCHREIBEND.some(m => exportiertHandler(src, m))) continue
       if (OEFFENTLICH_OHNE_LIMIT.has(datei)) continue
+      geprueft++
 
       const bewacht =
         /require[A-Za-z]*\(/.test(src) ||
@@ -174,6 +183,11 @@ describe('Gegenprobe: keine neue Route ohne Guard oder Limit', () => {
 
       if (!bewacht) ohne.push(datei)
     }
+    // Schutz gegen den stillen Leerlauf: findet die Erkennung keine
+    // einzige schreibende Route mehr, ist der Test oben trivial gruen.
+    // Genau das passierte, als die Routen auf `withTracking` umgestellt
+    // wurden — die Zusicherung hier haette es sofort gemeldet.
+    expect(geprueft, 'Scanner hat keine schreibende Route gefunden').toBeGreaterThan(50)
     expect(ohne, `Schreibende Routen ohne Guard/Limit:\n${ohne.join('\n')}`).toEqual([])
   })
 })

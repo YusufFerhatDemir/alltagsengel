@@ -11,11 +11,12 @@
 import { NextResponse } from 'next/server'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { getMetrics } from '@/lib/monitoring/metrics'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -25,4 +26,4 @@ export async function GET() {
     ...metrics,
     _hinweis: 'In-Memory pro Instanz — Daten gehen bei Serverless-Cold-Start verloren.',
   })
-}
+})

@@ -5,6 +5,7 @@ import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { heuteBerlin } from '@/lib/utils/timezone';
 import { logger } from '@/lib/logger';
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('beratung-chat');
 
 // ═══════════════════════════════════════════════════════════
@@ -198,7 +199,7 @@ async function callOpenAI(messages: ChatMessage[]): Promise<string | null> {
   }
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     const ip = getClientIp(req)
     if (!(await rateLimitPersistent(`beratung-chat:min:${ip}`, 8, 60_000)) || !(await rateLimitPersistent(`beratung-chat:h:${ip}`, 40, 3_600_000))) {
@@ -241,4 +242,4 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

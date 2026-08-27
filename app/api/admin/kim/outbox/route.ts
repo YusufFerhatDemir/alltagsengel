@@ -8,8 +8,9 @@ import { listMessages } from '@/lib/kim/message-service'
 import { processOutbox, pollDeliveryStatuses } from '@/lib/kim/outbox-service'
 import { resolveOrgProvider } from '@/lib/kim/provider-config-service'
 import { ermittleVersandModus, KimBetriebsmodusError } from '@/lib/kim/versandmodus'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -32,10 +33,10 @@ export async function GET(request: Request) {
   } catch (e) {
     return safeApiError(e, request)
   }
-}
+})
 
 /** Verarbeitet die Warteschlange (Versand + Zustellstatus-Abfrage). */
-export async function POST(_req: NextRequest) {
+export const POST = withTracking(async function POST(_req: NextRequest) {
   const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -59,4 +60,4 @@ export async function POST(_req: NextRequest) {
     const msg = e instanceof Error ? e.message : 'Unbekannter Fehler'
     return NextResponse.json({ error: msg }, { status: 500 })
   }
-}
+})

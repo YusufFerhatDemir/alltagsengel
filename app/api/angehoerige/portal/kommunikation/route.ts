@@ -7,9 +7,10 @@ import { createClient } from '@/lib/supabase/server'
 import { requirePortalAccess, hatPortalBereichZugriff } from '@/lib/angehoerige/portal-helpers'
 import { protokolliereZugriff } from '@/lib/angehoerige/angehoerige'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('angehoerige-kommunikation')
 
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const auth = await requirePortalAccess()
   if (!auth.ok) return auth.response
 
@@ -53,9 +54,9 @@ export async function GET() {
   }))
 
   return NextResponse.json({ nachrichten: enriched })
-}
+})
 
-export async function POST(request: NextRequest) {
+export const POST = withTracking(async function POST(request: NextRequest) {
   const auth = await requirePortalAccess()
   if (!auth.ok) return auth.response
 
@@ -114,4 +115,4 @@ export async function POST(request: NextRequest) {
   }).catch((err) => log.warnWithException('Zugriffs-Protokollierung fehlgeschlagen (non-blocking)', err))
 
   return NextResponse.json({ nachricht })
-}
+})

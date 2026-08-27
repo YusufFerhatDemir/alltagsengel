@@ -4,8 +4,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePersonalAdmin } from '@/lib/personal/api-auth'
 import { pruefeEinsatzfreigabe, setzeEinsatzfreigabe } from '@/lib/personal/einsatzfreigabe'
 import { writeAuditLog } from '@/lib/personal/audit'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(
+export const GET = withTracking(async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ caregiverId: string }> }
 ) {
@@ -20,9 +21,9 @@ export async function GET(
   } catch (e: any) {
     return apiErrorResponse(e)
   }
-}
+})
 
-export async function POST(
+export const POST = withTracking(async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ caregiverId: string }> }
 ) {
@@ -47,4 +48,4 @@ export async function POST(
   } catch (e: any) {
     return apiErrorResponse(e)
   }
-}
+})

@@ -6,6 +6,7 @@ import {
   FEHLER_KATEGORIEN, klassifiziereFehlercode, pflegeKatalogEintrag,
   type FehlerKategorie,
 } from '@/lib/abrechnung/ruecklaeufer-fehlercodes'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -14,7 +15,7 @@ export const dynamic = 'force-dynamic'
  * GET /api/billing/dta/fehlercodes            → Katalog + Kategorien
  * GET /api/billing/dta/fehlercodes?code=301   → Klassifizierung eines Codes
  */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireAdminMitOrg('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
@@ -54,7 +55,7 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 /**
  * POST /api/billing/dta/fehlercodes
@@ -65,7 +66,7 @@ export async function GET(request: Request) {
  * `global: true` legt den Eintrag organisationsübergreifend an (nur sinnvoll
  * für Codes, die bei allen Mandanten dasselbe bedeuten).
  */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireAdminMitOrg('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
@@ -103,4 +104,4 @@ export async function POST(request: Request) {
       { status: message.includes('Pflicht') ? 400 : 500 },
     )
   }
-}
+})

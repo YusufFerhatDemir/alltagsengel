@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireCoachUser } from '@/lib/coach/api-auth'
 import type { AktivitaetKategorie } from '@/lib/coach/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 const KATEGORIEN: AktivitaetKategorie[] = ['mobilitaet', 'selbstversorgung', 'alltagsgestaltung', 'soziale_teilhabe', 'entlastung', 'erinnerung']
 
@@ -11,7 +12,7 @@ function parseWochentage(input: unknown): number[] | null {
   return tage.sort((a, b) => a - b)
 }
 
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 
@@ -23,9 +24,9 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: 'Aktivitäten konnten nicht geladen werden.' }, { status: 500 })
   return NextResponse.json({ aktivitaeten: data ?? [] })
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireCoachUser({ schreibzugriff: true })
   if (!auth.ok) return auth.response
 
@@ -58,4 +59,4 @@ export async function POST(request: Request) {
 
   if (error) return NextResponse.json({ error: 'Aktivität konnte nicht gespeichert werden.' }, { status: 400 })
   return NextResponse.json({ aktivitaet: data })
-}
+})

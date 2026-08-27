@@ -7,6 +7,7 @@ import { aktuelleVersion } from '@/lib/kim/versionen'
 import { versendeKimNachricht, KimSpecFehltError } from '@/lib/kim/versand'
 import { heuteBerlin } from '@/lib/utils/timezone';
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * POST /api/billing/kim/nachrichten/[id]/versenden
@@ -17,7 +18,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
  * Versuch wird in der Warteschlange als "gesperrt" festgehalten, damit
  * sichtbar bleibt, dass ein Versand angefordert, aber abgewiesen wurde.
  */
-export async function POST(
+export const POST = withTracking(async function POST(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -48,4 +49,4 @@ export async function POST(
     }
     return safeApiError(err, _request)
   }
-}
+})

@@ -22,10 +22,11 @@ import {
   VpKzpLageNichtErmittelbarError,
 } from '@/lib/billing/vpkzp'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 const log = logger.child('api:vpkzp')
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
@@ -61,9 +62,9 @@ export async function GET(request: Request) {
       { status: 500 },
     )
   }
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
@@ -121,4 +122,4 @@ export async function POST(request: Request) {
       { status: 500 },
     )
   }
-}
+})
