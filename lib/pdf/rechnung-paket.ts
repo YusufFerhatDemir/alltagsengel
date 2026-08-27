@@ -34,6 +34,7 @@ import {
   MARGIN,
 } from '@/lib/pdf/briefkopf'
 import { logger } from '@/lib/logger'
+import { ladeUnterschriftsBild } from '@/lib/signaturen/unterschrift-bild'
 
 const log = logger.child('rechnung-paket')
 
@@ -513,21 +514,12 @@ export async function erzeugeRechnungsPaket(
   }
 }
 
-// Lädt Bild-Bytes aus signature_image: entweder Data-URL (base64) oder externe URL
+// Bild-Bytes aus signature_image — Herkunfts-, Zeit- und Groessengrenze
+// liegen in lib/signaturen/unterschrift-bild.ts. `signature_image` kommt aus
+// der Native-App bzw. dem OCR-Weg: ein ungepruefter fetch darauf war ein
+// serverseitiger Abruf einer frei waehlbaren Adresse.
 async function loadSignatureImageBytes(signatureImage: string): Promise<Uint8Array | null> {
-  if (!signatureImage) return null
-  if (signatureImage.startsWith('data:')) {
-    const base64 = signatureImage.split(',')[1]
-    if (!base64) return null
-    return new Uint8Array(Buffer.from(base64, 'base64'))
-  }
-  if (signatureImage.startsWith('http')) {
-    const res = await fetch(signatureImage)
-    if (!res.ok) return null
-    const buf = await res.arrayBuffer()
-    return new Uint8Array(buf)
-  }
-  return null
+  return ladeUnterschriftsBild(signatureImage)
 }
 
 // Bettet PNG oder JPG ein (best effort — versucht zuerst PNG, dann JPG)

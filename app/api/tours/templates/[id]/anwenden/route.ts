@@ -3,6 +3,7 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { minutenZuZeit, zeitZuMinuten } from '@/lib/availability'
 import { fahrtZwischenPlz } from '@/lib/touren/fahrtzeit'
+import { pruefeVorlagenStops } from '@/lib/touren/planung'
 import { POST as erstelleTour } from '@/app/api/tours/route'
 import { withTracking } from '@/lib/monitoring/tracker'
 
@@ -48,8 +49,12 @@ export const POST = withTracking(async function POST(
     service_type?: string
     notes?: string
   }[]
-  if (templateStops.length === 0) {
-    return NextResponse.json({ error: 'Vorlage enthält keine Stops.' }, { status: 422 })
+  // `stops` ist ein jsonb-Array ohne Struktur-Zusage. Ungeprueft wurde daraus
+  // "NaN:NaN" als Uhrzeit, sobald dauer_minuten fehlte — und ein roher
+  // Postgres-Formatfehler beim Anlegen des Einsatzes.
+  const stopFehler = pruefeVorlagenStops(templateStops)
+  if (stopFehler) {
+    return NextResponse.json({ error: stopFehler }, { status: 422 })
   }
 
   // PLZ der Klienten für die Fahrzeit-Schätzung zwischen den Stops
@@ -68,7 +73,16 @@ export const POST = withTracking(async function POST(
     .eq('organization_id', auth.ctx.organizationId)
     .single()
 
-  // Zeiten fortlaufend aufbauen: Ankunft = vorheriges Ende + Fahrzeit
+  // Zeiten fortlaufend aufbauen: Ankunft = vorheriges Ende + Fahrzeit.
+  // Eine gesetzte, aber unlesbare start_zeit faellt NICHT still auf 08:00
+  // zurueck — die Tour laege dann um Stunden verschoben, ohne dass es jemand
+  // merkt. Nur eine leere start_zeit nutzt den Standardbeginn.
+  if (template.start_zeit != null && zeitZuMinuten(template.start_zeit) === null) {
+    return NextResponse.json(
+      { error: `Vorlage: start_zeit "${template.start_zeit}" ist keine gültige Uhrzeit (HH:MM).` },
+      { status: 422 },
+    )
+  }
   let zeiger = zeitZuMinuten(template.start_zeit) ?? 8 * 60
   const stops = templateStops.map((s, i) => {
     const vorherPlz = i === 0 ? caregiver?.zip_code ?? null : plzMap.get(templateStops[i - 1].client_id) ?? null
@@ -84,6 +98,18 @@ export const POST = withTracking(async function POST(
       notes: s.notes,
     }
   })
+
+  // minutenZuZeit deckelt bei 24:00. Reicht die Vorlage ueber den Tag hinaus,
+  // wuerden mehrere Stops still auf 24:00 zusammenfallen — daraus entstuenden
+  // Einsaetze ohne Dauer.
+  if (zeiger > 24 * 60) {
+    return NextResponse.json({
+      error:
+        `Die Vorlage reicht mit Fahrzeiten über den Tag hinaus (rechnerisches Ende `
+        + `${Math.floor(zeiger / 60)}:${String(zeiger % 60).padStart(2, '0')} Uhr). `
+        + 'Bitte Startzeit oder Stop-Dauern anpassen.',
+    }, { status: 422 })
+  }
 
   // Normale Tour-Anlage wiederverwenden (alle Prüfungen inklusive)
   const tourRequest = new Request(new URL('/api/tours', req.url), {

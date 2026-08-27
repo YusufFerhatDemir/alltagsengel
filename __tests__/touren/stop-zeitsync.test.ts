@@ -1,30 +1,16 @@
+/**
+ * Tour-Stop PATCH — Zeitsync auf assignments
+ *
+ * Die frueheren Pruefungen hier waren Quelltext-Greps ("enthaelt die Datei
+ * diese Zeile?"). Sie sagten nichts darueber, ob der Sync tatsaechlich
+ * stattfindet, und wurden von der Umstellung (erst Einsatz, dann Stop)
+ * hinfaellig. Das Verhalten prueft jetzt __tests__/touren/stops-patch-route.test.ts
+ * gegen den echten Route-Handler; hier bleibt nur, was sonst nirgends steht.
+ */
+
 import { describe, it, expect } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
-
-const ROUTE_FILE = path.resolve('app/api/tours/[id]/stops/route.ts')
-
-describe('Tour-Stop PATCH: Zeitsync auf assignments', () => {
-  const src = fs.readFileSync(ROUTE_FILE, 'utf-8')
-
-  it('schreibt geplante_ankunft als start_time auf assignments', () => {
-    expect(src).toContain("assignmentUpdates.start_time = updates.geplante_ankunft")
-  })
-
-  it('schreibt geplantes_ende als end_time auf assignments', () => {
-    expect(src).toContain("assignmentUpdates.end_time = updates.geplantes_ende")
-  })
-
-  it('updated assignments mit der assignment_id des Stops', () => {
-    expect(src).toContain(".from('assignments')")
-    expect(src).toContain(".eq('id', stop.assignment_id)")
-  })
-
-  it('gibt 409 bei Doppelbelegung zurück und rollt Stop-Zeiten zurück', () => {
-    expect(src).toContain('DOPPELBELEGUNG')
-    expect(src).toMatch(/status:\s*409/)
-  })
-})
 
 describe('pflege_massnahmen Engel-RLS: kein caregivers-Join', () => {
   const migration = fs.readFileSync(

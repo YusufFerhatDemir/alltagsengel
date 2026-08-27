@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { pruefeEinsatzfreigabe, pruefeClientFreigabe, pruefeBudget, pruefeVPBudget } from '@/lib/personal/einsatzfreigabe'
 import { pruefeCaregiverVerfuegbarkeit } from '@/lib/touren/server'
+import { assertZeitfenster } from '@/lib/personal/dienstplan'
 import { ladeKonflikte } from '@/lib/einsatzplanung/konflikte-server'
 import { logBillingAction } from '@/lib/billing/core/audit'
 import { logAuditEvent } from '@/lib/audit-log'
@@ -86,6 +87,20 @@ export const POST = withTracking(async function POST(req: NextRequest) {
 
   if (!client_id || !caregiver_id || !start_time || !end_time || !service_type) {
     return NextResponse.json({ error: 'Pflichtfelder: client_id, caregiver_id, start_time, end_time, service_type' }, { status: 400 })
+  }
+
+  // Zeitfenster pruefen — dieselbe Regel wie im Dienstplan (assertZeitfenster):
+  // Format HH:MM, Nachteinsaetze ueber Mitternacht ausdruecklich erlaubt,
+  // aber kein Null-Einsatz (Beginn = Ende). Bis hierher gab es auf
+  // `assignments` GAR KEINE Zeitpruefung: ein Tippfehler im Format schlug als
+  // roher Postgres-Fehler durch (HTTP 500 statt lesbarer Meldung), und ein
+  // Einsatz "10:00-10:00" liess sich anlegen — er belegt keine Zeit, wird vom
+  // Doppelbelegungs-Trigger folgerichtig ignoriert und erzeugt spaeter einen
+  // Leistungsnachweis ueber 0 Minuten.
+  try {
+    assertZeitfenster(start_time, end_time, null, 'Einsatz')
+  } catch (err) {
+    return apiErrorResponse(err, req, 400)
   }
 
   const organizationId = await getActiveOrgId()
@@ -366,6 +381,17 @@ export const PATCH = withTracking(async function PATCH(req: NextRequest) {
       const gueltigBis = updates.valid_until ?? bestand?.valid_until ?? null
       const startZeit = updates.start_time ?? bestand?.start_time ?? null
       const endeZeit = updates.end_time ?? bestand?.end_time ?? null
+
+      // Gemergte Zeiten pruefen (Bestand + Aenderung) — sonst liesse sich ein
+      // gueltiger Einsatz per PATCH auf "10:00-10:00" oder eine kaputte
+      // Uhrzeit ziehen, an denen die Anlage laengst scheitert.
+      if (updates.start_time !== undefined || updates.end_time !== undefined) {
+        try {
+          assertZeitfenster(startZeit, endeZeit, null, 'Einsatz')
+        } catch (err) {
+          return apiErrorResponse(err, req, 400)
+        }
+      }
 
       if (caregiverId && datum) {
         let verfuegbarkeit

@@ -7,7 +7,13 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { UserFacingError } from '@/lib/api/user-facing-error'
-import { findeKonflikte, type Konflikt, type KonfliktEinsatz } from './konflikte'
+import {
+  findeKonflikte,
+  tagVerschieben,
+  wochentagsNachbarn,
+  type Konflikt,
+  type KonfliktEinsatz,
+} from './konflikte'
 
 const ISO_DATUM = /^\d{4}-\d{2}-\d{2}$/
 
@@ -102,9 +108,22 @@ export async function ladeKonflikte(
     .eq('organization_id', organizationId)
     .or(oderFilter)
 
-  query = istSerie
-    ? query.is('assignment_date', null).eq('weekday', kandidat.weekday as number)
-    : query.eq('assignment_date', kandidat.assignment_date as string)
+  // Suchraum: der eigene Tag PLUS Vor- und Folgetag. Ein Nachteinsatz des
+  // Vortages (22:00–06:00) ragt in den Tag des Kandidaten hinein, und der
+  // Nachteinsatz des Kandidaten in den Folgetag. Mit `eq(assignment_date)`
+  // blieben beide unsichtbar — die Vorabprüfung hätte dann grünes Licht
+  // gegeben, wo der Trigger seit 20261012000000 blockiert. Die Feinauswahl
+  // (Versatz -1/0/+1 plus Minutenrechnung) macht `findeKonflikte`.
+  if (istSerie) {
+    query = query
+      .is('assignment_date', null)
+      .in('weekday', wochentagsNachbarn(kandidat.weekday as number))
+  } else {
+    const datum = kandidat.assignment_date as string
+    query = query
+      .gte('assignment_date', tagVerschieben(datum, -1) ?? datum)
+      .lte('assignment_date', tagVerschieben(datum, 1) ?? datum)
+  }
 
   const { data, error } = await query
 

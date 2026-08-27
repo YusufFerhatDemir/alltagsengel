@@ -5,6 +5,8 @@ import { getActiveOrgId } from '@/lib/organizations/server'
 import { datumBerlin } from '@/lib/utils/timezone';
 import { safeDbError } from '@/lib/utils/api-error'
 import { mitStatusSync } from '@/lib/leistungsnachweis/status-sync'
+import { assertKlientenUnterschrift, assertStornierbar } from '@/lib/leistungsnachweis/nachweis-regeln'
+import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { tarifLeistungsart, bekannteLeistungsarten } from '@/lib/billing/leistungsarten'
 import { pruefeBudget } from '@/lib/personal/einsatzfreigabe'
 import type { BudgetTyp } from '@/lib/config/budget-constants'
@@ -292,10 +294,32 @@ export const PATCH = withTracking(async function PATCH(req: NextRequest) {
 
   if (action === 'sign') {
     const { data: current } = await supabase
-      .from('service_records').select('proof_status, status').eq('id', id).eq('organization_id', organizationId).single()
+      .from('service_records').select('proof_status, status, client_signature').eq('id', id).eq('organization_id', organizationId).single()
     if (!current) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 })
     if (current.proof_status !== 'ABGESCHLOSSEN') {
       return NextResponse.json({ error: 'Unterschrift nur im Status ABGESCHLOSSEN möglich' }, { status: 409 })
+    }
+
+    // Fail-closed: der Statuswechsel auf UNTERSCHRIEBEN loest in der
+    // Datenbank signature_hash + is_locked aus und macht den Nachweis damit
+    // abrechenbar (die Rechnungs-RPC prueft genau diese beiden Merkmale).
+    // Ohne echte Unterschrift waere das ein Beleg, den niemand
+    // unterschrieben hat — und er liesse sich danach nicht mehr korrigieren.
+    // Die Native-App legt ihre Unterschrift getrennt in service_signatures
+    // ab; dieser Weg zaehlt deshalb mit.
+    const { count: digitaleSignaturen } = await supabase
+      .from('service_signatures')
+      .select('id', { count: 'exact', head: true })
+      .eq('service_record_id', id)
+      .eq('signer_role', 'client')
+    try {
+      assertKlientenUnterschrift({
+        neueSignatur: body.client_signature,
+        bestandsSignatur: current.client_signature,
+        digitaleSignaturen: digitaleSignaturen ?? 0,
+      })
+    } catch (err) {
+      return apiErrorResponse(err, req, 422)
     }
 
     const signData: Record<string, unknown> = {
@@ -367,6 +391,21 @@ export const PATCH = withTracking(async function PATCH(req: NextRequest) {
     if (!rolleDarf(auth.role, 'einsatz.schreiben')) {
       return NextResponse.json({ error: 'Nur Admins können stornieren' }, { status: 403 })
     }
+
+    // Erlaubnisliste statt Sperrliste: ein Nachweis, der schon auf einer
+    // Rechnung steht, darf am Nachweis nicht storniert werden — die Rechnung
+    // bliebe sonst mit einer stornierten Position stehen.
+    const { data: stand } = await supabase
+      .from('service_records')
+      .select('status, billing_status, proof_status')
+      .eq('id', id).eq('organization_id', organizationId).maybeSingle()
+    if (!stand) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 })
+    try {
+      assertStornierbar(stand)
+    } catch (err) {
+      return apiErrorResponse(err, req, 409)
+    }
+
     const { data, error } = await supabase
       .from('service_records')
       .update({ proof_status: 'STORNIERT', billing_status: 'STORNIERT', updated_at: new Date().toISOString() })
