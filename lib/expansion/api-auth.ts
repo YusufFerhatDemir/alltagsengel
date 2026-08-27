@@ -7,7 +7,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from 'next/server'
-import { rolleDarf } from '@/lib/auth/guard'
+import { holeRollenQuellen, quellenDuerfen } from '@/lib/auth/rollen-quelle'
 import type { Berechtigung } from '@/lib/auth/rollen'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
@@ -27,22 +27,15 @@ export async function requireExpansionAdmin(
   berechtigung: Berechtigung = 'system.verwalten'
 ): Promise<AdminKontext> {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
+  const quellen = await holeRollenQuellen(supabase)
+  if (!quellen) {
     return {
       ok: false,
       response: NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 }),
     }
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile || !rolleDarf(profile.role, berechtigung)) {
+  if (!quellenDuerfen(quellen, berechtigung)) {
     return {
       ok: false,
       response: NextResponse.json({ error: 'Nur für Administratoren' }, { status: 403 }),
@@ -57,5 +50,5 @@ export async function requireExpansionAdmin(
       response: NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 }),
     }
   }
-  return { ok: true, userId: user.id, orgId }
+  return { ok: true, userId: quellen.userId, orgId }
 }

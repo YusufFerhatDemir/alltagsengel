@@ -4,6 +4,7 @@ import { getStorageKeyFromEnv } from '@/lib/supabase/storage-key'
 import { supabasePublishableKey, supabaseUrl } from '@/lib/supabase/keys'
 import { handleRateLimit } from '@/lib/middleware/rate-limit'
 import { darfPfad } from '@/lib/auth/bereiche'
+import { wirksameRolle } from '@/lib/auth/rollen'
 import { logger } from '@/lib/logger'
 const log = logger.child('proxy')
 
@@ -216,34 +217,49 @@ export async function proxy(request: NextRequest) {
     // NIEMALS allein für Autorisierung genutzt werden — sonst macht sich
     // jeder Nutzer selbst zum Admin.
     //
-    // Hierarchie:
-    //   1) app_metadata.role — nur serverseitig (Admin-API) setzbar → tamper-proof
-    //   2) Fallback: profiles.role in der DB (autoritativ, durch DB-Trigger
-    //      prevent_role_escalation gegen Self-Escalation geschützt)
-    //   3) user_metadata.role NICHT verwendet (unsicher)
-    let role: string = ''
+    // Beide Quellen, eine Antwort:
+    //   app_metadata.role — nur serverseitig (Admin-API) setzbar
+    //   profiles.role     — durch prevent_role_escalation geschützt
+    //   user_metadata.role NICHT verwendet (vom Nutzer selbst schreibbar)
+    //
+    // Bis 2026-08-28 stand hier „app_metadata gewinnt, profiles nur als
+    // Fallback" — profiles wurde gar nicht erst abgefragt, sobald
+    // app_metadata.role gesetzt war. Eine Herabstufung in der Datenbank
+    // (der dokumentierte Weg für 'superadmin' und für jede Korrektur
+    // außerhalb von /api/admin/manage-role) ließ diesen Torwächter damit
+    // unberührt: der alte, höhere Wert im Token entschied weiter, während
+    // die Fach-Guards in lib/**/api-auth.ts bereits abwiesen.
+    //
+    // Jetzt ist profiles bindend und app_metadata wirkt nur einschränkend
+    // (wirksameRolle, lib/auth/rollen.ts). Das kostet bei gesetztem
+    // app_metadata.role eine zusätzliche, indizierte Abfrage pro Anfrage —
+    // bei allen übrigen Konten lief sie ohnehin schon.
+    let profilRole = ''
+    let dbFehler = false
+    try {
+      const { data: profile, error: profilFehler } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle()
+      // Ein zurueckgegebener Fehler ist dasselbe wie ein geworfener: die
+      // bindende Quelle ist nicht lesbar, also wird nicht entschieden.
+      // supabase-js wirft bei PostgREST-Fehlern NICHT — ohne diese Zeile
+      // bliebe der Fall unbemerkt.
+      if (profilFehler) {
+        dbFehler = true
+        log.error(`Role DB check failed: ${profilFehler.message}`)
+      } else if (profile?.role) {
+        profilRole = profile.role
+      }
+    } catch (dbError) {
+      // FAIL-CLOSED: DB-Check fehlgeschlagen → Zugriff verweigern.
+      dbFehler = true
+      log.errorWithException('Role DB check failed', dbError)
+    }
 
     const appRole = (user.app_metadata?.role as string | undefined) || ''
-    if (appRole) {
-      role = appRole
-    }
-
-    // DB-Fallback: profiles-Tabelle abfragen (mit User-Token, NICHT service_role)
-    if (!role) {
-      try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single()
-        if (profile?.role) {
-          role = profile.role
-        }
-      } catch (dbError) {
-        // FAIL-CLOSED: DB-Check fehlgeschlagen → Zugriff verweigern.
-        log.errorWithException('Role DB check failed', dbError)
-      }
-    }
+    const role: string = dbFehler ? '' : wirksameRolle(appRole, profilRole)
 
     // ═══ Keine Rolle bestimmbar → Login ═══
     if (!role) {

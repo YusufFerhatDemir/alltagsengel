@@ -8,6 +8,7 @@ import Icon3D from '@/components/Icon3D'
 import { flushPendingProfile } from '@/lib/pending-profile'
 import { codeAbfrageNoetig, type MfaNiveau } from '@/lib/coach/mfa'
 import { logger } from '@/lib/logger'
+import { wirksameRolle } from '@/lib/auth/rollen'
 const log = logger.child('login')
 
 // ═══ Brute-Force Schutz: Konstanten ═══
@@ -223,23 +224,26 @@ function LoginForm() {
   }) {
     const supabase = createClient()
 
-    // Rollenquelle wie in proxy.ts: app_metadata.role (nur serverseitig
-    // setzbar) vor profiles.role (durch prevent_role_escalation geschuetzt).
-    // user_metadata.role ist vom Nutzer selbst editierbar und wird deshalb
-    // NICHT gelesen — bis 2026-08-23 hing die Weiterleitung genau daran
-    // (Lueckenanalyse Bereich 13, P2). Fuer die Zugriffskontrolle war das
-    // ohne Folge (die Middleware entscheidet), aber wer nur profiles.role
-    // gesetzt hatte, landete nach dem Login auf /kunde/home statt im
-    // eigenen Portal.
-    let role = (user.app_metadata?.role as string) || ''
-    if (!role) {
-      const { data: profil } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle()
-      role = (profil?.role as string) || ''
-    }
+    // Rollenquelle wie in proxy.ts: BEIDE nicht selbst beschreibbaren
+    // Quellen, und bei Widerspruch die schwaechere (wirksameRolle,
+    // lib/auth/rollen.ts). user_metadata.role ist vom Nutzer selbst
+    // editierbar und wird deshalb NICHT gelesen — bis 2026-08-23 hing die
+    // Weiterleitung genau daran (Lueckenanalyse Bereich 13, P2).
+    //
+    // Bis 2026-08-28 galt hier „app_metadata gewinnt, profiles als
+    // Rueckfall". Damit schickte der Login jemanden, der in der Datenbank
+    // herabgestuft worden war, weiter in den Verwaltungsbereich, aus dem
+    // ihn der Proxy sofort wieder herauswarf. Fuer die Zugriffskontrolle
+    // war das folgenlos, fuer die Person ein Sprung ins Leere.
+    const { data: profil } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle()
+    const role = wirksameRolle(
+      (user.app_metadata?.role as string) || '',
+      (profil?.role as string) || '',
+    )
 
     // Log im Hintergrund
     logSuccessLogin().catch((err) => log.warnWithException('Success-Login-Logging fehlgeschlagen (non-blocking)', err))

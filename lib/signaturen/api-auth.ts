@@ -1,14 +1,20 @@
 import { NextResponse } from 'next/server'
-import { rolleDarf } from '@/lib/auth/guard'
-import type { Berechtigung } from '@/lib/auth/rollen'
+import { holeRollenQuellen } from '@/lib/auth/rollen-quelle'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId, resolveUserOrgId } from '@/lib/organizations/server'
+import { sichtbareDokumenttypen, type Zugriffsart } from './berechtigung'
+import type { SignaturDokumentTyp } from './types'
 
 export interface SigAuthContext {
   userId: string
   organizationId: string
   role: string
   name: string
+  /** Beide Rollenquellen — fuer Folgepruefungen im selben Vorgang. */
+  appRolle: string
+  profilRolle: string
+  /** Dokumentarten, die diese Rollenlage in dieser Zugriffsart anfassen darf. */
+  sichtbareTypen: SignaturDokumentTyp[]
 }
 
 export type SigAuthResult =
@@ -16,29 +22,33 @@ export type SigAuthResult =
   | { ok: false; response: NextResponse }
 
 /**
- * Rollenkonzept (lib/auth/rollen.ts): der Guard prueft nicht mehr auf
- * „ist Admin", sondern auf eine BERECHTIGUNG. admin/superadmin haben alle,
- * pdl/qm/buchhaltung nur die ihrer Aufgabe. Der Default ist die
- * Lese-Berechtigung des Fachbereichs; schreibende Routen uebergeben die
- * Schreib-Berechtigung ausdruecklich.
+ * Guard fuer die Verwaltungswege des Signaturmoduls.
+ *
+ * Geprueft wird NICHT mehr pauschal 'einsatz.lesen'. Die Tabelle
+ * signatur_dokumente fuehrt sechs Dokumentarten quer ueber drei
+ * Fachbereiche — 'pflegebericht' sind Gesundheitsdaten, 'vertrag' und
+ * 'einwilligung' Klienten-Stammdaten. Ueber die pauschale Pruefung haette
+ * die Buchhaltung, die ausdruecklich keine Gesundheitsdaten sehen soll,
+ * Pflegeberichte gelesen. Welche Arten jemand sieht, entscheidet
+ * lib/signaturen/berechtigung.ts; wer gar keine sieht, bekommt 403 und
+ * keine leere Liste.
  */
-export async function requireSigAdmin(
-  berechtigung: Berechtigung = 'einsatz.lesen'
-): Promise<SigAuthResult> {
+export async function requireSigAdmin(art: Zugriffsart = 'lesen'): Promise<SigAuthResult> {
   const supabase = await createClient()
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
+  const quellen = await holeRollenQuellen(supabase)
+  if (!quellen) {
     return { ok: false, response: NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 }) }
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, first_name, last_name')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile || !rolleDarf(profile.role, berechtigung)) {
-    return { ok: false, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
+  const sichtbareTypen = sichtbareDokumenttypen(quellen.appRolle, quellen.profilRolle, art)
+  if (sichtbareTypen.length === 0) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' },
+        { status: 403 },
+      ),
+    }
   }
 
   const organizationId = await getActiveOrgId()
@@ -46,31 +56,40 @@ export async function requireSigAdmin(
     return { ok: false, response: NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 }) }
   }
 
-  const name = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || 'Alltagsengel'
-
   return {
     ok: true,
-    ctx: { userId: user.id, organizationId, role: profile.role, name },
+    ctx: {
+      userId: quellen.userId,
+      organizationId,
+      role: quellen.rolle,
+      name: quellen.name,
+      appRolle: quellen.appRolle,
+      profilRolle: quellen.profilRolle,
+      sichtbareTypen,
+    },
   }
 }
 
+/**
+ * Guard fuer den Signatar-Weg (signieren / ablehnen).
+ *
+ * Hier gibt es bewusst KEINE Rollenpruefung: wer unterschreiben soll, ist
+ * haeufig weder Administration noch Verwaltungsrolle — die Zuordnung
+ * steht in signaturen.signatar_id, und genau die pruefen die Funktionen
+ * in lib/signaturen/signaturen.ts vor jedem Schreibvorgang. Dieser Guard
+ * liefert nur Identitaet und Mandant.
+ */
 export async function requireSigUser(): Promise<
-  | { ok: true; userId: string; role: string; organizationId: string }
+  | { ok: true; userId: string; role: string; organizationId: string; appRolle: string; profilRolle: string }
   | { ok: false; response: NextResponse }
 > {
   const supabase = await createClient()
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
+  const quellen = await holeRollenQuellen(supabase)
+  if (!quellen) {
     return { ok: false, response: NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 }) }
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile) {
+  if (!quellen.profilRolle) {
     return { ok: false, response: NextResponse.json({ error: 'Kein Profil.' }, { status: 403 }) }
   }
 
@@ -79,5 +98,12 @@ export async function requireSigUser(): Promise<
     return { ok: false, response: NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 }) }
   }
 
-  return { ok: true, userId: user.id, role: profile.role, organizationId }
+  return {
+    ok: true,
+    userId: quellen.userId,
+    role: quellen.rolle,
+    organizationId,
+    appRolle: quellen.appRolle,
+    profilRolle: quellen.profilRolle,
+  }
 }

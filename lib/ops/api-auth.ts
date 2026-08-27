@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { rolleDarf } from '@/lib/auth/guard'
+import { holeRollenQuellen, quellenDuerfen } from '@/lib/auth/rollen-quelle'
 import type { Berechtigung } from '@/lib/auth/rollen'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId, resolveUserOrgId } from '@/lib/organizations/server'
@@ -41,18 +41,12 @@ export async function requireOpsAdmin(
   berechtigung: Berechtigung = 'system.verwalten'
 ): Promise<OpsAuthResult> {
   const supabase = await createClient()
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
+  const quellen = await holeRollenQuellen(supabase)
+  if (!quellen) {
     return { ok: false, response: NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 }) }
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, first_name, last_name')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile || !rolleDarf(profile.role, berechtigung)) {
+  if (!quellenDuerfen(quellen, berechtigung)) {
     return { ok: false, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
   }
   // MFA-Prüfung
@@ -66,11 +60,11 @@ export async function requireOpsAdmin(
     return { ok: false, response: NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 }) }
   }
 
-  const name = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || 'Alltagsengel'
+  const name = quellen.name
 
   return {
     ok: true,
-    ctx: { userId: user.id, organizationId, role: profile.role, name },
+    ctx: { userId: quellen.userId, organizationId, role: quellen.rolle, name },
   }
 }
 
@@ -78,16 +72,10 @@ export async function requireOpsUser(): Promise<
   { ok: true; userId: string; organizationId: string; role: string; name: string } | { ok: false; response: NextResponse }
 > {
   const supabase = await createClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
-  if (error || !user) {
+  const quellen = await holeRollenQuellen(supabase)
+  if (!quellen) {
     return { ok: false, response: NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 }) }
   }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, first_name, last_name')
-    .eq('id', user.id)
-    .single()
 
   // profiles hat keine organization_id-Spalte: Engel bekommen ihre Org aus dem
   // caregivers-Datensatz, alle uebrigen aus der aktiven Organisation
@@ -95,7 +83,7 @@ export async function requireOpsUser(): Promise<
   const { data: caregiver } = await supabase
     .from('caregivers')
     .select('organization_id')
-    .eq('user_id', user.id)
+    .eq('user_id', quellen.userId)
     .maybeSingle()
 
   // Fail-closed (Audit MITTEL-1): Engel bekommen ihre Org aus caregivers,
@@ -107,6 +95,6 @@ export async function requireOpsUser(): Promise<
     return { ok: false, response: NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 }) }
   }
 
-  const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'Alltagsengel'
-  return { ok: true, userId: user.id, organizationId, role: profile?.role ?? 'engel', name }
+  const name = quellen.name
+  return { ok: true, userId: quellen.userId, organizationId, role: quellen.rolle || 'engel', name }
 }

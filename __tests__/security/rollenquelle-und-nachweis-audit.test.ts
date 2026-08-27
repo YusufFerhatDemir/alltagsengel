@@ -34,14 +34,23 @@ describe('Bereich 13: Login liest keine manipulierbare Rollenquelle', () => {
     expect(quelle).not.toMatch(/const\s+role\s*=\s*\(?\s*user\.user_metadata\?\.role/)
   })
 
-  it('app_metadata.role ist die erste Quelle', () => {
+  it('app_metadata.role ist EINE der beiden Quellen', () => {
     expect(quelle).toMatch(/user\.app_metadata\?\.role/)
   })
 
-  it('profiles.role ist der Fallback — dieselbe Hierarchie wie in proxy.ts', () => {
+  it('profiles.role wird IMMER gelesen, nicht nur als Rueckfall', () => {
+    // Geaendert am 28.08.2026: bis dahin stand hier „app_metadata gewinnt,
+    // profiles als Fallback" — und profiles wurde gar nicht erst
+    // abgefragt, wenn app_metadata gesetzt war. Nach einer Herabstufung
+    // in der Datenbank schickte der Login die Person damit weiter in den
+    // Verwaltungsbereich. Jetzt entscheidet wirksameRolle() aus beiden
+    // Quellen; siehe __tests__/security/rollenquelle-wirksam.test.ts.
     const abschnitt = quelle.slice(quelle.indexOf('async function nachAnmeldung'))
     expect(abschnitt).toMatch(/from\('profiles'\)/)
     expect(abschnitt).toMatch(/select\('role'\)/)
+    expect(abschnitt).toMatch(/wirksameRolle\(/)
+    // Der alte „nur wenn leer"-Rueckfall darf nicht wiederkommen.
+    expect(abschnitt).not.toMatch(/let role = \(user\.app_metadata/)
   })
 
   it('die Rolle angehoerige fuehrt ins Angehoerigenportal', () => {

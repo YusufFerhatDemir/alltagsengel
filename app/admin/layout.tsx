@@ -10,7 +10,7 @@ import OrgSwitcher from '@/components/OrgSwitcher'
 import BundeslandSwitcher from '@/components/admin/BundeslandSwitcher'
 import { BundeslandProvider } from '@/components/admin/BundeslandContext'
 import { MFA_AUSNAHME_PFADE } from '@/lib/admin/mfa'
-import { istVerwaltungsrolle } from '@/lib/auth/rollen'
+import { istVerwaltungsrolle, wirksameRolle } from '@/lib/auth/rollen'
 import { darfPfad } from '@/lib/auth/bereiche'
 import { ReactNode } from 'react'
 
@@ -25,8 +25,11 @@ import { ReactNode } from 'react'
  * beschreiben kann; wer sich dort role='admin' eintrug, kam an dieser
  * Pruefung vorbei. Serverseitig hielt der Proxy trotzdem dicht (er liest
  * user_metadata bewusst nicht), aber eine Pruefung, die man sich selbst
- * ausstellen kann, ist keine Pruefung. Faellt app_metadata leer aus,
- * entscheidet der profiles-Rueckfall weiter unten.
+ * ausstellen kann, ist keine Pruefung.
+ *
+ * Dieser Wert ist nur die EINE der beiden Quellen; entschieden wird
+ * zusammen mit profiles.role ueber wirksameRolle() — siehe
+ * lib/auth/rollen.ts.
  */
 function extractRole(user: { app_metadata?: Record<string, unknown> } | null): string {
   const appRole = user?.app_metadata?.role
@@ -52,14 +55,21 @@ function useAdminAuth() {
       return true
     }
 
+    // Beide Quellen zusammen, nicht „app_metadata gewinnt, profiles als
+    // Rueckfall". Sonst zeigte die Navigation nach einer Herabstufung in
+    // der Datenbank weiter die alten Bereiche an, deren Schnittstellen
+    // laengst 403 antworten — siehe wirksameRolle().
+    const ermitteln = async (): Promise<string> => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return ''
+      const { data: profile } = await supabase
+        .from('profiles').select('role').eq('id', user.id).maybeSingle()
+      return wirksameRolle(extractRole(user), profile?.role ?? '')
+    }
+
     const { data: { session } } = await supabase.auth.getSession()
     if (session) {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (uebernehmen(extractRole(user))) return
-      if (user) {
-        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-        if (profile && uebernehmen(profile.role)) return
-      }
+      if (uebernehmen(await ermitteln())) return
       router.replace('/auth/login?error=admin_required')
       return
     }
@@ -71,12 +81,7 @@ function useAdminAuth() {
       const { data: { session: retrySession } } = await supabase.auth.getSession()
       if (retrySession) {
         clearInterval(retryInterval)
-        const { data: { user } } = await supabase.auth.getUser()
-        if (uebernehmen(extractRole(user))) return
-        if (user) {
-          const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-          if (profile && uebernehmen(profile.role)) return
-        }
+        if (uebernehmen(await ermitteln())) return
         router.replace('/auth/login?error=admin_required')
         return
       }

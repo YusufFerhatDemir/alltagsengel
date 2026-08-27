@@ -170,6 +170,22 @@ describe('Bestandsschutz: keine hartkodierten Rollenlisten', () => {
    */
   const GUARDS_OHNE_ROLLEN = new Set(['lib/coach/api-auth.ts'])
 
+  /**
+   * Wie ein Guard die Berechtigungsfrage stellt.
+   *
+   * Bis zum 28.08.2026 war das ueberall `rolleDarf(profile.role, …)` —
+   * also gegen EINE Rollenquelle. Seitdem laeuft die Frage ueber
+   * quellenDuerfen() (lib/auth/rollen-quelle.ts) und damit gegen BEIDE
+   * autoritativen Quellen (app_metadata.role und profiles.role).
+   * lib/signaturen stellt sie ueber sichtbareDokumenttypen(), weil dort
+   * die Dokumentart den Fachbereich bestimmt.
+   *
+   * Wichtig bleibt die urspruengliche Aussage des Tests: gefragt wird nach
+   * einer BERECHTIGUNG, nicht nach einer Rollenliste.
+   */
+  const BERECHTIGUNGSFRAGE =
+    /rolleDarf\(|quellenDuerfen\(|wirksamDarf\(|sichtbareDokumenttypen\(/
+
   it('kein Fach-Guard prueft noch gegen eine Rollenliste', () => {
     const guards = dateien("find lib -name 'api-auth.ts'; echo lib/abrechnung/require-admin.ts")
     expect(guards.length).toBeGreaterThan(10)
@@ -179,7 +195,7 @@ describe('Bestandsschutz: keine hartkodierten Rollenlisten', () => {
         /\['admin',\s*'superadmin'\]\.includes/,
       )
       if (!GUARDS_OHNE_ROLLEN.has(g)) {
-        expect(src, `${g}: nutzt rolleDarf() nicht`).toContain('rolleDarf(')
+        expect(src, `${g}: stellt keine Berechtigungsfrage`).toMatch(BERECHTIGUNGSFRAGE)
       }
     }
   })
