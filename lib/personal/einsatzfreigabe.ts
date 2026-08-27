@@ -152,7 +152,12 @@ export async function pruefeClientFreigabe(
     .eq('id', clientId)
     .eq('organization_id', organizationId)
     .single()
-  if (clErr || !client) throw new UserFacingError('Klient nicht gefunden oder gehört zu einer anderen Organisation.')
+  // 404 statt des Default-400: der Klient existiert unter dieser ID in dieser
+  // Organisation nicht. Ohne den ausdruecklichen Status kam die Meldung mit
+  // 400 zurueck — und weil die Aufrufer den Wurf gar nicht auffingen, ueber
+  // `withTracking` hinaus als HTTP 500 ohne jeden Klartext. Gleicher Status
+  // wie bei `sammleVoraussetzungen` fuer den Mitarbeiter.
+  if (clErr || !client) throw new UserFacingError('Klient nicht gefunden oder gehört zu einer anderen Organisation.', 404)
 
   const probleme: string[] = []
   const name = `${client.first_name ?? ''} ${client.last_name ?? ''}`.trim()

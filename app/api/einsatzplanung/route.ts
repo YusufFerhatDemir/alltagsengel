@@ -119,7 +119,19 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     )
   }
 
-  const clientCheck = await pruefeClientFreigabe(admin, client_id, organizationId, assignment_date)
+  // Fail-closed mit lesbarem Status: beide Prueffunktionen WERFEN, wenn
+  // Klient bzw. Mitarbeiter unter dieser ID in dieser Organisation nicht
+  // existieren (UserFacingError, Status 404). Ungefangen lief dieser Wurf
+  // durch `withTracking` bis in den Next.js-Handler und kam als HTTP 500
+  // ohne Klartext zurueck — eine schlicht falsche ID sah damit aus wie ein
+  // Serverausfall, und die Disposition hatte nichts, woran sie den Tippfehler
+  // erkennen konnte.
+  let clientCheck
+  try {
+    clientCheck = await pruefeClientFreigabe(admin, client_id, organizationId, assignment_date)
+  } catch (err) {
+    return apiErrorResponse(err, req, 404)
+  }
   if (!clientCheck.freigegeben && !body.force_override) {
     return NextResponse.json({
       error: `Klient "${clientCheck.clientName}" ist nicht für Einsätze freigegeben.`,
@@ -128,7 +140,12 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     }, { status: 422 })
   }
 
-  const freigabe = await pruefeEinsatzfreigabe(admin, caregiver_id, organizationId)
+  let freigabe
+  try {
+    freigabe = await pruefeEinsatzfreigabe(admin, caregiver_id, organizationId)
+  } catch (err) {
+    return apiErrorResponse(err, req, 404)
+  }
   if (!freigabe.freigegeben && !body.force_override) {
     return NextResponse.json({
       error: `Mitarbeiter "${freigabe.caregiverName}" ist nicht für Einsätze freigegeben.`,
@@ -339,8 +356,15 @@ export const PATCH = withTracking(async function PATCH(req: NextRequest) {
   const patchWarnungen: string[] = []
   {
     const admin = createAdminClient()
+    // Gleicher Grund wie im POST: eine unbekannte ID ist ein 404 mit
+    // Klartext, kein generischer 500.
     if (updates.caregiver_id) {
-      const freigabe = await pruefeEinsatzfreigabe(admin, updates.caregiver_id, organizationId)
+      let freigabe
+      try {
+        freigabe = await pruefeEinsatzfreigabe(admin, updates.caregiver_id, organizationId)
+      } catch (err) {
+        return apiErrorResponse(err, req, 404)
+      }
       if (!freigabe.freigegeben && !force_override) {
         return NextResponse.json({
           error: `Mitarbeiter "${freigabe.caregiverName}" ist nicht für Einsätze freigegeben.`,
@@ -351,7 +375,12 @@ export const PATCH = withTracking(async function PATCH(req: NextRequest) {
       }
     }
     if (updates.client_id) {
-      const clientCheck = await pruefeClientFreigabe(admin, updates.client_id, organizationId, updates.assignment_date)
+      let clientCheck
+      try {
+        clientCheck = await pruefeClientFreigabe(admin, updates.client_id, organizationId, updates.assignment_date)
+      } catch (err) {
+        return apiErrorResponse(err, req, 404)
+      }
       if (!clientCheck.freigegeben && !force_override) {
         return NextResponse.json({
           error: `Klient "${clientCheck.clientName}" ist nicht für Einsätze freigegeben.`,
@@ -457,13 +486,23 @@ export const PATCH = withTracking(async function PATCH(req: NextRequest) {
   if (force_override && organizationId) {
     const admin = createAdminClient()
     const warnungen: string[] = []
+    // Auch hier faengt der Block den Wurf ab: der Audit-Eintrag ist Beiwerk,
+    // aber eine unbekannte ID darf auch aus ihm heraus kein 500 erzeugen.
     if (updates.caregiver_id) {
-      const freigabe = await pruefeEinsatzfreigabe(admin, updates.caregiver_id, organizationId)
-      if (!freigabe.freigegeben) warnungen.push(`Einsatzfreigabe übersteuert: ${freigabe.probleme.join('; ')}`)
+      try {
+        const freigabe = await pruefeEinsatzfreigabe(admin, updates.caregiver_id, organizationId)
+        if (!freigabe.freigegeben) warnungen.push(`Einsatzfreigabe übersteuert: ${freigabe.probleme.join('; ')}`)
+      } catch (err) {
+        return apiErrorResponse(err, req, 404)
+      }
     }
     if (updates.client_id) {
-      const clientCheck = await pruefeClientFreigabe(admin, updates.client_id, organizationId, updates.assignment_date)
-      if (!clientCheck.freigegeben) warnungen.push(`Client-Freigabe übersteuert: ${clientCheck.probleme.join('; ')}`)
+      try {
+        const clientCheck = await pruefeClientFreigabe(admin, updates.client_id, organizationId, updates.assignment_date)
+        if (!clientCheck.freigegeben) warnungen.push(`Client-Freigabe übersteuert: ${clientCheck.probleme.join('; ')}`)
+      } catch (err) {
+        return apiErrorResponse(err, req, 404)
+      }
     }
     if (warnungen.length > 0) {
       await logBillingAction(admin, {

@@ -142,7 +142,15 @@ export const POST = withTracking(async function POST(req: NextRequest) {
   // ── Budget- und Client-Freigabe pro Klient prüfen ──────────────
   const clientIds = [...new Set(stops.filter(s => s.client_id).map(s => s.client_id!))]
   for (const cId of clientIds) {
-    const clientCheck = await pruefeClientFreigabe(admin, cId, auth.ctx.organizationId, tour_date)
+    // pruefeClientFreigabe WIRFT bei unbekanntem Klienten (404). Ungefangen
+    // kam das als HTTP 500 ohne Klartext zurueck — gleicher Befund wie in
+    // /api/einsatzplanung.
+    let clientCheck
+    try {
+      clientCheck = await pruefeClientFreigabe(admin, cId, auth.ctx.organizationId, tour_date)
+    } catch (err) {
+      return apiErrorResponse(err, req, 404)
+    }
     if (!clientCheck.freigegeben && !force_override) {
       return NextResponse.json({
         error: `Klient ${clientCheck.clientName}: ${clientCheck.probleme.join('; ')}`,

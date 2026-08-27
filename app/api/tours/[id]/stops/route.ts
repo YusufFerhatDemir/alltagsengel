@@ -20,6 +20,7 @@ import {
 } from '@/lib/touren/stops'
 import { STOP_SELECT, type StopZeile } from '@/lib/touren/select'
 import { saveServiceRecord } from '@/lib/admin/service-records'
+import { nachweisWerteAusEinsatz } from '@/lib/touren/leistungsnachweis'
 import { withTracking } from '@/lib/monitoring/tracker'
 
 async function ladeTour(admin: ReturnType<typeof createAdminClient>, id: string, organizationId: string) {
@@ -249,10 +250,36 @@ export const PATCH = withTracking(async function PATCH(
       || [caregiver?.first_name?.[0], caregiver?.last_name?.[0]].filter(Boolean).join('.') + '.'
     // Ohne Zeiten am Stop entstünde ein Nachweis über 00:00–00:00, also über
     // null Minuten — er sähe vollständig aus und wäre nicht abrechenbar.
+    // Leistungsart und Budget-Topf kommen aus dem EINSATZ, nicht aus einer
+    // festen Zeile. Vorher standen hier 'Alltagsbegleitung' und 'entlastung'
+    // fest verdrahtet: eine Haushaltshilfe wurde damit zum Alltagsbegleitungs-
+    // Tarif abgerechnet, und ein Verhinderungspflege-Einsatz verbrauchte still
+    // den Entlastungsbetrag nach § 45b statt des § 42a-Topfes. Beides faellt
+    // niemandem auf — der Nachweis sieht vollstaendig aus. Begruendung in
+    // lib/touren/leistungsnachweis.ts.
+    let nachweisWerte = null
+    if (stop.assignment_id) {
+      const { data: einsatz } = await admin
+        .from('assignments')
+        .select('service_type')
+        .eq('id', stop.assignment_id)
+        .eq('organization_id', auth.ctx.organizationId)
+        .maybeSingle()
+      nachweisWerte = nachweisWerteAusEinsatz(einsatz?.service_type as string | null | undefined)
+    }
+
     if (!stop.geplante_ankunft || !stop.geplantes_ende) {
       serviceRecordFehler =
         'Der Stop hat keine Zeiten — ein Leistungsnachweis darüber wäre null Minuten lang. '
         + 'Bitte Ankunft und Ende am Stop eintragen und den Nachweis erneut anlegen.'
+    } else if (!nachweisWerte) {
+      // Fail-closed statt Ersatzwert: ohne Leistungsart aus dem Einsatz waere
+      // jeder hier gesetzte Wert geraten — und wuerde den falschen Tarif und
+      // womoeglich den falschen Budget-Topf des Kunden belasten.
+      serviceRecordFehler =
+        'Zu diesem Stop ist keine Leistungsart am Einsatz hinterlegt — ohne sie '
+        + 'stünden Tarif und Budget-Topf des Nachweises nicht fest. Bitte die '
+        + 'Leistungsart am Einsatz eintragen und den Nachweis erneut anlegen.'
     } else {
       const gespeichert = await saveServiceRecord(admin, {
         client_id: stop.client_id,
@@ -260,8 +287,8 @@ export const PATCH = withTracking(async function PATCH(
         date: tour.tour_date,
         start_time: stop.geplante_ankunft.slice(0, 5),
         end_time: stop.geplantes_ende.slice(0, 5),
-        service_type: 'Alltagsbegleitung',
-        budget_type: 'entlastung',
+        service_type: nachweisWerte.service_type,
+        budget_type: nachweisWerte.budget_type,
         caregiver_initials: initialen,
         status: 'draft',
         notes: `Aus Tourenplanung, Tour ${tour.tour_date}, Stop ${stop.position}`,
