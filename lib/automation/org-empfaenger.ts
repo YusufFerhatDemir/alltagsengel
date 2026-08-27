@@ -46,11 +46,40 @@ export async function rollentraegerDerOrg(
   return (profile ?? []).map((p: { id: string }) => p.id)
 }
 
-/** Erster PDL/Admin der Organisation — Fallback-Verantwortlicher für automatisch erstellte Aufgaben. */
+/**
+ * Rollen, die den betrieblichen Meldungen der Automatisierungsketten
+ * zustehen: Fristablauf, fehlender Nachweis, Budgetgrenze, kritischer
+ * Vitalwert.
+ *
+ * BEFUND (28.08.2026): saemtliche Ketten riefen `['admin','superadmin']` —
+ * die Rolle `pdl` war NIRGENDS Empfängerin, obwohl die Variablen `pdlId`
+ * bzw. `pdlIds` heissen, die Kommentare „an PDL/Admin" sagen und eine
+ * ganze Kette `vitalwerte-pdl.ts` heisst. Die Pflegedienstleitung fuehrt
+ * den Betrieb (stammdaten/personal/einsatz/pflege/qm.schreiben,
+ * abrechnung.lesen) und ist genau die Stelle, an die ein kritischer
+ * Vitalwert oder eine ablaufende Verordnung gehoert. In einer
+ * Organisation, die eine PDL, aber keine Administration im Tagesbetrieb
+ * hat, gingen diese Meldungen ins Leere.
+ *
+ * `qm` steht bewusst NICHT hier: das Qualitaetsmanagement prueft, es
+ * disponiert nicht.
+ */
+export const BETRIEBS_EMPFAENGER_ROLLEN = ['admin', 'superadmin', 'pdl'] as const
+
+/**
+ * Verantwortlicher für automatisch erstellte Aufgaben.
+ *
+ * Reihenfolge ist Absicht: zuerst die PDL — sie fuehrt den Betrieb und
+ * bearbeitet diese Aufgaben — und erst wenn keine eingerichtet ist, die
+ * Administration. Vorher landeten ALLE automatisch erzeugten Aufgaben bei
+ * der Administration, auch wo eine PDL vorhanden war.
+ */
 export async function ersterPdlDerOrg(
   supabase: SupabaseClient,
   organizationId: string,
 ): Promise<string | null> {
-  const ids = await rollentraegerDerOrg(supabase, organizationId, ['admin', 'superadmin'])
-  return ids[0] ?? null
+  const pdl = await rollentraegerDerOrg(supabase, organizationId, ['pdl'])
+  if (pdl.length > 0) return pdl[0]
+  const admin = await rollentraegerDerOrg(supabase, organizationId, ['admin', 'superadmin'])
+  return admin[0] ?? null
 }

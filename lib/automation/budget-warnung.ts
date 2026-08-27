@@ -20,7 +20,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { pruefeBudget } from '@/lib/personal/einsatzfreigabe'
 import { heuteBerlin } from '@/lib/utils/timezone'
-import { rollentraegerDerOrg } from './org-empfaenger'
+import { rollentraegerDerOrg, BETRIEBS_EMPFAENGER_ROLLEN } from './org-empfaenger'
 import type { BudgetTyp } from '@/lib/config/budget-constants'
 
 const BUDGET_TYPEN: BudgetTyp[] = ['entlastung', 'verhinderungspflege']
@@ -60,7 +60,7 @@ export async function pruefeAlleBudgetsUndWarnen(
   const clientIds = Array.from(new Set((budgets ?? []).map((b: { client_id: string }) => b.client_id)))
   const fehler: string[] = []
   let gewarnt = 0
-  const empfaengerIds = await rollentraegerDerOrg(supabase, organizationId, ['admin', 'superadmin'])
+  const empfaengerIds = await rollentraegerDerOrg(supabase, organizationId, [...BETRIEBS_EMPFAENGER_ROLLEN])
 
   if (clientIds.length === 0 || empfaengerIds.length === 0) {
     return { geprueft: clientIds.length, gewarnt: 0, fehler }

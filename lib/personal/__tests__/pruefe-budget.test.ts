@@ -8,6 +8,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { pruefeBudget } from '../einsatzfreigabe'
 import { ENTLASTUNG_JAEHRLICH_EUR } from '@/lib/config/budget-constants'
+import { heuteBerlin } from '@/lib/utils/timezone'
 
 function mockClientBudgets(row: Record<string, unknown> | null, error: { message: string } | null = null) {
   return {
@@ -93,8 +94,21 @@ test('pruefeBudget: kein Budget hinterlegt (Selbstzahler) → Hinweis, kein Bloc
 // monat). Die Fälle unten setzen carryover_expires deshalb relativ zum
 // heutigen Tag, statt ein festes Datum zu unterstellen.
 
+/**
+ * Datum relativ zu HEUTE IN BERLIN — nicht in UTC.
+ *
+ * TESTBUG (28.08.2026, kein Produktionsfehler): der Helfer rechnete
+ * `new Date().toISOString().slice(0,10)`, also das UTC-Datum, während
+ * `pruefeBudget()` gegen `heuteBerlin()` vergleicht. Im Sommer liegt
+ * Berlin zwei Stunden vor UTC — zwischen 00:00 und 02:00 Berliner Zeit
+ * lieferte `tagVerschoben(0)` deshalb GESTERN, der Übertrag galt als
+ * verfallen und der Test „Übertrag gilt am Verfallstag selbst noch"
+ * schlug mit 100 statt 50 fehl. Nur der Test war falsch: die Regel
+ * `heute > verfaelltAm ? 0 : uebertrag` ist richtig und unverändert.
+ */
 function tagVerschoben(tage: number): string {
-  const d = new Date()
+  const [j, m, t] = heuteBerlin().split('-').map(Number)
+  const d = new Date(Date.UTC(j, m - 1, t))
   d.setUTCDate(d.getUTCDate() + tage)
   return d.toISOString().slice(0, 10)
 }
@@ -133,7 +147,9 @@ test('pruefeBudget: Übertrag gilt am Verfallstag selbst noch', async () => {
 
 test('pruefeBudget: ohne carryover_expires gilt der gesetzliche 30.06.', async () => {
   // Kein geratener Ersatzwert, sondern § 45b Abs. 1 S. 4 SGB XI selbst.
-  const imErstenHalbjahr = new Date().toISOString().slice(5, 10) <= '06-30'
+  // Ebenfalls gegen die Berliner Uhr — sonst kippt der Test in der Nacht
+  // vom 30.06. auf den 01.07. zwischen 00:00 und 02:00 Berliner Zeit.
+  const imErstenHalbjahr = heuteBerlin().slice(5, 10) <= '06-30'
   const supabase = mockClientBudgets({
     annual_amount: 1000, carryover_amount: 1000, carryover_expires: null,
     used_amount: 1000, combined_annual_amount: 0, combined_used_amount: 0,
