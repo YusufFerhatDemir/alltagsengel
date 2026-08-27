@@ -23,7 +23,7 @@ function schreibClient() {
   return { supabase: supabase as never, inserts }
 }
 
-const basis = { organizationId: 'org-1', woundId: 'w-1', erhobenVon: 'user-1' } as const
+const basis = { organizationId: 'org-1', woundId: 'w-1', wundStatus: 'aktiv' as const, erhobenVon: 'user-1' } as const
 
 test('createAssessment berechnet PUSH serverseitig aus den Rohdaten', async () => {
   const { supabase, inserts } = schreibClient()
@@ -51,6 +51,30 @@ test('createAssessment blockt fachlich unmögliche Werte', async () => {
     () => createAssessment(supabase, { ...basis, exsudatMenge: 'ueberschwemmung' as never }),
     /Ungültiger Wert/,
   )
+})
+
+test('createAssessment blockt neue Einträge bei abgeheilter Wunde', async () => {
+  const { supabase } = schreibClient()
+  await assert.rejects(
+    () => createAssessment(supabase, { ...basis, wundStatus: 'abgeheilt' }),
+    /abgeheilt/,
+  )
+})
+
+test('createAssessment blockt Erhebungszeitpunkt in der Zukunft', async () => {
+  const { supabase } = schreibClient()
+  const inZukunft = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+  await assert.rejects(
+    () => createAssessment(supabase, { ...basis, erhobenAm: inZukunft }),
+    /Zukunft/,
+  )
+})
+
+test('createAssessment akzeptiert einen Erhebungszeitpunkt innerhalb der Uhrenabweichungs-Toleranz', async () => {
+  const { supabase, inserts } = schreibClient()
+  const geradeEben = new Date(Date.now() + 60 * 1000).toISOString()
+  await createAssessment(supabase, { ...basis, erhobenAm: geradeEben })
+  assert.equal(inserts[0].erhoben_am, geradeEben)
 })
 
 test('createAssessment ohne Angaben speichert null-PUSH statt falscher 0', async () => {
