@@ -1,21 +1,28 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { WfEvent, ListWfEventsFilter } from './types'
+import { WF_EVENT_STATUS_WERTE, WF_MODUL_WERTE } from './types'
+import { pruefeEnum, pruefeLimit, pruefeOffset, STANDARD_LIMIT } from './validierung'
 
 export async function listEvents(
   supabase: SupabaseClient,
   filter: ListWfEventsFilter,
 ): Promise<WfEvent[]> {
+  const status = pruefeEnum(filter.status, WF_EVENT_STATUS_WERTE, 'status')
+  const modul = pruefeEnum(filter.modul, WF_MODUL_WERTE, 'modul')
+  const limit = pruefeLimit(filter.limit)
+  const offset = pruefeOffset(filter.offset)
+
   let query = supabase
     .from('wf_events')
     .select('*')
     .eq('organization_id', filter.organizationId)
     .order('created_at', { ascending: false })
 
-  if (filter.status) query = query.eq('status', filter.status)
-  if (filter.modul) query = query.eq('modul', filter.modul)
+  if (status) query = query.eq('status', status)
+  if (modul) query = query.eq('modul', modul)
   if (filter.eventTyp) query = query.eq('event_typ', filter.eventTyp)
-  if (filter.limit) query = query.limit(filter.limit)
-  if (filter.offset) query = query.range(filter.offset, filter.offset + (filter.limit ?? 50) - 1)
+  if (limit) query = query.limit(limit)
+  if (offset) query = query.range(offset, offset + (limit ?? STANDARD_LIMIT) - 1)
 
   const { data, error } = await query
   if (error) throw new Error(`Events konnten nicht geladen werden: ${error.message}`)

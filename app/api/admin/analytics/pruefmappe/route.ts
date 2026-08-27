@@ -1,6 +1,6 @@
 import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { erstellePruefmappe } from '@/lib/analytics/pruefmappe'
 import { withTracking } from '@/lib/monitoring/tracker'
@@ -18,7 +18,12 @@ export const GET = withTracking(async function GET(request: Request) {
   }
 
   try {
-    const supabase = await createClient()
+    // Service-Role statt RLS-Client: pflege_massnahmenplaene/pflege_massnahmen
+    // haben keine RLS-Policy für pdl/qm (nur is_admin() + Engel-Select). Ohne
+    // Service-Role zeigte die MDK-Prüfmappe die Kategorie "Maßnahmenplan"
+    // für PDL/QM immer als "keine_daten", selbst wenn ein aktiver Plan
+    // existiert — bei einer Prüfvorbereitung besonders riskant.
+    const supabase = createAdminClient()
     const mappe = await erstellePruefmappe(supabase, { organizationId: auth.ctx.organizationId, clientId, von, bis })
     return NextResponse.json(mappe)
   } catch (e: any) {

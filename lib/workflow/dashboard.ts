@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { WfEventDashboard, WfQueueStatusRow, WfDeadLetterUebersicht, WfStatistik } from './types'
+import { pruefeLimit } from './validierung'
 
 export interface WorkflowDashboard {
   statistik: WfStatistik | null
@@ -28,7 +29,7 @@ export async function listLetzteEvents(
     .from('wf_events_dashboard')
     .select('*')
     .eq('organization_id', params.organizationId)
-    .limit(params.limit ?? 20)
+    .limit(pruefeLimit(params.limit) ?? 20)
   if (error) throw new Error(`Events konnten nicht geladen werden: ${error.message}`)
   return (data ?? []) as WfEventDashboard[]
 }
@@ -41,7 +42,7 @@ export async function listQueueStatus(
     .from('wf_queue_status')
     .select('*')
     .eq('organization_id', params.organizationId)
-    .limit(params.limit ?? 20)
+    .limit(pruefeLimit(params.limit) ?? 20)
   if (error) throw new Error(`Warteschlangen-Status konnte nicht geladen werden: ${error.message}`)
   return (data ?? []) as WfQueueStatusRow[]
 }
@@ -54,7 +55,7 @@ export async function listDeadLetterUebersicht(
     .from('wf_dead_letter_uebersicht')
     .select('*')
     .eq('organization_id', params.organizationId)
-    .limit(params.limit ?? 20)
+    .limit(pruefeLimit(params.limit) ?? 20)
   if (error) throw new Error(`Dead-Letter-Uebersicht konnte nicht geladen werden: ${error.message}`)
   return (data ?? []) as WfDeadLetterUebersicht[]
 }

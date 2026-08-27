@@ -28,14 +28,14 @@ test('validiereSturzZeitpunkt lehnt ein Datum in der Zukunft ab', () => {
 
 test('validiereSturzZeitpunkt lehnt eine Uhrzeit in der Zukunft (heute) ab', () => {
   const heute = heuteBerlin()
-  // Statt eines festen "23:59" (flake-Risiko in den letzten Minuten vor
-  // Mitternacht) eine Stunde weit hinter der aktuellen Berlin-Zeit wählen,
-  // die garantiert noch am selben Kalendertag liegt.
-  const jetzt = berlinParts(new Date())
-  const stunde = Number(jetzt.hour)
-  const zukunftsZeit = stunde < 23
-    ? `${String(stunde + 1).padStart(2, '0')}:00`
-    : `23:${String(Math.min(Number(jetzt.minute) + 10, 59)).padStart(2, '0')}`
+  // 15 Minuten in der Zukunft — komfortabel jenseits des 5-Minuten-Puffers
+  // der Funktion, unabhängig davon, wie nah "jetzt" an der vollen Stunde
+  // liegt (ein früherer "nächste volle Stunde"-Ansatz scheiterte genau
+  // daran: kurz vor der vollen Stunde lag ":00" NÄHER als der Puffer).
+  // Restrisiko: in den letzten ~15 Minuten vor Mitternacht (Berlin) könnte
+  // "bald" bereits auf den Folgetag fallen — vernachlässigbares Zeitfenster.
+  const bald = berlinParts(new Date(Date.now() + 15 * 60 * 1000))
+  const zukunftsZeit = `${bald.hour}:${bald.minute}`
   assert.throws(
     () => validiereSturzZeitpunkt({ sturzDatum: heute, sturzUhrzeit: zukunftsZeit }),
     /Sturzuhrzeit darf nicht in der Zukunft/,
