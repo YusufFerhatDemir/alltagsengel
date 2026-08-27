@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { safeApiError } from '@/lib/api/error-sanitizer'
+import { apiErrorResponse, safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { requireMedAdmin } from '@/lib/medikamente/api-auth'
 import { logAuditEvent } from '@/lib/audit-log'
@@ -67,9 +67,7 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     })
 
     return NextResponse.json(created, { status: 201 })
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unbekannter Fehler'
-    const status = msg.includes('Pflichtfeld') || msg.includes('Ungültig') || msg.includes('muss') ? 400 : 500
-    return NextResponse.json({ error: msg }, { status })
+  } catch (e) {
+    return apiErrorResponse(e, req)
   }
 })

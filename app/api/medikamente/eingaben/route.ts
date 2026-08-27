@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { safeApiError } from '@/lib/api/error-sanitizer'
+import { apiErrorResponse, safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { requireMedUser } from '@/lib/medikamente/api-auth'
 import { listeEingaben, erfasseEingabe } from '@/lib/medikamente/medikamente'
@@ -47,6 +47,6 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     const data = await erfasseEingabe(sb, auth.organizationId, auth.userId, body)
     return NextResponse.json(data, { status: 201 })
   } catch (e) {
-    return safeApiError(e, req)
+    return apiErrorResponse(e, req)
   }
 })

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import type {
   Medikament,
   MedikamentEingabe,
@@ -20,31 +21,31 @@ const GUELTIGE_EINGABE_STATUS = ['geplant', 'gegeben', 'verweigert', 'ausgelasse
 
 export function validiereKategorie(k: string): asserts k is MedikamentKategorie {
   if (!GUELTIGE_KATEGORIEN.includes(k as MedikamentKategorie)) {
-    throw new Error(`Ungültige Kategorie: ${k}`)
+    throw new UserFacingError(`Ungültige Kategorie: ${k}`)
   }
 }
 
 export function validiereStatus(s: string): asserts s is MedikamentStatus {
   if (!GUELTIGE_STATUS.includes(s as MedikamentStatus)) {
-    throw new Error(`Ungültiger Status: ${s}`)
+    throw new UserFacingError(`Ungültiger Status: ${s}`)
   }
 }
 
 export function validiereMedikament(data: Record<string, unknown>): void {
   if (!data.medikament_name || typeof data.medikament_name !== 'string' || data.medikament_name.trim().length === 0) {
-    throw new Error('Medikamentenname ist ein Pflichtfeld.')
+    throw new UserFacingError('Medikamentenname ist ein Pflichtfeld.')
   }
   if (!data.dosierung || typeof data.dosierung !== 'string' || data.dosierung.trim().length === 0) {
-    throw new Error('Dosierung ist ein Pflichtfeld.')
+    throw new UserFacingError('Dosierung ist ein Pflichtfeld.')
   }
   if (!data.client_id || typeof data.client_id !== 'string') {
-    throw new Error('Klient muss zugeordnet sein.')
+    throw new UserFacingError('Klient muss zugeordnet sein.')
   }
   if (data.kategorie) validiereKategorie(data.kategorie as string)
 
   if (data.pzn && typeof data.pzn === 'string') {
     if (!/^\d{7,8}$/.test(data.pzn)) {
-      throw new Error('PZN muss 7 oder 8 Ziffern haben.')
+      throw new UserFacingError('PZN muss 7 oder 8 Ziffern haben.')
     }
   }
 
@@ -53,12 +54,12 @@ export function validiereMedikament(data: Record<string, unknown>): void {
   const abends = !!data.einnahme_abends
   const nachts = !!data.einnahme_nachts
   if (!morgens && !mittags && !abends && !nachts) {
-    throw new Error('Mindestens eine Einnahmezeit muss ausgewählt sein.')
+    throw new UserFacingError('Mindestens eine Einnahmezeit muss ausgewählt sein.')
   }
 
   if (data.beginn_datum && data.end_datum) {
     if (new Date(data.beginn_datum as string) > new Date(data.end_datum as string)) {
-      throw new Error('Enddatum darf nicht vor dem Beginndatum liegen.')
+      throw new UserFacingError('Enddatum darf nicht vor dem Beginndatum liegen.')
     }
   }
 }
@@ -146,6 +147,11 @@ export async function aktualisiereMedikament(
   id: string,
   updates: Record<string, unknown>,
 ): Promise<Medikament> {
+  const bestehend = await holeMedikament(sb, orgId, id)
+  if (!bestehend) throw new UserFacingError('Medikament nicht gefunden.', 404)
+  if (bestehend.status === 'abgesetzt') {
+    throw new UserFacingError('Abgesetztes Medikament kann nicht mehr bearbeitet werden. Für eine Reaktivierung zuerst den Status ändern.', 409)
+  }
   if (updates.kategorie) validiereKategorie(updates.kategorie as string)
 
   const allowed = [
@@ -179,13 +185,21 @@ export async function setzeMedikamentStatus(
   grund?: string,
 ): Promise<Medikament> {
   validiereStatus(status)
+  if (status === 'abgesetzt' && !grund?.trim()) {
+    throw new UserFacingError('Absetzgrund ist ein Pflichtfeld.')
+  }
   const row: Record<string, unknown> = {
     status,
     updated_at: new Date().toISOString(),
   }
   if (status === 'abgesetzt') {
     row.abgesetzt_am = new Date().toISOString()
-    row.abgesetzt_grund = grund || null
+    row.abgesetzt_grund = grund!.trim()
+  } else {
+    // Reaktivierung/Pausierung muss die Absetz-Historie löschen — sonst zeigt
+    // ein wieder aktives Medikament noch ein abgesetzt_am aus der Vergangenheit.
+    row.abgesetzt_am = null
+    row.abgesetzt_grund = null
   }
   const { data, error } = await sb
     .from('medikamente')
@@ -237,21 +251,30 @@ export async function erfasseEingabe(
   },
 ): Promise<MedikamentEingabe> {
   if (!GUELTIGE_EINNAHME_ZEITEN.includes(eingabe.einnahme_zeit as typeof GUELTIGE_EINNAHME_ZEITEN[number])) {
-    throw new Error(`Ungültige Einnahmezeit: ${eingabe.einnahme_zeit}`)
+    throw new UserFacingError(`Ungültige Einnahmezeit: ${eingabe.einnahme_zeit}`)
   }
   if (!GUELTIGE_EINGABE_STATUS.includes(eingabe.status as typeof GUELTIGE_EINGABE_STATUS[number])) {
-    throw new Error(`Ungültiger Eingabestatus: ${eingabe.status}`)
+    throw new UserFacingError(`Ungültiger Eingabestatus: ${eingabe.status}`)
+  }
+  if (eingabe.status === 'verweigert' && !eingabe.verweigert_grund?.trim()) {
+    throw new UserFacingError('Verweigerungsgrund ist bei Status "verweigert" ein Pflichtfeld.')
   }
 
   const { data: medikament, error: medErr } = await sb
     .from('medikamente')
-    .select('client_id')
+    .select('client_id, status')
     .eq('id', eingabe.medikament_id)
     .eq('organization_id', orgId)
     .maybeSingle()
-  if (medErr || !medikament) throw new Error('Medikament nicht gefunden.')
+  if (medErr || !medikament) throw new UserFacingError('Medikament nicht gefunden.', 404)
   if (medikament.client_id !== eingabe.client_id) {
-    throw new Error('Medikament gehört nicht zum angegebenen Klienten.')
+    throw new UserFacingError('Medikament gehört nicht zum angegebenen Klienten.')
+  }
+  if (medikament.status !== 'aktiv') {
+    throw new UserFacingError(
+      `Medikament ist nicht aktiv (Status: ${medikament.status}) — es kann keine neue Eingabe erfasst werden.`,
+      409,
+    )
   }
 
   const row = {
