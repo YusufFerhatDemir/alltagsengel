@@ -150,6 +150,28 @@ export const SYNC_ENTITY_REGISTRY: Record<OfflineEntityTyp, SyncEntityRegistryEi
   },
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/**
+ * Die Entity-ID stammt aus `payload.id` eines Queue-Items — also aus Daten,
+ * die das Geraet schickt. Sie wird an zwei Stellen weiterverwendet, und an
+ * beiden ist ein ungepruefter Wert schaedlich:
+ *
+ *  1. als Pfadsegment in resolveSyncRoute(): '../../admin/organizations'
+ *     normalisiert `new URL()` in apply.ts zu einem voellig anderen
+ *     Endpunkt — der Sync-Server ruft dann mit der Methode und dem Body des
+ *     Clients eine Route auf, die gar nicht in der Registry steht,
+ *  2. als Filter im Konflikt-Check: ein Wert, den Postgres nicht als uuid
+ *     lesen kann, laesst die Abfrage scheitern, die Fundstelle bleibt leer
+ *     und die Konflikterkennung wird stillschweigend uebersprungen.
+ *
+ * Alle synchronisierten Tabellen haben uuid-Primaerschluessel, deshalb ist
+ * die strikte Pruefung hier ohne Einschraenkung moeglich.
+ */
+export function istGueltigeEntityId(wert: unknown): wert is string {
+  return typeof wert === 'string' && UUID_RE.test(wert)
+}
+
 /** Löst Endpunkt + HTTP-Methode für eine Queue-Aktion auf. `null`, wenn nicht unterstützt. */
 export function resolveSyncRoute(
   eintrag: SyncEntityRegistryEintrag,
@@ -163,24 +185,39 @@ export function resolveSyncRoute(
   if (aktion === 'update') {
     if (!eintrag.updateEndpointVorlage) return null
     if (eintrag.updateEndpointVorlage.includes('{id}')) {
-      if (!id) return null
-      return { endpoint: eintrag.updateEndpointVorlage.replace('{id}', id), methode: eintrag.updateMethode }
+      if (!istGueltigeEntityId(id)) return null
+      return { endpoint: eintrag.updateEndpointVorlage.replace('{id}', encodeURIComponent(id)), methode: eintrag.updateMethode }
     }
     return { endpoint: eintrag.updateEndpointVorlage, methode: eintrag.updateMethode }
   }
   if (aktion === 'delete') {
     if (!eintrag.deleteEndpointVorlage) return null
     if (eintrag.deleteEndpointVorlage.includes('{id}')) {
-      if (!id) return null
-      return { endpoint: eintrag.deleteEndpointVorlage.replace('{id}', id), methode: eintrag.deleteMethode }
+      if (!istGueltigeEntityId(id)) return null
+      return { endpoint: eintrag.deleteEndpointVorlage.replace('{id}', encodeURIComponent(id)), methode: eintrag.deleteMethode }
     }
     return { endpoint: eintrag.deleteEndpointVorlage, methode: eintrag.deleteMethode }
   }
   return null
 }
 
-/** Extrahiert die Entity-ID aus dem Queue-Item-Payload (für Update/Delete/Konflikt-Check). */
+/**
+ * Extrahiert die Entity-ID aus dem Queue-Item-Payload (für Update/Delete/
+ * Konflikt-Check). Liefert `null`, wenn keine oder keine gueltige uuid
+ * vorliegt — siehe istGueltigeEntityId() zu den Folgen eines ungeprueften
+ * Werts.
+ */
 export function extrahiereEntityId(payload: Record<string, unknown>): string | null {
-  const id = payload.id
-  return typeof id === 'string' && id.length > 0 ? id : null
+  return istGueltigeEntityId(payload?.id) ? payload.id as string : null
+}
+
+/**
+ * true, wenn der Payload zwar eine `id` mitbringt, diese aber unbrauchbar
+ * ist. Der Aufrufer muss diesen Fall von "gar keine id" unterscheiden: ohne
+ * id ist ein 'create' regulaer, mit kaputter id ist das Queue-Item fehlerhaft
+ * und darf NICHT als konfliktfrei durchlaufen.
+ */
+export function hatUngueltigeEntityId(payload: Record<string, unknown>): boolean {
+  const id = payload?.id
+  return id !== undefined && id !== null && !istGueltigeEntityId(id)
 }
