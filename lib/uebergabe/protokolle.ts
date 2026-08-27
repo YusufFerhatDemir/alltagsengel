@@ -32,6 +32,31 @@ export interface CreateProtokollParams {
   zusammenfassung?: string | null
 }
 
+/**
+ * Mandantenschutz für uebernehmerCaregiverIds aus dem Body: die Spalte ist
+ * ein uuid[] ohne FK-Möglichkeit auf caregivers, und weder die RLS-Insert-
+ * Policy noch der Abschluss-Trigger prüfen ihren Inhalt. Ohne diese Prüfung
+ * könnte ein Protokoll Betreuungskräfte einer fremden Organisation als
+ * vorgesehene Empfänger eintragen.
+ */
+export async function caregiverIdsGehoerenZuOrg(
+  supabase: SupabaseClient,
+  caregiverIds: string[],
+  organizationId: string,
+): Promise<boolean> {
+  const eindeutig = [...new Set(caregiverIds)]
+  if (eindeutig.length === 0) return true
+
+  const { data, error } = await supabase
+    .from('caregivers')
+    .select('id')
+    .eq('organization_id', organizationId)
+    .in('id', eindeutig)
+
+  if (error) throw new Error(`Betreuungskräfte konnten nicht geprüft werden: ${error.message}`)
+  return (data ?? []).length === eindeutig.length
+}
+
 export interface ListProtokolleFilter {
   organizationId: string
   datumVon?: string

@@ -78,7 +78,7 @@ export async function schalteZugangFrei(
     return
   }
 
-  await db.from('coach_freischaltungen').insert({
+  const { error } = await db.from('coach_freischaltungen').insert({
     coach_user_id: coachUserId,
     bestellung_id: bestellungId,
     quelle: 'selbstzahler',
@@ -86,6 +86,29 @@ export async function schalteZugangFrei(
     gueltig_von: heuteBerlin(),
     gueltig_bis: gueltigBis,
   })
+
+  // Stripe liefert Webhook-Ereignisse "at least once" ohne Reihenfolge-
+  // garantie: zwei nahezu gleichzeitige Zustellungen können den SELECT
+  // oben beide vor dem jeweils anderen INSERT sehen. uq_coach_freischal-
+  // tungen_bestellung (Migration 20261009000002) fängt den zweiten INSERT
+  // dann als 23505 ab — die zuerst angelegte Zeile ist die gültige, wir
+  // schreiben ihr nur noch den aktuellen Stand fort statt zu duplizieren.
+  if (error?.code === '23505') {
+    const { data: bestehend } = await db
+      .from('coach_freischaltungen')
+      .select('id')
+      .eq('bestellung_id', bestellungId)
+      .single()
+    if (bestehend) {
+      await db
+        .from('coach_freischaltungen')
+        .update({ status: 'aktiv', gueltig_bis: gueltigBis })
+        .eq('id', bestehend.id)
+    }
+    return
+  }
+
+  if (error) throw new Error(`Freischaltung konnte nicht gespeichert werden: ${error.message}`)
 }
 
 /**

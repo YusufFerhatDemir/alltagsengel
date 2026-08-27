@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { requireUebergabeUser } from '@/lib/uebergabe/api-auth'
-import { createProtokoll, listProtokolle } from '@/lib/uebergabe/protokolle'
+import { caregiverIdsGehoerenZuOrg, createProtokoll, listProtokolle } from '@/lib/uebergabe/protokolle'
 import type { ProtokollStatus, Schicht } from '@/lib/uebergabe/types'
 import { safeErrorResponse } from '@/lib/utils/api-error'
 import { withTracking } from '@/lib/monitoring/tracker'
@@ -45,6 +45,11 @@ export const POST = withTracking(async function POST(request: Request) {
 
     const supabase = auth.ctx.istAdmin ? createAdminClient() : await createClient()
 
+    const uebernehmerCaregiverIds = Array.isArray(body.uebernehmerCaregiverIds) ? body.uebernehmerCaregiverIds : []
+    if (!(await caregiverIdsGehoerenZuOrg(supabase, uebernehmerCaregiverIds, auth.ctx.organizationId))) {
+      return NextResponse.json({ error: 'Eine oder mehrere Betreuungskräfte gehören nicht zur Organisation.' }, { status: 404 })
+    }
+
     const protokoll = await createProtokoll(supabase, {
       // Engel schreiben mit eigenem Client — dort setzt current_org_id() die Org.
       organizationId: auth.ctx.istAdmin ? auth.ctx.organizationId : undefined,
@@ -53,7 +58,7 @@ export const POST = withTracking(async function POST(request: Request) {
       tourId: body.tourId ?? null,
       uebergeberId: auth.ctx.userId,
       uebergeberName: auth.ctx.name,
-      uebernehmerCaregiverIds: Array.isArray(body.uebernehmerCaregiverIds) ? body.uebernehmerCaregiverIds : [],
+      uebernehmerCaregiverIds,
       zusammenfassung: body.zusammenfassung ?? null,
     })
 

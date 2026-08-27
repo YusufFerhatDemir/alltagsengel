@@ -13,10 +13,13 @@ export const GET = withTracking(async function GET(request: Request) {
     if (!auth.ok) return auth.response
 
     const limitParam = new URL(request.url).searchParams.get('limit')
+    const limit = limitParam ? Number(limitParam) : undefined
+    if (limit !== undefined && (!Number.isInteger(limit) || limit <= 0)) {
+      return NextResponse.json({ error: 'limit muss eine positive Ganzzahl sein.' }, { status: 400 })
+    }
+
     const supabase = auth.ctx.istAdmin ? createAdminClient() : await createClient()
-    const punkte = await listOffeneHandlungsbedarfe(
-      supabase, auth.ctx.organizationId, limitParam ? Number(limitParam) : undefined,
-    )
+    const punkte = await listOffeneHandlungsbedarfe(supabase, auth.ctx.organizationId, limit)
 
     return NextResponse.json({ punkte })
   } catch (err) {

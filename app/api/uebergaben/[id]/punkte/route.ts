@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireUebergabeUser } from '@/lib/uebergabe/api-auth'
 import { getProtokoll } from '@/lib/uebergabe/protokolle'
 import { createPunkt, listPunkte } from '@/lib/uebergabe/punkte'
+import { clientGehoertZuOrg } from '@/lib/clients/organization-guard'
 import { safeErrorResponse } from '@/lib/utils/api-error'
 import { withTracking } from '@/lib/monitoring/tracker'
 
@@ -40,6 +41,14 @@ export const POST = withTracking(async function POST(request: Request, { params 
     const protokoll = await getProtokoll(supabase, id, auth.ctx.organizationId)
     if (!protokoll) {
       return NextResponse.json({ error: 'Übergabeprotokoll nicht gefunden.' }, { status: 404 })
+    }
+
+    // Mandantenschutz: client_id hat keinen Org-Bezug in der Tabelle selbst
+    // (nur organization_id des Punktes wird vom Trigger geprüft) — ohne
+    // diese Prüfung könnte insbesondere die Service-Role-Route (istAdmin)
+    // einen Übergabepunkt unter einem fremden Klienten anlegen.
+    if (body.clientId && !(await clientGehoertZuOrg(supabase, body.clientId, auth.ctx.organizationId))) {
+      return NextResponse.json({ error: 'Klient nicht gefunden oder gehört nicht zur Organisation.' }, { status: 404 })
     }
 
     const punkt = await createPunkt(supabase, {
