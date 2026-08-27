@@ -4,7 +4,14 @@ import { createQualifikation, listQualifikationen, updateQualifikation, deleteQu
 
 function mockInsertClient(data: Record<string, unknown>) {
   return {
-    from: () => ({
+    // Seit dem Mandanten-Fence (lib/personal/organization-guard.ts) liest
+    // createQualifikation zuerst `caregivers`.
+    from: (tabelle: string) => tabelle === 'caregivers' ? ({
+      select: () => {
+        const lese: any = { eq: () => lese, maybeSingle: async () => ({ data: { id: 'cg-1' }, error: null }) }
+        return lese
+      },
+    }) : ({
       insert: () => ({
         select: () => ({
           single: async () => ({ data, error: null }),
@@ -51,7 +58,7 @@ test('createQualifikation: wirft bei leerem Titel', async () => {
       organizationId: 'org-1',
       caregiverId: 'cg-1',
       title: '',
-      qualificationType: 'zertifikat',
+      qualificationType: 'sonstige',
     }),
     /Pflichtfeld/,
   )
@@ -60,7 +67,13 @@ test('createQualifikation: wirft bei leerem Titel', async () => {
 test('createQualifikation: setzt Defaults korrekt', async () => {
   const inserted: Record<string, unknown>[] = []
   const supabase = {
-    from: () => ({
+    // `caregivers` = Mandanten-Fence vor dem Schreiben.
+    from: (tabelle: string) => tabelle === 'caregivers' ? ({
+      select: () => {
+        const lese: any = { eq: () => lese, maybeSingle: async () => ({ data: { id: 'cg-1' }, error: null }) }
+        return lese
+      },
+    }) as any : ({
       insert(payload: Record<string, unknown>) {
         inserted.push(payload)
         return {
@@ -79,7 +92,7 @@ test('createQualifikation: setzt Defaults korrekt', async () => {
     organizationId: 'org-1',
     caregiverId: 'cg-1',
     title: 'Erweitertes Führungszeugnis',
-    qualificationType: 'nachweis',
+    qualificationType: 'fuehrungszeugnis',
   })
 
   assert.equal(inserted.length, 1)
@@ -92,7 +105,13 @@ test('createQualifikation: setzt Defaults korrekt', async () => {
 test('createQualifikation: pflicht + einsatzrelevant werden durchgereicht', async () => {
   const inserted: Record<string, unknown>[] = []
   const supabase = {
-    from: () => ({
+    // `caregivers` = Mandanten-Fence vor dem Schreiben.
+    from: (tabelle: string) => tabelle === 'caregivers' ? ({
+      select: () => {
+        const lese: any = { eq: () => lese, maybeSingle: async () => ({ data: { id: 'cg-1' }, error: null }) }
+        return lese
+      },
+    }) as any : ({
       insert(payload: Record<string, unknown>) {
         inserted.push(payload)
         return {
@@ -111,7 +130,7 @@ test('createQualifikation: pflicht + einsatzrelevant werden durchgereicht', asyn
     organizationId: 'org-1',
     caregiverId: 'cg-1',
     title: 'Erste Hilfe',
-    qualificationType: 'schulung',
+    qualificationType: 'fortbildung',
     pflicht: true,
     einsatzrelevant: true,
     validUntil: '2028-12-31',

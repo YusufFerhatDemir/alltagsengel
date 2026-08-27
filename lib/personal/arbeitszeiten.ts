@@ -6,6 +6,7 @@ import {
   type PersonalArbeitszeit, type ArbeitszeitKonto,
   type ArbeitszeitQuelle, type ArbeitszeitStatus,
 } from './types'
+import { assertCaregiverInOrg } from './organization-guard'
 
 export interface CreateArbeitszeitParams {
   organizationId: string
@@ -25,6 +26,12 @@ export interface CreateArbeitszeitParams {
 export async function createArbeitszeit(supabase: SupabaseClient, params: CreateArbeitszeitParams): Promise<PersonalArbeitszeit> {
   assertErlaubt(params.quelle, ARBEITSZEIT_QUELLE_WERTE, 'quelle')
   assertPlausibleZeiten({ istMinuten: params.istMinuten, pauseMinuten: params.pauseMinuten })
+
+  // Mandanten-Fence VOR dem Schreiben (lib/personal/organization-guard.ts).
+  // personal_arbeitszeitkonto joint `caregivers` ohne Mandanten-Bedingung —
+  // eine Zeit auf einen fremden Mitarbeiter haette dessen Klarnamen in das
+  // eigene Arbeitszeitkonto geholt.
+  await assertCaregiverInOrg(supabase, params.caregiverId, params.organizationId)
 
   const { data, error } = await supabase
     .from('personal_arbeitszeiten')

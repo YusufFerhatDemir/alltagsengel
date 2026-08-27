@@ -12,7 +12,9 @@ export const PATCH = withTracking(async function PATCH(request: Request, { param
   const supabase = createAdminClient()
   try {
     const body = await request.json()
-    const data = await updateQualifikation(supabase, id, auth.ctx.organizationId, body)
+    // Der Prüfvermerk (`verifiziert`) trägt den angemeldeten Benutzer ein —
+    // `verifiziert_von`/`verifiziert_am` sind bewusst keine Body-Felder mehr.
+    const data = await updateQualifikation(supabase, id, auth.ctx.organizationId, body, auth.ctx.userId)
     return NextResponse.json(data)
   } catch (e: any) {
     return apiErrorResponse(e, request)
