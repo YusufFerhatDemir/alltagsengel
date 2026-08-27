@@ -81,10 +81,17 @@ describe('P0-2: requirePflegeUser lehnt User ohne Profil ab', () => {
   const src = read(API_AUTH)
   const fn = src.slice(src.indexOf('export async function requirePflegeUser'))
 
+  // Seit dem 28.08.2026 liest der Guard beide Rollenquellen ueber
+  // holeRollenQuellen() (lib/auth/rollen-quelle.ts). Die fehlende
+  // Profil-Zeile heisst dort `!quellen.profilRolle` statt `!profile` —
+  // die Aussage ist unveraendert: gueltiger Token ohne Personendatensatz
+  // ist kein Zugang.
+  const FEHLT_PRUEFUNG = 'if (!quellen.profilRolle)'
+
   it('gibt 403 "Kein Profil gefunden." zurück, wenn keine Profil-Zeile existiert', () => {
-    expect(fn).toMatch(/if\s*\(\s*!profile\s*\)/)
+    expect(fn).toContain(FEHLT_PRUEFUNG)
     expect(fn).toMatch(/Kein Profil gefunden\./)
-    const check = fn.slice(fn.indexOf('if (!profile'))
+    const check = fn.slice(fn.indexOf(FEHLT_PRUEFUNG))
     expect(check.slice(0, 300)).toMatch(/status:\s*403/)
   })
 
@@ -94,7 +101,7 @@ describe('P0-2: requirePflegeUser lehnt User ohne Profil ab', () => {
   })
 
   it('der !profile-Check steht vor dem Erfolgs-Return', () => {
-    const checkAt = fn.indexOf('if (!profile')
+    const checkAt = fn.indexOf(FEHLT_PRUEFUNG)
     // Nicht die Typ-Signatur ({ ok: true; userId… }), sondern das Erfolgs-return treffen.
     const okAt = fn.indexOf('return { ok: true')
     expect(checkAt).toBeGreaterThan(-1)

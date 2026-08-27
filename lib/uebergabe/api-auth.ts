@@ -6,8 +6,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from 'next/server'
-import { rolleDarf } from '@/lib/auth/guard'
-import type { Berechtigung } from '@/lib/auth/rollen'
+import { holeRollenQuellen, quellenDuerfen } from '@/lib/auth/rollen-quelle'
+import { wirksamDarf, type Berechtigung } from '@/lib/auth/rollen'
 import { createClient } from '@/lib/supabase/server'
 import { resolveUserOrgId } from '@/lib/organizations/server'
 
@@ -18,6 +18,15 @@ export interface UebergabeAuthContext {
   name: string
   caregiverId: string | null
   istAdmin: boolean
+  /**
+   * Beide Rollenquellen, damit spaetere Pruefungen (requireUebergabeAdmin)
+   * exakt dieselbe Regel anwenden wie der Einstieg. Ueber `role` allein
+   * ginge das nicht: das ist der Anzeigename der wirksamen Rolle, und bei
+   * zwei gleich weiten, aber verschiedenen Rollen entscheidet nur die
+   * Schnittmenge richtig (siehe lib/auth/rollen.ts).
+   */
+  appRolle: string
+  profilRolle: string
 }
 
 export type UebergabeAuthResult =
@@ -35,28 +44,22 @@ const EINSATZ_ROLLEN = ['engel', 'caregiver', 'mitarbeiter']
 /** Jeder angemeldete Mitarbeitende mit gültiger Organisation. */
 export async function requireUebergabeUser(): Promise<UebergabeAuthResult> {
   const supabase = await createClient()
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
+  const quellen = await holeRollenQuellen(supabase)
+  if (!quellen) {
     return { ok: false, response: NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 }) }
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, first_name, last_name')
-    .eq('id', user.id)
-    .single()
-
   // Gültiger Token ohne Profil-Zeile darf nicht still durchrutschen.
-  if (!profile) {
+  if (!quellen.profilRolle) {
     return { ok: false, response: NextResponse.json({ error: 'Kein Profil gefunden.' }, { status: 403 }) }
   }
 
-  const role = profile.role ?? 'engel'
+  const role = quellen.rolle || 'engel'
   // Kunden und Angehörige haben in der Dienstübergabe nichts zu suchen.
   // Übergaben enthalten Gesundheitsdaten — Verwaltungsrollen brauchen
   // dafür 'pflege.lesen' (also admin/superadmin/pdl/qm, nicht die
   // Buchhaltung).
-  if (!rolleDarf(role, 'pflege.lesen') && !EINSATZ_ROLLEN.includes(role)) {
+  if (!quellenDuerfen(quellen, 'pflege.lesen') && !EINSATZ_ROLLEN.includes(role)) {
     return { ok: false, response: NextResponse.json({ error: 'Keine Berechtigung für Übergaben.' }, { status: 403 }) }
   }
 
@@ -70,22 +73,24 @@ export async function requireUebergabeUser(): Promise<UebergabeAuthResult> {
   const { data: caregiver } = await supabase
     .from('caregivers')
     .select('id')
-    .eq('user_id', user.id)
+    .eq('user_id', quellen.userId)
     .maybeSingle()
 
-  const name = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || 'Alltagsengel'
+  const name = quellen.name
 
   return {
     ok: true,
     ctx: {
-      userId: user.id,
+      userId: quellen.userId,
       organizationId,
       role,
       name,
       caregiverId: caregiver?.id ?? null,
+      appRolle: quellen.appRolle,
+      profilRolle: quellen.profilRolle,
       // „istAdmin" heisst hier: darf protokollübergreifend arbeiten.
       // Das ist an die Schreibberechtigung für Pflegedaten gebunden.
-      istAdmin: rolleDarf(role, 'pflege.schreiben'),
+      istAdmin: quellenDuerfen(quellen, 'pflege.schreiben'),
     },
   }
 }
@@ -96,7 +101,7 @@ export async function requireUebergabeAdmin(
 ): Promise<UebergabeAuthResult> {
   const auth = await requireUebergabeUser()
   if (!auth.ok) return auth
-  if (!rolleDarf(auth.ctx.role, berechtigung)) {
+  if (!wirksamDarf(auth.ctx.appRolle, auth.ctx.profilRolle, berechtigung)) {
     return { ok: false, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
   }
   return auth

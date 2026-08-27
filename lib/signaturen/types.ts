@@ -4,6 +4,8 @@
 // supabase/migrations/20260821020000_digitale_signaturen.sql
 // ═══════════════════════════════════════════════════════════════
 
+import { UserFacingError } from '@/lib/api/user-facing-error'
+
 export type SignaturDokumentTyp =
   | 'leistungsnachweis' | 'vertrag' | 'pflegebericht'
   | 'protokoll' | 'einwilligung' | 'sonstiges'
@@ -123,57 +125,82 @@ export interface SignaturAuditFilter {
 }
 
 // ── Validierung ──────────────────────────────────────────────────
+//
+// UserFacingError statt nacktem Error: die Meldungen nennen Feld und
+// erlaubte Werte — also genau die Auskunft, die den Tippfehler behebt.
+// Ein nackter Error wird vom Sanitizer fail-closed zu „Interner
+// Serverfehler" verkuerzt und kaeme beim Nutzer nie an (gleiche Stelle
+// wie in lib/personal, faa0972).
 
 export function validiereDokumentTyp(t: string): asserts t is SignaturDokumentTyp {
   if (!SIGNATUR_DOKUMENT_TYPEN.includes(t as SignaturDokumentTyp)) {
-    throw new Error(`Ungültiger Dokumenttyp: ${t}`)
+    throw new UserFacingError(`Ungültiger Dokumenttyp: ${t}. Zulässig: ${SIGNATUR_DOKUMENT_TYPEN.join(', ')}`)
   }
 }
 
 export function validiereSignaturStatus(s: string): asserts s is SignaturStatus {
   if (!SIGNATUR_STATUS_WERTE.includes(s as SignaturStatus)) {
-    throw new Error(`Ungültiger Status: ${s}`)
+    throw new UserFacingError(`Ungültiger Status: ${s}. Zulässig: ${SIGNATUR_STATUS_WERTE.join(', ')}`)
   }
 }
 
 export function validiereMethode(m: string): asserts m is SignaturMethode {
   if (!SIGNATUR_METHODEN.includes(m as SignaturMethode)) {
-    throw new Error(`Ungültige Signaturmethode: ${m}`)
+    throw new UserFacingError(`Ungültige Signaturmethode: ${m}. Zulässig: ${SIGNATUR_METHODEN.join(', ')}`)
   }
 }
 
 export function validiereSHA256(hash: string): void {
   if (!/^[a-f0-9]{64}$/.test(hash)) {
-    throw new Error('Ungültiger SHA-256-Hash (erwartet: 64 Hex-Zeichen).')
+    throw new UserFacingError('Ungültiger SHA-256-Hash (erwartet: 64 Hex-Zeichen in Kleinschreibung).')
   }
 }
 
 export function validiereISO8601(ts: string): void {
   const d = new Date(ts)
   if (isNaN(d.getTime())) {
-    throw new Error(`Ungültiger Zeitstempel: ${ts} (ISO 8601 erwartet).`)
+    throw new UserFacingError(`Ungültiger Zeitstempel: ${ts} (ISO 8601 erwartet).`)
   }
 }
 
+/**
+ * Liegt ein Inhalts-Schnappschuss vor, ist der Hash eine ABLEITUNG davon
+ * und darf fehlen — erstelleDokument() berechnet ihn dann selbst und
+ * weist einen mitgeschickten, abweichenden Wert zurueck. Ohne
+ * Schnappschuss bleibt der Hash Pflicht: sonst stuende in der Spalte ein
+ * Nachweis, den nichts belegt.
+ */
 export function validiereDokumentInput(data: Record<string, unknown>): void {
   if (!data.titel || typeof data.titel !== 'string' || data.titel.trim().length === 0) {
-    throw new Error('Dokumenttitel ist ein Pflichtfeld.')
+    throw new UserFacingError('Dokumenttitel ist ein Pflichtfeld.')
   }
   validiereDokumentTyp(data.dokument_typ as string)
-  if (!data.dokument_hash_sha256 || typeof data.dokument_hash_sha256 !== 'string') {
-    throw new Error('Dokument-Hash (SHA-256) ist ein Pflichtfeld.')
+
+  const hatSnapshot =
+    typeof data.dokument_inhalt_snapshot === 'string'
+    && data.dokument_inhalt_snapshot.length > 0
+
+  const hash = data.dokument_hash_sha256
+  if (typeof hash === 'string' && hash.length > 0) {
+    validiereSHA256(hash)
+    return
   }
-  validiereSHA256(data.dokument_hash_sha256)
+
+  if (!hatSnapshot) {
+    throw new UserFacingError(
+      'Dokument-Hash (SHA-256) ist ein Pflichtfeld — oder übergeben Sie dokument_inhalt_snapshot, dann wird er berechnet.',
+    )
+  }
 }
 
 export function validiereSignaturInput(data: Record<string, unknown>): void {
   if (!data.dokument_id || typeof data.dokument_id !== 'string') {
-    throw new Error('Dokument muss zugeordnet sein.')
+    throw new UserFacingError('Dokument muss zugeordnet sein.')
   }
   if (!data.signatar_id || typeof data.signatar_id !== 'string') {
-    throw new Error('Signatar muss zugeordnet sein.')
+    throw new UserFacingError('Signatar muss zugeordnet sein.')
   }
   if (!data.signatar_name || typeof data.signatar_name !== 'string') {
-    throw new Error('Signatarname ist ein Pflichtfeld.')
+    throw new UserFacingError('Signatarname ist ein Pflichtfeld.')
   }
 }

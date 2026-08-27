@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { rolleDarf } from '@/lib/auth/guard'
+import { holeRollenQuellen, quellenDuerfen } from '@/lib/auth/rollen-quelle'
 import type { Berechtigung } from '@/lib/auth/rollen'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId, resolveUserOrgId } from '@/lib/organizations/server'
@@ -26,18 +26,12 @@ export async function requireAngehAdmin(
   berechtigung: Berechtigung = 'stammdaten.lesen'
 ): Promise<AngehAuthResult> {
   const supabase = await createClient()
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
+  const quellen = await holeRollenQuellen(supabase)
+  if (!quellen) {
     return { ok: false, response: NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 }) }
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, first_name, last_name')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile || !rolleDarf(profile.role, berechtigung)) {
+  if (!quellenDuerfen(quellen, berechtigung)) {
     return { ok: false, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
   }
 
@@ -46,11 +40,11 @@ export async function requireAngehAdmin(
     return { ok: false, response: NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 }) }
   }
 
-  const name = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || 'Alltagsengel'
+  const name = quellen.name
 
   return {
     ok: true,
-    ctx: { userId: user.id, organizationId, role: profile.role, name },
+    ctx: { userId: quellen.userId, organizationId, role: quellen.rolle, name },
   }
 }
 
@@ -59,25 +53,19 @@ export async function requireAngehUser(): Promise<
   | { ok: false; response: NextResponse }
 > {
   const supabase = await createClient()
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) {
+  const quellen = await holeRollenQuellen(supabase)
+  if (!quellen) {
     return { ok: false, response: NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 }) }
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile) {
+  if (!quellen.profilRolle) {
     return { ok: false, response: NextResponse.json({ error: 'Kein Profil.' }, { status: 403 }) }
   }
 
   // Rollenprüfung: Nur Benutzer mit der Rolle "angehoerige" dürfen zugreifen.
   // Admins/Superadmins werden ebenfalls durchgelassen (für Verwaltungszwecke).
   const erlaubteRollen = ['angehoerige', 'admin', 'superadmin']
-  if (!erlaubteRollen.includes(profile.role)) {
+  if (!erlaubteRollen.includes(quellen.rolle)) {
     return { ok: false, response: NextResponse.json({ error: 'Zugriff nur fuer Angehoerige.' }, { status: 403 }) }
   }
 
@@ -86,5 +74,5 @@ export async function requireAngehUser(): Promise<
     return { ok: false, response: NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 }) }
   }
 
-  return { ok: true, userId: user.id, role: profile.role, organizationId }
+  return { ok: true, userId: quellen.userId, role: quellen.rolle, organizationId }
 }

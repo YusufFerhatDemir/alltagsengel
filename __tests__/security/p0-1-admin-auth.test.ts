@@ -21,7 +21,14 @@ const { mockGetUser, mockFromSelect, mockCreateServerClient } = vi.hoisted(() =>
   const mockFromSelect = vi.fn()
   const mockCreateServerClient = vi.fn(() => ({
     auth: { getUser: mockGetUser },
-    from: () => ({ select: () => ({ eq: () => ({ single: mockFromSelect }) }) }),
+    // maybeSingle zusaetzlich zu single: proxy.ts liest die profiles-Zeile
+    // seit dem 28.08.2026 mit maybeSingle() — eine fehlende Zeile ist dort
+    // ein regulaerer Fall („keine Rolle"), kein Fehler.
+    from: () => ({
+      select: () => ({
+        eq: () => ({ single: mockFromSelect, maybeSingle: mockFromSelect }),
+      }),
+    }),
   }))
   return { mockGetUser, mockFromSelect, mockCreateServerClient }
 })
@@ -172,7 +179,18 @@ describe('P0-1: Admin-Routenschutz (Fail-Closed)', () => {
     expect(res.url).toContain('/engel/home')
   })
 
-  it('Admin-Benutzer (app_metadata) → Zugriff erlaubt', async () => {
+  // ───────────────────────────────────────────────────────────────
+  // Rollenquelle ab 28.08.2026
+  //
+  // Bis dahin galt „app_metadata gewinnt, profiles nur als Fallback" —
+  // profiles wurde gar nicht erst abgefragt, wenn app_metadata gesetzt
+  // war. Jetzt ist profiles BINDEND und app_metadata wirkt nur
+  // einschraenkend (wirksameRolle, lib/auth/rollen.ts). Die beiden
+  // folgenden Tests setzen deshalb beide Quellen; die zwei danach halten
+  // fest, was die alte Regel durchgelassen haette.
+  // ───────────────────────────────────────────────────────────────
+
+  it('Admin-Benutzer (beide Quellen einig) → Zugriff erlaubt', async () => {
     mockGetUser.mockResolvedValue({
       data: {
         user: {
@@ -183,6 +201,7 @@ describe('P0-1: Admin-Routenschutz (Fail-Closed)', () => {
       },
       error: null,
     })
+    mockFromSelect.mockResolvedValue({ data: { role: 'admin' }, error: null })
 
     const req = createMockRequest('/admin/dashboard')
     const res = await proxy(req)
@@ -191,7 +210,7 @@ describe('P0-1: Admin-Routenschutz (Fail-Closed)', () => {
     expect(res.type).not.toBe('redirect')
   })
 
-  it('Superadmin → Zugriff erlaubt', async () => {
+  it('Superadmin (beide Quellen einig) → Zugriff erlaubt', async () => {
     mockGetUser.mockResolvedValue({
       data: {
         user: {
@@ -202,11 +221,60 @@ describe('P0-1: Admin-Routenschutz (Fail-Closed)', () => {
       },
       error: null,
     })
+    mockFromSelect.mockResolvedValue({ data: { role: 'superadmin' }, error: null })
 
     const req = createMockRequest('/admin/users')
     const res = await proxy(req)
 
     expect(res.type).not.toBe('redirect')
+  })
+
+  it('app_metadata=admin OHNE profiles-Zeile → kein Zugriff', async () => {
+    // Ein Token ohne zugehoerigen Personendatensatz ist kein Zugang.
+    // Unter der alten Regel kam dieser Fall durch.
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: 'geist-001', app_metadata: { role: 'admin' }, user_metadata: {} } },
+      error: null,
+    })
+    mockFromSelect.mockResolvedValue({ data: null, error: null })
+
+    const res = await proxy(createMockRequest('/admin/dashboard'))
+
+    expect(res.type).toBe('redirect')
+    expect(res.url).toContain('login')
+  })
+
+  it('in der Datenbank herabgestuft (app_metadata=admin, profiles=kunde) → kein Admin-Zugriff', async () => {
+    // Der Kernfall des Tracks: app_metadata.role schreibt nur
+    // /api/admin/manage-role. Eine Herabstufung direkt in der Datenbank
+    // liess den alten, hoeheren Wert im Token stehen — und dieser
+    // Torwaechter liess die Person weiter herein, waehrend die
+    // Fach-Guards in lib/**/api-auth.ts bereits abwiesen.
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: 'ex-admin', app_metadata: { role: 'admin' }, user_metadata: {} } },
+      error: null,
+    })
+    mockFromSelect.mockResolvedValue({ data: { role: 'kunde' }, error: null })
+
+    const res = await proxy(createMockRequest('/admin/dashboard'))
+
+    expect(res.type).toBe('redirect')
+    expect(res.url).toContain('/kunde/home')
+  })
+
+  it('profiles-Abfrage mit Fehler → fail-closed zum Login', async () => {
+    // supabase-js wirft bei PostgREST-Fehlern nicht; ohne ausdrueckliche
+    // Pruefung des zurueckgegebenen Fehlers bliebe der Fall unbemerkt.
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: 'admin-789', app_metadata: { role: 'admin' }, user_metadata: {} } },
+      error: null,
+    })
+    mockFromSelect.mockResolvedValue({ data: null, error: { message: 'connection reset' } })
+
+    const res = await proxy(createMockRequest('/admin/dashboard'))
+
+    expect(res.type).toBe('redirect')
+    expect(res.url).toContain('login')
   })
 
   it('Admin per DB-Fallback (app_metadata leer) → Zugriff erlaubt', async () => {

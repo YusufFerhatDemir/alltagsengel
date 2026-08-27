@@ -43,7 +43,10 @@ vi.mock('@/lib/supabase/server', () => ({
       if (tabelle !== 'profiles') throw new Error(`Unerwartete Tabelle: ${tabelle}`)
       return {
         select: () => ({
-          eq: () => ({ single: () => profileMock() }),
+          // maybeSingle zusaetzlich zu single: holeRollenQuellen() liest die
+          // profiles-Zeile mit maybeSingle() — eine fehlende Zeile ist ein
+          // regulaerer Fall („keine Rolle"), kein Fehler.
+          eq: () => ({ single: () => profileMock(), maybeSingle: () => profileMock() }),
         }),
       }
     },

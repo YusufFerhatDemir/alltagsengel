@@ -1,6 +1,6 @@
 // Server-seitiger Admin-Check für die Abrechnungs-API-Routen.
 import { NextResponse } from 'next/server'
-import { rolleDarf } from '@/lib/auth/guard'
+import { holeRollenQuellen, quellenDuerfen } from '@/lib/auth/rollen-quelle'
 import type { Berechtigung } from '@/lib/auth/rollen'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
@@ -42,16 +42,11 @@ export async function requireAdmin(
   berechtigung: Berechtigung = 'abrechnung.lesen'
 ): Promise<{ ok: true } | { ok: false; response: NextResponse }> {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  const quellen = await holeRollenQuellen(supabase)
+  if (!quellen) {
     return { ok: false, response: NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 }) }
   }
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-  if (!profile || !rolleDarf(profile.role, berechtigung)) {
+  if (!quellenDuerfen(quellen, berechtigung)) {
     return { ok: false, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
   }
   // MFA-Prüfung: Admin mit Faktor muss auf AAL2 sein
@@ -81,16 +76,11 @@ export async function requireAdminMitOrg(
   | { ok: false; response: NextResponse }
 > {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  const quellen = await holeRollenQuellen(supabase)
+  if (!quellen) {
     return { ok: false, response: NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 }) }
   }
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-  if (!profile || !rolleDarf(profile.role, berechtigung)) {
+  if (!quellenDuerfen(quellen, berechtigung)) {
     return { ok: false, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
   }
   // MFA-Prüfung: Admin mit Faktor muss auf AAL2 sein
@@ -102,5 +92,5 @@ export async function requireAdminMitOrg(
     return { ok: false, response: NextResponse.json({ error: 'Keine Organisation zugewiesen' }, { status: 403 }) }
   }
 
-  return { ok: true, userId: user.id, organizationId }
+  return { ok: true, userId: quellen.userId, organizationId }
 }

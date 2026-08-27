@@ -1,23 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { requireSigAdmin } from '@/lib/signaturen/api-auth'
 import { listeDokumente, erstelleDokument } from '@/lib/signaturen/signaturen'
 import { SIGNATUR_DOKUMENT_TYPEN, type SignaturDokumentTyp } from '@/lib/signaturen/types'
 import { withTracking } from '@/lib/monitoring/tracker'
 
+// Dienstschluessel, weil signatur_dokumente live NUR eine is_admin()-Policy
+// traegt (28.08.2026 aus pg_policies gelesen). pdl/qm/buchhaltung kamen
+// ueber den Guard herein und bekamen mit dem RLS-Client eine LEERE Liste
+// ohne Fehler. Der Fence liegt deshalb im Code: organizationId aus dem
+// Auth-Kontext UND die Erlaubnisliste der Dokumentarten aus dem Guard —
+// beides in JEDER Abfrage, siehe lib/signaturen/signaturen.ts.
+
 export const GET = withTracking(async function GET(req: NextRequest) {
-  const auth = await requireSigAdmin('einsatz.lesen')
+  const auth = await requireSigAdmin('lesen')
   if (!auth.ok) return auth.response
 
   const url = new URL(req.url)
-  const dokument_typ = url.searchParams.get('dokument_typ') || undefined
+  const roh = url.searchParams.get('dokument_typ') || undefined
+  const dokument_typ =
+    roh && SIGNATUR_DOKUMENT_TYPEN.includes(roh as SignaturDokumentTyp)
+      ? (roh as SignaturDokumentTyp)
+      : undefined
 
   try {
-    const supabase = await createClient()
-    const dokumente = await listeDokumente(supabase, auth.ctx.organizationId, {
-      dokument_typ: dokument_typ && SIGNATUR_DOKUMENT_TYPEN.includes(dokument_typ as SignaturDokumentTyp) ? dokument_typ as SignaturDokumentTyp : undefined,
-    })
+    const dokumente = await listeDokumente(
+      createAdminClient(),
+      auth.ctx.organizationId,
+      auth.ctx.sichtbareTypen,
+      { dokument_typ },
+    )
     return NextResponse.json(dokumente)
   } catch (err) {
     return safeApiError(err, req)
@@ -25,17 +38,20 @@ export const GET = withTracking(async function GET(req: NextRequest) {
 })
 
 export const POST = withTracking(async function POST(req: NextRequest) {
-  const auth = await requireSigAdmin('einsatz.schreiben')
+  const auth = await requireSigAdmin('schreiben')
   if (!auth.ok) return auth.response
 
   try {
     const body = await req.json()
-    const supabase = await createClient()
-    const dokument = await erstelleDokument(supabase, auth.ctx.organizationId, auth.ctx.userId, body)
+    const dokument = await erstelleDokument(
+      createAdminClient(),
+      auth.ctx.organizationId,
+      auth.ctx.userId,
+      body,
+      auth.ctx.sichtbareTypen,
+    )
     return NextResponse.json(dokument, { status: 201 })
   } catch (err) {
-    const msg = (err as Error).message
-    const status = msg.includes('Pflichtfeld') || msg.includes('Ungültig') ? 400 : 500
-    return NextResponse.json({ error: msg }, { status })
+    return safeApiError(err, req)
   }
 })

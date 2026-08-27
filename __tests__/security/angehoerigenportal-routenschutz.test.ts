@@ -18,7 +18,14 @@ const { mockGetUser, mockFromSelect, mockCreateServerClient } = vi.hoisted(() =>
   const mockFromSelect = vi.fn()
   const mockCreateServerClient = vi.fn(() => ({
     auth: { getUser: mockGetUser },
-    from: () => ({ select: () => ({ eq: () => ({ single: mockFromSelect }) }) }),
+    // maybeSingle zusaetzlich zu single: proxy.ts liest die profiles-Zeile
+    // seit dem 28.08.2026 mit maybeSingle() — eine fehlende Zeile ist dort
+    // ein regulaerer Fall („keine Rolle"), kein Fehler.
+    from: () => ({
+      select: () => ({
+        eq: () => ({ single: mockFromSelect, maybeSingle: mockFromSelect }),
+      }),
+    }),
   }))
   return { mockGetUser, mockFromSelect, mockCreateServerClient }
 })
@@ -64,11 +71,21 @@ function createMockRequest(url: string) {
 
 import { proxy } from '../../proxy'
 
+/**
+ * Nutzer mit einer Rolle, die in BEIDEN autoritativen Quellen steht.
+ *
+ * Bis zum 28.08.2026 genuegte hier app_metadata: proxy.ts fragte profiles
+ * gar nicht erst ab, wenn app_metadata.role gesetzt war. Seitdem ist
+ * profiles bindend und app_metadata wirkt nur einschraenkend
+ * (wirksameRolle, lib/auth/rollen.ts) — der Doppelgaenger muss die
+ * profiles-Zeile deshalb mitliefern, sonst gaebe es gar keine Rolle.
+ */
 function alsNutzer(rolle: string) {
   mockGetUser.mockResolvedValue({
     data: { user: { id: 'u-1', app_metadata: { role: rolle }, user_metadata: {} } },
     error: null,
   })
+  mockFromSelect.mockResolvedValue({ data: { role: rolle }, error: null })
 }
 
 describe('Angehoerigenportal: serverseitiger Routenschutz', () => {

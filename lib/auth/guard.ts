@@ -16,8 +16,9 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import {
-  hatAlleBerechtigungen,
-  istAdministration,
+  wirksamDarfAlle,
+  wirksamIstAdministration,
+  wirksameRolle,
   type Berechtigung,
 } from './rollen'
 
@@ -61,20 +62,35 @@ async function pruefeAal2(supabase: SupabaseClient): Promise<NextResponse | null
 /**
  * Autoritative Rolle des angemeldeten Nutzers.
  *
- * Reihenfolge wie in proxy.ts:
- *   1. app_metadata.role — nur ueber die Admin-API setzbar
- *   2. profiles.role     — durch prevent_role_escalation geschuetzt
+ * BEIDE nicht selbst beschreibbaren Quellen werden gelesen:
+ *   app_metadata.role — nur ueber die GoTrue-Admin-API setzbar
+ *   profiles.role     — durch prevent_role_escalation geschuetzt
  * user_metadata wird NICHT gelesen: dort kann sich jeder Nutzer selbst
  * eintragen, was er moechte.
+ *
+ * Bis 2026-08-28 stand hier `appRole || profile?.role` — app_metadata
+ * gewann, und profiles kam nur zum Zug, wenn app_metadata leer war. Damit
+ * war eine Herabstufung in der Datenbank in dieser Schicht WIRKUNGSLOS,
+ * solange der alte, hoehere Wert in app_metadata stehenblieb (er wird nur
+ * von /api/admin/manage-role gepflegt). Die Entscheidungsregel liegt jetzt
+ * einheitlich in lib/auth/rollen.ts: profiles bindend, app_metadata nur
+ * einschraenkend — siehe den Block „Zwei autoritative Quellen" dort.
  */
 export async function holeRolle(): Promise<
-  { userId: string; rolle: string; name: string; supabase: SupabaseClient } | null
+  {
+    userId: string
+    rolle: string
+    appRolle: string
+    profilRolle: string
+    name: string
+    supabase: SupabaseClient
+  } | null
 > {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  const appRole = (user.app_metadata?.role as string | undefined) || ''
+  const appRolle = typeof user.app_metadata?.role === 'string' ? user.app_metadata.role : ''
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -82,11 +98,22 @@ export async function holeRolle(): Promise<
     .eq('id', user.id)
     .maybeSingle()
 
-  const rolle = appRole || profile?.role || ''
-  if (!rolle) return null
+  const profilRolle = typeof profile?.role === 'string' ? profile.role : ''
+
+  // Ohne profiles-Rolle gibt es keine Berechtigung — auch dann nicht, wenn
+  // app_metadata eine traegt. Ein Token ohne zugehoerigen Personendatensatz
+  // ist kein Zugang.
+  if (!profilRolle) return null
 
   const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'Alltagsengel'
-  return { userId: user.id, rolle, name, supabase }
+  return {
+    userId: user.id,
+    rolle: wirksameRolle(appRolle, profilRolle),
+    appRolle,
+    profilRolle,
+    name,
+    supabase,
+  }
 }
 
 export interface BerechtigungsOptionen {
@@ -112,7 +139,7 @@ export async function requireBerechtigung(
   const auth = await holeRolle()
   if (!auth) return fehler(401, 'Nicht autorisiert.')
 
-  if (!hatAlleBerechtigungen(auth.rolle, noetig)) {
+  if (!wirksamDarfAlle(auth.appRolle, auth.profilRolle, noetig)) {
     return fehler(403, 'Für diesen Bereich fehlt Ihnen die Berechtigung.')
   }
 
@@ -141,7 +168,9 @@ export async function requireAdministration(
 ): Promise<GuardErgebnis> {
   const auth = await holeRolle()
   if (!auth) return fehler(401, 'Nicht autorisiert.')
-  if (!istAdministration(auth.rolle)) return fehler(403, 'Nur für Administratoren.')
+  if (!wirksamIstAdministration(auth.appRolle, auth.profilRolle)) {
+    return fehler(403, 'Nur für Administratoren.')
+  }
 
   if (!optionen.ohneMfa) {
     const block = await pruefeAal2(auth.supabase)

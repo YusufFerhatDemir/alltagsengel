@@ -264,3 +264,142 @@ export function rolleDarf(rolle: string | null | undefined, berechtigung: Berech
   if (!istVerwaltungsrolle(rolle)) return false
   return hatBerechtigung(rolle, berechtigung)
 }
+
+// ───────────────────────────────────────────────────────────────────────
+// Zwei autoritative Quellen — eine Antwort
+// ───────────────────────────────────────────────────────────────────────
+//
+// Grundsatz 2 nennt ZWEI Quellen, die beide nicht vom Nutzer selbst
+// beschreibbar sind: `app_metadata.role` (nur ueber die GoTrue-Admin-API)
+// und `profiles.role` (durch prevent_role_escalation geschuetzt).
+// Ueber Jahre haben sich daraus zwei GEGENLAEUFIGE Lesarten entwickelt:
+//
+//   proxy.ts, lib/auth/guard.ts und app/admin/layout.tsx lasen
+//     `app_metadata.role || profiles.role` — app_metadata gewinnt,
+//     profiles wird gar nicht erst abgefragt, wenn app_metadata gesetzt ist.
+//   Die dreizehn Fach-Guards (lib/**/api-auth.ts) lasen ausschliesslich
+//     `profiles.role` und kannten app_metadata nicht.
+//
+// Damit hing die Antwort auf „darf diese Person das?" davon ab, WELCHE
+// Schicht gefragt wurde. Praktisch bedeutsam ist die Richtung des
+// Rechteentzugs: wird eine Rolle in der Datenbank herabgestuft — der
+// dokumentierte Weg fuer 'superadmin', und der einzige Weg fuer jede
+// Korrektur ausserhalb von /api/admin/manage-role — dann bleibt der alte,
+// hoehere Wert in app_metadata stehen. Der Torwaechter (proxy.ts) liess
+// die Person danach weiter in den Verwaltungsbereich, die Fach-Guards
+// wiesen sie ab. Ein Entzug, der nur zur Haelfte wirkt, ist kein Entzug.
+//
+// REGEL AB HIER: Widersprechen sich die Quellen, gilt die SCHWAECHERE.
+// Genauer, und das ist die Fassung, die entscheidet:
+//
+//   * `profiles` ist IMMER bindend. Fehlt der Datensatz oder traegt er
+//     keine (oder eine unbekannte) Rolle, gibt es keine Berechtigung —
+//     ganz gleich, was in app_metadata steht. Das entspricht dem
+//     bisherigen Verhalten der Fach-Guards (`!profile` ⇒ 403) und macht
+//     aus einem verwaisten Token keinen Zugang.
+//   * Ist `app_metadata.role` gesetzt, wirkt es NUR noch einschraenkend:
+//     gewaehrt wird die SCHNITTMENGE beider Berechtigungslisten.
+//   * Ist `app_metadata.role` nicht gesetzt, entscheidet `profiles` allein
+//     (unveraenderter Bestandsfall — bei den allermeisten Konten ist
+//     app_metadata.role nie geschrieben worden).
+//
+// Die Regel kann per Konstruktion nur Rechte NEHMEN, nie geben: jede
+// Aenderung an dieser Stelle ist damit rueckwaertskompatibel im Sinne der
+// Sicherheit. Eine Rechte-VERGABE verlangt weiterhin, dass beide Quellen
+// zustimmen — /api/admin/manage-role schreibt genau deshalb beide.
+// ───────────────────────────────────────────────────────────────────────
+
+function gesetzt(wert: string | null | undefined): wert is string {
+  return typeof wert === 'string' && wert.trim() !== ''
+}
+
+/**
+ * Berechtigungen, die nach BEIDEN Quellen zusammen gelten.
+ *
+ * `profilRolle` ist bindend: ist sie nicht gesetzt oder unbekannt, ist das
+ * Ergebnis leer. Eine gesetzte `appRolle` schraenkt zusaetzlich ein.
+ */
+export function wirksameBerechtigungen(
+  appRolle: string | null | undefined,
+  profilRolle: string | null | undefined,
+): readonly Berechtigung[] {
+  const ausProfil = berechtigungenVon(profilRolle)
+  if (ausProfil.length === 0) return []
+  if (!gesetzt(appRolle)) return ausProfil
+  const ausApp = new Set(berechtigungenVon(appRolle))
+  return ausProfil.filter(b => ausApp.has(b))
+}
+
+/**
+ * Die Form, die die Guards benutzen: eine Berechtigung gegen beide
+ * Quellen. Ersetzt `rolleDarf(profile.role, …)` ueberall dort, wo ein
+ * angemeldeter Nutzer geprueft wird.
+ */
+export function wirksamDarf(
+  appRolle: string | null | undefined,
+  profilRolle: string | null | undefined,
+  berechtigung: Berechtigung,
+): boolean {
+  return wirksameBerechtigungen(appRolle, profilRolle).includes(berechtigung)
+}
+
+/** Mindestens eine der genannten Berechtigungen, ueber beide Quellen. */
+export function wirksamDarfEines(
+  appRolle: string | null | undefined,
+  profilRolle: string | null | undefined,
+  berechtigungen: readonly Berechtigung[],
+): boolean {
+  const wirksam = wirksameBerechtigungen(appRolle, profilRolle)
+  return berechtigungen.some(b => wirksam.includes(b))
+}
+
+/** Alle genannten Berechtigungen, ueber beide Quellen. */
+export function wirksamDarfAlle(
+  appRolle: string | null | undefined,
+  profilRolle: string | null | undefined,
+  berechtigungen: readonly Berechtigung[],
+): boolean {
+  const wirksam = wirksameBerechtigungen(appRolle, profilRolle)
+  return berechtigungen.every(b => wirksam.includes(b))
+}
+
+/**
+ * Vorbehaltsbereiche (Tarife, Benutzerverwaltung, Systemeinstellungen).
+ * Beide gesetzten Quellen muessen Administration sagen.
+ */
+export function wirksamIstAdministration(
+  appRolle: string | null | undefined,
+  profilRolle: string | null | undefined,
+): boolean {
+  if (!istAdministration(profilRolle)) return false
+  if (!gesetzt(appRolle)) return true
+  return istAdministration(appRolle)
+}
+
+/** Darf der Verwaltungsbereich ueberhaupt betreten werden? */
+export function wirksamIstVerwaltungsrolle(
+  appRolle: string | null | undefined,
+  profilRolle: string | null | undefined,
+): boolean {
+  return wirksameBerechtigungen(appRolle, profilRolle).length > 0
+}
+
+/**
+ * Rollenname fuer Anzeige und Protokoll.
+ *
+ * Entschieden wird ueber die Berechtigungen (oben) — dieser Wert ist die
+ * Beschriftung dazu. Widersprechen sich die Quellen, steht hier die
+ * engere: das ist die, nach der tatsaechlich gehandelt wurde. Bei
+ * gleicher Weite gewinnt `profiles`, weil dort der Personendatensatz
+ * gefuehrt wird.
+ */
+export function wirksameRolle(
+  appRolle: string | null | undefined,
+  profilRolle: string | null | undefined,
+): string {
+  if (!gesetzt(profilRolle)) return ''
+  if (!gesetzt(appRolle) || appRolle === profilRolle) return profilRolle
+  return berechtigungenVon(appRolle).length < berechtigungenVon(profilRolle).length
+    ? appRolle
+    : profilRolle
+}
