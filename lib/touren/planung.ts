@@ -140,6 +140,50 @@ export function pruefeWochenkapazitaet(input: KapazitaetsInput): KapazitaetsErge
   return { ueberlastet: false, auslastungProzent: prozent, text: null }
 }
 
+export interface VorlagenStop {
+  client_id?: unknown
+  dauer_minuten?: unknown
+  service_type?: string
+  notes?: string
+}
+
+/**
+ * Prueft die Stop-Liste einer Tour-Vorlage, bevor daraus Zeiten gerechnet
+ * werden.
+ *
+ * `tour_templates.stops` ist ein jsonb-Array ohne jede Struktur-Zusage — der
+ * CHECK-Constraint deckt nur `weekday` ab. Beim Anwenden wurde `dauer_minuten`
+ * ungeprueft aufaddiert: fehlte das Feld oder stand Text darin, ergab
+ * `zeiger += undefined` NaN, `minutenZuZeit(NaN)` lieferte "NaN:NaN", und
+ * dieser Wert ging als Uhrzeit an die Einsatz-Anlage — Postgres antwortete
+ * mit einem rohen Formatfehler (HTTP 500). Eine negative Dauer erzeugte
+ * stillschweigend einen Stop, dessen Ende vor seiner Ankunft liegt.
+ *
+ * @returns Fehlermeldung oder null
+ */
+export function pruefeVorlagenStops(stops: VorlagenStop[]): string | null {
+  if (!Array.isArray(stops) || stops.length === 0) {
+    return 'Vorlage enthält keine Stops.'
+  }
+  for (const [i, stop] of stops.entries()) {
+    const nr = i + 1
+    if (typeof stop?.client_id !== 'string' || stop.client_id.trim() === '') {
+      return `Vorlage, Stop ${nr}: client_id fehlt.`
+    }
+    const dauer = stop.dauer_minuten
+    if (typeof dauer !== 'number' || !Number.isFinite(dauer) || !Number.isInteger(dauer)) {
+      return `Vorlage, Stop ${nr}: dauer_minuten muss eine ganze Zahl von Minuten sein (gefunden: ${JSON.stringify(dauer)}).`
+    }
+    if (dauer <= 0) {
+      return `Vorlage, Stop ${nr}: dauer_minuten muss größer als 0 sein (gefunden: ${dauer}).`
+    }
+    if (dauer > 1440) {
+      return `Vorlage, Stop ${nr}: dauer_minuten übersteigt einen ganzen Tag (${dauer} Minuten).`
+    }
+  }
+  return null
+}
+
 /** Gesamtminuten einer Stop-Liste: Einsatzzeit + Fahrzeit. */
 export function tourGesamtMinuten(stops: PlanStop[]): number {
   return stops.reduce((summe, stop) => {

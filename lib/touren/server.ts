@@ -9,6 +9,8 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { fahrtZwischenPlz } from './fahrtzeit'
+import { assertStopZeiten } from './stops'
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import { istVerfuegbar, zeitZuMinuten, type Zeitfenster } from '@/lib/availability'
 
 export interface StopInput {
@@ -96,6 +98,20 @@ export async function aufloeseStops(
 
     if (!stop.client_id || !stop.geplante_ankunft || !stop.geplantes_ende) {
       return { stops: [], fehler: 'Jeder Stop braucht assignment_id ODER client_id + geplante_ankunft + geplantes_ende.' }
+    }
+
+    // Zeitformat und Null-Einsatz pruefen, BEVOR daraus ein assignment wird.
+    // `assignments` hat keinen CHECK auf die Zeiten: ein Tippfehler kam vorher
+    // als roher Postgres-Fehler zurueck, und ein Stop "10:00-10:00" legte
+    // einen Einsatz ohne Dauer an, den der Doppelbelegungs-Trigger
+    // folgerichtig ignoriert.
+    try {
+      assertStopZeiten(stop.geplante_ankunft, stop.geplantes_ende)
+    } catch (err) {
+      return {
+        stops: [],
+        fehler: err instanceof UserFacingError ? err.message : 'Stop-Zeiten sind ungültig.',
+      }
     }
 
     const { data: client, error: clientError } = await admin

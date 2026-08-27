@@ -152,19 +152,47 @@ export const POST = withTracking(async function POST(
     .filter(s => s.assignment_id && !['ABGESCHLOSSEN', 'AUSGEFALLEN'].includes(s.status))
     .map(s => s.assignment_id as string)
 
+  // Bricht das Umhaengen mitten in der Liste ab (typisch: die Vertretung hat
+  // beim dritten Stop selbst schon einen Termin), muessen die bereits
+  // umgehaengten Einsaetze zurueck. Vorher blieben sie beim neuen
+  // Mitarbeiter stehen, waehrend die Tour weiter dem alten gehoerte: die
+  // ersten Einsaetze standen im Kalender der Vertretung, die restlichen beim
+  // Erkrankten, und niemand sah, dass die Tour halb uebertragen war.
+  const umgehaengt: string[] = []
+  const urspruenglicherCaregiver = tour.caregiver_id
+  async function nimmZurueck(): Promise<string | null> {
+    const gescheitert: string[] = []
+    for (const aId of umgehaengt) {
+      const { error } = await admin
+        .from('assignments')
+        .update({ caregiver_id: urspruenglicherCaregiver })
+        .eq('id', aId)
+      if (error) gescheitert.push(aId)
+    }
+    return gescheitert.length > 0
+      ? ` ACHTUNG: ${gescheitert.length} bereits umgehängte Einsätze konnten NICHT zurückgenommen werden `
+        + `(${gescheitert.join(', ')}) — bitte manuell prüfen.`
+      : ''
+  }
+
   for (const assignmentId of offeneAssignments) {
     const { error: aError } = await admin
       .from('assignments')
       .update({ caregiver_id: neuer_caregiver_id })
       .eq('id', assignmentId)
     if (aError) {
+      const nachsatz = await nimmZurueck()
       if (aError.message.includes('DOPPELBELEGUNG')) {
         return NextResponse.json({
-          error: `Vertretung hat einen Terminkonflikt: ${aError.message}`,
+          error: `Vertretung hat einen Terminkonflikt: ${aError.message} — die Tour wurde NICHT übertragen.${nachsatz}`,
         }, { status: 409 })
       }
-      return NextResponse.json({ error: uebersetzeDbFehler(aError) }, { status: 500 })
+      return NextResponse.json(
+        { error: `${uebersetzeDbFehler(aError)} — die Tour wurde NICHT übertragen.${nachsatz}` },
+        { status: 500 },
+      )
     }
+    umgehaengt.push(assignmentId)
   }
 
   // Tour selbst umhängen; ursprünglichen Mitarbeiter festhalten
@@ -179,7 +207,13 @@ export const POST = withTracking(async function POST(
     .select(TOUR_SELECT)
     .single()
   if (updateError) {
-    return NextResponse.json({ error: uebersetzeDbFehler(updateError) }, { status: 500 })
+    // Die Einsaetze haengen bereits am neuen Mitarbeiter, die Tour nicht —
+    // ohne Ruecknahme waere genau das der halb uebertragene Zustand.
+    const nachsatz = await nimmZurueck()
+    return NextResponse.json(
+      { error: `${uebersetzeDbFehler(updateError)} — die Tour wurde NICHT übertragen.${nachsatz}` },
+      { status: 500 },
+    )
   }
 
   // Fahrtzeiten neu: Startpunkt ist jetzt die Wohn-PLZ der Vertretung

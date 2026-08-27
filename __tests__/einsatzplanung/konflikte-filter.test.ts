@@ -89,7 +89,20 @@ describe('ladeKonflikte — Filterbau', () => {
     const aufruf = fake.ersterAuf('assignments')
     expect(hatFilter(aufruf, 'or', `caregiver_id.eq.${CG},client_id.eq.${KL}`)).toBe(true)
     expect(hatOrgFence(aufruf, ORG)).toBe(true)
-    expect(hatFilter(aufruf, 'eq', 'assignment_date', TAG)).toBe(true)
+  })
+
+  it('lädt Vortag und Folgetag mit — sonst bliebe der Nachteinsatz unsichtbar', async () => {
+    // Seit 20261012000000 rechnet der DB-Trigger Nachteinsaetze ueber den
+    // Tageswechsel. Ein `eq(assignment_date)` haette den Nachteinsatz des
+    // Vortages und den Fruehdienst des Folgetages gar nicht erst geladen —
+    // die Vorabpruefung haette gruenes Licht gegeben, wo die Datenbank
+    // blockiert.
+    const fake = erstelleFakeSupabase(() => ({ data: [] }))
+    await ladeKonflikte(fake.client, ORG, kandidat)
+    const aufruf = fake.ersterAuf('assignments')
+    expect(hatFilter(aufruf, 'eq', 'assignment_date', TAG)).toBe(false)
+    expect(hatFilter(aufruf, 'gte', 'assignment_date', '2026-09-09')).toBe(true)
+    expect(hatFilter(aufruf, 'lte', 'assignment_date', '2026-09-11')).toBe(true)
   })
 
   it('weist eine caregiver_id zurück, die den Filterausdruck aufbricht', async () => {
@@ -127,7 +140,11 @@ describe('ladeKonflikte — Filterbau', () => {
     await ladeKonflikte(fake.client, ORG, { ...kandidat, assignment_date: null, weekday: 1 })
     const aufruf = fake.ersterAuf('assignments')
     expect(hatFilter(aufruf, 'is', 'assignment_date', null)).toBe(true)
-    expect(hatFilter(aufruf, 'eq', 'weekday', 1)).toBe(true)
+    // Wochentag PLUS Nachbartage: die Sonntagsnacht (0/7) muss gegen die
+    // Montagsfrueh gehalten werden koennen.
+    const weekdayFilter = aufruf?.filter.find(f => f.methode === 'in' && f.spalte === 'weekday')
+    expect(weekdayFilter).toBeDefined()
+    expect(weekdayFilter?.wert).toEqual(expect.arrayContaining([0, 1, 2, 7]))
   })
 
   it('fragt gar nicht, wenn weder Datum noch Wochentag vorliegen', async () => {
