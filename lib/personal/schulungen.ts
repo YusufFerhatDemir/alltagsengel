@@ -1,6 +1,34 @@
 import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { assertErlaubt, SCHULUNGSART_WERTE, type PersonalSchulung, type Schulungsart } from './types'
+import { assertCaregiverInOrg } from './organization-guard'
+
+const DATUM_RE = /^\d{4}-\d{2}-\d{2}$/
+
+function istDatum(wert: unknown): wert is string {
+  return typeof wert === 'string' && DATUM_RE.test(wert.trim())
+}
+
+/**
+ * Prueft den Schulungszeitraum.
+ *
+ * `beginn` ist live NOT NULL: fehlte das Feld, ging `undefined` an die
+ * Datenbank und kam als 23502 zurueck — vom Sanitizer zu einem 500er ohne
+ * Klartext verkuerzt. Ein Ende VOR dem Beginn wurde bisher anstandslos
+ * gespeichert und stand danach so im Nachweis.
+ */
+export function assertSchulungszeitraum(beginn: unknown, ende: unknown): void {
+  if (!istDatum(beginn)) {
+    throw new UserFacingError('Beginn ist ein Pflichtfeld im Format JJJJ-MM-TT.', 400)
+  }
+  if (ende == null || ende === '') return
+  if (!istDatum(ende)) {
+    throw new UserFacingError('Ende muss im Format JJJJ-MM-TT sein.', 400)
+  }
+  if (String(ende).trim() < String(beginn).trim()) {
+    throw new UserFacingError('Das Ende der Schulung darf nicht vor dem Beginn liegen.', 400)
+  }
+}
 
 export interface CreateSchulungParams {
   organizationId: string
@@ -23,6 +51,10 @@ export interface CreateSchulungParams {
 export async function createSchulung(supabase: SupabaseClient, params: CreateSchulungParams): Promise<PersonalSchulung> {
   if (!params.titel?.trim()) throw new UserFacingError('Titel ist ein Pflichtfeld.')
   assertErlaubt(params.schulungsart, SCHULUNGSART_WERTE, 'schulungsart')
+  assertSchulungszeitraum(params.beginn, params.ende)
+
+  // Mandanten-Fence VOR dem Schreiben (lib/personal/organization-guard.ts).
+  await assertCaregiverInOrg(supabase, params.caregiverId, params.organizationId)
 
   const { data, error } = await supabase
     .from('personal_schulungen')
@@ -111,7 +143,7 @@ export async function updateSchulung(
 
   const { data: bestand, error: ladeFehler } = await supabase
     .from('personal_schulungen')
-    .select('bestanden')
+    .select('bestanden, beginn, ende')
     .eq('id', id)
     .eq('organization_id', organizationId)
     .maybeSingle()
@@ -126,6 +158,20 @@ export async function updateSchulung(
         409,
       )
     }
+  }
+
+  // Einseitige Verschiebung: das nicht mitgeschickte Feld kommt aus dem
+  // Bestand, sonst liesse sich der Zeitraum ueber zwei Aufrufe verdrehen
+  // (gleiches Muster wie updateAbwesenheit).
+  if (patch.beginn !== undefined || patch.ende !== undefined) {
+    assertSchulungszeitraum(
+      patch.beginn ?? bestand.beginn,
+      patch.ende !== undefined ? patch.ende : bestand.ende,
+    )
+  }
+
+  if (patch.titel !== undefined && !String(patch.titel).trim()) {
+    throw new UserFacingError('Titel darf nicht leer sein.', 400)
   }
 
   const update: Record<string, unknown> = {}

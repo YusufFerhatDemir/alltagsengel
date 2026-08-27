@@ -59,6 +59,10 @@ export interface CaregiverStammdaten {
   fuehrerschein_klassen: string[]
   einsatzfreigabe: boolean | null
   qualification_level: string | null
+  /** Eigenes Fahrzeug vorhanden (caregivers.has_vehicle). */
+  has_vehicle: boolean | null
+  /** Führerschein vorhanden (caregivers.has_drivers_license). */
+  has_drivers_license: boolean | null
 }
 
 export interface PersonalSchulung {
@@ -290,13 +294,27 @@ export interface UrlaubsUebersicht {
 
 // ── Validierung ─────────────────────────────────────────────────
 
+/**
+ * Wirft bei einem Wert ausserhalb der Erlaubnisliste.
+ *
+ * UserFacingError, NICHT der nackte Error von frueher: der Sanitizer
+ * (lib/api/error-sanitizer.ts) reicht nur UserFacingError im Klartext
+ * hinaus und macht aus jedem anderen Wurf ein „Interner Serverfehler" mit
+ * Korrelations-ID. Die Meldung nennt hier das Feld und die erlaubten Werte
+ * — genau die Auskunft, die den Tippfehler behebt — und kam trotzdem als
+ * 500 ohne jeden Hinweis an. Ein falsch geschriebener Vertragsstatus sah
+ * damit aus wie ein Anwendungsausfall.
+ */
 export function assertErlaubt<T extends string>(
   wert: T | null | undefined,
   erlaubt: readonly T[],
   feldname: string
 ): void {
   if (wert != null && !erlaubt.includes(wert)) {
-    throw new Error(`Ungültiger Wert "${wert}" für ${feldname}. Erlaubt: ${erlaubt.join(', ')}`)
+    throw new UserFacingError(
+      `Ungültiger Wert "${wert}" für ${feldname}. Erlaubt: ${erlaubt.join(', ')}`,
+      400,
+    )
   }
 }
 

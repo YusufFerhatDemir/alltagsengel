@@ -97,6 +97,22 @@ interface AuditEntry {
 // createQualifikation/createSchulung (lib/personal/qualifikationen.ts,
 // lib/personal/schulungen.ts), da sie direkt als POST-Body versendet werden.
 
+/**
+ * Beschriftungen zu QUALIFIKATIONSTYP_WERTE
+ * (lib/personal/qualifikationen.ts) — dieselbe Erlaubnisliste, die der
+ * Live-CHECK der Datenbank führt.
+ */
+const QUALIFIKATIONSART_LABELS: Record<string, string> = {
+  fuehrungszeugnis: 'Erweitertes Führungszeugnis',
+  erste_hilfe: 'Erste-Hilfe-Nachweis',
+  hygiene: 'Hygiene',
+  datenschutz: 'Datenschutz',
+  brandschutz: 'Brandschutz',
+  pflichtunterweisung: 'Pflichtunterweisung',
+  fortbildung: 'Fortbildung',
+  sonstige: 'Sonstige',
+}
+
 type Tab = 'stammdaten' | 'qualifikationen' | 'schulungen' | 'arbeitszeiten' | 'urlaub' | 'audit'
 
 const TABS: { key: Tab; label: string }[] = [
@@ -171,6 +187,7 @@ export default function PersonalDetailPage() {
   // Modal state
   const [showQualiModal, setShowQualiModal] = useState(false)
   const [showSchulungModal, setShowSchulungModal] = useState(false)
+  const [modalFehler, setModalFehler] = useState<string | null>(null)
   const [qualiForm, setQualiForm] = useState({ title: '', qualificationType: '', validUntil: '', pflicht: false, einsatzrelevant: false })
   const [schulungForm, setSchulungForm] = useState({ titel: '', schulungsart: 'pflichtschulung', beginn: '', dauerStunden: '', anbieter: '' })
 
@@ -191,13 +208,17 @@ export default function PersonalDetailPage() {
           qualifikationsstufe: r.qualifikationsstufe || r.qualification_level || '',
           notfallkontakt_name: r.notfallkontakt_name || r.emergency_contact_name || null,
           notfallkontakt_telefon: r.notfallkontakt_telefon || r.emergency_contact_phone || null,
-          einsatzgebiet_plz: r.einsatzgebiet_plz || r.service_area_zip || null,
+          // einsatzgebiet_plz ist serverseitig eine text[]-Spalte und wird
+          // hier als Komma-Liste bearbeitet (Rueckweg in saveStammdaten).
+          einsatzgebiet_plz: Array.isArray(r.einsatzgebiet_plz)
+            ? r.einsatzgebiet_plz.join(', ')
+            : (r.einsatzgebiet_plz || null),
           einsatzgebiet_radius_km: r.einsatzgebiet_radius_km ?? r.service_radius_km ?? null,
           wochenstunden_soll: r.wochenstunden_soll ?? r.weekly_hours_target ?? null,
-          urlaubstage_jahr: r.urlaubstage_jahr ?? r.vacation_days_year ?? null,
+          urlaubstage_jahr: r.urlaubstage_jahresanspruch ?? r.urlaubstage_jahr ?? null,
           probezeitende: r.probezeitende || r.probation_end || null,
-          fahrzeug: r.fahrzeug ?? r.has_vehicle ?? false,
-          fuehrerschein: r.fuehrerschein ?? r.has_license ?? false,
+          fahrzeug: r.has_vehicle ?? false,
+          fuehrerschein: r.has_drivers_license ?? false,
           einsatzfreigabe: r.einsatzfreigabe ?? r.deployment_cleared ?? false,
         }
         setStamm(s)
@@ -320,21 +341,45 @@ export default function PersonalDetailPage() {
     setSaving(true)
     setSaveMsg(null)
     try {
+      // Die Feldnamen dieser Seite sind NICHT die der Schnittstelle. Bis
+      // hierher ging `editData` unveraendert hinaus — von elf Feldern kamen
+      // nur `vertragsstatus` und `probezeitende` an, alles andere verwarf
+      // der Server stillschweigend und die Seite meldete trotzdem
+      // „Gespeichert". Die Zuordnung steht jetzt ausdruecklich hier; der
+      // Server weist unbekannte Felder inzwischen ausserdem ab
+      // (lib/personal/stammdaten.ts, STAMMDATEN_SPALTEN).
+      const nutzlast = {
+        vertragsstatus: editData.vertragsstatus || null,
+        qualifikationsstufe: editData.qualifikationsstufe || null,
+        notfallkontaktName: editData.notfallkontakt_name || null,
+        notfallkontaktTelefon: editData.notfallkontakt_telefon || null,
+        einsatzgebietPlz: (editData.einsatzgebiet_plz || '')
+          .split(/[,;\s]+/).map(s => s.trim()).filter(Boolean),
+        einsatzgebietRadiusKm: editData.einsatzgebiet_radius_km ?? null,
+        wochenstundenSoll: editData.wochenstunden_soll ?? null,
+        urlaubstageJahresanspruch: editData.urlaubstage_jahr ?? null,
+        probezeitende: editData.probezeitende || null,
+        hatFahrzeug: editData.fahrzeug ?? false,
+        hatFuehrerschein: editData.fuehrerschein ?? false,
+      }
       const res = await fetch(`/api/personal/stammdaten?caregiverId=${caregiverId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editData),
+        body: JSON.stringify(nutzlast),
       })
       if (res.ok) {
-        const data = await res.json()
         setStamm({ ...stamm!, ...editData } as Stammdaten)
         setEditMode(false)
         setSaveMsg('Gespeichert')
         setTimeout(() => setSaveMsg(null), 3000)
       } else {
-        setSaveMsg('Fehler beim Speichern')
+        // Die Meldung des Servers ist redaktionell formuliert (etwa
+        // „60311 ist keine gültige Postleitzahl") — sie gehoert angezeigt,
+        // nicht durch ein pauschales „Fehler beim Speichern" ersetzt.
+        const fehler = await res.json().catch(() => null)
+        setSaveMsg(fehler?.error || 'Fehler beim Speichern')
       }
-    } catch (err) {
+    } catch {
       setSaveMsg('Fehler beim Speichern')
     } finally {
       setSaving(false)
@@ -350,14 +395,21 @@ export default function PersonalDetailPage() {
         body: JSON.stringify({ ...qualiForm, caregiverId }),
       })
       if (res.ok) {
+        setModalFehler(null)
         setShowQualiModal(false)
         setQualiForm({ title: '', qualificationType: '', validUntil: '', pflicht: false, einsatzrelevant: false })
         // Reload
         setTab('stammdaten')
         setTimeout(() => setTab('qualifikationen'), 50)
+      } else {
+        // Ohne diesen Zweig blieb das Fenster bei jedem Fehler unveraendert
+        // stehen — ohne Meldung, ohne Hinweis, was fehlt.
+        const fehler = await res.json().catch(() => null)
+        setModalFehler(fehler?.error || 'Qualifikation konnte nicht angelegt werden.')
       }
     } catch (err) {
       log.errorWithException('Qualifikation hinzufuegen fehlgeschlagen', err)
+      setModalFehler('Qualifikation konnte nicht angelegt werden.')
     }
   }
 
@@ -374,13 +426,18 @@ export default function PersonalDetailPage() {
         }),
       })
       if (res.ok) {
+        setModalFehler(null)
         setShowSchulungModal(false)
         setSchulungForm({ titel: '', schulungsart: 'pflichtschulung', beginn: '', dauerStunden: '', anbieter: '' })
         setTab('stammdaten')
         setTimeout(() => setTab('schulungen'), 50)
+      } else {
+        const fehler = await res.json().catch(() => null)
+        setModalFehler(fehler?.error || 'Schulung konnte nicht angelegt werden.')
       }
     } catch (err) {
       log.errorWithException('Schulung hinzufuegen fehlgeschlagen', err)
+      setModalFehler('Schulung konnte nicht angelegt werden.')
     }
   }
 
@@ -572,14 +629,29 @@ export default function PersonalDetailPage() {
 
           {/* Add modal */}
           {showQualiModal && (
-            <Modal title="Qualifikation hinzuf&uuml;gen" onClose={() => setShowQualiModal(false)}>
+            <Modal title="Qualifikation hinzuf&uuml;gen" onClose={() => { setModalFehler(null); setShowQualiModal(false) }}>
               <label style={{ fontSize: 13 }}>
                 Bezeichnung
                 <input type="text" value={qualiForm.title} onChange={e => setQualiForm({ ...qualiForm, title: e.target.value })} style={{ ...inputStyle, marginTop: 4, marginBottom: 12 }} />
               </label>
+              {/*
+                Auswahlfeld statt Freitext: `qualification_type` ist in der
+                Datenbank auf acht Werte festgelegt
+                (caregiver_qualifications_qualification_type_check). Als
+                Freitextfeld — Platzhalter „z. B. Pflegefachkraft" — konnte
+                dieses Formular per Definition keine einzige Qualifikation
+                anlegen: jeder eingetippte Wert verletzte den CHECK, die
+                Antwort war ein 500er, und `if (res.ok)` liess das Fenster
+                ohne Meldung stehen.
+              */}
               <label style={{ fontSize: 13 }}>
                 Art
-                <input type="text" value={qualiForm.qualificationType} onChange={e => setQualiForm({ ...qualiForm, qualificationType: e.target.value })} placeholder="z. B. Pflegefachkraft, Erste-Hilfe-Schein" style={{ ...inputStyle, marginTop: 4, marginBottom: 12 }} />
+                <select value={qualiForm.qualificationType} onChange={e => setQualiForm({ ...qualiForm, qualificationType: e.target.value })} style={{ ...inputStyle, marginTop: 4, marginBottom: 12 }}>
+                  <option value="">— bitte wählen —</option>
+                  {Object.entries(QUALIFIKATIONSART_LABELS).map(([k, v]) => (
+                    <option key={k} value={k}>{v}</option>
+                  ))}
+                </select>
               </label>
               <label style={{ fontSize: 13 }}>
                 G&uuml;ltig bis
@@ -595,6 +667,9 @@ export default function PersonalDetailPage() {
                   Einsatzrelevant
                 </label>
               </div>
+              {modalFehler && (
+                <p style={{ color: '#D04B3B', fontSize: 13, marginBottom: 12 }}>{modalFehler}</p>
+              )}
               <button style={primaryBtn} onClick={addQualifikation}>Hinzuf&uuml;gen</button>
             </Modal>
           )}
@@ -650,7 +725,7 @@ export default function PersonalDetailPage() {
 
           {/* Add modal */}
           {showSchulungModal && (
-            <Modal title="Schulung hinzuf&uuml;gen" onClose={() => setShowSchulungModal(false)}>
+            <Modal title="Schulung hinzuf&uuml;gen" onClose={() => { setModalFehler(null); setShowSchulungModal(false) }}>
               <label style={{ fontSize: 13 }}>
                 Titel
                 <input type="text" value={schulungForm.titel} onChange={e => setSchulungForm({ ...schulungForm, titel: e.target.value })} style={{ ...inputStyle, marginTop: 4, marginBottom: 12 }} />
@@ -673,6 +748,9 @@ export default function PersonalDetailPage() {
                 Anbieter
                 <input type="text" value={schulungForm.anbieter} onChange={e => setSchulungForm({ ...schulungForm, anbieter: e.target.value })} style={{ ...inputStyle, marginTop: 4, marginBottom: 12 }} />
               </label>
+              {modalFehler && (
+                <p style={{ color: '#D04B3B', fontSize: 13, marginBottom: 12 }}>{modalFehler}</p>
+              )}
               <button style={primaryBtn} onClick={addSchulung}>Hinzuf&uuml;gen</button>
             </Modal>
           )}

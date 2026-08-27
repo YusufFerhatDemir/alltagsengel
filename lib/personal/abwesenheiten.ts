@@ -5,6 +5,7 @@ import {
   ABWESENHEIT_STATUS_WERTE, ABWESENHEIT_TYP_WERTE,
   type Abwesenheit, type AbwesenheitStatus, type AbwesenheitTyp,
 } from './types'
+import { assertCaregiverInOrg } from './organization-guard'
 
 export interface CreateAbwesenheitParams {
   organizationId: string
@@ -66,6 +67,9 @@ export async function createAbwesenheit(supabase: SupabaseClient, params: Create
   if (params.halberTag && params.startDate !== params.endDate) {
     throw new UserFacingError('Ein halber Tag ist nur für einen einzelnen Tag möglich.')
   }
+
+  // Mandanten-Fence VOR dem Schreiben (lib/personal/organization-guard.ts).
+  await assertCaregiverInOrg(supabase, params.caregiverId, params.organizationId)
 
   const { data, error } = await supabase
     .from('absences')
@@ -186,6 +190,23 @@ export async function updateAbwesenheit(
   return data as Abwesenheit
 }
 
+/**
+ * Urlaubstage und Kontojahr eines Antrags — dieselbe Rechnung, die auf das
+ * Konto gebucht wird, ohne Datenbank testbar.
+ */
+export function urlaubsBuchung(
+  abwesenheit: Pick<Abwesenheit, 'start_date' | 'end_date' | 'halber_tag'>,
+): { dauer: number; jahr: number } {
+  const start = new Date(`${abwesenheit.start_date}T00:00:00Z`)
+  const end = new Date(`${abwesenheit.end_date}T00:00:00Z`)
+  const diffMs = end.getTime() - start.getTime()
+  const tage = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1)
+  return {
+    dauer: abwesenheit.halber_tag ? 0.5 : tage,
+    jahr: start.getUTCFullYear(),
+  }
+}
+
 export async function genehmigenAbwesenheit(
   supabase: SupabaseClient,
   id: string,
@@ -202,6 +223,22 @@ export async function genehmigenAbwesenheit(
   if (existing.status !== 'beantragt') throw new UserFacingError('Nur beantragte Abwesenheiten können genehmigt werden.')
   if (existing.erstellt_von === genehmigenVon) {
     throw new UserFacingError('Eigene Abwesenheiten koennen nicht selbst genehmigt werden.')
+  }
+
+  // ── Kontodeckung VOR dem Statuswechsel ───────────────────────────────
+  // Vorher lief die Buchung erst NACH dem Update. Scheiterte sie — kein
+  // Urlaubskonto fuer das Jahr, zu wenig Restanspruch, CAS erschoepft —,
+  // meldete die Route zwar einen Fehler, der Antrag stand aber bereits auf
+  // 'genehmigt'. Die Betreuungskraft war damit im genehmigten Urlaub, das
+  // Konto zeigte keinen Verbrauch, und nachbuchen liess sich das nie mehr:
+  // genehmigen verlangt den Status 'beantragt', auf den der Antrag nicht
+  // zurueckkonnte. Die Pruefung liegt deshalb jetzt davor.
+  const istUrlaub = existing.absence_type === 'vacation'
+  const buchung = istUrlaub
+    ? urlaubsBuchung(existing as Abwesenheit)
+    : null
+  if (buchung) {
+    await pruefeKontodeckung(supabase, organizationId, existing.caregiver_id, buchung.jahr, buchung.dauer)
   }
 
   const { data, error } = await supabase
@@ -221,18 +258,59 @@ export async function genehmigenAbwesenheit(
   const abwesenheit = data as Abwesenheit
 
   // P1-35: Urlaubskonto synchronisieren bei genehmigtem Urlaub
-  if (abwesenheit.absence_type === 'vacation') {
-    const start = new Date(abwesenheit.start_date)
-    const end = new Date(abwesenheit.end_date)
-    const diffMs = end.getTime() - start.getTime()
-    const tage = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1)
-    const dauer = abwesenheit.halber_tag ? 0.5 : tage
-    const jahr = start.getFullYear()
-
-    await bucheGenommeneTage(supabase, organizationId, abwesenheit.caregiver_id, jahr, dauer)
+  if (buchung) {
+    try {
+      await bucheGenommeneTage(supabase, organizationId, abwesenheit.caregiver_id, buchung.jahr, buchung.dauer)
+    } catch (fehler) {
+      // Zwischen Vorpruefung und Buchung kann eine zweite Genehmigung den
+      // Restanspruch aufgebraucht haben. Dann darf die Genehmigung NICHT
+      // stehenbleiben — der Antrag geht zurueck auf 'beantragt' und kann
+      // erneut entschieden werden.
+      await supabase
+        .from('absences')
+        .update({ status: 'beantragt', genehmigt_von: null, genehmigt_am: null })
+        .eq('id', id)
+        .eq('organization_id', organizationId)
+        .eq('status', 'genehmigt')
+      throw fehler
+    }
   }
 
   return abwesenheit
+}
+
+/**
+ * Liest das Urlaubskonto und prueft, ob `dauer` Tage noch gedeckt sind —
+ * ohne zu schreiben. Fail-closed: ein Lesefehler oder ein fehlendes Konto
+ * ist keine Deckung.
+ */
+async function pruefeKontodeckung(
+  supabase: SupabaseClient,
+  organizationId: string,
+  caregiverId: string,
+  jahr: number,
+  dauer: number,
+): Promise<void> {
+  const { data: konto, error } = await supabase
+    .from('personal_urlaubskonto')
+    .select('anspruch_tage, uebertrag_vorjahr, genommen_tage, geplant_tage')
+    .eq('organization_id', organizationId)
+    .eq('caregiver_id', caregiverId)
+    .eq('jahr', jahr)
+    .maybeSingle()
+  if (error) throw new Error(`Urlaubskonto konnte nicht geprüft werden: ${error.message}`)
+  if (!konto) {
+    throw new UserFacingError(
+      `Für ${jahr} existiert kein Urlaubskonto für diese Betreuungskraft — Genehmigung ohne Kontobuchung nicht möglich.`
+    )
+  }
+  const resturlaub = (konto.anspruch_tage ?? 0) + (konto.uebertrag_vorjahr ?? 0)
+    - (konto.genommen_tage ?? 0) - (konto.geplant_tage ?? 0)
+  if (dauer > resturlaub) {
+    throw new UserFacingError(
+      `Nicht genug Resturlaub: verfügbar ${resturlaub} Tage, beantragt ${dauer} Tage.`
+    )
+  }
 }
 
 /**

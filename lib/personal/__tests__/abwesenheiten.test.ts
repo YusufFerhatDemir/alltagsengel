@@ -7,7 +7,17 @@ import { erstelleFakeSupabase } from '@/__tests__/helpers/supabase-fake'
 function insertClient() {
   const inserts: Array<Record<string, unknown>> = []
   const supabase = {
-    from: () => ({
+    // Seit dem Mandanten-Fence (lib/personal/organization-guard.ts) liest
+    // jeder Schreibweg zuerst `caregivers` und bricht ab, wenn der
+    // Mitarbeiter nicht zur Organisation gehoert. Der Doppelgaenger muss
+    // diesen Lesepfad kennen, sonst prueft der Test nicht mehr den
+    // Schreibvorgang, sondern nur noch die neue Sperre.
+    from: (tabelle: string) => tabelle === 'caregivers' ? ({
+      select: () => {
+        const lese: any = { eq: () => lese, maybeSingle: async () => ({ data: { id: 'cg-1' }, error: null }) }
+        return lese
+      },
+    }) as any : ({
       insert(payload: Record<string, unknown>) {
         inserts.push(payload)
         return {
