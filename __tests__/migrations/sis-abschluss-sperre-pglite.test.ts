@@ -33,8 +33,8 @@ import path from 'node:path'
 
 const MIGRATIONS_DIR = path.join(__dirname, '..', '..', 'supabase', 'migrations')
 const BASIS = '20260818010000_sis_strukturierte_informationssammlung.sql'
-const HAERTUNG = '20261007000000_sis_abschluss_sperre_haertung.sql'
-const ROLLBACK = '20261007000001_rollback_sis_abschluss_sperre_haertung.sql'
+const HAERTUNG = '20261007000002_sis_abschluss_sperre_haertung.sql'
+const ROLLBACK = '20261007000003_rollback_sis_abschluss_sperre_haertung.sql'
 
 const ORG = '00000000-0000-4000-8000-0000000000aa'
 const CLIENT = '00000000-0000-4000-8000-0000000000ba'
