@@ -14,6 +14,7 @@ import {
 import { createVital } from '../server'
 import { VITAL_TYPEN, VITAL_TYP_WERTE, assertVitalTyp, type VitalSign } from '../types'
 import { VITALS_ALARM_ENV, grenzwertAlarmeAktiv } from '../config'
+import { UserFacingError } from '@/lib/api/user-facing-error'
 
 // ── Typ-Konfiguration ────────────────────────────────────────────
 
@@ -32,6 +33,10 @@ test('alle 10 Vitaltypen sind konfiguriert und konsistent', () => {
 test('assertVitalTyp wirft bei unbekanntem Typ', () => {
   assert.throws(() => assertVitalTyp('cholesterin'), /Unbekannter Vitaltyp/)
   assert.doesNotThrow(() => assertVitalTyp('blutdruck'))
+})
+
+test('assertVitalTyp wirft eine UserFacingError (sonst verwischt der API-Sanitizer die Meldung)', () => {
+  assert.throws(() => assertVitalTyp('cholesterin'), (err: unknown) => err instanceof UserFacingError)
 })
 
 // ── Plausibilität ────────────────────────────────────────────────
@@ -82,6 +87,14 @@ test('Grenzwert-Guards: unrealistische Werte werden pro Vitaltyp abgelehnt', () 
   assert.doesNotThrow(() => validierePlausibilitaet('blutzucker', 600))
 })
 
+test('validierePlausibilitaet wirft eine UserFacingError, kein generisches Error', () => {
+  // Der API-Fehler-Sanitizer (apiErrorResponse) zeigt nur UserFacingError-
+  // Meldungen dem Nutzer — ein einfacher Error würde zu "Interner
+  // Serverfehler" verwischt und die konkrete Meldung ginge verloren.
+  assert.throws(() => validierePlausibilitaet('puls', 500), (err: unknown) => err instanceof UserFacingError)
+  assert.throws(() => validierePlausibilitaet('temperatur', -10), (err: unknown) => err instanceof UserFacingError)
+})
+
 // ── Grenzwert-Validierung ────────────────────────────────────────
 
 test('validiereGrenzwerte wirft bei min ≥ max', () => {
@@ -97,6 +110,26 @@ test('validiereGrenzwerte wirft, wenn kritisch innerhalb der Warnzone liegt', ()
   assert.throws(() => validiereGrenzwerte('puls', {
     min_warn: 50, max_warn: 100, min_critical: null, max_critical: 90,
   }), /darf nicht unter der Warngrenze/)
+})
+
+test('validiereGrenzwerte wirft, wenn ein Grenzwert außerhalb des plausiblen Bereichs läge (fail-open-Schutz)', () => {
+  // Puls-plausibelMax ist 250. Ein max_critical von 1000 wäre in sich
+  // konsistent, aber nie erreichbar: validierePlausibilitaet() kappt jede
+  // Messung vorher auf 250 — der kritische Alarm liefe für diese Richtung
+  // faktisch nie. Genau das prüft dieser Test.
+  assert.throws(() => validiereGrenzwerte('puls', {
+    min_warn: 50, max_warn: 100, min_critical: 40, max_critical: 1000,
+  }), /außerhalb des plausiblen Bereichs/)
+  assert.throws(() => validiereGrenzwerte('spo2', {
+    min_warn: null, max_warn: null, min_critical: -10, max_critical: null,
+  }), /außerhalb des plausiblen Bereichs/)
+})
+
+test('validiereGrenzwerte prüft auch sekundäre (diastolische) Grenzwerte auf Plausibilität', () => {
+  assert.throws(() => validiereGrenzwerte('blutdruck', {
+    min_warn: 100, max_warn: 140, min_critical: 90, max_critical: 180,
+    max_critical_secondary: 9999,
+  }), /außerhalb des plausiblen Bereichs/)
 })
 
 test('validiereGrenzwerte: Sekundär-Grenzen nur beim Blutdruck', () => {

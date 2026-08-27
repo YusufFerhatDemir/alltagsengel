@@ -9,6 +9,7 @@
 // SupabaseClient/Audit-Log liegen deshalb in ./server.
 // ═══════════════════════════════════════════════════════════════
 
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import {
   VITAL_TYPEN,
   type AlarmBewertung,
@@ -20,57 +21,87 @@ import {
 } from './types'
 
 // ── Validierung ──────────────────────────────────────────────────
+// UserFacingError statt Error: diese Meldungen sind redaktionell für
+// Endnutzer formuliert und sollen die Route auch erreichen. Ein einfacher
+// Error würde vom API-Fehler-Sanitizer (lib/api/error-sanitizer) fail-closed
+// zu "Interner Serverfehler" (500) verwischt — die konkrete, hilfreiche
+// Meldung ginge verloren (s. lib/medikamente, lib/akten für dasselbe Muster).
 
 /** Wirft bei unplausiblen Eingaben (Tippfehler-Schutz, kein Alarm). */
 export function validierePlausibilitaet(typ: VitalTyp, wert: number, wertSekundaer?: number | null): void {
   const cfg = VITAL_TYPEN[typ]
-  if (!Number.isFinite(wert)) throw new Error(`${cfg.label}: Wert fehlt oder ist keine Zahl.`)
+  if (!Number.isFinite(wert)) throw new UserFacingError(`${cfg.label}: Wert fehlt oder ist keine Zahl.`)
   if (wert < cfg.plausibelMin || wert > cfg.plausibelMax) {
-    throw new Error(`${cfg.label}: ${wert} ${cfg.einheit} liegt außerhalb des plausiblen Bereichs (${cfg.plausibelMin}–${cfg.plausibelMax}).`)
+    throw new UserFacingError(`${cfg.label}: ${wert} ${cfg.einheit} liegt außerhalb des plausiblen Bereichs (${cfg.plausibelMin}–${cfg.plausibelMax}).`)
   }
   if (cfg.hatSekundaer) {
     if (wertSekundaer == null || !Number.isFinite(wertSekundaer)) {
-      throw new Error(`${cfg.label}: ${cfg.labelSekundaer} ist ein Pflichtfeld.`)
+      throw new UserFacingError(`${cfg.label}: ${cfg.labelSekundaer} ist ein Pflichtfeld.`)
     }
     const minSek = cfg.plausibelMinSekundaer ?? cfg.plausibelMin
     const maxSek = cfg.plausibelMaxSekundaer ?? cfg.plausibelMax
     if (wertSekundaer < minSek || wertSekundaer > maxSek) {
-      throw new Error(`${cfg.label}: ${cfg.labelSekundaer} ${wertSekundaer} ${cfg.einheit} liegt außerhalb des plausiblen Bereichs (${minSek}–${maxSek}).`)
+      throw new UserFacingError(`${cfg.label}: ${cfg.labelSekundaer} ${wertSekundaer} ${cfg.einheit} liegt außerhalb des plausiblen Bereichs (${minSek}–${maxSek}).`)
     }
     if (wertSekundaer >= wert) {
-      throw new Error(`${cfg.label}: Diastolisch (${wertSekundaer}) muss unter systolisch (${wert}) liegen.`)
+      throw new UserFacingError(`${cfg.label}: Diastolisch (${wertSekundaer}) muss unter systolisch (${wert}) liegen.`)
     }
   } else if (wertSekundaer != null) {
-    throw new Error(`${cfg.label}: Ein Zweitwert ist nur beim Blutdruck erlaubt.`)
+    throw new UserFacingError(`${cfg.label}: Ein Zweitwert ist nur beim Blutdruck erlaubt.`)
   }
 }
 
-/** Wirft bei inkonsistenten Grenzwerten (min ≥ max, kritisch innerhalb warn). */
+/**
+ * Wirft bei inkonsistenten Grenzwerten (min ≥ max, kritisch innerhalb warn)
+ * UND bei Grenzwerten außerhalb des plausiblen Messbereichs.
+ *
+ * Der zweite Fall ist kein Schönheitsfehler: validierePlausibilitaet() kappt
+ * jede Messung auf [plausibelMin, plausibelMax]. Ein max_critical oberhalb
+ * von plausibelMax (z. B. Puls-Obergrenze 1000) kann folglich NIE erreicht
+ * werden — der kritische Alarm für diese Richtung ist damit faktisch und
+ * dauerhaft abgeschaltet, ohne dass das irgendwo sichtbar wäre (fail-open).
+ */
 export function validiereGrenzwerte(typ: VitalTyp, g: Grenzwerte): void {
   const cfg = VITAL_TYPEN[typ]
-  const pruefe = (minW: number | null | undefined, maxW: number | null | undefined,
-    minK: number | null | undefined, maxK: number | null | undefined, praefix: string) => {
-    if (minW != null && maxW != null && minW >= maxW) {
-      throw new Error(`${praefix}: Untere Warngrenze (${minW}) muss unter der oberen (${maxW}) liegen.`)
-    }
-    if (minK != null && maxK != null && minK >= maxK) {
-      throw new Error(`${praefix}: Untere kritische Grenze (${minK}) muss unter der oberen (${maxK}) liegen.`)
-    }
-    if (minK != null && minW != null && minK > minW) {
-      throw new Error(`${praefix}: Untere kritische Grenze (${minK}) darf nicht über der Warngrenze (${minW}) liegen.`)
-    }
-    if (maxK != null && maxW != null && maxK < maxW) {
-      throw new Error(`${praefix}: Obere kritische Grenze (${maxK}) darf nicht unter der Warngrenze (${maxW}) liegen.`)
+  const pruefeBereich = (wert: number | null | undefined, praefix: string, feld: string, bereichMin: number, bereichMax: number) => {
+    if (wert != null && (wert < bereichMin || wert > bereichMax)) {
+      throw new UserFacingError(
+        `${praefix}: ${feld} (${wert}) liegt außerhalb des plausiblen Bereichs (${bereichMin}–${bereichMax}) und würde den Alarm nie auslösen.`,
+      )
     }
   }
-  pruefe(g.min_warn, g.max_warn, g.min_critical, g.max_critical, cfg.label)
+  const pruefe = (minW: number | null | undefined, maxW: number | null | undefined,
+    minK: number | null | undefined, maxK: number | null | undefined, praefix: string,
+    bereichMin: number, bereichMax: number) => {
+    pruefeBereich(minW, praefix, 'Untere Warngrenze', bereichMin, bereichMax)
+    pruefeBereich(maxW, praefix, 'Obere Warngrenze', bereichMin, bereichMax)
+    pruefeBereich(minK, praefix, 'Untere kritische Grenze', bereichMin, bereichMax)
+    pruefeBereich(maxK, praefix, 'Obere kritische Grenze', bereichMin, bereichMax)
+    if (minW != null && maxW != null && minW >= maxW) {
+      throw new UserFacingError(`${praefix}: Untere Warngrenze (${minW}) muss unter der oberen (${maxW}) liegen.`)
+    }
+    if (minK != null && maxK != null && minK >= maxK) {
+      throw new UserFacingError(`${praefix}: Untere kritische Grenze (${minK}) muss unter der oberen (${maxK}) liegen.`)
+    }
+    if (minK != null && minW != null && minK > minW) {
+      throw new UserFacingError(`${praefix}: Untere kritische Grenze (${minK}) darf nicht über der Warngrenze (${minW}) liegen.`)
+    }
+    if (maxK != null && maxW != null && maxK < maxW) {
+      throw new UserFacingError(`${praefix}: Obere kritische Grenze (${maxK}) darf nicht unter der Warngrenze (${maxW}) liegen.`)
+    }
+  }
+  pruefe(g.min_warn, g.max_warn, g.min_critical, g.max_critical, cfg.label, cfg.plausibelMin, cfg.plausibelMax)
   if (cfg.hatSekundaer) {
-    pruefe(g.min_warn_secondary, g.max_warn_secondary, g.min_critical_secondary, g.max_critical_secondary, `${cfg.label} (${cfg.labelSekundaer})`)
+    pruefe(
+      g.min_warn_secondary, g.max_warn_secondary, g.min_critical_secondary, g.max_critical_secondary,
+      `${cfg.label} (${cfg.labelSekundaer})`,
+      cfg.plausibelMinSekundaer ?? cfg.plausibelMin, cfg.plausibelMaxSekundaer ?? cfg.plausibelMax,
+    )
   } else if (
     g.min_warn_secondary != null || g.max_warn_secondary != null
     || g.min_critical_secondary != null || g.max_critical_secondary != null
   ) {
-    throw new Error(`${cfg.label}: Sekundär-Grenzwerte sind nur beim Blutdruck erlaubt.`)
+    throw new UserFacingError(`${cfg.label}: Sekundär-Grenzwerte sind nur beim Blutdruck erlaubt.`)
   }
 }
 

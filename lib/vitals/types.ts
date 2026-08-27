@@ -1,8 +1,12 @@
 // ═══════════════════════════════════════════════════════════════
 // Vitalwerte — geteilte Typen & Typ-Konfiguration
 // Spiegelt 1:1 die Spalten aus
-// supabase/migrations/20260818010000_vitalwerte.sql
+// supabase/migrations/20260818010100_vitalwerte.sql
+// (plausibelMin/plausibelMax zusätzlich gespiegelt in
+// supabase/migrations/20261008000000_vitalwerte_plausibilitaet_db_check.sql)
 // ═══════════════════════════════════════════════════════════════
+
+import { UserFacingError } from '@/lib/api/user-facing-error'
 
 export type VitalTyp =
   | 'blutdruck' | 'puls' | 'temperatur' | 'blutzucker' | 'spo2'
@@ -156,6 +160,8 @@ export interface AlarmBewertung {
 
 export function assertVitalTyp(typ: string): asserts typ is VitalTyp {
   if (!VITAL_TYP_WERTE.includes(typ as VitalTyp)) {
-    throw new Error(`Unbekannter Vitaltyp "${typ}". Erlaubt: ${VITAL_TYP_WERTE.join(', ')}`)
+    // UserFacingError statt Error: sonst verwischt der API-Fehler-Sanitizer
+    // die Meldung fail-closed zu "Interner Serverfehler" (s. lib/vitals/vitals.ts).
+    throw new UserFacingError(`Unbekannter Vitaltyp "${typ}". Erlaubt: ${VITAL_TYP_WERTE.join(', ')}`)
   }
 }
