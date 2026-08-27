@@ -15,7 +15,10 @@ interface Bericht {
   duration_minutes: number
   service_type: string
   budget_type: string
-  notes: string
+  /** Nur gefüllt, wenn der Bereich „Pflegeberichte" freigegeben ist. */
+  notes: string | null
+  /** Server-Auskunft, ob der Freitext freigegeben ist. */
+  bericht_freigegeben: boolean
   status: string
   created_at: string
 }
@@ -189,6 +192,16 @@ export default function PflegeberichtPage() {
                         }}>
                           <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink4)', marginBottom: 4 }}>Anmerkungen:</div>
                           {bericht.notes}
+                        </div>
+                      )}
+
+                      {isExpanded && !bericht.bericht_freigegeben && (
+                        <div style={{
+                          marginTop: 12, padding: 12, borderRadius: 8,
+                          background: 'rgba(255,255,255,0.03)', fontSize: 12,
+                          color: 'var(--ink4)', lineHeight: 1.6,
+                        }}>
+                          Für diesen Eintrag ist der Pflegebericht nicht freigegeben.
                         </div>
                       )}
                     </div>

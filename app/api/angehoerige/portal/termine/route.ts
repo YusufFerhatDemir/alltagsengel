@@ -1,14 +1,28 @@
 // ═══════════════════════════════════════════════════════════════
 // GET /api/angehoerige/portal/termine — Termine des Klienten
 // ═══════════════════════════════════════════════════════════════
+//
+// Quelle sind die Einsätze (`assignments`), nicht `bookings` — warum,
+// steht ausführlich in lib/angehoerige/termine.ts. Kurz: `bookings`
+// hat per Fremdschlüssel keine Verbindung zu `clients`, der bisherige
+// Filter `.in('customer_id', <clients.id>)` verglich zwei getrennte
+// ID-Räume und konnte nie treffen. Die Terminseite war dauerhaft leer.
 
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { requirePortalAccess, erlaubteClientIds } from '@/lib/angehoerige/portal-helpers'
-import { protokolliereZugriff } from '@/lib/angehoerige/angehoerige'
-import { logger } from '@/lib/logger'
+import {
+  requirePortalAccess,
+  erlaubteClientIds,
+  protokollEintraege,
+  portalDatenClient,
+  protokolliereOderVerweigere,
+} from '@/lib/angehoerige/portal-helpers'
+import {
+  SICHTBARE_TERMIN_STATUS,
+  TERMIN_SPALTEN,
+  zuPortalTermin,
+  type AssignmentZeile,
+} from '@/lib/angehoerige/termine'
 import { withTracking } from '@/lib/monitoring/tracker'
-const log = logger.child('angehoerige-termine')
 
 export const GET = withTracking(async function GET() {
   const auth = await requirePortalAccess()
@@ -21,17 +35,15 @@ export const GET = withTracking(async function GET() {
     return NextResponse.json({ error: 'Kein Zugriff auf Termine.' }, { status: 403 })
   }
 
-  const supabase = await createClient()
+  const supabase = portalDatenClient()
 
-  // Bookings für die freigegebenen Klienten
   const { data: termine, error } = await supabase
-    .from('bookings')
-    .select(`
-      id, service, date, time, duration_hours, status, notes, created_at,
-      customer_id
-    `)
-    .in('customer_id', clientIds)
-    .order('date', { ascending: true })
+    .from('assignments')
+    .select(TERMIN_SPALTEN)
+    .eq('organization_id', ctx.organizationId)
+    .in('client_id', clientIds)
+    .in('status', [...SICHTBARE_TERMIN_STATUS])
+    .order('assignment_date', { ascending: true })
     .limit(50)
 
   if (error) {
@@ -41,34 +53,25 @@ export const GET = withTracking(async function GET() {
   // Klienten-Namen zuordnen
   const { data: clients } = await supabase
     .from('clients')
-    .select('id, first_name, last_name, user_id')
+    .select('id, first_name, last_name')
+    .eq('organization_id', ctx.organizationId)
     .in('id', clientIds)
 
-  // user_id -> client mapping for bookings (bookings use customer_id = profiles.id)
-  const userToClient = new Map<string, any>()
-  for (const c of clients ?? []) {
-    if (c.user_id) userToClient.set(c.user_id, c)
+  const namen = new Map<string, string>()
+  for (const c of (clients ?? []) as Array<{ id: string; first_name: string | null; last_name: string | null }>) {
+    namen.set(c.id, [c.first_name, c.last_name].filter(Boolean).join(' ') || 'Klient')
   }
 
-  const enriched = (termine ?? []).map(t => {
-    const client = userToClient.get(t.customer_id) ||
-      (clients ?? []).find((c: any) => c.id === t.customer_id)
-    return {
-      ...t,
-      client_name: client ? `${client.first_name} ${client.last_name}` : 'Klient',
-    }
-  })
+  const enriched = ((termine ?? []) as unknown as AssignmentZeile[])
+    .map(t => zuPortalTermin(t, namen.get(t.client_id) ?? 'Klient'))
 
-  // Audit: Terminzugriff protokollieren (Best-Effort)
-  const zugangFuerAudit = ctx.zugaenge.find(z => z.freigegebene_bereiche.includes('termine'))
-  if (zugangFuerAudit) {
-    protokolliereZugriff(supabase, ctx.organizationId, {
-      zugang_id: zugangFuerAudit.id,
-      user_id: ctx.userId,
-      client_id: zugangFuerAudit.client_id,
-      aktion: 'termine_eingesehen',
-    }).catch((err) => log.warnWithException('Zugriffs-Protokollierung fehlgeschlagen (non-blocking)', err))
-  }
+  // Zugriffsprotokoll fail-closed VOR der Ausgabe — bisher lief es als
+  // „non-blocking" ins Leere (keine RLS-Policy) und das Log blieb leer.
+  const protokoll = await protokolliereOderVerweigere(
+    ctx,
+    protokollEintraege(ctx.zugaenge, 'termine', 'termine_eingesehen'),
+  )
+  if (protokoll) return protokoll
 
   return NextResponse.json({ termine: enriched })
 })

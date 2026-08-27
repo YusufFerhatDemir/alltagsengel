@@ -67,6 +67,7 @@ export default function AngehoerigeAdminPage() {
   const [showCreate, setShowCreate] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
   const [revokeId, setRevokeId] = useState<string | null>(null)
+  const [reaktivierenId, setReaktivierenId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setError(null)
@@ -199,6 +200,11 @@ export default function AngehoerigeAdminPage() {
                               </button>
                             </>
                           )}
+                          {z.status !== 'aktiv' && (
+                            <button style={actionBtn} onClick={() => setReaktivierenId(z.id)}>
+                              Reaktivieren
+                            </button>
+                          )}
                           {z.status === 'widerrufen' && z.widerruf_grund && (
                             <span style={{ fontSize: 11, color: 'var(--ink4)', fontStyle: 'italic' }}>
                               {z.widerruf_grund}
@@ -219,6 +225,17 @@ export default function AngehoerigeAdminPage() {
         <CreateZugangModal
           onClose={() => setShowCreate(false)}
           onSaved={() => { setShowCreate(false); load() }}
+        />
+      )}
+
+      {reaktivierenId && (
+        <EditFreigabenModal
+          key={`reaktivieren-${reaktivierenId}`}
+          zugangId={reaktivierenId}
+          zugang={zugaenge.find(z => z.id === reaktivierenId)!}
+          modus="reaktivieren"
+          onClose={() => setReaktivierenId(null)}
+          onSaved={() => { setReaktivierenId(null); load() }}
         />
       )}
 
@@ -354,8 +371,14 @@ function CreateZugangModal({ onClose, onSaved }: { onClose: () => void; onSaved:
 // ═══════════════════════════════════════════════════════════════
 // Freigabe-Bereiche bearbeiten
 // ═══════════════════════════════════════════════════════════════
-function EditFreigabenModal({ zugangId, zugang, onClose, onSaved }: {
+function EditFreigabenModal({ zugangId, zugang, onClose, onSaved, modus = 'bearbeiten' }: {
   zugangId: string; zugang: ZugangRow; onClose: () => void; onSaved: () => void
+  /**
+   * 'reaktivieren' hebt einen Widerruf auf. Die Bereiche werden dabei
+   * bewusst neu bestaetigt statt still uebernommen — ein Widerruf soll
+   * nicht durch einen Klick den alten Umfang zurueckbringen.
+   */
+  modus?: 'bearbeiten' | 'reaktivieren'
 }) {
   const [bereiche, setBereiche] = useState<FreigabeBereich[]>(zugang.freigegebene_bereiche)
   const [pflegeberichte, setPflegeberichte] = useState(zugang.pflegeberichte_freigegeben)
@@ -376,13 +399,17 @@ function EditFreigabenModal({ zugangId, zugang, onClose, onSaved }: {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          ...(modus === 'reaktivieren' ? { action: 'reaktivieren' } : {}),
           freigegebene_bereiche: bereiche,
           pflegeberichte_freigegeben: pflegeberichte,
+          ...(modus === 'reaktivieren' ? { gueltig_bis: zugang.gueltig_bis ?? null } : {}),
         }),
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
-        throw new Error(body.error || 'Freigaben konnten nicht aktualisiert werden.')
+        throw new Error(body.error || (modus === 'reaktivieren'
+          ? 'Zugang konnte nicht reaktiviert werden.'
+          : 'Freigaben konnten nicht aktualisiert werden.'))
       }
       onSaved()
     } catch (error: any) {
@@ -394,8 +421,15 @@ function EditFreigabenModal({ zugangId, zugang, onClose, onSaved }: {
 
   return (
     <DialogOverlay onClose={onClose}>
-      <div role="dialog" aria-label="Freigabe-Bereiche bearbeiten" aria-modal="true" className="admin-modal" style={{ maxWidth: 460, width: '92%' }} onClick={e => e.stopPropagation()}>
-        <h3>Freigabe-Bereiche bearbeiten</h3>
+      <div
+        role="dialog"
+        aria-label={modus === 'reaktivieren' ? 'Zugang reaktivieren' : 'Freigabe-Bereiche bearbeiten'}
+        aria-modal="true"
+        className="admin-modal"
+        style={{ maxWidth: 460, width: '92%' }}
+        onClick={e => e.stopPropagation()}
+      >
+        <h3>{modus === 'reaktivieren' ? 'Zugang reaktivieren' : 'Freigabe-Bereiche bearbeiten'}</h3>
 
         {err && <Banner tone="danger">{err}</Banner>}
 
@@ -420,7 +454,9 @@ function EditFreigabenModal({ zugangId, zugang, onClose, onSaved }: {
         <div className="admin-modal-btns" style={{ marginTop: 14 }}>
           <button className="btn-cancel" onClick={onClose}>Abbrechen</button>
           <button className="btn-confirm" onClick={save} disabled={saving}>
-            {saving ? 'Speichern...' : 'Speichern'}
+            {saving
+              ? 'Speichern...'
+              : modus === 'reaktivieren' ? 'Zugang reaktivieren' : 'Speichern'}
           </button>
         </div>
       </div>

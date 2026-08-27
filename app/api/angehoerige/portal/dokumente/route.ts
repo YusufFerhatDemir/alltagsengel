@@ -1,14 +1,39 @@
 // ═══════════════════════════════════════════════════════════════
 // GET /api/angehoerige/portal/dokumente — Freigegebene Dokumente
 // ═══════════════════════════════════════════════════════════════
+//
+// BEFUND (27.08.2026): Die Abfrage filterte auf `status='aktiv'` und
+// die Sichtbarkeiten 'kunde'/'alle' — aber NICHT auf `gesperrt`.
+// `akten_dokumente` führt beides getrennt: `status` ('entwurf', 'aktiv',
+// 'archiviert', 'gesperrt', 'abgelaufen') UND das Kennzeichen
+// `gesperrt` (boolean, mit gesperrt_grund/-am/-von). Ein Dokument, das
+// über das Kennzeichen gesperrt wurde und dabei auf status='aktiv'
+// stehenblieb, ging weiter an den Angehörigen hinaus. Die Sperre ist
+// genau der Fall, in dem das nicht passieren darf.
 
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { requirePortalAccess, erlaubteClientIds } from '@/lib/angehoerige/portal-helpers'
-import { protokolliereZugriff } from '@/lib/angehoerige/angehoerige'
-import { logger } from '@/lib/logger'
+import {
+  requirePortalAccess,
+  erlaubteClientIds,
+  protokollEintraege,
+  portalDatenClient,
+  protokolliereOderVerweigere,
+} from '@/lib/angehoerige/portal-helpers'
 import { withTracking } from '@/lib/monitoring/tracker'
-const log = logger.child('angehoerige-dokumente')
+
+interface DokumentZeile {
+  id: string
+  titel: string | null
+  dokument_typ: string | null
+  kategorie: string | null
+  dateiname: string | null
+  mime_type: string | null
+  dokument_datum: string | null
+  status: string | null
+  sichtbarkeit: string | null
+  client_id: string | null
+  created_at: string | null
+}
 
 export const GET = withTracking(async function GET() {
   const auth = await requirePortalAccess()
@@ -21,7 +46,7 @@ export const GET = withTracking(async function GET() {
     return NextResponse.json({ error: 'Kein Zugriff auf Dokumente.' }, { status: 403 })
   }
 
-  const supabase = await createClient()
+  const supabase = portalDatenClient()
 
   // Akten-Dokumente mit Sichtbarkeit "kunde" oder "alle" für die freigegebenen Klienten
   const { data: dokumente, error } = await supabase
@@ -30,9 +55,11 @@ export const GET = withTracking(async function GET() {
       id, titel, dokument_typ, kategorie, dateiname, mime_type,
       dokument_datum, status, sichtbarkeit, client_id, created_at
     `)
+    .eq('organization_id', ctx.organizationId)
     .in('client_id', clientIds)
     .in('sichtbarkeit', ['kunde', 'alle'])
     .eq('status', 'aktiv')
+    .eq('gesperrt', false)
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
     .limit(50)
@@ -41,33 +68,30 @@ export const GET = withTracking(async function GET() {
     return NextResponse.json({ error: 'Dokumente konnten nicht geladen werden.' }, { status: 500 })
   }
 
-  // Klienten-Namen zuordnen
-  const uniqueClientIds = [...new Set((dokumente ?? []).map(d => d.client_id).filter(Boolean))]
+  const zeilen = (dokumente ?? []) as unknown as DokumentZeile[]
+
   const { data: clients } = await supabase
     .from('clients')
     .select('id, first_name, last_name')
-    .in('id', uniqueClientIds.length > 0 ? uniqueClientIds : ['__none__'])
+    .eq('organization_id', ctx.organizationId)
+    .in('id', clientIds)
 
-  const clientMap = new Map<string, string>()
-  for (const c of clients ?? []) {
-    clientMap.set(c.id, `${c.first_name} ${c.last_name}`)
+  const namen = new Map<string, string>()
+  for (const c of (clients ?? []) as Array<{ id: string; first_name: string | null; last_name: string | null }>) {
+    namen.set(c.id, [c.first_name, c.last_name].filter(Boolean).join(' ') || 'Klient')
   }
 
-  const enriched = (dokumente ?? []).map(d => ({
+  const enriched = zeilen.map(d => ({
     ...d,
-    client_name: d.client_id ? (clientMap.get(d.client_id) || 'Klient') : 'Allgemein',
+    client_name: d.client_id ? (namen.get(d.client_id) ?? 'Klient') : 'Allgemein',
   }))
 
-  // Audit: Dokumentenzugriff protokollieren (Best-Effort)
-  const zugangFuerAudit = ctx.zugaenge.find(z => z.freigegebene_bereiche.includes('dokumente'))
-  if (zugangFuerAudit) {
-    protokolliereZugriff(supabase, ctx.organizationId, {
-      zugang_id: zugangFuerAudit.id,
-      user_id: ctx.userId,
-      client_id: zugangFuerAudit.client_id,
-      aktion: 'dokument_eingesehen',
-    }).catch((err) => log.warnWithException('Zugriffs-Protokollierung fehlgeschlagen (non-blocking)', err))
-  }
+  // Zugriffsprotokoll fail-closed VOR der Ausgabe.
+  const protokoll = await protokolliereOderVerweigere(
+    ctx,
+    protokollEintraege(ctx.zugaenge, 'dokumente', 'dokument_eingesehen'),
+  )
+  if (protokoll) return protokoll
 
   return NextResponse.json({ dokumente: enriched })
 })

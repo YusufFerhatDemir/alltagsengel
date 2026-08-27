@@ -5,23 +5,42 @@ import { useRouter } from 'next/navigation'
 import { requireUser } from '@/lib/supabase/require-session'
 import { IconCalendar, IconClock, IconShield } from '@/components/Icons'
 
+// Die Termine kommen aus den Einsätzen (assignments), nicht mehr aus
+// `bookings` — Begründung in lib/angehoerige/termine.ts. Deshalb hier
+// die Feldnamen und Statuswerte der Einsatzplanung.
 interface Termin {
   id: string
-  service: string
-  date: string
-  time: string
-  duration_hours: number
-  status: string
-  notes: string
+  client_id: string
   client_name: string
+  datum: string | null
+  von: string | null
+  bis: string | null
+  leistungsart: string | null
+  status: string | null
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  pending: { label: 'Ausstehend', color: 'var(--gold2)' },
-  accepted: { label: 'Bestätigt', color: 'var(--green)' },
-  completed: { label: 'Abgeschlossen', color: 'var(--ink4)' },
+  active: { label: 'Geplant', color: 'var(--gold2)' },
+  GEPLANT: { label: 'Geplant', color: 'var(--gold2)' },
+  BESTAETIGT: { label: 'Bestätigt', color: 'var(--green)' },
+  UNTERWEGS: { label: 'Unterwegs', color: 'var(--green)' },
+  GESTARTET: { label: 'Läuft', color: 'var(--green)' },
+  BEENDET: { label: 'Abgeschlossen', color: 'var(--ink4)' },
+  STORNIERT: { label: 'Storniert', color: 'var(--red-w)' },
   cancelled: { label: 'Storniert', color: 'var(--red-w)' },
-  declined: { label: 'Abgelehnt', color: 'var(--red-w)' },
+  NO_SHOW: { label: 'Nicht angetroffen', color: 'var(--red-w)' },
+}
+
+/** Dauer in Minuten aus zwei Uhrzeiten — über Mitternacht hinaus. */
+function dauerMinuten(von: string | null, bis: string | null): number | null {
+  const zuMinuten = (t: string | null) => {
+    const m = /^(\d{1,2}):(\d{2})/.exec(t ?? '')
+    return m ? Number(m[1]) * 60 + Number(m[2]) : null
+  }
+  const a = zuMinuten(von)
+  const b = zuMinuten(bis)
+  if (a === null || b === null) return null
+  return b > a ? b - a : b + 24 * 60 - a
 }
 
 export default function TerminePage() {
@@ -56,8 +75,12 @@ export default function TerminePage() {
 
   const today = new Date().toISOString().split('T')[0]
   const filtered = termine.filter(t => {
-    if (filter === 'kommend') return t.date >= today
-    if (filter === 'vergangen') return t.date < today
+    // Ohne Datum lässt sich nicht einordnen, ob der Termin ansteht —
+    // er erscheint deshalb nur unter „Alle" statt in einem der beiden
+    // Zeitfilter zu verschwinden.
+    if (!t.datum) return filter === 'alle'
+    if (filter === 'kommend') return t.datum >= today
+    if (filter === 'vergangen') return t.datum < today
     return true
   })
 
@@ -126,13 +149,14 @@ export default function TerminePage() {
           </div>
         ) : (
           filtered.map(termin => {
-            const s = STATUS_MAP[termin.status] || { label: termin.status, color: 'var(--ink4)' }
+            const s = STATUS_MAP[termin.status ?? ''] || { label: termin.status ?? 'Unbekannt', color: 'var(--ink4)' }
+            const dauer = dauerMinuten(termin.von, termin.bis)
             return (
               <div key={termin.id} className="portal-list-item">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>
-                      {termin.service || 'Alltagsbegleitung'}
+                      {termin.leistungsart || 'Einsatz'}
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--ink4)', marginTop: 2 }}>
                       {termin.client_name}
@@ -149,20 +173,16 @@ export default function TerminePage() {
                 <div style={{ display: 'flex', gap: 16, fontSize: 13, color: 'var(--ink3)' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <IconCalendar size={14} />
-                    {new Date(termin.date).toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' })}
+                    {termin.datum
+                      ? new Date(termin.datum).toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' })
+                      : 'Ohne Datum'}
                   </span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <IconClock size={14} />
-                    {termin.time?.slice(0, 5)} Uhr
-                    {termin.duration_hours ? ` (${termin.duration_hours} Std.)` : ''}
+                    {termin.von ? `${termin.von.slice(0, 5)} Uhr` : 'Zeit offen'}
+                    {dauer !== null ? ` (${Math.floor(dauer / 60)}:${String(dauer % 60).padStart(2, '0')} Std.)` : ''}
                   </span>
                 </div>
-
-                {termin.notes && (
-                  <div style={{ fontSize: 12, color: 'var(--ink4)', marginTop: 8, fontStyle: 'italic' }}>
-                    {termin.notes}
-                  </div>
-                )}
               </div>
             )
           })
