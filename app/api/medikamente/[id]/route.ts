@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { safeApiError } from '@/lib/api/error-sanitizer'
+import { apiErrorResponse, safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { requireMedAdmin } from '@/lib/medikamente/api-auth'
 import { logAuditEvent } from '@/lib/audit-log'
@@ -75,10 +75,8 @@ export const PATCH = withTracking(async function PATCH(
     })
 
     return NextResponse.json(result)
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unbekannter Fehler'
-    const status = msg.includes('Ungültig') ? 400 : 500
-    return NextResponse.json({ error: msg }, { status })
+  } catch (e) {
+    return apiErrorResponse(e, req)
   }
 })
 
@@ -108,6 +106,6 @@ export const DELETE = withTracking(async function DELETE(
 
     return NextResponse.json(result)
   } catch (e) {
-    return safeApiError(e, req)
+    return apiErrorResponse(e, req)
   }
 })
