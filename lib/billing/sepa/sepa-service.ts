@@ -205,9 +205,13 @@ export async function createSepaBatch(
   // Rechnungen mit Client + Mandat laden
   const { data: invoices } = await supabase
     .from('invoices')
-    .select('id, invoice_number, invoice_number_formatted, total_amount, paid_amount, client_id, status')
+    .select('id, invoice_number, invoice_number_formatted, total_amount, paid_amount, client_id, status, frozen_at, deleted_at')
     .in('id', invoiceIds)
     .eq('organization_id', organizationId)
+    // Geloeschte Rechnungen wurden bisher mitgeladen und eingezogen. Eine
+    // Rechnung, die in der Oberflaeche nicht mehr existiert, darf kein Geld
+    // vom Konto des Kunden holen.
+    .is('deleted_at', null)
 
   if (!invoices || invoices.length === 0) throw new Error('Keine gültigen Rechnungen gefunden.')
 
@@ -251,15 +255,28 @@ export async function createSepaBatch(
   const bereitsImEinzug = new Set<string>((laufendePosten || []).map(p => p.invoice_id))
 
   /**
-   * Rechnungsstatus, aus denen KEIN Lastschrifteinzug entstehen darf.
+   * Rechnungsstatus, aus denen ein Lastschrifteinzug entstehen DARF.
    *
-   * `status` wurde bisher mitgelesen, aber nie ausgewertet. Damit wurden
-   * Entwürfe (nicht festgeschrieben, nicht versandt) genauso eingezogen
-   * wie stornierte und abgeschriebene Rechnungen — also Beträge, die dem
-   * Unternehmen gar nicht zustehen.
+   * Bewusst eine Erlaubnisliste. Vorher stand hier eine Sperrliste
+   * ('entwurf', 'storniert', 'abgeschrieben', 'akzeptiert', 'bezahlt') —
+   * damit war jeder Status einziehbar, der zufaellig nicht daraufstand.
+   * Konkret durchgerutscht sind:
+   *
+   *   geprueft               — noch nicht festgeschrieben, nie beim Kunden
+   *   korrektur_erforderlich — Rechnung ist bekannt falsch
+   *   strittig               — der Kunde bestreitet die Forderung gerade
+   *   abgelehnt              — der Kostentraeger hat abgelehnt
+   *   gekuerzt               — der offene Betrag ist noch nicht festgestellt
+   *   erneut_eingereicht     — Kassenweg, keine Privatlastschrift
+   *
+   * Eine Sperrliste an dieser Stelle ist die falsche Richtung: ein neuer
+   * Status im Status-Automaten (lib/billing/core/status-machine.ts) waere
+   * ohne Codeaenderung sofort einzugsfaehig gewesen. Mit der Erlaubnisliste
+   * ist ein neuer Status erst einmal gesperrt und muss hier bewusst
+   * freigeschaltet werden.
    */
-  const NICHT_EINZIEHBAR = new Set([
-    'entwurf', 'draft', 'storniert', 'abgeschrieben', 'akzeptiert', 'bezahlt',
+  const EINZIEHBARE_STATUS = new Set([
+    'freigegeben', 'uebermittelt', 'quittiert', 'teilweise_bezahlt',
   ])
 
   // Batch-Nummer generieren
@@ -270,8 +287,19 @@ export async function createSepaBatch(
   const skipped: { invoiceId: string; reason: string }[] = []
 
   for (const inv of invoices) {
-    if (NICHT_EINZIEHBAR.has(String(inv.status ?? ''))) {
+    if (!EINZIEHBARE_STATUS.has(String(inv.status ?? ''))) {
       skipped.push({ invoiceId: inv.id, reason: `Status "${inv.status}" — kein Einzug` })
+      continue
+    }
+
+    // Festschreibung ist im ganzen Haus das Tor nach draussen (siehe
+    // lib/billing/versand/rechnung-versand.ts). Der Lastschrifteinzug hat
+    // es bisher als einziger Aussenweg nicht geprueft — eine Rechnung ohne
+    // frozen_at ist inhaltlich noch aenderbar, ihr Betrag also nicht
+    // verbindlich. Redundant zur Statuspruefung, aber bewusst doppelt:
+    // hier geht echtes Geld vom Konto des Kunden.
+    if (!inv.frozen_at) {
+      skipped.push({ invoiceId: inv.id, reason: 'Nicht festgeschrieben — kein Einzug' })
       continue
     }
 
@@ -369,6 +397,56 @@ export async function createSepaBatch(
     .insert(batchItems)
 
   if (itemsErr) throw new Error(`Batch-Positionen konnten nicht gespeichert werden: ${itemsErr.message}`)
+
+  /*
+   * CAS-Guard gegen den doppelten Einzug bei parallelen Laeufen.
+   *
+   * Die Sperre `bereitsImEinzug` weiter oben ist ein Lesen-dann-Schreiben:
+   * zwei gleichzeitige Laeufe mit derselben Rechnung sehen beide eine leere
+   * Liste und legen beide einen Posten an. Ergebnis: zweimal abgebucht.
+   * Eine Datenbank-Bedingung gibt es dafuer nicht — sepa_batch_items hat
+   * keinen Eindeutigkeits-Index auf invoice_id (siehe Migration
+   * 20260812120000). Solange der Index fehlt, ist diese Nachpruefung die
+   * einzige Grenze; sie ist nach dem Muster von createCreditNote gebaut
+   * (einfuegen, nachpruefen, bei Verlust zuruecknehmen).
+   *
+   * Gewinner ist immer der aelteste Posten je Rechnung. Damit entscheidet
+   * nicht der Zufall, sondern eine feste Reihenfolge — beide Laeufe kommen
+   * zum selben Ergebnis, und genau einer zieht ein.
+   *
+   * Zurueckgenommen wird der GANZE Lauf, nicht die einzelne Position: die
+   * pain.008-Datei ist mit allen Posten erzeugt, Summe und Anzahl stehen
+   * schon im Batch. Ein Lauf, dem eine Position fehlt, waere in sich falsch.
+   */
+  const { data: nachPosten } = await supabase
+    .from('sepa_batch_items')
+    .select('id, invoice_id, batch_id, created_at')
+    .eq('organization_id', organizationId)
+    .in('invoice_id', items.map(i => i.invoiceId))
+    .in('status', ['offen', 'eingezogen'])
+
+  const verloren: string[] = []
+  for (const i of items) {
+    const konkurrenz = (nachPosten || []).filter(p => p.invoice_id === i.invoiceId)
+    if (konkurrenz.length <= 1) continue
+    // Aeltester Posten gewinnt; bei gleichem Zeitstempel entscheidet die id.
+    const gewinner = konkurrenz.reduce((a, b) => {
+      const ka = `${a.created_at ?? ''}|${a.id}`
+      const kb = `${b.created_at ?? ''}|${b.id}`
+      return ka <= kb ? a : b
+    })
+    if (gewinner.batch_id !== batch.id) verloren.push(i.invoiceId)
+  }
+
+  if (verloren.length > 0) {
+    await supabase.from('sepa_batch_items').delete().eq('batch_id', batch.id)
+    await supabase.from('sepa_batches').delete().eq('id', batch.id)
+    throw new Error(
+      `Paralleler Zugriff: ${verloren.length} Rechnung(en) wurden zeitgleich in einen `
+      + `anderen Sammelauftrag aufgenommen. Dieser Lauf wurde vollstaendig zurueckgenommen `
+      + `— es wurde nichts eingezogen. Bitte erneut starten.`
+    )
+  }
 
   // XML in Supabase Storage speichern
   const storagePath = `sepa/${organizationId}/${batchNumber}.xml`
