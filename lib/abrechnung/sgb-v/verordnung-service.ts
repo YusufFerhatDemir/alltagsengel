@@ -14,8 +14,36 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { UserFacingError } from '../../api/user-facing-error'
+import { heuteBerlin } from '../../utils/timezone'
 import { logBillingAction } from '../../billing/core/audit'
 import { HKP_VERORDNUNG_TYPE, gueltigBis, type HkpVerordnung } from './positionen'
+
+const DATUM_RE = /^\d{4}-\d{2}-\d{2}$/
+
+/**
+ * Der Gueltigkeitszeitraum entscheidet ueber die Abrechenbarkeit jeder
+ * angehaengten Leistung (siehe pruefePosition in ./positionen.ts). Ein
+ * unlesbares Datum landete bisher ungeprueft in der Spalte; Postgres nimmt
+ * dabei auch Formate an, die der Vergleich hier als Zeichenkette dann falsch
+ * ordnet ('1.3.2026' < '2026-01-01').
+ */
+function pruefeDatum(wert: string | null | undefined, feld: string): string | null {
+  if (wert === null || wert === undefined || wert === '') return null
+  if (typeof wert !== 'string' || !DATUM_RE.test(wert) || Number.isNaN(Date.parse(`${wert}T12:00:00Z`))) {
+    throw new UserFacingError(`${feld} muss ein Datum im Format JJJJ-MM-TT sein.`, 400)
+  }
+  return wert
+}
+
+/**
+ * Genehmigen ist aus diesen Zustaenden zulaessig. 'abgelehnt' und
+ * 'abgelaufen' fehlen bewusst: eine abgelehnte Verordnung per Genehmigung zu
+ * ueberschreiben macht jede daran haengende Leistung schlagartig abrechenbar,
+ * ohne dass die Ablehnung je aufgehoben wurde. Der Weg dorthin fuehrt ueber
+ * 'widerspruch' bzw. eine neue Verordnung.
+ */
+const GENEHMIGBARE_STATI = ['ausstehend', 'beantragt', 'widerspruch', 'genehmigt']
 
 export interface HkpVerordnungListEintrag extends HkpVerordnung {
   client_id: string
@@ -51,7 +79,9 @@ const SELECT = `
 
 function toEintrag(row: any): HkpVerordnungListEintrag {
   const klient = Array.isArray(row.clients) ? row.clients[0] : row.clients
-  const heute = new Date().toISOString().slice(0, 10)
+  // Berlin statt UTC: zwischen 00:00 und 02:00 MESZ liegt das UTC-Datum
+  // noch auf gestern — eine heute ablaufende Verordnung galt dadurch laenger.
+  const heute = heuteBerlin()
   const bis = gueltigBis(row)
   return {
     id: row.id,
@@ -89,7 +119,7 @@ export async function listeHkpVerordnungen(
     .is('deleted_at', null)
     .order('ausstellungsdatum', { ascending: false })
 
-  if (error) throw new Error(`HKP-Verordnungen konnten nicht geladen werden: ${error.message}`)
+  if (error) throw new Error(`verordnungen select (Liste) fehlgeschlagen: ${error.message}`)
   return (data || []).map(toEintrag)
 }
 
@@ -107,7 +137,7 @@ export async function ladeHkpVerordnung(
     .is('deleted_at', null)
     .maybeSingle()
 
-  if (error) throw new Error(`HKP-Verordnung konnte nicht geladen werden: ${error.message}`)
+  if (error) throw new Error(`verordnungen select (Einzel) fehlgeschlagen: ${error.message}`)
   return data ? toEintrag(data) : null
 }
 
@@ -124,7 +154,24 @@ export async function legeHkpVerordnungAn(
   actorId: string,
 ): Promise<string> {
   if (!eingabe.arztName?.trim()) {
-    throw new Error('§ 37 SGB V verlangt eine ärztliche Verordnung (Muster 12) — Arzt fehlt.')
+    throw new UserFacingError('§ 37 SGB V verlangt eine ärztliche Verordnung (Muster 12) — Arzt fehlt.', 400)
+  }
+  if (!eingabe.clientId) {
+    throw new UserFacingError('Klient ist Pflicht.', 400)
+  }
+
+  const ausstellungsdatum = pruefeDatum(eingabe.ausstellungsdatum, 'Ausstellungsdatum')
+  if (!ausstellungsdatum) {
+    throw new UserFacingError('Das Ausstellungsdatum der Verordnung ist Pflicht.', 400)
+  }
+  const gueltigVon = pruefeDatum(eingabe.gueltigVon, 'Gültig-ab-Datum')
+  const gueltigBisDatum = pruefeDatum(eingabe.gueltigBis, 'Gültig-bis-Datum')
+
+  // Ein umgedrehter Zeitraum laesst pruefePosition() JEDE Leistung als
+  // ausserhalb der Verordnung gelten — die Leistungen fallen still aus der
+  // Abrechnung, ohne dass die Verordnung als fehlerhaft auffaellt.
+  if (gueltigVon && gueltigBisDatum && gueltigBisDatum < gueltigVon) {
+    throw new UserFacingError('Das Gültig-bis-Datum liegt vor dem Gültig-ab-Datum.', 400)
   }
 
   // Klient gehört zur Organisation? (belt-and-braces, service_role umgeht RLS)
@@ -134,7 +181,7 @@ export async function legeHkpVerordnungAn(
     .eq('id', eingabe.clientId)
     .eq('organization_id', organizationId)
     .maybeSingle()
-  if (!klient) throw new Error('Klient nicht gefunden oder gehört zu einer anderen Organisation.')
+  if (!klient) throw new UserFacingError('Klient nicht gefunden oder gehört zu einer anderen Organisation.', 404)
 
   const { data: row, error } = await supabase
     .from('verordnungen')
@@ -144,13 +191,13 @@ export async function legeHkpVerordnungAn(
       ist_verordnung: true,
       kostentraeger_typ: 'krankenkasse',
       genehmigung_status: 'ausstehend',
-      ausstellungsdatum: eingabe.ausstellungsdatum,
+      ausstellungsdatum,
       arzt_name: eingabe.arztName,
       arzt_praxis: eingabe.arztPraxis ?? null,
       diagnose: eingabe.diagnose ?? null,
       leistung_beschreibung: eingabe.leistungBeschreibung ?? null,
-      gueltig_von: eingabe.gueltigVon ?? null,
-      gueltig_bis: eingabe.gueltigBis ?? null,
+      gueltig_von: gueltigVon,
+      gueltig_bis: gueltigBisDatum,
       verordnung_nummer: eingabe.verordnungNummer ?? null,
       kostentraeger_ik_nummer: eingabe.kostentraegerIkNummer ?? null,
       kostentraeger_name: eingabe.kostentraegerName ?? null,
@@ -158,7 +205,7 @@ export async function legeHkpVerordnungAn(
     .select('id')
     .single()
 
-  if (error || !row) throw new Error(`HKP-Verordnung konnte nicht angelegt werden: ${error?.message}`)
+  if (error || !row) throw new Error(`verordnungen insert fehlgeschlagen: ${error?.message}`)
 
   await logBillingAction(supabase, {
     entityType: 'verordnung',
@@ -181,19 +228,53 @@ export async function genehmigeHkpVerordnung(
   actorId: string,
 ): Promise<void> {
   const bestehend = await ladeHkpVerordnung(supabase, organizationId, verordnungId)
-  if (!bestehend) throw new Error('HKP-Verordnung nicht gefunden oder gehört zu einer anderen Organisation.')
+  if (!bestehend) throw new UserFacingError('HKP-Verordnung nicht gefunden oder gehört zu einer anderen Organisation.', 404)
 
-  const { error } = await supabase
+  if (!GENEHMIGBARE_STATI.includes(bestehend.genehmigung_status)) {
+    throw new UserFacingError(
+      `Eine Verordnung im Status "${bestehend.genehmigung_status}" kann nicht genehmigt werden. `
+      + `Erlaubt: ${GENEHMIGBARE_STATI.join(', ')}.`,
+      409,
+    )
+  }
+
+  const genehmigungBis = pruefeDatum(genehmigung.genehmigungBis, 'Genehmigt-bis-Datum')
+  const genehmigungDatum = heuteBerlin()
+  if (genehmigungBis && genehmigungBis < genehmigungDatum) {
+    throw new UserFacingError('Das Genehmigt-bis-Datum liegt in der Vergangenheit.', 400)
+  }
+  // gueltig_von ist der Verordnungsbeginn; eine Genehmigung, die davor
+  // endet, deckt keinen einzigen Leistungstag ab.
+  if (genehmigungBis && bestehend.gueltig_von && genehmigungBis < bestehend.gueltig_von) {
+    throw new UserFacingError('Das Genehmigt-bis-Datum liegt vor dem Beginn der Verordnung.', 400)
+  }
+
+  // Die Mandantengrenze zieht die Lese-Abfrage oben (clients!inner) — sie
+  // kann im UPDATE nicht wiederholt werden, weil `verordnungen` keine
+  // organization_id hat und PostgREST im UPDATE nicht ueber den Join
+  // filtert. Was hier dazukommt, sichert den Rest:
+  //   - verordnung_type + deleted_at: derselbe Ausschnitt wie beim Lesen,
+  //     sonst trifft das UPDATE eine Zeile, die die Pruefung nie gesehen hat,
+  //   - genehmigung_status: Compare-and-Swap gegen den gelesenen Wert, damit
+  //     zwei gleichzeitige Bearbeiter sich nicht gegenseitig ueberschreiben.
+  const { data: geaendert, error } = await supabase
     .from('verordnungen')
     .update({
       genehmigung_status: 'genehmigt',
-      genehmigung_datum: new Date().toISOString().slice(0, 10),
-      genehmigung_bis: genehmigung.genehmigungBis ?? null,
+      genehmigung_datum: genehmigungDatum,
+      genehmigung_bis: genehmigungBis,
       genehmigung_aktenzeichen: genehmigung.aktenzeichen ?? null,
     })
     .eq('id', verordnungId)
+    .eq('verordnung_type', HKP_VERORDNUNG_TYPE)
+    .eq('genehmigung_status', bestehend.genehmigung_status)
+    .is('deleted_at', null)
+    .select('id')
 
-  if (error) throw new Error(`Genehmigung konnte nicht eingetragen werden: ${error.message}`)
+  if (error) throw new Error(`verordnungen update (Genehmigung) fehlgeschlagen: ${error.message}`)
+  if (!geaendert || geaendert.length === 0) {
+    throw new UserFacingError('Der Status der Verordnung hat sich zwischenzeitlich geändert.', 409)
+  }
 
   await logBillingAction(supabase, {
     entityType: 'verordnung',
@@ -201,7 +282,11 @@ export async function genehmigeHkpVerordnung(
     entityId: verordnungId,
     action: 'sgb_v_verordnung_genehmigt',
     previousState: { genehmigung_status: bestehend.genehmigung_status },
-    newState: { genehmigung_status: 'genehmigt', aktenzeichen: genehmigung.aktenzeichen ?? null },
+    newState: {
+      genehmigung_status: 'genehmigt',
+      aktenzeichen: genehmigung.aktenzeichen ?? null,
+      genehmigung_bis: genehmigungBis,
+    },
     actorId,
   })
 }
