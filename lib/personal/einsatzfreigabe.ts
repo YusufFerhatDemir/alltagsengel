@@ -25,18 +25,34 @@ export interface ClientFreigabeErgebnis {
   probleme: string[]
 }
 
-export async function pruefeEinsatzfreigabe(
+/**
+ * Die sachlichen Voraussetzungen der Einsatzfreigabe — OHNE das Kennzeichen
+ * `caregivers.einsatzfreigabe` selbst.
+ *
+ * Bewusst getrennt von `pruefeEinsatzfreigabe`: Beim Erteilen der Freigabe ist
+ * das Kennzeichen naturgemäß noch nicht gesetzt. Läge die Flag-Prüfung mit in
+ * derselben Funktion, könnte `setzeEinsatzfreigabe` die Voraussetzungen nie
+ * gegen ein sauberes Ergebnis prüfen — es bliebe immer mindestens „Freigabe
+ * nicht erteilt" stehen und die Freigabe wäre nicht erteilbar.
+ */
+async function sammleVoraussetzungen(
   supabase: SupabaseClient,
   caregiverId: string,
   organizationId: string,
-): Promise<FreigabeErgebnis> {
+): Promise<{
+  name: string
+  vertragsstatus: string | null
+  einsatzfreigabe: boolean
+  probleme: string[]
+  abgelaufen: { id: string; title: string; valid_until: string | null }[]
+}> {
   const { data: cg, error: cgErr } = await supabase
     .from('caregivers')
     .select('id, first_name, last_name, einsatzfreigabe, vertragsstatus, status')
     .eq('id', caregiverId)
     .eq('organization_id', organizationId)
     .single()
-  if (cgErr || !cg) throw new UserFacingError('Mitarbeiter nicht gefunden.')
+  if (cgErr || !cg) throw new UserFacingError('Mitarbeiter nicht gefunden.', 404)
 
   const probleme: string[] = []
   const name = `${cg.first_name ?? ''} ${cg.last_name ?? ''}`.trim()
@@ -49,16 +65,20 @@ export async function pruefeEinsatzfreigabe(
     probleme.push(`Vertragsstatus ist "${cg.vertragsstatus}" (erwartet: aktiv)`)
   }
 
-  if (!cg.einsatzfreigabe) {
-    probleme.push('Einsatzfreigabe ist nicht erteilt')
-  }
-
-  const { data: quals } = await supabase
+  // FAIL-CLOSED: Eine nicht lesbare Qualifikationsliste ist kein Nachweis.
+  // Vorher wurde `error` verschluckt; bei Schema-Drift/RLS-Fehler kam
+  // `quals = null` zurück und die Pflichtprüfung meldete zwar „fehlt", aber
+  // mit einer Begruendung, die den echten Grund verdeckte.
+  const { data: quals, error: qualErr } = await supabase
     .from('caregiver_qualifications')
     .select('id, title, valid_until, einsatzrelevant, pflicht')
     .eq('caregiver_id', caregiverId)
     .eq('organization_id', organizationId)
     .eq('einsatzrelevant', true)
+  if (qualErr) {
+    probleme.push('Qualifikationen sind derzeit nicht prüfbar — Freigabe nicht möglich.')
+    return { name, vertragsstatus: cg.vertragsstatus, einsatzfreigabe: !!cg.einsatzfreigabe, probleme, abgelaufen: [] }
+  }
 
   const heute = heuteBerlin()
   const abgelaufen = (quals ?? []).filter(q =>
@@ -70,25 +90,42 @@ export async function pruefeEinsatzfreigabe(
   }
 
   // Enforcing: Führungszeugnis + Erste Hilfe müssen als Pflichtqualifikation vorliegen
-  const pflichtTypen = PFLICHT_QUALIFIKATIONEN
-  for (const pflicht of pflichtTypen) {
+  for (const pflicht of PFLICHT_QUALIFIKATIONEN) {
     const vorhanden = (quals ?? []).find(q =>
       q.title?.toLowerCase().includes(pflicht.suchbegriff) && q.pflicht
     )
     if (!vorhanden) {
       probleme.push(`Pflichtqualifikation "${pflicht.label}" fehlt`)
     } else if (vorhanden.valid_until && vorhanden.valid_until < heute) {
-      // Bereits in abgelaufen erfasst, aber expliziter Hinweis
+      // Die Sammelmeldung oben nennt nur die Anzahl. Fuer eine Pflicht-
+      // qualifikation gehoert der Name in den Klartext — sonst sucht die
+      // Disposition, welcher Nachweis nachgereicht werden muss.
+      probleme.push(`Pflichtqualifikation "${pflicht.label}" ist am ${vorhanden.valid_until} abgelaufen`)
     }
+  }
+
+  return { name, vertragsstatus: cg.vertragsstatus, einsatzfreigabe: !!cg.einsatzfreigabe, probleme, abgelaufen }
+}
+
+export async function pruefeEinsatzfreigabe(
+  supabase: SupabaseClient,
+  caregiverId: string,
+  organizationId: string,
+): Promise<FreigabeErgebnis> {
+  const basis = await sammleVoraussetzungen(supabase, caregiverId, organizationId)
+  const probleme = [...basis.probleme]
+
+  if (!basis.einsatzfreigabe) {
+    probleme.push('Einsatzfreigabe ist nicht erteilt')
   }
 
   return {
     caregiverId,
-    caregiverName: name,
+    caregiverName: basis.name,
     freigegeben: probleme.length === 0,
-    vertragsstatus: cg.vertragsstatus,
+    vertragsstatus: basis.vertragsstatus,
     probleme,
-    abgelaufeneQualifikationen: abgelaufen.map(q => ({
+    abgelaufeneQualifikationen: basis.abgelaufen.map(q => ({
       id: q.id,
       title: q.title,
       validUntil: q.valid_until,
@@ -272,12 +309,36 @@ export async function pruefeVPBudget(
   return { ...vpResult, vpKzpKombiniertWarnung }
 }
 
+/**
+ * Setzt oder entzieht die Einsatzfreigabe.
+ *
+ * ERTEILEN ist an die Voraussetzungen gebunden. Vorher war
+ * `pruefeEinsatzfreigabe` reine Anzeige: die POST-Route schrieb
+ * `einsatzfreigabe = true` direkt aus dem Body, ohne die Pruefung je
+ * aufzurufen. Damit konnte eine Betreuungskraft ohne erweitertes
+ * Fuehrungszeugnis, ohne gueltigen Erste-Hilfe-Nachweis oder mit
+ * gekuendigtem Vertrag freigegeben werden — genau die Nachweise, die bei
+ * einer MD-Pruefung verlangt werden.
+ *
+ * ENTZIEHEN (`freigabe = false`) bleibt jederzeit moeglich: eine Sperre darf
+ * nie an einer Pruefung scheitern.
+ */
 export async function setzeEinsatzfreigabe(
   supabase: SupabaseClient,
   caregiverId: string,
   organizationId: string,
   freigabe: boolean,
 ): Promise<void> {
+  if (freigabe) {
+    const { probleme } = await sammleVoraussetzungen(supabase, caregiverId, organizationId)
+    if (probleme.length > 0) {
+      throw new UserFacingError(
+        `Einsatzfreigabe nicht möglich: ${probleme.join('; ')}.`,
+        409,
+      )
+    }
+  }
+
   const update: Record<string, unknown> = {
     einsatzfreigabe: freigabe,
     einsatzfreigabe_am: freigabe ? heuteBerlin() : null,

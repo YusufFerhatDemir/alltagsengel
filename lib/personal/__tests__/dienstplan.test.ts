@@ -4,6 +4,7 @@ import {
   createEintrag, updateEintrag, deleteEintrag, listEintraege, listTagesansicht,
   createSchicht, listSchichten, updateSchicht,
 } from '../dienstplan'
+import { UserFacingError } from '../../api/user-facing-error'
 
 function insertClient() {
   const inserts: Array<Record<string, unknown>> = []
@@ -96,12 +97,19 @@ test('createEintrag: übersetzt Abwesenheits-Konflikt benutzerfreundlich', async
 function mockQuery(opts: {
   singleResult?: { data: unknown; error: unknown }
   listResult?: { data: unknown; error: unknown }
+  /**
+   * Bestand, den `updateEintrag`/`deleteEintrag` vor dem Schreiben lesen
+   * (Endzustand-Sperre). Default ist ein geplanter Dienst — also ein Eintrag,
+   * an dem Änderungen erlaubt sind.
+   */
+  bestand?: { data: unknown; error: unknown }
 }) {
   const calls: Array<{ method: string; args: unknown[] }> = []
   const builder: Record<string, unknown> = {}
   for (const m of ['insert', 'update', 'delete', 'select', 'eq', 'gte', 'lte', 'order']) {
     builder[m] = (...args: unknown[]) => { calls.push({ method: m, args }); return builder }
   }
+  builder.maybeSingle = async () => opts.bestand ?? { data: { status: 'geplant' }, error: null }
   builder.single = async () => opts.singleResult ?? { data: null, error: { message: 'kein singleResult konfiguriert' } }
   builder.then = (resolve: (v: unknown) => void, reject: (e: unknown) => void) =>
     Promise.resolve(opts.listResult ?? { data: [], error: null }).then(resolve, reject)
@@ -191,7 +199,71 @@ test('deleteEintrag: filtert nach id UND organization_id (Mandantengrenze)', asy
   const { builder, calls } = mockQuery({ listResult: { data: null, error: null } })
   await deleteEintrag(supabaseWith(builder), 'e-1', 'org-1')
   const eqCalls = calls.filter(c => c.method === 'eq').map(c => c.args)
-  assert.deepEqual(eqCalls, [['id', 'e-1'], ['organization_id', 'org-1']])
+  // Zweimal dasselbe Paar: einmal beim Lesen des Bestands (Endzustand-Sperre),
+  // einmal beim Löschen selbst. Beide Wege bleiben mandantengefiltert.
+  assert.deepEqual(eqCalls, [
+    ['id', 'e-1'], ['organization_id', 'org-1'],
+    ['id', 'e-1'], ['organization_id', 'org-1'],
+  ])
+})
+
+test('deleteEintrag: löscht einen abgeschlossenen Dienst NICHT', async () => {
+  const { builder, calls } = mockQuery({ bestand: { data: { status: 'abgeschlossen' }, error: null } })
+  await assert.rejects(
+    () => deleteEintrag(supabaseWith(builder), 'e-1', 'org-1'),
+    (err: unknown) => err instanceof UserFacingError && /nicht gelöscht/.test((err as Error).message),
+  )
+  assert.ok(!calls.some(c => c.method === 'delete'), 'Es darf gar kein DELETE abgesetzt werden')
+})
+
+test('deleteEintrag: meldet einen unbekannten Eintrag als 404', async () => {
+  const { builder } = mockQuery({ bestand: { data: null, error: null } })
+  await assert.rejects(
+    () => deleteEintrag(supabaseWith(builder), 'e-fremd', 'org-1'),
+    (err: unknown) => err instanceof UserFacingError && (err as UserFacingError).status === 404,
+  )
+})
+
+// ── Endzustand-Sperre beim Ändern ──────────────────────────────
+
+test('updateEintrag: sperrt Kernfelder eines abgeschlossenen Dienstes', async () => {
+  for (const status of ['abgeschlossen', 'ausgefallen']) {
+    const { builder, calls } = mockQuery({ bestand: { data: { status }, error: null } })
+    await assert.rejects(
+      () => updateEintrag(supabaseWith(builder), 'e-1', 'org-1', { startZeit: '09:00' }),
+      (err: unknown) => err instanceof UserFacingError && (err as UserFacingError).status === 409,
+      `Status ${status} muss gesperrt sein`,
+    )
+    assert.ok(!calls.some(c => c.method === 'update'), 'Kein UPDATE bei gesperrtem Dienst')
+  }
+})
+
+test('updateEintrag: sperrt auch das Umbesetzen und den Statuswechsel', async () => {
+  for (const patch of [{ caregiverId: 'cg-2' }, { clientId: 'cl-2' }, { status: 'geplant' as const }]) {
+    const { builder } = mockQuery({ bestand: { data: { status: 'abgeschlossen' }, error: null } })
+    await assert.rejects(
+      () => updateEintrag(supabaseWith(builder), 'e-1', 'org-1', patch),
+      (err: unknown) => err instanceof UserFacingError,
+    )
+  }
+})
+
+test('updateEintrag: lässt Notizen am abgeschlossenen Dienst zu', async () => {
+  const { builder, calls } = mockQuery({
+    bestand: { data: { status: 'abgeschlossen' }, error: null },
+    singleResult: { data: { id: 'e-1', notizen: 'Nachtrag' }, error: null },
+  })
+  await updateEintrag(supabaseWith(builder), 'e-1', 'org-1', { notizen: 'Nachtrag' })
+  assert.deepEqual(calls.find(c => c.method === 'update')!.args[0], { notizen: 'Nachtrag' })
+})
+
+test('updateEintrag: geplanter Dienst bleibt frei änderbar', async () => {
+  const { builder, calls } = mockQuery({
+    bestand: { data: { status: 'geplant' }, error: null },
+    singleResult: { data: { id: 'e-1' }, error: null },
+  })
+  await updateEintrag(supabaseWith(builder), 'e-1', 'org-1', { startZeit: '09:00', caregiverId: 'cg-2' })
+  assert.deepEqual(calls.find(c => c.method === 'update')!.args[0], { start_zeit: '09:00', caregiver_id: 'cg-2' })
 })
 
 test('deleteEintrag: wirft bei DB-Fehler', async () => {

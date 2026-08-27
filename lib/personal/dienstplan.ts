@@ -186,6 +186,26 @@ export interface UpdateEintragParams {
   bestaetigtAm?: string | null
 }
 
+/**
+ * Ein abgeschlossener Dienst ist geleistete Arbeit — die Zeiten daran haengen
+ * an Arbeitszeit-Erfassung und Abrechnung. Nachtraeglich verschieben,
+ * umbesetzen oder auf einen anderen Klienten umbuchen darf man ihn deshalb
+ * nicht mehr. `ausgefallen` zaehlt genauso: der Dienst ist entschieden und
+ * die Absage dokumentiert. `vertretung` bleibt bewusst offen — dort laeuft
+ * die Umbesetzung ja gerade erst.
+ *
+ * In der Datenbank gibt es dafuer keinen Riegel — dienstplan_eintraege hat
+ * keinen Status-Guard-Trigger (20260811010000_personalmanagement.sql). Diese
+ * Pruefung ist die einzige Stelle, an der die Regel gilt.
+ */
+const DIENSTPLAN_ENDZUSTAENDE: DienstplanStatus[] = ['abgeschlossen', 'ausgefallen']
+
+/** Feld-Aenderungen, die an einem entschiedenen Dienst nichts mehr zu suchen haben. */
+const DIENST_KERNFELDER: Array<keyof UpdateEintragParams> = [
+  'schichtId', 'caregiverId', 'clientId', 'assignmentId',
+  'startZeit', 'endZeit', 'pauseMinuten', 'typ',
+]
+
 export async function updateEintrag(
   supabase: SupabaseClient,
   id: string,
@@ -194,6 +214,25 @@ export async function updateEintrag(
 ): Promise<DienstplanEintrag> {
   assertErlaubt(patch.status, DIENSTPLAN_STATUS_WERTE, 'status')
   assertErlaubt(patch.typ, DIENSTPLAN_TYP_WERTE, 'typ')
+
+  const { data: bestand, error: ladeFehler } = await supabase
+    .from('dienstplan_eintraege')
+    .select('status')
+    .eq('id', id)
+    .eq('organization_id', organizationId)
+    .maybeSingle()
+  if (ladeFehler) throw new Error(`Dienstplan-Eintrag konnte nicht geladen werden: ${ladeFehler.message}`)
+  if (!bestand) throw new UserFacingError('Dienstplan-Eintrag nicht gefunden.', 404)
+
+  if (DIENSTPLAN_ENDZUSTAENDE.includes(bestand.status as DienstplanStatus)) {
+    const beruehrt = DIENST_KERNFELDER.filter(feld => patch[feld] !== undefined)
+    if (beruehrt.length > 0 || patch.status !== undefined) {
+      throw new UserFacingError(
+        `Ein Dienst im Status "${bestand.status}" ist abgeschlossen und kann nicht mehr geändert werden. Notizen bleiben ergänzbar.`,
+        409,
+      )
+    }
+  }
 
   const update: Record<string, unknown> = {}
   if (patch.schichtId !== undefined) update.schicht_id = patch.schichtId
@@ -228,6 +267,23 @@ export async function updateEintrag(
 }
 
 export async function deleteEintrag(supabase: SupabaseClient, id: string, organizationId: string): Promise<void> {
+  // Ein geleisteter oder ausgefallener Dienst ist Teil der Dokumentation —
+  // er wird nicht geloescht, sonst fehlt der Bezug zur erfassten Arbeitszeit.
+  const { data: bestand, error: ladeFehler } = await supabase
+    .from('dienstplan_eintraege')
+    .select('status')
+    .eq('id', id)
+    .eq('organization_id', organizationId)
+    .maybeSingle()
+  if (ladeFehler) throw new Error(`Dienstplan-Eintrag konnte nicht geladen werden: ${ladeFehler.message}`)
+  if (!bestand) throw new UserFacingError('Dienstplan-Eintrag nicht gefunden.', 404)
+  if (DIENSTPLAN_ENDZUSTAENDE.includes(bestand.status as DienstplanStatus)) {
+    throw new UserFacingError(
+      `Ein Dienst im Status "${bestand.status}" kann nicht gelöscht werden.`,
+      409,
+    )
+  }
+
   const { error } = await supabase
     .from('dienstplan_eintraege')
     .delete()
