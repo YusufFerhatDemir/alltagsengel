@@ -111,7 +111,11 @@ export async function GET(request: Request) {
     const orgId = await getActiveOrgId()
     // Fail-closed (Audit MITTEL-1)
     if (!orgId) return NextResponse.json({ error: 'Keine Organisation zugewiesen' }, { status: 403 })
-    const companyIk = await getOrgIK(admin)
+    // Org MITGEBEN: ohne zweiten Parameter faellt getOrgIK auf die Stamm-
+    // Organisation zurueck. Der Leistungsnachweis traegt die IK des
+    // Leistungserbringers gegenueber der Pflegekasse — ein anderer
+    // Mandant haette hier die IK von Alltagsengel ausgewiesen.
+    const companyIk = await getOrgIK(admin, orgId)
 
     // ── Optional: Verordnung laden (liefert Genehmigungsnummer + Klient) ──
     let verordnung: {

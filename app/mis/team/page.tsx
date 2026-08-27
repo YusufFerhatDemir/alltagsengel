@@ -120,7 +120,7 @@ export default function TeamPage() {
       })
       if (error) { setRecError(error); setRecSaving(false); return }
       if (degraded) {
-        setRecError('Gespeichert — Status musste auf „Entwurf" gesetzt werden (Datenbank-Migration steht noch aus).')
+        setRecError('Gespeichert — der Status musste auf „Entwurf" gesetzt werden (Datenbank-Migration steht noch aus). Der Eintrag ist so noch nicht abrechenbar und muss nachbearbeitet werden. Der Budget-Topf wurde NICHT verändert.')
       }
       setRecOpen(false)
       setRecForm({

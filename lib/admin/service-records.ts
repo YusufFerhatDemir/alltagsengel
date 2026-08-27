@@ -14,9 +14,14 @@
 // Der Fix für die Constraints liegt in
 //   supabase/migrations/20260702_fix_service_records_check_constraints.sql
 // und muss im Supabase-SQL-Editor angewendet werden (DDL ist von der App aus
-// nicht möglich). SOLANGE das nicht passiert ist, degradiert diese Funktion
-// kontrolliert: sie versucht den fachlich korrekten Wert und fällt bei 23514
-// auf den live erlaubten Wert zurück, statt den Einsatz zu verwerfen.
+// nicht möglich). SOLANGE das nicht passiert ist, wertet diese Funktion den
+// STATUS kontrolliert auf 'draft' ab, statt den Einsatz zu verwerfen.
+//
+// Der BUDGET-TOPF wird dagegen NIE ersetzt. Er entscheidet, welcher Topf des
+// Kunden verbraucht wird (§ 45b Entlastungsbetrag, § 39 Verhinderungspflege,
+// privat) — ein Ersatzwert wäre eine stille Umbuchung fremden Geldes, kein
+// Rückfall. Scheitert er am Constraint, bricht die Funktion mit einer
+// deutlichen Meldung ab. Begründung ausführlich an der Stelle selbst.
 //
 // Nach Anwendung der Migration greift der Fallback einfach nie mehr — die
 // Funktion kann dann unverändert bestehen bleiben.
@@ -25,9 +30,10 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { logger } from '@/lib/logger'
 const log = logger.child('leistungs-erfassung')
 
-// Live erlaubte Rückfallwerte (kleinster gemeinsamer Nenner beider Constraint-Stände)
+// Live erlaubter Rückfallwert für den STATUS (kleinster gemeinsamer Nenner
+// beider Constraint-Stände). Für den Budget-Topf gibt es bewusst keinen —
+// siehe die Begründung an der Abwertung unten.
 const FALLBACK_STATUS = 'draft'
-const FALLBACK_BUDGET_TYPE = 'entlastung'
 
 const CHECK_VIOLATION = '23514'
 
@@ -54,7 +60,11 @@ export interface ServiceRecordInput {
 export interface SaveResult {
   id: string | null
   error: string | null
-  /** true, wenn Status oder Budget-Topf wegen der alten Constraints abgewertet wurden */
+  /**
+   * true, wenn der STATUS wegen der alten Constraints auf 'draft'
+   * abgewertet wurde. Der Budget-Topf wird nie abgewertet — dort führt
+   * ein Constraint-Verstoß zu `error`, nicht zu `degraded`.
+   */
   degraded: boolean
 }
 
@@ -69,15 +79,32 @@ export async function saveServiceRecord(
   supabase: SupabaseClient,
   input: ServiceRecordInput,
 ): Promise<SaveResult> {
+  /*
+   * Abgewertet wird NUR der Status — der Budget-Topf niemals.
+   *
+   * Vorher gab es einen dritten Versuch, der zusätzlich `budget_type` auf
+   * 'entlastung' zurückstellte. Das ist keine Abwertung, das ist eine
+   * Umbuchung: eine Leistung, die auf die Verhinderungspflege (§ 39) oder
+   * auf Privatzahlung lief, verbrauchte dann den Entlastungsbetrag nach
+   * § 45b — 131 EUR im Monat, die dem Kunden woanders fehlen. Der Fehler
+   * fällt niemandem auf: der Datensatz sieht vollständig aus, die
+   * Abrechnung läuft durch, nur aus dem falschen Topf.
+   *
+   * Der Status ist der andere Fall: 'draft' ist sichtbar unfertig und
+   * NICHT abrechenbar (nur `status` steuert Rechnung und Budget). Die
+   * erfasste Arbeit geht nicht verloren, sie wartet. Das ist der
+   * Unterschied zwischen „später nacharbeiten" und „still falsch gebucht".
+   *
+   * Wenn der Budget-Topf am Check-Constraint scheitert, ist die richtige
+   * Antwort deshalb eine Fehlermeldung an den Menschen davor — nicht ein
+   * stiller Ersatzwert. Behoben wird das mit
+   * supabase/migrations/20260702_fix_service_records_check_constraints.sql.
+   */
   const attempts: { status: string; budget_type: string }[] = [
     { status: input.status, budget_type: input.budget_type },
   ]
-  // Reihenfolge: erst Status abwerten, dann zusätzlich den Budget-Topf.
   if (input.status !== FALLBACK_STATUS) {
     attempts.push({ status: FALLBACK_STATUS, budget_type: input.budget_type })
-  }
-  if (input.budget_type !== FALLBACK_BUDGET_TYPE) {
-    attempts.push({ status: FALLBACK_STATUS, budget_type: FALLBACK_BUDGET_TYPE })
   }
 
   let lastError = 'Unbekannter Fehler'
@@ -104,10 +131,9 @@ export async function saveServiceRecord(
       .single()
 
     if (!error) {
-      const degraded =
-        attempt.status !== input.status || attempt.budget_type !== input.budget_type
+      const degraded = attempt.status !== input.status
       if (degraded) {
-        log.warn('Check-Constraint noch nicht migriert — abweichend gespeichert', {
+        log.warn('Check-Constraint noch nicht migriert — Status abgewertet', {
           gespeichert: attempt,
           gewuenscht: { status: input.status, budget_type: input.budget_type },
         })
@@ -121,5 +147,20 @@ export async function saveServiceRecord(
     if (error.code !== CHECK_VIOLATION) break
   }
 
-  return { id: null, error: lastError, degraded: false }
+  // Bis hierhin heisst: auch mit abgewertetem Status abgelehnt. Der wahr-
+  // scheinlichste Grund ist der Budget-Topf — und der wird nicht ersetzt.
+  // Die Meldung sagt das ausdruecklich, damit vor dem Bildschirm niemand
+  // raet und niemand auf 'entlastung' ausweicht, um „es zum Laufen zu
+  // bringen".
+  const budgetVerdacht = lastError.includes('budget_type')
+  return {
+    id: null,
+    degraded: false,
+    error: budgetVerdacht
+      ? `Der Budget-Topf "${input.budget_type}" wird von der Datenbank noch nicht `
+        + 'akzeptiert (Migration 20260702 steht aus). Der Eintrag wurde NICHT '
+        + 'gespeichert — er wird bewusst nicht auf den Entlastungsbetrag '
+        + `umgebucht. Urspruengliche Meldung: ${lastError}`
+      : lastError,
+  }
 }
