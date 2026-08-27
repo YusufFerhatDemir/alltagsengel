@@ -332,10 +332,51 @@ describe('Zuordnung der Bankbuchung zur Lastschrift', () => {
       'e0000000-0000-4000-8000-000000000005', ORG_A, ADMIN_A,
     )
 
-    expect(r.erkannt).toBe(true)
     expect(r.gebuehrCent).toBe(0)
     expect(r.mandatGesperrt).toBe(false)
     expect(await zaehle('billing_audit_trail')).toBe(0)
+  })
+
+  /**
+   * KORREKTUR (27.08.2026): dieser Test verlangte bis hierher
+   * `erkannt === true` — er hielt damit einen Fehler fest, statt ihn zu
+   * fangen. `erkannt` war im Ergebnis auf `true` vorbelegt und wurde beim
+   * Ausgang „keine Lastschrift gefunden" nie zurueckgesetzt.
+   *
+   * Der Aufrufer (app/api/billing/camt/import/route.ts) entscheidet daran,
+   * ob die Buchung als verarbeitet oder als Klaerfall zaehlt. Eine
+   * Ruecklastschrift ohne Treffer wurde deshalb als
+   * 'ruecklastschrift_verarbeitet' gemeldet und als „zugeordnet" gezaehlt,
+   * obwohl nichts storniert, nichts wieder geoeffnet und keine Gebuehr
+   * gebucht wurde: das Geld war zurueck, die Rechnung galt weiter als
+   * bezahlt, und es entstand keine Zeile, die jemand haette abarbeiten
+   * koennen.
+   */
+  it('meldet ohne Treffer erkannt=false — sonst zaehlt der Import ihn als erledigt', async () => {
+    const r = await verarbeiteRuecklastschrift(
+      admin,
+      buchung({ betragCent: -5000, endToEndId: 'AE-GIBT-ES-AUCH-NICHT' }),
+      'e0000000-0000-4000-8000-000000000006', ORG_A, ADMIN_A,
+    )
+
+    expect(r.erkannt).toBe(false)
+    expect(r.fehler).toMatch(/Keine zugehoerige SEPA-Lastschrift/)
+  })
+
+  it('meldet erkannt=true nur, wenn wirklich verarbeitet wurde', async () => {
+    const a = await baueEingezogenenPosten({
+      org: ORG_A, klient: KLIENT_A, nummer: 'RE-2026-1099',
+      betragCent: 5000, mandatsReferenz: 'AE-A-0001-E1', endToEndId: 'AE-RE-2026-1099',
+    })
+
+    const r = await verarbeiteRuecklastschrift(
+      admin, buchung({ betragCent: -5000, endToEndId: 'AE-RE-2026-1099' }),
+      'e0000000-0000-4000-8000-000000000007', ORG_A, ADMIN_A,
+    )
+
+    expect(r.erkannt).toBe(true)
+    expect(r.invoiceId).toBe(a.invoiceId)
+    expect(r.gebuehrCent).toBeGreaterThan(0)
   })
 })
 
@@ -654,6 +695,128 @@ describe('Mandatssperre und Mahnstufe', () => {
       `SELECT dunning_level FROM public.dunning_entries WHERE invoice_id = '${a.invoiceId}'`,
     )
     expect(eintrag.dunning_level).toBe('mahnung_2')
+  })
+
+  // ── Befund F-2 (Phase 8) ──
+  //
+  // Dieser Weg setzt die Mahnstufe direkt, ohne durch advanceDunning() und
+  // dessen Gate zu laufen. Zum Teil ist das Absicht: eine geplatzte
+  // Lastschrift soll nicht auf den regulaeren Stufenabstand warten.
+  //
+  // Eine MANUELLE Mahnsperre ist etwas anderes. Sie nimmt einen Fall bewusst
+  // aus dem Mahnlauf (Ratenvereinbarung, Klaerung, Trauerfall). Wurde die
+  // Stufe trotzdem hochgezaehlt, sprang der Kunde beim Aufheben der Sperre
+  // ohne Zwischenschritt auf mahnung_1 — ohne dass je eine Erinnerung
+  // hinausging und ohne Spur, warum.
+  it('laesst die Mahnstufe bei gesetzter Mahnsperre unveraendert', async () => {
+    const a = await baueEingezogenenPosten({
+      org: ORG_A, klient: KLIENT_A, nummer: 'RE-2026-3008',
+      betragCent: 5000, mandatsReferenz: 'AE-A-0001-Z6', endToEndId: 'AE-RE-2026-3008',
+    })
+    await db.exec(
+      `UPDATE public.dunning_entries
+          SET block_dunning = true, block_reason = 'Ratenvereinbarung bis 31.12.2026'
+        WHERE invoice_id = '${a.invoiceId}'`,
+    )
+
+    const r = await verarbeiteRuecklastschrift(
+      admin, buchung({ betragCent: -5000, endToEndId: 'AE-RE-2026-3008' }),
+      'e0000000-0000-4000-8000-000000003008', ORG_A, ADMIN_A,
+    )
+
+    const [eintrag] = await zeilen<{ dunning_level: string; last_dunning_at: string | null }>(
+      `SELECT dunning_level, last_dunning_at FROM public.dunning_entries
+        WHERE invoice_id = '${a.invoiceId}'`,
+    )
+    expect(eintrag.dunning_level).toBe('offen')
+    expect(eintrag.last_dunning_at).toBeNull()
+
+    const [inv] = await zeilen<{ dunning_level: string }>(
+      `SELECT dunning_level FROM public.invoices WHERE id = '${a.invoiceId}'`,
+    )
+    expect(inv.dunning_level).toBe('offen')
+
+    // Nicht still: der Grund muss im Ergebnis stehen.
+    expect(r.neueMahnstufe).toBeNull()
+    expect(r.mahnstufeUebersprungen).toMatch(/Mahnsperre/)
+    expect(r.mahnstufeUebersprungen).toMatch(/Ratenvereinbarung/)
+  })
+
+  it('bucht die Ruecklastschrift trotz Mahnsperre vollstaendig — nur die Stufe bleibt stehen', async () => {
+    // Die Sperre gilt dem Mahnwesen, nicht der Buchung. Rechnung wieder
+    // offen, Gebuehr gebucht — sonst waere die Sperre ein Freibrief.
+    const a = await baueEingezogenenPosten({
+      org: ORG_A, klient: KLIENT_A, nummer: 'RE-2026-3009',
+      betragCent: 5000, mandatsReferenz: 'AE-A-0001-Z7', endToEndId: 'AE-RE-2026-3009',
+    })
+    await db.exec(
+      `UPDATE public.dunning_entries SET block_dunning = true WHERE invoice_id = '${a.invoiceId}'`,
+    )
+
+    const r = await verarbeiteRuecklastschrift(
+      admin, buchung({ betragCent: -5000, endToEndId: 'AE-RE-2026-3009' }),
+      'e0000000-0000-4000-8000-000000003009', ORG_A, ADMIN_A,
+    )
+
+    expect(r.fehler).toBeNull()
+    expect(r.gebuehrCent).toBeGreaterThan(0)
+    const [inv] = await zeilen<{ status: string; bezahlt: boolean }>(
+      `SELECT status, bezahlt FROM public.invoices WHERE id = '${a.invoiceId}'`,
+    )
+    expect(inv.status).not.toBe('bezahlt')
+  })
+
+  it('meldet den Grund, wenn es gar keinen Mahnvorgang gibt', async () => {
+    await baueEingezogenenPosten({
+      org: ORG_A, klient: KLIENT_A, nummer: 'RE-2026-3010',
+      betragCent: 5000, mandatsReferenz: 'AE-A-0001-Z8', endToEndId: 'AE-RE-2026-3010',
+      mitMahnzeile: false,
+    })
+
+    const r = await verarbeiteRuecklastschrift(
+      admin, buchung({ betragCent: -5000, endToEndId: 'AE-RE-2026-3010' }),
+      'e0000000-0000-4000-8000-000000003010', ORG_A, ADMIN_A,
+    )
+    expect(r.neueMahnstufe).toBeNull()
+    expect(r.mahnstufeUebersprungen).toMatch(/Kein Mahnvorgang/)
+  })
+
+  it('meldet die gesetzte Stufe im Ergebnis, nicht nur in der Datenbank', async () => {
+    const a = await baueEingezogenenPosten({
+      org: ORG_A, klient: KLIENT_A, nummer: 'RE-2026-3011',
+      betragCent: 5000, mandatsReferenz: 'AE-A-0001-Z9', endToEndId: 'AE-RE-2026-3011',
+    })
+
+    const r = await verarbeiteRuecklastschrift(
+      admin, buchung({ betragCent: -5000, endToEndId: 'AE-RE-2026-3011' }),
+      'e0000000-0000-4000-8000-000000003011', ORG_A, ADMIN_A,
+    )
+    expect(r.neueMahnstufe).toBe('mahnung_1')
+    expect(r.mahnstufeUebersprungen).toBeNull()
+    const [eintrag] = await zeilen<{ dunning_level: string }>(
+      `SELECT dunning_level FROM public.dunning_entries WHERE invoice_id = '${a.invoiceId}'`,
+    )
+    expect(eintrag.dunning_level).toBe(r.neueMahnstufe)
+  })
+
+  it('ruehrt die Mahnzeile eines anderen Mandanten nicht an', async () => {
+    // Der Aufrufer reicht einen Admin-Client herein, der RLS umgeht — der
+    // Mandanten-Fence muss deshalb im Filter stehen.
+    const fremd = await baueEingezogenenPosten({
+      org: ORG_B, klient: KLIENT_B, nummer: 'RE-2026-3012',
+      betragCent: 5000, mandatsReferenz: 'AE-B-0001-Z1', endToEndId: 'AE-RE-2026-3012',
+    })
+
+    const r = await verarbeiteRuecklastschrift(
+      admin, buchung({ betragCent: -5000, endToEndId: 'AE-RE-2026-3012' }),
+      'e0000000-0000-4000-8000-000000003012', ORG_A, ADMIN_A,
+    )
+
+    expect(r.invoiceId).toBeNull()
+    const [eintrag] = await zeilen<{ dunning_level: string }>(
+      `SELECT dunning_level FROM public.dunning_entries WHERE invoice_id = '${fremd.invoiceId}'`,
+    )
+    expect(eintrag.dunning_level).toBe('offen')
   })
 
   it('kommt ohne Mahnzeile durch, ohne abzubrechen', async () => {
