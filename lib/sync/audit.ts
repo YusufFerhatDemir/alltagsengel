@@ -60,8 +60,14 @@ export async function warBereitsErfolgreich(
     .maybeSingle()
 
   if (error) {
+    // NICHT `return false`: das hiesse "noch nicht synchronisiert" und
+    // fuehrte die Aktion erneut aus. Bei append-only-Entitaeten (etwa
+    // medikament_eingaben) entsteht dabei aus einem vorübergehenden
+    // DB-Fehler ein doppelter Datensatz — eine doppelt dokumentierte
+    // Medikamentengabe. Der Wurf landet im Fehlerzweig des Aufrufers, das
+    // Item bleibt in der Queue und wird spaeter erneut versucht.
     log.error('Idempotency-Check fehlgeschlagen', { errorMessage: error.message })
-    return false
+    throw new Error(`Idempotenz-Pruefung fehlgeschlagen: ${error.message}`)
   }
   return !!data
 }

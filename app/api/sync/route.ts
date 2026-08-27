@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsUser } from '@/lib/ops/api-auth'
 import { validiereQueueItem, DEFAULT_OFFLINE_CONFIG } from '@/lib/offline/types'
 import type { OfflineQueueItem, KonfliktStrategie } from '@/lib/offline/types'
-import { SYNC_ENTITY_REGISTRY, resolveSyncRoute, extrahiereEntityId } from '@/lib/sync/entity-registry'
+import { SYNC_ENTITY_REGISTRY, resolveSyncRoute, extrahiereEntityId, hatUngueltigeEntityId } from '@/lib/sync/entity-registry'
 import { hatKonflikt, entscheideKonflikt } from '@/lib/sync/conflict'
 import { schreibeSyncAudit, schreibeSyncKonflikt, warBereitsErfolgreich } from '@/lib/sync/audit'
 import { wendeAenderungAn } from '@/lib/sync/apply'
@@ -120,6 +120,23 @@ export const POST = withTracking(async function POST(request: Request) {
         })
 
         const registryEintrag = SYNC_ENTITY_REGISTRY[vollstaendig.entity_typ]
+
+        // Eine mitgeschickte, aber unbrauchbare id ist ein Fehler und kein
+        // "keine id": sonst laeuft das Item als konfliktfrei durch — bei
+        // Entity-Typen, deren Update-Endpunkt die id im Body statt im Pfad
+        // erwartet (leistungsnachweis), wuerde die Aenderung sogar ohne
+        // jede Konfliktpruefung angewendet.
+        if (hatUngueltigeEntityId(vollstaendig.payload)) {
+          ergebnisse.push({
+            queue_item_id: queueItemId,
+            idempotency_key: idempotencyKey,
+            entity_typ: vollstaendig.entity_typ,
+            status: 'error',
+            message: 'payload.id ist keine gültige UUID.',
+          })
+          continue
+        }
+
         const entityId = extrahiereEntityId(vollstaendig.payload)
 
         // ── Konflikt-Erkennung (nur bei 'update' mit bekannter ID) ──
@@ -173,6 +190,23 @@ export const POST = withTracking(async function POST(request: Request) {
               })
             } else {
               void benachrichtigeKonflikt(auth.userId, vollstaendig.entity_typ)
+            }
+
+            // Ohne persistierten Konflikt gibt es keinen Weg zurueck: die
+            // lokale Aenderung wuerde verworfen, ohne dass irgendwo steht,
+            // was sie enthielt — im Admin-UI taucht nichts auf, und der
+            // Client meldet dem Nutzer "wartet auf Klaerung". Deshalb hier
+            // als Fehler melden statt die Daten fallen zu lassen; das Item
+            // bleibt in der Queue.
+            if (!entscheidung.wendeLokaleAenderungAn && !konfliktRow) {
+              ergebnisse.push({
+                queue_item_id: queueItemId,
+                idempotency_key: idempotencyKey,
+                entity_typ: vollstaendig.entity_typ,
+                status: 'error',
+                message: 'Konflikt erkannt, konnte aber nicht gespeichert werden — lokale Änderung bleibt in der Queue.',
+              })
+              continue
             }
 
             if (!entscheidung.wendeLokaleAenderungAn) {

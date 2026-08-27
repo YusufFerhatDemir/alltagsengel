@@ -11,6 +11,9 @@ import {
   entscheideManuelleAufloesung,
 } from '@/lib/sync/conflict'
 
+/** Entity-IDs sind ueberall uuids — die Registry prueft das inzwischen. */
+const TEST_ID = '77777777-7777-4777-8777-777777777777'
+
 // ── Entity-Registry ──────────────────────────────────────────────
 
 describe('SYNC_ENTITY_REGISTRY', () => {
@@ -30,13 +33,21 @@ describe('resolveSyncRoute', () => {
   })
 
   it('liefert PATCH-Endpunkt mit eingesetzter ID für update (pflege_risiko)', () => {
-    const route = resolveSyncRoute(SYNC_ENTITY_REGISTRY.pflege_risiko, 'update', 'risk-1')
-    expect(route).toEqual({ endpoint: '/api/pflege/risiken/risk-1', methode: 'PATCH' })
+    const route = resolveSyncRoute(SYNC_ENTITY_REGISTRY.pflege_risiko, 'update', TEST_ID)
+    expect(route).toEqual({ endpoint: `/api/pflege/risiken/${TEST_ID}`, methode: 'PATCH' })
   })
 
   it('liefert DELETE-Endpunkt mit eingesetzter ID für delete (vitalwerte)', () => {
-    const route = resolveSyncRoute(SYNC_ENTITY_REGISTRY.vitalwerte, 'delete', 'vital-1')
-    expect(route).toEqual({ endpoint: '/api/vitals/vital-1', methode: 'DELETE' })
+    const route = resolveSyncRoute(SYNC_ENTITY_REGISTRY.vitalwerte, 'delete', TEST_ID)
+    expect(route).toEqual({ endpoint: `/api/vitals/${TEST_ID}`, methode: 'DELETE' })
+  })
+
+  it('gibt null zurück, wenn die ID keine UUID ist', () => {
+    // Die ID kommt aus payload.id des Geraets. Ein Wert wie
+    // '../../admin/organizations' wuerde von new URL() in lib/sync/apply.ts
+    // zu einem ganz anderen Endpunkt normalisiert.
+    expect(resolveSyncRoute(SYNC_ENTITY_REGISTRY.pflege_risiko, 'update', 'risk-1')).toBeNull()
+    expect(resolveSyncRoute(SYNC_ENTITY_REGISTRY.vitalwerte, 'delete', '../../admin/organizations')).toBeNull()
   })
 
   it('gibt null zurück, wenn create nicht unterstützt wird (leistungsnachweis)', () => {
@@ -50,7 +61,7 @@ describe('resolveSyncRoute', () => {
   })
 
   it('gibt null zurück, wenn delete nicht unterstützt wird (pflegebericht)', () => {
-    const route = resolveSyncRoute(SYNC_ENTITY_REGISTRY.pflegebericht, 'delete', 'x')
+    const route = resolveSyncRoute(SYNC_ENTITY_REGISTRY.pflegebericht, 'delete', TEST_ID)
     expect(route).toBeNull()
   })
 
@@ -59,13 +70,17 @@ describe('resolveSyncRoute', () => {
       endpoint: '/api/medikamente/eingaben',
       methode: 'POST',
     })
-    expect(resolveSyncRoute(SYNC_ENTITY_REGISTRY.medikament_eingabe, 'update', 'm-1')).toBeNull()
+    expect(resolveSyncRoute(SYNC_ENTITY_REGISTRY.medikament_eingabe, 'update', TEST_ID)).toBeNull()
   })
 })
 
 describe('extrahiereEntityId', () => {
-  it('liefert die ID, wenn vorhanden und ein String ist', () => {
-    expect(extrahiereEntityId({ id: 'abc-123', name: 'x' })).toBe('abc-123')
+  it('liefert die ID, wenn vorhanden und eine UUID ist', () => {
+    expect(extrahiereEntityId({ id: TEST_ID, name: 'x' })).toBe(TEST_ID)
+  })
+
+  it('liefert null, wenn die ID keine UUID ist', () => {
+    expect(extrahiereEntityId({ id: 'abc-123' })).toBeNull()
   })
 
   it('liefert null, wenn keine ID im Payload ist', () => {
@@ -96,8 +111,13 @@ describe('hatKonflikt', () => {
     expect(hatKonflikt({ serverUpdatedAt: '2026-08-12T11:00:00Z', basisUpdatedAt: '2026-08-12T10:00:00Z' })).toBe(true)
   })
 
-  it('kein Konflikt, wenn kein Server-Stand ermittelt werden konnte', () => {
-    expect(hatKonflikt({ serverUpdatedAt: null, basisUpdatedAt: '2026-08-12T10:00:00Z' })).toBe(false)
+  it('KONFLIKT, wenn der Client eine Basis behauptet, aber kein Server-Stand ermittelt werden konnte', () => {
+    // Frueher galt das als konfliktfrei und die lokale Aenderung wurde
+    // angewendet. Genau dieser Zweig greift, wenn die Zeile nicht gefunden
+    // wurde, die Abfrage fehlschlug oder updated_at NULL ist — und in allen
+    // dreien konnten Server-Daten still ueberschrieben werden. Jetzt
+    // fail-closed: im Zweifel ist es ein Konflikt.
+    expect(hatKonflikt({ serverUpdatedAt: null, basisUpdatedAt: '2026-08-12T10:00:00Z' })).toBe(true)
   })
 })
 
