@@ -28,6 +28,18 @@ export type BearbeitungsStatus =
   | 'neu' | 'in_pruefung' | 'korrektur_erforderlich' | 'korrigiert'
   | 'erneut_eingereicht' | 'erledigt' | 'ignoriert'
 
+/**
+ * Derselbe Katalog als Laufzeitwert.
+ *
+ * Zeichengleich mit CHECK chk_fp_bearbeitungsstatus (Migration
+ * 20260808220000). Ein TypScript-Typ prueft nichts an einem Wert, der aus
+ * einem Anfragekoerper kommt — dafuer braucht es diese Liste.
+ */
+export const BEARBEITUNGS_STATUS: readonly BearbeitungsStatus[] = [
+  'neu', 'in_pruefung', 'korrektur_erforderlich', 'korrigiert',
+  'erneut_eingereicht', 'erledigt', 'ignoriert',
+] as const
+
 export interface FehlerErstellenParams {
   organizationId: string
   laufId?: string
@@ -136,20 +148,62 @@ export async function aktualisiereFehler(
 
   if (!existing) throw new Error('Fehler nicht gefunden')
 
-  // Erlaubte Übergänge
-  const erlaubt: Record<string, string[]> = {
+  // Zielstatus zuerst gegen den Katalog pruefen.
+  //
+  // Der Wert kommt aus dem Anfragekoerper der Route und wurde dort nicht
+  // geprueft. Ohne diese Zeile faengt ihn erst der CHECK
+  // chk_fp_bearbeitungsstatus in der Datenbank ab — und dessen Fehler ging
+  // bisher verloren (siehe unten). Fail-closed vor der Uebergangstabelle:
+  // ein unbekannter Zielstatus ist keine Frage von Uebergaengen.
+  if (!BEARBEITUNGS_STATUS.includes(params.bearbeitungsstatus)) {
+    throw new Error(
+      `Unbekannter Bearbeitungsstatus: ${params.bearbeitungsstatus}. `
+      + `Erlaubt: ${BEARBEITUNGS_STATUS.join(', ')}`,
+    )
+  }
+
+  /*
+   * Erlaubte Uebergaenge — VOLLSTAENDIG, einschliesslich der Endzustaende.
+   *
+   * Vorher fehlten 'erledigt' und 'ignoriert' in dieser Tabelle, und die
+   * Pruefung lautete `if (erlaubt[current] && …)`. Ein Status, der nicht
+   * in der Tabelle stand, hatte damit KEINE Beschraenkung: ein erledigter
+   * Fehler liess sich auf 'neu' zuruecksetzen, ein ignorierter auf
+   * 'erledigt'. Genau die beiden Zustaende, die eine Kassenpruefung als
+   * abgeschlossen liest, waren die einzigen ohne Riegel.
+   *
+   * Die leeren Listen sind deshalb Absicht und kein vergessener Eintrag —
+   * dasselbe Muster wie TERMINAL_STATUSES in
+   * lib/billing/core/status-machine.ts. Ein Fehler, der wieder aufgemacht
+   * werden soll, wird neu angelegt; die alte Zeile bleibt als Beleg stehen.
+   */
+  const erlaubt: Record<BearbeitungsStatus, BearbeitungsStatus[]> = {
     'neu': ['in_pruefung', 'ignoriert'],
     'in_pruefung': ['korrektur_erforderlich', 'erledigt', 'ignoriert'],
     'korrektur_erforderlich': ['korrigiert', 'ignoriert'],
     'korrigiert': ['erneut_eingereicht', 'erledigt'],
     'erneut_eingereicht': ['erledigt', 'korrektur_erforderlich'],
+    // Endzustaende — bewusst leer.
+    'erledigt': [],
+    'ignoriert': [],
   }
 
-  const current = existing.bearbeitungsstatus
-  if (erlaubt[current] && !erlaubt[current].includes(params.bearbeitungsstatus)) {
+  const current = existing.bearbeitungsstatus as BearbeitungsStatus
+  const moeglich = erlaubt[current]
+  if (!moeglich) {
+    // Ein Status, den der Katalog nicht kennt (Altbestand, per Hand
+    // gesetzt): fail-closed. Vorher war genau das der Freifahrtschein.
+    throw new Error(
+      `Unbekannter Ausgangsstatus "${current}" — Uebergang nicht auswertbar. `
+      + `Bekannt: ${BEARBEITUNGS_STATUS.join(', ')}`,
+    )
+  }
+  if (!moeglich.includes(params.bearbeitungsstatus)) {
     throw new Error(
       `Ungültiger Statusübergang: ${current} → ${params.bearbeitungsstatus}. ` +
-      `Erlaubt: ${erlaubt[current]?.join(', ')}`,
+      (moeglich.length === 0
+        ? `"${current}" ist ein Endzustand.`
+        : `Erlaubt: ${moeglich.join(', ')}`),
     )
   }
 
@@ -171,7 +225,15 @@ export async function aktualisiereFehler(
     .update(update)
     .eq('id', params.fehlerId)
   if (params.organizationId) fehlerUpdate = fehlerUpdate.eq('organization_id', params.organizationId)
-  await fehlerUpdate
+  // Ergebnis auswerten. Vorher wurde das Versprechen nur abgewartet: ein
+  // abgelehnter CHECK, eine RLS-Sperre oder ein Verbindungsabbruch fielen
+  // still unter den Tisch. Die Route meldete danach { success: true } und
+  // der Pruefpfad-Eintrag unten behauptete einen Statuswechsel, den es nie
+  // gegeben hat — ein falscher Audit-Eintrag ist schlimmer als keiner.
+  const { error: updateError } = await fehlerUpdate
+  if (updateError) {
+    throw new Error(`Fehler konnte nicht aktualisiert werden: ${updateError.message}`)
+  }
 
   await logBillingAction(supabase, {
     entityType: 'dta_fehlerprotokoll',
