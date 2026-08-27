@@ -21,7 +21,13 @@ import type { Medikament } from '../types'
 // Konfigurierbar über `medikament` (Rückgabe für select/maybeSingle) —
 // analog zum Muster in lib/wunden/__tests__/wunden.test.ts.
 
-function fakeClient(opts: { medikament?: Record<string, unknown> | null } = {}) {
+function fakeClient(opts: {
+  medikament?: Record<string, unknown> | null
+  /** Bereits dokumentierte Gaben — Antwort auf die Doppelgabe-Pruefung. */
+  eingaben?: Array<Record<string, unknown>>
+  /** Lesefehler der Doppelgabe-Pruefung (fail-closed-Fall). */
+  eingabenFehler?: { message: string }
+} = {}) {
   const inserts: Array<{ table: string; payload: Record<string, unknown> }> = []
   const updates: Array<{ table: string; payload: Record<string, unknown> }> = []
 
@@ -31,6 +37,13 @@ function fakeClient(opts: { medikament?: Record<string, unknown> | null } = {}) 
         select() {
           const kette: any = {
             eq: () => kette,
+            // `limit()` schliesst die Listenabfrage ab — erfasseEingabe liest
+            // damit die bereits dokumentierten Gaben.
+            limit: async () => (
+              opts.eingabenFehler
+                ? { data: null, error: opts.eingabenFehler }
+                : { data: opts.eingaben ?? [], error: null }
+            ),
             maybeSingle: async () => ({ data: opts.medikament ?? null, error: null }),
             single: async () => ({ data: opts.medikament ?? null, error: null }),
           }
@@ -52,6 +65,32 @@ function fakeClient(opts: { medikament?: Record<string, unknown> | null } = {}) 
     },
   }
   return { supabase: supabase as never, inserts, updates }
+}
+
+/**
+ * Eine Zeile, wie sie in `medikamente` wirklich steht: `medikament_name`
+ * und `dosierung` sind NOT NULL, und der CHECK `einnahme_mindestens_eine`
+ * erzwingt mindestens eine Einnahmezeit. Die frueheren Attrappen hielten
+ * nur `status` vor — damit liess sich die Pruefung des zusammengefuehrten
+ * Standes in `aktualisiereMedikament` nicht abbilden.
+ */
+function bestandsMedikament(ueberschreibungen: Record<string, unknown> = {}) {
+  return {
+    id: 'm-1',
+    organization_id: 'org-1',
+    client_id: 'client-1',
+    medikament_name: 'Ramipril',
+    dosierung: '5mg',
+    kategorie: 'herz_kreislauf',
+    einheit: 'mg',
+    einnahme_morgens: true,
+    einnahme_mittags: false,
+    einnahme_abends: false,
+    einnahme_nachts: false,
+    dauermedikation: true,
+    status: 'aktiv',
+    ...ueberschreibungen,
+  }
 }
 
 const gueltigesMedikament = {
@@ -104,7 +143,7 @@ test('erstelleMedikament legt mit Status "aktiv" an', async () => {
 // ── aktualisiereMedikament: Sperr-Logik ───────────────────────────
 
 test('aktualisiereMedikament blockiert Bearbeitung eines abgesetzten Medikaments', async () => {
-  const { supabase } = fakeClient({ medikament: { id: 'm-1', organization_id: 'org-1', status: 'abgesetzt' } })
+  const { supabase } = fakeClient({ medikament: bestandsMedikament({ status: 'abgesetzt' }) })
   await assert.rejects(
     () => aktualisiereMedikament(supabase, 'org-1', 'm-1', { dosierung: '10mg' }),
     /kann nicht mehr bearbeitet werden/,
@@ -112,7 +151,7 @@ test('aktualisiereMedikament blockiert Bearbeitung eines abgesetzten Medikaments
 })
 
 test('aktualisiereMedikament erlaubt Bearbeitung eines aktiven Medikaments', async () => {
-  const { supabase, updates } = fakeClient({ medikament: { id: 'm-1', organization_id: 'org-1', status: 'aktiv' } })
+  const { supabase, updates } = fakeClient({ medikament: bestandsMedikament({ status: 'aktiv' }) })
   await aktualisiereMedikament(supabase, 'org-1', 'm-1', { dosierung: '10mg' })
   assert.equal(updates[0].payload.dosierung, '10mg')
 })

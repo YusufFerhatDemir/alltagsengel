@@ -184,11 +184,23 @@ export function berechneAktuelleAlarme(
   const grenzenIndex = new Map<string, VitalSignThreshold>()
   for (const g of grenzwerte) grenzenIndex.set(`${g.client_id}:${g.type}`, g)
 
-  // messungen kommen measured_at-absteigend sortiert — die erste je (klient, typ) ist die jüngste.
+  // Die jüngste Messung wird SELBST bestimmt, nicht aus der Reihenfolge der
+  // Eingabe abgelesen.
+  //
+  // Vorher galt "die erste je (Klient, Typ) ist die jüngste" — richtig nur,
+  // solange der Aufrufer measured_at-absteigend sortiert übergibt. Das ist
+  // eine Zusage, die kein Compiler und kein Test einfordert: ein Aufrufer,
+  // der nach `created_at` sortiert, aufsteigend sortiert oder mehrere
+  // Abfragen zusammenfügt, bekam eine ÄLTERE Messung als „aktuellen
+  // Zustand" bewertet. Bei einem kritischen Blutdruck ist das der
+  // Unterschied zwischen Alarm und Ruhe — und es fällt nirgends auf.
   const juengste = new Map<string, VitalSign>()
   for (const m of messungen) {
     const key = `${m.client_id}:${m.type}`
-    if (!juengste.has(key)) juengste.set(key, m)
+    const bisher = juengste.get(key)
+    if (!bisher || String(m.measured_at ?? '') > String(bisher.measured_at ?? '')) {
+      juengste.set(key, m)
+    }
   }
 
   const alarme: KlientenAlarm[] = []

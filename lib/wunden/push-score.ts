@@ -12,6 +12,14 @@ const FLAECHE_KLASSEN_CM2 = [0.3, 0.6, 1.0, 2.0, 3.0, 4.0, 8.0, 12.0, 24.0] as c
 /** Fläche (L×B in cm²) → 0-10 gemäß PUSH 3.0. */
 export function pushFlaechePunkte(laengeCm: number | null, breiteCm: number | null): number | null {
   if (laengeCm === null || breiteCm === null) return null
+  // NaN und Infinity vor dem Vergleich abfangen: `NaN < 0` ist false, und
+  // `NaN <= grenze` ist es fuer JEDE Klasse ebenfalls — findIndex lieferte
+  // dann -1 und der Score sprang auf die HOECHSTE Flaechenklasse (10). Eine
+  // fehlgeschlagene Zahlenumwandlung im Formular erzeugte so den Befund
+  // „groesste Wundflaeche" statt einer Fehlermeldung.
+  if (!Number.isFinite(laengeCm) || !Number.isFinite(breiteCm)) {
+    throw new Error('Länge/Breite müssen endliche Zahlen sein.')
+  }
   if (laengeCm < 0 || breiteCm < 0) throw new Error('Länge/Breite dürfen nicht negativ sein.')
   const flaeche = laengeCm * breiteCm
   if (flaeche === 0) return 0

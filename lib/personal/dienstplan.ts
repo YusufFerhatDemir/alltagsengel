@@ -328,6 +328,15 @@ export async function updateEintrag(
   if (ladeFehler) throw new Error(`Dienstplan-Eintrag konnte nicht geladen werden: ${ladeFehler.message}`)
   if (!bestand) throw new UserFacingError('Dienstplan-Eintrag nicht gefunden.', 404)
 
+  if (DIENSTPLAN_ENDZUSTAENDE.includes(bestand.status as DienstplanStatus)) {
+    const beruehrt = DIENST_KERNFELDER.filter(feld => patch[feld] !== undefined)
+    if (beruehrt.length > 0 || patch.status !== undefined) {
+      throw new UserFacingError(
+        `Ein Dienst im Status "${bestand.status}" ist abgeschlossen und kann nicht mehr geändert werden. Notizen bleiben ergänzbar.`,
+        409,
+      )
+    }
+  }
   // Gegen den Bestand pruefen — ein reines Verschieben des Beginns darf
   // weder einen Null-Dienst noch eine Pause laenger als der Dienst erzeugen.
   if (patch.startZeit !== undefined || patch.endZeit !== undefined || patch.pauseMinuten !== undefined) {
@@ -339,15 +348,6 @@ export async function updateEintrag(
     )
   }
 
-  if (DIENSTPLAN_ENDZUSTAENDE.includes(bestand.status as DienstplanStatus)) {
-    const beruehrt = DIENST_KERNFELDER.filter(feld => patch[feld] !== undefined)
-    if (beruehrt.length > 0 || patch.status !== undefined) {
-      throw new UserFacingError(
-        `Ein Dienst im Status "${bestand.status}" ist abgeschlossen und kann nicht mehr geändert werden. Notizen bleiben ergänzbar.`,
-        409,
-      )
-    }
-  }
 
   const update: Record<string, unknown> = {}
   if (patch.schichtId !== undefined) update.schicht_id = patch.schichtId
