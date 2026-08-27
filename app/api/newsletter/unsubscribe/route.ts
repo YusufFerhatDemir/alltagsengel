@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('newsletter')
 
 // ═══════════════════════════════════════════════════════════
@@ -9,7 +10,7 @@ const log = logger.child('newsletter')
 
 const supabaseAdmin = createAdminClient()
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const email = searchParams.get('email')
 
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
     })
   }
-}
+})
 
 function unsubPage(message: string, success: boolean): string {
   return `<!DOCTYPE html>

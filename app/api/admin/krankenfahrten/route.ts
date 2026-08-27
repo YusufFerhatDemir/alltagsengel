@@ -5,12 +5,13 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logAuditEvent } from '@/lib/audit-log'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * GET /api/admin/krankenfahrten
  * Returns all Krankenfahrten bookings + providers + stats for admin
  */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -85,13 +86,13 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 /**
  * PUT /api/admin/krankenfahrten
  * Update ride status, provider verification, etc.
  */
-export async function PUT(req: Request) {
+export const PUT = withTracking(async function PUT(req: Request) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -176,4 +177,4 @@ export async function PUT(req: Request) {
   } catch (err) {
     return safeApiError(err, req)
   }
-}
+})

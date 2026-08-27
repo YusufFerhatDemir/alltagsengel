@@ -11,8 +11,9 @@ import { NextResponse } from 'next/server'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { createClient } from '@/lib/supabase/server'
 import { istSchluesselGueltig } from '@/lib/coach/abrechnung'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -25,9 +26,9 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: 'Abrechnungswege konnten nicht geladen werden.' }, { status: 500 })
   return NextResponse.json({ wege: data ?? [] })
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -63,9 +64,9 @@ export async function POST(request: Request) {
     )
   }
   return NextResponse.json({ weg: data })
-}
+})
 
-export async function PATCH(request: Request) {
+export const PATCH = withTracking(async function PATCH(request: Request) {
   const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -102,4 +103,4 @@ export async function PATCH(request: Request) {
 
   if (error) return NextResponse.json({ error: 'Abrechnungsweg konnte nicht geändert werden.' }, { status: 400 })
   return NextResponse.json({ weg: data })
-}
+})

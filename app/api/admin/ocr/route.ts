@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('api/admin/ocr')
 
 // ═══════════════════════════════════════════════════════════════
@@ -32,7 +33,7 @@ interface Extracted {
   amounts?: number[]
 }
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -201,4 +202,4 @@ export async function POST(request: Request) {
   } catch (err: any) {
     return safeApiError(err, request)
   }
-}
+})

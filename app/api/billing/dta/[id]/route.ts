@@ -4,8 +4,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(
+export const GET = withTracking(async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -88,4 +89,4 @@ export async function GET(
   } catch (err) {
     return safeApiError(err, _request)
   }
-}
+})

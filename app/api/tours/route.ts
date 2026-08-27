@@ -13,9 +13,10 @@ import {
 import { pruefeBudget, pruefeClientFreigabe } from '@/lib/personal/einsatzfreigabe'
 import { pruefeZeitplan, tourGesamtMinuten, pruefeWochenkapazitaet } from '@/lib/touren/planung'
 import { TOUR_SELECT, type TourZeile } from '@/lib/touren/select'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // ── GET /api/tours?start=…&end=…&caregiver_id=…&status=… ──────────
-export async function GET(req: NextRequest) {
+export const GET = withTracking(async function GET(req: NextRequest) {
   const auth = await requireOpsAdmin('einsatz.lesen')
   if (!auth.ok) return auth.response
 
@@ -48,10 +49,10 @@ export async function GET(req: NextRequest) {
     tour_stops: [...(t.tour_stops ?? [])].sort((a, b) => a.position - b.position),
   }))
   return NextResponse.json(touren)
-}
+})
 
 // ── POST /api/tours — Tour mit Stops anlegen ──────────────────────
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   const auth = await requireOpsAdmin('einsatz.schreiben')
   if (!auth.ok) return auth.response
 
@@ -281,4 +282,4 @@ export async function POST(req: NextRequest) {
     { ...(komplett as unknown as TourZeile), warnungen: warnungen.length > 0 ? warnungen : undefined },
     { status: 201 }
   )
-}
+})

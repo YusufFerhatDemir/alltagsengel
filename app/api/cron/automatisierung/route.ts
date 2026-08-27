@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { fuehreTaeglicheAutomatisierungAus } from '@/lib/automation'
 import { raeumeZustellspurAuf } from '@/lib/notifications/aufraeumen'
 import { pruefeCronGeheimnis } from '@/lib/api/cron-auth'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // ═══════════════════════════════════════════════════════════
 // CRON: TAEGLICHE AUTOMATISIERUNGSKETTEN (WS7)
@@ -16,7 +17,7 @@ import { pruefeCronGeheimnis } from '@/lib/api/cron-auth'
 
 const supabaseAdmin = createAdminClient()
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const abweisung = pruefeCronGeheimnis(request)
   if (abweisung) return abweisung
 
@@ -52,4 +53,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

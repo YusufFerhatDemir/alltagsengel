@@ -4,6 +4,7 @@ import { sendRawEmail } from '@/lib/notifications'
 import { getClientIp, escapeHtml } from '@/lib/rate-limit'
 import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('kontakt')
 
 // ═══════════════════════════════════════════════════════════
@@ -24,7 +25,7 @@ const log = logger.child('kontakt')
 
 const MAX_LEN = { name: 120, email: 200, phone: 40, message: 4000 }
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const ip = getClientIp(request)
     if (!(await rateLimitPersistent(`kontakt:${ip}`, 5, 10 * 60 * 1000))) {
@@ -127,4 +128,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

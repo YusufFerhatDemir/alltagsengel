@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { uebersetzeDbFehler } from '@/lib/touren/server'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 const TEMPLATE_SELECT =
   'id, name, caregiver_id, weekday, start_zeit, stops, aktiv, notes, created_at, updated_at, ' +
@@ -24,7 +25,7 @@ function validiereStops(stops: unknown): string | null {
 }
 
 // ── GET /api/tours/templates ──────────────────────────────────────
-export async function GET(req: NextRequest) {
+export const GET = withTracking(async function GET(req: NextRequest) {
   const auth = await requireOpsAdmin('einsatz.lesen')
   if (!auth.ok) return auth.response
 
@@ -39,10 +40,10 @@ export async function GET(req: NextRequest) {
   const { data, error } = await query
   if (error) return NextResponse.json({ error: uebersetzeDbFehler(error) }, { status: 500 })
   return NextResponse.json(data)
-}
+})
 
 // ── POST /api/tours/templates ─────────────────────────────────────
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   const auth = await requireOpsAdmin('einsatz.schreiben')
   if (!auth.ok) return auth.response
 
@@ -72,10 +73,10 @@ export async function POST(req: NextRequest) {
     .single()
   if (error) return NextResponse.json({ error: uebersetzeDbFehler(error) }, { status: 500 })
   return NextResponse.json(data, { status: 201 })
-}
+})
 
 // ── PATCH /api/tours/templates — body: { id, …updates } ──────────
-export async function PATCH(req: NextRequest) {
+export const PATCH = withTracking(async function PATCH(req: NextRequest) {
   const auth = await requireOpsAdmin('einsatz.schreiben')
   if (!auth.ok) return auth.response
 
@@ -108,4 +109,4 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: uebersetzeDbFehler(error) }, { status })
   }
   return NextResponse.json(data)
-}
+})

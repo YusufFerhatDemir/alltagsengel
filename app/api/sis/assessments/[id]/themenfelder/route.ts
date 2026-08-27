@@ -3,9 +3,10 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePflegeAdmin } from '@/lib/pflege/api-auth'
 import { upsertThemenfeld } from '@/lib/sis'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /** PUT { feldNr, sichtKlient?, einschaetzungPflege?, handlungsbedarf?, bemerkung? } */
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PUT = withTracking(async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const auth = await requirePflegeAdmin('pflege.schreiben')
@@ -31,4 +32,4 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   } catch (err) {
     return apiErrorResponse(err, request)
   }
-}
+})

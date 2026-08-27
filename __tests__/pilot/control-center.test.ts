@@ -35,6 +35,7 @@ import {
   FREIGABE_HINWEIS,
   type MoneyPathUebersicht,
 } from '@/lib/pilot/control-center'
+import { exportiertHandler } from '../helpers/route-quelle'
 
 const ORG = '11111111-1111-4111-8111-111111111111'
 const FREMD = '22222222-2222-4222-8222-222222222222'
@@ -218,7 +219,7 @@ describe('Nur lesend', () => {
   it('die API-Route bietet kein POST, PUT, PATCH oder DELETE an', () => {
     // Der Riegel gegen „einen Knopf drankleben ist ja schnell gemacht".
     const route = readFileSync(join(process.cwd(), 'app/api/admin/pilot/route.ts'), 'utf8')
-    expect(route).toMatch(/export async function GET/)
+    expect(exportiertHandler(route, 'GET')).toBe(true)
     for (const verb of ['POST', 'PUT', 'PATCH', 'DELETE']) {
       expect(route, `${verb} darf es hier nicht geben`).not.toMatch(
         new RegExp(`export\\s+(async\\s+)?function\\s+${verb}`),

@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { calculatePrice, getAvailableTiers, getAvailableSurcharges } from '@/lib/pricing-engine'
 import type { PricingRequest } from '@/lib/types/pricing'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const body = await request.json() as PricingRequest
 
@@ -16,10 +17,10 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 /** GET returns available tiers and surcharges for the booking form */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   try {
     const [tiers, surcharges] = await Promise.all([
       getAvailableTiers(),
@@ -29,4 +30,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

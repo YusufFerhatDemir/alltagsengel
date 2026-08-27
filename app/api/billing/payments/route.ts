@@ -7,6 +7,7 @@ import { getActiveOrgId } from '@/lib/organizations/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 
 import { euroZuCent, centRunden } from '@/lib/geld'
+import { withTracking } from '@/lib/monitoring/tracker'
 // Spiegel der Union-Typen aus lib/billing/core/payments.ts. Fail-closed:
 // ein unbekannter Wert wird hier abgewiesen und nicht an den DB-CHECK
 // durchgereicht, der nur eine rohe Postgres-Meldung zurückgibt.
@@ -16,7 +17,7 @@ const PAYMENT_METHODS: readonly PaymentMethod[] = [
 ]
 const PAYER_TYPES: readonly PayerType[] = ['kunde', 'kostentraeger', 'sonstiger']
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -162,9 +163,9 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -205,4 +206,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

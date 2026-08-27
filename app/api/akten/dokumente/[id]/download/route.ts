@@ -6,6 +6,7 @@ import { requireAktenUser } from '@/lib/akten/api-auth'
 import { getSignedDokumentUrl } from '@/lib/akten/dokumente'
 import { bucketForZuordnung } from '@/lib/akten/types'
 import { logAktenZugriff } from '@/lib/akten/zugriff-log'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // Zugriff läuft in zwei Schichten:
 // 1) RLS-scoped SELECT mit dem Server-Client des eingeloggten Users — das
@@ -14,7 +15,7 @@ import { logAktenZugriff } from '@/lib/akten/zugriff-log'
 //    oder Engel).
 // 2) Erst danach wird mit dem Service-Role-Client die signierte URL erzeugt,
 //    weil die Storage-Buckets keine eigenen Client-Policies haben.
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withTracking(async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const auth = await requireAktenUser()
@@ -52,4 +53,4 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

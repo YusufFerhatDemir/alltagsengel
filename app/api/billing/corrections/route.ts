@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('billing/corrections')
 
 /**
@@ -15,7 +16,7 @@ const log = logger.child('billing/corrections')
  *   ?status=entwurf|freigegeben|uebermittelt|verarbeitet
  *   ?limit=200 (max. 500)
  */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
   const { organizationId } = auth.ctx
@@ -106,4 +107,4 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.json({ rows, kpi })
-}
+})

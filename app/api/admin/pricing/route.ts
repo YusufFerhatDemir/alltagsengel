@@ -3,6 +3,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { invalidatePricingCache } from '@/lib/pricing-engine'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // Admin auth check helper
 async function checkAdmin() {
@@ -44,7 +45,7 @@ async function logAudit(
 }
 
 /** GET — Read all pricing data (tiers, surcharges, regions, config, audit) */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const { supabase, user, error } = await checkAdmin()
   if (error) return NextResponse.json({ error }, { status: 401 })
 
@@ -89,10 +90,10 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 /** POST — Create new tier/surcharge/region/config */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const { supabase, user, error } = await checkAdmin()
   if (error) return NextResponse.json({ error }, { status: 401 })
 
@@ -119,10 +120,10 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 /** PUT — Update existing tier/surcharge/region/config */
-export async function PUT(request: Request) {
+export const PUT = withTracking(async function PUT(request: Request) {
   const { supabase, user, error } = await checkAdmin()
   if (error) return NextResponse.json({ error }, { status: 401 })
 
@@ -153,10 +154,10 @@ export async function PUT(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 /** DELETE — Remove tier/surcharge/region */
-export async function DELETE(request: Request) {
+export const DELETE = withTracking(async function DELETE(request: Request) {
   const { supabase, user, error } = await checkAdmin()
   if (error) return NextResponse.json({ error }, { status: 401 })
 
@@ -188,4 +189,4 @@ export async function DELETE(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

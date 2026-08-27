@@ -8,6 +8,7 @@ import { getActiveOrgId } from '@/lib/organizations/server'
 import { logAuditEvent } from '@/lib/audit-log'
 import { berlinParts } from '@/lib/utils/timezone'
 import { erstelleInitialBudgets } from '@/lib/budget/auto-budget'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * Lokaler Guard dieser Route. Prueft seit dem Rollenkonzept eine
@@ -38,7 +39,7 @@ function generateCustomerNumber(): string {
   return `KD-${yy}${p.month}-${rand}`
 }
 
-export async function POST(req: Request) {
+export const POST = withTracking(async function POST(req: Request) {
   const auth = await requireAdmin('stammdaten.schreiben')
   if (!auth.ok) return auth.response
 
@@ -162,4 +163,4 @@ export async function POST(req: Request) {
   } catch (err) {
     return safeApiError(err, req)
   }
-}
+})

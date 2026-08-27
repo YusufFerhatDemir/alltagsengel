@@ -6,8 +6,9 @@ import { deleteProtokoll, getProtokoll, updateProtokoll } from '@/lib/uebergabe/
 import { listPunkte } from '@/lib/uebergabe/punkte'
 import { listKenntnisnahmen } from '@/lib/uebergabe/kenntnisnahmen'
 import { safeErrorResponse } from '@/lib/utils/api-error'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withTracking(async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const auth = await requireUebergabeUser()
     if (!auth.ok) return auth.response
@@ -28,9 +29,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   } catch (err) {
     return safeErrorResponse(err, 400)
   }
-}
+})
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withTracking(async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const auth = await requireUebergabeUser()
     if (!auth.ok) return auth.response
@@ -49,9 +50,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   } catch (err) {
     return safeErrorResponse(err, 400)
   }
-}
+})
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = withTracking(async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const auth = await requireUebergabeAdmin('pflege.schreiben')
     if (!auth.ok) return auth.response
@@ -62,4 +63,4 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   } catch (err) {
     return safeErrorResponse(err, 400)
   }
-}
+})

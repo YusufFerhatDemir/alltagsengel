@@ -8,6 +8,7 @@ import { randomBytes } from 'node:crypto'
 import { logAuditEvent } from '@/lib/audit-log'
 import { sendAccountDeletionEmail } from '@/lib/emails/account-deletion'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('api:user')
 
 /**
@@ -45,7 +46,7 @@ const log = logger.child('api:user')
 
 const GRACE_DAYS = 60
 
-export async function DELETE(request: NextRequest) {
+export const DELETE = withTracking(async function DELETE(request: NextRequest) {
   try {
     // ── 1. Session-Check ─────────────────────────────────────────
     const supabase = await createClient()
@@ -206,4 +207,4 @@ export async function DELETE(request: NextRequest) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

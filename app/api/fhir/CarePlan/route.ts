@@ -10,10 +10,11 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { buildSearchsetBundle, massnahmenplanToFhirCarePlan } from '@/lib/fhir/mappers'
 import { exceptionOutcome, invalidOutcome, toFhirErrorResponse } from '@/lib/fhir/operation-outcome'
 import type { PflegeMassnahme, PflegeMassnahmenplan } from '@/lib/pflege/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 const FHIR_CONTENT_TYPE = 'application/fhir+json; charset=utf-8'
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return toFhirErrorResponse(auth.response)
 
@@ -63,4 +64,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

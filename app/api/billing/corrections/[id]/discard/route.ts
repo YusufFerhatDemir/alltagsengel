@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { discardCreditNote } from '@/lib/billing/core'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * POST /api/billing/corrections/[id]/discard
@@ -12,7 +13,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
  *
  * Body: { reason: string }
  */
-export async function POST(
+export const POST = withTracking(async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -38,4 +39,4 @@ export async function POST(
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

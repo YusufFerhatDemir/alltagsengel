@@ -7,12 +7,13 @@ import { ladeAufbereitung } from '@/lib/abrechnung/sgb-v/versand'
 import { erzeugePruefExport } from '@/lib/abrechnung/sgb-v/export-generator'
 import { ladeWarteschlange, reiheEin, verarbeiteEintrag, type AdapterTyp } from '@/lib/abrechnung/sgb-v/transport-adapter'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('billing/sgb-v/laeufe/[id]')
 
 const ADAPTER_TYPEN: AdapterTyp[] = ['mock', 'file_export', 'dakota', 'kim']
 
 /** GET /api/billing/sgb-v/laeufe/[id]/queue */
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withTracking(async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
@@ -24,7 +25,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 /**
  * POST /api/billing/sgb-v/laeufe/[id]/queue
@@ -34,7 +35,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
  * synchron: Mock/File-Export laufen sofort durch, Dakota/KIM schlagen sofort
  * mit einer klaren Meldung fehl).
  */
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const POST = withTracking(async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
@@ -75,4 +76,4 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     log.error('/queue] Fehler', { message })
     return NextResponse.json({ error: message }, { status: 400 })
   }
-}
+})

@@ -3,11 +3,12 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { ladeSyncStatusUebersicht } from '@/lib/sync/dashboard'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // GET /api/admin/sync-status — Übersicht offener Konflikte, Sync-Fehler
 // (letzte 24h) und offener Sync-Vorgänge, org-gefenced auf die aktive
 // Organisation des Admins (analog allen anderen Block-19-Dashboards).
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -18,4 +19,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

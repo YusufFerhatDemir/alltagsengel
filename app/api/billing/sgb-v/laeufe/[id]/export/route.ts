@@ -5,6 +5,7 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { ladeAbrechnungslauf } from '@/lib/abrechnung/sgb-v/abrechnungslauf'
 import { ladeAufbereitung } from '@/lib/abrechnung/sgb-v/versand'
 import { erzeugePruefExport, pruefExportAlsCsv, pruefExportAlsJson } from '@/lib/abrechnung/sgb-v/export-generator'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * POST /api/billing/sgb-v/laeufe/[id]/export?format=json|csv
@@ -12,7 +13,7 @@ import { erzeugePruefExport, pruefExportAlsCsv, pruefExportAlsJson } from '@/lib
  * Liefert den internen Prüf-Export — KEIN amtlicher EDIFACT-Datensatz, siehe
  * lib/abrechnung/sgb-v/export-generator.ts.
  */
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const POST = withTracking(async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
@@ -41,4 +42,4 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

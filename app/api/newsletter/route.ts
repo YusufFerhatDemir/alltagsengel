@@ -5,6 +5,7 @@ import { sendRawEmail } from '@/lib/notifications'
 import { getClientIp } from '@/lib/rate-limit'
 import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('newsletter')
 
 // ═══════════════════════════════════════════════════════════
@@ -13,7 +14,7 @@ const log = logger.child('newsletter')
 
 const supabaseAdmin = createAdminClient()
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     // NIEDRIG-8 (Security-Audit 2026-08-19): ratenbegrenzt wie kontakt /
     // lead-inquiry — sonst laesst sich die Willkommens-Mail als Versandhilfe
@@ -105,4 +106,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

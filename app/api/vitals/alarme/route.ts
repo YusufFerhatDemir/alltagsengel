@@ -5,13 +5,14 @@ import { requirePflegeAdmin } from '@/lib/pflege/api-auth'
 import { berechneAktuelleAlarme } from '@/lib/vitals/vitals'
 import { listThresholds, listVitals } from '@/lib/vitals/server'
 import { grenzwertAlarmeAktiv } from '@/lib/vitals/config'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * GET — Aktive Grenzwert-Alarme der Organisation.
  * Bewertet je Klient und Vitaltyp die jüngste Messung der letzten 7 Tage
  * (Zeitfenster per ?tage= übersteuerbar).
  */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   try {
     const auth = await requirePflegeAdmin('pflege.lesen')
     if (!auth.ok) return auth.response
@@ -37,4 +38,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

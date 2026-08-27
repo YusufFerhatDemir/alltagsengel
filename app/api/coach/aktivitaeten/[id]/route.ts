@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { requireCoachUser } from '@/lib/coach/api-auth'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withTracking(async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireCoachUser({ schreibzugriff: true })
   if (!auth.ok) return auth.response
   const { id } = await params
@@ -37,4 +38,4 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (error) return NextResponse.json({ error: 'Aktivität konnte nicht aktualisiert werden.' }, { status: 400 })
   if (!data) return NextResponse.json({ error: 'Aktivität nicht gefunden.' }, { status: 404 })
   return NextResponse.json({ aktivitaet: data })
-}
+})

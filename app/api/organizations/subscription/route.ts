@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -10,7 +11,7 @@ export const dynamic = 'force-dynamic'
  * GET /api/organizations/subscription
  * Abo-Stand der aktiven Organisation (für die Billing-UI in den Einstellungen).
  */
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
@@ -30,4 +31,4 @@ export async function GET() {
   ])
 
   return NextResponse.json({ orgId, organization, subscription })
-}
+})

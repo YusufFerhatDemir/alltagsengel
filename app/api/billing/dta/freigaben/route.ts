@@ -3,6 +3,7 @@ import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { freigabeUebersicht } from '@/lib/abrechnung/externe-freigaben'
 import { sgbVKanalStatus } from '@/lib/abrechnung/sgb-v/versand'
 import { kimKanalStatus } from '@/lib/kim/adapter'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -15,7 +16,7 @@ export const dynamic = 'force-dynamic'
  *
  * Meldet ausschliesslich Ja/Nein pro Schalter — niemals Werte von Secrets.
  */
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const auth = await requireAdminMitOrg('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
@@ -35,4 +36,4 @@ export async function GET() {
       kim: kimKanalStatus(),
     },
   })
-}
+})

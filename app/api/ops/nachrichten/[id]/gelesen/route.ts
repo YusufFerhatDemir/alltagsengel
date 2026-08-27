@@ -4,8 +4,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsUser } from '@/lib/ops/api-auth'
 import { markGelesen } from '@/lib/ops/nachrichten'
 import { logAuditEvent } from '@/lib/audit-log'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function PATCH(
+export const PATCH = withTracking(async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -32,4 +33,4 @@ export async function PATCH(
   } catch (e: any) {
     return apiErrorResponse(e)
   }
-}
+})

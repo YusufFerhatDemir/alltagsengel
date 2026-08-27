@@ -3,8 +3,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { advanceDunning, ensureDunningEntry } from '@/lib/billing/core/dunning'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function POST(
+export const POST = withTracking(async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ invoiceId: string }> }
 ) {
@@ -36,4 +37,4 @@ export async function POST(
   } catch (e) {
     return safeApiError(e, _req)
   }
-}
+})

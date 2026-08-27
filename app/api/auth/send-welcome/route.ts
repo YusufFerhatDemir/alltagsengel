@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { sendEmailNotification } from '@/lib/notifications'
 import { createClient } from '@/lib/supabase/server'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * POST /api/auth/send-welcome
@@ -9,7 +10,7 @@ import { createClient } from '@/lib/supabase/server'
  * Different content for Engel, Kunde, and Fahrer.
  * Geschützt: Nur authentifizierte Nutzer können ihre eigene Welcome-Mail auslösen.
  */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     // Auth-Prüfung: Nur eingeloggte Nutzer dürfen Welcome-Mail auslösen
     const supabase = await createClient()
@@ -120,4 +121,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

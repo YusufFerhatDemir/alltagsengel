@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // Akzeptiert sendBeacon-Body (Blob). text() statt json() macht es robust.
 export const runtime = 'nodejs'
@@ -32,7 +33,7 @@ function ok(ip: string) {
   return true
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     const ip =
       req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
@@ -83,4 +84,4 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     return safeApiError(err, req)
   }
-}
+})

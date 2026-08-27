@@ -3,8 +3,9 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { updateWiedervorlage } from '@/lib/ops/wiedervorlagen'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function PATCH(
+export const PATCH = withTracking(async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -24,4 +25,4 @@ export async function PATCH(
   } catch (e: any) {
     return apiErrorResponse(e)
   }
-}
+})

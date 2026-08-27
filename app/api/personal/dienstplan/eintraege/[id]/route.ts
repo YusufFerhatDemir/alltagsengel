@@ -5,8 +5,9 @@ import { requirePersonalAdmin } from '@/lib/personal/api-auth'
 import { updateEintrag, deleteEintrag } from '@/lib/personal/dienstplan'
 import { pruefeEinsatzfreigabe } from '@/lib/personal/einsatzfreigabe'
 import { writeAuditLog } from '@/lib/personal/audit'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withTracking(async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requirePersonalAdmin('personal.schreiben')
   if (!auth.ok) return auth.response
   const { id } = await params
@@ -94,9 +95,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   } catch (e: any) {
     return apiErrorResponse(e, request)
   }
-}
+})
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = withTracking(async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requirePersonalAdmin('personal.schreiben')
   if (!auth.ok) return auth.response
   const { id } = await params
@@ -127,4 +128,4 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   } catch (e: any) {
     return apiErrorResponse(e, request)
   }
-}
+})

@@ -21,8 +21,9 @@ import { logAuditEventOrWarn } from '@/lib/audit-log'
 import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { sammleAuskunft, type AuskunftClient } from '@/lib/dsgvo/auskunft'
 import { heuteBerlin } from '@/lib/utils/timezone'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const supabase = await createClient()
   const { data: { user }, error } = await supabase.auth.getUser()
   if (error || !user) {
@@ -66,4 +67,4 @@ export async function GET(request: Request) {
       'Cache-Control': 'no-store',
     },
   })
-}
+})

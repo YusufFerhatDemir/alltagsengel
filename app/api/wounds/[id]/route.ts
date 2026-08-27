@@ -7,8 +7,9 @@ import { getWound, updateWound } from '@/lib/wunden/wunden'
 import { logAuditEvent } from '@/lib/audit-log'
 import { listAssessments } from '@/lib/wunden/assessments'
 import { listTreatments, naechsterVwTermin } from '@/lib/wunden/behandlungen'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withTracking(async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const auth = await requireWundenAdmin('pflege.lesen')
@@ -33,9 +34,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   } catch (err) {
     return safeApiError(err, _request)
   }
-}
+})
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withTracking(async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const auth = await requireWundenAdmin('pflege.schreiben')
@@ -71,4 +72,4 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   } catch (err) {
     return apiErrorResponse(err, request)
   }
-}
+})

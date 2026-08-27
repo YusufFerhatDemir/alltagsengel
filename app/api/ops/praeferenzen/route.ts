@@ -3,8 +3,9 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsUser } from '@/lib/ops/api-auth'
 import { listPraeferenzen, upsertPraeferenz } from '@/lib/ops/praeferenzen'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsUser()
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
@@ -17,9 +18,9 @@ export async function GET(request: Request) {
   } catch (e: any) {
     return apiErrorResponse(e, request)
   }
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireOpsUser()
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
@@ -38,9 +39,9 @@ export async function POST(request: Request) {
   } catch (e: any) {
     return apiErrorResponse(e, request)
   }
-}
+})
 
-export async function PATCH(request: Request) {
+export const PATCH = withTracking(async function PATCH(request: Request) {
   const auth = await requireOpsUser()
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
@@ -59,4 +60,4 @@ export async function PATCH(request: Request) {
   } catch (e: any) {
     return apiErrorResponse(e, request)
   }
-}
+})

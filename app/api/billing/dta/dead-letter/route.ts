@@ -19,6 +19,7 @@ import {
   type DeadLetterStatus,
 } from '@/lib/abrechnung/dead-letter'
 import type { VersandKanal } from '@/lib/abrechnung/versand-protokoll'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -26,7 +27,7 @@ export const dynamic = 'force-dynamic'
 const STATUS: DeadLetterStatus[] = ['offen', 'in_analyse', 'wiedervorgelegt', 'erledigt', 'verworfen']
 const KANAELE: VersandKanal[] = ['sftp_105', 'sftp_302', 'kim', 'manuell']
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireAdminMitOrg('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
@@ -60,7 +61,7 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 /**
  * PATCH — Body: { "id": "…", "status": "in_analyse" | … , "notiz"?, "verworfen_grund"? }
@@ -70,7 +71,7 @@ export async function GET(request: Request) {
  * 'bereit_zur_uebermittlung' — es startet KEINEN Versand. Wer wiedervorlegt,
  * hat die Ursache gesehen und löst den Versand danach bewusst aus.
  */
-export async function PATCH(request: Request) {
+export const PATCH = withTracking(async function PATCH(request: Request) {
   const auth = await requireAdminMitOrg('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
@@ -120,4 +121,4 @@ export async function PATCH(request: Request) {
         : 500
     return NextResponse.json({ error: message }, { status })
   }
-}
+})

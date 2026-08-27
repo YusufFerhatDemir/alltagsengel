@@ -5,13 +5,14 @@ import { requirePflegeAdmin } from '@/lib/pflege/api-auth'
 import { getPflegeUebersicht, zusammenfassungUebersicht } from '@/lib/pflege/uebersicht'
 import { getRisikoDashboard, zusammenfassungRisiken } from '@/lib/pflege/risiken'
 import type { Aufnahmestatus, RisikoPruefstatus, RisikoSchweregrad } from '@/lib/pflege/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * GET — Pflegedoku-Übersicht (View pflege_uebersicht).
  * Mit ?risiken=true liefert die Route stattdessen das Risiko-Dashboard
  * (View pflege_risiko_dashboard) inklusive Kennzahlen.
  */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   try {
     const auth = await requirePflegeAdmin('pflege.lesen')
     if (!auth.ok) return auth.response
@@ -42,4 +43,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

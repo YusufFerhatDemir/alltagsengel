@@ -3,6 +3,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireCaregiverSession } from '@/lib/native-auth'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('api/native/leistungsnachweis-upload')
 
 // ═══════════════════════════════════════════════════════════════
@@ -28,7 +29,7 @@ const log = logger.child('api/native/leistungsnachweis-upload')
 
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024 // 15 MB, analog MAX_PROOF_SIZE_MB
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const auth = await requireCaregiverSession(request)
     if (!auth.ok) {
@@ -126,4 +127,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

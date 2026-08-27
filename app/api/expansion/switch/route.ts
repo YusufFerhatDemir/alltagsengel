@@ -21,11 +21,12 @@ import {
   BUNDESLAND_NAMEN,
   type ExpansionStatus,
 } from '@/lib/expansion/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const auth = await requireExpansionAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -51,9 +52,9 @@ export async function GET() {
   })
 
   return NextResponse.json({ aktiv, laender })
-}
+})
 
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   const auth = await requireExpansionAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -84,4 +85,4 @@ export async function POST(req: NextRequest) {
   })
 
   return NextResponse.json({ ok: true, aktiv: wert })
-}
+})

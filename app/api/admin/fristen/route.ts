@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { sammleFristen } from '@/lib/automation/fristen-sammler'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // ═══════════════════════════════════════════════════════════════
 // Fristen-Dashboard API — aggregiert Fristen aus allen Quellen
 // ═══════════════════════════════════════════════════════════════
 
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const auth = await requireOpsAdmin('qm.lesen')
   if (!auth.ok) return auth.response
 
@@ -39,4 +40,4 @@ export async function GET() {
     zusammenfassung,
     ...(warnungen.length > 0 ? { warnungen } : {}),
   })
-}
+})

@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logAuditEvent } from '@/lib/audit-log'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('admin/aerzte')
 
 export const runtime = 'nodejs'
@@ -42,7 +43,7 @@ function validiereFelder(eingabe: Record<string, unknown>): string | null {
 }
 
 /** GET — einzelnen Arzt laden. */
-export async function GET(
+export const GET = withTracking(async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -72,10 +73,10 @@ export async function GET(
   } catch (e) {
     return safeApiError(e, _req)
   }
-}
+})
 
 /** PATCH — Arzt aktualisieren. */
-export async function PATCH(
+export const PATCH = withTracking(async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -134,10 +135,10 @@ export async function PATCH(
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})
 
 /** DELETE — Soft-Delete (aktiv = false). */
-export async function DELETE(
+export const DELETE = withTracking(async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -181,4 +182,4 @@ export async function DELETE(
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

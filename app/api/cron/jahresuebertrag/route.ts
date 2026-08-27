@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { uebertrageJahresbudgets } from '@/lib/budget/auto-budget'
 import { berlinParts } from '@/lib/utils/timezone'
 import { pruefeCronGeheimnis } from '@/lib/api/cron-auth'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // ═══════════════════════════════════════════════════════════
 // CRON: JAHRESÜBERTRAG § 45b
@@ -24,7 +25,7 @@ import { pruefeCronGeheimnis } from '@/lib/api/cron-auth'
 // auf — als Nachhol- und Korrekturweg.
 // ═══════════════════════════════════════════════════════════
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const abweisung = pruefeCronGeheimnis(request)
   if (abweisung) return abweisung
 
@@ -87,4 +88,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

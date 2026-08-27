@@ -16,6 +16,7 @@ import { getActiveOrgId } from '@/lib/organizations/server'
 import { heuteBerlin } from '@/lib/utils/timezone'
 
 import { euroZuCent, centRunden } from '@/lib/geld'
+import { withTracking } from '@/lib/monitoring/tracker'
 /**
  * POST /api/billing/invoices/[id]/zahlung
  *
@@ -36,7 +37,7 @@ import { euroZuCent, centRunden } from '@/lib/geld'
  *
  * Nur fuer Administratoren, mit Org-Fence.
  */
-export async function POST(
+export const POST = withTracking(async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -157,4 +158,4 @@ export async function POST(
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

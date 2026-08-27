@@ -25,6 +25,7 @@
 import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
+import { HANDLER_NAMEN, handlerKopfMuster, handlerRumpf } from '../helpers/route-quelle'
 
 const WURZEL = path.resolve(__dirname, '../..')
 
@@ -66,7 +67,7 @@ function inlineSchranke(rumpf: string): boolean {
   return sitzung && rollenEntscheidung
 }
 
-const HANDLER = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']
+const HANDLER = HANDLER_NAMEN
 
 function routenDateien(start: string): string[] {
   const treffer: string[] = []
@@ -81,56 +82,6 @@ function routenDateien(start: string): string[] {
   return treffer.sort()
 }
 
-/**
- * Schneidet den Rumpf eines exportierten Handlers heraus.
- *
- * Ohne Parser, aber in drei Schritten statt einem: erst die Parameterliste
- * ueberspringen, dann eine etwaige Rueckgabetyp-Angabe, dann den Rumpf
- * klammerweise abzaehlen. Der naive Weg (erste `{` nach dem Funktionsnamen)
- * greift bei Next-Handlern daneben — deren Signatur lautet
- * `(req, { params }: { params: Promise<{ id: string }> })` und beginnt mit
- * gleich drei geschweiften Klammern, die nicht der Rumpf sind.
- */
-function handlerRumpf(src: string, name: string): string | null {
-  const kopf = new RegExp(`export\\s+(?:async\\s+)?function\\s+${name}\\s*\\(`).exec(src)
-  if (!kopf) return null
-
-  // 1. Parameterliste: von der oeffnenden Klammer bis zur passenden schliessenden.
-  let i = kopf.index + kopf[0].length - 1
-  let klammern = 0
-  for (; i < src.length; i++) {
-    if (src[i] === '(') klammern++
-    else if (src[i] === ')') {
-      klammern--
-      if (klammern === 0) { i++; break }
-    }
-  }
-
-  // 2. Rueckgabetyp: `): Promise<{ ... }> {` — die geschweiften Klammern
-  //    darin gehoeren zum Typ, nicht zum Rumpf. Deshalb nur eine `{`
-  //    akzeptieren, die auf Winkelklammer-Tiefe 0 steht.
-  let winkel = 0
-  let start = -1
-  for (; i < src.length; i++) {
-    const c = src[i]
-    if (c === '<') winkel++
-    else if (c === '>') winkel = Math.max(0, winkel - 1)
-    else if (c === '{' && winkel === 0) { start = i; break }
-  }
-  if (start === -1) return null
-
-  // 3. Rumpf abzaehlen.
-  let tiefe = 0
-  for (let j = start; j < src.length; j++) {
-    if (src[j] === '{') tiefe++
-    else if (src[j] === '}') {
-      tiefe--
-      if (tiefe === 0) return src.slice(start, j + 1)
-    }
-  }
-  return null
-}
-
 const DATEIEN = routenDateien('app/api/admin')
 
 // ═══════════════════════════════════════════════════════════════════
@@ -143,9 +94,7 @@ describe('app/api/admin/** — jeder Handler hat eine Schranke', () => {
   for (const datei of DATEIEN) {
     describe(datei, () => {
       const src = readFileSync(path.join(WURZEL, datei), 'utf-8')
-      const vorhanden = HANDLER.filter(h =>
-        new RegExp(`export\\s+(?:async\\s+)?function\\s+${h}\\s*\\(`).test(src),
-      )
+      const vorhanden = HANDLER.filter(h => handlerKopfMuster(h).test(src))
 
       it('exportiert mindestens einen Handler', () => {
         expect(vorhanden.length).toBeGreaterThan(0)
@@ -218,6 +167,40 @@ describe('Der Scanner erkennt eine ungeschuetzte Route', () => {
       }
     `
     expect(inlineSchranke(handlerRumpf(vollstaendig, 'GET')!)).toBe(true)
+  })
+
+  it('erkennt den gewrappten Handler — und meldet ihn ungeschuetzt', () => {
+    // Die Form, in der die Routen seit dem Request-Tracking exportiert
+    // werden. Wuerde der Scanner sie nicht kennen, faende er in KEINER
+    // Datei mehr einen Handler — und liesse alles durch, ohne rot zu
+    // werden.
+    const gewrappt = `
+      export const GET = withTracking(async function GET(req: NextRequest) {
+        return NextResponse.json({ geheim: true })
+      })
+    `
+    const rumpf = handlerRumpf(gewrappt, 'GET')
+    expect(rumpf, 'gewrappter Rumpf nicht lesbar').toBeTruthy()
+    expect(GUARDS.filter(g => rumpf!.includes(g))).toHaveLength(0)
+    expect(inlineSchranke(rumpf!)).toBe(false)
+  })
+
+  it('laesst den gewrappten, geschuetzten Handler durch — mit Next-Signatur', () => {
+    const gewrappt = `
+      export const PATCH = withTracking(async function PATCH(
+        request: Request,
+        { params }: { params: Promise<{ id: string }> },
+      ): Promise<NextResponse<{ ok: boolean }>> {
+        const auth = await requireAdminMitOrg('system.verwalten')
+        if (!auth.ok) return auth.response
+        return NextResponse.json({ ok: true })
+      })
+    `
+    const rumpf = handlerRumpf(gewrappt, 'PATCH')!
+    expect(rumpf).toContain('requireAdminMitOrg')
+    // Der Rumpf endet an der schliessenden Klammer der Funktion, nicht
+    // an der des withTracking-Aufrufs.
+    expect(rumpf.trimEnd().endsWith('}')).toBe(true)
   })
 
   it('laesst den geschuetzten DELETE durch — auch mit Next-Signatur', () => {

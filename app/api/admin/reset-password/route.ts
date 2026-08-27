@@ -9,8 +9,9 @@ import { validatePasswordAsync } from '@/lib/password-validation'
 import { logAuditEvent } from '@/lib/audit-log'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { adminLogger as log } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function POST(request: NextRequest) {
+export const POST = withTracking(async function POST(request: NextRequest) {
   try {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -183,4 +184,4 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

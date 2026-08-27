@@ -9,6 +9,7 @@ import {
   reaktiviereAufgegebene,
 } from '@/lib/billing/dunning/mahn-versand'
 import { logBillingAction } from '@/lib/billing/core/audit'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * POST /api/billing/dunning/versand
@@ -27,7 +28,7 @@ import { logBillingAction } from '@/lib/billing/core/audit'
  *
  * GET liefert nur die Zaehler der Queue, ohne etwas zu versenden.
  */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const auth = await pruefeAdmin('abrechnung.schreiben')
     if (!auth.ok) return auth.response
@@ -92,9 +93,9 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   try {
     const auth = await pruefeAdmin()
     if (!auth.ok) return auth.response
@@ -116,7 +117,7 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 type AdminPruefung =
   | { ok: false; response: NextResponse }

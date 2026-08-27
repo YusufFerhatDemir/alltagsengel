@@ -7,8 +7,9 @@ import { createClient } from '@/lib/supabase/server'
 import { requirePflegeAdmin, requirePflegeUser } from '@/lib/pflege/api-auth'
 import { createVerlauf, listVerlauf } from '@/lib/pflege/verlauf'
 import type { VerlaufKategorie, VerlaufSichtbarkeit, VerlaufTyp } from '@/lib/pflege/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   try {
     const auth = await requirePflegeAdmin('pflege.lesen')
     if (!auth.ok) return auth.response
@@ -31,7 +32,7 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 /**
  * POST — Verlaufseintrag anlegen.
@@ -39,7 +40,7 @@ export async function GET(request: Request) {
  * Engel schreiben mit ihrem eigenen Client: RLS (engel_pflege_verlauf_insert)
  * prüft die aktive Zuordnung, current_org_id() setzt die Organisation.
  */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const auth = await requirePflegeUser()
     if (!auth.ok) return auth.response
@@ -82,4 +83,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return apiErrorResponse(err, request)
   }
-}
+})

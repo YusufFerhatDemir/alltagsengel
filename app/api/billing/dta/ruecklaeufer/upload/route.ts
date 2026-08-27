@@ -18,6 +18,7 @@ import { erstelleFrist, fristFuerTyp } from '@/lib/abrechnung/fristen-manager'
 import type { RuecklaeuferImportErgebnis } from '@/lib/abrechnung/ruecklaeufer'
 import { sanitizeStorageName } from '@/lib/file-upload-validation'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('api:billing')
 
 // Der Bucket `dta-dateien` erlaubt serverseitig 10 MB. Hier wird dieselbe
@@ -28,7 +29,7 @@ const MAX_RUECKLAEUFER_BYTES = 10 * 1024 * 1024
 
 // sanitizeFileName entfernt — zentralisiert in lib/file-upload-validation.ts (sanitizeStorageName)
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const auth = await requireOpsAdmin('abrechnung.schreiben')
     if (!auth.ok) return auth.response
@@ -150,4 +151,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

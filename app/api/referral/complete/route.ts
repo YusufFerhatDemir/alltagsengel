@@ -2,13 +2,14 @@ import { NextResponse, NextRequest } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 const supabaseAdmin = createAdminClient()
 
 // ═══ POST: Referral abschließen nach erster Buchung ═══
 // Wird aufgerufen wenn ein referred User seine erste Buchung abschließt
 // Geschützt: Nutzer muss authentifiziert sein und kann nur eigene Referrals abschließen
-export async function POST(request: NextRequest) {
+export const POST = withTracking(async function POST(request: NextRequest) {
   try {
     // Auth-Prüfung: Nur eingeloggte Nutzer
     const supabase = await createServerClient()
@@ -123,4 +124,4 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

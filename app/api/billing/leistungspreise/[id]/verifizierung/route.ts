@@ -1,13 +1,14 @@
 import { handleVerifizierungPatch, handleDetailGet } from '@/lib/billing/tarif-verifizierung-service'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * GET /api/billing/leistungspreise/[id]/verifizierung
  * Aktueller Stand, Audit-Historie und hinterlegte Belege eines Leistungspreises.
  */
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withTracking(async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   return handleDetailGet('leistungspreise', id)
-}
+})
 
 /**
  * PATCH /api/billing/leistungspreise/[id]/verifizierung
@@ -20,7 +21,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
  *
  * Body: { status: 'verified' | 'unverified' | 'blocked', quelle: string, belegId?: string }
  */
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withTracking(async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   return handleVerifizierungPatch(request, 'leistungspreise', id)
-}
+})

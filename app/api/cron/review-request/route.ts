@@ -6,6 +6,7 @@ import { esc } from '@/lib/notifications/html'
 import { datumBerlin } from '@/lib/utils/timezone'
 import { logger } from '@/lib/logger'
 import { pruefeCronGeheimnis } from '@/lib/api/cron-auth'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('review-cron')
 
 // ═══════════════════════════════════════════════════════════
@@ -26,7 +27,7 @@ const log = logger.child('review-cron')
 
 const supabaseAdmin = createAdminClient()
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const abweisung = pruefeCronGeheimnis(request)
   if (abweisung) return abweisung
 
@@ -160,4 +161,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

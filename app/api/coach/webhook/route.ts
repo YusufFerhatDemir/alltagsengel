@@ -36,6 +36,7 @@ import {
   sendeBestellbestaetigung, sendeZahlungFehlgeschlagen,
 } from '@/lib/emails/coach-bestellung'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('coach-webhook')
 
 export const runtime = 'nodejs'
@@ -103,7 +104,7 @@ function istCoachEreignis(metadata: Stripe.Metadata | null | undefined): boolean
   return metadata?.produkt === 'pflegecoach'
 }
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const rohkoerper = await request.text()
   const signatur = request.headers.get('stripe-signature')
 
@@ -134,7 +135,7 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ received: true })
-}
+})
 
 async function verarbeite(ereignis: Stripe.Event): Promise<void> {
   switch (ereignis.type) {

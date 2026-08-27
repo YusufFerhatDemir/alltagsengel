@@ -3,8 +3,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { revokeMandate } from '@/lib/billing/sepa/sepa-service'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function POST(
+export const POST = withTracking(async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -21,4 +22,4 @@ export async function POST(
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

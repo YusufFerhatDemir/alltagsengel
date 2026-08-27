@@ -4,6 +4,7 @@ import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
 import { escapeHtml, getClientIp } from '@/lib/rate-limit'
 import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('api:visitor-alert')
 
 // Einzeiler + Längen-Cap für Felder, die in E-Mail-HTML landen.
@@ -41,7 +42,7 @@ const ALERT_EMAIL = process.env.ADMIN_ALERT_EMAIL || ''
 // pro Serverless-Instanz. Jetzt instanzuebergreifend in der Datenbank.
 const COOLDOWN_MS = 3_600_000
 
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     // NIEDRIG-8 (Security-Audit 2026-08-19): der Endpunkt ist bewusst anonym
     // aufrufbar und loest Admin-Mails aus. Ohne Limit ist er eine Spam-Schleuder
@@ -209,4 +210,4 @@ export async function POST(req: NextRequest) {
     log.errorWithException('Visitor alert error', err)
     return NextResponse.json({ ok: true })
   }
-}
+})

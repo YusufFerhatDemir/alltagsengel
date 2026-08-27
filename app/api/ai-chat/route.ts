@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('api:ai-chat')
 
 // Rate limiter: max 10 requests per minute per user
@@ -248,7 +249,7 @@ async function callOpenAI(systemPrompt: string, messages: Array<{ role: string; 
 // ──────────────────────────────────────────────────────
 // Main Handler: Gemini (primär) → OpenAI (Fallback)
 // ──────────────────────────────────────────────────────
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     // Auth check — NUR Admins dürfen auf Live-Daten zugreifen
     const supabase = await createClient()
@@ -315,4 +316,4 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     return safeApiError(error, req)
   }
-}
+})

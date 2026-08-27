@@ -4,10 +4,11 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { listeAbrechnungslaeufe, starteAbrechnungslauf } from '@/lib/abrechnung/sgb-v/abrechnungslauf'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('billing/sgb-v/laeufe')
 
 /** GET /api/billing/sgb-v/laeufe — Liste der § 302-Abrechnungsläufe. */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
@@ -18,7 +19,7 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 /**
  * POST /api/billing/sgb-v/laeufe — Abrechnungslauf starten.
@@ -27,7 +28,7 @@ export async function GET(request: Request) {
  * Legt IMMER einen Lauf an, auch wenn die Kette danach am Generator/Gate
  * stoppt — siehe lib/abrechnung/sgb-v/versand.ts für die Begründung.
  */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
@@ -52,4 +53,4 @@ export async function POST(request: Request) {
     log.error('Fehler', { message })
     return NextResponse.json({ error: message }, { status: 400 })
   }
-}
+})

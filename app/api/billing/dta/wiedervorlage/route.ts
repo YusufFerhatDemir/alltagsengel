@@ -7,6 +7,7 @@ import {
 } from '@/lib/abrechnung/wiedervorlage'
 import { FEHLER_KATEGORIEN, type FehlerKategorie } from '@/lib/abrechnung/ruecklaeufer-fehlercodes'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -20,7 +21,7 @@ const STATUS: WiedervorlageStatus[] = [
  *
  * Der Arbeitsvorrat aus abgelehnten/gekürzten Positionen, mit Übersicht.
  */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireAdminMitOrg('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
@@ -55,7 +56,7 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 /**
  * POST /api/billing/dta/wiedervorlage
@@ -64,7 +65,7 @@ export async function GET(request: Request) {
  * Nimmt alle abgelehnten/gekürzten Positionen eines Rückläufers in die Queue auf.
  * Wiederholte Aufrufe erzeugen keine Dubletten.
  */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireAdminMitOrg('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
@@ -86,4 +87,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

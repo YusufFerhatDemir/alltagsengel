@@ -3,8 +3,9 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsUser } from '@/lib/ops/api-auth'
 import { getNachricht } from '@/lib/ops/nachrichten'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(
+export const GET = withTracking(async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -37,4 +38,4 @@ export async function GET(
   } catch (e: any) {
     return apiErrorResponse(e)
   }
-}
+})

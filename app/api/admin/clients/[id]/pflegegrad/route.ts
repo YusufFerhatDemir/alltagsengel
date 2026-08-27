@@ -8,6 +8,7 @@ import { logAuditEvent } from '@/lib/audit-log'
 import { berlinParts } from '@/lib/utils/timezone'
 import { erstelleInitialBudgets } from '@/lib/budget/auto-budget'
 import { budgetVersionFuerJahr } from '@/lib/config/budget-constants'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * PATCH /api/admin/clients/[id]/pflegegrad
@@ -26,7 +27,7 @@ import { budgetVersionFuerJahr } from '@/lib/config/budget-constants'
  * Body: { care_level: number (0-5), care_level_since?: 'YYYY-MM-DD' }
  * care_level = 0 bedeutet "kein Pflegegrad".
  */
-export async function PATCH(
+export const PATCH = withTracking(async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -191,4 +192,4 @@ export async function PATCH(
   } catch (err) {
     return safeApiError(err, req)
   }
-}
+})

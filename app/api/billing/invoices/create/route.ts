@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server'
 import { createInvoiceDraft } from '@/lib/billing/core'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -39,7 +40,7 @@ interface InvoiceResult {
  * - Atomizitaet: Engine erstellt Rechnung + Positionen + Audit-Trail
  * - Keine Browser-Betraege: Preise kommen aus service_records (DB)
  */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     // ── 1. Auth-Pruefung ──────────────────────────────────────────────
     const supabase = await createClient()
@@ -219,4 +220,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

@@ -3,8 +3,9 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsUser } from '@/lib/ops/api-auth'
 import { markBenachrichtigungenGelesen } from '@/lib/ops/benachrichtigungen'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function PATCH(request: Request) {
+export const PATCH = withTracking(async function PATCH(request: Request) {
   const auth = await requireOpsUser()
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
@@ -22,4 +23,4 @@ export async function PATCH(request: Request) {
   } catch (e: any) {
     return apiErrorResponse(e, request)
   }
-}
+})

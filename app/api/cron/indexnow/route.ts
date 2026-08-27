@@ -3,6 +3,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { notifyIndexers } from '@/lib/indexing'
 import { logger } from '@/lib/logger'
 import { pruefeCronGeheimnis } from '@/lib/api/cron-auth'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('cron:indexnow')
 
 // ═══════════════════════════════════════════════════════════
@@ -17,7 +18,7 @@ const log = logger.child('cron:indexnow')
 
 const SITEMAP_URL = 'https://alltagsengel.care/sitemap.xml'
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const abweisung = pruefeCronGeheimnis(request)
   if (abweisung) return abweisung
 
@@ -44,4 +45,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

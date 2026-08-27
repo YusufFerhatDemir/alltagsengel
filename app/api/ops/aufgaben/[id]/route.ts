@@ -5,9 +5,10 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { getAufgabe, updateAufgabe, deleteAufgabe } from '@/lib/ops/aufgaben'
 import { logAktivitaet } from '@/lib/ops/aktivitaetslog'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('api:ops')
 
-export async function GET(
+export const GET = withTracking(async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -24,9 +25,9 @@ export async function GET(
   } catch (e: any) {
     return apiErrorResponse(e)
   }
-}
+})
 
-export async function PATCH(
+export const PATCH = withTracking(async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -57,9 +58,9 @@ export async function PATCH(
   } catch (e: any) {
     return apiErrorResponse(e)
   }
-}
+})
 
-export async function DELETE(
+export const DELETE = withTracking(async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -85,4 +86,4 @@ export async function DELETE(
   } catch (e: any) {
     return apiErrorResponse(e)
   }
-}
+})

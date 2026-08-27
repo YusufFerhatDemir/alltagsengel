@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { createClient } from '@/lib/supabase/server'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * Code zurückziehen oder Gültigkeit anpassen.
  * Ein bereits eingelöster Code wird nicht mehr verändert — sonst wäre der
  * Nachweis der Freischaltung nachträglich manipulierbar.
  */
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withTracking(async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   const { id } = await params
@@ -51,4 +52,4 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     )
   }
   return NextResponse.json({ code: data[0] })
-}
+})

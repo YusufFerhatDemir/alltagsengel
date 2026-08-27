@@ -5,8 +5,9 @@ import { requireKimAdmin } from '@/lib/kim/api-auth'
 import { cancelMessage, getMessage, markMessageRead, queueForSending, updateDraftMessage } from '@/lib/kim/message-service'
 import { listKimAttachments } from '@/lib/kim/attachment-service'
 import type { CreateKimMessageInput } from '@/lib/kim/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withTracking(async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   const { id } = await params
@@ -22,11 +23,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const status = msg.includes('nicht gefunden') ? 404 : 500
     return NextResponse.json({ error: msg }, { status })
   }
-}
+})
 
 type PatchBody = { action?: 'update' | 'queue' | 'cancel' | 'mark_read' } & Partial<CreateKimMessageInput>
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withTracking(async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   const { id } = await params
@@ -54,4 +55,4 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const status = msg.includes('nicht gefunden') ? 404 : msg.includes('Ungültig') || msg.includes('Pflichtfeld') || msg.includes('Nur Entwürfe') ? 400 : 500
     return NextResponse.json({ error: msg }, { status })
   }
-}
+})

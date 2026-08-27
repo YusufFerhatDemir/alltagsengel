@@ -3,6 +3,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { requireAdmin } from '@/lib/abrechnung/require-admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { ladeEmpfaengerZertifikat } from '@/lib/abrechnung/zertifikate'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -14,7 +15,7 @@ export const maxDuration = 60 // ITSG-Verzeichnis ist mehrere MB groß
  * Lädt das Empfänger-Zertifikat der IK aus dem öffentlichen
  * ITSG-Trust-Center-Verzeichnis und cacht es in der DB.
  */
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   const auth = await requireAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   try {
@@ -42,4 +43,4 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

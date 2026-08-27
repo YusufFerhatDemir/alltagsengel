@@ -3,8 +3,9 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePersonalAdmin } from '@/lib/personal/api-auth'
 import { updateSchulung, deleteSchulung } from '@/lib/personal/schulungen'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withTracking(async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requirePersonalAdmin('personal.schreiben')
   if (!auth.ok) return auth.response
   const { id } = await params
@@ -16,9 +17,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   } catch (e: any) {
     return apiErrorResponse(e, request)
   }
-}
+})
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = withTracking(async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requirePersonalAdmin('personal.schreiben')
   if (!auth.ok) return auth.response
   const { id } = await params
@@ -29,4 +30,4 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   } catch (e: any) {
     return apiErrorResponse(e, request)
   }
-}
+})

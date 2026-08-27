@@ -11,6 +11,7 @@ import { ermittleBusinessInputs } from '@/lib/pilot/business-inputs'
 import { ermittlePilotKandidat } from '@/lib/pilot/pilot-kandidat'
 import { ermittleLaufzeitHerkunft } from '@/lib/pilot/laufzeit-herkunft'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('admin/pilot')
 
 export const runtime = 'nodejs'
@@ -37,7 +38,7 @@ const MAX_KUNDEN = 100
  * fremde Mandanten sitzen in den jeweiligen Diensten — eine Zahl aus
  * dieser Antwort ist eine Messung, keine Erlaubnis.
  */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireAdminMitOrg('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -100,4 +101,4 @@ export async function GET(request: Request) {
   } catch (e) {
     return safeApiError(e, request)
   }
-}
+})

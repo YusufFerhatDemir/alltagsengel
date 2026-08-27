@@ -15,9 +15,10 @@ import { NextResponse } from 'next/server'
 import { requireCoachUser } from '@/lib/coach/api-auth'
 import { istNutzungsEreignis } from '@/lib/coach/nachweise'
 import { nutzungsnachweisAktiv } from '@/lib/coach/config'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /** Eigene Nachweisdaten einsehen (Art. 15 DSGVO). */
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 
@@ -29,14 +30,14 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: 'Nachweisdaten konnten nicht geladen werden.' }, { status: 500 })
   return NextResponse.json({ ereignisse: data ?? [], erfassungAktiv: nutzungsnachweisAktiv() })
-}
+})
 
 // Bewusst OHNE `schreibzugriff`: Diese Route hat ihr eigenes, strengeres
 // Tor (Deployment-Schalter + Einwilligung 'wissenschaftliche_auswertung')
 // und antwortet bei fehlender Grundlage weich mit `erfasst: false`, statt
 // mit 403. Ein 403 würde einen Nutzerablauf abbrechen, den die Erfassung
 // nie beeinflussen darf.
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 
@@ -80,4 +81,4 @@ export async function POST(request: Request) {
 
   if (error) return NextResponse.json({ error: 'Ereignis konnte nicht erfasst werden.' }, { status: 400 })
   return NextResponse.json({ erfasst: true })
-}
+})

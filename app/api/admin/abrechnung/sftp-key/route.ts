@@ -6,6 +6,7 @@ import { ZERTIFIKAT_BUCKET } from '@/lib/abrechnung/zertifikate'
 import { protokolliereRotation } from '@/lib/abrechnung/credentials'
 import { logAuditEvent } from '@/lib/audit-log'
 import { createHash } from 'node:crypto'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -16,7 +17,7 @@ export const dynamic = 'force-dynamic'
  * Speichert den Key im privaten Bucket und verknüpft ihn mit der
  * Datenannahmestelle. Keys landen NIE in der Datenbank.
  */
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   const auth = await requireAdminMitOrg('system.verwalten')
   if (!auth.ok) return auth.response
   try {
@@ -101,4 +102,4 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

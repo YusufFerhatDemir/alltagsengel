@@ -20,6 +20,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { entferneGeraet } from '@/lib/notifications/push'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 const log = logger.child('api:push-unregister')
 
@@ -55,13 +56,13 @@ async function abmelden(request: NextRequest) {
   return NextResponse.json({ ok: true })
 }
 
-export async function DELETE(request: NextRequest) {
+export const DELETE = withTracking(async function DELETE(request: NextRequest) {
   try {
     return await abmelden(request)
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 /**
  * POST ist derselbe Vorgang. Grund: manche HTTP-Stacks in mobilen Apps
@@ -69,10 +70,10 @@ export async function DELETE(request: NextRequest) {
  * zweiter Weg ist billiger als ein Abmeldeversuch, der still ins Leere
  * laeuft und den Nutzer weiter benachrichtigt.
  */
-export async function POST(request: NextRequest) {
+export const POST = withTracking(async function POST(request: NextRequest) {
   try {
     return await abmelden(request)
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

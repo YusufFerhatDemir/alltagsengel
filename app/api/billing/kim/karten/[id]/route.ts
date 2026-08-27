@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { aktualisiereKarte, loescheKarte } from '@/lib/kim/karten'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * PATCH /api/billing/kim/karten/[id]
  * DELETE /api/billing/kim/karten/[id]
  */
-export async function PATCH(
+export const PATCH = withTracking(async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -25,9 +26,9 @@ export async function PATCH(
     const message = err instanceof Error ? err.message : 'Interner Serverfehler'
     return NextResponse.json({ error: message }, { status: 400 })
   }
-}
+})
 
-export async function DELETE(
+export const DELETE = withTracking(async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -44,4 +45,4 @@ export async function DELETE(
     const message = err instanceof Error ? err.message : 'Interner Serverfehler'
     return NextResponse.json({ error: message }, { status: 400 })
   }
-}
+})

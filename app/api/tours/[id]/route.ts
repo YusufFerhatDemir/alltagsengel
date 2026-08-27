@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { storniereGeloesteAssignments, uebersetzeDbFehler } from '@/lib/touren/server'
 import { TOUR_SELECT, type TourZeile } from '@/lib/touren/select'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 const ERLAUBTE_STATUS = ['GEPLANT', 'FREIGEGEBEN', 'UNTERWEGS', 'ABGESCHLOSSEN', 'STORNIERT']
 
@@ -30,7 +31,7 @@ async function storniereTourEinsaetze(
 }
 
 // ── GET /api/tours/[id] ───────────────────────────────────────────
-export async function GET(
+export const GET = withTracking(async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -54,10 +55,10 @@ export async function GET(
     ...tour,
     tour_stops: [...(tour.tour_stops ?? [])].sort((a, b) => a.position - b.position),
   })
-}
+})
 
 // ── PATCH /api/tours/[id] — Tourfelder/Status ändern ─────────────
-export async function PATCH(
+export const PATCH = withTracking(async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -91,10 +92,10 @@ export async function PATCH(
   }
   if (updates.status === 'STORNIERT') await storniereTourEinsaetze(admin, id)
   return NextResponse.json(data)
-}
+})
 
 // ── DELETE /api/tours/[id] — storniert (kein Hard-Delete) ────────
-export async function DELETE(
+export const DELETE = withTracking(async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -116,4 +117,4 @@ export async function DELETE(
   }
   await storniereTourEinsaetze(admin, id)
   return NextResponse.json(data)
-}
+})

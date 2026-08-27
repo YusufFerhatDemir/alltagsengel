@@ -3,8 +3,9 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAktenAdmin } from '@/lib/akten/api-auth'
 import { softDeleteKontaktperson, updateKontaktperson } from '@/lib/akten/kontaktpersonen'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withTracking(async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const auth = await requireAktenAdmin('stammdaten.schreiben')
@@ -19,9 +20,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   } catch (err) {
     return apiErrorResponse(err, request)
   }
-}
+})
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = withTracking(async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const auth = await requireAktenAdmin('stammdaten.schreiben')
@@ -35,4 +36,4 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   } catch (err) {
     return apiErrorResponse(err, _request)
   }
-}
+})

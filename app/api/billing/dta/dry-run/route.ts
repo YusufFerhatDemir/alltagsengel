@@ -13,6 +13,7 @@ import { getOrgIK } from '@/lib/config/org-config'
 import { logBillingAction } from '@/lib/billing/core/audit'
 import { pflegegradVon } from '@/lib/clients/pflegegrad'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('dta/dry-run')
 
 export const maxDuration = 60
@@ -28,7 +29,7 @@ export const maxDuration = 60
  * Prüft: PreFlight → Rechnungsdaten → EDIFACT-Generierung → Validierung
  *        → Auftragsdatei → Routing → Ergebnisbericht
  */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -507,4 +508,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

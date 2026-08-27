@@ -5,8 +5,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePflegeAdmin } from '@/lib/pflege/api-auth'
 import { deleteThreshold, listThresholds, upsertThreshold } from '@/lib/vitals/server'
 import { grenzwertAlarmeAktiv } from '@/lib/vitals/config'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   try {
     const auth = await requirePflegeAdmin('pflege.lesen')
     if (!auth.ok) return auth.response
@@ -19,10 +20,10 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 /** PUT — Grenzwert-Satz je (Klient, Vitaltyp) anlegen oder überschreiben. */
-export async function PUT(request: Request) {
+export const PUT = withTracking(async function PUT(request: Request) {
   try {
     const auth = await requirePflegeAdmin('pflege.schreiben')
     if (!auth.ok) return auth.response
@@ -68,9 +69,9 @@ export async function PUT(request: Request) {
   } catch (err) {
     return apiErrorResponse(err, request)
   }
-}
+})
 
-export async function DELETE(request: Request) {
+export const DELETE = withTracking(async function DELETE(request: Request) {
   try {
     const auth = await requirePflegeAdmin('pflege.schreiben')
     if (!auth.ok) return auth.response
@@ -84,4 +85,4 @@ export async function DELETE(request: Request) {
   } catch (err) {
     return apiErrorResponse(err, request)
   }
-}
+})

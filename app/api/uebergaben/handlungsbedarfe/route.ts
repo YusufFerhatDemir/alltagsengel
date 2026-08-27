@@ -4,9 +4,10 @@ import { createClient } from '@/lib/supabase/server'
 import { requireUebergabeUser } from '@/lib/uebergabe/api-auth'
 import { listOffeneHandlungsbedarfe } from '@/lib/uebergabe/punkte'
 import { safeErrorResponse } from '@/lib/utils/api-error'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /** Offene Handlungsbedarfe aus allen Übergaben — das Arbeitsblatt des Folgedienstes. */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   try {
     const auth = await requireUebergabeUser()
     if (!auth.ok) return auth.response
@@ -21,4 +22,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeErrorResponse(err, 400)
   }
-}
+})

@@ -2,12 +2,13 @@ import { NextResponse, NextRequest } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('api:referral')
 
 const supabaseAdmin = createAdminClient()
 
 // ═══ GET: Referral-Info für den eingeloggten User ═══
-export async function GET(request: NextRequest) {
+export const GET = withTracking(async function GET(request: NextRequest) {
   try {
     // Auth prüfen via Header
     const authHeader = request.headers.get('authorization')
@@ -54,10 +55,10 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 // ═══ POST: Referral-Code bei Registrierung einlösen ═══
-export async function POST(request: NextRequest) {
+export const POST = withTracking(async function POST(request: NextRequest) {
   try {
     // ═══ AUTH: nur der eingeloggte, GEWORBENE User darf einen Code einlösen ═══
     // Vorher: KEIN Auth-Check + referred_user_id aus dem Body → jeder konnte
@@ -136,4 +137,4 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

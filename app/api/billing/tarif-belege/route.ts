@@ -10,6 +10,7 @@ import {
 } from '@/lib/billing/core/tarif-belege'
 import { pruefeBelegDatei, type QuellTabelle } from '@/lib/billing/core/tarif-verifizierung'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('api:billing')
 
 const QUELLEN: readonly QuellTabelle[] = ['billing_tariffs', 'leistungspreise']
@@ -42,7 +43,7 @@ async function zeileGehoertZurOrg(
  * GET /api/billing/tarif-belege?quellTabelle=…&id=…
  * Belege einer Tarif-/Preiszeile mit kurzlebigen signierten Download-URLs.
  */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
@@ -92,7 +93,7 @@ export async function GET(request: Request) {
     log.errorWithException('Belege laden fehlgeschlagen', err)
     return NextResponse.json({ error: 'Belege konnten nicht geladen werden.' }, { status: 500 })
   }
-}
+})
 
 /**
  * POST /api/billing/tarif-belege  (multipart/form-data)
@@ -106,7 +107,7 @@ export async function GET(request: Request) {
  * Der Upload verifiziert NICHTS. Er legt nur den Nachweis ab. Die Freigabe
  * ist ein zweiter, bewusster Schritt ueber PATCH …/verifizierung.
  */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
@@ -179,4 +180,4 @@ export async function POST(request: Request) {
     log.errorWithException('Beleg-Upload fehlgeschlagen', err)
     return NextResponse.json({ error: 'Beleg konnte nicht gespeichert werden.' }, { status: 500 })
   }
-}
+})

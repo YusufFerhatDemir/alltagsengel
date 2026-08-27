@@ -16,6 +16,7 @@ import {
 } from '@/lib/bookings/einsatz-kette'
 import { logAuditEventOrWarn } from '@/lib/audit-log'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('api:bookings')
 
 // ─── Row-Formen des bookings-Selects (inkl. eingebetteter Joins) ───
@@ -114,7 +115,7 @@ async function setzeBuchungZurueckAufPending(
  * wenn die Kette nicht gebaut werden kann. Der Einsatz muss dann manuell
  * geplant werden; der Vorgang wird im Audit-Trail festgehalten.
  */
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -368,4 +369,4 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     return safeApiError(err, req)
   }
-}
+})

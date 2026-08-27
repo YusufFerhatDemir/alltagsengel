@@ -8,6 +8,7 @@ import { validateIkNummer } from '@/lib/organizations/ik'
 import { ACTIVE_ORG_COOKIE, PLAN_FEATURES } from '@/lib/organizations/types'
 import { eindeutigesBundeslandFuerPlz, normalizeBundesland } from '@/lib/expansion/plz-bundesland'
 import { BUNDESLAND_NAMEN } from '@/lib/expansion/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -18,7 +19,7 @@ export const dynamic = 'force-dynamic'
  * Liefert bewusst 200 mit leerer Liste, solange die Phase-3-Migration
  * noch nicht angewendet ist (UI degradiert dann auf „Alltagsengel").
  */
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
@@ -26,7 +27,7 @@ export async function GET() {
   const organizations = await getUserOrganizations(user.id)
   const activeOrgId = await getActiveOrgId()
   return NextResponse.json({ organizations, active_org_id: activeOrgId })
-}
+})
 
 /**
  * POST /api/organizations
@@ -35,7 +36,7 @@ export async function GET() {
  * Der anlegende User wird Owner; Free-Subscription wird erzeugt;
  * die neue Org wird direkt als aktive Org gesetzt.
  */
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
@@ -147,4 +148,4 @@ export async function POST(req: NextRequest) {
   })
 
   return NextResponse.json({ organization: org })
-}
+})

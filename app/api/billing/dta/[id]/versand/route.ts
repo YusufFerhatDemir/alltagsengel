@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { versendeLauf } from '@/lib/abrechnung/versand'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // SFTP (ssh2) läuft nicht in der Edge-Runtime.
 export const runtime = 'nodejs'
@@ -23,7 +24,7 @@ export const dynamic = 'force-dynamic'
  * Zustand und kommt als 200 mit `gestoppt: "extern"` zurück, damit die
  * Oberfläche sie erklären kann statt einen Absturz zu zeigen.
  */
-export async function POST(
+export const POST = withTracking(async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -63,4 +64,4 @@ export async function POST(
       || message.includes('kann nicht versendet werden')
     return NextResponse.json({ error: message }, { status: konflikt ? 409 : 500 })
   }
-}
+})

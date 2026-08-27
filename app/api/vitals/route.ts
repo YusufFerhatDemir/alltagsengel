@@ -9,8 +9,9 @@ import { bewerteMesswert } from '@/lib/vitals/vitals'
 import { createVital, listThresholds, listVitals } from '@/lib/vitals/server'
 import { grenzwertAlarmeAktiv } from '@/lib/vitals/config'
 import type { VitalTyp } from '@/lib/vitals/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   try {
     const auth = await requirePflegeAdmin('pflege.lesen')
     if (!auth.ok) return auth.response
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 /**
  * POST — Messung erfassen.
@@ -39,7 +40,7 @@ export async function GET(request: Request) {
  * prüft die aktive Zuordnung, current_org_id() setzt die Organisation.
  * Die Antwort enthält die Alarm-Bewertung der neuen Messung.
  */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const auth = await requirePflegeUser()
     if (!auth.ok) return auth.response
@@ -107,4 +108,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return apiErrorResponse(err, request)
   }
-}
+})

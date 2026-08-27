@@ -3,8 +3,9 @@ import { NextResponse } from 'next/server'
 import { advanceDunning, ensureDunningEntry } from '@/lib/billing/core'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const auth = await requireOpsAdmin('abrechnung.schreiben')
     if (!auth.ok) return auth.response
@@ -35,4 +36,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

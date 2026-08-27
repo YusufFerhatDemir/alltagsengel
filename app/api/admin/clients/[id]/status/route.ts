@@ -12,6 +12,7 @@ import {
   type ClientStatusWert,
   type PipelineStatusWert,
 } from '@/lib/clients/status'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * PATCH /api/admin/clients/[id]/status
@@ -35,7 +36,7 @@ import {
  *   grund?: string   // wandert in den Audit-Log, nicht in die Klientendaten
  * }
  */
-export async function PATCH(
+export const PATCH = withTracking(async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -173,4 +174,4 @@ export async function PATCH(
   } catch (err) {
     return safeApiError(err, req)
   }
-}
+})

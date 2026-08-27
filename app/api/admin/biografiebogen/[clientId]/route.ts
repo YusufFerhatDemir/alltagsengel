@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logAuditEvent } from '@/lib/audit-log'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('admin/biografiebogen')
 
 export const runtime = 'nodejs'
@@ -25,7 +26,7 @@ function nurErlaubteFelder(roh: Record<string, unknown>): Record<string, unknown
 }
 
 /** GET — Biografiebogen eines Klienten (null, wenn noch nicht angelegt). */
-export async function GET(
+export const GET = withTracking(async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ clientId: string }> },
 ) {
@@ -61,10 +62,10 @@ export async function GET(
   } catch (e) {
     return safeApiError(e, _req)
   }
-}
+})
 
 /** PUT — Biografiebogen anlegen oder aktualisieren (Upsert über client_id). */
-export async function PUT(
+export const PUT = withTracking(async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ clientId: string }> },
 ) {
@@ -147,4 +148,4 @@ export async function PUT(
   } catch (e) {
     return safeApiError(e, req)
   }
-}
+})

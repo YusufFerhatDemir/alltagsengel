@@ -12,6 +12,7 @@ import { aktuelleVersion, monatsStichtag } from '@/lib/abrechnung/sgb-v/versione
 import { exportImplementiert } from '@/lib/abrechnung/sgb-v/generator'
 import { pruefeAufbereitungTarife } from '@/lib/abrechnung/sgb-v/validierung'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('billing/sgb-v/vorschau')
 
 /**
@@ -23,7 +24,7 @@ const log = logger.child('billing/sgb-v/vorschau')
  * Schreibt nichts. Erzeugt keine Datei — der Generator ist gesperrt, solange
  * die Technische Anlage fehlt (s. lib/abrechnung/sgb-v/generator.ts).
  */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
   const { organizationId } = auth.ctx
@@ -137,4 +138,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

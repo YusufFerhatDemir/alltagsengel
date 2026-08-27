@@ -7,9 +7,10 @@ import { createClient } from '@/lib/supabase/server'
 import { requirePortalAccess, erlaubteClientIds } from '@/lib/angehoerige/portal-helpers'
 import { protokolliereZugriff } from '@/lib/angehoerige/angehoerige'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('angehoerige-termine')
 
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const auth = await requirePortalAccess()
   if (!auth.ok) return auth.response
 
@@ -70,4 +71,4 @@ export async function GET() {
   }
 
   return NextResponse.json({ termine: enriched })
-}
+})

@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendPushToUser, type PushPayload } from '@/lib/push'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * POST /api/push/send
  * Internal endpoint to send push notifications to a user.
  * Requires service role key or internal auth.
  */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     // Verify internal call via service role key header.
     // Waehrend der Supabase-Key-Migration zaehlt sowohl der neue Secret-Key
@@ -43,4 +44,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

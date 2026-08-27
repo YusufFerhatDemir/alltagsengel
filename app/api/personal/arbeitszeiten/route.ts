@@ -6,8 +6,9 @@ import { createArbeitszeit, listArbeitszeiten } from '@/lib/personal/arbeitszeit
 import { getActiveOrgId } from '@/lib/organizations/server'
 import type { ArbeitszeitStatus } from '@/lib/personal/types'
 import { writeAuditLog } from '@/lib/personal/audit'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(req: NextRequest) {
+export const GET = withTracking(async function GET(req: NextRequest) {
   try {
     const admin = await requirePersonalAdmin('personal.lesen')
     if (admin.ok) {
@@ -45,9 +46,9 @@ export async function GET(req: NextRequest) {
   } catch (e: any) {
     return apiErrorResponse(e, req)
   }
-}
+})
 
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     const admin = await requirePersonalAdmin('personal.schreiben')
     if (admin.ok) {
@@ -99,4 +100,4 @@ export async function POST(req: NextRequest) {
   } catch (e: any) {
     return apiErrorResponse(e, req)
   }
-}
+})

@@ -6,8 +6,9 @@ import { listEintraege, createEintrag } from '@/lib/personal/dienstplan'
 import { pruefeEinsatzfreigabe } from '@/lib/personal/einsatzfreigabe'
 import { writeAuditLog } from '@/lib/personal/audit'
 import type { DienstplanStatus } from '@/lib/personal/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requirePersonalAdmin('personal.lesen')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
@@ -32,9 +33,9 @@ export async function GET(request: Request) {
   } catch (e: any) {
     return apiErrorResponse(e, request)
   }
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requirePersonalAdmin('personal.schreiben')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
@@ -117,4 +118,4 @@ export async function POST(request: Request) {
   } catch (e: any) {
     return apiErrorResponse(e, request)
   }
-}
+})

@@ -3,6 +3,7 @@ import { requireCoachUser } from '@/lib/coach/api-auth'
 import { buildExport } from '@/lib/coach/export'
 import { buildFhirBundle } from '@/lib/coach/fhir'
 import { heuteBerlin } from '@/lib/utils/timezone';
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * Self-Service-Datenexport (Art. 20 DSGVO / DiPAV Anlage 2):
@@ -13,7 +14,7 @@ import { heuteBerlin } from '@/lib/utils/timezone';
  * bleibt die Vollausgabe — das Bundle enthält bewusst weniger
  * (keine Einwilligungen, keine Berichte, keine Identität).
  */
-export async function GET(request: NextRequest) {
+export const GET = withTracking(async function GET(request: NextRequest) {
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 
@@ -68,4 +69,4 @@ export async function GET(request: NextRequest) {
       'Cache-Control': 'no-store',
     },
   })
-}
+})

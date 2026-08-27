@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server'
 import { requireCoachUser } from '@/lib/coach/api-auth'
 import type { ErledigungStatus } from '@/lib/coach/types'
 import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
+import { withTracking } from '@/lib/monitoring/tracker'
 
 const STATUS: ErledigungStatus[] = ['erledigt', 'teilweise', 'ausgelassen']
 
 /** Erledigungen laden — ?von=YYYY-MM-DD (Default: letzte 28 Tage). */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 
@@ -24,10 +25,10 @@ export async function GET(request: Request) {
 
   if (error) return NextResponse.json({ error: 'Erledigungen konnten nicht geladen werden.' }, { status: 500 })
   return NextResponse.json({ log: data ?? [] })
-}
+})
 
 /** Erledigung eintragen/ändern (Upsert je Aktivität+Tag). */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireCoachUser({ schreibzugriff: true })
   if (!auth.ok) return auth.response
 
@@ -57,4 +58,4 @@ export async function POST(request: Request) {
 
   if (error) return NextResponse.json({ error: 'Erledigung konnte nicht gespeichert werden.' }, { status: 400 })
   return NextResponse.json({ eintrag: data })
-}
+})

@@ -7,7 +7,8 @@ import { erstelleMonatsabschluss } from '@/lib/abrechnung/monatsabschluss'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 
 import { euroZuCent } from '@/lib/geld'
-export async function GET(request: Request) {
+import { withTracking } from '@/lib/monitoring/tracker'
+export const GET = withTracking(async function GET(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -125,7 +126,7 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
 
 /**
  * POST /api/billing/monthly-closing
@@ -146,7 +147,7 @@ export async function GET(request: Request) {
  * dryRun=true rechnet alles durch, schreibt aber nichts — gedacht fuer die
  * Vorschau vor dem echten Abschluss.
  */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -190,4 +191,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

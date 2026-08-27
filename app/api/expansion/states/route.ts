@@ -20,11 +20,12 @@ import { adminMatrix, invalidateStateCache } from '@/lib/expansion/state-setting
 import { normalizeBundesland } from '@/lib/expansion/plz-bundesland'
 import { istExpansionStatus } from '@/lib/expansion/types'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('expansion/states')
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const auth = await requireExpansionAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -54,9 +55,9 @@ export async function GET() {
     bundeslaender: matrix,
     dashboard: false,
   })
-}
+})
 
-export async function PATCH(request: NextRequest) {
+export const PATCH = withTracking(async function PATCH(request: NextRequest) {
   const auth = await requireExpansionAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -164,4 +165,4 @@ export async function PATCH(request: NextRequest) {
 
   invalidateStateCache()
   return NextResponse.json({ ok: true, bundesland: data })
-}
+})

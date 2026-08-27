@@ -4,6 +4,7 @@ import { getClientIp } from '@/lib/rate-limit'
 import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('lead-inquiry')
 
 // ═══════════════════════════════════════════════════════════
@@ -17,7 +18,7 @@ const supabaseAdmin = createAdminClient()
 
 const MAX_LEN = { name: 120, phone: 40, message: 2000, service: 60, source: 60, utm_source: 120 }
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const ip = getClientIp(request)
     if (!(await rateLimitPersistent(`lead:${ip}`, 5, 10 * 60 * 1000))) {
@@ -94,4 +95,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

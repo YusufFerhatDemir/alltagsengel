@@ -37,6 +37,7 @@ import {
 } from '@/lib/coach/pricing'
 import { WIDERRUFSBELEHRUNG_VERSION } from '@/lib/coach/rechtstexte'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('coach-checkout')
 
 export const runtime = 'nodejs'
@@ -82,7 +83,7 @@ function pruefeAnschrift(body: Record<string, unknown>, fallbackEmail: string): 
   return { ok: true, wert }
 }
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     // Rate-Limit vor allem anderen: Jeder Aufruf, der durchkommt, legt
     // einen Stripe-Customer an — das ist eine Ressource bei einem Dritten.
@@ -253,4 +254,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

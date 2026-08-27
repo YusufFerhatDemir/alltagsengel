@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logAuditEvent } from '@/lib/audit-log'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('api:user')
 
 /**
@@ -37,7 +38,7 @@ function redirect(path: string) {
   return NextResponse.redirect(`${APP_URL}${path}`, { status: 303 })
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withTracking(async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url)
     const token = (url.searchParams.get('token') || '').trim()
@@ -139,4 +140,4 @@ export async function GET(request: NextRequest) {
     })
     return redirect('/auth/login?undo_error=server_error')
   }
-}
+})

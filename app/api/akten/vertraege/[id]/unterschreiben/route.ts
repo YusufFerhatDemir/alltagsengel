@@ -4,8 +4,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAktenAdmin } from '@/lib/akten/api-auth'
 import { vertragUnterschreiben } from '@/lib/akten/vertraege'
 import type { SignaturTyp } from '@/lib/akten/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const POST = withTracking(async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const auth = await requireAktenAdmin('stammdaten.schreiben')
@@ -31,4 +32,4 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   } catch (err) {
     return apiErrorResponse(err, request)
   }
-}
+})

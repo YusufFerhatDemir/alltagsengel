@@ -20,6 +20,7 @@ import { requireExpansionAdmin } from '@/lib/expansion/api-auth'
 import { normalizeBundesland } from '@/lib/expansion/plz-bundesland'
 import { BUNDESLAND_NAMEN, type BundeslandCode } from '@/lib/expansion/types'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('expansion/notify-waitlist')
 
 export const dynamic = 'force-dynamic'
@@ -70,7 +71,7 @@ async function ladeStatus(orgId: string, bundesland: BundeslandCode) {
   return data
 }
 
-export async function GET(_request: NextRequest, context: RouteContext) {
+export const GET = withTracking(async function GET(_request: NextRequest, context: RouteContext) {
   const auth = await requireExpansionAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -99,9 +100,9 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     max_pro_lauf: MAX_PRO_LAUF,
     hinweis: 'Der Versand startet erst mit POST { "bestaetigt": true }.',
   })
-}
+})
 
-export async function POST(request: NextRequest, context: RouteContext) {
+export const POST = withTracking(async function POST(request: NextRequest, context: RouteContext) {
   const auth = await requireExpansionAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -192,4 +193,4 @@ export async function POST(request: NextRequest, context: RouteContext) {
         + 'Bitte erneut aufrufen, um die restlichen Empfänger zu benachrichtigen.'
       : null,
   })
-}
+})

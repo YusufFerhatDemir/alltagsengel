@@ -9,10 +9,11 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { clientToFhirPatient } from '@/lib/fhir/mappers'
 import { exceptionOutcome, notFoundOutcome, toFhirErrorResponse } from '@/lib/fhir/operation-outcome'
 import type { ClientFhirRow } from '@/lib/fhir/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 const FHIR_CONTENT_TYPE = 'application/fhir+json; charset=utf-8'
 
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withTracking(async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return toFhirErrorResponse(auth.response)
@@ -34,4 +35,4 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   } catch (err) {
     return safeApiError(err, _request)
   }
-}
+})

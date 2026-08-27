@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { releaseCreditNote } from '@/lib/billing/core'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * POST /api/billing/corrections/[id]/release
@@ -11,7 +12,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
  * wird auf 'freigegeben' gehoben, festgeschrieben und ein Freigabe-Snapshot
  * geschrieben. Nur fuer Administratoren.
  */
-export async function POST(
+export const POST = withTracking(async function POST(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -27,4 +28,4 @@ export async function POST(
   } catch (err) {
     return safeApiError(err, _request)
   }
-}
+})

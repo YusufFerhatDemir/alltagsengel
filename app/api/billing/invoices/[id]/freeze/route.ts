@@ -7,13 +7,14 @@ import { getActiveOrgId } from '@/lib/organizations/server'
 import { versandFlagsStand } from '@/lib/config/versand-flags'
 import { protokolliereVersandFlags } from '@/lib/config/versand-flags-audit'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * POST /api/billing/invoices/[id]/freeze
  * Rechnung festschreiben (Snapshot + Preise einfrieren).
  * Nur fuer Administratoren.
  */
-export async function POST(
+export const POST = withTracking(async function POST(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -80,4 +81,4 @@ export async function POST(
   } catch (err) {
     return safeApiError(err, _request)
   }
-}
+})

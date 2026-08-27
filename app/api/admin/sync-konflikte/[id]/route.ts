@@ -6,6 +6,7 @@ import { holeKonflikt, loeseKonfliktAuf, schreibeSyncAudit } from '@/lib/sync/au
 import { entscheideManuelleAufloesung } from '@/lib/sync/conflict'
 import { SYNC_ENTITY_REGISTRY, resolveSyncRoute } from '@/lib/sync/entity-registry'
 import { wendeAenderungAn } from '@/lib/sync/apply'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // ═══════════════════════════════════════════════════════════════
 // PATCH /api/admin/sync-konflikte/[id]
@@ -23,7 +24,7 @@ import { wendeAenderungAn } from '@/lib/sync/apply'
 //                angewendet wird (z. B. Karteileiche).
 // ═══════════════════════════════════════════════════════════════
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withTracking(async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
@@ -92,4 +93,4 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

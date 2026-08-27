@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('google-reviews')
 
 // ═══════════════════════════════════════════════════════════
@@ -47,7 +48,7 @@ interface Cached {
 
 let cache: Cached | null = null
 
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const apiKey = process.env.GOOGLE_MAPS_API_KEY
   const placeId = process.env.GOOGLE_PLACE_ID
 
@@ -99,4 +100,4 @@ export async function GET() {
     if (cache) return NextResponse.json(cache.data)
     return NextResponse.json({ configured: false })
   }
-}
+})

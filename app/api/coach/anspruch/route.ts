@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server'
 import { requireCoachUser } from '@/lib/coach/api-auth'
 import { dipaModus } from '@/lib/coach/config'
 import { pruefeAnspruch, type NutzungDurch } from '@/lib/coach/anspruch'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 const NUTZUNG_DURCH: NutzungDurch[] = ['pflegebeduerftig', 'angehoerig', 'gemeinsam']
 
 /** Bisherige Anspruchsprüfungen des Nutzers (neueste zuerst). */
-export async function GET() {
+export const GET = withTracking(async function GET() {
   if (!dipaModus()) {
     return NextResponse.json({ error: 'Anspruchsprüfung ist nur im DiPA-Modus verfügbar.' }, { status: 404 })
   }
@@ -22,14 +23,14 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: 'Prüfungen konnten nicht geladen werden.' }, { status: 500 })
   return NextResponse.json({ pruefungen: data ?? [] })
-}
+})
 
 /**
  * Selbstauskunft auswerten und speichern.
  * Die Bewertung passiert serverseitig (lib/coach/anspruch.ts), damit
  * Ergebnis und gespeicherte Kriterien-Version immer zusammenpassen.
  */
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   if (!dipaModus()) {
     return NextResponse.json({ error: 'Anspruchsprüfung ist nur im DiPA-Modus verfügbar.' }, { status: 404 })
   }
@@ -69,4 +70,4 @@ export async function POST(request: Request) {
 
   if (error) return NextResponse.json({ error: 'Prüfung konnte nicht gespeichert werden.' }, { status: 400 })
   return NextResponse.json({ pruefung: data, ergebnis })
-}
+})

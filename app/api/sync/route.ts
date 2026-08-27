@@ -10,6 +10,7 @@ import { schreibeSyncAudit, schreibeSyncKonflikt, warBereitsErfolgreich } from '
 import { wendeAenderungAn } from '@/lib/sync/apply'
 import { benachrichtigeKonflikt, benachrichtigeSyncFehler } from '@/lib/sync/notify'
 import type { SyncBatchAntwort, SyncItemErgebnis } from '@/lib/sync/types'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // ═══════════════════════════════════════════════════════════════
 // POST /api/sync
@@ -38,7 +39,7 @@ import type { SyncBatchAntwort, SyncItemErgebnis } from '@/lib/sync/types'
 
 const MAX_BATCH_SIZE = 50
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   try {
     const auth = await requireOpsUser()
     if (!auth.ok) return auth.response
@@ -283,4 +284,4 @@ export async function POST(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

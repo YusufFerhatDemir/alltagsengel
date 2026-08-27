@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { pruefeCronGeheimnis } from '@/lib/api/cron-auth'
 import { versandFlagsStand } from '@/lib/config/versand-flags'
 import { protokolliereVersandFlags } from '@/lib/config/versand-flags-audit'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // ═══════════════════════════════════════════════════════════
 // CRON: AUTOMATISCHER MAHNLAUF
@@ -35,7 +36,7 @@ import { protokolliereVersandFlags } from '@/lib/config/versand-flags-audit'
 
 const supabaseAdmin = createAdminClient()
 
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   const abweisung = pruefeCronGeheimnis(request)
   if (abweisung) return abweisung
 
@@ -159,4 +160,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})

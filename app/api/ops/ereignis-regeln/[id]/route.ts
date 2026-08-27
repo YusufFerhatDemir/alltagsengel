@@ -3,8 +3,9 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { updateEreignisRegel, deleteEreignisRegel } from '@/lib/ops/ereignis-regeln'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function PATCH(
+export const PATCH = withTracking(async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -24,9 +25,9 @@ export async function PATCH(
   } catch (e: any) {
     return apiErrorResponse(e)
   }
-}
+})
 
-export async function DELETE(
+export const DELETE = withTracking(async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -43,4 +44,4 @@ export async function DELETE(
   } catch (e: any) {
     return apiErrorResponse(e)
   }
-}
+})

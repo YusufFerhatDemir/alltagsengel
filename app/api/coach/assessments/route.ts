@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { requireCoachUser } from '@/lib/coach/api-auth'
 import { ASSESSMENT_BEREICHE } from '@/lib/coach/assessment'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 
@@ -15,9 +16,9 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: 'Assessments konnten nicht geladen werden.' }, { status: 500 })
   return NextResponse.json({ assessments: data ?? [] })
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withTracking(async function POST(request: Request) {
   const auth = await requireCoachUser({ schreibzugriff: true })
   if (!auth.ok) return auth.response
 
@@ -48,4 +49,4 @@ export async function POST(request: Request) {
 
   if (error) return NextResponse.json({ error: 'Assessment konnte nicht gespeichert werden.' }, { status: 400 })
   return NextResponse.json({ assessment: data })
-}
+})

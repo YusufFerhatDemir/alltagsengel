@@ -22,13 +22,14 @@ import { requireCoachUser } from '@/lib/coach/api-auth'
 import { escapeHtml } from '@/lib/rate-limit'
 import type { CoachRechnung } from '@/lib/coach/types'
 import { bereiteRechnungAuf, rechnungHtml, type RechnungsDaten } from '@/lib/coach/rechnung'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const UUID = /^[0-9a-f-]{36}$/i
 
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withTracking(async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 
@@ -106,4 +107,4 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       'Content-Disposition': `inline; filename="Rechnung-${r.nummer}.html"`,
     },
   })
-}
+})

@@ -4,8 +4,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireKimAdmin } from '@/lib/kim/api-auth'
 import { getMessage } from '@/lib/kim/message-service'
 import { uploadKimAttachment } from '@/lib/kim/attachment-service'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const POST = withTracking(async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   const { id } = await params
@@ -37,4 +38,4 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const status = msg.includes('nicht erlaubt') || msg.includes('größer') || msg.includes('leer') ? 400 : 500
     return NextResponse.json({ error: msg }, { status })
   }
-}
+})

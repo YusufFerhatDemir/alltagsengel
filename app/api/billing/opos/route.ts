@@ -3,12 +3,13 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { requireOpsAdmin } from '@/lib/ops/api-auth';
 import { getOposListe, type OposFilter } from '@/lib/billing/opos/opos-manager';
 import { safeApiError } from '@/lib/api/error-sanitizer';
+import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
  * GET /api/billing/opos
  * Offene-Posten-Liste mit optionalen Filtern.
  */
-export async function GET(req: NextRequest) {
+export const GET = withTracking(async function GET(req: NextRequest) {
   try {
     const auth = await requireOpsAdmin('abrechnung.lesen');
     if (!auth.ok) return auth.response;
@@ -39,4 +40,4 @@ export async function GET(req: NextRequest) {
   } catch (e) {
     return safeApiError(e, req);
   }
-}
+})

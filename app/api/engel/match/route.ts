@@ -36,6 +36,7 @@ import { resolvePlz } from '@/lib/hessen-plz'
 import { ENGEL_MATCH_RADIUS_KM, plzDistanceKm } from '@/lib/plz-match'
 import { istVerfuegbar, type Zeitfenster } from '@/lib/availability'
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 export const dynamic = 'force-dynamic'
 
@@ -67,7 +68,7 @@ async function distanzKm(plzA: string, plzB: string): Promise<number | null> {
   return plzA.slice(0, 2) === plzB.slice(0, 2) ? 0 : null
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withTracking(async function GET(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
@@ -194,4 +195,4 @@ export async function GET(request: NextRequest) {
     radiusKm,
     customerPlz,
   })
-}
+})

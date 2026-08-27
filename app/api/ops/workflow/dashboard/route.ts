@@ -3,8 +3,9 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { getDashboard } from '@/lib/workflow/dashboard'
+import { withTracking } from '@/lib/monitoring/tracker'
 
-export async function GET() {
+export const GET = withTracking(async function GET() {
   const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
@@ -14,4 +15,4 @@ export async function GET() {
   } catch (e: any) {
     return apiErrorResponse(e)
   }
-}
+})

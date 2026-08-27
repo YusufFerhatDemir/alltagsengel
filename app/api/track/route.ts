@@ -3,6 +3,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('tracking')
 
 // Rate Limiter: max 10 Tracking-Requests pro IP pro Minute
@@ -94,7 +95,7 @@ async function getDetailedGeo(ip: string): Promise<GeoData | null> {
   }
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     // IP aus Header lesen (Vercel / Cloudflare)
     const ip =
@@ -221,4 +222,4 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     return safeApiError(err, req)
   }
-}
+})

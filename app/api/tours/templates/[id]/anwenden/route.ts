@@ -4,13 +4,14 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { minutenZuZeit, zeitZuMinuten } from '@/lib/availability'
 import { fahrtZwischenPlz } from '@/lib/touren/fahrtzeit'
 import { POST as erstelleTour } from '@/app/api/tours/route'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 // ── POST /api/tours/templates/[id]/anwenden ──────────────────────
 // body: { tour_date, caregiver_id? } — materialisiert die Vorlage
 // als konkrete Tour: Zeiten werden ab start_zeit fortlaufend aus
 // Stop-Dauer + geschätzter Fahrzeit aufgebaut, dann läuft die
 // normale Tour-Anlage (inkl. aller Prüfungen) über POST /api/tours.
-export async function POST(
+export const POST = withTracking(async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -106,4 +107,4 @@ export async function POST(
     tour.template_id = template.id
   }
   return NextResponse.json(tour, { status: 201 })
-}
+})

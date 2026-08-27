@@ -10,6 +10,7 @@ import {
 } from '@/lib/touren/server'
 import { STOP_SELECT, type StopZeile } from '@/lib/touren/select'
 import { saveServiceRecord } from '@/lib/admin/service-records'
+import { withTracking } from '@/lib/monitoring/tracker'
 
 const STOP_STATUS = ['GEPLANT', 'UNTERWEGS', 'BEIM_KLIENTEN', 'ABGESCHLOSSEN', 'AUSGEFALLEN']
 
@@ -24,7 +25,7 @@ async function ladeTour(admin: ReturnType<typeof createAdminClient>, id: string,
 }
 
 // ── POST /api/tours/[id]/stops — Stop anhängen ────────────────────
-export async function POST(
+export const POST = withTracking(async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -81,12 +82,12 @@ export async function POST(
   await aktualisiereFahrtzeiten(admin, id, caregiver?.zip_code ?? null)
 
   return NextResponse.json(neu, { status: 201 })
-}
+})
 
 // ── PATCH /api/tours/[id]/stops — Stop ändern (Zeiten, Status,
 //    Reihenfolge). body: { stop_id, …updates } oder
 //    { reihenfolge: [stop_id, …] } für komplettes Umsortieren ─────
-export async function PATCH(
+export const PATCH = withTracking(async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -233,10 +234,10 @@ export async function PATCH(
     ...(stop as StopZeile & Record<string, unknown>),
     leistungsnachweis_fehler: serviceRecordFehler ?? undefined,
   })
-}
+})
 
 // ── DELETE /api/tours/[id]/stops?stop_id=… — nur geplante Stops ──
-export async function DELETE(
+export const DELETE = withTracking(async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -271,4 +272,4 @@ export async function DELETE(
   const caregiver = Array.isArray(tour.caregivers) ? tour.caregivers[0] : tour.caregivers
   await aktualisiereFahrtzeiten(admin, id, caregiver?.zip_code ?? null)
   return NextResponse.json({ ok: true })
-}
+})

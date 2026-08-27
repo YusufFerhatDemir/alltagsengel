@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logger } from '@/lib/logger'
+import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('api:billing')
 
 /**
@@ -11,7 +12,7 @@ const log = logger.child('api:billing')
  * Audit-Trail abfragen. Nur für Administratoren.
  * Query-Parameter: entity_type, entity_id, from, to, limit (Standard: 100)
  */
-export async function GET(request: Request) {
+export const GET = withTracking(async function GET(request: Request) {
   try {
     // Auth-Prüfung
     const supabase = await createClient()
@@ -77,4 +78,4 @@ export async function GET(request: Request) {
   } catch (err) {
     return safeApiError(err, request)
   }
-}
+})
