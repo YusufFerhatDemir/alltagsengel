@@ -204,11 +204,11 @@ export const DOKUMENTIERTE_SICHERHEITSLAGE = {
  * Verifikationsskripte unter `scripts/verify-*.mjs`.
  */
 export const JUENGSTE_MIGRATIONEN = [
-  '20261010000004_pflege_verlauf_backdating_sperre_db.sql',
-  '20261010000005_rollback_pflege_verlauf_backdating_sperre_db.sql',
   '20261010000006_kim_audit_anhang_abgewiesen.sql',
   '20261010000007_rollback_kim_audit_anhang_abgewiesen.sql',
   '20261011000000_dienstplan_nachtdienst_doppelbelegung.sql',
+  '20261011000001_medikament_eingaben_doppelgabe.sql',
+  '20261011000002_rollback_medikament_eingaben_doppelgabe.sql',
 ] as const
 
 // ---------------------------------------------------------------------------

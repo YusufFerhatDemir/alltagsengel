@@ -109,7 +109,7 @@ function mockQuery(opts: {
   for (const m of ['insert', 'update', 'delete', 'select', 'eq', 'gte', 'lte', 'order']) {
     builder[m] = (...args: unknown[]) => { calls.push({ method: m, args }); return builder }
   }
-  builder.maybeSingle = async () => opts.bestand ?? { data: { status: 'geplant' }, error: null }
+  builder.maybeSingle = async () => opts.bestand ?? { data: { status: 'geplant', start_zeit: '08:00:00', end_zeit: '16:00:00', pause_minuten: 30 }, error: null }
   builder.single = async () => opts.singleResult ?? { data: null, error: { message: 'kein singleResult konfiguriert' } }
   builder.then = (resolve: (v: unknown) => void, reject: (e: unknown) => void) =>
     Promise.resolve(opts.listResult ?? { data: [], error: null }).then(resolve, reject)
@@ -208,7 +208,7 @@ test('deleteEintrag: filtert nach id UND organization_id (Mandantengrenze)', asy
 })
 
 test('deleteEintrag: löscht einen abgeschlossenen Dienst NICHT', async () => {
-  const { builder, calls } = mockQuery({ bestand: { data: { status: 'abgeschlossen' }, error: null } })
+  const { builder, calls } = mockQuery({ bestand: { data: { status: 'abgeschlossen', start_zeit: '08:00:00', end_zeit: '16:00:00', pause_minuten: 30 }, error: null } })
   await assert.rejects(
     () => deleteEintrag(supabaseWith(builder), 'e-1', 'org-1'),
     (err: unknown) => err instanceof UserFacingError && /nicht gelöscht/.test((err as Error).message),
@@ -240,7 +240,7 @@ test('updateEintrag: sperrt Kernfelder eines abgeschlossenen Dienstes', async ()
 
 test('updateEintrag: sperrt auch das Umbesetzen und den Statuswechsel', async () => {
   for (const patch of [{ caregiverId: 'cg-2' }, { clientId: 'cl-2' }, { status: 'geplant' as const }]) {
-    const { builder } = mockQuery({ bestand: { data: { status: 'abgeschlossen' }, error: null } })
+    const { builder } = mockQuery({ bestand: { data: { status: 'abgeschlossen', start_zeit: '08:00:00', end_zeit: '16:00:00', pause_minuten: 30 }, error: null } })
     await assert.rejects(
       () => updateEintrag(supabaseWith(builder), 'e-1', 'org-1', patch),
       (err: unknown) => err instanceof UserFacingError,
@@ -250,7 +250,7 @@ test('updateEintrag: sperrt auch das Umbesetzen und den Statuswechsel', async ()
 
 test('updateEintrag: lässt Notizen am abgeschlossenen Dienst zu', async () => {
   const { builder, calls } = mockQuery({
-    bestand: { data: { status: 'abgeschlossen' }, error: null },
+    bestand: { data: { status: 'abgeschlossen', start_zeit: '08:00:00', end_zeit: '16:00:00', pause_minuten: 30 }, error: null },
     singleResult: { data: { id: 'e-1', notizen: 'Nachtrag' }, error: null },
   })
   await updateEintrag(supabaseWith(builder), 'e-1', 'org-1', { notizen: 'Nachtrag' })
@@ -259,7 +259,7 @@ test('updateEintrag: lässt Notizen am abgeschlossenen Dienst zu', async () => {
 
 test('updateEintrag: geplanter Dienst bleibt frei änderbar', async () => {
   const { builder, calls } = mockQuery({
-    bestand: { data: { status: 'geplant' }, error: null },
+    bestand: { data: { status: 'geplant', start_zeit: '08:00:00', end_zeit: '16:00:00', pause_minuten: 30 }, error: null },
     singleResult: { data: { id: 'e-1' }, error: null },
   })
   await updateEintrag(supabaseWith(builder), 'e-1', 'org-1', { startZeit: '09:00', caregiverId: 'cg-2' })

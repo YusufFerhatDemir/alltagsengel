@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { UserFacingError } from '@/lib/api/user-facing-error'
+import { heuteBerlin } from '@/lib/utils/timezone'
 import type {
   Medikament,
   MedikamentEingabe,
@@ -18,6 +19,12 @@ const GUELTIGE_STATUS: MedikamentStatus[] = ['aktiv', 'pausiert', 'abgesetzt']
 
 const GUELTIGE_EINNAHME_ZEITEN = ['morgens', 'mittags', 'abends', 'nachts'] as const
 const GUELTIGE_EINGABE_STATUS = ['geplant', 'gegeben', 'verweigert', 'ausgelassen'] as const
+
+/**
+ * Eingabe-Status, die eine Gabe als ENTSCHIEDEN dokumentieren.
+ * 'geplant' ist nur eine Vormerkung und darf ueberschrieben werden.
+ */
+export const DOKUMENTIERTE_EINGABE_STATUS = ['gegeben', 'verweigert', 'ausgelassen'] as const
 
 export function validiereKategorie(k: string): asserts k is MedikamentKategorie {
   if (!GUELTIGE_KATEGORIEN.includes(k as MedikamentKategorie)) {
@@ -57,12 +64,38 @@ export function validiereMedikament(data: Record<string, unknown>): void {
     throw new UserFacingError('Mindestens eine Einnahmezeit muss ausgewählt sein.')
   }
 
+  if (data.beginn_datum !== undefined && data.beginn_datum !== null && data.beginn_datum !== '') {
+    assertIsoDatum(data.beginn_datum, 'Beginndatum')
+  }
+  if (data.end_datum !== undefined && data.end_datum !== null && data.end_datum !== '') {
+    assertIsoDatum(data.end_datum, 'Enddatum')
+  }
   if (data.beginn_datum && data.end_datum) {
-    if (new Date(data.beginn_datum as string) > new Date(data.end_datum as string)) {
+    // Zeichenkettenvergleich statt new Date(): ein unlesbares Datum ergab
+    // dort NaN, und `NaN > NaN` ist false — die Pruefung ging still durch.
+    // Das Format ist durch assertIsoDatum oben gesichert.
+    if (String(data.beginn_datum) > String(data.end_datum)) {
       throw new UserFacingError('Enddatum darf nicht vor dem Beginndatum liegen.')
     }
   }
 }
+
+/** `YYYY-MM-DD` — Medikationszeitraeume sind Datumsspalten, keine Zeitstempel. */
+const ISO_DATUM = /^\d{4}-\d{2}-\d{2}$/
+
+function assertIsoDatum(wert: unknown, feld: string): void {
+  const text = typeof wert === 'string' ? wert.trim() : ''
+  if (!ISO_DATUM.test(text) || Number.isNaN(Date.parse(`${text}T00:00:00Z`))) {
+    throw new UserFacingError(`${feld} ist kein gültiges Datum (JJJJ-MM-TT).`)
+  }
+}
+
+/** Felder, aus denen sich die Gueltigkeit einer Medikation ergibt. */
+const VALIDIERTE_FELDER = [
+  'medikament_name', 'dosierung', 'pzn', 'kategorie',
+  'einnahme_morgens', 'einnahme_mittags', 'einnahme_abends', 'einnahme_nachts',
+  'beginn_datum', 'end_datum',
+] as const
 
 export async function listeMedikamente(
   sb: SupabaseClient,
@@ -152,7 +185,41 @@ export async function aktualisiereMedikament(
   if (bestehend.status === 'abgesetzt') {
     throw new UserFacingError('Abgesetztes Medikament kann nicht mehr bearbeitet werden. Für eine Reaktivierung zuerst den Status ändern.', 409)
   }
-  if (updates.kategorie) validiereKategorie(updates.kategorie as string)
+
+  // ── Die Aenderung wird gegen den ZUSAMMENGEFUEHRTEN Stand geprueft ──
+  //
+  // Bisher lief hier nur `validiereKategorie`. Was das schliesst, ist
+  // zweierlei — und die beiden Faelle wiegen unterschiedlich schwer:
+  //
+  //  · ECHTE LUECKE: `dosierung: ''` und `medikament_name: '  '` kommen
+  //    durch. Beide Spalten sind NOT NULL, aber die leere Zeichenkette ist
+  //    nicht NULL — die Datenbank nimmt sie an. Beim Anlegen war das
+  //    verboten, per Update nicht. In der Akte steht danach ein Medikament
+  //    ohne Dosierungsangabe.
+  //
+  //  · LESBARE MELDUNG: alles Uebrige (alle vier Einnahmezeiten abgewaehlt,
+  //    PZN 'ABC', Ende vor Beginn) faengt die Datenbank ueber ihre
+  //    CHECK-Constraints ab — aber als rohe Postgres-Meldung. Die Zeile
+  //    unten wirft dafuer `Error` (kein UserFacingError), der Sanitizer
+  //    macht daraus fail-closed einen 500er, und der Anwender sieht
+  //    "Interner Serverfehler" statt der Ursache.
+  //
+  // Geprueft wird der Stand NACH der Aenderung, nicht der Patch: ein Update,
+  // das nur `end_datum` verschiebt, muss gegen das bestehende `beginn_datum`
+  // gehalten werden.
+  const beruehrt = VALIDIERTE_FELDER.some(f => f in updates)
+  if (beruehrt) {
+    const zusammengefuehrt: Record<string, unknown> = {
+      ...(bestehend as unknown as Record<string, unknown>),
+      ...updates,
+      // client_id wird von aktualisiereMedikament nie geaendert; fuer die
+      // Pflichtfeldpruefung zaehlt der bestehende Wert.
+      client_id: (bestehend as unknown as Record<string, unknown>).client_id ?? 'unveraendert',
+    }
+    validiereMedikament(zusammengefuehrt)
+  } else if (updates.kategorie) {
+    validiereKategorie(updates.kategorie as string)
+  }
 
   const allowed = [
     'medikament_name', 'wirkstoff', 'pzn', 'kategorie', 'darreichungsform',
@@ -260,9 +327,14 @@ export async function erfasseEingabe(
     throw new UserFacingError('Verweigerungsgrund ist bei Status "verweigert" ein Pflichtfeld.')
   }
 
+  const gabeTag = String(eingabe.geplant_um ?? '').slice(0, 10)
+  if (!ISO_DATUM.test(gabeTag)) {
+    throw new UserFacingError('geplant_um ist kein gültiger Zeitpunkt.')
+  }
+
   const { data: medikament, error: medErr } = await sb
     .from('medikamente')
-    .select('client_id, status')
+    .select('client_id, status, beginn_datum, end_datum, dauermedikation')
     .eq('id', eingabe.medikament_id)
     .eq('organization_id', orgId)
     .maybeSingle()
@@ -273,6 +345,70 @@ export async function erfasseEingabe(
   if (medikament.status !== 'aktiv') {
     throw new UserFacingError(
       `Medikament ist nicht aktiv (Status: ${medikament.status}) — es kann keine neue Eingabe erfasst werden.`,
+      409,
+    )
+  }
+
+  // ── Gabe innerhalb des Verordnungszeitraums? ──────────────────────
+  //
+  // Geprueft wurde bisher nur der Status. Ein Medikament, dessen
+  // `end_datum` vor Wochen lag, stand aber weiterhin auf 'aktiv' (den
+  // Status setzt niemand automatisch um) — jede weitere Gabe liess sich
+  // anstandslos dokumentieren, und `beginn_datum` band ueberhaupt nicht.
+  // Dieselbe Regel wie `istAbgelaufen`/`istBegonnen`: `end_datum` bindet
+  // nur bei einer befristeten Medikation, `beginn_datum` immer.
+  const beginn = medikament.beginn_datum ? String(medikament.beginn_datum).slice(0, 10) : null
+  const ende = medikament.end_datum ? String(medikament.end_datum).slice(0, 10) : null
+  if (beginn && gabeTag < beginn) {
+    throw new UserFacingError(
+      `Die Medikation beginnt erst am ${beginn} — für den ${gabeTag} kann keine Gabe dokumentiert werden.`,
+      409,
+    )
+  }
+  if (ende && medikament.dauermedikation !== true && gabeTag > ende) {
+    throw new UserFacingError(
+      `Die Medikation endete am ${ende} — für den ${gabeTag} kann keine Gabe dokumentiert werden.`,
+      409,
+    )
+  }
+
+  // ── Dieselbe Gabe schon dokumentiert? ─────────────────────────────
+  //
+  // `medikament_eingaben` ist append-only und traegt KEINEN eindeutigen
+  // Index (20260820010000). Ein erneuter Klick, ein Wiederholungslauf der
+  // Offline-Synchronisation oder ein Netzabbruch nach dem Insert erzeugte
+  // deshalb eine ZWEITE Zeile fuer dieselbe geplante Gabe — in der Akte
+  // steht dann, das Medikament sei zweimal gegeben worden. Genau dieser
+  // Fall ist im Offline-Pfad bereits einmal aufgetreten
+  // (warBereitsErfolgreich, 20261009).
+  //
+  // Fail-closed: laesst sich der Bestand nicht lesen, wird NICHT
+  // geschrieben. Eine fehlende Dokumentation faellt beim naechsten Blick
+  // in die Akte auf, eine doppelte nicht.
+  const { data: bestehende, error: bestandFehler } = await sb
+    .from('medikament_eingaben')
+    .select('id, status')
+    .eq('organization_id', orgId)
+    .eq('medikament_id', eingabe.medikament_id)
+    .eq('geplant_um', eingabe.geplant_um)
+    .eq('einnahme_zeit', eingabe.einnahme_zeit)
+    .limit(5)
+
+  if (bestandFehler) {
+    throw new UserFacingError(
+      'Bereits dokumentierte Gaben konnten nicht geprüft werden — es wurde nichts gespeichert. '
+      + 'Bitte erneut versuchen.',
+      503,
+    )
+  }
+
+  const schonDokumentiert = (bestehende ?? []).find(
+    z => DOKUMENTIERTE_EINGABE_STATUS.includes(String(z.status) as typeof DOKUMENTIERTE_EINGABE_STATUS[number]),
+  )
+  if (schonDokumentiert) {
+    throw new UserFacingError(
+      `Für diese Gabe (${eingabe.einnahme_zeit}, ${gabeTag}) ist bereits „${schonDokumentiert.status}" dokumentiert. `
+      + 'Eine zweite Dokumentation derselben Gabe wird nicht angelegt — bei einer Korrektur den bestehenden Eintrag prüfen.',
       409,
     )
   }
@@ -308,8 +444,26 @@ export function einnahmeZeiten(m: Medikament): string[] {
   return zeiten
 }
 
-export function istAbgelaufen(m: Medikament): boolean {
+/**
+ * Ist die Medikation abgelaufen?
+ *
+ * `end_datum` ist der LETZTE Tag, an dem gegeben wird — nicht der erste
+ * danach. Der frühere Vergleich `new Date(m.end_datum) < new Date()` las das
+ * Datum als UTC-Mitternacht und stellte es dem aktuellen Zeitstempel
+ * gegenüber: schon um 00:01 des Endtages galt die Medikation als abgelaufen,
+ * die Gaben dieses Tages sahen unzulässig aus.
+ *
+ * Verglichen wird deshalb Datum gegen Datum in Europe/Berlin — derselbe
+ * Kalendertag, den die Pflegekraft vor sich sieht.
+ */
+export function istAbgelaufen(m: Medikament, heute: string = heuteBerlin()): boolean {
   if (m.dauermedikation) return false
   if (!m.end_datum) return false
-  return new Date(m.end_datum) < new Date()
+  return String(m.end_datum).slice(0, 10) < heute
+}
+
+/** Hat die Medikation am Stichtag schon begonnen? */
+export function istBegonnen(m: Pick<Medikament, 'beginn_datum'>, stichtag: string): boolean {
+  if (!m.beginn_datum) return true
+  return String(m.beginn_datum).slice(0, 10) <= stichtag
 }

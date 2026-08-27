@@ -146,6 +146,28 @@ export async function updateWound(
       effektiverTyp = (bestehend as { wund_typ: WundTyp }).wund_typ
     }
     assertDekubitusGrad(effektiverTyp, patch.dekubitusGrad)
+  } else if (patch.wundTyp !== undefined && patch.wundTyp !== 'dekubitus') {
+    // Die andere Richtung: der Typ wechselt WEG von 'dekubitus', ohne dass
+    // ein Grad mitgeschickt wird. Der bestehende `dekubitus_grad` blieb dann
+    // stehen — eine Wunde vom Typ 'ulcus_cruris' mit Dekubitus-Grad III.
+    // Der DB-Constraint faengt das ab, aber als roher Postgres-Fehler: die
+    // Zeile unten wirft `Error` (kein UserFacingError), der Sanitizer macht
+    // daraus fail-closed einen 500er, und der Anwender sieht nur
+    // "Interner Serverfehler" statt der eigentlichen Ursache.
+    const { data: bestehend, error: ladeError } = await supabase
+      .from('wounds')
+      .select('dekubitus_grad')
+      .eq('id', id)
+      .eq('organization_id', organizationId)
+      .maybeSingle()
+    if (ladeError) throw new Error(`Wunde konnte nicht geladen werden: ${ladeError.message}`)
+    if (!bestehend) throw new UserFacingError('Wunde nicht gefunden.', 404)
+    if ((bestehend as { dekubitus_grad: number | null }).dekubitus_grad != null) {
+      throw new UserFacingError(
+        `Wundtyp "${patch.wundTyp}" verträgt keinen Dekubitus-Grad. `
+        + 'Beim Typwechsel `dekubitusGrad: null` mitsenden, um den bisherigen Grad zu entfernen.',
+      )
+    }
   }
 
   const update: Record<string, unknown> = {}
