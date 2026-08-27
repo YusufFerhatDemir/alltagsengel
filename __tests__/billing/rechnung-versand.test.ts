@@ -391,3 +391,86 @@ describe('versendeRechnungPerEmail', () => {
     })
   })
 })
+
+// ═══════════════════════════════════════════════════════════════
+// BEFUND V-1 — der PDF-Fehlschlag war der stille Ausgang
+// ═══════════════════════════════════════════════════════════════
+//
+// versendeRechnungPerEmail protokolliert jeden Ausgang in
+// invoice_email_log — jeden ausser einem: warf erzeugeRechnungsPaket()
+// (fehlende Schriftart, Storage nicht erreichbar, Beleg nicht baubar),
+// flog die Ausnahme am Protokollieren vorbei nach oben.
+//
+// Beim automatischen Versand aus freezeInvoice() wird sie dort
+// zusaetzlich geschluckt: die Rechnung ist festgeschrieben, die Mail nie
+// unterwegs, invoice_email_log leer, sent_at leer. Der Betrieb liest den
+// Zustellstand aber genau an diesen beiden Stellen ab — ein so
+// gescheiterter Versand war unsichtbar.
+//
+// Fachlich ist ein PDF-Fehler derselbe Fall wie ein Provider-Fehler: die
+// Rechnung ist nicht raus. Er wird jetzt auch so behandelt.
+describe('versendeRechnungPerEmail — Beleg nicht erzeugbar (V-1)', () => {
+  it('meldet fehlgeschlagen statt zu werfen', async () => {
+    const { stub } = makeStub()
+    paketMock.mockRejectedValue(new Error('fontkit nicht registriert'))
+
+    const ergebnis = await versendeRechnungPerEmail(stub, {
+      preflight: 'uebersprungen', invoiceId: INV, organizationId: ORG, actorId: ACTOR,
+    })
+
+    expect(ergebnis.status).toBe('fehlgeschlagen')
+    expect(ergebnis.grund).toContain('Beleg konnte nicht erzeugt werden')
+    expect(ergebnis.grund).toContain('fontkit nicht registriert')
+  })
+
+  it('hinterlaesst eine Zeile in invoice_email_log', async () => {
+    const { stub, protokoll } = makeStub()
+    paketMock.mockRejectedValue(new Error('Storage nicht erreichbar'))
+
+    const ergebnis = await versendeRechnungPerEmail(stub, {
+      preflight: 'uebersprungen', invoiceId: INV, organizationId: ORG, actorId: ACTOR,
+    })
+
+    expect(ergebnis.protokolliert).toBe(true)
+    expect(protokoll.logInserts).toHaveLength(1)
+    expect(protokoll.logInserts[0]).toMatchObject({
+      invoice_id: INV,
+      organization_id: ORG,
+      status: 'fehlgeschlagen',
+      empfaenger_email: 'erika@example.org',
+    })
+    expect(String(protokoll.logInserts[0].grund)).toContain('Storage nicht erreichbar')
+  })
+
+  it('schreibt einen Audit-Eintrag email_fehlgeschlagen', async () => {
+    const { stub, protokoll } = makeStub()
+    paketMock.mockRejectedValue(new Error('Beleg kaputt'))
+
+    await versendeRechnungPerEmail(stub, {
+      preflight: 'uebersprungen', invoiceId: INV, organizationId: ORG, actorId: ACTOR,
+    })
+
+    expect(protokoll.auditInserts).toHaveLength(1)
+    expect(protokoll.auditInserts[0]).toMatchObject({
+      entity_type: 'invoice',
+      entity_id: INV,
+      action: 'email_fehlgeschlagen',
+      organization_id: ORG,
+    })
+  })
+
+  it('setzt sent_at NICHT und ruft den Mailversand gar nicht erst auf', async () => {
+    const { stub, protokoll } = makeStub()
+    paketMock.mockRejectedValue(new Error('Beleg kaputt'))
+
+    await versendeRechnungPerEmail(stub, {
+      preflight: 'uebersprungen', invoiceId: INV, organizationId: ORG, actorId: ACTOR,
+    })
+
+    // Kein Versandzeitpunkt: der naechste Lauf darf und muss es erneut
+    // versuchen. Und ohne Anhang darf keine Mail rausgehen — eine
+    // Rechnungsmail ohne Rechnung waere schlimmer als keine Mail.
+    expect(protokoll.invoiceUpdates).toHaveLength(0)
+    expect(mailMock).not.toHaveBeenCalled()
+  })
+})

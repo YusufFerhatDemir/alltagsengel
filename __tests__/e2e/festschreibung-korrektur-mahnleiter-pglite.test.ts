@@ -231,12 +231,15 @@ describe('Wettlauf: zwei gleichzeitige Festschreibungen', () => {
   it('der unterlegene Lauf scheitert — er meldet keinen Erfolg', () => {
     const fehler = ergebnisse.find(e => e.status === 'rejected') as PromiseRejectedResult
     expect(fehler).toBeTruthy()
-    // Der Riegel ist der UNIQUE-Constraint auf (invoice_id, version); die
-    // Anwendung selbst schreibt ohne Bedingung auf den gelesenen Zustand
-    // zurueck. Wer diesen Constraint entfernt, oeffnet die Doppel-
-    // Festschreibung wieder.
+    // Zwei Riegel liegen hintereinander: der UNIQUE-Constraint auf
+    // (invoice_id, version) faengt den Zweiten meist schon am Snapshot ab,
+    // und seit dem CAS-Guard schreibt auch die Festschreibung selbst nur
+    // noch `WHERE frozen_at IS NULL`. Frueher war NUR der Constraint da —
+    // ein fremder Nebeneffekt, kein Vorsatz. Der Test unten
+    // ('Festschreibung schreibt nur, solange frozen_at leer ist') haelt
+    // den zweiten Riegel einzeln fest.
     expect(String(fehler.reason)).toMatch(
-      /Snapshot konnte nicht erstellt werden|unique_invoice_version|bereits festgeschrieben/
+      /Snapshot konnte nicht erstellt werden|unique_invoice_version|bereits festgeschrieben|zwischenzeitlich festgeschrieben/
     )
   })
 
@@ -266,6 +269,70 @@ describe('Wettlauf: zwei gleichzeitige Festschreibungen', () => {
           AND conname = 'unique_invoice_version'`
     )
     expect(treffer).toHaveLength(1)
+  })
+
+  /**
+   * Der zweite Riegel, einzeln geprueft.
+   *
+   * Der Wettlauf oben laeuft in der Praxis in den Snapshot-Constraint.
+   * Das ist ein Nebeneffekt einer fremden Bedingung: wer sie entfernt
+   * oder die Versionszaehlung aendert, oeffnet die Doppelfestschreibung
+   * wieder, ohne dass hier ein Test rot wird.
+   *
+   * Deshalb wird das Fenster hier direkt aufgemacht: die Rechnung wird
+   * NACH dem Lesen und NACH dem Snapshot von aussen festgeschrieben —
+   * genau der Zustand, den ein paralleler Lauf hinterlaesst. Das
+   * abschliessende UPDATE darf dann nichts mehr anfassen.
+   */
+  it('Festschreibung schreibt nur, solange frozen_at leer ist', async () => {
+    const zweite = await legeEntwurf({ betragEuro: 77 })
+    await admin.from('invoices').update({ status: 'geprueft' }).eq('id', zweite)
+
+    const FREMD = '2020-01-01T00:00:00.000Z'
+    const original = (admin as unknown as { from: (t: string) => unknown }).from
+    let geschoben = false
+    ;(admin as unknown as { from: (t: string) => unknown }).from = function (tabelle: string) {
+      const b = original.call(this, tabelle) as Record<string, unknown>
+      if (tabelle === 'invoice_snapshots' && !geschoben) {
+        const echt = (b.insert as (v: unknown) => unknown).bind(b)
+        b.insert = (werte: unknown) => {
+          const kette = echt(werte) as Record<string, unknown>
+          const echtesSelect = (kette.select as (s?: string) => unknown).bind(kette)
+          kette.select = (spalten?: string) => {
+            const s2 = echtesSelect(spalten) as Record<string, unknown>
+            const echtesSingle = (s2.single as () => Promise<unknown>).bind(s2)
+            s2.single = async () => {
+              const r = await echtesSingle()
+              if (!geschoben) {
+                geschoben = true
+                // Der parallele Lauf war schneller.
+                await db.query(
+                  `UPDATE public.invoices SET frozen_at = $2, status = 'freigegeben' WHERE id = $1`,
+                  [zweite, FREMD] as never[],
+                )
+              }
+              return r
+            }
+            return s2
+          }
+          return kette
+        }
+      }
+      return b
+    } as never
+
+    try {
+      await expect(freezeInvoice(admin, zweite, ADMIN, ORG))
+        .rejects.toThrow(/zwischenzeitlich festgeschrieben/)
+    } finally {
+      ;(admin as unknown as { from: unknown }).from = original as never
+    }
+
+    // Der fremde Zeitpunkt steht unveraendert — nichts ueberschrieben.
+    const [inv] = await zeilen<{ frozen_at: string; invoice_number_formatted: string | null }>(
+      'SELECT * FROM public.invoices WHERE id = $1', [zweite]
+    )
+    expect(new Date(inv.frozen_at).toISOString()).toBe(FREMD)
   })
 })
 

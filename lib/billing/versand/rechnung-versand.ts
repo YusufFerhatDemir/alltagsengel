@@ -265,11 +265,60 @@ export async function versendeRechnungPerEmail(
     .maybeSingle()
 
   // ── PDF erzeugen (laedt zugleich in den Storage + pflegt invoice_packages) ──
-  const paket = await erzeugeRechnungsPaket(admin, {
-    invoiceId,
-    organizationId,
-    generatedBy: actorId,
-  })
+  //
+  // Der Fehlschlag hier war bis hierhin die EINZIGE Art, wie ein Versand
+  // enden konnte, ohne eine Zeile in invoice_email_log zu hinterlassen:
+  // erzeugeRechnungsPaket() wirft (fehlende Schriftart, Storage nicht
+  // erreichbar, Beleg nicht baubar), die Ausnahme faellt am
+  // Protokollieren vorbei nach oben. Beim automatischen Versand aus
+  // freezeInvoice() wird sie dort zusaetzlich geschluckt — die Rechnung
+  // war dann festgeschrieben, die Mail nie unterwegs, und ausser einer
+  // Logzeile gab es keinen Hinweis darauf. Genau diese Klasse hatte den
+  // Leistungsnachweis-Beleg schon einmal still zerlegt.
+  //
+  // Ein PDF-Fehler ist derselbe Fall wie ein Provider-Fehler: die
+  // Rechnung ist nicht raus. Er wird deshalb auch gleich behandelt —
+  // protokolliert, auditiert, als 'fehlgeschlagen' zurueckgegeben. Die
+  // Einmal-Freigabe ist an dieser Stelle geprueft, aber noch NICHT
+  // verbraucht; sie bleibt also fuer den Wiederholungslauf gueltig.
+  let paket: Awaited<ReturnType<typeof erzeugeRechnungsPaket>>
+  try {
+    paket = await erzeugeRechnungsPaket(admin, {
+      invoiceId,
+      organizationId,
+      generatedBy: actorId,
+    })
+  } catch (err) {
+    const grund = `Beleg konnte nicht erzeugt werden: ${(err as Error)?.message ?? 'unbekannter Fehler'}`
+    log.errorWithException('Rechnungsbeleg nicht erzeugbar — Versand abgebrochen', err, { invoiceId })
+
+    const protokolliert = await protokolliere(admin, {
+      organizationId, invoiceId, actorId, status: 'fehlgeschlagen',
+      grund,
+      empfaengerEmail: client.email,
+      empfaengerName,
+      betreff: null,
+    })
+
+    await auditOderWarnen(admin, {
+      entityType: 'invoice',
+      organizationId,
+      entityId: invoiceId,
+      action: 'email_fehlgeschlagen',
+      newState: { empfaenger: client.email, grund },
+      actorId,
+    })
+
+    return {
+      status: 'fehlgeschlagen',
+      invoiceId,
+      invoiceNumber: nummer,
+      empfaenger: client.email,
+      grund,
+      protokolliert,
+      preflight: preflightErgebnis,
+    }
+  }
 
   const zahlbar = !['gutschrift', 'storno', 'teilstorno'].includes(inv.correction_type || '')
 
