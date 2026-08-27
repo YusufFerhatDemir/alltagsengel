@@ -8,6 +8,11 @@ import assert from 'node:assert/strict'
 import { createWound, updateWound, zusammenfassungWunden } from '../wunden'
 import { WUND_TYP_WERTE } from '../types'
 import type { Wound } from '../types'
+import { erstelleFakeSupabase } from '@/__tests__/helpers/supabase-fake'
+
+function inZweiTagen(): string {
+  return new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+}
 
 function schreibClient() {
   const inserts: Array<Record<string, unknown>> = []
@@ -69,6 +74,46 @@ test('createWound: Dekubitus-Grad nur bei Dekubitus', async () => {
   const { supabase: ok, inserts } = schreibClient()
   await createWound(ok, { ...basis, wundTyp: 'dekubitus', dekubitusGrad: 3 })
   assert.equal(inserts[0].dekubitus_grad, 3)
+})
+
+test('createWound blockt ein Entstehungsdatum in der Zukunft', async () => {
+  const { supabase } = schreibClient()
+  await assert.rejects(
+    () => createWound(supabase, { ...basis, wundTyp: 'sonstige', entstandenAm: inZweiTagen() }),
+    /Zukunft/,
+  )
+})
+
+test('updateWound blockt Entstehungs- und Abheilungsdatum in der Zukunft', async () => {
+  const { supabase } = schreibClient()
+  await assert.rejects(
+    () => updateWound(supabase, 'w-1', 'org-1', { entstandenAm: inZweiTagen() }),
+    /Zukunft/,
+  )
+  await assert.rejects(
+    () => updateWound(supabase, 'w-1', 'org-1', { status: 'abgeheilt', abgeheiltAm: inZweiTagen() }),
+    /Zukunft/,
+  )
+})
+
+test('updateWound prüft Dekubitus-Grad bei Teil-Update gegen den BESTEHENDEN Wundtyp', async () => {
+  const fakeNichtDekubitus = erstelleFakeSupabase(aufruf => {
+    if (aufruf.tabelle === 'wounds' && aufruf.operation === 'select') return { data: { wund_typ: 'op_wunde' } }
+    if (aufruf.tabelle === 'wounds' && aufruf.operation === 'update') return { data: { id: 'w-1', ...(aufruf.payload as object) } }
+    return undefined
+  })
+  await assert.rejects(
+    () => updateWound(fakeNichtDekubitus.client, 'w-1', 'org-1', { dekubitusGrad: 2 }),
+    /nur bei Wundtyp/,
+  )
+
+  const fakeDekubitus = erstelleFakeSupabase(aufruf => {
+    if (aufruf.tabelle === 'wounds' && aufruf.operation === 'select') return { data: { wund_typ: 'dekubitus' } }
+    if (aufruf.tabelle === 'wounds' && aufruf.operation === 'update') return { data: { id: 'w-1', ...(aufruf.payload as object) } }
+    return undefined
+  })
+  const wunde = await updateWound(fakeDekubitus.client, 'w-1', 'org-1', { dekubitusGrad: 3 })
+  assert.equal(wunde.dekubitus_grad, 3)
 })
 
 test('updateWound hält Status und Abheilungsdatum konsistent (DB-Constraint)', async () => {
