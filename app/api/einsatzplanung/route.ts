@@ -142,9 +142,17 @@ export const POST = withTracking(async function POST(req: NextRequest) {
   // recurrence_rule) hat kein einzelnes Datum, gegen das sich eine
   // Abwesenheit sinnvoll halten ließe.
   if (assignment_date) {
-    const verfuegbarkeit = await pruefeCaregiverVerfuegbarkeit(
-      admin, caregiver_id, assignment_date, start_time ?? null, end_time ?? null
-    )
+    // Fail-closed: die Prueffunktion wirft, wenn das Datum unbrauchbar ist
+    // oder die Abwesenheitsliste nicht gelesen werden konnte. Vorher galt
+    // beides still als "nicht abwesend".
+    let verfuegbarkeit
+    try {
+      verfuegbarkeit = await pruefeCaregiverVerfuegbarkeit(
+        admin, caregiver_id, assignment_date, start_time ?? null, end_time ?? null
+      )
+    } catch (err) {
+      return apiErrorResponse(err, req, 400)
+    }
     if (verfuegbarkeit.abwesend && !body.force_override) {
       return NextResponse.json({
         error: `Mitarbeiter "${freigabe.caregiverName}" ist am ${assignment_date} abwesend (${verfuegbarkeit.abwesenheitsGrund}).`,
@@ -193,18 +201,26 @@ export const POST = withTracking(async function POST(req: NextRequest) {
   // `ladeKonflikte`/`findeKonflikte` exakt nachbilden — vorher lief eine
   // Serie hier ungeprüft durch und der Nutzer sah nur die rohe DB-Meldung.
   if (assignment_date || weekday != null) {
-    const konflikte = await ladeKonflikte(admin, organizationId, {
-      id: '',
-      client_id,
-      caregiver_id,
-      assignment_date,
-      weekday,
-      valid_from,
-      valid_until,
-      start_time,
-      end_time,
-      status: assignmentStatus || 'GEPLANT',
-    })
+    // ladeKonflikte prueft die IDs/Datumsformate, bevor sie in einen
+    // PostgREST-Filter wandern, und wirft dabei UserFacingError. Ohne
+    // diese Uebersetzung waere daraus eine 500er-Antwort geworden.
+    let konflikte
+    try {
+      konflikte = await ladeKonflikte(admin, organizationId, {
+        id: '',
+        client_id,
+        caregiver_id,
+        assignment_date,
+        weekday,
+        valid_from,
+        valid_until,
+        start_time,
+        end_time,
+        status: assignmentStatus || 'GEPLANT',
+      })
+    } catch (err) {
+      return apiErrorResponse(err, req, 400)
+    }
     const mitarbeiterKonflikt = konflikte.find(k => k.art === 'mitarbeiter')
     if (mitarbeiterKonflikt) {
       return NextResponse.json({
@@ -352,9 +368,14 @@ export const PATCH = withTracking(async function PATCH(req: NextRequest) {
       const endeZeit = updates.end_time ?? bestand?.end_time ?? null
 
       if (caregiverId && datum) {
-        const verfuegbarkeit = await pruefeCaregiverVerfuegbarkeit(
-          admin, caregiverId, datum, startZeit, endeZeit
-        )
+        let verfuegbarkeit
+        try {
+          verfuegbarkeit = await pruefeCaregiverVerfuegbarkeit(
+            admin, caregiverId, datum, startZeit, endeZeit
+          )
+        } catch (err) {
+          return apiErrorResponse(err, req, 400)
+        }
         if (verfuegbarkeit.abwesend && !force_override) {
           return NextResponse.json({
             error: `Mitarbeiter ist am ${datum} abwesend (${verfuegbarkeit.abwesenheitsGrund}).`,
@@ -374,18 +395,23 @@ export const PATCH = withTracking(async function PATCH(req: NextRequest) {
       // gegen die alten Werte läuft. Der eigene Datensatz zählt nicht mit
       // (Abgleich über `id` in findeKonflikte).
       if (datum || wochentag != null) {
-        const konflikte = await ladeKonflikte(admin, organizationId, {
-          id,
-          client_id: clientId,
-          caregiver_id: caregiverId,
-          assignment_date: datum,
-          weekday: wochentag,
-          valid_from: gueltigVon,
-          valid_until: gueltigBis,
-          start_time: startZeit,
-          end_time: endeZeit,
-          status: updates.status ?? bestand?.status ?? null,
-        })
+        let konflikte
+        try {
+          konflikte = await ladeKonflikte(admin, organizationId, {
+            id,
+            client_id: clientId,
+            caregiver_id: caregiverId,
+            assignment_date: datum,
+            weekday: wochentag,
+            valid_from: gueltigVon,
+            valid_until: gueltigBis,
+            start_time: startZeit,
+            end_time: endeZeit,
+            status: updates.status ?? bestand?.status ?? null,
+          })
+        } catch (err) {
+          return apiErrorResponse(err, req, 400)
+        }
         const mitarbeiterKonflikt = konflikte.find(k => k.art === 'mitarbeiter')
         if (mitarbeiterKonflikt) {
           return NextResponse.json({

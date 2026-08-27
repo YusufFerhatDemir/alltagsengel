@@ -43,6 +43,26 @@ export interface AbrechnungsPosition {
   betrag_cent: number
   unterschrieben: boolean
   abtretung_vorhanden: boolean
+  /**
+   * Alle Einsaetze des Monats liegen im Genehmigungszeitraum.
+   *
+   * Vorher wurde nur geprueft, ob die Genehmigung schon VOR dem Monatsersten
+   * abgelaufen war — und selbst dann blieb die Position abrechenbar: die
+   * Warnung trug zwar `schwere: 'fehler'`, floss aber nirgends in die
+   * Entscheidung ein. Eine Genehmigung, die MITTEN im Monat endet, wurde gar
+   * nicht bemerkt.
+   */
+  genehmigung_gedeckt: boolean
+  /** Einsaetze ausserhalb des Genehmigungszeitraums (Anzahl). */
+  einsaetze_ungedeckt: number
+  /**
+   * Fuer JEDEN Einsatz konnte ein verifizierter Preis ermittelt werden.
+   *
+   * Ist das nicht der Fall, ist `betrag_cent` nachweislich zu niedrig. Die
+   * Position galt trotzdem als abrechenbar und ihr Teilbetrag ging in
+   * `gesamt_cent` ein — die Summe sah vollstaendig aus, war es aber nicht.
+   */
+  preis_vollstaendig: boolean
   abrechenbar: boolean
 }
 
@@ -67,6 +87,15 @@ export interface MonatsabschlussErgebnis {
   warnungen: AbschlussWarnung[]
   closings_geschrieben: number
 }
+
+/**
+ * `monthly_closings.status`-Werte, ab denen die Periode entschieden ist.
+ *
+ * Werteset des CHECK-Constraints (20260706_monatsabschluss_ki_pruefzentrale):
+ * 'open' | 'in_review' | 'ready' | 'closed' | 'sent'. Die ersten drei sind
+ * Zwischenstaende und duerfen ueberschrieben werden, die letzten beiden nicht.
+ */
+export const ABGESCHLOSSENE_CLOSING_STATUS: ReadonlySet<string> = new Set(['closed', 'sent'])
 
 /** Signatur des (optionalen) EDIFACT-Generators aus lib/abrechnung/edifact. */
 export type EdifactGenerator = (gruppe: KostentraegerGruppe, monat: string) => string
@@ -278,13 +307,21 @@ export async function erstelleMonatsabschluss(
 
     if (vRecs.length === 0) continue // in diesem Monat nichts erbracht
 
-    // Genehmigung noch gültig?
-    if (v.genehmigung_bis && v.genehmigung_bis < periodStart) {
+    // Genehmigung noch gültig? Geprüft wird je EINSATZDATUM, nicht gegen den
+    // Monatsersten: eine Genehmigung mit `genehmigung_bis` mitten im Monat
+    // deckt die Einsätze davor, aber keinen danach. Der frühere Vergleich
+    // `genehmigung_bis < periodStart` sah genau diesen Fall nie.
+    const ungedeckt = v.genehmigung_bis
+      ? vRecs.filter(r => String(r.date ?? '') > String(v.genehmigung_bis))
+      : []
+    const genehmigungGedeckt = ungedeckt.length === 0
+    if (!genehmigungGedeckt) {
       warnungen.push({
         schwere: 'fehler',
         verordnung_id: v.id,
         client: name,
-        text: `Genehmigung bereits am ${v.genehmigung_bis} abgelaufen — Einsätze des Monats ${monat} sind nicht gedeckt.`,
+        text: `Genehmigung endete am ${v.genehmigung_bis} — ${ungedeckt.length} von ${vRecs.length} Einsätzen `
+          + `des Monats ${monat} sind davon nicht gedeckt. Position wird NICHT als abrechenbar geführt.`,
       })
     }
     if (!v.genehmigung_aktenzeichen) {
@@ -340,6 +377,7 @@ export async function erstelleMonatsabschluss(
         }
       }
     }
+    const preisVollstaendig = luecke === null
     if (luecke) {
       warnungen.push({
         schwere: 'warnung',
@@ -365,7 +403,14 @@ export async function erstelleMonatsabschluss(
       betrag_cent: betragCent,
       unterschrieben,
       abtretung_vorhanden: abtretung,
-      abrechenbar: unterschrieben && abtretung,
+      genehmigung_gedeckt: genehmigungGedeckt,
+      einsaetze_ungedeckt: ungedeckt.length,
+      preis_vollstaendig: preisVollstaendig,
+      // Fail-closed: eine Position ist nur dann abrechenbar, wenn ALLE vier
+      // Voraussetzungen belegt sind. Vorher zaehlten nur Unterschrift und
+      // Abtretung — eine abgelaufene Genehmigung und ein unvollstaendiger
+      // Betrag standen als Warnung daneben, ohne die Summe zu beeinflussen.
+      abrechenbar: unterschrieben && abtretung && genehmigungGedeckt && preisVollstaendig,
     })
   }
 
@@ -418,7 +463,59 @@ export async function erstelleMonatsabschluss(
       if (!p.abrechenbar) agg.blockiert = true
       perClient.set(p.client_id, agg)
     }
+
+    // ── Bereits entschiedene Perioden nicht wieder aufreissen ──
+    //
+    // Der Upsert traegt `onConflict: 'client_id,year,month'` und setzt
+    // `status` auf 'ready' bzw. 'in_review'. Ein zweiter Lauf desselben
+    // Monats stempelte damit einen bereits ABGESCHLOSSENEN ('closed') oder
+    // an den Kostentraeger VERSENDETEN ('sent') Abschluss zurueck auf
+    // 'ready' — samt neu gerechnetem `total_amount`, waehrend
+    // `finalized_at`/`invoice_id` unveraendert stehen blieben. Die Periode
+    // sah danach wieder offen aus, obwohl sie eingereicht war.
+    //
+    // Die Route erlaubt jedem Nutzer mit `abrechnung.schreiben`, den Lauf
+    // beliebig oft auszuloesen; ein Doppelklick genuegte.
+    const gesperrteClients = new Set<string>()
+    const clientIdsMitPositionen = Array.from(perClient.keys())
+    if (clientIdsMitPositionen.length > 0) {
+      const { data: bestehende, error: bestandFehler } = await supabase
+        .from('monthly_closings')
+        .select('client_id, status')
+        .eq('organization_id', organizationId)
+        .eq('year', jahr)
+        .eq('month', monatNum)
+        .in('client_id', clientIdsMitPositionen)
+
+      if (bestandFehler) {
+        // Fail-closed: ohne den Bestand ist nicht feststellbar, ob ein
+        // Abschluss bereits versendet wurde. Dann wird gar nichts
+        // geschrieben — ein zurueckgesetzter Versandstand ist schlimmer
+        // als ein Lauf, der nichts speichert.
+        throw new Error(
+          `Bestehende Monatsabschlüsse konnten nicht gelesen werden: ${bestandFehler.message}. `
+          + 'Es wurde NICHTS geschrieben — ein Lauf könnte sonst eine bereits eingereichte '
+          + 'Periode zurücksetzen.'
+        )
+      }
+
+      for (const z of bestehende ?? []) {
+        if (ABGESCHLOSSENE_CLOSING_STATUS.has(String(z.status ?? ''))) {
+          gesperrteClients.add(String(z.client_id))
+        }
+      }
+    }
+
     for (const [clientId, agg] of perClient) {
+      if (gesperrteClients.has(clientId)) {
+        warnungen.push({
+          schwere: 'hinweis',
+          client: clientName.get(clientId) || clientId,
+          text: `Monatsabschluss ${monat} ist bereits abgeschlossen bzw. versendet — er wurde NICHT überschrieben. `
+            + 'Für eine Korrektur den Abschluss zuerst wieder öffnen.',
+        })
+        continue
+      }
       const { error: upErr } = await supabase.from('monthly_closings').upsert(
         {
           // MANDANT: Pflichtangabe. Fehlte sie, griff der Spalten-Default

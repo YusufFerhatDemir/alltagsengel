@@ -7,6 +7,87 @@ import {
   type DienstplanStatus, type DienstplanTyp,
 } from './types'
 
+// ── Zeitfenster einer Schicht / eines Dienstes ──────────────────
+//
+// Weder `dienstplan_schichten` noch `dienstplan_eintraege` tragen einen
+// CHECK auf die Zeiten (20260811010000_personalmanagement.sql). Bis hierher
+// gab es damit UEBERHAUPT keine Pruefung: eine Schicht "10:00–10:00" (Dauer
+// null) oder eine Pause von 480 Minuten in einem 4-Stunden-Dienst liessen
+// sich anlegen, und ein Tippfehler im Zeitformat schlug erst als roher
+// Postgres-Fehler durch (HTTP 500 statt einer lesbaren Meldung).
+//
+// Ende VOR Beginn wird bewusst NICHT abgelehnt: Nachtdienste ueber
+// Mitternacht sind in der ambulanten Pflege der Normalfall und in
+// `lib/personal/types.ts` ausdruecklich als zulaessig festgehalten. Ihre
+// Ueberlappung rechnet seit 20261011000000 der DB-Trigger korrekt ueber den
+// Tageswechsel. Abgelehnt wird nur der Null-Dienst (Ende = Beginn), der
+// weder ein Tagdienst noch ein Nachtdienst sein kann.
+
+/** 'HH:MM' oder 'HH:MM:SS' — Postgres liefert die zweite Form. */
+const ZEIT_MUSTER = /^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/
+
+/** Minuten seit Mitternacht, oder null bei unlesbarer Zeit. */
+export function schichtZeitZuMinuten(zeit: string | null | undefined): number | null {
+  if (typeof zeit !== 'string') return null
+  const treffer = ZEIT_MUSTER.exec(zeit.trim())
+  if (!treffer) return null
+  return Number(treffer[1]) * 60 + Number(treffer[2])
+}
+
+/**
+ * Dienstdauer in Minuten. Ende <= Beginn gilt als Nachtdienst und laeuft
+ * ueber Mitternacht; Ende = Beginn ergibt 0 und wird vom Aufrufer abgelehnt.
+ */
+export function dienstDauerMinuten(startZeit: string, endZeit: string): number | null {
+  const start = schichtZeitZuMinuten(startZeit)
+  const ende = schichtZeitZuMinuten(endZeit)
+  if (start === null || ende === null) return null
+  if (ende === start) return 0
+  return ende > start ? ende - start : ende - start + 1440
+}
+
+/** `YYYY-MM-DD` — sonst schlaegt erst Postgres zu, mit unlesbarer Meldung. */
+const ISO_DATUM = /^\d{4}-\d{2}-\d{2}$/
+
+export function assertDatum(datum: string | null | undefined): void {
+  if (typeof datum !== 'string' || !ISO_DATUM.test(datum.trim())) {
+    throw new UserFacingError(`Datum "${datum ?? ''}" ist kein gültiges Datum (JJJJ-MM-TT).`)
+  }
+}
+
+/**
+ * Prueft Zeitformat, Null-Dienst und Pausenlaenge zusammen.
+ * `feld` benennt in der Meldung, worum es geht (Schicht bzw. Dienst).
+ */
+export function assertZeitfenster(
+  startZeit: string | null | undefined,
+  endZeit: string | null | undefined,
+  pauseMinuten: number | null | undefined,
+  was: string,
+): void {
+  if (schichtZeitZuMinuten(startZeit) === null) {
+    throw new UserFacingError(`${was}: Beginn "${startZeit ?? ''}" ist keine gültige Uhrzeit (HH:MM).`)
+  }
+  if (schichtZeitZuMinuten(endZeit) === null) {
+    throw new UserFacingError(`${was}: Ende "${endZeit ?? ''}" ist keine gültige Uhrzeit (HH:MM).`)
+  }
+
+  const dauer = dienstDauerMinuten(startZeit as string, endZeit as string)
+  if (dauer === 0) {
+    throw new UserFacingError(`${was}: Beginn und Ende sind identisch (${String(startZeit).slice(0, 5)}) — das ergibt keine Arbeitszeit.`)
+  }
+
+  if (pauseMinuten === null || pauseMinuten === undefined) return
+  if (!Number.isInteger(pauseMinuten) || pauseMinuten < 0) {
+    throw new UserFacingError(`${was}: Pause muss eine ganze Zahl von Minuten ab 0 sein (übergeben: ${pauseMinuten}).`)
+  }
+  if (dauer !== null && pauseMinuten >= dauer) {
+    throw new UserFacingError(
+      `${was}: Pause (${pauseMinuten} Min) ist nicht kürzer als die Dienstdauer (${dauer} Min) — es bliebe keine Arbeitszeit übrig.`,
+    )
+  }
+}
+
 // ── Schichten (Vorlagen) ────────────────────────────────────────
 
 export interface CreateSchichtParams {
@@ -21,6 +102,7 @@ export interface CreateSchichtParams {
 
 export async function createSchicht(supabase: SupabaseClient, params: CreateSchichtParams): Promise<DienstplanSchicht> {
   if (!params.bezeichnung?.trim()) throw new UserFacingError('Bezeichnung ist ein Pflichtfeld.')
+  assertZeitfenster(params.startZeit, params.endZeit, params.pauseMinuten ?? 0, 'Schicht')
 
   const { data, error } = await supabase
     .from('dienstplan_schichten')
@@ -69,6 +151,26 @@ export async function updateSchicht(
   organizationId: string,
   patch: UpdateSchichtParams,
 ): Promise<DienstplanSchicht> {
+  // Gegen den BESTAND pruefen, nicht nur gegen den Patch: wer allein
+  // `startZeit` verschiebt, erzeugt sonst unbemerkt einen Null-Dienst oder
+  // eine Pause, die laenger ist als die verbleibende Schicht.
+  if (patch.startZeit !== undefined || patch.endZeit !== undefined || patch.pauseMinuten !== undefined) {
+    const { data: bestand, error: ladeFehler } = await supabase
+      .from('dienstplan_schichten')
+      .select('start_zeit, end_zeit, pause_minuten')
+      .eq('id', id)
+      .eq('organization_id', organizationId)
+      .maybeSingle()
+    if (ladeFehler) throw new Error(`Schicht konnte nicht geladen werden: ${ladeFehler.message}`)
+    if (!bestand) throw new UserFacingError('Schicht nicht gefunden.', 404)
+    assertZeitfenster(
+      patch.startZeit ?? (bestand.start_zeit as string),
+      patch.endZeit ?? (bestand.end_zeit as string),
+      patch.pauseMinuten ?? (bestand.pause_minuten as number | null) ?? 0,
+      'Schicht',
+    )
+  }
+
   const update: Record<string, unknown> = {}
   if (patch.bezeichnung !== undefined) update.bezeichnung = patch.bezeichnung
   if (patch.kuerzel !== undefined) update.kuerzel = patch.kuerzel
@@ -112,6 +214,8 @@ export interface CreateEintragParams {
 export async function createEintrag(supabase: SupabaseClient, params: CreateEintragParams): Promise<DienstplanEintrag> {
   assertErlaubt(params.status, DIENSTPLAN_STATUS_WERTE, 'status')
   assertErlaubt(params.typ, DIENSTPLAN_TYP_WERTE, 'typ')
+  assertDatum(params.datum)
+  assertZeitfenster(params.startZeit, params.endZeit, params.pauseMinuten ?? 0, 'Dienst')
 
   const { data, error } = await supabase
     .from('dienstplan_eintraege')
@@ -217,12 +321,23 @@ export async function updateEintrag(
 
   const { data: bestand, error: ladeFehler } = await supabase
     .from('dienstplan_eintraege')
-    .select('status')
+    .select('status, start_zeit, end_zeit, pause_minuten')
     .eq('id', id)
     .eq('organization_id', organizationId)
     .maybeSingle()
   if (ladeFehler) throw new Error(`Dienstplan-Eintrag konnte nicht geladen werden: ${ladeFehler.message}`)
   if (!bestand) throw new UserFacingError('Dienstplan-Eintrag nicht gefunden.', 404)
+
+  // Gegen den Bestand pruefen — ein reines Verschieben des Beginns darf
+  // weder einen Null-Dienst noch eine Pause laenger als der Dienst erzeugen.
+  if (patch.startZeit !== undefined || patch.endZeit !== undefined || patch.pauseMinuten !== undefined) {
+    assertZeitfenster(
+      patch.startZeit ?? (bestand.start_zeit as string),
+      patch.endZeit ?? (bestand.end_zeit as string),
+      patch.pauseMinuten ?? (bestand.pause_minuten as number | null) ?? 0,
+      'Dienst',
+    )
+  }
 
   if (DIENSTPLAN_ENDZUSTAENDE.includes(bestand.status as DienstplanStatus)) {
     const beruehrt = DIENST_KERNFELDER.filter(feld => patch[feld] !== undefined)

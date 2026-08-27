@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logBillingAction } from '@/lib/billing/core/audit'
@@ -31,13 +32,20 @@ export const GET = withTracking(async function GET(
     return NextResponse.json({ error: 'Tour nicht gefunden.' }, { status: 404 })
   }
 
-  const kandidaten = await findeVertretungsKandidaten(admin, {
-    organizationId: auth.ctx.organizationId,
-    tourDate: tour.tour_date,
-    ausgeschlossenCaregiverId: tour.caregiver_id,
-    clientIds: [...new Set((tour.tour_stops ?? []).map(s => s.client_id).filter((c): c is string => !!c))],
-  })
-  return NextResponse.json(kandidaten)
+  // Fail-closed: findeVertretungsKandidaten wirft, wenn die Abwesenheiten
+  // nicht lesbar sind — eine Kandidatenliste, die Abwesende als verfuegbar
+  // zeigt, sieht geprueft aus und ist es nicht.
+  try {
+    const kandidaten = await findeVertretungsKandidaten(admin, {
+      organizationId: auth.ctx.organizationId,
+      tourDate: tour.tour_date,
+      ausgeschlossenCaregiverId: tour.caregiver_id,
+      clientIds: [...new Set((tour.tour_stops ?? []).map(s => s.client_id).filter((c): c is string => !!c))],
+    })
+    return NextResponse.json(kandidaten)
+  } catch (err) {
+    return apiErrorResponse(err, _req, 400)
+  }
 })
 
 // ── POST /api/tours/[id]/vertretung — Tour übertragen ────────────
@@ -99,9 +107,14 @@ export const POST = withTracking(async function POST(
     warnungen.push('Einsatzfreigabe übersteuert.')
   }
 
-  const befund = await pruefeCaregiverVerfuegbarkeit(
-    admin, neuer_caregiver_id, tour.tour_date, tour.start_zeit, tour.ende_zeit
-  )
+  let befund
+  try {
+    befund = await pruefeCaregiverVerfuegbarkeit(
+      admin, neuer_caregiver_id, tour.tour_date, tour.start_zeit, tour.ende_zeit
+    )
+  } catch (err) {
+    return apiErrorResponse(err, req, 400)
+  }
   if (befund.abwesend && !force_override) {
     return NextResponse.json({
       error: `Vertretung ist am ${tour.tour_date} selbst abwesend (${befund.abwesenheitsGrund}).`,

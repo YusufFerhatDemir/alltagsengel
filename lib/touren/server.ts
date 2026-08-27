@@ -9,7 +9,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { fahrtZwischenPlz } from './fahrtzeit'
-import { istVerfuegbar, type Zeitfenster } from '@/lib/availability'
+import { istVerfuegbar, zeitZuMinuten, type Zeitfenster } from '@/lib/availability'
 
 export interface StopInput {
   /** vorhandenen Einsatz anhängen … */
@@ -246,10 +246,43 @@ export interface VerfuegbarkeitsBefund {
   ausserhalbZeitfenster: boolean
 }
 
+/** `YYYY-MM-DD` — alles andere darf nicht in einen PostgREST-Filter wandern. */
+const ISO_DATUM = /^\d{4}-\d{2}-\d{2}$/
+
+/**
+ * Abwesenheits-Status, die einen Einsatz tatsaechlich blockieren.
+ *
+ * Der CHECK-Constraint `absences_status_check` (20260811010000) kennt
+ * KLEINGESCHRIEBENE Werte: 'beantragt', 'genehmigt', 'abgelehnt',
+ * 'storniert'. Geprueft wurde hier bisher gegen 'ABGELEHNT'/'rejected' —
+ * beides kommt in der Spalte nicht vor. Damit galt jede abgelehnte und
+ * jede zurueckgezogene Abwesenheit weiter als Abwesenheit: der Mitarbeiter
+ * liess sich fuer den Tag nicht mehr einplanen, obwohl der Urlaubsantrag
+ * abgelehnt war.
+ *
+ * Massgeblich ist dieselbe Liste wie im DB-Trigger `check_doppelbelegung`
+ * (`status IS NULL OR status IN ('beantragt','genehmigt')`) — sonst sagen
+ * Vorabpruefung und Datenbank Verschiedenes.
+ */
+export const BLOCKIERENDE_ABWESENHEITS_STATUS = ['beantragt', 'genehmigt'] as const
+
+/** NULL = Altbestand vor dem Urlaubs-Workflow und zaehlt weiterhin. */
+export function abwesenheitBlockiert(status: string | null | undefined): boolean {
+  if (status === null || status === undefined || String(status).trim() === '') return true
+  return (BLOCKIERENDE_ABWESENHEITS_STATUS as readonly string[])
+    .includes(String(status).trim().toLowerCase())
+}
+
 /**
  * Verfügbarkeit eines Mitarbeiters am Tourtag prüfen:
- * genehmigte/gemeldete Abwesenheit blockiert, gepflegte
+ * genehmigte/beantragte Abwesenheit blockiert, gepflegte
  * angel_availability-Zeitfenster geben eine Warnung.
+ *
+ * FAIL-CLOSED: Konnte die Abwesenheitsliste nicht gelesen werden, wird
+ * geworfen. Vorher wurde der Lesefehler verschluckt (`const { data } = ...`)
+ * und eine leere Liste als "nicht abwesend" gewertet — ein Datenbankfehler
+ * hob damit still die einzige Sperre auf, die einen Einsatz im genehmigten
+ * Urlaub verhindert.
  */
 export async function pruefeCaregiverVerfuegbarkeit(
   admin: SupabaseClient,
@@ -264,13 +297,30 @@ export async function pruefeCaregiverVerfuegbarkeit(
     ausserhalbZeitfenster: false,
   }
 
-  const { data: abwesenheiten } = await admin
+  // Das Datum wandert unmaskiert in einen or()-Ausdruck. Ein Wert, der
+  // dort Kommas oder Punkte mitbringt, erzeugt einen anderen Filter als
+  // gemeint — und PostgREST antwortet mit 400, was ohne die Pruefung
+  // unten als "keine Abwesenheit" durchginge.
+  if (!ISO_DATUM.test(String(tourDate ?? ''))) {
+    throw new Error(`Datum "${tourDate}" ist kein YYYY-MM-DD — Abwesenheitsprüfung nicht durchführbar.`)
+  }
+
+  const { data: abwesenheiten, error: abwesenheitFehler } = await admin
     .from('absences')
     .select('absence_type, status, start_date, end_date')
     .eq('caregiver_id', caregiverId)
     .lte('start_date', tourDate)
     .or(`end_date.gte.${tourDate},end_date.is.null`)
-  const aktiv = (abwesenheiten ?? []).filter(a => a.status !== 'ABGELEHNT' && a.status !== 'rejected')
+
+  if (abwesenheitFehler) {
+    throw new Error(
+      `Abwesenheiten konnten nicht geprüft werden: ${abwesenheitFehler.message}. `
+      + 'Die Zuweisung wurde NICHT vorgenommen — ein Einsatz im genehmigten Urlaub '
+      + 'wäre schlimmer als eine ausbleibende Zuweisung.'
+    )
+  }
+
+  const aktiv = (abwesenheiten ?? []).filter(a => abwesenheitBlockiert(a.status))
   if (aktiv.length > 0) {
     befund.abwesend = true
     befund.abwesenheitsGrund = aktiv.map(a => a.absence_type).join(', ')
@@ -289,9 +339,15 @@ export async function pruefeCaregiverVerfuegbarkeit(
         .eq('angel_id', caregiver.user_id)
       if (fenster && fenster.length > 0) {
         const start = startZeit.slice(0, 5)
-        const dauerStunden =
-          (Number(endeZeit.slice(0, 2)) * 60 + Number(endeZeit.slice(3, 5))
-            - Number(startZeit.slice(0, 2)) * 60 - Number(startZeit.slice(3, 5))) / 60
+        // Frueher per slice(0,2)/slice(3,5) zerlegt: bei einstelliger Stunde
+        // ('9:00', wie sie aus Formularen kommt) ergab das NaN, dauerStunden
+        // wurde NaN und `dauerStunden > 0` war falsch — die Fensterpruefung
+        // fiel dann still komplett aus.
+        const startMin = zeitZuMinuten(startZeit)
+        const endeMin = zeitZuMinuten(endeZeit)
+        const dauerStunden = startMin !== null && endeMin !== null
+          ? (endeMin - startMin) / 60
+          : NaN
         if (dauerStunden > 0 && !istVerfuegbar(fenster as Zeitfenster[], null, tourDate, start, dauerStunden)) {
           befund.ausserhalbZeitfenster = true
         }
@@ -335,10 +391,17 @@ export async function findeVertretungsKandidaten(
 
   if (!caregivers || caregivers.length === 0) return []
 
+  if (!ISO_DATUM.test(String(params.tourDate ?? ''))) {
+    throw new Error(`Datum "${params.tourDate}" ist kein YYYY-MM-DD — Vertretungssuche nicht durchführbar.`)
+  }
+
+  const eigeneIds = caregivers.map(c => c.id as string)
+
   const { data: bevorzugte } = params.clientIds.length > 0
     ? await admin
         .from('client_preferred_substitutes')
         .select('caregiver_id, priority')
+        .eq('organization_id', params.organizationId)
         .in('client_id', params.clientIds)
     : { data: [] as { caregiver_id: string; priority: number | null }[] }
 
@@ -349,14 +412,28 @@ export async function findeVertretungsKandidaten(
     if (bisher === undefined || prio < bisher) prioMap.set(b.caregiver_id, prio)
   }
 
-  const { data: abwesenheiten } = await admin
+  // `absences` traegt zwar eine organization_id (Phase 3), aber der Fence
+  // muss hier trotzdem stehen: `admin` ist der service-role-Client, RLS
+  // greift nicht. Ohne Einschraenkung las die Abfrage die Abwesenheiten
+  // ALLER Mandanten und filterte erst danach im Speicher.
+  const { data: abwesenheiten, error: abwesenheitFehler } = await admin
     .from('absences')
     .select('caregiver_id, status')
+    .in('caregiver_id', eigeneIds)
     .lte('start_date', params.tourDate)
     .or(`end_date.gte.${params.tourDate},end_date.is.null`)
+
+  // Fail-closed: eine Kandidatenliste, die Abwesende als verfuegbar zeigt,
+  // ist schlimmer als gar keine — sie sieht geprueft aus.
+  if (abwesenheitFehler) {
+    throw new Error(
+      `Abwesenheiten der Vertretungskandidaten nicht lesbar: ${abwesenheitFehler.message}.`
+    )
+  }
+
   const abwesend = new Set(
     (abwesenheiten ?? [])
-      .filter(a => a.status !== 'ABGELEHNT' && a.status !== 'rejected')
+      .filter(a => abwesenheitBlockiert(a.status))
       .map(a => a.caregiver_id)
   )
 

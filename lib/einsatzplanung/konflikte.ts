@@ -69,6 +69,12 @@ export function zeitZuMinuten(zeit: string | null | undefined): number | null {
   if (!treffer) return null
   const stunden = Number(treffer[1])
   const minuten = Number(treffer[2])
+  // Postgres kennt fuer `time` den Grenzwert 24:00:00 als Tagesende, und
+  // Formulare schicken ihn fuer den Spaetdienst bis Mitternacht. Er wurde
+  // hier bisher als unlesbar verworfen — und weil `zeitenUeberschneiden()`
+  // bei unlesbarer Zeit fail-open arbeitet, meldete ein Einsatz
+  // "20:00–24:00" gegen einen bestehenden "21:00–22:00" KEINEN Konflikt.
+  if (stunden === 24) return minuten === 0 ? 1440 : null
   if (stunden > 23 || minuten > 59) return null
   return stunden * 60 + minuten
 }
