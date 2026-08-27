@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- Rollback: 20261007000000_sis_abschluss_sperre_haertung.sql
+-- Rollback: 20261007000002_sis_abschluss_sperre_haertung.sql
 -- Stellt die Trigger-Funktionen auf den Stand von
 -- 20260818010000_sis_strukturierte_informationssammlung.sql zurueck
 -- (Sperre nur ueber `gesperrt`, `abgeschlossen` wieder frei beschreibbar).
