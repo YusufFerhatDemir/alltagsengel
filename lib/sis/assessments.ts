@@ -30,7 +30,7 @@ export function validateSisUebergang(von: SisStatus, nach: SisStatus): void {
     gesperrt: [],
   }
   if (!erlaubt[von]?.includes(nach)) {
-    throw new Error(`Statuswechsel ${von} → ${nach} ist nicht erlaubt.`)
+    throw new UserFacingError(`Statuswechsel ${von} → ${nach} ist nicht erlaubt.`)
   }
 }
 
@@ -198,7 +198,7 @@ export async function abschliessenAssessment(
     return !feld?.einschaetzung_pflege?.trim()
   })
   if (fehlend.length > 0) {
-    throw new Error(`Abschluss nicht möglich: fachliche Einschätzung fehlt in Themenfeld ${fehlend.join(', ')}.`)
+    throw new UserFacingError(`Abschluss nicht möglich: fachliche Einschätzung fehlt in Themenfeld ${fehlend.join(', ')}.`)
   }
 
   const unbewertet = SIS_RISIKO_WERTE.filter(risiko => {
@@ -206,7 +206,7 @@ export async function abschliessenAssessment(
     return !zeile || zeile.risiko_vorhanden === 'unklar'
   })
   if (unbewertet.length > 0) {
-    throw new Error(`Abschluss nicht möglich: Risikomatrix unbewertet für ${unbewertet.join(', ')}.`)
+    throw new UserFacingError(`Abschluss nicht möglich: Risikomatrix unbewertet für ${unbewertet.join(', ')}.`)
   }
 
   const { data, error } = await supabase
