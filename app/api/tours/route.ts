@@ -14,6 +14,7 @@ import { pruefeBudget, pruefeClientFreigabe } from '@/lib/personal/einsatzfreiga
 import { pruefeZeitplan, tourGesamtMinuten, pruefeWochenkapazitaet } from '@/lib/touren/planung'
 import { TOUR_SELECT, type TourZeile } from '@/lib/touren/select'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 
 // ── GET /api/tours?start=…&end=…&caregiver_id=…&status=… ──────────
 export const GET = withTracking(async function GET(req: NextRequest) {
@@ -69,6 +70,12 @@ export const POST = withTracking(async function POST(req: NextRequest) {
   if (!caregiver_id || !tour_date) {
     return NextResponse.json({ error: 'Pflichtfelder: caregiver_id, tour_date.' }, { status: 400 })
   }
+  // tour_date wandert in einen PostgREST-or()-Ausdruck der Abwesenheits-
+  // pruefung. Ein Wert, der kein Datum ist, erzeugte dort einen anderen
+  // Filter — und die Pruefung fiel still aus.
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(tour_date)) {
+    return NextResponse.json({ error: 'tour_date muss das Format JJJJ-MM-TT haben.' }, { status: 400 })
+  }
   if (!Array.isArray(stops) || stops.length === 0) {
     return NextResponse.json({ error: 'Mindestens ein Stop erforderlich.' }, { status: 400 })
   }
@@ -111,11 +118,18 @@ export const POST = withTracking(async function POST(req: NextRequest) {
   vorabEndZeiten.sort()
 
   // Verfügbarkeit: Abwesenheit blockiert (außer force_override), Zeitfenster warnt
-  const befund = await pruefeCaregiverVerfuegbarkeit(
-    admin, caregiver_id, tour_date,
-    vorabStartZeiten[0] ?? null,
-    vorabEndZeiten[vorabEndZeiten.length - 1] ?? null
-  )
+  // Fail-closed: die Prueffunktion wirft bei nicht lesbarer Abwesenheits-
+  // liste, statt sie als "keine Abwesenheit" auszugeben.
+  let befund
+  try {
+    befund = await pruefeCaregiverVerfuegbarkeit(
+      admin, caregiver_id, tour_date,
+      vorabStartZeiten[0] ?? null,
+      vorabEndZeiten[vorabEndZeiten.length - 1] ?? null
+    )
+  } catch (err) {
+    return apiErrorResponse(err, req, 400)
+  }
   if (befund.abwesend && !force_override) {
     return NextResponse.json({
       error: `Mitarbeiter ist am ${tour_date} abwesend (${befund.abwesenheitsGrund}).`,

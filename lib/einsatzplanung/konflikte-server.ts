@@ -6,7 +6,10 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import { findeKonflikte, type Konflikt, type KonfliktEinsatz } from './konflikte'
+
+const ISO_DATUM = /^\d{4}-\d{2}-\d{2}$/
 
 function personName(wert: unknown): string | null {
   const p = Array.isArray(wert) ? wert[0] : wert
@@ -40,6 +43,26 @@ function mapZeile(r: Record<string, unknown>): KonfliktEinsatz {
   }
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/**
+ * `caregiver_id` und `client_id` landen als Textbaustein in einem
+ * PostgREST-`or()`-Ausdruck. Kommt dort ein Wert mit Komma oder Punkt an —
+ * beides sind Trennzeichen der Filtersprache —, entsteht ein ANDERER Filter
+ * als gemeint. Das Ergebnis ist im besten Fall HTTP 400 (und damit,
+ * zusammen mit dem Fail-Open unten, eine stillschweigend ausgefallene
+ * Konfliktpruefung), im schlechteren ein Bestand, der nichts mit dem
+ * Kandidaten zu tun hat.
+ *
+ * Beide Werte kommen aus dem Request-Body von /api/einsatzplanung. Sie
+ * werden deshalb hier geprueft, bevor sie in den Ausdruck wandern.
+ */
+function assertFilterId(wert: string, feld: string): void {
+  if (!UUID.test(wert)) {
+    throw new UserFacingError(`${feld} ist keine gültige ID.`)
+  }
+}
+
 /**
  * Lädt alle Einsätze, die für den Kandidaten überhaupt kollidieren können
  * (gleiche Betreuungskraft ODER gleicher Klient), und gibt die gefundenen
@@ -58,6 +81,15 @@ export async function ladeKonflikte(
   const istSerie = !kandidat.assignment_date && kandidat.weekday != null
   if (!kandidat.assignment_date && !istSerie) return []
   if (!kandidat.caregiver_id && !kandidat.client_id) return []
+
+  if (kandidat.caregiver_id) assertFilterId(kandidat.caregiver_id, 'caregiver_id')
+  if (kandidat.client_id) assertFilterId(kandidat.client_id, 'client_id')
+  if (!istSerie && !ISO_DATUM.test(String(kandidat.assignment_date ?? ''))) {
+    throw new UserFacingError('assignment_date ist kein gültiges Datum (JJJJ-MM-TT).')
+  }
+  if (istSerie && !Number.isInteger(kandidat.weekday)) {
+    throw new UserFacingError('weekday muss eine ganze Zahl von 0 bis 7 sein.')
+  }
 
   const oderFilter = [
     kandidat.caregiver_id ? `caregiver_id.eq.${kandidat.caregiver_id}` : null,
