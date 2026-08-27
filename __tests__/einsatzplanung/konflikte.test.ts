@@ -125,11 +125,16 @@ describe('findeKonflikte', () => {
     expect(findeKonflikte(einsatz({ id: 'neu' }), bestand)).toEqual([])
   })
 
-  it('prüft Serien ohne Datum bewusst nicht', () => {
-    // weekday + recurrence_rule hat kein einzelnes Datum; der Trigger
-    // behandelt sie in einem eigenen Zweig. Hier wird nichts geraten.
+  it('prüft eine Serie (weekday) ohne Datum gar nicht erst gegen datierte Einsätze', () => {
+    // Ohne Serienauflösung steht nicht fest, ob ein datierter Einsatz und
+    // eine Serie je zusammenfallen — bewusst kein Rateversuch.
     const bestand = [einsatz({ id: 'b1', client_id: 'k2' })]
     expect(findeKonflikte(einsatz({ id: 'neu', assignment_date: null }), bestand)).toEqual([])
+  })
+
+  it('gibt ohne Datum UND ohne weekday nichts zurück', () => {
+    const bestand = [einsatz({ id: 'b1', client_id: 'k2', assignment_date: null, weekday: 1 })]
+    expect(findeKonflikte(einsatz({ id: 'neu', assignment_date: null, weekday: null }), bestand)).toEqual([])
   })
 
   it('meldet je Gegenstück höchstens einen Konflikt — Mitarbeiter schlägt Klient', () => {
@@ -147,6 +152,57 @@ describe('findeKonflikte', () => {
     expect(k[0].meldung).toContain('Die Betreuungskraft')
     expect(k[0].meldung).not.toContain('null')
     expect(k[0].meldung).not.toContain('undefined')
+  })
+})
+
+describe('findeKonflikte: Serien (weekday statt assignment_date)', () => {
+  function serie(over: Partial<KonfliktEinsatz> = {}): KonfliktEinsatz {
+    return einsatz({ assignment_date: null, weekday: 1, valid_from: null, valid_until: null, ...over })
+  }
+
+  it('erkennt die Doppelbelegung einer Betreuungskraft über zwei Serien am selben Wochentag', () => {
+    const bestand = [serie({ id: 'b1', client_id: 'k2', start_time: '10:00', end_time: '12:00', caregiver_name: 'Sabrina Martin' })]
+    const k = findeKonflikte(serie({ id: 'neu' }), bestand, '2026-01-01')
+    expect(k).toHaveLength(1)
+    expect(k[0].art).toBe('mitarbeiter')
+    expect(k[0].meldung).toContain('jeden Montag')
+  })
+
+  it('ignoriert einen anderen Wochentag', () => {
+    const bestand = [serie({ id: 'b1', client_id: 'k2', weekday: 2 })]
+    expect(findeKonflikte(serie({ id: 'neu' }), bestand, '2026-01-01')).toEqual([])
+  })
+
+  it('prüft eine Serie nie gegen einen datierten Einsatz', () => {
+    const bestand = [einsatz({ id: 'b1', client_id: 'k2' })]
+    expect(findeKonflikte(serie({ id: 'neu' }), bestand, '2026-01-01')).toEqual([])
+  })
+
+  it('erkennt keine Überschneidung, wenn sich die Gültigkeitsfenster nicht berühren', () => {
+    const bestand = [serie({ id: 'b1', client_id: 'k2', valid_from: '2026-01-01', valid_until: '2026-03-31' })]
+    const kandidat = serie({ id: 'neu', valid_from: '2026-04-01' })
+    expect(findeKonflikte(kandidat, bestand, '2026-01-01')).toEqual([])
+  })
+
+  it('erkennt eine Überschneidung, wenn sich die Gültigkeitsfenster berühren', () => {
+    const bestand = [serie({ id: 'b1', client_id: 'k2', valid_from: '2026-01-01', valid_until: '2026-03-31' })]
+    const kandidat = serie({ id: 'neu', valid_from: '2026-03-01' })
+    const k = findeKonflikte(kandidat, bestand, '2026-01-01')
+    expect(k).toHaveLength(1)
+  })
+
+  it('behandelt ein fehlendes Gültigkeitsende als unbegrenzt', () => {
+    const bestand = [serie({ id: 'b1', client_id: 'k2', valid_from: '2026-01-01', valid_until: null })]
+    const kandidat = serie({ id: 'neu', valid_from: '2030-01-01' })
+    const k = findeKonflikte(kandidat, bestand, '2026-01-01')
+    expect(k).toHaveLength(1)
+  })
+
+  it('behandelt einen fehlenden Gültigkeitsstart als "ab heute"', () => {
+    const bestand = [serie({ id: 'b1', client_id: 'k2', valid_from: null, valid_until: '2026-06-30' })]
+    // Kandidat startet weit in der Zukunft — Bestand (ab "heute") überlappt nicht mehr.
+    const kandidat = serie({ id: 'neu', valid_from: '2027-01-01' })
+    expect(findeKonflikte(kandidat, bestand, '2026-01-01')).toEqual([])
   })
 })
 
@@ -204,6 +260,14 @@ describe('/api/einsatzplanung: Konfliktprüfung verdrahtet', () => {
     const patch = abschnitt('PATCH')
     expect(patch).toContain('ladeKonflikte(')
     expect(patch).toContain('status: 409')
+  })
+
+  it('prüft auch Serien ohne Einzeldatum (weekday), nicht nur datierte Einsätze', () => {
+    // Vormals lief eine Serie (weekday + recurrence_rule) an der
+    // Konfliktprüfung vorbei durch — der Nutzer sah nur die rohe DB-Meldung.
+    for (const teil of [abschnitt('POST'), abschnitt('PATCH')]) {
+      expect(teil).toMatch(/assignment_date \|\| weekday != null|datum \|\| wochentag != null/)
+    }
   })
 
   it('bietet für die Mitarbeiter-Doppelbelegung KEINEN force_override an', () => {
