@@ -419,7 +419,10 @@ describe('Abrechenbarkeit — Unterschrift und Abtretung', () => {
     expect(r.warnungen.some(w => w.schwere === 'fehler' && /Abtretungserklärung/.test(w.text))).toBe(true)
   })
 
-  it('meldet eine abgelaufene Genehmigung als Fehler', async () => {
+  // Auf die neue Zusage gezogen: die Warnung trug zwar schon
+  // `schwere: 'fehler'`, floss aber in KEINE Entscheidung ein — die
+  // Position blieb abrechenbar und ihr Betrag ging in `gesamt_cent` ein.
+  it('meldet eine abgelaufene Genehmigung als Fehler UND blockiert die Position', async () => {
     await legePreis({ org: ORG_A, preisCent: 3000 })
     const v = await legeVerordnung({
       org: ORG_A, klient: KLIENT_A, genehmigungBis: '2026-06-15',
@@ -427,7 +430,10 @@ describe('Abrechenbarkeit — Unterschrift und Abtretung', () => {
     await legeEinsatz({ org: ORG_A, klient: KLIENT_A, verordnung: v, datum: '2026-07-10', minuten: 60 })
 
     const r = await lauf({ dryRun: true })
-    expect(r.warnungen.some(w => w.schwere === 'fehler' && /abgelaufen/.test(w.text))).toBe(true)
+    expect(r.warnungen.some(w => w.schwere === 'fehler' && /Genehmigung endete/.test(w.text))).toBe(true)
+    expect(r.gruppen[0].positionen[0].genehmigung_gedeckt).toBe(false)
+    expect(r.gruppen[0].positionen[0].abrechenbar).toBe(false)
+    expect(r.gesamt_cent).toBe(0)
   })
 
   it('meldet ein fehlendes Aktenzeichen als Warnung', async () => {
@@ -607,5 +613,257 @@ describe('Abschlusszeilen in monthly_closings', () => {
       { organization_id: ORG_A, client_id: KLIENT_A },
       { organization_id: ORG_B, client_id: KLIENT_B },
     ])
+  })
+})
+
+// ═════════════════════════════════════════════════════════════════════
+// Genehmigungszeitraum — die Deckung wird je EINSATZDATUM geprueft
+// ═════════════════════════════════════════════════════════════════════
+//
+// Geprueft wurde vorher nur `genehmigung_bis < periodStart`, also ob die
+// Genehmigung schon vor dem Monatsersten abgelaufen war. Eine Genehmigung,
+// die MITTEN im Monat endet, wurde damit gar nicht bemerkt — und selbst der
+// erkannte Fall aenderte nichts: die Warnung stand daneben, die Position
+// blieb abrechenbar und ihr Betrag ging in `gesamt_cent` ein.
+describe('Genehmigungszeitraum', () => {
+  beforeEach(async () => {
+    await legePreis({ org: ORG_A, preisCent: 3000 })
+  })
+
+  it('deckt Einsaetze bis einschliesslich des letzten Genehmigungstages', async () => {
+    const v = await legeVerordnung({ org: ORG_A, klient: KLIENT_A, genehmigungBis: '2026-07-31' })
+    await legeEinsatz({ org: ORG_A, klient: KLIENT_A, verordnung: v, datum: '2026-07-31', minuten: 60 })
+
+    const p = (await lauf({ dryRun: true })).gruppen[0].positionen[0]
+    expect(p.genehmigung_gedeckt).toBe(true)
+    expect(p.einsaetze_ungedeckt).toBe(0)
+    expect(p.abrechenbar).toBe(true)
+  })
+
+  it('erkennt die MITTEN im Monat endende Genehmigung', async () => {
+    const v = await legeVerordnung({ org: ORG_A, klient: KLIENT_A, genehmigungBis: '2026-07-15' })
+    await legeEinsatz({ org: ORG_A, klient: KLIENT_A, verordnung: v, datum: '2026-07-10', minuten: 60 })
+    await legeEinsatz({ org: ORG_A, klient: KLIENT_A, verordnung: v, datum: '2026-07-20', minuten: 60 })
+
+    const r = await lauf({ dryRun: true })
+    const p = r.gruppen[0].positionen[0]
+    expect(p.genehmigung_gedeckt).toBe(false)
+    expect(p.einsaetze_ungedeckt).toBe(1)
+    expect(p.abrechenbar).toBe(false)
+    expect(r.warnungen.some(w => w.schwere === 'fehler' && /1 von 2 Einsätzen/.test(w.text))).toBe(true)
+  })
+
+  it('nimmt den Betrag einer ungedeckten Position aus der Gesamtsumme', async () => {
+    const gedeckt = await legeVerordnung({
+      org: ORG_A, klient: KLIENT_A, genehmigungBis: '2026-12-31', kostentraegerName: 'Kasse Gut',
+    })
+    const offen = await legeVerordnung({
+      org: ORG_A, klient: KLIENT_A2, genehmigungBis: '2026-07-05', kostentraegerName: 'Kasse Alt',
+    })
+    await legeEinsatz({ org: ORG_A, klient: KLIENT_A, verordnung: gedeckt, datum: '2026-07-10', minuten: 60 })
+    await legeEinsatz({ org: ORG_A, klient: KLIENT_A2, verordnung: offen, datum: '2026-07-10', minuten: 60 })
+
+    const r = await lauf({ dryRun: true })
+    expect(r.gesamt_cent).toBe(3000)
+    expect(r.positionen_abrechenbar).toBe(1)
+    expect(r.positionen_blockiert).toBe(1)
+  })
+
+  it('behandelt eine Verordnung ohne Enddatum als unbefristet gedeckt', async () => {
+    const v = await legeVerordnung({ org: ORG_A, klient: KLIENT_A, genehmigungBis: null })
+    await legeEinsatz({ org: ORG_A, klient: KLIENT_A, verordnung: v, datum: '2026-07-10', minuten: 60 })
+
+    const p = (await lauf({ dryRun: true })).gruppen[0].positionen[0]
+    expect(p.genehmigung_gedeckt).toBe(true)
+    expect(p.abrechenbar).toBe(true)
+  })
+})
+
+// ═════════════════════════════════════════════════════════════════════
+// Preisluecken — ein unvollstaendiger Betrag ist kein abrechenbarer
+// ═════════════════════════════════════════════════════════════════════
+describe('Preisvollstaendigkeit', () => {
+  it('fuehrt eine Position mit fehlendem Preis NICHT als abrechenbar', async () => {
+    const v = await legeVerordnung({ org: ORG_A, klient: KLIENT_A })
+    await legeEinsatz({ org: ORG_A, klient: KLIENT_A, verordnung: v, datum: '2026-07-10', minuten: 60 })
+
+    const r = await lauf({ dryRun: true })
+    const p = r.gruppen[0].positionen[0]
+    expect(p.preis_vollstaendig).toBe(false)
+    expect(p.betrag_cent).toBe(0)
+    expect(p.abrechenbar).toBe(false)
+    expect(r.gesamt_cent).toBe(0)
+  })
+
+  it('blockiert die Position auch, wenn nur EIN Einsatz ohne Preis ist', async () => {
+    // Preis gilt erst ab dem 15.7. — der Einsatz am 10.7. hat keinen.
+    await legePreis({ org: ORG_A, preisCent: 3000, gueltigAb: '2026-07-15' })
+    const v = await legeVerordnung({ org: ORG_A, klient: KLIENT_A })
+    await legeEinsatz({ org: ORG_A, klient: KLIENT_A, verordnung: v, datum: '2026-07-10', minuten: 60 })
+    await legeEinsatz({ org: ORG_A, klient: KLIENT_A, verordnung: v, datum: '2026-07-20', minuten: 60 })
+
+    const r = await lauf({ dryRun: true })
+    const p = r.gruppen[0].positionen[0]
+    // Der Teilbetrag steht weiterhin in der Position — als Anhaltspunkt.
+    expect(p.betrag_cent).toBe(3000)
+    // Er darf aber nicht als vollstaendiger, abrechenbarer Betrag gelten.
+    expect(p.preis_vollstaendig).toBe(false)
+    expect(p.abrechenbar).toBe(false)
+    expect(r.gesamt_cent).toBe(0)
+  })
+
+  it('blockiert bei nicht verifiziertem Tarif', async () => {
+    await legePreis({ org: ORG_A, preisCent: 3000, status: 'unverified' })
+    const v = await legeVerordnung({ org: ORG_A, klient: KLIENT_A })
+    await legeEinsatz({ org: ORG_A, klient: KLIENT_A, verordnung: v, datum: '2026-07-10', minuten: 60 })
+
+    const p = (await lauf({ dryRun: true })).gruppen[0].positionen[0]
+    expect(p.preis_vollstaendig).toBe(false)
+    expect(p.abrechenbar).toBe(false)
+  })
+
+  it('fuehrt eine vollstaendig bepreiste Position als abrechenbar', async () => {
+    await legePreis({ org: ORG_A, preisCent: 3000 })
+    const v = await legeVerordnung({ org: ORG_A, klient: KLIENT_A })
+    await legeEinsatz({ org: ORG_A, klient: KLIENT_A, verordnung: v, datum: '2026-07-10', minuten: 60 })
+
+    const p = (await lauf({ dryRun: true })).gruppen[0].positionen[0]
+    expect(p.preis_vollstaendig).toBe(true)
+    expect(p.abrechenbar).toBe(true)
+  })
+})
+
+// ═════════════════════════════════════════════════════════════════════
+// Abgeschlossene Perioden nicht wieder aufreissen
+// ═════════════════════════════════════════════════════════════════════
+//
+// Der Upsert traegt `onConflict: 'client_id,year,month'` und setzt `status`
+// auf 'ready' bzw. 'in_review'. Ein zweiter Lauf desselben Monats stempelte
+// damit einen bereits ABGESCHLOSSENEN ('closed') oder an den Kostentraeger
+// VERSENDETEN ('sent') Abschluss zurueck — samt neu gerechnetem
+// `total_amount`. Die Route erlaubt jedem Nutzer mit `abrechnung.schreiben`,
+// den Lauf beliebig oft auszuloesen; ein Doppelklick genuegte.
+describe('Schutz abgeschlossener Perioden', () => {
+  async function laufMitBestand(status: string) {
+    await legePreis({ org: ORG_A, preisCent: 3000 })
+    const v = await legeVerordnung({ org: ORG_A, klient: KLIENT_A })
+    await legeEinsatz({ org: ORG_A, klient: KLIENT_A, verordnung: v, datum: '2026-07-10', minuten: 60 })
+
+    await db.query(
+      `INSERT INTO public.monthly_closings
+         (organization_id, client_id, year, month, status, ampel, total_records, total_amount, notes)
+       VALUES ($1, $2, 2026, 7, $3, 'gruen', 99, 999.99, 'Handabschluss')`,
+      [ORG_A, KLIENT_A, status],
+    )
+    return lauf()
+  }
+
+  it('ueberschreibt einen versendeten Abschluss NICHT', async () => {
+    const r = await laufMitBestand('sent')
+    expect(r.closings_geschrieben).toBe(0)
+    const [z] = await zeilen<{ status: string; total_amount: string; total_records: number }>(
+      'SELECT status, total_amount, total_records FROM public.monthly_closings',
+    )
+    expect(z.status).toBe('sent')
+    expect(Number(z.total_amount)).toBe(999.99)
+    expect(z.total_records).toBe(99)
+  })
+
+  it('ueberschreibt einen geschlossenen Abschluss NICHT', async () => {
+    const r = await laufMitBestand('closed')
+    expect(r.closings_geschrieben).toBe(0)
+    const [z] = await zeilen<{ status: string }>('SELECT status FROM public.monthly_closings')
+    expect(z.status).toBe('closed')
+  })
+
+  it('macht den uebersprungenen Abschluss im Bericht sichtbar', async () => {
+    const r = await laufMitBestand('sent')
+    expect(r.warnungen.some(w => /bereits abgeschlossen bzw. versendet/.test(w.text))).toBe(true)
+  })
+
+  it('schreibt einen Abschluss in Arbeit weiterhin fort', async () => {
+    const r = await laufMitBestand('in_review')
+    expect(r.closings_geschrieben).toBe(1)
+    const [z] = await zeilen<{ status: string; total_records: number }>(
+      'SELECT status, total_records FROM public.monthly_closings',
+    )
+    expect(z.status).toBe('ready')
+    expect(z.total_records).toBe(1)
+  })
+
+  it('schreibt einen offenen Abschluss weiterhin fort', async () => {
+    const r = await laufMitBestand('open')
+    expect(r.closings_geschrieben).toBe(1)
+    const [z] = await zeilen<{ status: string }>('SELECT status FROM public.monthly_closings')
+    expect(z.status).toBe('ready')
+  })
+
+  it('sperrt nur den betroffenen Klienten, nicht den ganzen Lauf', async () => {
+    await legePreis({ org: ORG_A, preisCent: 3000 })
+    for (const klient of [KLIENT_A, KLIENT_A2]) {
+      const v = await legeVerordnung({ org: ORG_A, klient })
+      await legeEinsatz({ org: ORG_A, klient, verordnung: v, datum: '2026-07-10', minuten: 60 })
+    }
+    await db.query(
+      `INSERT INTO public.monthly_closings
+         (organization_id, client_id, year, month, status, ampel, total_records, total_amount)
+       VALUES ($1, $2, 2026, 7, 'sent', 'gruen', 99, 999.99)`,
+      [ORG_A, KLIENT_A],
+    )
+
+    const r = await lauf()
+    expect(r.closings_geschrieben).toBe(1)
+    const alle = await zeilen<{ client_id: string; status: string }>(
+      'SELECT client_id, status FROM public.monthly_closings ORDER BY client_id',
+    )
+    expect(alle.find(z => z.client_id === KLIENT_A)?.status).toBe('sent')
+    expect(alle.find(z => z.client_id === KLIENT_A2)?.status).toBe('ready')
+  })
+
+  it('sperrt nicht wegen des Abschlusses eines FREMDEN Mandanten', async () => {
+    await legePreis({ org: ORG_A, preisCent: 3000 })
+    const v = await legeVerordnung({ org: ORG_A, klient: KLIENT_A })
+    await legeEinsatz({ org: ORG_A, klient: KLIENT_A, verordnung: v, datum: '2026-07-10', minuten: 60 })
+    await db.query(
+      `INSERT INTO public.monthly_closings
+         (organization_id, client_id, year, month, status, ampel)
+       VALUES ($1, $2, 2026, 7, 'sent', 'gruen')`,
+      [ORG_B, KLIENT_B],
+    )
+
+    const r = await lauf()
+    expect(r.closings_geschrieben).toBe(1)
+  })
+
+  it('sperrt nicht wegen eines abgeschlossenen ANDEREN Monats', async () => {
+    await legePreis({ org: ORG_A, preisCent: 3000 })
+    const v = await legeVerordnung({ org: ORG_A, klient: KLIENT_A })
+    await legeEinsatz({ org: ORG_A, klient: KLIENT_A, verordnung: v, datum: '2026-07-10', minuten: 60 })
+    await db.query(
+      `INSERT INTO public.monthly_closings
+         (organization_id, client_id, year, month, status, ampel)
+       VALUES ($1, $2, 2026, 6, 'sent', 'gruen')`,
+      [ORG_A, KLIENT_A],
+    )
+
+    const r = await lauf()
+    expect(r.closings_geschrieben).toBe(1)
+  })
+
+  it('laesst den Vorschaulauf (dryRun) den Bestand unberuehrt', async () => {
+    await legePreis({ org: ORG_A, preisCent: 3000 })
+    const v = await legeVerordnung({ org: ORG_A, klient: KLIENT_A })
+    await legeEinsatz({ org: ORG_A, klient: KLIENT_A, verordnung: v, datum: '2026-07-10', minuten: 60 })
+    await db.query(
+      `INSERT INTO public.monthly_closings
+         (organization_id, client_id, year, month, status, ampel)
+       VALUES ($1, $2, 2026, 7, 'sent', 'gruen')`,
+      [ORG_A, KLIENT_A],
+    )
+
+    const r = await lauf({ dryRun: true })
+    expect(r.closings_geschrieben).toBe(0)
+    const [z] = await zeilen<{ status: string }>('SELECT status FROM public.monthly_closings')
+    expect(z.status).toBe('sent')
   })
 })
