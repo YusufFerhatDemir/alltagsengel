@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireCoachUser } from '@/lib/coach/api-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { hatAktiveEinwilligung } from '@/lib/coach/consent'
 import {
   BEREITS_FREIGEGEBEN_CODE, BEREITS_FREIGEGEBEN_TEXT,
@@ -56,6 +57,26 @@ export async function POST(request: Request) {
   // PflegeCoach-Konto existiert. EXECUTE ist deshalb auf service_role
   // beschraenkt (20260922000000); der Lookup laeuft nur noch hier, hinter
   // requireCoachUser() UND der Pruefung der eigenen Einwilligung.
+  //
+  // Das schuetzt gegen Fremde, nicht gegen einen angemeldeten Nutzer, der
+  // Adressen durchprobiert. Der Deckel darunter schliesst genau das — er
+  // war in 20260916000000_coach_shares_email_funktionen.sql als bekannte,
+  // offene Einschraenkung vermerkt.
+  //
+  // Der Zaehler haengt am NUTZER, nicht an der IP: der Aufrufer ist hier
+  // angemeldet, und eine IP ist geteilt (Praxis-Netz) wie auch wechselbar
+  // (Mobilfunk) — beides macht sie als Schluessel unbrauchbar. 10 Suchen
+  // pro Stunde liegen weit ueber jedem echten Einladeverhalten und weit
+  // unter allem, was sich zum Durchprobieren einer Adressliste eignet.
+  // Persistent statt In-Memory: jede neue Serverless-Instanz startete
+  // sonst mit leerem Zaehler (siehe lib/rate-limit-persistent.ts).
+  if (!(await rateLimitPersistent(`coach-freigabe-lookup:${auth.user.id}`, 10, 60 * 60 * 1000))) {
+    return NextResponse.json(
+      { error: 'Zu viele Suchanfragen. Bitte versuchen Sie es in einer Stunde erneut.' },
+      { status: 429 },
+    )
+  }
+
   const { data: granteeId, error: lookupFehler } = await createAdminClient()
     .rpc('coach_finde_nutzer_id', { p_email: email })
   if (lookupFehler) {

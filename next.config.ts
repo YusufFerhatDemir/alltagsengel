@@ -224,6 +224,17 @@ const nextConfig: NextConfig = {
         source: '/_next/static/:path*',
         headers: [{ key: 'X-Robots-Tag', value: 'noindex' }],
       },
+      // Apple verlangt fuer die Apple-App-Site-Association Content-Type
+      // application/json. Die Datei hat bewusst keine Endung, deshalb
+      // liefert der statische Auslieferer sonst application/octet-stream
+      // (live am 27.08.2026 nachgemessen) — iOS verwirft die Datei damit,
+      // und Universal Links landen im Browser statt in der App.
+      // .well-known/assetlinks.json (Android) braucht das nicht: die
+      // Endung .json setzt den Typ bereits richtig.
+      {
+        source: '/.well-known/apple-app-site-association',
+        headers: [{ key: 'Content-Type', value: 'application/json' }],
+      },
       {
         source: '/sentry-example',
         headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
