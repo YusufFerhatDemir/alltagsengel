@@ -57,6 +57,31 @@ test('Zweitwert ist nur beim Blutdruck erlaubt', () => {
   assert.throws(() => validierePlausibilitaet('puls', 72, 60), /nur beim Blutdruck/)
 })
 
+test('Blutdruck: diastolisch hat eigene, engere Plausibilitätsgrenzen als systolisch', () => {
+  // 250 wäre für systolisch plausibel (Bereich 40–300), für diastolisch nicht (Bereich 20–200)
+  assert.throws(() => validierePlausibilitaet('blutdruck', 260, 250), /plausiblen Bereichs \(20–200\)/)
+  assert.throws(() => validierePlausibilitaet('blutdruck', 120, 15), /plausiblen Bereichs \(20–200\)/)
+  assert.doesNotThrow(() => validierePlausibilitaet('blutdruck', 190, 110))
+})
+
+test('Grenzwert-Guards: unrealistische Werte werden pro Vitaltyp abgelehnt', () => {
+  assert.throws(() => validierePlausibilitaet('blutdruck', 310, 80), /plausiblen Bereichs/)
+  assert.throws(() => validierePlausibilitaet('blutdruck', 30, 80), /plausiblen Bereichs/)
+  assert.throws(() => validierePlausibilitaet('puls', 251), /plausiblen Bereichs/)
+  assert.throws(() => validierePlausibilitaet('puls', 19), /plausiblen Bereichs/)
+  assert.throws(() => validierePlausibilitaet('temperatur', 45.1), /plausiblen Bereichs/)
+  assert.throws(() => validierePlausibilitaet('temperatur', 29.9), /plausiblen Bereichs/)
+  assert.throws(() => validierePlausibilitaet('spo2', 101), /plausiblen Bereichs/)
+  assert.throws(() => validierePlausibilitaet('spo2', 49), /plausiblen Bereichs/)
+  assert.throws(() => validierePlausibilitaet('blutzucker', 601), /plausiblen Bereichs/)
+  assert.throws(() => validierePlausibilitaet('blutzucker', 19), /plausiblen Bereichs/)
+  assert.doesNotThrow(() => validierePlausibilitaet('blutdruck', 300, 200))
+  assert.doesNotThrow(() => validierePlausibilitaet('puls', 250))
+  assert.doesNotThrow(() => validierePlausibilitaet('temperatur', 45))
+  assert.doesNotThrow(() => validierePlausibilitaet('spo2', 100))
+  assert.doesNotThrow(() => validierePlausibilitaet('blutzucker', 600))
+})
+
 // ── Grenzwert-Validierung ────────────────────────────────────────
 
 test('validiereGrenzwerte wirft bei min ≥ max', () => {

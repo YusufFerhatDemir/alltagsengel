@@ -37,6 +37,9 @@ export interface VitalTypConfig {
   /** Harte Plausibilitätsgrenzen für die Eingabe (kein Alarm, sondern Validierungsfehler). */
   plausibelMin: number
   plausibelMax: number
+  /** Nur beim Blutdruck (diastolisch) abweichend von plausibelMin/-Max; sonst identisch. */
+  plausibelMinSekundaer?: number
+  plausibelMaxSekundaer?: number
   dezimalstellen: number
   /**
    * Standard-Grenzwerte (Erwachsene, häusliche Betreuung) — greifen nur,
@@ -50,7 +53,9 @@ export const VITAL_TYPEN: Record<VitalTyp, VitalTypConfig> = {
   blutdruck: {
     label: 'Blutdruck', einheit: 'mmHg', hatSekundaer: true,
     labelWert: 'Systolisch', labelSekundaer: 'Diastolisch',
-    plausibelMin: 40, plausibelMax: 300, dezimalstellen: 0,
+    plausibelMin: 40, plausibelMax: 300,
+    plausibelMinSekundaer: 20, plausibelMaxSekundaer: 200,
+    dezimalstellen: 0,
     standard: {
       min_warn: 100, max_warn: 140, min_critical: 90, max_critical: 180,
       min_warn_secondary: 60, max_warn_secondary: 90,
@@ -69,7 +74,7 @@ export const VITAL_TYPEN: Record<VitalTyp, VitalTypConfig> = {
   },
   blutzucker: {
     label: 'Blutzucker', einheit: 'mg/dl', hatSekundaer: false, labelWert: 'Glukose',
-    plausibelMin: 20, plausibelMax: 800, dezimalstellen: 0,
+    plausibelMin: 20, plausibelMax: 600, dezimalstellen: 0,
     standard: { min_warn: 70, max_warn: 180, min_critical: 54, max_critical: 250 },
   },
   spo2: {

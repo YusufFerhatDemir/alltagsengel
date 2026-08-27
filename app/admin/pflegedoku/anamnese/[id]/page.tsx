@@ -51,6 +51,7 @@ export default function AdminAnamnesePage({ params }: { params: Promise<{ id: st
   const [hinweis, setHinweis] = useState('')
 
   const gesperrt = anamnese?.gesperrt === true
+  const editierbar = !!anamnese && !gesperrt && anamnese.status === 'entwurf'
 
   useEffect(() => { load() }, [clientId])
 
@@ -184,11 +185,14 @@ export default function AdminAnamnesePage({ params }: { params: Promise<{ id: st
       {error && <Banner tone="danger">{error}</Banner>}
       {hinweis && <Banner tone="success">{hinweis}</Banner>}
       {gesperrt && <Banner tone="info">Diese Anamnese ist gesperrt und damit unveränderlich.</Banner>}
+      {!gesperrt && anamnese?.status === 'abgeschlossen' && (
+        <Banner tone="info">Diese Anamnese ist abgeschlossen und kann nicht mehr bearbeitet werden.</Banner>
+      )}
 
       <Karte titel="Erhebung">
         <FeldRaster>
-          <TextFeld label="Datum der Erhebung" type="date" value={form.anamneseDatum} onChange={v => feld('anamneseDatum', v)} disabled={gesperrt} />
-          <AuswahlFeld label="Art der Anamnese" value={form.anamneseTyp} onChange={v => feld('anamneseTyp', v)} optionen={PFLEGE_ANAMNESE_TYP} disabled={gesperrt} />
+          <TextFeld label="Datum der Erhebung" type="date" value={form.anamneseDatum} onChange={v => feld('anamneseDatum', v)} disabled={!editierbar} />
+          <AuswahlFeld label="Art der Anamnese" value={form.anamneseTyp} onChange={v => feld('anamneseTyp', v)} optionen={PFLEGE_ANAMNESE_TYP} disabled={!editierbar} />
         </FeldRaster>
       </Karte>
 
@@ -197,18 +201,18 @@ export default function AdminAnamnesePage({ params }: { params: Promise<{ id: st
       {tab === 'koerper' && (
         <Karte titel="Körperlicher Zustand">
           <FeldRaster>
-            <AuswahlFeld label="Sturzrisiko" value={form.sturzrisiko} onChange={v => feld('sturzrisiko', v)} optionen={PFLEGE_STURZRISIKO} disabled={gesperrt} />
+            <AuswahlFeld label="Sturzrisiko" value={form.sturzrisiko} onChange={v => feld('sturzrisiko', v)} optionen={PFLEGE_STURZRISIKO} disabled={!editierbar} />
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              <SchalterFeld label="Schluckbeschwerden" value={form.schluckbeschwerden} onChange={v => feld('schluckbeschwerden', v)} disabled={gesperrt} />
+              <SchalterFeld label="Schluckbeschwerden" value={form.schluckbeschwerden} onChange={v => feld('schluckbeschwerden', v)} disabled={!editierbar} />
             </div>
           </FeldRaster>
           <div style={{ marginTop: 12, display: 'grid', gap: 12 }}>
-            <TextBereich label="Allgemeiner körperlicher Zustand" value={form.koerperlicherZustand} onChange={v => feld('koerperlicherZustand', v)} disabled={gesperrt} />
-            <TextBereich label="Mobilität" value={form.mobilitaet} onChange={v => feld('mobilitaet', v)} disabled={gesperrt} rows={2} />
-            <TextBereich label="Schmerzen" value={form.schmerzen} onChange={v => feld('schmerzen', v)} disabled={gesperrt} rows={2} />
-            <TextBereich label="Ernährungszustand" value={form.ernaehrungszustand} onChange={v => feld('ernaehrungszustand', v)} disabled={gesperrt} rows={2} />
-            <TextBereich label="Kontinenz" value={form.inkontinenz} onChange={v => feld('inkontinenz', v)} disabled={gesperrt} rows={2} />
-            <TextBereich label="Hautbild" value={form.hautbild} onChange={v => feld('hautbild', v)} disabled={gesperrt} rows={2} />
+            <TextBereich label="Allgemeiner körperlicher Zustand" value={form.koerperlicherZustand} onChange={v => feld('koerperlicherZustand', v)} disabled={!editierbar} />
+            <TextBereich label="Mobilität" value={form.mobilitaet} onChange={v => feld('mobilitaet', v)} disabled={!editierbar} rows={2} />
+            <TextBereich label="Schmerzen" value={form.schmerzen} onChange={v => feld('schmerzen', v)} disabled={!editierbar} rows={2} />
+            <TextBereich label="Ernährungszustand" value={form.ernaehrungszustand} onChange={v => feld('ernaehrungszustand', v)} disabled={!editierbar} rows={2} />
+            <TextBereich label="Kontinenz" value={form.inkontinenz} onChange={v => feld('inkontinenz', v)} disabled={!editierbar} rows={2} />
+            <TextBereich label="Hautbild" value={form.hautbild} onChange={v => feld('hautbild', v)} disabled={!editierbar} rows={2} />
           </div>
         </Karte>
       )}
@@ -216,11 +220,11 @@ export default function AdminAnamnesePage({ params }: { params: Promise<{ id: st
       {tab === 'kognition' && (
         <Karte titel="Kognition & Psyche">
           <div style={{ display: 'grid', gap: 12 }}>
-            <TextBereich label="Orientierung" value={form.orientierung} onChange={v => feld('orientierung', v)} disabled={gesperrt} rows={2} />
-            <TextBereich label="Kommunikationsfähigkeit" value={form.kommunikationsfaehigkeit} onChange={v => feld('kommunikationsfaehigkeit', v)} disabled={gesperrt} rows={2} />
-            <TextBereich label="Stimmungslage" value={form.stimmungslage} onChange={v => feld('stimmungslage', v)} disabled={gesperrt} rows={2} />
-            <TextBereich label="Verhaltensauffälligkeiten" value={form.verhaltensauffaelligkeiten} onChange={v => feld('verhaltensauffaelligkeiten', v)} disabled={gesperrt} rows={2} />
-            <TextBereich label="Nachtruhe" value={form.nachtruhe} onChange={v => feld('nachtruhe', v)} disabled={gesperrt} rows={2} />
+            <TextBereich label="Orientierung" value={form.orientierung} onChange={v => feld('orientierung', v)} disabled={!editierbar} rows={2} />
+            <TextBereich label="Kommunikationsfähigkeit" value={form.kommunikationsfaehigkeit} onChange={v => feld('kommunikationsfaehigkeit', v)} disabled={!editierbar} rows={2} />
+            <TextBereich label="Stimmungslage" value={form.stimmungslage} onChange={v => feld('stimmungslage', v)} disabled={!editierbar} rows={2} />
+            <TextBereich label="Verhaltensauffälligkeiten" value={form.verhaltensauffaelligkeiten} onChange={v => feld('verhaltensauffaelligkeiten', v)} disabled={!editierbar} rows={2} />
+            <TextBereich label="Nachtruhe" value={form.nachtruhe} onChange={v => feld('nachtruhe', v)} disabled={!editierbar} rows={2} />
           </div>
         </Karte>
       )}
@@ -228,10 +232,10 @@ export default function AdminAnamnesePage({ params }: { params: Promise<{ id: st
       {tab === 'sozial' && (
         <Karte titel="Soziale Situation">
           <div style={{ display: 'grid', gap: 12 }}>
-            <TextBereich label="Soziale Kontakte" value={form.sozialeKontakte} onChange={v => feld('sozialeKontakte', v)} disabled={gesperrt} rows={2} />
-            <TextBereich label="Tagesstruktur" value={form.tagesstruktur} onChange={v => feld('tagesstruktur', v)} disabled={gesperrt} rows={2} />
-            <TextBereich label="Hobbys und Interessen" value={form.hobbysInteressen} onChange={v => feld('hobbysInteressen', v)} disabled={gesperrt} rows={2} />
-            <TextBereich label="Religiöse und kulturelle Bedürfnisse" value={form.religioesKulturell} onChange={v => feld('religioesKulturell', v)} disabled={gesperrt} rows={2} />
+            <TextBereich label="Soziale Kontakte" value={form.sozialeKontakte} onChange={v => feld('sozialeKontakte', v)} disabled={!editierbar} rows={2} />
+            <TextBereich label="Tagesstruktur" value={form.tagesstruktur} onChange={v => feld('tagesstruktur', v)} disabled={!editierbar} rows={2} />
+            <TextBereich label="Hobbys und Interessen" value={form.hobbysInteressen} onChange={v => feld('hobbysInteressen', v)} disabled={!editierbar} rows={2} />
+            <TextBereich label="Religiöse und kulturelle Bedürfnisse" value={form.religioesKulturell} onChange={v => feld('religioesKulturell', v)} disabled={!editierbar} rows={2} />
           </div>
         </Karte>
       )}
@@ -239,10 +243,10 @@ export default function AdminAnamnesePage({ params }: { params: Promise<{ id: st
       {tab === 'selbstversorgung' && (
         <Karte titel="Selbstversorgung">
           <div style={{ display: 'grid', gap: 12 }}>
-            <TextBereich label="Körperpflege" value={form.koerperpflege} onChange={v => feld('koerperpflege', v)} disabled={gesperrt} rows={2} />
-            <TextBereich label="An- und Auskleiden" value={form.anAuskleiden} onChange={v => feld('anAuskleiden', v)} disabled={gesperrt} rows={2} />
-            <TextBereich label="Essen und Trinken" value={form.essenTrinken} onChange={v => feld('essenTrinken', v)} disabled={gesperrt} rows={2} />
-            <TextBereich label="Hauswirtschaft" value={form.hauswirtschaft} onChange={v => feld('hauswirtschaft', v)} disabled={gesperrt} rows={2} />
+            <TextBereich label="Körperpflege" value={form.koerperpflege} onChange={v => feld('koerperpflege', v)} disabled={!editierbar} rows={2} />
+            <TextBereich label="An- und Auskleiden" value={form.anAuskleiden} onChange={v => feld('anAuskleiden', v)} disabled={!editierbar} rows={2} />
+            <TextBereich label="Essen und Trinken" value={form.essenTrinken} onChange={v => feld('essenTrinken', v)} disabled={!editierbar} rows={2} />
+            <TextBereich label="Hauswirtschaft" value={form.hauswirtschaft} onChange={v => feld('hauswirtschaft', v)} disabled={!editierbar} rows={2} />
           </div>
         </Karte>
       )}
@@ -250,16 +254,16 @@ export default function AdminAnamnesePage({ params }: { params: Promise<{ id: st
       {tab === 'zusammenfassung' && (
         <Karte titel="Zusammenfassung">
           <div style={{ display: 'grid', gap: 12 }}>
-            <TextBereich label="Zusammenfassung" value={form.zusammenfassung} onChange={v => feld('zusammenfassung', v)} disabled={gesperrt} rows={4} />
-            <TextBereich label="Besonderheiten" value={form.besonderheiten} onChange={v => feld('besonderheiten', v)} disabled={gesperrt} />
-            <TextBereich label="Empfehlungen" value={form.empfehlungen} onChange={v => feld('empfehlungen', v)} disabled={gesperrt} />
+            <TextBereich label="Zusammenfassung" value={form.zusammenfassung} onChange={v => feld('zusammenfassung', v)} disabled={!editierbar} rows={4} />
+            <TextBereich label="Besonderheiten" value={form.besonderheiten} onChange={v => feld('besonderheiten', v)} disabled={!editierbar} />
+            <TextBereich label="Empfehlungen" value={form.empfehlungen} onChange={v => feld('empfehlungen', v)} disabled={!editierbar} />
           </div>
         </Karte>
       )}
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {!anamnese && <button onClick={anlegen} disabled={busy} style={pflegePrimaryBtn}>Anamnese anlegen</button>}
-        {anamnese && !gesperrt && (
+        {anamnese && editierbar && (
           <>
             <button onClick={() => speichern()} disabled={busy} style={pflegePrimaryBtn}>Speichern</button>
             <button onClick={() => speichern('abgeschlossen')} disabled={busy} style={pflegeSecondaryBtn}>Abschließen</button>
