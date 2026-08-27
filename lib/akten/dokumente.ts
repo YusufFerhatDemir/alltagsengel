@@ -13,7 +13,18 @@ import { sanitizeStorageName } from '@/lib/file-upload-validation'
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { logAktenZugriff } from './zugriff-log'
-import { bucketForZuordnung, type AktenDokument, type DokumentKategorie, type DokumentSichtbarkeit, type DokumentStatus, type DokumentTyp } from './types'
+import {
+  bucketForZuordnung,
+  DOKUMENT_KATEGORIEN, DOKUMENT_SICHTBARKEIT_WERTE, DOKUMENT_STATUS_WERTE, DOKUMENT_TYPEN,
+  type AktenDokument, type DokumentKategorie, type DokumentSichtbarkeit, type DokumentStatus, type DokumentTyp,
+} from './types'
+
+/** Weist einen unbekannten String-Wert zurueck, bevor er den DB-CHECK-Constraint erreicht. */
+function assertDokumentEnum<T extends string>(werte: readonly T[], wert: T, feld: string): void {
+  if (!werte.includes(wert)) {
+    throw new UserFacingError(`Ungültiger Wert für ${feld}: "${wert}". Erlaubt: ${werte.join(', ')}.`)
+  }
+}
 
 // ---------------------------------------------------------------------------
 // SHA-256
@@ -124,6 +135,9 @@ export async function createDokument(supabase: SupabaseClient, params: CreateDok
   if (params.clientId && params.caregiverId) {
     throw new UserFacingError('Ein Dokument kann nicht gleichzeitig Kunde und Mitarbeiter zugeordnet sein.')
   }
+  assertDokumentEnum(DOKUMENT_TYPEN, params.dokumentTyp, 'dokumentTyp')
+  if (params.kategorie !== undefined) assertDokumentEnum(DOKUMENT_KATEGORIEN, params.kategorie, 'kategorie')
+  if (params.sichtbarkeit !== undefined) assertDokumentEnum(DOKUMENT_SICHTBARKEIT_WERTE, params.sichtbarkeit, 'sichtbarkeit')
 
   const { data, error } = await supabase
     .from('akten_dokumente')
@@ -196,7 +210,7 @@ export interface ListDokumenteFilter {
  * Anfuehrungszeichen um den Wert nehmen den Sonderzeichen ihre Bedeutung;
  * Backslash und Anfuehrungszeichen im Begriff selbst werden maskiert.
  */
-function postgrestWert(begriff: string): string {
+export function postgrestWert(begriff: string): string {
   const maskiert = begriff.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
   return `"%${maskiert}%"`
 }
@@ -263,6 +277,10 @@ export async function updateDokument(
   const existing = await getDokument(supabase, id, organizationId)
   if (!existing) throw new UserFacingError('Dokument nicht gefunden.')
   if (existing.gesperrt) throw new UserFacingError('Gesperrtes Dokument kann nicht bearbeitet werden. Erst entsperren.')
+
+  if (patch.kategorie !== undefined) assertDokumentEnum(DOKUMENT_KATEGORIEN, patch.kategorie, 'kategorie')
+  if (patch.status !== undefined) assertDokumentEnum(DOKUMENT_STATUS_WERTE, patch.status, 'status')
+  if (patch.sichtbarkeit !== undefined) assertDokumentEnum(DOKUMENT_SICHTBARKEIT_WERTE, patch.sichtbarkeit, 'sichtbarkeit')
 
   const update: Record<string, unknown> = {}
   if (patch.titel !== undefined) update.titel = patch.titel

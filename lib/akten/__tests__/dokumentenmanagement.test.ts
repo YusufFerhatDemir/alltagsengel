@@ -11,8 +11,9 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { computeSha256Hex, createDokument } from '../dokumente'
+import { computeSha256Hex, createDokument, updateDokument } from '../dokumente'
 import { bucketForZuordnung } from '../types'
+import { erstelleFakeSupabase, type FakeAufruf } from '@/__tests__/helpers/supabase-fake'
 
 test('computeSha256Hex liefert den korrekten SHA-256-Hex-Digest', async () => {
   // sha256("hallo") — via `python3 -c "import hashlib;print(hashlib.sha256(b'hallo').hexdigest())"` verifiziert
@@ -57,4 +58,60 @@ test('createDokument lehnt gleichzeitige Kunde+Mitarbeiter-Zuordnung ab, ohne di
     /nicht gleichzeitig Kunde und Mitarbeiter/
   )
   assert.equal(dbWasCalled.value, false)
+})
+
+test('createDokument weist einen unbekannten dokumentTyp zurück, ohne die DB anzufassen', async () => {
+  const dbWasCalled = { value: false }
+  const stubSupabase = {
+    from() { dbWasCalled.value = true; throw new Error('DB darf hier nicht erreicht werden') },
+  } as any
+
+  await assert.rejects(
+    () => createDokument(stubSupabase, {
+      organizationId: 'org-1',
+      titel: 'Test',
+      dokumentTyp: 'nicht_existent' as any,
+      datei: { bucket: 'documents', dateipfad: 'x', dateiname: 'x.pdf', dateigroesseBytes: 1, mimeType: 'application/pdf', sha256Hash: 'abc' },
+      erstelltVon: 'user-1',
+    }),
+    /Ungültiger Wert für dokumentTyp/
+  )
+  assert.equal(dbWasCalled.value, false)
+})
+
+test('createDokument weist eine unbekannte kategorie zurück, ohne die DB anzufassen', async () => {
+  const dbWasCalled = { value: false }
+  const stubSupabase = {
+    from() { dbWasCalled.value = true; throw new Error('DB darf hier nicht erreicht werden') },
+  } as any
+
+  await assert.rejects(
+    () => createDokument(stubSupabase, {
+      organizationId: 'org-1',
+      titel: 'Test',
+      dokumentTyp: 'sonstiges',
+      kategorie: 'erfunden' as any,
+      datei: { bucket: 'documents', dateipfad: 'x', dateiname: 'x.pdf', dateigroesseBytes: 1, mimeType: 'application/pdf', sha256Hash: 'abc' },
+      erstelltVon: 'user-1',
+    }),
+    /Ungültiger Wert für kategorie/
+  )
+  assert.equal(dbWasCalled.value, false)
+})
+
+test('updateDokument weist einen unbekannten status zurück, ohne ihn zu schreiben', async () => {
+  const bestehend = {
+    id: 'dok-1', organization_id: 'org-1', gesperrt: false,
+    dokument_typ: 'sonstiges', kategorie: 'allgemein', status: 'entwurf', sichtbarkeit: 'intern',
+  }
+  const f = erstelleFakeSupabase((a: FakeAufruf) => {
+    if (a.tabelle === 'akten_dokumente' && a.operation === 'select') return { data: bestehend }
+    return { data: null }
+  })
+
+  await assert.rejects(
+    () => updateDokument(f.client, 'dok-1', 'org-1', { status: 'erfunden' as any }, 'user-1'),
+    /Ungültiger Wert für status/
+  )
+  assert.equal(f.auf('akten_dokumente').filter(a => a.operation === 'update').length, 0, 'update() darf bei ungültigem Wert nie aufgerufen werden')
 })
