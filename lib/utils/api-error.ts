@@ -6,7 +6,14 @@ const PG_PATTERNS = [
   /column "[\w.]+" (?:does not exist|of relation)/i,
   /duplicate key value violates unique constraint/i,
   /null value in column/i,
-  /permission denied for (?:table|schema|function)/i,
+  // Bewusst OHNE Objektart-Liste: Postgres schreibt je nach Objekt
+  // „permission denied for table/relation/view/sequence/materialized view/
+  // schema/function/database…". Die frühere Aufzählung (table|schema|
+  // function) liess „permission denied for relation …" und „… for view …"
+  // durch — der Client bekam damit den echten Tabellennamen zu sehen.
+  // Ein englisches „permission denied" stammt in dieser Anwendung immer aus
+  // Postgres/PostgREST; eigene Meldungen sind deutsch.
+  /permission denied/i,
   /row-level security/i,
   /syntax error at or near/i,
   /function [\w.]+\(.*\) does not exist/i,
