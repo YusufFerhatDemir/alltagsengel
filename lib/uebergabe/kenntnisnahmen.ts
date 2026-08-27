@@ -5,12 +5,27 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { UebergabeKenntnisnahme } from './types'
 
 export interface QuittierenParams {
   protokollId: string
-  /** Weglassen beim user-scoped Client (Engel) — dann greift current_org_id(). */
-  organizationId?: string
+  /**
+   * PFLICHT — auch beim user-scoped Client (Engel).
+   *
+   * Mandantenschutz: `protokollId` kommt aus der URL, also aus dem Body des
+   * Aufrufers. War die Organisation optional, lief der Protokoll-Lookup bei
+   * einem Service-Role-Client (istAdmin, RLS umgangen) ohne jeden
+   * Mandantenfilter — wer die UUID eines fremden Protokolls kannte, konnte es
+   * quittieren und tauchte im Nachweis einer fremden Organisation auf.
+   *
+   * Der Filter ist zugleich die Absicherung fuer die INSERT-Spalte: erst wenn
+   * das Protokoll unter genau dieser Organisation sichtbar war, wird
+   * geschrieben. Beim user-scoped Client faellt die Sichtbarkeit ohnehin mit
+   * current_org_id() zusammen (org_fence ist RESTRICTIVE), der explizite Wert
+   * entspricht dort also dem Spalten-Default.
+   */
+  organizationId: string
   userId: string
   caregiverId?: string | null
   name: string
@@ -26,26 +41,29 @@ export async function quittieren(
   supabase: SupabaseClient,
   params: QuittierenParams,
 ): Promise<UebergabeKenntnisnahme> {
-  if (!params.name?.trim()) throw new Error('Der Name der quittierenden Person ist ein Pflichtfeld.')
+  if (!params.name?.trim()) throw new UserFacingError('Der Name der quittierenden Person ist ein Pflichtfeld.')
+  if (!params.organizationId) {
+    throw new UserFacingError('Die Organisation der quittierenden Person konnte nicht bestimmt werden.', 403)
+  }
 
-  let protokollQuery = supabase
+  const { data: protokoll, error: protokollError } = await supabase
     .from('uebergabe_protokolle')
     .select('status')
     .eq('id', params.protokollId)
-  if (params.organizationId) protokollQuery = protokollQuery.eq('organization_id', params.organizationId)
-  const { data: protokoll, error: protokollError } = await protokollQuery.maybeSingle()
+    .eq('organization_id', params.organizationId)
+    .maybeSingle()
 
   if (protokollError) throw new Error(`Protokoll konnte nicht geprüft werden: ${protokollError.message}`)
-  if (!protokoll) throw new Error('Übergabeprotokoll nicht gefunden.')
+  if (!protokoll) throw new UserFacingError('Übergabeprotokoll nicht gefunden.', 404)
   if (protokoll.status !== 'abgeschlossen') {
-    throw new Error('Nur abgeschlossene Übergabeprotokolle können zur Kenntnis genommen werden.')
+    throw new UserFacingError('Nur abgeschlossene Übergabeprotokolle können zur Kenntnis genommen werden.', 409)
   }
 
   const { data, error } = await supabase
     .from('uebergabe_kenntnisnahmen')
     .insert({
       protokoll_id: params.protokollId,
-      ...(params.organizationId ? { organization_id: params.organizationId } : {}),
+      organization_id: params.organizationId,
       user_id: params.userId,
       caregiver_id: params.caregiverId ?? null,
       name: params.name.trim(),
@@ -57,7 +75,7 @@ export async function quittieren(
   if (error) {
     // Doppelte Quittung ist kein Fehlerfall — die vorhandene zählt.
     if (error.code === '23505') {
-      const bestand = await getKenntnisnahme(supabase, params.protokollId, params.userId)
+      const bestand = await getKenntnisnahme(supabase, params.protokollId, params.userId, params.organizationId)
       if (bestand) return bestand
     }
     throw new Error(`Kenntnisnahme konnte nicht gespeichert werden: ${error.message}`)
