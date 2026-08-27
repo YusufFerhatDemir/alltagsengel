@@ -64,6 +64,43 @@ export interface CreateVerlaufParams {
   sichtbarkeit?: VerlaufSichtbarkeit
 }
 
+/**
+ * Wirft, wenn für den Monat des Eintragsdatums bereits eine abgeschlossene
+ * Dokumentationsperiode existiert — sonst könnte man nach Monatsabschluss
+ * rückwirkend einen neuen (unversperrten) Eintrag einfügen und damit den
+ * Abschluss unterlaufen (trg_locked_verlauf greift nur bei UPDATE, nicht INSERT).
+ *
+ * pflege_doku_perioden ist per RLS nur für admin/superadmin lesbar
+ * (org_fence_pflege_doku_perioden + admin_pflege_doku_perioden) — ohne
+ * organizationId (Engel-Pfad, RLS-Client) liefert die Abfrage daher immer
+ * leer und die Prüfung greift nicht. Das ist keine Regression (vorher gab es
+ * gar keine Prüfung), schließt die Lücke aber nur für den Admin-Schreibpfad.
+ */
+async function assertPeriodeOffen(
+  supabase: SupabaseClient, clientId: string, eintragDatumIso: string, organizationId?: string,
+): Promise<void> {
+  const datum = new Date(eintragDatumIso)
+  const jahr = datum.getUTCFullYear()
+  const monat = datum.getUTCMonth() + 1
+
+  let query = supabase
+    .from('pflege_doku_perioden')
+    .select('status')
+    .eq('client_id', clientId)
+    .eq('jahr', jahr)
+    .eq('monat', monat)
+  if (organizationId) query = query.eq('organization_id', organizationId)
+
+  const { data, error } = await query.maybeSingle()
+  if (error) throw new Error(`Dokumentationsperiode konnte nicht geprüft werden: ${error.message}`)
+  if (data?.status === 'abgeschlossen') {
+    throw new UserFacingError(
+      `Die Dokumentationsperiode ${String(monat).padStart(2, '0')}/${jahr} ist abgeschlossen. Bitte zuerst wiedereröffnen.`,
+      409,
+    )
+  }
+}
+
 export async function createVerlauf(supabase: SupabaseClient, params: CreateVerlaufParams): Promise<PflegeVerlaufEintrag> {
   if (!params.inhalt?.trim()) throw new UserFacingError('Inhalt ist ein Pflichtfeld.')
   assertErlaubt(params.eintragTyp, VERLAUF_TYP_WERTE, 'eintrag_typ')
@@ -73,13 +110,16 @@ export async function createVerlauf(supabase: SupabaseClient, params: CreateVerl
   const typ = params.eintragTyp ?? 'verlauf'
   // Sturz und Notfall sind per Definition dringend — unabhängig vom Flag im Formular.
   const dringend = params.istDringend ?? false
+  const eintragDatum = params.eintragDatum ?? new Date().toISOString()
+
+  await assertPeriodeOffen(supabase, params.clientId, eintragDatum, params.organizationId)
 
   const { data, error } = await supabase
     .from('pflege_verlauf')
     .insert({
       ...(params.organizationId ? { organization_id: params.organizationId } : {}),
       client_id: params.clientId,
-      eintrag_datum: params.eintragDatum ?? new Date().toISOString(),
+      eintrag_datum: eintragDatum,
       eintrag_typ: typ,
       kategorie: params.kategorie ?? 'allgemein',
       titel: params.titel ?? null,

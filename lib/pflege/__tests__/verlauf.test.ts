@@ -10,10 +10,18 @@ import {
 } from '../verlauf'
 import type { PflegeVerlaufEintrag } from '../types'
 
-function insertClient() {
+/** `periode` steuert die Antwort von assertPeriodeOffen (Standard: keine Periode → offen). */
+function insertClient(periode: { status: string } | null = null) {
   const inserts: Array<{ tabelle: string; payload: Record<string, unknown> }> = []
   const supabase = {
     from: (tabelle: string) => ({
+      select() {
+        const kette: any = {
+          eq: () => kette,
+          maybeSingle: async () => ({ data: tabelle === 'pflege_doku_perioden' ? periode : null, error: null }),
+        }
+        return kette
+      },
       insert(payload: Record<string, unknown>) {
         inserts.push({ tabelle, payload })
         return { select: () => ({ single: async () => ({ data: { id: 'v-1', organization_id: 'org-1', ...payload }, error: null }) }) }
@@ -140,6 +148,29 @@ test('createVerlauf verlangt Inhalt und prüft die Aufzählungen vor dem DB-Zugr
     /Ungültiger Wert "wetter" für kategorie/
   )
   assert.equal(dbAufgerufen, false)
+})
+
+test('createVerlauf blockt neue Einträge in einer abgeschlossenen Dokumentationsperiode', async () => {
+  const { supabase } = insertClient({ status: 'abgeschlossen' })
+  await assert.rejects(
+    () => createVerlauf(supabase, {
+      organizationId: 'org-1', clientId: 'client-1', inhalt: 'Rückwirkender Eintrag',
+      eintragDatum: '2026-07-15T10:00:00.000Z',
+      autorId: 'user-1', autorName: 'Alltagsengel', autorRolle: 'admin',
+    }),
+    /Dokumentationsperiode 07\/2026 ist abgeschlossen/,
+  )
+})
+
+test('createVerlauf erlaubt neue Einträge in einer offenen oder wiedereröffneten Periode', async () => {
+  for (const status of [null, 'offen', 'wiedereroeffnet'] as const) {
+    const { supabase, nur } = insertClient(status === null ? null : { status })
+    await createVerlauf(supabase, {
+      organizationId: 'org-1', clientId: 'client-1', inhalt: 'Normaler Eintrag',
+      autorId: 'user-1', autorName: 'Alltagsengel', autorRolle: 'admin',
+    })
+    assert.equal(nur('pflege_verlauf').length, 1, `Status ${status} muss weiterhin Einträge erlauben`)
+  }
 })
 
 test('updateVerlauf blockt gesperrte Einträge mit Hinweis auf die Periode', async () => {
