@@ -45,11 +45,17 @@ interface CheckResult {
  * dem Timeout. 'degraded' ist genau dieser Zustand: erreichbar, aber nicht
  * in Ordnung.
  *
- * 1500 ms fuer die Verbindung (Aufbau inklusive), 800 ms fuer eine
- * Zaehlabfrage mit head:true auf einem indizierten Primaerschluessel.
+ * Die Werte sind gemessen, nicht geschaetzt (Production, 27.08.2026, je drei
+ * Laeufe): der database-Check liegt warm bei 667-759 ms und beim Kaltstart bei
+ * 1126 ms; die Tabellen-Checks bei 127-398 ms. Ein Budget von 1500 ms haette
+ * damit auf jedem etwas langsameren Kaltstart 'degraded' gemeldet — eine
+ * Schwelle, die im Normalbetrieb regelmaessig anschlaegt, ist keine Schwelle.
+ * 2500 ms lassen den Kaltstart durch und fangen trotzdem das Doppelte des
+ * schlechtesten gemessenen Werts ab. 800 ms fuer die Tabellen sind gut das
+ * Doppelte des dort gemessenen Maximums.
  */
 const ZEITBUDGET_MS = {
-  database: 1500,
+  database: 2500,
   tabelle: 800,
 } as const
 
