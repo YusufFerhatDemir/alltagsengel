@@ -151,6 +151,8 @@ describe('Nachrichten', () => {
   describe('createNachricht', () => {
     it('erstellt Nachricht + Empfaengerzeilen', async () => {
       const erstellte = nachrichtFixture({ id: 'n-neu' })
+      mock._setTableData('organization_members', [{ user_id: 'u-2' }, { user_id: 'u-3' }])
+      mock._setTableData('caregivers', [{ user_id: 'u-2' }, { user_id: 'u-3' }])
       mock._setResult(erstellte)
 
       const ergebnis = await createNachricht(mock.client as any, {
@@ -197,6 +199,8 @@ describe('Nachrichten', () => {
     })
 
     it('wirft Fehler bei fehlgeschlagenem Insert', async () => {
+      mock._setTableData('organization_members', [{ user_id: 'u-2' }])
+      mock._setTableData('caregivers', [{ user_id: 'u-2' }])
       mock._setResult(null, { message: 'Constraint-Verletzung' })
 
       await expect(
@@ -226,6 +230,8 @@ describe('Nachrichten', () => {
         eltern_id: 'n-1',
         betreff: 'Re: Einsatzplanung Montag',
       })
+      mock._setTableData('organization_members', [{ user_id: 'u-1' }])
+      mock._setTableData('caregivers', [{ user_id: 'u-1' }])
       mock._setResult(antwort)
 
       const ergebnis = await createAntwort(mock.client as any, {
