@@ -1,4 +1,4 @@
-# MASTER HANDOFF -- Stand 27.08.2026, nach Phase 8.5 (Pruefinfrastruktur + Altbefunde)
+# MASTER HANDOFF -- Stand 27.08.2026, nach Phase 8.6 (Geldwege: SEPA, Rechnungsversand, IK, Budget-Topf)
 
 Dieses Dokument ist die einzige Wahrheitsquelle fuer den technischen Zustand
 beider Produkte. Jede neue Session liest zuerst diese Datei.
@@ -221,6 +221,114 @@ git rev-parse HEAD && git rev-parse origin/main
 | Anforderungskatalog DiPA | `5b7fe21` | 60 Tests, 6 pure functions |
 | P1-4 Testabdeckung Welle 6 | `0e8418f` | 358 neue Tests, 15 Dateien |
 | Client-Upload-Validierung | `354b056` | SVG blockiert, HEIC erlaubt |
+
+---
+
+## 4a00. Zuletzt erledigte Arbeiten -- Phase 8.6, Geldwege (27.08.2026)
+
+Fuenf Befunde, alle in der Kategorie „laeuft durch und ist falsch" -- keiner
+haette einen Fehler geworfen, jeder haette Geld in die falsche Richtung
+bewegt. Alle mit Gegenprobe belegt (Fix zurueckgenommen ⇒ Test rot).
+
+**Track 4 — SEPA-Lastschrifteinzug** (`fc47b46`)
+
+`createSepaBatch()` entschied ueber eine SPERRliste, welche Rechnungen
+eingezogen werden. Der Status-Automat kennt fuenfzehn Status; auf der Liste
+standen sechs. Einziehbar waren dadurch unter anderem `geprueft` (nicht
+festgeschrieben, nie beim Kunden), `strittig` (der Kunde bestreitet die
+Forderung gerade), `korrektur_erforderlich` (die Rechnung ist bekannt falsch)
+und `gekuerzt` (der offene Betrag steht nicht fest). Jetzt eine
+ERLAUBNISliste: `freigegeben`, `uebermittelt`, `quittiert`,
+`teilweise_bezahlt`.
+
+Dazu drei weitere Loecher im selben Weg:
+- **Kein Festschreibungstor.** Der Einzug war der einzige Aussenweg ohne
+  `frozen_at`-Pruefung. Jetzt geprueft, redundant zum Status und bewusst so.
+- **Kein Soft-Delete-Filter.** Geloeschte Rechnungen (`deleted_at`) wurden
+  eingezogen -- Geld vom Konto fuer einen Vorgang, der nirgends mehr steht.
+- **Doppelter Einzug bei parallelen Laeufen.** Die B-4-Sperre war ein
+  Lesen-dann-Schreiben ohne Datenbank-Bedingung. Jetzt CAS-Guard nach dem
+  Einfuegen (aeltester Posten je Rechnung gewinnt, der Verlierer nimmt den
+  GANZEN Lauf zurueck) plus Migration `20261006000000` mit partiellem
+  Eindeutigkeits-Index `WHERE status IN ('offen','eingezogen')`.
+
+Regressionstests B-5 bis B-8 in `__tests__/billing/sepa-service-pglite.test.ts`.
+
+**Track 3 — Rechnungsworkflow** (`8f63d93`)
+
+`versendeRechnungPerEmail()` protokollierte jeden Ausgang in
+`invoice_email_log` -- ausser einem: warf `erzeugeRechnungsPaket()` (fehlende
+Schriftart, Storage nicht erreichbar), flog die Ausnahme am Protokollieren
+vorbei nach oben. Beim automatischen Versand aus `freezeInvoice()` wird sie
+dort zusaetzlich geschluckt: Rechnung festgeschrieben, Mail nie unterwegs,
+`invoice_email_log` leer, `sent_at` leer -- und der Betrieb liest den
+Zustellstand genau an diesen beiden Stellen ab. Ein PDF-Fehler ist jetzt
+derselbe Fall wie ein Provider-Fehler: protokolliert, auditiert,
+`status: 'fehlgeschlagen'`.
+
+Zusaetzlich CAS-Guard `.is('frozen_at', null)` bei der Festschreibung. Der
+Wettlauf lief bisher in den UNIQUE-Constraint auf `invoice_snapshots` --
+ein Nebeneffekt einer fremden Bedingung, kein Vorsatz.
+
+**Track 2 — Abrechnungslogik SGB XI: geprueft, keine Abweichung**
+
+Entlastungsbetrag 131 EUR/Monat, gemeinsamer Jahresbetrag VP/KZP 3.539 EUR,
+VP/KZP je 56 Tage ab 2025, PfluV-Obergrenzen 30/25 EUR -- alle Werte stimmen
+und liegen versioniert (`lib/config/budget-constants.ts`,
+`lib/billing/vpkzp/konstanten.ts`, Seed in `20260808110000`).
+**Offen (P2, siehe Paragraph 7):** `billing_gesetzliche_obergrenzen` traegt die
+PfluV-Saetze, wird aber von KEINEM Anwendungscode gelesen -- die Obergrenze
+ist dokumentiert, nicht durchgesetzt. Der Seed ist zudem `bestaetigt = FALSE`;
+eine Durchsetzung auf unbestaetigten Werten waere geraten.
+
+**Track 1 — fuenf ungetestete Kernmodule** (`0220501`, `ee44ac4`)
+
+| Modul | Tests | Dabei gefunden |
+|---|---|---|
+| `lib/abrechnung/require-admin.ts` | 20 | -- (Schranke vor ~25 Kassenrouten, war ungetestet) |
+| `lib/abrechnung/transport.ts` | 21 | -- (Phase = Wiederholungsbremse jetzt festgehalten) |
+| `lib/abrechnung/fehlerprotokoll.ts` | 26 | FP-1/2/3 |
+| `lib/config/org-config.ts` | 14 | IK-1, IK-2 |
+| `lib/admin/service-records.ts` | 11 | SR-1 |
+
+- **FP-1** Die Uebergangstabelle kannte `erledigt` und `ignoriert` nicht, und
+  die Pruefung lautete `if (erlaubt[current] && …)`. Ein Status ohne
+  Tabelleneintrag hatte damit keine Beschraenkung -- ausgerechnet die beiden
+  Zustaende, die als abgeschlossen gelesen werden, waren die einzigen ohne
+  Riegel. Jetzt vollstaendig, mit leeren Listen als Endzustand.
+- **FP-2** Der Zielstatus kam ungeprueft aus dem Anfragekoerper.
+- **FP-3** Das UPDATE-Ergebnis wurde nur abgewartet, nicht ausgewertet: eine
+  RLS-Sperre oder ein abgelehnter CHECK fielen still unter den Tisch, die
+  Route meldete `{ success: true }`, und der Pruefpfad bekam einen Eintrag
+  ueber einen Statuswechsel, den es nie gab.
+- **IK-1** `app/api/leistungsnachweis/route.ts` rief `getOrgIK(admin)` OHNE
+  Organisation auf, obwohl die aktive Organisation zwei Zeilen darueber
+  geladen und fail-closed geprueft war. Jeder Leistungsnachweis eines zweiten
+  Mandanten trug die IK von Alltagsengel.
+- **IK-2** Der Env-Rueckfall `ALLTAGSENGEL_IK` galt fuer JEDE Organisation.
+  Ein Mandant ohne gepflegte `ik_nummer` rechnete still unter fremdem
+  Institutionskennzeichen ab. Jetzt nur noch fuer die Stamm-Organisation;
+  fuer jede andere ein Abbruch.
+- **SR-1** `saveServiceRecord()` wertete bei alten CHECK-Constraints nicht nur
+  den Status ab, sondern stellte auch `budget_type` auf `entlastung` zurueck.
+  Das ist keine Abwertung, sondern eine Umbuchung: eine Leistung auf
+  Verhinderungspflege (Paragraph 39) oder auf Privatzahlung verbrauchte dann den
+  Entlastungsbetrag nach Paragraph 45b. Zwei von drei Aufrufern werteten `degraded`
+  ausserdem gar nicht aus. Der Budget-Topf wird jetzt NIE ersetzt -- statt
+  dessen eine deutliche Fehlermeldung. Die Statusabwertung auf `draft` bleibt
+  (sichtbar unfertig, nicht abrechenbar, Arbeit nicht verloren).
+
+**Track 5 — Admin-Routen: geprueft, keine Luecke** (`ae5eeff`)
+
+Alle Handler unter `app/api/admin/**` pruefen Anmeldung UND Berechtigung --
+teils ueber einen Helfer (`requireAdmin`, `requireKimAdmin`, `requireSigAdmin`,
+`requireAngehAdmin`, `checkAdmin`), teils inline. Neuer Regressionstest
+`__tests__/security/admin-api-routen-guard.test.ts` (163 Faelle) haelt das
+fest und wertet eine reine `auth.getUser()`-Pruefung ausdruecklich NICHT als
+Schranke -- unter `/api/admin` ist auch jeder Kunde angemeldet.
+
+**Stand:** Typecheck 0 Fehler, vitest 6.527 gruen, `npm run test:unit` 2.211
+gruen. Eine Migration wartet auf den SQL-Editor: `20261006000000`.
 
 ---
 
@@ -654,10 +762,18 @@ sie nicht in einem Bericht verschwindet.
 6A-Handoffs sind erledigt; die Phase-7- und Phase-8-Befunde sind saemtlich
 behoben oder als benannte Grenzen dokumentiert (Paragraph 5).
 
+**Wartet auf den SQL-Editor:** `20261006000000_sepa_batch_items_kein_doppelter_einzug.sql`
+(partieller Eindeutigkeits-Index gegen den doppelten Lastschrifteinzug).
+Solange sie nicht eingespielt ist, haelt allein der CAS-Guard in
+`createSepaBatch()` -- er deckt den Anwendungsweg ab, aber nicht ein Skript
+oder den SQL-Editor. Vorpruefung auf bereits vorhandene Dubletten steht im
+Kopf der Migration.
+
 | # | Problem | Prioritaet |
 |---|---|---|
-| **T-0** | **`npm run check:schema-drift` ist weder in CI noch im Precommit-Guard verdrahtet.** Phase 7 zeigte mit P-1, warum das zaehlt. | **P2** |
-| **T-1** | 30 der 36 ungetesteten `lib/`-Module stehen noch aus. Drei Phasen in Folge haben gezeigt, was dort liegt. | P2 |
+| ~~T-0~~ | ~~Schema-Drift-Check nicht verdrahtet.~~ **Erledigt in Phase 8.5** (`bd4d8b7`). | erledigt |
+| **T-1** | **~25 ungetestete `lib/`-Module stehen noch aus** (Phase 8.6 hat fuenf davon geschlossen und dabei fuenf Befunde gefunden -- FP-1/2/3, IK-1/2, SR-1). Vier Phasen in Folge haben gezeigt, was dort liegt. Naechste nach Gewicht: `lib/abrechnung/health.ts` (421 Z.), `lib/abrechnung/sgb-v/storno-korrektur.ts` (179 Z., Geld), `lib/abrechnung/sgb-v/ruecklaufer-service.ts`, `lib/stripe/helpers.ts`, `lib/offline/offline-queue.ts`. | P2 |
+| **T-9** | **PfluV-Obergrenzen sind dokumentiert, aber nicht durchgesetzt.** `billing_gesetzliche_obergrenzen` (Seed `20260808110000`: 30 EUR/Std Betreuung, 25 EUR/Std Hauswirtschaft) wird von KEINEM Anwendungscode gelesen -- der Preisweg prueft keine gesetzliche Obergrenze. Heute folgenlos, weil die Tarif-Verifizierung fail-closed sperrt (nur 1 Kassentarif `verified`). Vor einer Durchsetzung muss der Seed bestaetigt werden: er steht auf `bestaetigt = FALSE`, die PfluV-Novelle war in der Verbaendeanhoerung. **Kein Wert darf hier geraten werden.** | **P2** |
 | **T-2** | DATEV-Storage-Schicht ungetestet (PGlite bildet Storage nicht ab). Phase-7-Validator sitzt davor. | benannte Grenze |
 | **T-2b** | Die erste echte DATEV-CSV sollte jemand oeffnen und die Spaltenausrichtung ansehen (Befund D-1). | Erstbetrieb |
 | **T-3** | `no_overlapping_tariffs` unter PGlite unbeweisbar (kein `btree_gist`). Nur gegen echtes Postgres pruefbar. | benannte Grenze |
