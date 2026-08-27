@@ -246,6 +246,16 @@ export async function freigebenPlan(
     .eq('organization_id', organizationId)
     .select('*')
     .single()
+  // 23505: uq_pflege_massnahmenplaene_ein_aktiver_plan — zwei gleichzeitige
+  // Freigaben fuer denselben Klienten (Race Condition, siehe Migration
+  // 20261009000000). Der Ablöse-Schritt oben ist nicht transaktional
+  // abgesichert; dieser Unique-Index ist die eigentliche Absicherung.
+  if (error?.code === '23505') {
+    throw new UserFacingError(
+      'Für diesen Kunden wurde in der Zwischenzeit bereits ein anderer Plan freigegeben. Bitte Seite neu laden.',
+      409,
+    )
+  }
   if (error || !data) throw new Error(`Maßnahmenplan konnte nicht freigegeben werden: ${error?.message ?? 'unbekannt'}`)
 
   await logPflegeAktivitaet(supabase, {
