@@ -39,11 +39,35 @@ export async function getOrgIK(
     // Env-Fallback unten greift.
   }
 
-  const envIk = process.env.ALLTAGSENGEL_IK || process.env.NEXT_PUBLIC_ALLTAGSENGEL_IK
-  if (envIk) return envIk
+  /*
+   * Env-Rueckfall NUR fuer die Stamm-Organisation.
+   *
+   * ALLTAGSENGEL_IK ist die IK von Alltagsengel — eine einzelne Zahl in
+   * einer Umgebungsvariablen kann gar nichts anderes sein. Vorher griff
+   * dieser Rueckfall fuer JEDE Organisation: hatte ein zweiter Mandant
+   * keine ik_nummer gepflegt, bekam er still die IK von Alltagsengel und
+   * rechnete unter fremdem Institutionskennzeichen ab. Das faellt weder
+   * beim Erzeugen noch beim Versand auf — erst bei der Kasse, und dann
+   * als Abrechnungsbetrug im Erscheinungsbild.
+   *
+   * Fuer jeden anderen Mandanten ist eine fehlende ik_nummer deshalb ein
+   * Abbruch. Es gibt keinen Wert, den man an dieser Stelle raten koennte.
+   */
+  if (organizationId === DEFAULT_ORG_ID) {
+    const envIk = process.env.ALLTAGSENGEL_IK || process.env.NEXT_PUBLIC_ALLTAGSENGEL_IK
+    if (envIk) return envIk
+
+    throw new Error(
+      'IK-Nummer nicht konfiguriert: weder organizations.ik_nummer noch ' +
+        'ALLTAGSENGEL_IK/NEXT_PUBLIC_ALLTAGSENGEL_IK gesetzt.'
+    )
+  }
 
   throw new Error(
-    'IK-Nummer nicht konfiguriert: weder organizations.ik_nummer noch ' +
-      'ALLTAGSENGEL_IK/NEXT_PUBLIC_ALLTAGSENGEL_IK gesetzt.'
+    `IK-Nummer fuer Organisation ${organizationId} nicht hinterlegt `
+    + '(organizations.ik_nummer ist leer). Der Env-Wert ALLTAGSENGEL_IK gilt '
+    + 'ausschliesslich fuer die Stamm-Organisation und wird hier bewusst NICHT '
+    + 'verwendet — sonst rechnete dieser Mandant unter fremdem '
+    + 'Institutionskennzeichen ab.'
   )
 }
