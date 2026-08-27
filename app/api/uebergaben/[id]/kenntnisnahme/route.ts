@@ -33,7 +33,10 @@ export const POST = withTracking(async function POST(_request: Request, { params
     const supabase = auth.ctx.istAdmin ? createAdminClient() : await createClient()
     const kenntnisnahme = await quittieren(supabase, {
       protokollId: id,
-      organizationId: auth.ctx.istAdmin ? auth.ctx.organizationId : undefined,
+      // Immer mitgeben — auch beim user-scoped Client. Bei istAdmin (Service
+      // Role) ist es der einzige Mandantenfilter, sonst die zweite Schranke
+      // neben RLS.
+      organizationId: auth.ctx.organizationId,
       userId: auth.ctx.userId,
       caregiverId: auth.ctx.caregiverId,
       name: auth.ctx.name,

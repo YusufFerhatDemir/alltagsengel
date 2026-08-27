@@ -255,6 +255,20 @@ export async function abschliessenProtokoll(
   return data as UebergabeProtokoll
 }
 
+/**
+ * Loescht ein offenes Protokoll samt Punkten und Kenntnisnahmen.
+ *
+ * Die Kinder werden NICHT einzeln geloescht, weil die Datenbank das bereits
+ * zusagt: `uebergabe_punkte.protokoll_id` und
+ * `uebergabe_kenntnisnahmen.protokoll_id` sind beide
+ * `REFERENCES uebergabe_protokolle(id) ON DELETE CASCADE`
+ * (20260903000000_uebergabeprotokolle.sql). Verwaiste Punkte kann es damit
+ * nicht geben.
+ *
+ * Der DELETE-Zweig von trg_uebergabe_punkt_guard steht dem nicht im Weg: er
+ * blockt nur Punkte eines ABGESCHLOSSENEN Protokolls, und ein abgeschlossenes
+ * Protokoll wird hier ohnehin abgewiesen.
+ */
 export async function deleteProtokoll(
   supabase: SupabaseClient,
   id: string,
