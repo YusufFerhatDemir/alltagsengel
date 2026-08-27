@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePflegeAdmin } from '@/lib/pflege/api-auth'
+import { clientGehoertZuOrg } from '@/lib/clients/organization-guard'
 import { createVerlauf, listVerlauf } from '@/lib/pflege/verlauf'
 import { logAuditEvent } from '@/lib/audit-log'
 import { withTracking } from '@/lib/monitoring/tracker'
@@ -138,8 +139,12 @@ export const POST = withTracking(async function POST(request: Request) {
       return NextResponse.json({ error: 'Sofortmassnahmen sind ein Pflichtfeld.' }, { status: 400 })
     }
 
-    const inhalt = formatSturzprotokoll(body)
     const admin = createAdminClient()
+    if (!(await clientGehoertZuOrg(admin, body.clientId, auth.ctx.organizationId))) {
+      return NextResponse.json({ error: 'Klient nicht gefunden oder gehört nicht zur Organisation.' }, { status: 404 })
+    }
+
+    const inhalt = formatSturzprotokoll(body)
 
     const eintragDatum = new Date(`${body.sturzDatum}T${body.sturzUhrzeit}`).toISOString()
 

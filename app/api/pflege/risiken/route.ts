@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePflegeAdmin } from '@/lib/pflege/api-auth'
+import { clientGehoertZuOrg } from '@/lib/clients/organization-guard'
 import { createRisiko, listRisiken } from '@/lib/pflege/risiken'
 import type { RisikoSchweregrad, RisikoTyp } from '@/lib/pflege/types'
 import { withTracking } from '@/lib/monitoring/tracker'
@@ -40,6 +41,9 @@ export const POST = withTracking(async function POST(request: Request) {
     }
 
     const admin = createAdminClient()
+    if (!(await clientGehoertZuOrg(admin, body.clientId, organizationId))) {
+      return NextResponse.json({ error: 'Klient nicht gefunden oder gehört nicht zur Organisation.' }, { status: 404 })
+    }
     const risiko = await createRisiko(admin, {
       organizationId,
       clientId: body.clientId,
