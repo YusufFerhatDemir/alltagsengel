@@ -9,7 +9,15 @@ import { createPlan, freigebenPlan, neueVersion, updatePlan, validatePlanUeberga
 import type { PlanStatus } from '../types'
 
 /** Minimaler Supabase-Doppelgänger: liefert `plan` für Lesezugriffe, sammelt Updates. */
-function planClient(plan: Record<string, unknown>, optionen: { massnahmenCount?: number; massnahmen?: unknown[] } = {}) {
+function planClient(
+  plan: Record<string, unknown>,
+  optionen: {
+    massnahmenCount?: number
+    massnahmen?: unknown[]
+    /** Fehler, den das UPDATE liefert, das status auf 'aktiv' setzt (z. B. 23505-Unique-Verletzung). */
+    aktivierenFehler?: { code: string; message: string }
+  } = {}
+) {
   const updates: Array<{ tabelle: string; payload: Record<string, unknown> }> = []
   const inserts: Array<{ tabelle: string; payload: unknown }> = []
 
@@ -50,7 +58,14 @@ function planClient(plan: Record<string, unknown>, optionen: { massnahmenCount?:
           const kette: any = {
             eq: () => kette,
             neq: () => kette,
-            select: () => ({ single: async () => ({ data: { ...plan, ...payload }, error: null }) }),
+            select: () => ({
+              single: async () => {
+                if (optionen.aktivierenFehler && payload.status === 'aktiv') {
+                  return { data: null, error: optionen.aktivierenFehler }
+                }
+                return { data: { ...plan, ...payload }, error: null }
+              },
+            }),
             then: (resolve: (v: unknown) => void) => resolve({ error: null }),
           }
           return kette
@@ -167,6 +182,17 @@ test('freigebenPlan setzt den Plan aktiv, löst den Vorgänger ab und protokolli
   assert.equal(logPayload.entitaet_id, 'plan-1')
   assert.equal(logPayload.aktion, 'freigegeben')
   assert.equal(logPayload.akteur_id, 'user-7')
+})
+
+test('freigebenPlan meldet eine gleichzeitige Freigabe verständlich (Unique-Index 23505)', async () => {
+  const { supabase } = planClient(BASIS_PLAN, {
+    massnahmenCount: 2,
+    aktivierenFehler: { code: '23505', message: 'duplicate key value violates unique constraint "uq_pflege_massnahmenplaene_ein_aktiver_plan"' },
+  })
+  await assert.rejects(
+    () => freigebenPlan(supabase, 'plan-1', 'org-1', 'user-1'),
+    /in der Zwischenzeit bereits ein anderer Plan freigegeben/,
+  )
 })
 
 test('freigebenPlan blockt gesperrte Pläne', async () => {
