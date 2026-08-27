@@ -18,6 +18,8 @@ export type KimAuditAktion =
   | 'adresse_geaendert'
   | 'adresse_verifiziert'
   | 'provider_konfiguriert'
+  // Eingehender Anhang bei der Pruefung verworfen (Migration 20261010000006).
+  | 'anhang_abgewiesen'
 
 export interface WriteKimAuditParams {
   organizationId: string

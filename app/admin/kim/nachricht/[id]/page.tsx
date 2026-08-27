@@ -122,9 +122,15 @@ export default function KimNachrichtDetailPage() {
         <ul className="text-sm space-y-1">
           {message.attachments.map(a => (
             <li key={a.id}>
-              <a href={a.signed_url} target="_blank" rel="noreferrer" className="text-blue-700 dark:text-blue-400">
-                {a.filename}
-              </a>{' '}
+              {a.signed_url ? (
+                <a href={a.signed_url} target="_blank" rel="noreferrer" className="text-blue-700 dark:text-blue-400">
+                  {a.filename}
+                </a>
+              ) : (
+                <span className="text-gray-700 dark:text-gray-300">
+                  {a.filename} <span className="text-red-600 dark:text-red-400">(nicht abrufbar)</span>
+                </span>
+              )}{' '}
               <span className="text-gray-500">({fmtBytes(a.size_bytes)})</span>
             </li>
           ))}

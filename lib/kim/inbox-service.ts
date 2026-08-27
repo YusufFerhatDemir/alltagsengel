@@ -1,7 +1,7 @@
 import type { IKimProvider } from './provider-interface'
 import type { KimClient, KimMessage } from './types'
 import { writeKimAuditLog } from './audit-service'
-import { uploadKimAttachment } from './attachment-service'
+import { uploadKimAttachment, pruefeKimAnhang } from './attachment-service'
 import { mitSimulationsMarker, pruefeVersandModus, simulationsMarker } from './versandmodus'
 
 export interface FetchInboundSummary {
@@ -71,11 +71,32 @@ export async function fetchAndStoreInbound(
 
     const message = data as KimMessage
 
+    // Anhaenge einzeln und fehlertolerant: Inhalt und Typ bestimmt der
+    // absendende Fremdsystem. Ein einziger unzulaessiger Anhang riss vorher
+    // den gesamten Abruf mit — und weil die Nachricht beim naechsten Lauf
+    // erneut geholt wurde, blieb das Postfach dauerhaft stehen. Der Anhang
+    // wird stattdessen verworfen und im Audit-Log als solcher vermerkt.
     for (const attachment of item.attachments ?? []) {
+      const datei = { name: attachment.filename, type: attachment.mimeType, arrayBuffer: attachment.content }
+      try {
+        pruefeKimAnhang(datei)
+      } catch (err) {
+        await writeKimAuditLog(supabase, {
+          organizationId,
+          aktion: 'anhang_abgewiesen',
+          messageId: message.id,
+          details: {
+            filename: attachment.filename,
+            mime_type: attachment.mimeType,
+            grund: err instanceof Error ? err.message : 'unbekannt',
+          },
+        })
+        continue
+      }
       await uploadKimAttachment(supabase, {
         organizationId,
         messageId: message.id,
-        datei: { name: attachment.filename, type: attachment.mimeType, arrayBuffer: attachment.content },
+        datei,
       })
     }
 
