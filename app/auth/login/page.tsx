@@ -9,6 +9,7 @@ import { flushPendingProfile } from '@/lib/pending-profile'
 import { codeAbfrageNoetig, type MfaNiveau } from '@/lib/coach/mfa'
 import { logger } from '@/lib/logger'
 import { wirksameRolle } from '@/lib/auth/rollen'
+import { KONTO_GELOESCHT_CODE, KONTO_GELOESCHT_TEXT } from '@/lib/auth/konto-status'
 const log = logger.child('login')
 
 // ═══ Brute-Force Schutz: Konstanten ═══
@@ -21,6 +22,10 @@ function LoginForm() {
   const justRegistered = searchParams.get('registered') === 'true'
   const redirectTo = searchParams.get('redirectTo') || searchParams.get('next') || ''
   const authError = searchParams.get('error') === 'admin_required' || searchParams.get('error') === 'auth_required'
+  // Track 11: eigener Grund fuer ein zur Loeschung vorgemerktes Konto —
+  // sonst steht dort „Zugriff verweigert" und die Person sucht den Fehler
+  // bei sich, statt den Widerrufslink in ihrer E-Mail zu finden.
+  const kontoGeloescht = searchParams.get('error') === KONTO_GELOESCHT_CODE
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -412,6 +417,11 @@ function LoginForm() {
           </div>
         )}
 
+        {kontoGeloescht && (
+          <div style={{ background: 'rgba(208, 75, 59, 0.15)', border: '1px solid rgba(208, 75, 59, 0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 12, fontSize: 13, color: '#ef9a9a', textAlign: 'center' }}>
+            {KONTO_GELOESCHT_TEXT}
+          </div>
+        )}
         {authError && (
           <div style={{ background: 'rgba(208, 75, 59, 0.15)', border: '1px solid rgba(208, 75, 59, 0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 12, fontSize: 13, color: '#ef9a9a', textAlign: 'center' }}>
             Zugriff verweigert. Bitte melden Sie sich an.

@@ -106,14 +106,27 @@ export const DELETE = withTracking(async function DELETE(request: Request) {
     }
   }
 
-  const { error } = await auth.supabase
+  // WIRKUNGSNACHWEIS (Track 11): `.delete()` ohne `.select()` meldet auch
+  // dann keinen Fehler, wenn RLS ALLE Zeilen weggefiltert hat — PostgREST
+  // loescht dann null Zeilen und antwortet zufrieden. Genau so konnte die
+  // Route „geloescht: true" melden, ohne dass etwas geloescht war: eine
+  // falsche Auskunft ueber die Ausuebung eines Betroffenenrechts. Mit
+  // `.select('id')` kommt zurueck, was tatsaechlich entfernt wurde.
+  const { data: entfernt, error } = await auth.supabase
     .from('coach_users')
     .delete()
     .eq('id', auth.coachUser.id)
+    .select('id')
 
   if (error) {
     return NextResponse.json({ error: 'Die Daten konnten nicht gelöscht werden.' }, { status: 500 })
   }
+  if (!Array.isArray(entfernt) || entfernt.length === 0) {
+    return NextResponse.json(
+      { error: 'Die Daten konnten nicht gelöscht werden. Bitte wenden Sie sich an datenschutz@alltagsengel.care.' },
+      { status: 500 },
+    )
+  }
 
-  return NextResponse.json({ geloescht: true })
+  return NextResponse.json({ geloescht: true, entfernteDatensaetze: entfernt.length })
 })

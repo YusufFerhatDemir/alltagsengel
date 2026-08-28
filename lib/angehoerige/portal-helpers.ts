@@ -41,6 +41,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resolveUserOrgId } from '@/lib/organizations/server'
+import { istZurLoeschungVorgemerkt, KONTO_GELOESCHT_TEXT } from '@/lib/auth/konto-status'
 import { logger } from '@/lib/logger'
 import { protokolliereZugriff } from './angehoerige'
 import type { AngehoerigenZugang, FreigabeBereich, AuditAktion } from './types'
@@ -73,9 +74,17 @@ export async function requirePortalAccess(): Promise<PortalAuthResult> {
   // Rollenprüfung: Nur Angehoerige (+ Admins fuer Verwaltung) duerfen zugreifen
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, deleted_at')
     .eq('id', user.id)
     .single()
+
+  // Track 11: ein zur Loeschung vorgemerktes Konto behaelt seine Rolle in
+  // profiles und kaeme hier sonst weiter durch — mit Einsicht in
+  // Gesundheitsdaten Dritter. Diese Route liest nicht ueber
+  // holeRollenQuellen(), also steht die Pruefung hier ausdruecklich.
+  if (istZurLoeschungVorgemerkt(profile)) {
+    return { ok: false, response: NextResponse.json({ error: KONTO_GELOESCHT_TEXT }, { status: 403 }) }
+  }
 
   const erlaubteRollen = ['angehoerige', 'admin', 'superadmin']
   if (!profile || !erlaubteRollen.includes(profile.role)) {

@@ -48,6 +48,18 @@ import { serve } from 'https://deno.land/std@0.192.0/http/server.ts'
 const GRACE_DAYS = 60
 const BATCH_SIZE = 50
 
+/**
+ * Konstantzeit-Vergleich. Deno bringt kein node:crypto.timingSafeEqual
+ * mit, deshalb von Hand: gleiche Laenge pruefen, dann jedes Zeichen
+ * verodern statt beim ersten Unterschied abzubrechen.
+ */
+function gleich(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  let abweichung = 0
+  for (let i = 0; i < a.length; i++) abweichung |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  return abweichung === 0
+}
+
 interface Profile {
   id: string
   first_name: string | null
@@ -60,15 +72,67 @@ interface AuthUserEmail {
   email: string | null
 }
 
+// ════════════════════════════════════════════════════════════════════
+// TRACK 11 — DIESE FUNCTION IST STILLGELEGT.
+// ════════════════════════════════════════════════════════════════════
+//
+// Die endgueltige Loeschung laeuft seit Track 11 im Anwendungscode:
+//   lib/dsgvo/loeschkatalog.ts  — was geloescht wird und was bleibt
+//   lib/dsgvo/loeschung.ts      — der Ablauf
+//   app/api/cron/konto-loeschung — der Takt (vercel.json, 03:00)
+//
+// DREI GRUENDE, warum diese Function nicht einfach weiterlaufen darf:
+//
+//  1. SIE LOESCHT ZU VIEL. Der Block unten entfernt `bookings` — obwohl
+//     die Migration 20260804400000 fuer genau diese Tabelle das Gegenteil
+//     entschieden hat („Buchungsdaten — erhalten bleiben", ON DELETE SET
+//     NULL). Buchungen sind abrechnungsrelevante Belege (§ 147 AO).
+//  2. SIE LOESCHT ZU WENIG UND BEHAUPTET DAS GEGENTEIL. Die Kundenakte
+//     (`clients`), die Mitarbeiterakte (`caregivers`), Geraetetokens und
+//     die Zugaenge zum Angehoerigenportal standen in keiner Liste; die
+//     Bestaetigungsmail sagte trotzdem „alle damit verknuepften Daten".
+//  3. IHR TUERSTEHER WAR FAIL-OPEN. `if (cronSecret && …)` liess bei
+//     NICHT gesetztem CRON_SECRET jeden Aufruf durch. Und war es gesetzt,
+//     konnte der eingeplante pg_cron-Aufruf es nie treffen: der schickt
+//     den service_role_key als Bearer, verglichen wurde gegen CRON_SECRET.
+//     Offen oder tot — dazwischen lag nichts.
+//
+// Sie bleibt im Repo, weil eine moeglicherweise bereits ausgerollte
+// Function nicht dadurch verschwindet, dass man die Datei loescht. Sie
+// antwortet ab sofort mit 410, solange nicht ausdruecklich
+// HARD_DELETE_EDGE_AKTIV=1 gesetzt ist — und ihr Geheimnis-Check ist
+// fail-closed.
+// ════════════════════════════════════════════════════════════════════
+
 // @ts-expect-error — Deno global
 serve(async (req: Request) => {
+  if (Deno.env.get('HARD_DELETE_EDGE_AKTIV') !== '1') {
+    return new Response(
+      JSON.stringify({
+        error: 'stillgelegt',
+        hinweis: 'Die endgueltige Kontoloeschung laeuft ueber /api/cron/konto-loeschung (lib/dsgvo/loeschung.ts).',
+      }),
+      { status: 410, headers: { 'Content-Type': 'application/json' } },
+    )
+  }
+
+  // FAIL-CLOSED: ohne gesetztes Geheimnis wird nicht geloescht. Vorher
+  // stand hier `if (cronSecret && …)` — ohne Geheimnis kam jeder durch.
+  // `verify_jwt` ist kein Ersatz: es akzeptiert JEDES gueltige Projekt-JWT,
+  // also auch den oeffentlichen anon-Key.
   const cronSecret = Deno.env.get('CRON_SECRET')
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
   const authHeader = req.headers.get('authorization') || ''
   const providedSecret = authHeader.replace(/^Bearer\s+/i, '')
 
-  // Wenn CRON_SECRET gesetzt ist, muss der Aufruf passen.
-  // Supabase checkt JWT zusaetzlich via verify_jwt:true im deploy-config.
-  if (cronSecret && providedSecret !== cronSecret) {
+  if (!cronSecret) {
+    return new Response('Forbidden', { status: 403 })
+  }
+  // Der eingeplante Aufruf schickt den Dienstschluessel, ein manueller
+  // Aufruf das CRON_SECRET. Beide sind zulaessig; nichts sonst.
+  const zulaessig = gleich(providedSecret, cronSecret)
+    || (typeof serviceKey === 'string' && serviceKey.length > 0 && gleich(providedSecret, serviceKey))
+  if (!zulaessig) {
     return new Response('Forbidden', { status: 403 })
   }
 

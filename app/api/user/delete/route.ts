@@ -6,6 +6,7 @@ import { createClient as createRawClient } from '@supabase/supabase-js'
 import { supabasePublishableKey, supabaseUrl } from '@/lib/supabase/keys'
 import { randomBytes } from 'node:crypto'
 import { logAuditEvent } from '@/lib/audit-log'
+import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { sendAccountDeletionEmail } from '@/lib/emails/account-deletion'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
@@ -22,7 +23,11 @@ const log = logger.child('api:user')
  *   3. Re-Auth mit frischem Client (persistSession:false), damit die
  *      laufende Session nicht ueberschrieben wird.
  *   4. Snapshot: Profil-Daten fuers Audit + Mail.
- *   5. profiles.deleted_at = now()  →  RLS blendet den User ueberall aus.
+ *   5. profiles.deleted_at = now()  →  der Zugang ist gesperrt. Seit
+ *      Track 11 pruefen proxy.ts, lib/auth/rollen-quelle.ts,
+ *      lib/auth/guard.ts und das Angehoerigenportal diese Spalte; vorher
+ *      wirkte nur der signOut() darunter, und eine erneute Anmeldung
+ *      stellte den vollen Zugriff wieder her.
  *   6. Token generieren (64 Hex), expires_at = now() + 60 Tage, in
  *      account_deletion_tokens einfuegen.
  *   7. Widerruf-Mail an die User-Mail schicken (enthaelt /api/user/delete/undo
@@ -30,8 +35,11 @@ const log = logger.child('api:user')
  *   8. Audit-Event 'user_self_soft_delete' loggen.
  *   9. signOut() → Client hat keine Session mehr, Kunde landet auf /login.
  *
- * Die eigentliche Cascade-Loeschung (Auth-User + Kind-Tabellen) uebernimmt
- * eine Supabase-Edge-Function, die via pg_cron nach 60 Tagen laeuft.
+ * Die eigentliche Loeschung (Auth-User + Kind-Tabellen) uebernimmt seit
+ * Track 11 der Cron-Lauf /api/cron/konto-loeschung nach dem Loeschkatalog
+ * in lib/dsgvo/loeschkatalog.ts. Die frueher zustaendige Edge Function
+ * account-hard-delete ist stillgelegt: ihr pg_cron-Aufruf lief gegen eine
+ * NULL-URL und ist nie ausgefuehrt worden.
  *
  * Die Route ist damit:
  *   - idempotent-robust: wenn deleted_at schon gesetzt ist, regenerieren wir
@@ -82,6 +90,20 @@ export const DELETE = withTracking(async function DELETE(request: NextRequest) {
       log.error('user/delete: Supabase-Env-Vars fehlen')
       return NextResponse.json({ error: 'Konfigurationsfehler' }, { status: 500 })
     }
+    // RATENBEGRENZUNG (Track 11): der Block darunter probiert ein Passwort
+    // gegen GoTrue. Die Anmeldeseite hat dafuer eine Sperre nach fuenf
+    // Fehlversuchen und schreibt jeden davon nach mis_auth_log — diese
+    // Route hatte beides nicht. Wer eine Sitzung uebernommen hat (fremdes
+    // Geraet, gestohlenes Cookie), konnte hier unbegrenzt und unprotokolliert
+    // Passwoerter durchprobieren. Zehn Versuche je Stunde und Konto decken
+    // jeden echten Loeschwunsch ab.
+    if (!(await rateLimitPersistent(`user-delete:${user.id}`, 10, 3_600_000))) {
+      return NextResponse.json(
+        { error: 'Zu viele Versuche. Bitte versuchen Sie es in einer Stunde erneut.' },
+        { status: 429 },
+      )
+    }
+
     const verifier = createRawClient(projektUrl, oeffentlicherKey, {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     })
@@ -94,6 +116,27 @@ export const DELETE = withTracking(async function DELETE(request: NextRequest) {
         code: signInError?.code,
         name: signInError?.name,
       })
+      // Der Fehlversuch gehoert ins Protokoll — sonst ist genau der Weg
+      // unsichtbar, auf dem jemand mit fremder Sitzung Passwoerter probiert.
+      //
+      // Geschrieben wird nach mis_auth_log mit 'login_failed', also in
+      // dieselbe Spur, die die Anmeldeseite fuehrt (app/auth/login/actions.ts).
+      // NICHT nach mis_audit_log: dessen action-Spalte traegt live einen
+      // CHECK ueber eine feste Werteliste, ein neuer Wert wuerde den Insert
+      // scheitern lassen — der Fehlversuch waere dann wieder unsichtbar.
+      try {
+        await createAdminClient().from('mis_auth_log').insert({
+          user_id: user.id,
+          user_email: user.email,
+          user_name: null,
+          action: 'login_failed',
+          ip_address: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null,
+          device: 'api:user/delete',
+          status: 'failed',
+        })
+      } catch {
+        /* Protokollfehler darf die Abweisung nicht kippen */
+      }
       return NextResponse.json({ error: 'Passwort ist falsch.' }, { status: 401 })
     }
 
