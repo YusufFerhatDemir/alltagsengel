@@ -81,57 +81,70 @@ test.describe('Booking-Entry-Points (Smoke)', () => {
     // bewiesen. Die Antwort wird deshalb abgefangen und durch die ECHTE
     // Absage von GoTrue ersetzt. Damit laeuft der Test durch den Zweig,
     // um den es geht, ist unabhaengig von jedem Backend und schnell.
-    // CORS MUSS MIT. Der Aufruf geht an eine FREMDE Herkunft
-    // (die Supabase-URL), und sein Content-Type ist application/json —
-    // damit ist er nach der Fetch-Spezifikation kein einfacher Aufruf,
-    // sondern loest einen OPTIONS-Preflight aus.
+    // ── Warum hier `fetch` ersetzt wird und nicht `page.route` ──────
+    // Erster Versuch war `page.route` auf die Supabase-URL. In chromium
+    // lief das (1,6 s, gruen), auf mobile-safari NICHT — und die Diagnose
+    // unten hat gezeigt, woran: `tokenAufrufe: []`, in der Konsole
+    // „Error resolving ci-placeholder.supabase.co" und „TypeError: Load
+    // failed", der Knopf stand auf „Anmelden…".
     //
-    // Genau daran ist der erste Lauf gescheitert, und zwar NUR auf
-    // mobile-safari: chromium liess die abgefangene Antwort auch ohne
-    // CORS-Kopfzeilen durch, WebKit hat den Preflight abgelehnt. Die
-    // Anmeldung landete dann im Netzwerk-Zweig statt im geprueften — der
-    // Unterschied zwischen „gruen in einem Browser" und „richtig".
+    // Der Aufruf geht an eine FREMDE Herkunft und traegt Content-Type
+    // application/json — damit ist er kein einfacher Aufruf und WebKit
+    // schickt zuerst einen OPTIONS-Preflight. Dieser Preflight lief an
+    // der Routing-Schicht vorbei ins echte Netz, scheiterte an der
+    // Namensaufloesung, und supabase-js versuchte es danach still weiter.
+    // Der Preflight einzeln beantwortet (davor probiert) half nicht: was
+    // nie durch die Abfangregel kommt, laesst sich darin auch nicht
+    // beantworten.
     //
-    // Deshalb: der Preflight wird eigens beantwortet, und die eigentliche
-    // Antwort traegt dieselben Kopfzeilen.
-    const cors = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': '*',
-    }
+    // `fetch` im Fenster zu ersetzen umgeht die ganze Schicht: kein
+    // Preflight, keine Herkunftspruefung, kein Netz — und dieselbe
+    // Antwort in jeder Maschine. Der geprueffte Code ist unveraendert der
+    // echte; ersetzt ist nur, was Supabase geantwortet haette.
+    await page.addInitScript(() => {
+      const echtesFetch = window.fetch.bind(window)
+      const antwort = (koerper: unknown, status: number) =>
+        new Response(JSON.stringify(koerper), {
+          status,
+          headers: { 'Content-Type': 'application/json' },
+        })
 
-    await page.route('**/auth/v1/token**', route => {
-      if (route.request().method() === 'OPTIONS') {
-        return route.fulfill({ status: 204, headers: cors })
-      }
-      return route.fulfill({
-        status: 400,
-        headers: { ...cors, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          error: 'invalid_grant',
-          error_description: 'Invalid login credentials',
-          msg: 'Invalid login credentials',
-        }),
-      })
+      window.fetch = ((eingabe: RequestInfo | URL, init?: RequestInit) => {
+        const url =
+          typeof eingabe === 'string' ? eingabe
+          : eingabe instanceof URL ? eingabe.href
+          : eingabe.url
+
+        // Die Absage, um die es geht — wortgleich wie GoTrue sie schickt.
+        if (url.includes('/auth/v1/token')) {
+          return Promise.resolve(antwort({
+            error: 'invalid_grant',
+            error_description: 'Invalid login credentials',
+            msg: 'Invalid login credentials',
+          }, 400))
+        }
+
+        // Der Ratenzaehler spricht seinerseits Supabase an. Ohne diese
+        // Antwort wartet der Test auf ihn statt auf die Anmeldung — und
+        // ein „locked" von dort waere einer der beiden stillen Rueckwege
+        // der Maske, bei denen gar keine Meldung erscheint.
+        if (url.includes('/api/auth/check-rate-limit')) {
+          return Promise.resolve(antwort({ allowed: true, locked: false }, 200))
+        }
+
+        return echtesFetch(eingabe as RequestInfo, init)
+      }) as typeof window.fetch
     })
-
-    // Der Ratenzaehler laeuft ueber eine eigene Route, die ihrerseits
-    // Supabase anspricht. Ohne dieses Abfangen wartet der Test auf sie
-    // statt auf die Anmeldung. Gleiche Herkunft, also ohne Preflight —
-    // die Kopfzeilen schaden aber nicht und halten beide Faelle gleich.
-    await page.route('**/api/auth/check-rate-limit', route =>
-      route.fulfill({
-        status: 200,
-        headers: { ...cors, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ allowed: true, locked: false }),
-      }),
-    )
 
     // Beobachter fuer die Diagnose weiter unten.
     const konsole: string[] = []
     const seitenfehler: string[] = []
     const tokenAufrufe: Array<{ methode: string; status: number | string }> = []
     const ratenAufrufe: string[] = []
+    // Hinweis zur Lesart: seit `fetch` im Fenster ersetzt ist, laeuft der
+    // Anmeldeaufruf gar nicht mehr ueber die Netzschicht — `tokenAufrufe`
+    // bleibt im Normalfall LEER. Ein Eintrag darin hiesse, dass die
+    // Ersetzung nicht griff und ein echter Aufruf rausging.
     page.on('console', m => {
       if (m.type() === 'error' || m.type() === 'warning') konsole.push(`${m.type()}: ${m.text()}`)
     })
