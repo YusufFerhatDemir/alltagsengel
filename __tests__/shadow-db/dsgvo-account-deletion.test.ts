@@ -106,6 +106,7 @@ describe.skipIf(!hasShadowDb)('Dynamisch: DSGVO-Kontolöschung gegen echte Shado
     // Definierter Ausgangszustand
     await service.from('profiles').update({ deleted_at: null }).eq('id', KUNDE_A_ID)
     await service.from('account_deletion_tokens').delete().eq('user_id', KUNDE_A_ID)
+    await ratelimitZuruecksetzen()
   })
 
   afterAll(async () => {
@@ -114,7 +115,34 @@ describe.skipIf(!hasShadowDb)('Dynamisch: DSGVO-Kontolöschung gegen echte Shado
     if (!service) return
     await service.from('profiles').update({ deleted_at: null }).eq('id', KUNDE_A_ID)
     await service.from('account_deletion_tokens').delete().eq('user_id', KUNDE_A_ID)
+    await ratelimitZuruecksetzen()
   })
+
+  /**
+   * Den Ratelimit-Zaehler dieses Nutzers zuruecksetzen.
+   *
+   * BEFUND, der diese Zeilen noetig macht: `DELETE /api/user/delete` laeuft
+   * durch `rateLimitPersistent('user-delete:<id>', 10, 3_600_000)` — der
+   * Zaehler steht in `public.api_rate_limits` und damit IN DER DATENBANK.
+   * Die Shadow-DB ueberlebt den Testlauf; der Zaehler also auch.
+   *
+   * Die Suite setzt pro Lauf mehrere DELETE-Aufrufe ab. Nach ein paar
+   * Laeufen innerhalb derselben Stunde war das Stundenkontingent
+   * aufgebraucht, und ab da antwortete die Route mit 429 — Fall 4 und
+   * alles danach fiel um, obwohl an der Loeschkette nichts kaputt war.
+   * Genau das ist in CI passiert (jeder Lauf seit dem 28.08. rot, immer
+   * dieselben sechs Faelle, immer „expected 429 to be 200").
+   *
+   * Der bisherige „definierte Ausgangszustand" umfasste `profiles` und
+   * `account_deletion_tokens`, aber nicht den Zaehler — er war also
+   * definiert fuer alles ausser der einen Zeile, die den Lauf kippte.
+   */
+  async function ratelimitZuruecksetzen() {
+    // Fehler werden bewusst geschluckt: laeuft die Suite gegen eine
+    // Shadow-DB ohne Migration 20260922030000, gibt es die Tabelle nicht —
+    // dann greift auch der Limiter nicht und es ist nichts zurueckzusetzen.
+    await service.from('api_rate_limits').delete().eq('key', `user-delete:${KUNDE_A_ID}`)
+  }
 
   async function profileRow() {
     const { data, error } = await service
