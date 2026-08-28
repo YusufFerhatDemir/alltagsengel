@@ -298,7 +298,14 @@ Die beiden Migrationen dieses Tracks wurden zunächst nach der **bisherigen** Ko
 
 **Die vorhergesagte Folge ist eingetreten und ist nicht behoben:** `20260828180000` sortiert **vor** dem `20261017`-Block mit seinen Zukunfts-Nummern. „Die fünf jüngsten Dateien in `supabase/migrations`" — die Definition, mit der `JUENGSTE_MIGRATIONEN` und sein Test arbeiten — sind damit **nicht mehr die zuletzt entstandenen**. Die Konstante steht deshalb wieder auf dem `20261017`-Block, und die beiden neuesten Migrationen des Repos tauchen im Pilot-Schnappschuss **nicht** auf. Solange zwei Nummernkreise nebeneinanderliegen, ist das unvermeidbar; es steht als Kommentar an der Konstante, damit es nicht für ein Versehen gehalten wird. Die saubere Auflösung wäre eine Umbenennung **aller** Zukunfts-Nummern in einem Zug — eine Entscheidung für das ganze Repo, die nicht nebenbei in einen Sicherheits-Track gehört.
 
-**R7 — Dieser Track wurde von einer fremden Sitzung mitcommittet.** Commit `42f328d5` („MASTER_HANDOFF_LATEST.pdf + CM22/efy15 PROVEN_LIVE", 17:28) enthält sämtliche Dateien dieses Tracks — Routen, Module, Tests, Migrationen, Bericht — obwohl seine Nachricht von etwas anderem handelt. Ursache ist das `git add -A` in `deploy.sh`, das die zu diesem Zeitpunkt noch in Arbeit befindlichen Dateien eingesammelt hat. Der Inhalt ist unversehrt und vollständig; **die Zuordnung von Commit-Nachricht zu Inhalt stimmt für Track 13 aber nicht.** Wer die Historie nach diesem Track durchsucht, findet ihn nicht unter seiner eigenen Nachricht. Nicht rückabgewickelt, weil ein Reset auf `main` die Arbeit der anderen Sitzung träfe.
+**R7 — Dieser Track wurde von fremden Sitzungen mitcommittet, zweimal.** Die Arbeit dieses Tracks liegt vollständig und unversehrt in `main` — aber verteilt auf zwei Commits, deren Nachrichten von etwas anderem handeln:
+
+* `42f328d5` „MASTER_HANDOFF_LATEST.pdf + CM22/efy15 PROVEN_LIVE" (17:28) — Routen, Module, Tests, Migrationen, Bericht
+* `09e42a13` „AE13: Future-TS-Fix 20261018→20260828180000 + Ledger-Update" (19:04) — die Umbenennung und die letzten Berichtskorrekturen
+
+Ursache ist beide Male das `git add -A` in `deploy.sh`, das die zu diesem Zeitpunkt noch in Arbeit befindlichen Dateien einer anderen Sitzung eingesammelt hat. **Die Zuordnung von Commit-Nachricht zu Inhalt stimmt für Track 13 damit nicht** — wer die Historie nach diesem Track durchsucht, findet ihn nicht unter einer Nachricht, die ihn beschreibt. Nicht rückabgewickelt, weil ein Reset die Arbeit der anderen Sitzungen träfe.
+
+**Das Gegenmittel liegt bereits im Repo und wurde nicht benutzt:** `deploy.sh` kennt `DEPLOY_PATHS` für scoped staging, mit dem Kommentar *„Schützt parallele Sessions davor, sich gegenseitig halbfertige Arbeit in den Commit zu ziehen"*. Wer bei laufenden Parallel-Sitzungen `git add -A` fährt, hat diese Schranke zur Verfügung und nutzt sie nicht. Für künftige Tracks gilt: bei mehr als einer aktiven Sitzung `DEPLOY_PATHS` setzen.
 
 ---
 
