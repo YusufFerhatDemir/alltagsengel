@@ -45,10 +45,20 @@ export function extrahiereFunktion(sql: string, name: string): string {
   const tagEnde = sql.indexOf('$', asIdx + 4)
   const tag = sql.slice(asIdx + 3, tagEnde + 1)   // z. B. "$fn$" oder "$$"
 
-  const ende = sql.indexOf(`${tag};`, tagEnde + 1)
-  if (ende === -1) throw new Error(`Funktionsende ${tag}; fuer ${name} nicht gefunden`)
+  // Schliessendes Dollar-Quote suchen — und danach das Semikolon.
+  //
+  // Die beiden Schreibweisen im Repo unterscheiden sich genau hier:
+  //   … $$;                       (neuere Migrationen, Sprache steht oben)
+  //   … $$ LANGUAGE plpgsql;      (Personalmanagement-Migration)
+  // Wer nur nach `$$;` sucht, findet in der zweiten Form das Ende einer
+  // ganz anderen, viel spaeteren Funktion und schneidet stillschweigend
+  // einen zu grossen Block heraus. Deshalb: Tag suchen, dann Semikolon.
+  const schluss = sql.indexOf(tag, tagEnde + 1)
+  if (schluss === -1) throw new Error(`Funktionsende ${tag} fuer ${name} nicht gefunden`)
+  const semikolon = sql.indexOf(';', schluss + tag.length)
+  if (semikolon === -1) throw new Error(`Kein Semikolon nach dem Funktionsende von ${name}`)
 
-  return sql.slice(start, ende + tag.length + 1)
+  return sql.slice(start, semikolon + 1)
 }
 
 /** Wie extrahiereFunktion, aber direkt aus einer Migrationsdatei. */

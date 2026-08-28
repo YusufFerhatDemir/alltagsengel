@@ -811,3 +811,155 @@ export async function baueNachweisManipulationsschutz(db: PGlite): Promise<void>
       EXECUTE FUNCTION public.prevent_locked_record_change();
   `)
 }
+
+// ─────────────────────────────────────────────────────────────────────
+// Personalmanagement: Dienstplan, Zeiterfassung, ArbZG-Protokoll
+// ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Baut die Personal-Strecke auf: Abwesenheiten, Dienstplan, Zeiterfassung,
+ * das unveraenderliche Korrekturprotokoll und die ArbZG-Verstossliste.
+ *
+ * Alles Tragende kommt WORTGLEICH aus den Migrationen — Tabellen samt
+ * ihren CHECK-Constraints und UNIQUE-Bedingungen, die vier
+ * Trigger-Funktionen und die Auswertungssicht. Das ist hier kein
+ * Selbstzweck: die drei Aussagen, um die es in diesem Modul geht, sind
+ * allesamt Aussagen ueber die DATENBANK —
+ *
+ *   • `personal_arbeitszeiten_unique` (eine Zeit je Kraft/Tag/Startzeit)
+ *   • `ueberstunden_minuten` GENERATED ALWAYS (ist − soll, sonst 0)
+ *   • `log_arbeitszeit_korrektur` (Sperre + Korrekturprotokoll + Status)
+ *
+ * — und ein handgeschriebenes Testschema haette jede davon bestaetigt,
+ * egal was drinsteht (siehe testschema-lockerer-als-produktion).
+ *
+ * NACHZUG, mit Quelle je Zeile:
+ *   • `absences.organization_id` — die Baseline-Tabelle kennt sie nicht;
+ *     live haengt sie am Phase-3-DO-Block, der in baueKettenSchema() aber
+ *     VOR dieser Tabelle laeuft. `check_doppelbelegung` liest die Spalte,
+ *     ohne sie scheiterte der Trigger mit 42703 statt zu pruefen.
+ *   • `set_updated_at()` aus 20250101000050 — Voraussetzung der
+ *     updated_at-Trigger, die die Migration mitbringt.
+ *
+ * NICHT enthalten: die RLS-Policies der Personal-Tabellen. Die
+ * Zeiterfassung faehrt live ueber `createAdminClient()` (BYPASSRLS); was
+ * hier geprueft wird, ist der Fence IM ANWENDUNGSCODE
+ * (`assertCaregiverInOrg`) und die DB-Riegel — nicht RLS.
+ *
+ * Setzt baueKettenSchema() voraus (caregivers, clients, assignments,
+ * service_records, organizations).
+ */
+export async function bauePersonalTabellen(db: PGlite): Promise<void> {
+  const M_PERSONAL = '20260811010000_personalmanagement.sql'
+  const M_ARBZG    = '20260920060000_arbeitszeit_verstoesse.sql'
+  const M_FUNKTIONEN = '20250101000050_missing_production_functions.sql'
+
+  await db.exec(funktionAusMigration(M_FUNKTIONEN, 'set_updated_at'))
+
+  // ── Abwesenheiten ─────────────────────────────────────────────────
+  await db.exec(tabelleAusMigration(M_LIVE, 'absences'))
+  await db.exec(`
+    -- TEIL 3 der Personalmanagement-Migration, wortgleich.
+    ALTER TABLE absences
+      ADD COLUMN IF NOT EXISTS status text DEFAULT 'beantragt',
+      ADD COLUMN IF NOT EXISTS halber_tag boolean DEFAULT false,
+      ADD COLUMN IF NOT EXISTS tage_berechnet numeric(5,1),
+      ADD COLUMN IF NOT EXISTS genehmigt_von uuid,
+      ADD COLUMN IF NOT EXISTS genehmigt_am timestamptz,
+      ADD COLUMN IF NOT EXISTS ablehnungsgrund text,
+      ADD COLUMN IF NOT EXISTS dokument_id uuid,
+      ADD COLUMN IF NOT EXISTS erstellt_von uuid,
+      ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
+
+    ALTER TABLE absences ADD CONSTRAINT absences_status_check
+      CHECK (status IS NULL OR status IN ('beantragt','genehmigt','abgelehnt','storniert'));
+    ALTER TABLE absences DROP CONSTRAINT IF EXISTS absences_absence_type_check;
+    ALTER TABLE absences ADD CONSTRAINT absences_absence_type_check
+      CHECK (absence_type IN ('sick','vacation','personal','other',
+        'fortbildung','mutterschutz','elternzeit','sonderurlaub','unbezahlt'));
+
+    -- NACHZUG (Phase-3-Fence, siehe Kopfkommentar).
+    ALTER TABLE absences
+      ADD COLUMN IF NOT EXISTS organization_id uuid REFERENCES public.organizations(id);
+    ALTER TABLE absences ALTER COLUMN organization_id SET DEFAULT public.current_org_id();
+  `)
+
+  // ── Dienstplan ────────────────────────────────────────────────────
+  await db.exec(tabelleAusMigration(M_PERSONAL, 'dienstplan_schichten'))
+  await db.exec(tabelleAusMigration(M_PERSONAL, 'dienstplan_eintraege'))
+
+  // ── Zeiterfassung + Protokolle ────────────────────────────────────
+  await db.exec(tabelleAusMigration(M_PERSONAL, 'personal_arbeitszeiten'))
+  await db.exec(tabelleAusMigration(M_PERSONAL, 'personal_zeitkorrekturen'))
+  await db.exec(tabelleAusMigration(M_PERSONAL, 'personal_audit_log'))
+  await db.exec(tabelleAusMigration(M_ARBZG, 'arbeitszeit_verstoesse'))
+
+  // ── Trigger-Funktionen, wortgleich ────────────────────────────────
+  await db.exec(funktionAusMigration(M_PERSONAL, 'check_doppelbelegung'))
+  await db.exec(funktionAusMigration(M_PERSONAL, 'log_arbeitszeit_korrektur'))
+  await db.exec(funktionAusMigration(M_PERSONAL, 'prevent_zeitkorrektur_edit'))
+  await db.exec(funktionAusMigration(M_ARBZG, 'arbzg_pruefung'))
+
+  await db.exec(`
+    CREATE TRIGGER trg_check_doppelbelegung
+      BEFORE INSERT OR UPDATE ON dienstplan_eintraege
+      FOR EACH ROW EXECUTE FUNCTION check_doppelbelegung();
+
+    CREATE TRIGGER trg_arbzg_pruefung
+      AFTER INSERT OR UPDATE ON dienstplan_eintraege
+      FOR EACH ROW EXECUTE FUNCTION arbzg_pruefung();
+
+    CREATE TRIGGER trg_log_arbeitszeit_korrektur
+      BEFORE UPDATE ON personal_arbeitszeiten
+      FOR EACH ROW EXECUTE FUNCTION log_arbeitszeit_korrektur();
+
+    CREATE TRIGGER trg_updated_at_personal_arbeitszeiten BEFORE UPDATE ON personal_arbeitszeiten
+      FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+    CREATE TRIGGER trg_immutable_zeitkorrektur_update BEFORE UPDATE ON personal_zeitkorrekturen
+      FOR EACH ROW EXECUTE FUNCTION prevent_zeitkorrektur_edit();
+    CREATE TRIGGER trg_immutable_zeitkorrektur_delete BEFORE DELETE ON personal_zeitkorrekturen
+      FOR EACH ROW EXECUTE FUNCTION prevent_zeitkorrektur_edit();
+  `)
+
+  // ── Auswertungssicht, wortgleich aus TEIL 13 ──────────────────────
+  // Sie joint caregivers OHNE Mandantenbedingung — genau der Grund,
+  // warum assertCaregiverInOrg vor dem Schreiben stehen muss.
+  await db.exec(`
+    CREATE OR REPLACE VIEW personal_arbeitszeitkonto AS
+    SELECT
+      az.organization_id,
+      az.caregiver_id,
+      cg.first_name || ' ' || cg.last_name AS caregiver_name,
+      EXTRACT(YEAR FROM az.datum)::int AS jahr,
+      EXTRACT(MONTH FROM az.datum)::int AS monat,
+      COUNT(*) AS anzahl_eintraege,
+      SUM(az.ist_minuten) AS ist_minuten_gesamt,
+      SUM(COALESCE(az.soll_minuten, 0)) AS soll_minuten_gesamt,
+      SUM(CASE WHEN az.soll_minuten IS NOT NULL THEN az.ist_minuten - az.soll_minuten ELSE 0 END) AS ueberstunden_gesamt,
+      SUM(az.pause_minuten) AS pausen_gesamt,
+      COUNT(*) FILTER (WHERE az.status = 'korrigiert') AS korrigierte_eintraege
+    FROM personal_arbeitszeiten az
+    JOIN caregivers cg ON cg.id = az.caregiver_id
+    GROUP BY az.organization_id, az.caregiver_id, cg.first_name, cg.last_name,
+      EXTRACT(YEAR FROM az.datum), EXTRACT(MONTH FROM az.datum);
+  `)
+}
+
+/**
+ * Wendet Migration 20261018000000 auf ein bereits gebautes Personal-Schema
+ * an — die Fassung, die den Akteur der Zeitkorrektur nachzieht und die
+ * Sperre zur echten Schranke macht.
+ *
+ * Bewusst NICHT Teil von bauePersonalTabellen(): die Migration ist
+ * eingecheckt und (Stand 29.08.2026) NICHT angewendet. Wer sie in den
+ * Grundaufbau zoege, wuerde jede Suite gegen eine Datenbank fahren lassen,
+ * die es so noch nicht gibt — und der Befund, den sie behebt, waere in
+ * keinem Lauf mehr sichtbar. Die Kettensuite prueft deshalb BEIDE
+ * Schemafassungen.
+ *
+ * Setzt bauePersonalTabellen() voraus.
+ */
+export async function wendeArbeitszeitAkteurMigrationAn(db: PGlite): Promise<void> {
+  await db.exec(transaktionsInhalt('20261018000000_arbeitszeit_korrektur_akteur.sql'))
+}

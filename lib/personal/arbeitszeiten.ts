@@ -8,7 +8,33 @@ import {
 } from './types'
 import { assertCaregiverInOrg } from './organization-guard'
 
-export interface CreateArbeitszeitParams {
+/**
+ * Wer handelt gerade? Die Zeiterfassung faehrt durchgehend mit
+ * `createAdminClient()` (Dienstschluessel) — `auth.uid()` ist dort live
+ * NULL, die JWT-Claims tragen nur `{"role":"service_role"}` und kein `sub`
+ * (am 29.08.2026 gegen Produktion gemessen).
+ *
+ * Der DB-Trigger `log_arbeitszeit_korrektur` schreibt aber `auth.uid()` in
+ * `personal_zeitkorrekturen.korrigiert_von`, und die Spalte ist NOT NULL.
+ * Folge: JEDE Zeitkorrektur scheiterte mit 23502 und einer rohen
+ * Datenbankmeldung. Aufgefallen ist das erst im Lauf gegen echtes Postgres
+ * (__tests__/e2e/zeiterfassung-kette-pglite.test.ts); live nicht, weil
+ * `personal_arbeitszeiten` 0 Zeilen traegt — niemand hat je korrigiert.
+ *
+ * Migration 20261018000000 zieht deshalb `geaendert_von` nach und laesst
+ * den Trigger `COALESCE(auth.uid(), NEW.geaendert_von)` nehmen. Solange sie
+ * nicht angewendet ist, kennt die Datenbank die Spalte nicht — ein 42703
+ * ("column does not exist") fuehrt deshalb zu einem zweiten Versuch ohne
+ * sie (siehe `mitAkteur`). Die Kette laeuft damit in beiden
+ * Schemafassungen; ohne die Migration meldet sie die fehlende
+ * Urheberschaft lesbar, statt die rohe Datenbankmeldung durchzureichen.
+ */
+export interface AkteurParams {
+  /** Handelnder Benutzer (Routen: `admin.ctx.userId` bzw. `user.userId`). */
+  benutzerId?: string | null
+}
+
+export interface CreateArbeitszeitParams extends AkteurParams {
   organizationId: string
   caregiverId: string
   datum: string
@@ -33,26 +59,61 @@ export async function createArbeitszeit(supabase: SupabaseClient, params: Create
   // eigene Arbeitszeitkonto geholt.
   await assertCaregiverInOrg(supabase, params.caregiverId, params.organizationId)
 
-  const { data, error } = await supabase
-    .from('personal_arbeitszeiten')
-    .insert({
-      organization_id: params.organizationId,
-      caregiver_id: params.caregiverId,
-      datum: params.datum,
-      start_zeit: params.startZeit,
-      end_zeit: params.endZeit,
-      pause_minuten: params.pauseMinuten ?? 0,
-      ist_minuten: params.istMinuten,
-      soll_minuten: params.sollMinuten ?? null,
-      dienstplan_eintrag_id: params.dienstplanEintragId ?? null,
-      service_record_id: params.serviceRecordId ?? null,
-      quelle: params.quelle ?? 'manuell',
-      bemerkung: params.bemerkung ?? null,
-    })
-    .select('*')
-    .single()
+  const zeile: Record<string, unknown> = {
+    organization_id: params.organizationId,
+    caregiver_id: params.caregiverId,
+    datum: params.datum,
+    start_zeit: params.startZeit,
+    end_zeit: params.endZeit,
+    pause_minuten: params.pauseMinuten ?? 0,
+    ist_minuten: params.istMinuten,
+    soll_minuten: params.sollMinuten ?? null,
+    dienstplan_eintrag_id: params.dienstplanEintragId ?? null,
+    service_record_id: params.serviceRecordId ?? null,
+    quelle: params.quelle ?? 'manuell',
+    bemerkung: params.bemerkung ?? null,
+  }
+
+  const { data, error } = await mitAkteur(
+    zeile,
+    params.benutzerId,
+    werte => supabase.from('personal_arbeitszeiten').insert(werte).select('*').single(),
+  )
   if (error || !data) throw new Error(`Arbeitszeit konnte nicht angelegt werden: ${error?.message ?? 'unbekannt'}`)
   return data as PersonalArbeitszeit
+}
+
+/** Fehlercode einer PostgREST-Antwort, soweit vorhanden. */
+function fehlerCode(error: unknown): string | undefined {
+  return (error as { code?: string } | null)?.code
+}
+
+/**
+ * Fuehrt den Schreibvorgang mit `geaendert_von` aus — und ohne, falls die
+ * Datenbank die Spalte noch nicht kennt (Migration 20261018000000 nicht
+ * angewendet). Siehe Kopfkommentar bei `AkteurParams`.
+ *
+ * Ohne diese Nachsicht waere die Wahl: entweder die Spalte nie schreiben
+ * (dann bleibt die Korrektur kaputt, sobald die Migration da ist nicht
+ * besser) oder sie immer schreiben (dann faellt HEUTE jede Erfassung mit
+ * 42703 aus — genau das Muster aus dem Projekt-Gedaechtnis „Schema-Drift
+ * 42703": eine unbekannte Spalte killt die Abfrage still).
+ */
+async function mitAkteur<T>(
+  zeile: Record<string, unknown>,
+  benutzerId: string | null | undefined,
+  schreibe: (werte: Record<string, unknown>) => PromiseLike<{ data: T | null; error: { message: string; code?: string } | null }>,
+): Promise<{ data: T | null; error: { message: string; code?: string } | null }> {
+  // Die Spalte wird IMMER mitgeschrieben, auch als `null`. Sonst traegt eine
+  // Zeile beim naechsten UPDATE noch den Urheber des VORIGEN Schreibvorgangs
+  // — der Trigger liest NEW.geaendert_von, und NEW uebernimmt unveraenderte
+  // Spalten aus OLD. Eine Korrektur wuerde damit dem falschen Menschen
+  // zugeschrieben, und die Fail-Closed-Pruefung des Triggers liefe leer.
+  const ersterVersuch = await schreibe({ ...zeile, geaendert_von: benutzerId ?? null })
+  if (fehlerCode(ersterVersuch.error) !== '42703') return ersterVersuch
+
+  // Migration 20261018000000 ist nicht angewendet — ohne die Spalte weiter.
+  return schreibe(zeile)
 }
 
 export interface ListArbeitszeitenFilter {
@@ -83,7 +144,7 @@ export async function listArbeitszeiten(supabase: SupabaseClient, filter: ListAr
   return (data ?? []) as PersonalArbeitszeit[]
 }
 
-export interface UpdateArbeitszeitParams {
+export interface UpdateArbeitszeitParams extends AkteurParams {
   startZeit?: string
   endZeit?: string
   pauseMinuten?: number
@@ -117,11 +178,17 @@ export async function updateArbeitszeit(
 
   // Sperr-Logik VOR dem Schreiben.
   //
-  // Der DB-Trigger log_arbeitszeit_korrektur blockt nur den Fall
+  // Der DB-Trigger log_arbeitszeit_korrektur blockt live nur den Fall
   // `OLD.gesperrt = true AND NEW.gesperrt = true`. Wer im selben UPDATE
   // `gesperrt: false` mitschickt, faellt aus dieser Bedingung heraus — die
   // Sperre liess sich also durch das Anhaengen eines einzigen Feldes
   // umgehen und der abgerechnete Zeitnachweis im selben Zug veraendern.
+  // Belegt in __tests__/e2e/zeiterfassung-kette-pglite.test.ts gegen echtes
+  // Postgres; Migration 20261018000000 zieht den Trigger nach (Sperre an der
+  // Absicht statt am Endzustand), ist aber noch nicht angewendet.
+  //
+  // Dieser Guard bleibt auch danach stehen: er liefert die lesbare 409,
+  // waehrend der Trigger eine Datenbankausnahme wirft.
   // Hier wird deshalb der Bestand gelesen und entschieden.
   const { data: bestand, error: ladeFehler } = await supabase
     .from('personal_arbeitszeiten')
@@ -161,16 +228,39 @@ export async function updateArbeitszeit(
 
   if (Object.keys(update).length === 0) throw new UserFacingError('Keine Änderungen übergeben.')
 
-  const { data, error } = await supabase
-    .from('personal_arbeitszeiten')
-    .update(update)
-    .eq('id', id)
-    .eq('organization_id', organizationId)
-    .select('*')
-    .single()
+  const { data, error } = await mitAkteur(
+    update,
+    patch.benutzerId,
+    werte => supabase
+      .from('personal_arbeitszeiten')
+      .update(werte)
+      .eq('id', id)
+      .eq('organization_id', organizationId)
+      .select('*')
+      .single(),
+  )
   if (error || !data) {
     const msg = error?.message ?? 'unbekannt'
     if (msg.includes('Gesperrte Arbeitszeit')) throw new UserFacingError('Gesperrte Arbeitszeit kann nicht bearbeitet werden.')
+
+    // Der Urheber fehlt. Zwei Auspraegungen, eine Ursache:
+    //   • 23502 auf korrigiert_von — Migration 20261018000000 ist NICHT
+    //     angewendet, der Trigger schreibt weiter blind auth.uid()
+    //   • die Klartext-Ausnahme derselben Migration, wenn sie ANGEWENDET
+    //     ist und die Anwendung trotzdem keinen Benutzer mitgibt
+    // Beides ist derselbe Fehler und darf nicht als rohe Datenbankmeldung
+    // nach aussen gehen — sie nennt Spalten- und Constraint-Namen.
+    const ohneUrheber =
+      msg.includes('Zeitkorrektur ohne Urheber') ||
+      (fehlerCode(error) === '23502' && msg.includes('korrigiert_von'))
+    if (ohneUrheber) {
+      throw new UserFacingError(
+        'Die Korrektur konnte nicht protokolliert werden, weil der bearbeitende Benutzer fehlt. '
+        + 'Bitte neu anmelden und erneut versuchen.',
+        409,
+      )
+    }
+
     throw new Error(`Arbeitszeit konnte nicht aktualisiert werden: ${msg}`)
   }
   return data as PersonalArbeitszeit

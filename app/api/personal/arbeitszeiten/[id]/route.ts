@@ -27,6 +27,18 @@ export const PATCH = withTracking(async function PATCH(
       .eq('organization_id', auth.ctx.organizationId)
       .maybeSingle()
 
+    // Der Akteur kommt aus dem Auth-Kontext und wird NACH dem Body gesetzt —
+    // ein mitgeschicktes `benutzerId` aus dem Request wird damit ueberschrieben.
+    // Ohne ihn kann der Trigger das Korrekturprotokoll nicht schreiben, weil
+    // der Dienstschluessel kein auth.uid() hat (siehe
+    // lib/personal/arbeitszeiten.ts, AkteurParams).
+    //
+    // Bewusst kein Objekt-Literal mit Body-Spread: die Organisation steht hier
+    // als eigenes Argument und ist aus dem Body ohnehin nicht erreichbar. Ein
+    // Spread wuerde nur die Pruefung aus
+    // __tests__/security/p0-personal-mandanten-isolation.test.ts ausloesen,
+    // die genau solche Literale sucht — ohne dass es hier etwas abzusichern gaebe.
+    body.benutzerId = auth.ctx.userId
     const data = await updateArbeitszeit(supabase, id, auth.ctx.organizationId, body)
 
     const aktion = body.gesperrt === true ? 'gesperrt'
