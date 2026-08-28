@@ -50,6 +50,12 @@
 -- der Code die Wirkung — beides, weil eins allein hier zu wenig ist.
 -- ═══════════════════════════════════════════════════════════════════════
 
+-- VORFLUG gegen die Produktion (29.08.2026): 4 Klienten in 1 Organisation mit
+-- 4 verschiedenen Nummern, 0 Kollisionen ueber Mandanten hinweg, und der
+-- Constraint-Name clients_kundennummer_pro_mandant ist frei. Der DO-Block
+-- unten prueft es beim Anwenden trotzdem noch einmal selbst — ein Vorflug
+-- von gestern ist kein Ersatz fuer die Pruefung im selben Lauf.
+
 BEGIN;
 
 -- Sicherung: bricht ab, falls es doch eine Kollision ueber Mandanten gibt.
