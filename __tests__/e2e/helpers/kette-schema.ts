@@ -46,6 +46,10 @@ const M_CAMT          = '20260825010000_zahlungseingang_opos.sql'
 const M_DATEV         = '20260812180000_datev_export.sql'
 const M_TARIF_AUDIT   = '20260831040000_tarif_verifizierung_audit.sql'
 const M_BELEGPFLICHT  = '20260904000000_tarif_belege_belegpflicht.sql'
+const M_NACHWEIS_HART = '20260814010000_leistungsnachweis_haertung.sql'
+const M_SEARCH_PATH   = '20260914010000_security_search_path_und_profiles.sql'
+const M_STATUS_SYNC   = '20260901010000_service_record_status_sync.sql'
+const M_INTEGRITAET   = '20261017000000_abrechnungsintegritaet_leistungsnachweis.sql'
 
 /** Stamm-Organisation — Rueckfallwert von current_org_id(). */
 export const STAMM_ORG = '00000000-0000-4000-8000-000460629986'
@@ -73,6 +77,16 @@ CREATE SCHEMA IF NOT EXISTS extensions;
 -- Signatur, echtes SHA-256. Die RPC bildet damit dieselben Checksummen.
 CREATE FUNCTION extensions.digest(p_data bytea, p_algo text) RETURNS bytea
   LANGUAGE sql IMMUTABLE AS $d$ SELECT sha256(p_data) $d$;
+
+-- pgcrypto bringt digest() in ZWEI Ueberladungen mit, bytea und text.
+-- Hier stand lange nur die bytea-Fassung, weil die Rechnungs-RPC nur
+-- diese benutzt. compute_signature_hash uebergibt dagegen eine
+-- Text-Verkettung — gegen das Testschema scheiterte der Trigger deshalb
+-- mit „function extensions.digest(text, unknown) does not exist", waehrend
+-- er live laeuft. Ein Testschema, das eine Ueberladung weglaesst, laesst
+-- genau den Trigger scheitern, den es pruefen soll.
+CREATE FUNCTION extensions.digest(p_data text, p_algo text) RETURNS bytea
+  LANGUAGE sql IMMUTABLE AS $d$ SELECT sha256(convert_to(p_data, 'UTF8')) $d$;
 
 CREATE TABLE auth.users (
   id uuid PRIMARY KEY,
@@ -194,6 +208,16 @@ ALTER TABLE public.billing_tariffs
 -- client_budgets ──────────────────────────────────────────────────────
 ALTER TABLE public.client_budgets
   ADD COLUMN IF NOT EXISTS budget_type TEXT NOT NULL DEFAULT 'entlastung';  -- 20260805…
+
+-- profiles ────────────────────────────────────────────────────────────
+-- postal_code kommt aus 20260101000100 (Live-Baseline). Sie fehlte hier,
+-- obwohl registerAsEngel sie schreibt — die Server Action scheiterte gegen
+-- das Testschema mit 42703 und lieferte { ok: false }, waehrend sie live
+-- durchlaeuft. Genau der Fall aus dem Projekt-Gedaechtnis: ein Testschema,
+-- das lockerer (hier: aermer) ist als die Produktion, prueft einen anderen
+-- Code als den ausgelieferten.
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS postal_code TEXT;                     -- 20260101000100
 
 -- assignments / bookings ──────────────────────────────────────────────
 ALTER TABLE public.assignments
@@ -716,5 +740,74 @@ export async function baueTarifVerifizierung(db: PGlite): Promise<void> {
     CREATE TRIGGER trg_belegpflicht_leistungspreise
       BEFORE INSERT OR UPDATE ON public.leistungspreise
       FOR EACH ROW EXECUTE FUNCTION public.trg_verifizierung_belegpflicht();
+  `)
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Manipulationsschutz des Leistungsnachweises
+// ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Haengt die VIER Trigger an `service_records`, die live zusammen den
+ * Manipulationsschutz bilden — jeder wortgleich aus seiner Migration:
+ *
+ *   trg_sync_record_status     20260901010000  proof_status → status
+ *   trg_a_unterschrift_beleg   20261017000000  kein Statuswert ohne Beleg
+ *   trg_compute_signature_hash 20260814010000  Hash + is_locked
+ *   trg_prevent_locked_record  20260814010000  gesperrt heisst gesperrt
+ *
+ * Die beiden Funktionskoerper stammen aus 20260914010000 — das ist die
+ * JUENGSTE Fassung (SET search_path) und damit die, die live in pg_proc
+ * steht; am 28.08.2026 gegen den Live-Quelltext gehalten und identisch.
+ * Die Trigger-Anweisungen selbst stehen dort nicht, sie kommen samt ihrer
+ * WHEN-Bedingungen aus 20260814010000. Diese WHEN-Bedingungen sind kein
+ * Beiwerk: `trg_compute_signature_hash` feuert nur, wenn sich
+ * proof_status ueberhaupt AENDERT, und `trg_prevent_locked_record` nur auf
+ * einer bereits gesperrten Zeile. Wer sie weglaesst, baut einen strengeren
+ * Prueflauf als die Produktion und beweist damit nichts ueber sie.
+ *
+ * Setzt baueKettenSchema() voraus.
+ */
+export async function baueNachweisManipulationsschutz(db: PGlite): Promise<void> {
+  // client_signature stammt aus dem Live-Baseline-Schema und fehlt im
+  // Kettenschema. enforce_unterschrift_beleg liest sie — ohne die Spalte
+  // scheitert der Trigger mit 42703 statt zu pruefen.
+  await db.exec(`
+    ALTER TABLE public.service_records
+      ADD COLUMN IF NOT EXISTS client_signature TEXT;   -- 20260101000000
+  `)
+
+  await db.exec(funktionAusMigration(M_STATUS_SYNC, 'sync_service_record_status'))
+  await db.exec(funktionAusMigration(M_INTEGRITAET, 'enforce_unterschrift_beleg'))
+  await db.exec(funktionAusMigration(M_SEARCH_PATH, 'compute_signature_hash'))
+  await db.exec(funktionAusMigration(M_SEARCH_PATH, 'prevent_locked_record_change'))
+
+  await db.exec(`
+    DROP TRIGGER IF EXISTS trg_sync_record_status ON public.service_records;
+    CREATE TRIGGER trg_sync_record_status
+      BEFORE INSERT OR UPDATE ON public.service_records
+      FOR EACH ROW
+      EXECUTE FUNCTION public.sync_service_record_status();
+
+    DROP TRIGGER IF EXISTS trg_a_unterschrift_beleg ON public.service_records;
+    CREATE TRIGGER trg_a_unterschrift_beleg
+      BEFORE INSERT OR UPDATE ON public.service_records
+      FOR EACH ROW
+      EXECUTE FUNCTION public.enforce_unterschrift_beleg();
+
+    DROP TRIGGER IF EXISTS trg_compute_signature_hash ON public.service_records;
+    CREATE TRIGGER trg_compute_signature_hash
+      BEFORE UPDATE ON public.service_records
+      FOR EACH ROW
+      WHEN (NEW.proof_status = 'UNTERSCHRIEBEN'
+            AND OLD.proof_status IS DISTINCT FROM NEW.proof_status)
+      EXECUTE FUNCTION public.compute_signature_hash();
+
+    DROP TRIGGER IF EXISTS trg_prevent_locked_record ON public.service_records;
+    CREATE TRIGGER trg_prevent_locked_record
+      BEFORE UPDATE ON public.service_records
+      FOR EACH ROW
+      WHEN (OLD.is_locked = true)
+      EXECUTE FUNCTION public.prevent_locked_record_change();
   `)
 }

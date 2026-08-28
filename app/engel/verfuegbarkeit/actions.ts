@@ -6,6 +6,34 @@ import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 type Slot = { id: string; weekday: number; start_time: string; end_time: string }
 
+/**
+ * Wochentag nach ISO-8601: 1 = Montag … 7 = Sonntag.
+ *
+ * BEFUND (28.08.2026, beim Schreiben des E2E-Prueflaufs aufgefallen):
+ * hier stand `weekday < 0 || weekday > 6`. Das ist die JavaScript-Zaehlung
+ * von `Date.getDay()` — die Datenbank zaehlt aber nach ISO. Der
+ * CHECK-Constraint `weekday between 1 and 7` aus 20260719000000 und die
+ * Liste WOCHENTAGE in lib/availability.ts (Mo=1 … So=7, die auch die
+ * Oberflaeche rendert) sagen beide dasselbe, nur diese Pruefung nicht.
+ *
+ * Zwei Folgen, beide still:
+ *
+ *   • SONNTAG (7) wurde abgewiesen, obwohl die Oberflaeche ihn anbietet
+ *     und die Datenbank ihn annimmt. Ein Engel konnte fuer Sonntag keine
+ *     Zeiten hinterlegen und bekam „Ungueltiger Wochentag." zu sehen —
+ *     ohne dass irgendwo stand, dass es an der Zahl liegt.
+ *   • Die 0 (die es nach ISO nicht gibt) kam durch die Pruefung und
+ *     scheiterte erst am CHECK, wo der Fehler zu „Das Zeitfenster konnte
+ *     nicht gespeichert werden." verallgemeinert wird.
+ *
+ * Der Wertebereich steht ab hier an EINER Stelle und ist derselbe wie in
+ * der Datenbank. Eine Eingabepruefung, die einen anderen Bereich kennt als
+ * die Spalte, ist keine Pruefung, sondern eine zweite Meinung.
+ */
+function istWochentag(wert: unknown): wert is number {
+  return typeof wert === 'number' && Number.isInteger(wert) && wert >= 1 && wert <= 7
+}
+
 async function requireEngel() {
   const supabase = await createClient()
   const { data: { user }, error } = await supabase.auth.getUser()
@@ -37,7 +65,7 @@ export async function addAvailabilitySlot(
   endTime: string,
 ): Promise<{ ok: true; data: Slot } | { ok: false; error: string }> {
   try {
-    if (typeof weekday !== 'number' || weekday < 0 || weekday > 6) {
+    if (!istWochentag(weekday)) {
       return { ok: false, error: 'Ungueltiger Wochentag.' }
     }
     if (!startTime || typeof startTime !== 'string' || !/^\d{2}:\d{2}$/.test(startTime)) {
@@ -142,7 +170,7 @@ export async function applyDefaultTemplate(
     if (!Array.isArray(weekdays) || weekdays.length === 0) {
       return { ok: false, error: 'Keine Wochentage angegeben.' }
     }
-    if (weekdays.some(d => typeof d !== 'number' || d < 0 || d > 6)) {
+    if (!weekdays.every(istWochentag)) {
       return { ok: false, error: 'Ungueltiger Wochentag in der Liste.' }
     }
     if (!startTime || typeof startTime !== 'string' || !/^\d{2}:\d{2}$/.test(startTime)) {
