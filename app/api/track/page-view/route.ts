@@ -18,7 +18,8 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
-import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { getClientIp } from '@/lib/rate-limit'
+import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { withTracking } from '@/lib/monitoring/tracker'
 
 const MAX_PFAD = 500
@@ -37,7 +38,15 @@ export const POST = withTracking(async function POST(request: Request) {
     const ip = getClientIp(request)
 
     // 60 Aufrufe/Minute pro IP — deckt normales Navigieren ab und stoppt Floods.
-    if (!rateLimit(`page-view:${ip}`, 60, 60_000)) {
+    //
+    // Track 13 B2: instanzuebergreifend gezaehlt. `rateLimit` haelt seine
+    // Map im Modul-Scope, also je Serverless-Instanz — auf Vercel startet
+    // jede neue mit leerem Zaehler. Der Kopf dieser Datei nennt das Limit
+    // als eine der drei Schranken, die den frueheren Direktschreibpfad aus
+    // dem Browser ersetzen; als instanzlokale Zaehlung war es das nicht.
+    // Diese Route schreibt mit dem Dienstschluessel und legt dabei die
+    // IP-Adresse ab (live 6632 Zeilen mit IP, 2033 verschiedene).
+    if (!(await rateLimitPersistent(`page-view:${ip}`, 60, 60_000))) {
       return NextResponse.json({ ok: true })
     }
 

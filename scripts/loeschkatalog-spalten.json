@@ -45,6 +45,16 @@
     "entscheidung": "loeschen"
   },
   {
+    "tabelle": "page_views",
+    "spalte": "user_id",
+    "entscheidung": "loeschen"
+  },
+  {
+    "tabelle": "visitor_locations",
+    "spalte": "user_id",
+    "entscheidung": "loeschen"
+  },
+  {
     "tabelle": "care_recipients",
     "spalte": "profile_id",
     "entscheidung": "loeschen"

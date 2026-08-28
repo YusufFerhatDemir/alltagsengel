@@ -2,32 +2,29 @@ import { NextRequest, NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
+import { getClientIp } from '@/lib/rate-limit'
+import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
 const log = logger.child('tracking')
 
-// Rate Limiter: max 10 Tracking-Requests pro IP pro Minute
-const trackRateLimit = new Map<string, { count: number; resetAt: number }>()
-
-function checkTrackRateLimit(ip: string): boolean {
-  const now = Date.now()
-  const entry = trackRateLimit.get(ip)
-  if (!entry || now > entry.resetAt) {
-    trackRateLimit.set(ip, { count: 1, resetAt: now + 60000 })
-    return true
-  }
-  if (entry.count >= 10) return false
-  entry.count++
-  return true
-}
-
-// Aufräumen alle 5 Minuten
-setInterval(() => {
-  const now = Date.now()
-  for (const [key, entry] of trackRateLimit.entries()) {
-    if (now > entry.resetAt) trackRateLimit.delete(key)
-  }
-}, 300000)
+// Rate Limiter: max 10 Tracking-Requests pro IP pro Minute.
+//
+// Track 13 B2: gezaehlt wird instanzuebergreifend in der Datenbank, nicht
+// in einer Map im Modul-Scope. Der Grund steht seit dem 19.08.2026 in
+// lib/rate-limit-persistent.ts und galt fuer /api/visitor-alert genauso:
+// auf Vercel startet JEDE neue Serverless-Instanz mit leerem Zaehler, ein
+// Modul-Scope-Limit ist dort keins. Diese Route schreibt mit dem
+// DIENSTSCHLUESSEL in zwei Tabellen (`visitors`, `visitor_locations`) und
+// stoesst zusaetzlich einen Mailversand an — genau der Fall, fuer den der
+// persistente Zaehler damals gebaut wurde. Sie war beim Umbau uebersehen
+// worden.
+//
+// Die frueher hier stehende `setInterval`-Aufraeumschleife ist mit
+// entfallen: sie lief im Modul-Scope einer Serverless-Funktion, also je
+// Instanz und ohne Bezug zur Lebensdauer eines Requests.
+const TRACK_LIMIT = 10
+const TRACK_FENSTER_MS = 60_000
 
 // Cache für IP-Geo-Daten (vermeidet doppelte API-Aufrufe)
 const geoCache = new Map<string, { data: GeoData; ts: number }>()
@@ -97,14 +94,13 @@ async function getDetailedGeo(ip: string): Promise<GeoData | null> {
 
 export const POST = withTracking(async function POST(req: NextRequest) {
   try {
-    // IP aus Header lesen (Vercel / Cloudflare)
-    const ip =
-      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-      req.headers.get('x-real-ip') ||
-      'unknown'
+    // IP aus Header lesen (Vercel / Cloudflare).
+    // getClientIp() liest dieselben Header wie zuvor; auf Vercel ist
+    // x-forwarded-for nicht faelschbar (Track 10 N1, live belegt).
+    const ip = getClientIp(req)
 
-    // Rate Limiting
-    if (!checkTrackRateLimit(ip)) {
+    // Rate Limiting — instanzuebergreifend, siehe TRACK_LIMIT oben.
+    if (!(await rateLimitPersistent(`track:${ip}`, TRACK_LIMIT, TRACK_FENSTER_MS))) {
       return NextResponse.json({ ok: true }) // Stille Ablehnung
     }
 

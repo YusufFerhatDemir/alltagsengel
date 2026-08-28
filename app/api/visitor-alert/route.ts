@@ -42,6 +42,42 @@ const ALERT_EMAIL = process.env.ADMIN_ALERT_EMAIL || ''
 // pro Serverless-Instanz. Jetzt instanzuebergreifend in der Datenbank.
 const COOLDOWN_MS = 3_600_000
 
+// ── Track 13, Befund B7 ──────────────────────────────────────────────
+// Der Cooldown haengt an der GEMELDETEN IP — und die steht im Rumpf, ist
+// also frei waehlbar. Wer sie bei jedem Aufruf aendert, hat keinen
+// Cooldown, sondern nur das Aufrufer-Limit von 20/Minute vor sich: bis zu
+// 20 Alarmmails pro Minute in dasselbe Postfach.
+//
+// Zwei Riegel dagegen, beide am AUFRUFER statt an seiner Angabe:
+//
+//   1) Die gemeldete IP muss wie eine IP aussehen. Ein leerer Wert ergab
+//      bisher `ipPrefix = ''` und damit `LIKE '%'` — die Historie-Abfrage
+//      traf dann JEDEN Besucher statt eines bestimmten. (Das Ergebnis
+//      floss nur in die Alarmmail, nicht in die Antwort; es war also
+//      keine Auskunft nach aussen, aber die falsche Abfrage.)
+//   2) Ein Mailbudget je Aufrufer-IP, unabhaengig davon, wie viele
+//      verschiedene Besucher-IPs er behauptet.
+const ALARM_BUDGET_JE_AUFRUFER = 5
+const ALARM_BUDGET_FENSTER_MS = 3_600_000
+
+/**
+ * Sieht der gemeldete Wert wie eine IP-Adresse aus?
+ *
+ * Bewusst grob: es geht nicht darum, jede gueltige Adresse exakt zu
+ * treffen, sondern darum, dass der Wert als LIKE-Praefix und als
+ * Cooldown-Schluessel taugt. Leer, zu kurz oder mit Platzhaltern gespickt
+ * faellt durch.
+ */
+export function istPlausibleIp(wert: unknown): boolean {
+  if (typeof wert !== 'string') return false
+  const s = wert.trim()
+  if (s.length < 7 || s.length > 45) return false
+  const ipv4 = /^(\d{1,3}\.){3}\d{1,3}$/
+  const ipv6 = /^[0-9a-fA-F:]+$/
+  if (ipv4.test(s)) return s.split('.').every(t => Number(t) <= 255)
+  return ipv6.test(s) && s.includes(':')
+}
+
 export const POST = withTracking(async function POST(req: NextRequest) {
   try {
     // NIEDRIG-8 (Security-Audit 2026-08-19): der Endpunkt ist bewusst anonym
@@ -56,7 +92,10 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     }
 
     const { ip, city, region, page, userAgent, postalCode, isp: bodyIsp, district } = await req.json()
-    if (!ip) return NextResponse.json({ ok: true })
+    // Track 13 B7: nicht nur „irgendein Wert", sondern eine plausible IP.
+    // Sonst waehlt der Rumpf den LIKE-Praefix der Historie-Abfrage und den
+    // Cooldown-Schluessel.
+    if (!istPlausibleIp(ip)) return NextResponse.json({ ok: true })
 
     // Eigene IPs ignorieren
     if (EXCLUDED_IPS.some(ex => ip.startsWith(ex))) {
@@ -75,6 +114,19 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     const ipPrefix = ip.substring(0, 20)
     if (!(await rateLimitPersistent(`visitor-alert:cooldown:${ipPrefix}`, 1, COOLDOWN_MS))) {
       return NextResponse.json({ ok: true, cooldown: true })
+    }
+
+    // Track 13 B7: Budget am AUFRUFER. Der Cooldown oben haengt an einer
+    // Angabe aus dem Rumpf; wer sie variiert, kaeme sonst an ihm vorbei.
+    // Dieses Limit greift erst NACH dem Cooldown, damit der normale
+    // Betrieb (ein Besucher, eine Mail pro Stunde) es nie beruehrt.
+    if (!(await rateLimitPersistent(
+      `visitor-alert:budget:${aufruferIp}`,
+      ALARM_BUDGET_JE_AUFRUFER,
+      ALARM_BUDGET_FENSTER_MS,
+    ))) {
+      log.warn('Alarmbudget je Aufrufer erschoepft — kein Versand')
+      return NextResponse.json({ ok: true, budget: true })
     }
 
     // Gerät-Info aus User-Agent

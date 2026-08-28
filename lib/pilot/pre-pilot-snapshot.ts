@@ -204,11 +204,11 @@ export const DOKUMENTIERTE_SICHERHEITSLAGE = {
  * Verifikationsskripte unter `scripts/verify-*.mjs`.
  */
 export const JUENGSTE_MIGRATIONEN = [
-  '20261016000001_rollback_loeschkette_bookings_angel_fk.sql',
-  '20261017000000_abrechnungsintegritaet_leistungsnachweis.sql',
   '20261017000001_rollback_abrechnungsintegritaet_leistungsnachweis.sql',
   '20261017000002_obergrenze_angebotstyp.sql',
   '20261017000003_rollback_obergrenze_angebotstyp.sql',
+  '20261018000000_perimeter_lead_inquiries_offene_tuer.sql',
+  '20261018000001_rollback_perimeter_lead_inquiries_offene_tuer.sql',
 ] as const
 
 // ---------------------------------------------------------------------------

@@ -124,6 +124,24 @@ export const LOESCHKATALOG: readonly LoeschEintrag[] = [
     begruendung: 'Öffentliches Engel-Profil. Muss verschwinden, sonst bleibt die Person auffindbar.',
   },
   {
+    tabelle: 'visitor_locations', spalte: 'user_id', entscheidung: 'loeschen',
+    begruendung:
+      'Track 13 B4: Seitenweise Bewegungsspur des angemeldeten Kontos in den Portalen (portal, page_path, created_at) '
+      + 'zusammen mit ip_address und user_agent. Kein Aufbewahrungsgrund — es ist Reichweitenmessung, kein Beleg und keine Pflegedokumentation. '
+      + '„aufbewahren" waere hier eine FALSCHE AUSSAGE: der Fremdschluessel steht zwar auf ON DELETE SET NULL, aber SET NULL entfernt nur das ETIKETT. '
+      + 'Die volle IP-Adresse bleibt in derselben Zeile stehen und ist nach Art. 4 Nr. 1 DSGVO selbst ein Personenbezug — die Zeile waere danach '
+      + 'pseudonymisiert, nicht geloescht. Live am 28.08.2026: 578 von 3850 Zeilen tragen ein user_id, verteilt auf 38 Konten, davon 284 im Portal „kunde".',
+  },
+  {
+    tabelle: 'page_views', spalte: 'user_id', entscheidung: 'loeschen',
+    begruendung:
+      'Track 13 B4: Seitenaufrufe des angemeldeten Kontos (path, page_label, referrer, viewed_at) zusammen mit '
+      + 'ip_address und user_agent. Kein Aufbewahrungsgrund — Reichweitenmessung, kein Beleg. Wie bei '
+      + '[[visitor_locations]] waere „aufbewahren" eine falsche Aussage: der Fremdschluessel auf auth.users steht '
+      + 'auf ON DELETE SET NULL und entfernt nur das Etikett, waehrend die volle IP-Adresse in derselben Zeile '
+      + 'stehen bleibt. Live am 28.08.2026: 1111 von 8315 Zeilen mit user_id, verteilt auf 43 Konten.',
+  },
+  {
     tabelle: 'care_recipients', spalte: 'profile_id', entscheidung: 'loeschen',
     begruendung: 'Angaben zur betreuten Person, die das Konto selbst erfasst hat. Betrifft einen Dritten und hat ohne das Konto keinen Träger mehr.',
   },

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { getClientIp } from '@/lib/rate-limit'
+import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
@@ -44,7 +45,15 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     // NIEDRIG-8 (Security-Audit 2026-08-19): oeffentlicher Schreibendpunkt
     // ohne Limit. 60 Events/Minute pro IP — gleiche Groessenordnung wie
     // /api/analytics/vitals.
-    if (!rateLimit(`capi:${getClientIp(req)}`, 60, 60_000)) {
+    //
+    // Track 13 B2: von `rateLimit` (Map im Modul-Scope, also je
+    // Serverless-Instanz) auf den persistenten Zaehler gezogen. Diese
+    // Route persistiert heute nichts (Welle-1-Stub), soll aber in Welle 2
+    // an Meta/TikTok POSTen — dann ist das Limit ein KOSTEN-Deckel gegen
+    // eine fremde API, und ein Zaehler, der bei jeder neuen Instanz von
+    // vorn beginnt, waere dafuer wertlos. Jetzt umgestellt, solange es
+    // noch nichts kostet.
+    if (!(await rateLimitPersistent(`capi:${getClientIp(req)}`, 60, 60_000))) {
       return NextResponse.json({ ok: true, accepted: false })
     }
 
