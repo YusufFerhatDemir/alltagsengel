@@ -254,7 +254,34 @@ test('updateEintrag: lässt Notizen am abgeschlossenen Dienst zu', async () => {
     singleResult: { data: { id: 'e-1', notizen: 'Nachtrag' }, error: null },
   })
   await updateEintrag(supabaseWith(builder), 'e-1', 'org-1', { notizen: 'Nachtrag' })
-  assert.deepEqual(calls.find(c => c.method === 'update')!.args[0], { notizen: 'Nachtrag' })
+  assert.deepEqual(
+    calls.find(c => c.method === 'update')!.args[0],
+    { notizen: 'Nachtrag', aenderung_grund: null },
+  )
+})
+
+/**
+ * `aenderung_grund` steht IMMER im UPDATE — auch als `null`.
+ *
+ * Der DB-Trigger `pruefe_dienstplan_freigabe` (Migration 20260829005700)
+ * liest `NEW.aenderung_grund` und verlangt auf einer freigegebenen Woche,
+ * dass er sich bei JEDER Aenderung unterscheidet. `NEW` uebernimmt
+ * unveraenderte Spalten aus `OLD` — bliebe das Feld weg, deckte ein einmal
+ * gesetzter Grund jede weitere Aenderung derselben Zeile mit ab. Das `null`
+ * oben ist deshalb kein Beiwerk, sondern der Punkt.
+ */
+test('updateEintrag: der Aenderungsgrund geht mit', async () => {
+  const { builder, calls } = mockQuery({
+    bestand: { data: { status: 'geplant', start_zeit: '08:00:00', end_zeit: '16:00:00', pause_minuten: 30 }, error: null },
+    singleResult: { data: { id: 'e-1' }, error: null },
+  })
+  await updateEintrag(supabaseWith(builder), 'e-1', 'org-1', {
+    endZeit: '17:00', aenderungGrund: '  Krankmeldung Frau M.  ',
+  })
+  assert.deepEqual(
+    calls.find(c => c.method === 'update')!.args[0],
+    { end_zeit: '17:00', aenderung_grund: 'Krankmeldung Frau M.' },
+  )
 })
 
 test('updateEintrag: geplanter Dienst bleibt frei änderbar', async () => {
@@ -263,7 +290,10 @@ test('updateEintrag: geplanter Dienst bleibt frei änderbar', async () => {
     singleResult: { data: { id: 'e-1' }, error: null },
   })
   await updateEintrag(supabaseWith(builder), 'e-1', 'org-1', { startZeit: '09:00', caregiverId: 'cg-2' })
-  assert.deepEqual(calls.find(c => c.method === 'update')!.args[0], { start_zeit: '09:00', caregiver_id: 'cg-2' })
+  assert.deepEqual(
+    calls.find(c => c.method === 'update')!.args[0],
+    { start_zeit: '09:00', caregiver_id: 'cg-2', aenderung_grund: null },
+  )
 })
 
 test('deleteEintrag: wirft bei DB-Fehler', async () => {
