@@ -225,9 +225,15 @@ describe('Nachrichten', () => {
 
   describe('createAntwort', () => {
     it('setzt eltern_id fuer Threading', async () => {
+      // absender_id ist hier bewusst 'u-2': seit Track 10 verlangt
+      // createAntwort, dass der Absender am Verlauf beteiligt ist. Der
+      // Doppelgaenger liefert dieselbe Zeile fuer jede Abfrage, also ist
+      // 'u-2' damit zugleich Absender der Thread-Wurzel — genau der Fall
+      // „beteiligt".
       const antwort = nachrichtFixture({
         id: 'n-antwort',
         eltern_id: 'n-1',
+        absender_id: 'u-2',
         betreff: 'Re: Einsatzplanung Montag',
       })
       mock._setTableData('organization_members', [{ user_id: 'u-1' }])

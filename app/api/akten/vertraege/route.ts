@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAktenAdmin } from '@/lib/akten/api-auth'
+import { assertZuordnungInOrg } from '@/lib/akten/zuordnung-guard'
+import { getDokument } from '@/lib/akten/dokumente'
 import { createVertrag, listVertraege } from '@/lib/akten/vertraege'
 import type { VertragsStatus, VertragsTyp } from '@/lib/akten/types'
 import { withTracking } from '@/lib/monitoring/tracker'
@@ -45,6 +47,21 @@ export const POST = withTracking(async function POST(request: Request) {
     }
 
     const admin = createAdminClient()
+    await assertZuordnungInOrg(admin, {
+      clientId: body.clientId ?? null,
+      caregiverId: body.caregiverId ?? null,
+      organizationId,
+    })
+
+    // Das verknuepfte Dokument gehoert ebenso geprueft: dokument_id ist eine
+    // einfache FK auf akten_dokumente(id) — ohne Mandantenbedingung.
+    if (body.dokumentId) {
+      const verknuepft = await getDokument(admin, body.dokumentId, organizationId)
+      if (!verknuepft) {
+        return NextResponse.json({ error: 'Verknuepftes Dokument nicht gefunden oder gehoert nicht zur Organisation.' }, { status: 404 })
+      }
+    }
+
     const vertrag = await createVertrag(admin, {
       organizationId,
       clientId: body.clientId ?? null,

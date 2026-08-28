@@ -69,6 +69,18 @@ test('createAufnahme setzt die Vorgabewerte für Ort und Dringlichkeit und proto
   const inserts: Array<{ tabelle: string; payload: Record<string, unknown> }> = []
   const supabase = {
     from: (tabelle: string) => ({
+      // select(): seit Track 10 prueft createAufnahme die Urheberschaft
+      // (aufgenommen_von) ueber assertBenutzerInOrg — organization_members,
+      // caregivers, clients, je .eq().eq().limit(1).maybeSingle().
+      // 'user-1' gehoert hier zur Organisation.
+      select() {
+        const kette: any = {
+          eq: () => kette,
+          limit: () => kette,
+          maybeSingle: async () => ({ data: { user_id: 'user-1' }, error: null }),
+        }
+        return kette
+      },
       insert(payload: Record<string, unknown>) {
         inserts.push({ tabelle, payload })
         return { select: () => ({ single: async () => ({ data: { id: 'a-1', organization_id: 'org-1', ...payload }, error: null }) }) }

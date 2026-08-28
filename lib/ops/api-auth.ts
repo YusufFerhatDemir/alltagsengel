@@ -3,6 +3,7 @@ import { holeRollenQuellen, quellenDuerfen } from '@/lib/auth/rollen-quelle'
 import type { Berechtigung } from '@/lib/auth/rollen'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId, resolveUserOrgId } from '@/lib/organizations/server'
+import { hatOpsPostfach } from './postfach-rollen'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 /** MFA-Prüfung: Admin mit Faktor muss auf AAL2 sein. Fail-open bei Fehler. */
@@ -68,8 +69,37 @@ export async function requireOpsAdmin(
   }
 }
 
-export async function requireOpsUser(): Promise<
+/**
+ * Wie `requireOpsUser()`, zusaetzlich mit der Postfach-Erlaubnisliste aus
+ * lib/ops/postfach-rollen.ts. Siehe dort die Begruendung (Track 10).
+ */
+export async function requireOpsPostfachUser(): Promise<
   { ok: true; userId: string; organizationId: string; role: string; name: string } | { ok: false; response: NextResponse }
+> {
+  const basis = await requireOpsUser()
+  if (!basis.ok) return basis
+
+  if (!hatOpsPostfach(basis.appRolle, basis.profilRolle)) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: 'Für das interne Postfach fehlt Ihnen die Berechtigung.' },
+        { status: 403 },
+      ),
+    }
+  }
+
+  return {
+    ok: true,
+    userId: basis.userId,
+    organizationId: basis.organizationId,
+    role: basis.role,
+    name: basis.name,
+  }
+}
+
+export async function requireOpsUser(): Promise<
+  { ok: true; userId: string; organizationId: string; role: string; name: string; appRolle: string; profilRolle: string } | { ok: false; response: NextResponse }
 > {
   const supabase = await createClient()
   const quellen = await holeRollenQuellen(supabase)
@@ -96,5 +126,13 @@ export async function requireOpsUser(): Promise<
   }
 
   const name = quellen.name
-  return { ok: true, userId: quellen.userId, organizationId, role: quellen.rolle || 'engel', name }
+  return {
+    ok: true,
+    userId: quellen.userId,
+    organizationId,
+    role: quellen.rolle || 'engel',
+    name,
+    appRolle: quellen.appRolle,
+    profilRolle: quellen.profilRolle,
+  }
 }

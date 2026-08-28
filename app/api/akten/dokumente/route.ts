@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAktenAdmin } from '@/lib/akten/api-auth'
+import { assertZuordnungInOrg } from '@/lib/akten/zuordnung-guard'
 import { createDokument, listDokumente, uploadDokumentDatei } from '@/lib/akten/dokumente'
 import type { DokumentKategorie, DokumentSichtbarkeit, DokumentStatus, DokumentTyp } from '@/lib/akten/types'
 import { withTracking } from '@/lib/monitoring/tracker'
@@ -65,6 +66,10 @@ export const POST = withTracking(async function POST(request: Request) {
     const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : []
 
     const admin = createAdminClient()
+    // Mandantenschutz VOR dem Upload: sonst laege die Datei bereits im
+    // Bucket, wenn die Zuordnung abgelehnt wird.
+    await assertZuordnungInOrg(admin, { clientId, caregiverId, organizationId })
+
     const arrayBuffer = await file.arrayBuffer()
     const datei = await uploadDokumentDatei(admin, {
       organizationId,

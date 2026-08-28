@@ -53,6 +53,11 @@ function sisClient(
           const kette: any = {
             eq: () => kette,
             order: () => kette,
+            // limit(): seit Track 10 prueft createAssessment die Urheberschaft
+            // (erhoben_von) ueber assertBenutzerInOrg — dessen Abfragen enden
+            // auf .limit(1).maybeSingle(). `kopf` ist hier nicht null, das
+            // Konto gilt damit als zur Organisation gehoerend.
+            limit: () => kette,
             maybeSingle: async () => ({ data: kopf, error: null }),
             then: (resolve: (v: unknown) => void) => resolve({ data: daten, error: null }),
           }

@@ -1,6 +1,7 @@
 import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getDokument } from '@/lib/akten/dokumente'
+import { assertBenutzerInOrg } from '@/lib/organizations/benutzer-guard'
 import type { OpsAufgabeAnhang } from './types'
 
 export async function listAnhaenge(
@@ -31,6 +32,32 @@ export async function createAnhang(
   const dokument = await getDokument(supabase, params.dokumentId, params.organizationId)
   if (!dokument) {
     throw new UserFacingError('Dokument nicht gefunden oder gehoert nicht zur Organisation.')
+  }
+
+  // Dieselbe Luecke wie bei dokument_id, nur auf der anderen Seite der
+  // Verknuepfung: aufgabe_id kam ungeprueft aus dem Pfad. Mit einer
+  // fremden Aufgaben-UUID entstand eine Anhangszeile, die auf die Aufgabe
+  // einer ANDEREN Organisation zeigt (organization_id der Zeile bliebe die
+  // des Aufrufers, die Verknuepfung zeigt aber hinaus).
+  const { data: aufgabe, error: aufgabeFehler } = await supabase
+    .from('ops_aufgaben')
+    .select('id')
+    .eq('id', params.aufgabeId)
+    .eq('organization_id', params.organizationId)
+    .maybeSingle()
+  if (aufgabeFehler) {
+    throw new Error(`Aufgabe konnte nicht geprueft werden: ${aufgabeFehler.message}`)
+  }
+  if (!aufgabe) {
+    throw new UserFacingError('Aufgabe nicht gefunden oder gehoert nicht zur Organisation.')
+  }
+
+  // Urheberschaft: `hinzugefuegt_von` kam bisher roh aus dem Rumpf
+  // (`body.hinzugefuegt_von || auth.ctx.userId`) und ist eine uuid auf
+  // auth.users — also mandantenuebergreifend. Ein beliebiges Konto liess
+  // sich damit als Urheber eintragen.
+  if (params.hinzugefuegtVon) {
+    await assertBenutzerInOrg(supabase, params.hinzugefuegtVon, params.organizationId, 'Hinzugefuegt von')
   }
 
   const { data, error } = await supabase
