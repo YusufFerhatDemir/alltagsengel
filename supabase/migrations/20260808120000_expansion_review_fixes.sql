@@ -23,7 +23,7 @@
 --   B8  update_state_settings konnte Felder nicht wieder leeren.
 --
 -- KEINE erfundenen Preise. KEINE Production-Migration.
--- Rollback: 20260808120002_rollback_expansion_review_fixes.sql
+-- Rollback: 20260808120003_rollback_expansion_review_fixes.sql
 -- ════════════════════════════════════════════════════════════════════════════
 
 -- ────────────────────────────────────────────────────────────────────────────

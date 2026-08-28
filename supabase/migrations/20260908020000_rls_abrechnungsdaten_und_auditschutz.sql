@@ -60,7 +60,7 @@
 -- Felder unveraenderlich; der Weg zurueck bleibt ueber 'korrektur' offen.
 --
 -- KEINE Datenaenderung. Rein rechteseitig + ein Trigger.
--- Rollback: 20260908000001_rollback_rls_abrechnungsdaten_und_auditschutz.sql
+-- Rollback: 20260908020001_rollback_rls_abrechnungsdaten_und_auditschutz.sql
 -- ════════════════════════════════════════════════════════════════════════════
 
 -- ─────────────────────────────────────────────────────────────────────

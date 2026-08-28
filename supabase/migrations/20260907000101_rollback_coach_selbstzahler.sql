@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- ROLLBACK zu 20260907000000_coach_selbstzahler.sql
+-- ROLLBACK zu 20260907000100_coach_selbstzahler.sql
 -- ═══════════════════════════════════════════════════════════════════════════
 -- ACHTUNG — DATENVERLUST: Dieses Skript loescht Vertrags-, Zahlungs- und
 -- Rechnungsdaten. Rechnungen unterliegen der Aufbewahrungspflicht

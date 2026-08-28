@@ -2,6 +2,7 @@
 -- Migration: Digitaler PflegeCoach (DiPA-Modul) — Datenmodell coach_*
 -- Datum:     2026-08-18 (sequenziell), erstellt 2026-08-09
 -- Projekt:   Alltagsengel UG — DiPA nach § 40a SGB XI (Erprobungspfad § 78a Abs. 6a)
+-- Rollback:  20260819010001_rollback_pflegecoach_dipa_modul.sql
 -- ═══════════════════════════════════════════════════════════════════════════
 -- IDEMPOTENT: Alle Statements mit IF NOT EXISTS / DO-Guards.
 -- BESTEHENDE DATEN: Keine Änderung an bestehenden Tabellen. Nur neue Objekte.
