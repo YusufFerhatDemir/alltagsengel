@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
 import { logAuditEventOrWarn } from '@/lib/audit-log'
 import { geocodePLZ } from '@/lib/geocoding'
@@ -54,7 +55,11 @@ export async function registerAsEngel(data: {
     const { supabase, userId, organizationId, role, name } = await requireAuth()
 
     // --- 1. Upsert angel profile ---
-    const { error: angelError } = await supabase.from('angels').upsert({
+    // Admin-Client: authenticated hat seit Track 9 kein INSERT/volles UPDATE
+    // mehr auf angels (Column-Level GRANT beschraenkt auf is_online, bio,
+    // services, availability — hourly_rate nur ueber Admin-Client).
+    const admin = createAdminClient()
+    const { error: angelError } = await admin.from('angels').upsert({
       id: userId,
       hourly_rate: data.hourlyRate,
       services: data.services,
