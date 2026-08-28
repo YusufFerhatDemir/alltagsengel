@@ -105,6 +105,7 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
 
   // Qualitaetssicherung
   '/admin/quality':                   { lesen: 'qm.lesen', schreiben: 'qm.schreiben' },
+  '/admin/pflegevisiten':             { lesen: 'qm.lesen', schreiben: 'qm.schreiben' },
   '/admin/pruefprotokoll':            { lesen: 'qm.lesen', schreiben: 'qm.schreiben' },
   '/admin/fristen':                   { lesen: 'qm.lesen', schreiben: 'qm.schreiben' },
   '/admin/wiedervorlagen':            { lesen: 'qm.lesen', schreiben: 'qm.schreiben' },
@@ -250,6 +251,12 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   '/api/vitals':                      { lesen: 'pflege.lesen', schreiben: 'pflege.schreiben' },
   '/api/medikamente':                 { lesen: 'pflege.lesen', schreiben: 'pflege.schreiben' },
   '/api/sis':                         { lesen: 'pflege.lesen', schreiben: 'pflege.schreiben' },
+  // Pflegevisite: das Qualitaetsmanagement prueft und dokumentiert im
+  // eigenen Bestand. Die eine Route, die den Regelkreis schliesst
+  // (PATCH /api/qm/befunde mit aktion='massnahme'), verlangt im Handler
+  // ausdruecklich `pflege.schreiben` — die Rolle `qm` hat sie bewusst
+  // nicht, sonst stellte dieselbe Stelle fest und erklaerte fuer erledigt.
+  '/api/qm':                          { lesen: 'qm.lesen', schreiben: 'qm.schreiben' },
   '/api/uebergaben':                  { lesen: 'pflege.lesen', schreiben: 'pflege.schreiben' },
   '/api/tours':                       { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
   '/api/einsatzplanung':              { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
