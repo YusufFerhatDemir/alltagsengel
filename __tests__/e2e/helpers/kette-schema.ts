@@ -1036,6 +1036,13 @@ export async function bauePflegeplanungTabellen(db: PGlite): Promise<void> {
 
   await db.exec(tabelleAusMigration(M_PFLEGEDOKU, 'pflege_massnahmenplaene'))
   await db.exec(tabelleAusMigration(M_PFLEGEDOKU, 'pflege_massnahmen'))
+  // pflege_verlauf haengt per Fremdschluessel an pflege_anamnesen und
+  // pflege_aufnahmen; beide gehoeren zur selben Migration und werden
+  // deshalb mitgezogen — sonst scheiterte schon das CREATE TABLE.
+  await db.exec(tabelleAusMigration(M_PFLEGEDOKU, 'pflege_aufnahmen'))
+  await db.exec(tabelleAusMigration(M_PFLEGEDOKU, 'pflege_anamnesen'))
+  await db.exec(tabelleAusMigration(M_PFLEGEDOKU, 'pflege_verlauf'))
+  await db.exec(tabelleAusMigration(M_PFLEGEDOKU, 'pflege_doku_perioden'))
   await db.exec(tabelleAusMigration(M_PFLEGE_AUDIT, 'pflege_audit_log'))
 
   // Der Teilindex — Pruefgegenstand, deshalb wortgleich.
@@ -1133,4 +1140,26 @@ export async function wendeDienstplanFreigabeMigrationAn(db: PGlite): Promise<vo
     funktionAusMigration('20260706_monatsabschluss_ki_pruefzentrale.sql', 'is_internal_staff'),
   )
   await db.exec(transaktionsInhalt('20260829005700_dienstplan_freigabe.sql'))
+}
+
+/**
+ * Wendet Migration 20260829011500 an — die Fassung von
+ * `prevent_locked_record_change`, die den unveraenderten Nachweis als
+ * abgerechnet kennzeichnen laesst.
+ *
+ * Bewusst NICHT Teil von `baueNachweisManipulationsschutz()`: die
+ * Migration ist eingecheckt und (Stand 29.08.2026) nicht angewendet. Wer
+ * sie in den Grundaufbau zoege, verdeckte den P0, den sie behebt — und
+ * genau der ist der Grund, warum die Kette Unterschrift → Rechnung live
+ * nicht durchlaeuft.
+ *
+ * Setzt baueNachweisManipulationsschutz() voraus.
+ */
+export async function wendeAbrechnungTrotzSperreMigrationAn(db: PGlite): Promise<void> {
+  await db.exec(
+    funktionAusMigration(
+      '20260829011500_leistungsnachweis_abrechenbar_trotz_sperre.sql',
+      'prevent_locked_record_change',
+    ),
+  )
 }
