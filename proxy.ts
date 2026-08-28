@@ -5,6 +5,7 @@ import { supabasePublishableKey, supabaseUrl } from '@/lib/supabase/keys'
 import { handleRateLimit } from '@/lib/middleware/rate-limit'
 import { darfPfad } from '@/lib/auth/bereiche'
 import { wirksameRolle } from '@/lib/auth/rollen'
+import { istZurLoeschungVorgemerkt, KONTO_GELOESCHT_CODE } from '@/lib/auth/konto-status'
 import { logger } from '@/lib/logger'
 const log = logger.child('proxy')
 
@@ -236,10 +237,11 @@ export async function proxy(request: NextRequest) {
     // bei allen übrigen Konten lief sie ohnehin schon.
     let profilRole = ''
     let dbFehler = false
+    let vorgemerkt = false
     try {
       const { data: profile, error: profilFehler } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, deleted_at')
         .eq('id', user.id)
         .maybeSingle()
       // Ein zurueckgegebener Fehler ist dasselbe wie ein geworfener: die
@@ -249,6 +251,12 @@ export async function proxy(request: NextRequest) {
       if (profilFehler) {
         dbFehler = true
         log.error(`Role DB check failed: ${profilFehler.message}`)
+      } else if (istZurLoeschungVorgemerkt(profile)) {
+        // Track 11: `deleted_at` gesetzt heisst „zur Loeschung vorgemerkt".
+        // Die Selbstlese-Policy auf profiles filtert das nicht, und
+        // auth.users bleibt unangetastet — ohne diese Zeile arbeitet ein
+        // geloeschtes Konto nach erneuter Anmeldung einfach weiter.
+        vorgemerkt = true
       } else if (profile?.role) {
         profilRole = profile.role
       }
@@ -259,14 +267,17 @@ export async function proxy(request: NextRequest) {
     }
 
     const appRole = (user.app_metadata?.role as string | undefined) || ''
-    const role: string = dbFehler ? '' : wirksameRolle(appRole, profilRole)
+    const role: string = dbFehler || vorgemerkt ? '' : wirksameRolle(appRole, profilRole)
 
     // ═══ Keine Rolle bestimmbar → Login ═══
+    // Bei einem zur Loeschung vorgemerkten Konto steht ein eigener Grund
+    // in der URL: die Person soll erfahren, WARUM sie nicht mehr
+    // hineinkommt, und den Weg zum Widerruf finden.
     if (!role) {
       const url = request.nextUrl.clone()
       url.pathname = '/auth/login'
       url.searchParams.set('next', pathname)
-      url.searchParams.set('error', 'auth_required')
+      url.searchParams.set('error', vorgemerkt ? KONTO_GELOESCHT_CODE : 'auth_required')
       return NextResponse.redirect(url)
     }
 

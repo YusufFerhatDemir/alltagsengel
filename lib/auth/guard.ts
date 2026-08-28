@@ -15,6 +15,7 @@ import { NextResponse } from 'next/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { istZurLoeschungVorgemerkt } from './konto-status'
 import {
   wirksamDarfAlle,
   wirksamIstAdministration,
@@ -94,9 +95,14 @@ export async function holeRolle(): Promise<
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, first_name, last_name')
+    .select('role, first_name, last_name, deleted_at')
     .eq('id', user.id)
     .maybeSingle()
+
+  // Zur Loeschung vorgemerkt (Track 11): die Sitzung besteht, der Zugang
+  // nicht mehr. Rueckgabe wie bei fehlendem Profil — die Aufrufer
+  // antworten damit 401.
+  if (istZurLoeschungVorgemerkt(profile)) return null
 
   const profilRolle = typeof profile?.role === 'string' ? profile.role : ''
 

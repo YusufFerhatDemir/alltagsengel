@@ -20,6 +20,7 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { istZurLoeschungVorgemerkt } from './konto-status'
 import {
   wirksamDarf,
   wirksamIstAdministration,
@@ -39,6 +40,12 @@ export interface RollenQuellen {
   nachname: string
   /** Anzeigename, faellt auf 'Alltagsengel' zurueck. */
   name: string
+  /**
+   * Gesetzt, wenn `profiles.deleted_at` einen Wert traegt — das Konto ist
+   * zur Loeschung vorgemerkt. `profilRolle` ist dann leer, damit jede
+   * Berechtigungsfrage mit Nein beantwortet wird (siehe konto-status.ts).
+   */
+  zurLoeschungVorgemerkt: boolean
 }
 
 /**
@@ -48,13 +55,20 @@ export interface RollenQuellen {
  * profiles-Datensatz kommt hier mit `profilRolle: ''` zurueck — das ist
  * kein 401, sondern fuehrt in `quellenDuerfen()` zu einem klaren Nein,
  * genau wie das bisherige `if (!profile) → 403` der Fach-Guards.
+ *
+ * Ein zur Loeschung vorgemerktes Konto (Track 11) ergibt ebenfalls
+ * `null`: die Sitzung besteht, sie traegt aber keinen Zugang mehr. 401
+ * ist dafuer die richtige Antwort — 403 hiesse „angemeldet, aber zu
+ * wenig Rechte", und das trifft es nicht.
  */
 export async function holeRollenQuellen(
   supabase: SupabaseClient,
 ): Promise<RollenQuellen | null> {
   const { data: { user }, error } = await supabase.auth.getUser()
   if (error || !user) return null
-  return holeRollenQuellenFuer(supabase, user)
+  const quellen = await holeRollenQuellenFuer(supabase, user)
+  if (quellen.zurLoeschungVorgemerkt) return null
+  return quellen
 }
 
 /**
@@ -97,11 +111,17 @@ export async function holeRollenQuellenFuer(
   // nicht zu einem geworfenen PostgREST-Fehler.
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, first_name, last_name')
+    .select('role, first_name, last_name, deleted_at')
     .eq('id', user.id)
     .maybeSingle()
 
-  const profilRolle = typeof profile?.role === 'string' ? profile.role : ''
+  // Ein zur Loeschung vorgemerktes Konto traegt keine wirksame Rolle mehr.
+  // Die leere `profilRolle` ist hier kein Notbehelf, sondern genau die
+  // Aussage, die das Modul ohnehin schon kennt: ohne profiles-Rolle gibt es
+  // keine Berechtigung. Damit schliessen ALLE Guards, die von hier lesen,
+  // in einem Zug — auch die, die `zurLoeschungVorgemerkt` gar nicht kennen.
+  const vorgemerkt = istZurLoeschungVorgemerkt(profile)
+  const profilRolle = !vorgemerkt && typeof profile?.role === 'string' ? profile.role : ''
   const vorname = typeof profile?.first_name === 'string' ? profile.first_name : ''
   const nachname = typeof profile?.last_name === 'string' ? profile.last_name : ''
 
@@ -113,6 +133,7 @@ export async function holeRollenQuellenFuer(
     vorname,
     nachname,
     name: [vorname, nachname].filter(Boolean).join(' ') || 'Alltagsengel',
+    zurLoeschungVorgemerkt: vorgemerkt,
   }
 }
 

@@ -1,0 +1,135 @@
+[
+  {
+    "tabelle": "notifications",
+    "spalte": "user_id",
+    "entscheidung": "loeschen"
+  },
+  {
+    "tabelle": "push_subscriptions",
+    "spalte": "user_id",
+    "entscheidung": "loeschen"
+  },
+  {
+    "tabelle": "fcm_tokens",
+    "spalte": "user_id",
+    "entscheidung": "loeschen"
+  },
+  {
+    "tabelle": "messages",
+    "spalte": "sender_id",
+    "entscheidung": "loeschen"
+  },
+  {
+    "tabelle": "messages",
+    "spalte": "receiver_id",
+    "entscheidung": "loeschen"
+  },
+  {
+    "tabelle": "chat_messages",
+    "spalte": "sender_id",
+    "entscheidung": "loeschen"
+  },
+  {
+    "tabelle": "documents",
+    "spalte": "user_id",
+    "entscheidung": "loeschen"
+  },
+  {
+    "tabelle": "angel_availability",
+    "spalte": "angel_id",
+    "entscheidung": "loeschen"
+  },
+  {
+    "tabelle": "angels",
+    "spalte": "id",
+    "entscheidung": "loeschen"
+  },
+  {
+    "tabelle": "care_recipients",
+    "spalte": "profile_id",
+    "entscheidung": "loeschen"
+  },
+  {
+    "tabelle": "angehoerigen_zugaenge",
+    "spalte": "user_id",
+    "entscheidung": "loeschen"
+  },
+  {
+    "tabelle": "coach_users",
+    "spalte": "user_id",
+    "entscheidung": "loeschen"
+  },
+  {
+    "tabelle": "account_deletion_tokens",
+    "spalte": "user_id",
+    "entscheidung": "loeschen"
+  },
+  {
+    "tabelle": "clients",
+    "spalte": "user_id",
+    "entscheidung": "aufbewahren"
+  },
+  {
+    "tabelle": "caregivers",
+    "spalte": "user_id",
+    "entscheidung": "aufbewahren"
+  },
+  {
+    "tabelle": "bookings",
+    "spalte": "customer_id",
+    "entscheidung": "aufbewahren"
+  },
+  {
+    "tabelle": "bookings",
+    "spalte": "angel_id",
+    "entscheidung": "aufbewahren",
+    "blockiert": true
+  },
+  {
+    "tabelle": "krankenfahrten",
+    "spalte": "customer_id",
+    "entscheidung": "aufbewahren"
+  },
+  {
+    "tabelle": "reviews",
+    "spalte": "reviewer_id",
+    "entscheidung": "aufbewahren"
+  },
+  {
+    "tabelle": "referrals",
+    "spalte": "referrer_id",
+    "entscheidung": "aufbewahren"
+  },
+  {
+    "tabelle": "referrals",
+    "spalte": "referred_id",
+    "entscheidung": "aufbewahren"
+  },
+  {
+    "tabelle": "audit_logs",
+    "spalte": "actor_id",
+    "entscheidung": "aufbewahren"
+  },
+  {
+    "tabelle": "mis_audit_log",
+    "spalte": "actor_id",
+    "entscheidung": "aufbewahren"
+  },
+  {
+    "tabelle": "mis_auth_log",
+    "spalte": "user_id",
+    "entscheidung": "aufbewahren"
+  },
+  {
+    "tabelle": "angehoerigen_audit_log",
+    "spalte": "user_id",
+    "entscheidung": "aufbewahren",
+    "blockiert": true
+  },
+  {
+    "tabelle": "signaturen",
+    "spalte": "signatar_id",
+    "entscheidung": "aufbewahren",
+    "blockiert": true
+  }
+]
