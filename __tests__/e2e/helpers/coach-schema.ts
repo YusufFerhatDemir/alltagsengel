@@ -124,6 +124,119 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_coach_freischaltungen_bestellung
 `
 
 /**
+ * ECHTES HMAC-SHA256 als Ersatz für `extensions.hmac` aus pgcrypto.
+ *
+ * PGlite bringt pgcrypto nicht mit. Der naheliegende Ausweg — `sha256(key
+ * || data)` — wäre hier genau der Fehler, vor dem
+ * memory/testschema-lockerer-als-produktion warnt: Die Suite prüft dann die
+ * Nachbildung und nicht den Mechanismus. Deshalb ist HMAC hier nach
+ * RFC 2104 ausgeschrieben, auf dem eingebauten `sha256(bytea)`:
+ *
+ *   HMAC(K, m) = H( (K' ⊕ opad) ‖ H( (K' ⊕ ipad) ‖ m ) )
+ *
+ * K' ist der auf 64 Byte (Blockgröße von SHA-256) mit Nullbytes
+ * aufgefüllte Schlüssel; ist er länger als 64 Byte, wird er zuvor gehasht.
+ * Die Suite weist mit einem Testvektor aus RFC 4231 nach, dass diese
+ * Fassung dasselbe liefert wie eine echte HMAC-Bibliothek — ohne diesen
+ * Nachweis wäre sie nur eine plausibel aussehende Funktion.
+ */
+const HMAC_ERSATZ = `
+CREATE SCHEMA IF NOT EXISTS extensions;
+
+CREATE OR REPLACE FUNCTION extensions.hmac(p_data bytea, p_key bytea, p_algo text)
+RETURNS bytea LANGUAGE plpgsql IMMUTABLE AS $hm$
+DECLARE
+  block_size CONSTANT int := 64;
+  k bytea;
+  ipad bytea := '';
+  opad bytea := '';
+  i int;
+BEGIN
+  IF p_algo <> 'sha256' THEN
+    RAISE EXCEPTION 'Nur sha256 nachgebildet, angefragt: %', p_algo;
+  END IF;
+
+  k := p_key;
+  IF length(k) > block_size THEN k := sha256(k); END IF;
+  -- Mit Nullbytes auf Blockgroesse auffuellen.
+  k := k || decode(repeat('00', block_size - length(k)), 'hex');
+
+  FOR i IN 0 .. block_size - 1 LOOP
+    ipad := ipad || set_byte('\\x00'::bytea, 0, get_byte(k, i) # 54);   -- 0x36
+    opad := opad || set_byte('\\x00'::bytea, 0, get_byte(k, i) # 92);   -- 0x5c
+  END LOOP;
+
+  RETURN sha256(opad || sha256(ipad || p_data));
+END;
+$hm$;
+
+-- Ersatz fuer pgcrypto.gen_random_bytes. Nur als Spalten-Default gebraucht;
+-- die Kette setzt den Schluessel, wo sein Wert etwas entscheidet.
+CREATE OR REPLACE FUNCTION extensions.gen_random_bytes(p_laenge int)
+RETURNS bytea LANGUAGE plpgsql VOLATILE AS $gr$
+DECLARE b bytea := ''; i int;
+BEGIN
+  FOR i IN 1 .. p_laenge LOOP
+    b := b || set_byte('\\x00'::bytea, 0, floor(random() * 256)::int);
+  END LOOP;
+  RETURN b;
+END;
+$gr$;
+`
+
+/**
+ * Baut das Nachweis-/Pseudonymisierungsschema auf einer frischen Instanz.
+ *
+ * Tabellen, Funktionen, Policies und die REVOKE-/GRANT-Zeilen stammen aus
+ * 20260826010000. Nur `extensions.hmac` und `gen_random_bytes` sind Ersatz
+ * (siehe HMAC_ERSATZ) — alles andere ist der Produktionsstand.
+ */
+export async function baueNachweisSchema(): Promise<PGlite> {
+  const db = new PGlite()
+  await db.exec(GRUNDGERUEST)
+  await db.exec(HMAC_ERSATZ)
+
+  await db.exec(funktionAusMigration(M_DIPA, 'coach_set_updated_at'))
+  await db.exec(tabelleAusMigration(M_DIPA, 'coach_users'))
+  await db.exec(tabelleAusMigration(M_FREISCHALT, 'coach_pseudonym_key'))
+  await db.exec(`
+    INSERT INTO coach_pseudonym_key (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+    ALTER TABLE coach_pseudonym_key ENABLE ROW LEVEL SECURITY;
+    REVOKE ALL ON coach_pseudonym_key FROM anon, authenticated;
+  `)
+
+  await db.exec(funktionAusMigration(M_FREISCHALT, 'coach_pseudonym'))
+  await db.exec(`
+    REVOKE ALL ON FUNCTION coach_pseudonym(uuid) FROM PUBLIC, anon, authenticated;
+    GRANT EXECUTE ON FUNCTION coach_pseudonym(uuid) TO service_role;
+  `)
+  await db.exec(funktionAusMigration(M_FREISCHALT, 'coach_mein_pseudonym'))
+  await db.exec(`
+    REVOKE ALL ON FUNCTION coach_mein_pseudonym() FROM PUBLIC, anon;
+    GRANT EXECUTE ON FUNCTION coach_mein_pseudonym() TO authenticated, service_role;
+  `)
+
+  await db.exec(tabelleAusMigration(M_FREISCHALT, 'coach_nutzungsereignisse'))
+  await db.exec(NACHWEIS_POLICIES)
+  return db
+}
+
+/** Policies und Grants aus 20260826010000, wortgleich. */
+const NACHWEIS_POLICIES = `
+ALTER TABLE coach_nutzungsereignisse ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY coach_nutzungsereignisse_self_select ON coach_nutzungsereignisse FOR SELECT TO authenticated
+  USING (pseudonym = coach_mein_pseudonym());
+CREATE POLICY coach_nutzungsereignisse_self_insert ON coach_nutzungsereignisse FOR INSERT TO authenticated
+  WITH CHECK (pseudonym = coach_mein_pseudonym());
+CREATE POLICY coach_nutzungsereignisse_self_delete ON coach_nutzungsereignisse FOR DELETE TO authenticated
+  USING (pseudonym = coach_mein_pseudonym());
+
+REVOKE ALL ON coach_nutzungsereignisse FROM anon;
+REVOKE UPDATE ON coach_nutzungsereignisse FROM authenticated;
+`
+
+/**
  * Baut das PflegeCoach-Schema auf einer frischen PGlite-Instanz.
  *
  * @param mitUniqueIndex  false = Stand VOR Migration 20261009000002.
