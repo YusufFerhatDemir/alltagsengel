@@ -5,6 +5,7 @@ import {
   erfasseHkpLeistung, listeHkpLeistungsnachweise, pruefeVollstaendigkeit,
 } from '@/lib/abrechnung/sgb-v/leistungsnachweis-service'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { assertZeitraumGueltig } from '@/lib/leistungsnachweis/zeitraum'
 import { withTracking } from '@/lib/monitoring/tracker'
 
 /**
@@ -47,6 +48,11 @@ export const POST = withTracking(async function POST(request: Request) {
         return NextResponse.json({ error: `Feld "${feld}" ist Pflicht.` }, { status: 400 })
       }
     }
+
+    // Zeitraum pruefen, bevor die Zeile entsteht: die Dauer wird aus
+    // start/end generiert und bestimmt den Betrag — ein Ende vor dem Beginn
+    // ergaebe eine negative Position (Track 12, B5).
+    assertZeitraumGueltig(body.startTime, body.endTime)
 
     const admin = createAdminClient()
     const id = await erfasseHkpLeistung(admin, auth.ctx.organizationId, {

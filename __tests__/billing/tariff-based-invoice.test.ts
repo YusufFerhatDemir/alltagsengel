@@ -65,6 +65,30 @@ const createMockSupabase = () => ({
       kette.maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
       return kette;
     }
+    if (table === 'service_records') {
+      // Beleg-Pruefung vor der RPC (Track 12/B2): der Rechnungsweg liest
+      // hier die Nachweise des Zeitraums und verlangt zu jedem, der als
+      // unterschrieben gilt, einen Unterschriftsbeleg. Ein ordentlich
+      // unterschriebener Nachweis traegt Hash UND Zeitstempel — genau so,
+      // wie compute_signature_hash ihn erzeugt.
+      const kette: any = {};
+      kette.select = () => kette;
+      kette.eq = () => kette;
+      kette.in = () => kette;
+      kette.gte = () => kette;
+      kette.lte = vi.fn().mockResolvedValue({
+        data: [{
+          id: 'sr-1',
+          date: '2026-09-15',
+          proof_status: 'UNTERSCHRIEBEN',
+          signature_hash: 'a'.repeat(64),
+          client_signed_at: '2026-09-15T12:00:00Z',
+          client_signature: null,
+        }],
+        error: null,
+      });
+      return kette;
+    }
     if (table === 'invoice_items') {
       const kette: any = {};
       kette.select = () => kette;

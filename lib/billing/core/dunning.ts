@@ -218,6 +218,32 @@ export async function checkDunningBlocks(
   return blocks
 }
 
+/**
+ * Ein paralleler Lauf hat dieselbe Mahnstufe bereits eskaliert.
+ *
+ * Bewusst ein eigener Fehlertyp und nicht `Error`: der Aufrufer (Mahnlauf,
+ * Einzel-Eskalation) soll den Fall als "nichts zu tun" verbuchen koennen,
+ * ohne ihn von einem echten Fehlschlag unterscheiden zu muessen — und ohne
+ * dass ein Sammellauf daran abbricht.
+ */
+export class MahnstufeBereitsEskaliertError extends Error {
+  readonly invoiceId: string
+  readonly gelesenerStand: DunningLevel
+  readonly zielStufe: DunningLevel
+
+  constructor(invoiceId: string, gelesenerStand: DunningLevel, zielStufe: DunningLevel) {
+    super(
+      `Mahnstufe der Rechnung ${invoiceId} stand beim Schreiben nicht mehr auf `
+      + `"${gelesenerStand}" — ein paralleler Lauf hat bereits auf "${zielStufe}" `
+      + 'eskaliert. Es wurde nichts geaendert und keine zweite Mahngebuehr gebucht.',
+    )
+    this.name = 'MahnstufeBereitsEskaliertError'
+    this.invoiceId = invoiceId
+    this.gelesenerStand = gelesenerStand
+    this.zielStufe = zielStufe
+  }
+}
+
 // ---------------------------------------------------------------------------
 // advanceDunning — eskaliert Mahnstufe
 // ---------------------------------------------------------------------------
@@ -298,7 +324,24 @@ export async function advanceDunning(
   const todayMs = new Date(heuteStr + 'T00:00:00+01:00').getTime()
   const daysOverdue = Math.max(0, Math.floor((todayMs - dueMs) / 86400000))
 
-  await supabase
+  // ── CAS auf die Mahnstufe ────────────────────────────────────────────
+  //
+  // BEFUND (Track 12, B6): Der Schreibvorgang war ein Lesen-Rechnen-Schreiben
+  // ohne Vergleich mit dem gelesenen Stand. `dunning_fee_cents` wird dabei
+  // AUFADDIERT (`entry.dunning_fee_cents + feeCents`). Laufen zwei
+  // Eskalationen desselben Eintrags nebeneinander — der taegliche Cron und
+  // ein manueller Anstoss ueber /api/billing/dunning/advance oder /lauf, oder
+  // schlicht ein Wiederholungslauf desselben Vercel-Crons —, dann lesen
+  // beide denselben `entry`, errechnen dieselbe neue Stufe und addieren die
+  // Gebuehr JE ZWEIMAL. Die Stufe selbst ist idempotent (zweimal derselbe
+  // Wert), die Gebuehr ist es nicht: der Kunde bekommt eine Mahngebuehr in
+  // Rechnung gestellt, die es nur einmal gibt.
+  //
+  // Das `.eq('dunning_level', entry.dunning_level)` macht den Schreibvorgang
+  // zum Compare-and-Swap: der zweite Lauf findet die Stufe nicht mehr im
+  // gelesenen Zustand vor und aendert nichts. Dasselbe Muster wie bei
+  // monthly_closings und bonus_berechnungen.
+  const { data: eskaliert, error: eskalationFehler } = await supabase
     .from('dunning_entries')
     .update({
       dunning_level: newLevel,
@@ -309,6 +352,20 @@ export async function advanceDunning(
     })
     .eq('invoice_id', invoiceId)
     .eq('organization_id', organizationId)
+    .eq('dunning_level', entry.dunning_level)
+    .select('id')
+
+  if (eskalationFehler) {
+    throw new Error(`Mahnstufe konnte nicht gesetzt werden: ${eskalationFehler.message}`)
+  }
+
+  // Null betroffene Zeilen heisst: die Stufe stand beim Schreiben nicht mehr
+  // auf dem gelesenen Wert — ein paralleler Lauf war schneller. Das ist kein
+  // Fehler des Systems, aber ausdruecklich KEIN Erfolg dieses Laufs: weder
+  // die Rechnung nachziehen noch eine zweite Mahnung protokollieren.
+  if (!eskaliert || eskaliert.length === 0) {
+    throw new MahnstufeBereitsEskaliertError(invoiceId, entry.dunning_level as DunningLevel, newLevel)
+  }
 
   await supabase
     .from('invoices')
@@ -566,6 +623,14 @@ export async function runDunningRun(
         feeCents: advanced.feeCents,
       })
     } catch (err) {
+      // Ein paralleler Lauf war schneller: kein Fehler, sondern schlicht
+      // nichts zu tun. Wichtig ist vor allem, was hier NICHT passiert —
+      // der Eintrag landet nicht in `result.eskaliert` und loest damit
+      // weiter unten keinen zweiten Mahnungsversand aus.
+      if (err instanceof MahnstufeBereitsEskaliertError) {
+        result.unveraendert++
+        continue
+      }
       result.blockiert.push({
         invoiceId: inv.id,
         invoiceNumber: nummer,

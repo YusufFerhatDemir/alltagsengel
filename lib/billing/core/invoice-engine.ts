@@ -48,6 +48,7 @@ import {
   type BudgetLage,
   type BudgetDeckelErgebnis,
 } from './budget-cap';
+import { assertBelegteNachweise } from '@/lib/billing/nachweis-beleg';
 
 // ---------------------------------------------------------------------------
 // Fehler-Codes fuer Tarif-Aufloesung
@@ -372,6 +373,37 @@ export async function createInvoiceDraft(
         topf,
       })
     : null;
+
+  // ── Unterschriftsbeleg VOR der Rechnungserstellung ───────────────────
+  // Reihenfolge: nach der Budgetlage, vor der RPC. Beide Vorpruefungen
+  // sind fail-closed und schreiben nichts; die Budgetlage steht zuerst,
+  // weil sie die aeltere und breitere Aussage ist ("darf ueberhaupt
+  // gedeckelt abgerechnet werden"). Entscheidend ist nur, dass beide vor
+  // der RPC liegen — danach existiert die Rechnung.
+  // Die RPC prueft die Unterschrift ebenfalls, akzeptiert dabei aber
+  //
+  //     proof_status IS DISTINCT FROM 'UNTERSCHRIEBEN' AND signature_hash IS NULL
+  //
+  // — also eine ODER-Annahme: der blosse Statuswert 'UNTERSCHRIEBEN'
+  // genuegt ihr, auch wenn nie ein Hash gebildet wurde. Der Hash entsteht
+  // aber nur, wenn `client_signed_at` gesetzt ist; wer den Status ohne
+  // Zeitstempel setzt, kommt an der Sperre vorbei. Und den Status setzen
+  // kann live jede Pflegekraft auf ihrer eigenen Zeile: die Policy
+  // `sr_engel_own` ist FOR ALL und hebt die Statuseinschraenkung der
+  // daneben liegenden Policy `service_records_caregiver_update` durch die
+  // ODER-Verknuepfung permissiver Policies auf.
+  //
+  // Deshalb hier, an der EINEN Stelle, durch die jeder Rechnungsweg laeuft
+  // (Einzelrechnung, auto-invoice, Sammelrechnungslauf), noch einmal die
+  // strengere Frage: gibt es einen BELEG. Siehe lib/billing/nachweis-beleg.ts.
+  // Migration 20261017000000 zieht dieselbe Verschaerfung in der Datenbank
+  // nach; bis sie angewendet ist, ist diese Pruefung die einzige.
+  await assertBelegteNachweise(supabase, {
+    clientId,
+    organizationId: client.organization_id,
+    periodMonth,
+    budgetType,
+  });
 
   // ── Atomare Rechnungserstellung via RPC ──────────────────────────────
   // Tarif-Aufloesung + Preisberechnung + Rechnungserstellung

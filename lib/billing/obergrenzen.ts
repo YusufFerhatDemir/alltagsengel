@@ -6,29 +6,48 @@
  * 20260808110000 die hessischen PfluV-Saetze (30,00 EUR/Std. Betreuung,
  * 25,00 EUR/Std. Entlastung im Alltag). Gelesen wurde sie bis zur Phase 8.6
  * von KEINEM Anwendungscode. Es gibt zwar den DB-Trigger
- * `enforce_tariff_obergrenze`, der aber zwei Bedingungen hat, die live
- * beide nicht erfuellt sind:
+ * `enforce_tariff_obergrenze`, der aber zwei Bedingungen hatte, die
+ * urspruenglich beide nicht erfuellt waren:
  *
- *   1. Er greift nur bei `bestaetigt = TRUE`. Der Seed steht bewusst auf
- *      FALSE (Sekundaerquellen, PfluV-Novelle in der Verbaendeanhoerung).
+ *   1. Er greift nur bei `bestaetigt = TRUE`. Der Seed stand auf FALSE
+ *      (Sekundaerquellen, PfluV-Novelle in der Verbaendeanhoerung).
  *   2. Er matcht auf `verguetungsart`, NICHT auf `angebotstyp`. Die beiden
  *      Seed-Zeilen unterscheiden sich aber ausschliesslich im angebotstyp
  *      (beide: hessen / §45b SGB XI / zeit_stunde / leistungsart NULL).
  *      `billing_tariffs` hat gar keine angebotstyp-Spalte — der Trigger
- *      koennte 30 und 25 EUR also selbst bei bestaetigt = TRUE nicht
- *      auseinanderhalten und wuerde eine der beiden Zeilen willkuerlich
- *      ziehen.
+ *      kann 30 und 25 EUR also nicht auseinanderhalten und zieht eine der
+ *      beiden Zeilen willkuerlich.
  *
- * Ergebnis: die Obergrenze war dokumentiert, nicht durchgesetzt — und wer
- * einen 35-EUR-Tarif anlegte, bekam nirgends einen Hinweis.
+ * ── STAND 28.08.2026, gegen die Produktion geprueft (Track 12) ──────────
+ * Punkt 1 gilt NICHT MEHR. Beide Zeilen stehen live auf
+ * `bestaetigt = TRUE, ist_aktiv = TRUE`. Der Trigger greift also. Und weil
+ * Punkt 2 unveraendert gilt, greift er falsch:
+ *
+ *   Die Auswahl des Triggers wurde fuer jede §45b-Zeitstunden-Leistungsart
+ *   nachgestellt (betreuung_45a, demenzbetreuung, hauswirtschaft,
+ *   einkaufsservice). Sie liefert in ALLEN vier Faellen 3000 Cent — auch
+ *   fuer `hauswirtschaft` und `einkaufsservice`, deren Grenze nach
+ *   §45a Abs. 1 S. 2 Nr. 3 SGB XI bei 2500 Cent liegt. Zwei Zeilen sind
+ *   fuer den Filter des Triggers gleichwertig, das `ORDER BY` bricht den
+ *   Gleichstand nicht auf, und `LIMIT 1` entscheidet der Planer.
+ *
+ * Das ist in beide Richtungen falsch: Entlastungsleistungen duerfen 20 %
+ * teurer sein, als die Verordnung erlaubt — und wenn der Planer die andere
+ * Zeile zoege, wuerde umgekehrt ein rechtmaessiger 30-EUR-Betreuungstarif
+ * abgewiesen. Ein Gleichstand ist keine Grundlage fuer eine Sperre.
+ *
+ * Die Auswahl DIESES Moduls ist die richtige: es kennt den Angebotstyp
+ * (ANGEBOTSTYP_VON_LEISTUNGSART) und filtert danach. `abweichungZurDatenbank`
+ * weiter unten stellt beide Auswahlen nebeneinander, damit der Unterschied
+ * benennbar ist, statt nur zu wirken. Migration 20261017000002 zieht die
+ * Angebotstyp-Zuordnung in den Trigger nach.
  *
  * ── Was dieses Modul tut, und was bewusst nicht ─────────────────────────
- * Es WARNT. Es blockiert nicht. Das ist kein Kompromiss aus Bequemlichkeit,
- * sondern folgt der Datenlage: `bestaetigt = FALSE` heisst, der Wert ist
- * nicht 1:1 gegen den Verordnungstext geprueft. Eine harte Sperre auf einem
- * ungeprueften Wert wuerde legitime Tarifpflege blockieren und waere
- * schlimmer als die Luecke. Sobald jemand `bestaetigt = TRUE` setzt, greift
- * zusaetzlich die DB-Sperre — dann meldet dieses Modul das mit.
+ * Es WARNT, solange `bestaetigt = FALSE` ist. Steht die Regel auf
+ * `bestaetigt = TRUE` — wie jetzt live —, meldet es `verstoss` und weist
+ * darauf hin, dass die Datenbank das Speichern zurueckweist. Es blockiert
+ * selbst nicht: die Sperre gehoert an die eine Stelle, die sie
+ * unumgehbar durchsetzen kann, und das ist die Datenbank.
  *
  * Die Zuordnung Leistungsart → Angebotstyp ist eine fachliche Auslegung von
  * §45a Abs. 1 S. 2 SGB XI und als solche gekennzeichnet: wo sie nicht
@@ -257,22 +276,29 @@ export function pruefeGegenRegeln(
     + `von ${euro(regel.obergrenze_cent)} (${land}, ${regel.rechtsgrundlage}, `
     + `Quelle: ${quelle}).`
 
-  if (regel.bestaetigt) {
-    return {
-      ...gemeinsam,
-      status: 'verstoss',
-      meldung:
-        `${kopf} Diese Obergrenze ist bestaetigt — die Datenbank weist das `
-        + `Speichern zurueck.`,
-    }
-  }
-
+  // Die Unschaerfe gehoert in BEIDE Zweige. Sie stand urspruenglich nur im
+  // Warnzweig — solange alle Regeln unbestaetigt waren, war das dasselbe.
+  // Seit die hessischen Zeilen live auf `bestaetigt = TRUE` stehen, laeuft
+  // der haeufigere Fall in den Verstoss-Zweig, und dort fehlte der Hinweis
+  // genau dann, wenn er am meisten zaehlt: die Meldung sagte "die Datenbank
+  // weist das zurueck", ohne zu sagen, dass die Grenze unter Unschaerfe
+  // gewaehlt wurde.
   const unschaerfe = unbestimmt
     ? ` Hinweis: Fuer die Leistungsart "${eingabe.leistungsart ?? '(keine)'}" ist `
       + `der Angebotstyp nach §45a Abs. 1 S. 2 SGB XI nicht eindeutig; geprueft `
       + `wurde gegen die hoechste einschlaegige Grenze. Eine strengere Grenze `
       + `kann zutreffen.`
     : ''
+
+  if (regel.bestaetigt) {
+    return {
+      ...gemeinsam,
+      status: 'verstoss',
+      meldung:
+        `${kopf} Diese Obergrenze ist bestaetigt — die Datenbank weist das `
+        + `Speichern zurueck.${unschaerfe}`,
+    }
+  }
 
   return {
     ...gemeinsam,
@@ -408,4 +434,142 @@ export async function pruefeObergrenzenStapel(
     }
     return pruefeGegenRegeln(regeln, eingabe)
   })
+}
+
+// ---------------------------------------------------------------------------
+// Abgleich mit der Auswahl des DB-Triggers
+// ---------------------------------------------------------------------------
+
+/**
+ * Stellt die Auswahl von `enforce_tariff_obergrenze` nach — bewusst mit
+ * seinem Fehler, nicht mit unserem Wissen.
+ *
+ * Der Trigger filtert auf `bestaetigt`, `ist_aktiv`, `rechtsgrundlage`,
+ * `verguetungsart`, `bundesland` und `leistungsart`. Den `angebotstyp`
+ * kennt er nicht — `billing_tariffs` hat die Spalte gar nicht. Genau
+ * deshalb kann er zwei Zeilen, die sich NUR im Angebotstyp unterscheiden,
+ * nicht auseinanderhalten.
+ *
+ * Rueckgabe: die Zeile, die der Trigger zoege, und wie viele Zeilen dafuer
+ * gleichwertig waren. `gleichwertig > 1` heisst: das Ergebnis ist nicht
+ * bestimmt, sondern Sache des Planers.
+ */
+export function datenbankAuswahl(
+  regeln: ObergrenzenRegel[],
+  eingabe: ObergrenzenEingabe,
+): { regel: ObergrenzenRegel | null; gleichwertig: number } {
+  const passend = regeln.filter(r => {
+    if (!r.ist_aktiv) return false
+    if (!r.bestaetigt) return false   // der Trigger prueft nur bestaetigte Regeln
+    if (r.rechtsgrundlage !== eingabe.rechtsgrundlage) return false
+    if (r.verguetungsart !== eingabe.verguetungsart) return false
+    if (r.bundesland !== null && r.bundesland !== eingabe.bundesland) return false
+    if (r.leistungsart !== null && r.leistungsart !== eingabe.leistungsart) return false
+    if (r.gueltig_ab > eingabe.gueltigAb) return false
+    if (r.gueltig_bis !== null && r.gueltig_bis < eingabe.gueltigAb) return false
+    return true
+  })
+
+  if (passend.length === 0) return { regel: null, gleichwertig: 0 }
+
+  const rang = (r: ObergrenzenRegel) =>
+    [r.bundesland !== null ? 1 : 0, r.leistungsart !== null ? 1 : 0, r.gueltig_ab] as const
+
+  const sortiert = [...passend].sort((a, b) => {
+    const [la, aa, ga] = rang(a)
+    const [lb, ab, gb] = rang(b)
+    if (la !== lb) return lb - la
+    if (aa !== ab) return ab - aa
+    return gb.localeCompare(ga)
+  })
+
+  const spitze = rang(sortiert[0])
+  const gleichwertig = sortiert.filter(r => {
+    const k = rang(r)
+    return k[0] === spitze[0] && k[1] === spitze[1] && k[2] === spitze[2]
+  }).length
+
+  return { regel: sortiert[0], gleichwertig }
+}
+
+export interface DatenbankAbweichung {
+  /** Grenze, die dieses Modul anwendet (mit Angebotstyp). */
+  anwendungCent: number | null
+  /** Grenze, die der DB-Trigger zoege (ohne Angebotstyp). */
+  datenbankCent: number | null
+  /** Wie viele Zeilen fuer die Auswahl des Triggers gleichwertig sind. */
+  gleichwertigeZeilen: number
+  /** true, wenn beide Auswahlen zu unterschiedlichen Grenzen fuehren. */
+  weichtAb: boolean
+  /**
+   * true, wenn die Auswahl des Triggers auf einem Gleichstand beruht und
+   * damit gar nicht bestimmt ist — unabhaengig davon, ob sie heute
+   * zufaellig dieselbe Zeile trifft.
+   */
+  unbestimmt: boolean
+  meldung: string | null
+}
+
+/**
+ * Vergleicht die Auswahl dieses Moduls mit der des DB-Triggers.
+ *
+ * Warum das eine eigene Auskunft verdient: die beiden Antworten koennen
+ * auseinanderlaufen, und wer nur eine von beiden sieht, haelt sie fuer DIE
+ * Antwort. Ein Tarif, den dieses Modul als `verstoss` meldet, kann von der
+ * Datenbank anstandslos gespeichert werden — und umgekehrt kann ein
+ * rechtmaessiger Tarif an einer Sperre scheitern, deren Grund nirgends
+ * steht. Die Tarifpflege soll das benannt bekommen, nicht erraten.
+ */
+export function abweichungZurDatenbank(
+  regeln: ObergrenzenRegel[],
+  eingabe: ObergrenzenEingabe,
+): DatenbankAbweichung {
+  const leer: DatenbankAbweichung = {
+    anwendungCent: null,
+    datenbankCent: null,
+    gleichwertigeZeilen: 0,
+    weichtAb: false,
+    unbestimmt: false,
+    meldung: null,
+  }
+
+  if (eingabe.rechtsgrundlage === 'privat') return leer
+
+  const anwendung = pruefeGegenRegeln(regeln, eingabe)
+  const db = datenbankAuswahl(regeln, eingabe)
+
+  const anwendungCent = anwendung.obergrenzeCent
+  const datenbankCent = db.regel?.obergrenze_cent ?? null
+  const unbestimmt = db.gleichwertig > 1
+  const weichtAb = anwendungCent !== null && datenbankCent !== null && anwendungCent !== datenbankCent
+
+  if (!weichtAb && !unbestimmt) {
+    return { ...leer, anwendungCent, datenbankCent, gleichwertigeZeilen: db.gleichwertig }
+  }
+
+  const teile: string[] = []
+  if (weichtAb) {
+    teile.push(
+      `Die gesetzliche Obergrenze dieser Leistungsart betraegt ${euro(anwendungCent!)}; `
+      + `die Datenbank prueft aber gegen ${euro(datenbankCent!)}, weil ihr Trigger den `
+      + 'Angebotstyp nach §45a Abs. 1 S. 2 SGB XI nicht kennt.',
+    )
+  }
+  if (unbestimmt) {
+    teile.push(
+      `Fuer die Auswahl des Datenbank-Triggers sind ${db.gleichwertig} Regelzeilen `
+      + 'gleichwertig; welche davon greift, ist nicht festgelegt. Eine Sperre auf einem '
+      + 'Gleichstand ist keine verlaessliche Sperre.',
+    )
+  }
+  teile.push('Migration 20261017000002 zieht die Angebotstyp-Zuordnung in den Trigger nach.')
+
+  return {
+    anwendungCent,
+    datenbankCent,
+    gleichwertigeZeilen: db.gleichwertig,
+    weichtAb,
+    unbestimmt,
+    meldung: teile.join(' '),
+  }
 }

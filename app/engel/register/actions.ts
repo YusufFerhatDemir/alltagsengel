@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
 import { logAuditEventOrWarn } from '@/lib/audit-log'
 import { geocodePLZ } from '@/lib/geocoding'
+import { ENGEL_HOURLY_RATE } from '@/lib/pricing/b2c-constants'
 
 // Register: user may not have 'engel' role yet — only check authenticated
 async function requireAuth() {
@@ -38,7 +39,14 @@ export async function registerAsEngel(data: {
   qualification: string
   services: string[]
   availability: string[]
-  hourlyRate: number
+  /**
+   * WIRD IGNORIERT (Track 12, B1). Der Stundensatz ist eine
+   * Konditionsentscheidung des Betriebs und wird serverseitig aus
+   * ENGEL_HOURLY_RATE gesetzt. Das Feld bleibt in der Signatur, damit
+   * bestehende Aufrufer nicht brechen — die Registrierungsseite schickt
+   * ohnehin genau diese Konstante zurueck.
+   */
+  hourlyRate?: number
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
     // --- Input validation ---
@@ -48,31 +56,80 @@ export async function registerAsEngel(data: {
     if (!Array.isArray(data.availability) || data.availability.length === 0) {
       return { ok: false, error: 'Bitte mindestens einen Verfügbarkeitstag wählen.' }
     }
-    if (typeof data.hourlyRate !== 'number' || data.hourlyRate <= 0) {
-      return { ok: false, error: 'Ungültiger Stundensatz.' }
-    }
-
     const { supabase, userId, organizationId, role, name } = await requireAuth()
 
-    // --- 1. Upsert angel profile ---
-    // Admin-Client: authenticated hat seit Track 9 kein INSERT/volles UPDATE
-    // mehr auf angels (Column-Level GRANT beschraenkt auf is_online, bio,
-    // services, availability — hourly_rate nur ueber Admin-Client).
+    // --- 1. Angel-Profil anlegen ------------------------------------------
+    // Diese Server Action laeuft ueber den ADMIN-Client und umgeht damit
+    // sowohl RLS als auch die Spalten-GRANTs. Beides ist notwendig — seit
+    // Track 9 hat `authenticated` auf `angels` kein INSERT und nur noch
+    // UPDATE auf (is_online, bio, services, availability); hourly_rate,
+    // qualification, is_certified und is_45b_capable sind live gesperrt
+    // (has_column_privilege = false, am 28.08.2026 gegen die Produktion
+    // geprueft).
+    //
+    // BEFUND (Track 12, B1): genau dadurch war diese Stelle das offene
+    // Gegenstueck zu jener Sperre. `requireAuth()` prueft nur, DASS jemand
+    // angemeldet ist — keine Rolle, und vor allem nicht, ob dieses Konto
+    // bereits registriert ist. Der Aufruf war ein `upsert` auf `id`, also
+    // idempotent per Konstruktion: ein laengst registrierter Engel konnte
+    // die Action ein zweites Mal aufrufen und dabei seinen eigenen
+    // hourly_rate, seine qualification und die beiden Kennzeichen
+    // is_certified/is_45b_capable frei setzen — dieselben vier Spalten, die
+    // Track 9 an der Datenbank verriegelt hat. Server Actions sind
+    // aufrufbare HTTP-Endpunkte; dass die Oberflaeche das Feld gar nicht
+    // anbietet, ist keine Schranke.
+    //
+    // Drei Aenderungen:
+    //
+    //   1. Der Stundensatz kommt NICHT mehr aus dem Aufruf. Er ist eine
+    //      Konditionsentscheidung des Betriebs und steht als
+    //      ENGEL_HOURLY_RATE in lib/pricing/b2c-constants.ts — die
+    //      Registrierungsseite hat schon immer genau diese Konstante
+    //      geschickt und nie eine Nutzereingabe. Der Parameter bleibt in
+    //      der Signatur, damit bestehende Aufrufer nicht brechen, wird aber
+    //      ignoriert; abweichende Saetze setzt die Personalverwaltung.
+    //   2. Ein bereits vorhandener Datensatz wird nur noch in den Feldern
+    //      fortgeschrieben, die der Engel selbst pflegen darf. hourly_rate,
+    //      qualification und die Kennzeichen bleiben stehen.
+    //   3. rating/total_jobs/satisfaction_pct werden nur bei der ERSTanlage
+    //      gesetzt. Vorher stempelte jeder erneute Aufruf sie auf
+    //      5,0 / 0 / 100 zurueck — eine Bewertungshistorie liess sich damit
+    //      loeschen.
     const admin = createAdminClient()
-    const { error: angelError } = await admin.from('angels').upsert({
-      id: userId,
-      hourly_rate: data.hourlyRate,
-      services: data.services,
-      availability: data.availability,
-      bio: null,
+
+    const { data: bestand, error: bestandError } = await admin
+      .from('angels')
+      .select('id')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (bestandError) {
+      return { ok: false, error: bestandError.message }
+    }
+
+    // Nur bei der Erstanlage: alles, was der Engel nicht selbst bestimmt.
+    const erstanlage = {
+      hourly_rate: ENGEL_HOURLY_RATE,
       qualification: data.qualification || null,
       is_certified: (data.qualification || '').includes('45b') || (data.qualification || '').includes('53b'),
       is_45b_capable: (data.qualification || '').includes('45b'),
-      is_online: true,
       total_jobs: 0,
       rating: 5.0,
       satisfaction_pct: 100,
-    })
+      bio: null,
+    }
+
+    // Bei jedem Aufruf: die Felder, die der Engel ohnehin selbst pflegen
+    // darf (dieselben vier wie im Spalten-GRANT aus Track 9).
+    const selbstgepflegt = {
+      services: data.services,
+      availability: data.availability,
+      is_online: true,
+    }
+
+    const { error: angelError } = bestand
+      ? await admin.from('angels').update(selbstgepflegt).eq('id', userId)
+      : await admin.from('angels').insert({ id: userId, ...erstanlage, ...selbstgepflegt })
 
     if (angelError) {
       return { ok: false, error: angelError.message }

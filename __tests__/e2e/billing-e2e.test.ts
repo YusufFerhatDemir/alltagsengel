@@ -245,7 +245,7 @@ function createPriceResolveMock(tarife: BillingTarif[]) {
     returns: vi.fn().mockResolvedValue({ data: tarife, error: null }),
   };
   return {
-    from: vi.fn(() => mockChain),
+    from: vi.fn((t: string) => (t === 'service_records' ? serviceRecordsKette() : mockChain)),
     rpc: vi.fn(),
     _chain: mockChain,
   } as any;
@@ -254,6 +254,37 @@ function createPriceResolveMock(tarife: BillingTarif[]) {
 // ═══════════════════════════════════════════════════════════════════════════
 // SZENARIO 1: Neuer §45b-Kunde → Auto-Budget
 // ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Kette fuer `service_records` im Rechnungsweg.
+ *
+ * Seit Track 12/B2 liest createInvoiceDraft die Nachweise des Zeitraums und
+ * verlangt zu jedem, der als unterschrieben GILT, auch einen Beleg. Der
+ * generische mockChain unten kann das nicht abbilden: dort ist `.in()`
+ * terminal, die Kette hier laeuft aber ueber `.in().gte().lte()` weiter.
+ *
+ * Der Rueckgabewert ist ein ordentlich unterschriebener Nachweis — Hash UND
+ * Zeitstempel, genau wie compute_signature_hash ihn erzeugt.
+ */
+function serviceRecordsKette() {
+  const kette: any = {}
+  kette.select = () => kette
+  kette.eq = () => kette
+  kette.in = () => kette
+  kette.gte = () => kette
+  kette.lte = vi.fn().mockResolvedValue({
+    data: [{
+      id: 'sr-e2e-1',
+      date: '2026-06-15',
+      proof_status: 'UNTERSCHRIEBEN',
+      signature_hash: 'a'.repeat(64),
+      client_signed_at: '2026-06-15T12:00:00Z',
+      client_signature: null,
+    }],
+    error: null,
+  })
+  return kette
+}
 
 describe('Szenario 1: Neuer §45b-Kunde → Auto-Budget', () => {
   it('erstellt Entlastungs- und VP-Anspruch in EINER Zeile bei Pflegegrad >= 2 (Jahresbeginn)', async () => {
@@ -791,7 +822,7 @@ describe('Szenario 9: Cross-Tenant-Isolation', () => {
       }),
     };
     const mock = {
-      from: vi.fn(() => mockChain),
+      from: vi.fn((t: string) => (t === 'service_records' ? serviceRecordsKette() : mockChain)),
       rpc: vi.fn(),
     } as any;
 
@@ -832,7 +863,7 @@ describe('Szenario 9: Cross-Tenant-Isolation', () => {
       }),
     };
     const mock = {
-      from: vi.fn(() => mockChain),
+      from: vi.fn((t: string) => (t === 'service_records' ? serviceRecordsKette() : mockChain)),
       rpc: vi.fn(),
     } as any;
 
@@ -897,7 +928,7 @@ describe('Szenario 10: Voller Abrechnungsflow', () => {
         }),
       };
       const mock = {
-        from: vi.fn(() => mockChain),
+        from: vi.fn((t: string) => (t === 'service_records' ? serviceRecordsKette() : mockChain)),
         rpc: vi.fn().mockResolvedValue({ data: rpcResult, error: null }),
       } as any;
 
@@ -944,7 +975,7 @@ describe('Szenario 10: Voller Abrechnungsflow', () => {
         is: vi.fn().mockResolvedValue({ data: [], error: null }),
       };
       const mock = {
-        from: vi.fn(() => mockChain),
+        from: vi.fn((t: string) => (t === 'service_records' ? serviceRecordsKette() : mockChain)),
         rpc: vi.fn().mockResolvedValue({
           data: null,
           error: { message: 'MISSING_VALID_TARIFF: Kein Tarif für Grundpflege' },
@@ -1257,7 +1288,7 @@ describe('Grenzfaelle', () => {
         error: { message: 'connection refused' },
       }),
     };
-    const mock = { from: vi.fn(() => mockChain) } as any;
+    const mock = { from: vi.fn((t: string) => (t === 'service_records' ? serviceRecordsKette() : mockChain)) } as any;
 
     await expect(
       resolvePrice(mock, {

@@ -21,6 +21,7 @@ import {
 import { STOP_SELECT, type StopZeile } from '@/lib/touren/select'
 import { saveServiceRecord } from '@/lib/admin/service-records'
 import { nachweisWerteAusEinsatz } from '@/lib/touren/leistungsnachweis'
+import { istZeitraumGueltig } from '@/lib/leistungsnachweis/zeitraum'
 import { withTracking } from '@/lib/monitoring/tracker'
 
 async function ladeTour(admin: ReturnType<typeof createAdminClient>, id: string, organizationId: string) {
@@ -272,6 +273,19 @@ export const PATCH = withTracking(async function PATCH(
       serviceRecordFehler =
         'Der Stop hat keine Zeiten — ein Leistungsnachweis darüber wäre null Minuten lang. '
         + 'Bitte Ankunft und Ende am Stop eintragen und den Nachweis erneut anlegen.'
+    } else if (!istZeitraumGueltig(stop.geplante_ankunft.slice(0, 5), stop.geplantes_ende.slice(0, 5))) {
+      // Nachtdienst ueber Mitternacht: `duration_minutes` ist eine
+      // GENERATED-Spalte ((end_time - start_time)/60). Ein Ende vor dem
+      // Beginn ergibt eine NEGATIVE Dauer — und damit eine
+      // Rechnungsposition, die Geld abzieht statt es zu fordern. Und genau
+      // hier ist der Fall zu erwarten: Nachtzuschlaege sind in
+      // billing_tariffs vorgesehen (Track 12, B5).
+      serviceRecordFehler =
+        `Der Stop läuft von ${stop.geplante_ankunft.slice(0, 5)} bis `
+        + `${stop.geplantes_ende.slice(0, 5)} und damit über Mitternacht. Die `
+        + 'Einsatzdauer wird aus der Differenz berechnet und wäre negativ — der '
+        + 'Nachweis würde den Rechnungsbetrag mindern. Bitte den Einsatz als zwei '
+        + 'Stops erfassen (bis 23:59 und ab 00:00).'
     } else if (!nachweisWerte) {
       // Fail-closed statt Ersatzwert: ohne Leistungsart aus dem Einsatz waere
       // jeder hier gesetzte Wert geraten — und wuerde den falschen Tarif und

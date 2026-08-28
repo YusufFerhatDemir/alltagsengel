@@ -6,6 +6,7 @@ import { datumBerlin } from '@/lib/utils/timezone';
 import { safeDbError } from '@/lib/utils/api-error'
 import { mitStatusSync } from '@/lib/leistungsnachweis/status-sync'
 import { assertKlientenUnterschrift, assertStornierbar } from '@/lib/leistungsnachweis/nachweis-regeln'
+import { assertZeitraumGueltig } from '@/lib/leistungsnachweis/zeitraum'
 import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { tarifLeistungsart, bekannteLeistungsarten } from '@/lib/billing/leistungsarten'
 import { pruefeBudget } from '@/lib/personal/einsatzfreigabe'
@@ -188,6 +189,20 @@ export const POST = withTracking(async function POST(req: NextRequest) {
 
   if (!client_id || !caregiver_id || !date || !start_time || !end_time || !service_type) {
     return NextResponse.json({ error: 'Pflichtfelder fehlen' }, { status: 400 })
+  }
+
+  // Zeitraum VOR der Erfassung prüfen: service_records.duration_minutes ist
+  // eine GENERATED-Spalte ((end_time - start_time)/60) und genau dieser Wert
+  // bestimmt den Rechnungsbetrag. Ein Ende vor dem Beginn — ein Nachtdienst
+  // über Mitternacht — erzeugt eine negative Dauer und damit eine
+  // Rechnungsposition, die Geld ABZIEHT. Weder die Datenbank noch diese
+  // Route prüften das bisher (Track 12, B5).
+  // Eigenes try/catch: dieser POST-Handler hat keine aeussere Fehlerklammer,
+  // ein durchgereichter UserFacingError wuerde als 500 ohne Meldung ankommen.
+  try {
+    assertZeitraumGueltig(start_time, end_time)
+  } catch (err) {
+    return apiErrorResponse(err, req, 422)
   }
 
   // Abrechenbarkeit VOR der Erfassung prüfen: ohne Tarifzuordnung scheitert

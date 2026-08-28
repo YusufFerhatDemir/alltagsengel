@@ -1,4 +1,4 @@
-# MASTER HANDOFF -- Stand 27.08.2026, nach Phase 8.6 (Geldwege: SEPA, Rechnungsversand, IK, Budget-Topf)
+# MASTER HANDOFF -- Stand 28.08.2026, nach Haerte-Track 12 (Abrechnung und Finanzfluesse)
 
 Dieses Dokument ist die einzige Wahrheitsquelle fuer den technischen Zustand
 beider Produkte. Jede neue Session liest zuerst diese Datei.
@@ -47,9 +47,13 @@ Dokument nicht den Stand, der tatsaechlich deployed ist -- dann zuerst
 
 | Anker | Bedeutung | Wert |
 |---|---|---|
-| **CODE_HEAD** | lokaler `main`-HEAD | `175ee7f` (Phase 8.6, Geldwege) |
-| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | `175ee7f` |
-| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | `175ee7f` |
+| **CODE_HEAD** | lokaler `main`-HEAD | `b99a893` (Track 11) -- fortgeschrieben im Track-12-Commit |
+| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | Track 12, Abrechnung und Finanzfluesse |
+| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | per `git rev-parse origin/main` pruefen |
+
+> Der Anker nennt bewusst `b99a893` und nicht den Track-12-Commit: ein
+> Dokument kann den Hash des Commits, der es enthaelt, nicht enthalten.
+> `b99a893` ist der Stand, GEGEN den Track 12 geprueft hat.
 
 Pruefbefehl:
 
@@ -233,6 +237,111 @@ git rev-parse HEAD && git rev-parse origin/main
 | Anforderungskatalog DiPA | `5b7fe21` | 60 Tests, 6 pure functions |
 | P1-4 Testabdeckung Welle 6 | `0e8418f` | 358 neue Tests, 15 Dateien |
 | Client-Upload-Validierung | `354b056` | SVG blockiert, HEIC erlaubt |
+
+---
+
+## 4-0. Haerte-Tracks 8-12 (28.08.2026) -- die Serie nach Phase 8.6
+
+Fuenf aufeinander aufbauende Sicherheits-Tracks. Jeder hat einen eigenen
+Bericht unter `docs/reports/`; hier steht nur, welche Frage er beantwortet
+hat und was offen blieb.
+
+| Track | Angriffsflaeche | Befunde | Bericht |
+|---|---|---|---|
+| 8 | Tourenplanung und Einsatzdokumentation | 1 P1, 11 Negativbefunde | `track-8-tourenplanung-audit.md` |
+| 9 | Personalverwaltung und Berechtigungssystem | 1 P0, 1 P1, 1 P2, 13 Negativbefunde | `track-9-personalverwaltung-audit.md` |
+| 10 | Subjekt-/Objektbindung innerhalb des Mandanten (BOLA) | 2 P1, 3 P2, 9 Negativbefunde | `track-10-subjektbindung-audit.md` |
+| 11 | Betroffenenrechte und Loeschkette (DSGVO Art. 15/17) | 3 P1, 2 P2, 1 P3, 8 Negativbefunde | `track-11-loeschkette-audit.md` |
+| 12 | Abrechnung und Finanzfluesse | 3 P1, 3 P2, 1 P3, 12 Negativbefunde | `track-12-abrechnung-finanzfluesse-audit.md` |
+
+### Warum Track 12 eine andere Frage stellt als 1-11
+
+Die Tracks 1-11 haben nacheinander „**wer darf welche Daten sehen und
+schreiben**" geschlossen. Track 12 fragt: **stimmt der Betrag?** Ein
+Zugriffsaudit kann das prinzipiell nicht beantworten -- wer eine Zeile
+schreiben *darf*, kann sie mit einem falschen Wert schreiben, und der Weg
+sieht in jedem Zugriffstest korrekt aus. Alle Befunde des Tracks liegen
+deshalb **hinter** einer bestandenen Berechtigungspruefung.
+
+### Track 12 -- die drei P1
+
+**B1 -- Die Registrierung war das offene Gegenstueck zur Track-9-Sperre.**
+Track 9 hat `angels.hourly_rate`, `qualification`, `is_certified` und
+`is_45b_capable` fuer `authenticated` an der Datenbank verriegelt (live
+bestaetigt ueber `has_column_privilege`). Im selben Zug wanderte
+`registerAsEngel` auf den Admin-Client, der die Sperre umgeht -- als
+`upsert` auf `id`, also idempotent, und mit einem `requireAuth()`, das nur
+prueft, DASS jemand angemeldet ist. Ein laengst registrierter Engel konnte
+die Server Action erneut aufrufen und genau diese vier Spalten frei setzen.
+Jetzt: Stundensatz aus der Serverkonstante, Bestand lesen, danach nur noch
+die vier selbstgepflegten Felder fortschreiben, fail-closed bei Lesefehler.
+
+**B2 -- „Unterschrieben" ohne Unterschrift, an der Datenbank vorbei.** Die
+Unterschriftspflicht wurde nur auf der SCHREIBENDEN Seite durchgesetzt.
+Daneben liegt ein zweiter Weg: `authenticated` hat live UPDATE auf
+`service_records`, und die Policy `sr_engel_own` ist FOR ALL -- permissive
+Policies werden ODER-verknuepft, die daneben liegende Statusbeschraenkung
+der Policy `service_records_caregiver_update` ist damit wirkungslos. Ein
+`PATCH` auf `proof_status` macht den eigenen Nachweis abrechenbar, ohne
+dass `compute_signature_hash` laeuft (der verlangt `client_signed_at`), und
+die Rechnungs-RPC laesst den blossen Statuswert als Unterschrift gelten.
+Ueber `/api/billing/auto-invoice` -- das die Pflegekraft mit
+Native-Bearer-Token aufrufen darf -- laeuft die Kette bis zur fertigen
+Rechnung durch. Jetzt: `assertBelegteNachweise` in `createInvoiceDraft`,
+der einen Stelle, durch die jeder Rechnungsweg laeuft; dazu Migration
+`20261017000000` (Beleg-Trigger + Entfernen von `sr_engel_own`).
+
+**B5 -- Ein Nachtdienst erzeugt eine Rechnungsposition, die Geld abzieht.**
+`service_records.duration_minutes` ist eine GENERATED-Spalte
+`(end_time - start_time)/60` und bestimmt den Rechnungsbetrag. Kein CHECK
+und keine Anwendungspruefung verlangte `end_time > start_time`. 22:00-06:00
+ergibt `-960` Minuten und damit einen negativen Rechnungsbetrag.
+`angel_availability` traegt genau diesen CHECK bereits -- fuer
+`service_records` fehlte er. Latent: live 0 betroffene Zeilen.
+
+### Track 12 -- Bestandsbefund, LIVE_VERIFIZIERT
+
+**Der Manipulationsschutz auf `service_records` hat noch nie gegriffen.**
+Von 30 Zeilen traegt KEINE `signature_hash` oder `client_signed_at`;
+`is_locked` ist ueberall FALSE -- auch auf den 15 bereits abgerechneten.
+`prevent_locked_record_change` schuetzt derzeit nichts, weil er
+vollstaendig daran haengt, dass `compute_signature_hash` vorher lief. Vier
+Nachweise tragen ueberhaupt keinen Unterschriftsnachweis, einer davon ist
+`invoiced`. Bewusst NICHT durch einen Backfill vorweggenommen: ob
+nachtraeglich zu unterschreiben, zu stornieren oder als Altbestand zu
+belassen, ist eine aufbewahrungsrechtliche Entscheidung (§ 630f BGB).
+
+### Track 12 -- Migrationen: EINGECHECKT, NICHT ANGEWENDET
+
+| Datei | Wirkung |
+|---|---|
+| `20261017000000_abrechnungsintegritaet_leistungsnachweis.sql` | Beleg-Trigger, Zeitfenster-CHECK, entfernt `sr_engel_own` |
+| `20261017000002_obergrenze_angebotstyp.sql` | PfluV-Obergrenze nach Angebotstyp statt Gleichstand |
+
+Beide mit Rollback. Beide verletzen heute **null** Bestandszeilen. DDL ueber
+den Dienstschluessel wird live mit `42501` abgewiesen -- Ausfuehrung nur
+manuell im SQL-Editor.
+
+### Track 12 -- neues Live-Pruefskript
+
+`npm run verify:abrechnung` (`scripts/verify-abrechnung-live.mjs`) prueft
+nur lesend gegen die Produktion: Track-9-Spaltensperre, effektive Rechte auf
+acht Geldtabellen, `anon`-Zugriff auf neun Tabellen, die FOR-ALL-Policy aus
+B2, die Auswahl des Obergrenzen-Triggers, negative Einsatzdauern und den
+Unterschriftsbeleg im Bestand. **5 von 7 bestanden**, 2 Berichte. Die zwei
+offenen Punkte sind genau die beiden nicht angewendeten Migrationen; das
+Skript schreibt das selbst in seine Schlussmeldung.
+
+### Stand der Pruefungen nach Track 12
+
+| Pruefung | Ergebnis |
+|---|---|
+| `tsc --noEmit` | **0 Fehler** |
+| `vitest run` | **7.855 gruen / 0 rot** (vorher 7.809) |
+| `npm run test:unit` (node:test) | **2.513 gruen / 0 rot** |
+| `npm run lint:forbidden` | **0 Treffer** (24.811 Dateien) |
+| `npm run lint:route-auth` | **0 Treffer** (412 Routen) |
+| `npm run lint:org-id` | **0 Treffer** (1.419 Dateien) |
 
 ---
 

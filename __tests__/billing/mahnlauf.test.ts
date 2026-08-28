@@ -90,8 +90,20 @@ class QB {
   private resolve() {
     if (this.mode === 'insert') return { data: this.pending, error: null }
     if (this.mode === 'update') {
-      for (const r of this.matched()) Object.assign(r, this.pending)
-      return { data: null, error: null }
+      // PostgREST liefert bei `.update(...).select(...)` die BETROFFENEN
+      // Zeilen zurueck — und null Zeilen sind kein Fehler, sondern die
+      // Auskunft "der Filter hat nichts getroffen". Genau daran haengt der
+      // Compare-and-Swap der Mahnstufe (Track 12/B6). Vorher gab dieser
+      // Doppelgaenger hier immer `null` zurueck; ein CAS liesse sich damit
+      // nicht pruefen — er saehe aus wie ein Fehlschlag.
+      //
+      // Die Trefferliste wird VOR dem Schreiben festgehalten: das
+      // Object.assign veraendert dieselben Zeilenobjekte, und ein Filter
+      // auf eine der geschriebenen Spalten wuerde sie danach nicht mehr
+      // finden.
+      const betroffen = this.matched()
+      for (const r of betroffen) Object.assign(r, this.pending)
+      return { data: betroffen, error: null }
     }
     return { data: this.matched(), error: null }
   }
