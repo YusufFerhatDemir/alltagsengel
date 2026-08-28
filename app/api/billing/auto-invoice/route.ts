@@ -8,6 +8,7 @@ import { createInvoiceDraft } from '@/lib/billing/core'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { ohneStornierte } from '@/lib/leistungsnachweis/status-sync'
 const log = logger.child('auto-invoice')
 
 // ═══════════════════════════════════════════════════════════════
@@ -187,7 +188,7 @@ export const POST = withTracking(async function POST(request: Request) {
     // ── Alle Einsätze des Klienten im Monat — org-fence ──
     const { data: records, error: monthErr } = await admin
       .from('service_records')
-      .select('id, date, service_type, duration_minutes, amount, budget_type, status')
+      .select('id, date, service_type, duration_minutes, amount, budget_type, status, proof_status, billing_status')
       .eq('client_id', resolvedClientId)
       .eq('organization_id', orgId)
       .gte('date', periodStart)
@@ -196,9 +197,26 @@ export const POST = withTracking(async function POST(request: Request) {
       return safeApiError(monthErr, request)
     }
 
-    const all = records || []
+    // Stornierte Nachweise fallen VOR jeder weiteren Rechnung heraus.
+    // Zwei Wirkungen hatte das Fehlen dieses Filters:
+    //   1) Ein Storno bleibt wegen des fehlenden status-Gegenstuecks auf
+    //      'complete' stehen und galt als "noch nicht unterschrieben" —
+    //      damit war der ganze Monat dauerhaft nicht abrechenbar, ohne dass
+    //      es einen Weg gegeben haette, den Nachweis noch zu unterschreiben.
+    //   2) Stand er auf 'signed', wanderte er in signedIds und wurde weiter
+    //      unten auf status='invoiced' gestempelt — ein Widerruf, den die
+    //      Oberflaeche danach als abgerechnet fuehrt.
+    const alleRecords = records || []
+    const all = ohneStornierte(alleRecords)
+    const storniert = alleRecords.length - all.length
     if (all.length === 0) {
-      return NextResponse.json({ ready: false, reason: 'Keine Einsätze im Monat', invoice: null })
+      return NextResponse.json({
+        ready: false,
+        reason: storniert > 0
+          ? `Keine abrechenbaren Einsätze im Monat (${storniert} storniert)`
+          : 'Keine Einsätze im Monat',
+        invoice: null,
+      })
     }
 
     // ── Vollständigkeits-Check: ALLE unterschrieben? ──
@@ -206,7 +224,8 @@ export const POST = withTracking(async function POST(request: Request) {
     if (pending.length > 0) {
       return NextResponse.json({
         ready: false,
-        reason: `${pending.length} Einsatz/Einsätze noch nicht unterschrieben`,
+        reason: `${pending.length} Einsatz/Einsätze noch nicht unterschrieben`
+          + (storniert > 0 ? ` (${storniert} storniert, nicht berücksichtigt)` : ''),
         pending: pending.map(r => ({ id: r.id, date: r.date, status: r.status })),
         invoice: null,
       })

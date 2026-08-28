@@ -59,6 +59,12 @@ export interface HkpLeistung {
   duration_minutes: number | null
   service_type: string | null
   amount: number | null
+  // Storno-Felder: 'STORNIERT' hat kein Gegenstueck im status-Werteset, ein
+  // Widerruf bleibt deshalb auf status='signed' stehen. Jede Abfrage, die
+  // HKP-Leistungen laedt, muss sie mitlesen und ohneStornierte() anwenden —
+  // sonst wandert eine zurueckgenommene Leistung in die Kassenabrechnung.
+  proof_status?: string | null
+  billing_status?: string | null
 }
 
 export interface HkpKlient {

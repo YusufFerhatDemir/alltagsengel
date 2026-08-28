@@ -26,6 +26,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { getOrgIK } from '@/lib/config/org-config'
+import { ohneStornierte } from '@/lib/leistungsnachweis/status-sync'
 
 // ── Leistungserbringer-Stammdaten (Pflichtfeld Kasse) ───────────
 // IK-Nummer wird in loadLeistungsnachweis() via getOrgIK() geladen.
@@ -289,7 +290,7 @@ export async function loadLeistungsnachweis(params: {
   const { data: records, error: rErr } = await supabase
     .from('service_records')
     .select(
-      'id, date, start_time, end_time, duration_minutes, service_type, amount, status, client_signature, caregiver_initials, verordnung_id'
+      'id, date, start_time, end_time, duration_minutes, service_type, amount, status, proof_status, billing_status, client_signature, caregiver_initials, verordnung_id'
     )
     .eq('verordnung_id', verordnung_id)
     .gte('date', periodStart)
@@ -299,7 +300,12 @@ export async function loadLeistungsnachweis(params: {
     .order('start_time', { ascending: true })
   if (rErr) throw new Error(`Einsätze konnten nicht geladen werden: ${rErr.message}`)
 
-  const rows = records || []
+  // Storno raus: 'STORNIERT' hat kein Gegenstueck im status-Werteset, ein
+  // widerrufener Nachweis bleibt deshalb auf status='signed' stehen und kam
+  // durch den .in('status', …)-Filter durch — auf ein Blatt, das der
+  // Pflegekasse als Nachweis vorgelegt wird.
+  const rows = ohneStornierte(records || [])
+  const stornierteAnzahl = (records || []).length - rows.length
 
   // 4) Digitale Unterschriften (Native-App-Pfad) dazuladen
   const recordIds = rows.map(r => r.id)
@@ -330,6 +336,9 @@ export async function loadLeistungsnachweis(params: {
   if (!klient.date_of_birth) warnungen.push('Geburtsdatum des Klienten fehlt.')
   if (!klient.care_level) warnungen.push('Pflegegrad des Klienten fehlt.')
   if (rows.length === 0) warnungen.push('Keine erfassten Einsätze in diesem Monat.')
+  if (stornierteAnzahl > 0) {
+    warnungen.push(`${stornierteAnzahl} stornierte(r) Nachweis(e) wurde(n) nicht aufgenommen.`)
+  }
   if (!verordnung.abtretungserklaerung_vorhanden) {
     warnungen.push('Abtretungserklärung liegt nicht vor — Direktabrechnung mit der Kasse nicht möglich.')
   }

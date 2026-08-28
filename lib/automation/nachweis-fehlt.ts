@@ -20,6 +20,7 @@ import { logAuditEvent } from '@/lib/audit-log'
 import { ersterPdlDerOrg } from './org-empfaenger'
 import { heuteBerlin } from '@/lib/utils/timezone'
 import { logger } from '@/lib/logger'
+import { nachweisOffen } from '@/lib/leistungsnachweis/status-sync'
 const log = logger.child('nachweis-fehlt')
 
 /** Tage nach Einsatzdatum, ab denen ein fehlender Nachweis eine Aufgabe auslöst. */
@@ -31,6 +32,9 @@ interface OffenerNachweis {
   client_id: string | null
   caregiver_id: string
   service_type: string | null
+  status?: string | null
+  proof_status?: string | null
+  billing_status?: string | null
   clients: { first_name?: string | null; last_name?: string | null } | { first_name?: string | null; last_name?: string | null }[] | null
 }
 
@@ -55,11 +59,27 @@ export async function meldeFehlendeNachweise(
   grenzDatum.setDate(grenzDatum.getDate() - NACHWEIS_FRIST_TAGE)
   const grenzDatumStr = grenzDatum.toISOString().slice(0, 10)
 
+  // Der Nachweisstand steht in ZWEI Spalten, und der DB-Trigger
+  // sync_service_record_status laeuft nur in EINE Richtung
+  // (proof_status -> status). Jeder Schreibweg, der nur `status` setzt —
+  // die Rechnungs-RPC setzt 'invoiced', der Verwaltungsweg 'signed' —
+  // laesst proof_status auf 'ENTWURF' stehen. Live am 28.08.2026 traf das
+  // auf 28 von 30 Nachweisen zu, 15 davon bereits abgerechnet: diese Kette
+  // hat der Betreuungskraft UND der PDL taeglich Aufgaben angelegt fuer
+  // Nachweise, die laengst erledigt und bezahlt sind — 56 Aufgaben aus
+  // einem Statusfeld, das niemand nachzieht.
+  //
+  // Der zusaetzliche status-Filter fragt beide Spalten: nur ein Nachweis,
+  // der auch nach `status` noch offen ist, ist wirklich offen. Der
+  // JS-Filter darunter wiederholt die Regel gegen ohnehin geladene Zeilen
+  // (und nimmt stornierte mit heraus — ein Widerruf braucht keine
+  // Erinnerung mehr).
   const { data: offene, error } = await supabase
     .from('service_records')
-    .select('id, date, client_id, caregiver_id, service_type, clients(first_name, last_name)')
+    .select('id, date, client_id, caregiver_id, service_type, status, proof_status, billing_status, clients(first_name, last_name)')
     .eq('organization_id', organizationId)
     .eq('proof_status', 'ENTWURF')
+    .in('status', ['draft', 'incomplete'])
     .lt('date', grenzDatumStr)
     .limit(500)
 
@@ -67,7 +87,7 @@ export async function meldeFehlendeNachweise(
     return { geprueft: 0, aufgabenErstellt: 0, fehler: [`service_records: ${error.message}`] }
   }
 
-  const offeneNachweise = (offene ?? []) as OffenerNachweis[]
+  const offeneNachweise = ((offene ?? []) as OffenerNachweis[]).filter(nachweisOffen)
   const fehler: string[] = []
   let aufgabenErstellt = 0
   const pdlId = await ersterPdlDerOrg(supabase, organizationId)

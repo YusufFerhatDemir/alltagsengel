@@ -89,10 +89,26 @@ export const POST = withTracking(async function POST(request: Request) {
     const confidenceNum = typeof confidence === 'number' ? confidence : 0
     const ocrStatus = confidenceNum < 70 ? 'needs_review' : 'processed'
 
-    const { data: ocrResult, error: ocrErr } = await supabase
+    // Dienstschluessel statt RLS-Client — zwei Gruende, beide live belegt:
+    //
+    //  1) Auf ocr_results und review_errors steht als einzige schreibende
+    //     Policy `*_admin_all` mit is_admin(), und is_admin() ist live auf
+    //     admin|superadmin beschraenkt (aus pg_proc gelesen). Diese Route
+    //     laesst ueber 'einsatz.schreiben' aber auch die PDL herein — also
+    //     genau die Rolle, die in einem Pflegedienst die Pruefzentrale
+    //     bedient. Fuer sie scheiterte der Insert an 42501 und die Route
+    //     meldete 500.
+    //  2) organization_id ist NOT NULL mit Default current_org_id(). Die
+    //     Funktion liest auth.uid(); beim Dienstschluessel gibt es keinen
+    //     angemeldeten Nutzer und die Fallback-Kette endet in der fest
+    //     verdrahteten Stamm-Organisation. Deshalb wird die Organisation
+    //     hier ausdruecklich gesetzt — dieselbe, gegen die der Nachweis
+    //     oben schon gefenced wurde.
+    const { data: ocrResult, error: ocrErr } = await admin
       .from('ocr_results')
       .insert({
         service_record_id,
+        organization_id: orgId,
         image_url,
         raw_text: raw_text || '',
         extracted: extracted || {},
@@ -170,7 +186,7 @@ export const POST = withTracking(async function POST(request: Request) {
     }
 
     // ── 4) Unterschrift-Prüfung ──
-    const { count: sigCount } = await supabase
+    const { count: sigCount } = await admin
       .from('service_signatures')
       .select('id', { count: 'exact', head: true })
       .eq('service_record_id', service_record_id)
@@ -185,17 +201,30 @@ export const POST = withTracking(async function POST(request: Request) {
       })
     }
 
+    // FAIL-CLOSED. Die Befunde SIND das Ergebnis dieser Pruefung — darunter
+    // 'signature_missing' mit severity 'critical', also der Hinweis, dass
+    // fuer einen Einsatz ueberhaupt keine Unterschrift vorliegt. Bisher
+    // wurde ein fehlgeschlagener Insert nur geloggt und die Route
+    // antwortete 200 mit `review_errors: []`: die Oberflaeche meldete dem
+    // Buero eine bestandene Pruefung, waehrend die Beanstandungen nirgends
+    // ankamen. Schlaegt der Eintrag fehl, wird der ocr_results-Datensatz
+    // wieder entfernt (sonst bliebe ein Pruefvorgang ohne seine Befunde
+    // stehen) und die Route antwortet 503 mit Klartext.
     let insertedErrors: any[] = []
     if (createdErrors.length > 0) {
-      const { data: errData, error: errInsErr } = await supabase
+      const { data: errData, error: errInsErr } = await admin
         .from('review_errors')
-        .insert(createdErrors)
+        .insert(createdErrors.map(e => ({ ...e, organization_id: orgId })))
         .select()
       if (errInsErr) {
         log.errorWithException('review_errors insert error', errInsErr)
-      } else {
-        insertedErrors = errData || []
+        await admin.from('ocr_results').delete().eq('id', ocrResult.id)
+        return NextResponse.json({
+          error: 'Die Prüfbefunde konnten nicht gespeichert werden — der Prüfvorgang wurde zurückgenommen. '
+            + 'Bitte erneut versuchen; ohne gespeicherte Befunde wäre die Prüfung nicht nachweisbar.',
+        }, { status: 503 })
       }
+      insertedErrors = errData || []
     }
 
     return NextResponse.json({ ocr_result: ocrResult, review_errors: insertedErrors })

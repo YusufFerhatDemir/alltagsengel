@@ -7,6 +7,7 @@ import { erstelleMonatsabschluss } from '@/lib/abrechnung/monatsabschluss'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 
 import { euroZuCent } from '@/lib/geld'
+import { ohneStornierte } from '@/lib/leistungsnachweis/status-sync'
 import { withTracking } from '@/lib/monitoring/tracker'
 export const GET = withTracking(async function GET(request: Request) {
   try {
@@ -41,7 +42,7 @@ export const GET = withTracking(async function GET(request: Request) {
 
     const [recordsRes, invoicesRes, closingsRes, paymentsRes] = await Promise.all([
       admin.from('service_records')
-        .select('id, client_id, status, date, duration_minutes, amount, budget_type, service_type')
+        .select('id, client_id, status, proof_status, billing_status, date, duration_minutes, amount, budget_type, service_type')
         .eq('organization_id', organizationId)
         .gte('date', periodStart).lte('date', periodEnd),
       admin.from('invoices')
@@ -60,7 +61,15 @@ export const GET = withTracking(async function GET(request: Request) {
         .is('deleted_at', null),
     ])
 
-    const records = recordsRes.data || []
+    // Storno wird getrennt ausgewiesen und zaehlt nicht mehr als
+    // unterschriebene bzw. abgerechnete Leistung: 'STORNIERT' hat kein
+    // Gegenstueck im status-Werteset, ein Widerruf bleibt deshalb auf
+    // 'signed'/'invoiced' stehen und erschien in dieser Uebersicht als
+    // erbrachte, abgerechnete Leistung. Die Ampel des Monatsabschlusses
+    // haengt an diesen Zahlen.
+    const alleRecords = recordsRes.data || []
+    const records = ohneStornierte(alleRecords)
+    const stornierteRecords = alleRecords.length - records.length
     const invoices = invoicesRes.data || []
     const closings = closingsRes.data || []
     const payments = paymentsRes.data || []
@@ -103,6 +112,7 @@ export const GET = withTracking(async function GET(request: Request) {
         abgeschlossen: completeRecords,
         unterschrieben: signedRecords,
         abgerechnet: invoicedRecords,
+        storniert: stornierteRecords,
       },
       rechnungen: {
         gesamt: totalInvoices,

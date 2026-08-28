@@ -14,6 +14,7 @@ import { logBillingAction } from '@/lib/billing/core/audit'
 import { pflegegradVon } from '@/lib/clients/pflegegrad'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { ohneStornierte, hatUnterschrift } from '@/lib/leistungsnachweis/status-sync'
 const log = logger.child('dta/dry-run')
 
 export const maxDuration = 60
@@ -182,22 +183,37 @@ export const POST = withTracking(async function POST(request: Request) {
     const drStart = `${periodMonth}-01`
     const drLastDay = new Date(Number(periodMonth.slice(0, 4)), Number(periodMonth.slice(5, 7)), 0).getDate()
     const drEnd = `${periodMonth}-${String(drLastDay).padStart(2, '0')}`
-    const { data: records } = await admin
+    const { data: alleRecords } = await admin
       .from('service_records')
-      .select('id, client_id, date, service_type, duration_minutes, amount, caregiver_id, caregiver:caregivers(first_name, last_name), proof_status')
+      .select('id, client_id, date, service_type, duration_minutes, amount, caregiver_id, caregiver:caregivers(first_name, last_name), proof_status, billing_status, signature_hash, client_signature')
       .in('client_id', clientIds)
       .eq('organization_id', organizationId)
       .gte('date', drStart)
       .lte('date', drEnd)
       .in('status', ['complete', 'signed', 'invoiced'])
 
-    const unsigniert = records?.filter((r: any) => r.proof_status !== 'UNTERSCHRIEBEN') ?? []
+    // Storniertes zaehlt hier weder als Leistung noch als fehlende
+    // Unterschrift — es geht gar nicht erst in die Datei.
+    const records = ohneStornierte(alleRecords || [])
+    const storniert = (alleRecords || []).length - records.length
+
+    // Bis hierher galt allein proof_status === 'UNTERSCHRIEBEN' als
+    // Unterschrift. Der Sync laeuft aber nur in eine Richtung
+    // (proof_status -> status, siehe status-sync.ts): jeder Nachweis, den
+    // der Verwaltungsweg oder die Rechnungs-RPC angefasst hat, blieb auf
+    // 'ENTWURF' stehen. Live am 28.08.2026 traf das auf 28 von 30
+    // Nachweisen zu — die Vorpruefung meldete also praktisch JEDEN Nachweis
+    // als nicht unterschrieben und begrub damit die vier, bei denen
+    // tatsaechlich kein Beleg vorliegt. hatUnterschrift() fragt nach dem
+    // Beleg statt nach der Statusspalte.
+    const unsigniert = records.filter(r => !hatUnterschrift(r))
 
     schritte.push({
       schritt: '3. Kundendaten + Leistungsnachweise',
       status: unsigniert.length > 0 ? 'warnung' : 'ok',
-      details: `${clientIds.length} Kunden, ${records?.length ?? 0} Leistungsnachweise` +
-        (unsigniert.length > 0 ? ` (${unsigniert.length} nicht unterschrieben)` : ''),
+      details: `${clientIds.length} Kunden, ${records.length} Leistungsnachweise`
+        + (unsigniert.length > 0 ? ` (${unsigniert.length} ohne Unterschrift)` : '')
+        + (storniert > 0 ? `, ${storniert} storniert (nicht abgerechnet)` : ''),
       dauer_ms: Date.now() - kdStart,
     })
 
@@ -208,7 +224,7 @@ export const POST = withTracking(async function POST(request: Request) {
       if (!client) continue
 
       const kt = ktByClient.get(inv.client_id)
-      const clientRecords = records?.filter((r: any) => r.client_id === inv.client_id) ?? []
+      const clientRecords = records.filter((r: any) => r.client_id === inv.client_id)
       const leistungen = clientRecords.map((r: any) => {
         const menge = (r.duration_minutes ?? 60) / 60
         const gesamtCent = euroZuCent(r.amount)

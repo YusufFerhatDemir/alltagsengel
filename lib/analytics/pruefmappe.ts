@@ -6,6 +6,7 @@
 // Kategorie liest ausschließlich reale, org-gefenced Tabellen.
 // ═══════════════════════════════════════════════════════════════
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { ohneStornierte } from '@/lib/leistungsnachweis/status-sync'
 
 export type PruefmappenStatus = 'vollstaendig' | 'unvollstaendig' | 'keine_daten'
 
@@ -26,7 +27,7 @@ export interface Pruefmappe {
 // ── Pure Bewertungen ─────────────────────────────────────────────
 
 export function bewerteLeistungsnachweise(
-  saetze: { client_signature: string | null }[],
+  saetze: { client_signature?: string | null | unknown }[],
   offeneFehler: number,
 ): PruefmappenKategorie {
   if (saetze.length === 0) {
@@ -104,8 +105,10 @@ export async function erstellePruefmappe(
 
   const [recordsRes, verlaufRes, planeRes, woundsRes, vitalsRes] = await Promise.all([
     supabase
+      // proof_status/billing_status mitlesen — sonst filtert ohneStornierte()
+      // unten nichts (beide Felder waeren undefined).
       .from('service_records')
-      .select('id, client_signature')
+      .select('id, client_signature, proof_status, billing_status')
       .eq('organization_id', organizationId)
       .eq('client_id', clientId)
       .gte('date', von)
@@ -142,7 +145,15 @@ export async function erstellePruefmappe(
   if (woundsRes.error) throw new Error(`Wunddoku konnte nicht geladen werden: ${woundsRes.error.message}`)
   if (vitalsRes.error) throw new Error(`Vitalwerte konnten nicht geladen werden: ${vitalsRes.error.message}`)
 
-  const recordIds = (recordsRes.data || []).map((r: any) => r.id as string)
+  // Ein STORNIERTER Nachweis ist keine erbrachte Leistung. In der
+  // Pruefmappe zaehlte er bisher voll mit: einmal in der Gesamtzahl und
+  // einmal in der Unterschriftenquote, an der die Kategorie
+  // "Leistungsnachweise" haengt. Ein Widerruf ohne Unterschrift drueckte
+  // damit die Quote der Dokumentation, obwohl gar keine Leistung offen ist —
+  // und das ist die Zahl, die bei einer MD-Pruefung vorgelegt wird.
+  const alleRecords = (recordsRes.data || []) as { id: string; client_signature?: unknown; proof_status?: string | null; billing_status?: string | null }[]
+  const gueltigeRecords = ohneStornierte(alleRecords)
+  const recordIds = gueltigeRecords.map(r => r.id)
   let offeneFehler = 0
   if (recordIds.length > 0) {
     const { data: fehlerData, error: fehlerErr } = await supabase
@@ -166,7 +177,7 @@ export async function erstellePruefmappe(
   }
 
   const kategorien: PruefmappenKategorie[] = [
-    bewerteLeistungsnachweise(recordsRes.data || [], offeneFehler),
+    bewerteLeistungsnachweise(gueltigeRecords, offeneFehler),
     bewertePflegeverlauf(verlaufRes.data || []),
     bewerteMassnahmenplan(planeRes.data || [], massnahmen),
     bewerteWunddoku(woundsRes.data || []),
