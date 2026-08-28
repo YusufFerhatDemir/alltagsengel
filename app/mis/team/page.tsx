@@ -473,13 +473,10 @@ export default function TeamPage() {
           </div>
           <div>
             <div style={{ fontSize: 11, fontWeight: 600, color: BRAND.muted, marginBottom: 2 }}>Rolle</div>
-            <select value={editForm.role} onChange={e => setEditForm({...editForm, role: e.target.value})} style={inputStyle}>
-              <option value="admin">Admin</option>
-              <option value="superadmin">Superadmin</option>
-              <option value="engel">Engel</option>
-              <option value="kunde">Kunde</option>
-              <option value="fahrer">Fahrer</option>
-            </select>
+            <div style={{ ...inputStyle, background: 'var(--bg2, #f5f5f5)', cursor: 'not-allowed', opacity: 0.7 }}>
+              {({ admin: 'Admin', superadmin: 'Superadmin', engel: 'Engel', kunde: 'Kunde', fahrer: 'Fahrer' } as Record<string,string>)[editForm.role] || editForm.role}
+            </div>
+            <div style={{ fontSize: 10, color: BRAND.muted, marginTop: 2 }}>Rollenaenderung nur ueber Superadmin-Rollenverwaltung</div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
             <MisButton variant="secondary" onClick={() => { setEditOpen(false); setEditUser(null) }}>Abbrechen</MisButton>
