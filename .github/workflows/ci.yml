@@ -83,6 +83,19 @@ jobs:
       - name: Forbidden-strings lint
         run: npm run lint:forbidden
 
+      - name: Mandanten-Lint (organization_id bei Dienstschluessel-Inserts)
+        # 190 Tabellen tragen live `organization_id NOT NULL DEFAULT
+        # current_org_id()`. Diese Funktion liest auth.uid(); beim
+        # Dienstschluessel gibt es keinen angemeldeten Nutzer, die
+        # Fallback-Kette laeuft ins Leere und endet in einer fest
+        # verdrahteten Stamm-Organisation. Ein Insert ohne organization_id
+        # legt die Zeile deshalb beim FALSCHEN Mandanten ab — und der eigene
+        # sieht sie hinter dem RESTRICTIVE org_fence gar nicht mehr.
+        #
+        # Die Regel liest scripts/org-default-tables.json (eingecheckt,
+        # aus der Live-DB erzeugt) und braucht deshalb keinen DB-Zugang.
+        run: npm run lint:org-id
+
       - name: Schema-Drift-Check (warn-only — blockiert nicht)
         # Findet Code, der Spalten anspricht, die es live nicht gibt.
         # PostgREST lehnt so eine Abfrage komplett ab (42703); im Code sieht

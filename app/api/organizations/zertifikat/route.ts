@@ -88,16 +88,17 @@ export const POST = withTracking(async function POST(req: NextRequest) {
       fingerprint: pruefung.fingerprint,
       organization_id: organizationId,
     }
-    let { error: dbErr } = await admin
+    // KEIN Fallback ohne organization_id mehr: abrechnung_zertifikate traegt
+    // die Spalte live als NOT NULL mit Default current_org_id(). Dieser Weg
+    // laeuft mit dem Dienstschluessel, dort gibt es kein auth.uid() — der
+    // Default haette das Zertifikat eines fremden Mandanten in der
+    // Stamm-Organisation abgelegt, wo es hinter dem RESTRICTIVE
+    // abrechnung_zertifikate_org_fence fuer den eigenen Mandanten unsichtbar
+    // waere. Ein DTA-Absenderzertifikat beim falschen Mandanten ist keine
+    // Formalie: es signiert dessen Kassenabrechnung.
+    const { error: dbErr } = await admin
       .from('abrechnung_zertifikate')
       .upsert(zeile, { onConflict: 'ik_nummer,typ' })
-    if (dbErr && /organization_id/.test(dbErr.message)) {
-      // Fallback, solange die Phase-3-Migration noch nicht angewendet ist
-      const { organization_id: _omit, ...ohneOrg } = zeile
-      ;({ error: dbErr } = await admin
-        .from('abrechnung_zertifikate')
-        .upsert(ohneOrg, { onConflict: 'ik_nummer,typ' }))
-    }
     if (dbErr) return safeApiError(dbErr, req)
 
     // Onboarding-Fortschritt

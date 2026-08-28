@@ -105,6 +105,15 @@ export async function registriereGeraet(
   const { userId, organizationId, token } = params
 
   if (!istUuid(userId)) return { ok: false, bekannt: false, grund: 'Ungueltige Nutzer-ID' }
+  // FAIL-CLOSED auf den Mandanten: dieses Modul schreibt mit dem
+  // Dienstschluessel (holeClient → createAdminClient). Ohne organization_id
+  // greift der Spalten-Default current_org_id(), der mangels auth.uid() in
+  // der Stamm-Organisation endet — das Geraet eines fremden Mandanten haenge
+  // dann dort, und der eigene Mandant saehe es nicht. Lieber keine
+  // Registrierung als eine beim falschen Mandanten.
+  if (!istUuid(organizationId)) {
+    return { ok: false, bekannt: false, grund: 'Ungueltige Organisations-ID' }
+  }
   if (typeof token !== 'string' || token.trim().length < 20) {
     return { ok: false, bekannt: false, grund: 'Ungueltiger Token' }
   }
@@ -120,29 +129,31 @@ export async function registriereGeraet(
 
   const zeile: Record<string, unknown> = {
     user_id: userId,
+    organization_id: organizationId,
     token: token.trim(),
     platform: plattform,
     device_info: params.deviceInfo ?? null,
     updated_at: jetzt,
   }
-  if (istUuid(organizationId)) zeile.organization_id = organizationId
 
-  const schreibe = async (mitOrg: boolean, mitLastUsed: boolean) => {
+  const schreibe = async (mitLastUsed: boolean) => {
     const nutzlast = { ...zeile }
-    if (!mitOrg) delete nutzlast.organization_id
     if (mitLastUsed) nutzlast.last_used_at = jetzt
     return client.from('fcm_tokens').upsert(nutzlast, { onConflict: 'user_id,token' })
   }
 
-  let { error } = await schreibe(true, true)
+  let { error } = await schreibe(true)
 
-  // Migration noch nicht eingespielt: ohne die neuen Spalten erneut
-  // versuchen, statt die Registrierung ganz zu verlieren.
+  // Migration noch nicht eingespielt: ohne last_used_at erneut versuchen,
+  // statt die Registrierung ganz zu verlieren. organization_id wird dabei
+  // BEWUSST NICHT weggelassen — sie ist live NOT NULL, ein Versuch ohne sie
+  // koennte den Fehler gar nicht beheben, sondern nur das Geraet in der
+  // Stamm-Organisation ablegen.
   if (error && fehlerCode(error) === SPALTE_FEHLT) {
-    log.warn('fcm_tokens ohne neue Spalten — Registrierung im Altformat', {
+    log.warn('fcm_tokens ohne last_used_at — Registrierung im Altformat', {
       errorMessage: error.message,
     })
-    ;({ error } = await schreibe(false, false))
+    ;({ error } = await schreibe(false))
   }
 
   if (error) {

@@ -282,6 +282,9 @@ export const PATCH = withTracking(async function PATCH(
         + 'Leistungsart am Einsatz eintragen und den Nachweis erneut anlegen.'
     } else {
       const gespeichert = await saveServiceRecord(admin, {
+        // Dienstschluessel: ohne diese Zeile faellt der Nachweis auf den
+        // Spalten-Default current_org_id() und damit in die Stamm-Organisation.
+        organization_id: auth.ctx.organizationId,
         client_id: stop.client_id,
         caregiver_id: tour.caregiver_id,
         date: tour.tour_date,

@@ -55,6 +55,18 @@ export interface ServiceRecordInput {
   client_signature?: string | null
   status: string
   completeness_check?: Record<string, unknown> | null
+  /**
+   * Mandant des Nachweises. PFLICHT, sobald der uebergebene Client der
+   * Dienstschluessel ist (createAdminClient) — dort gibt es kein auth.uid(),
+   * der Spalten-Default current_org_id() laeuft ins Leere und endet in der
+   * fest verdrahteten Stamm-Organisation. Ein so abgelegter Nachweis ist fuer
+   * den eigenen Mandanten hinter service_records_org_fence (RESTRICTIVE)
+   * unsichtbar und wird nie abgerechnet.
+   *
+   * Beim RLS-Client des angemeldeten Nutzers ist der Default richtig; dort
+   * darf das Feld fehlen. Angegeben ist besser, weil es nicht raet.
+   */
+  organization_id?: string | null
 }
 
 export interface SaveResult {
@@ -113,6 +125,7 @@ export async function saveServiceRecord(
     const { data, error } = await supabase
       .from('service_records')
       .insert({
+        ...(input.organization_id ? { organization_id: input.organization_id } : {}),
         client_id: input.client_id,
         caregiver_id: input.caregiver_id,
         date: input.date,
