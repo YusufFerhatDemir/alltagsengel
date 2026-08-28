@@ -963,3 +963,72 @@ export async function bauePersonalTabellen(db: PGlite): Promise<void> {
 export async function wendeArbeitszeitAkteurMigrationAn(db: PGlite): Promise<void> {
   await db.exec(transaktionsInhalt('20261018000000_arbeitszeit_korrektur_akteur.sql'))
 }
+
+// ─────────────────────────────────────────────────────────────────────
+// Pflegedokumentation: Massnahmenplanung
+// ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Baut die Massnahmenplanung auf: Plaene, Einzelmassnahmen, das
+ * unveraenderliche Pflege-Audit-Log — und die beiden Riegel, an denen
+ * dieses Modul haengt.
+ *
+ * Alles WORTGLEICH aus den Migrationen. Was hier zaehlt, sind genau die
+ * Dinge, die nur eine echte Datenbank beantwortet:
+ *
+ *   • `uq_pflege_massnahmenplaene_ein_aktiver_plan` — ein TEILINDEX
+ *     (`WHERE status = 'aktiv'`). Er ist laut Migration 20261009000000
+ *     die EIGENTLICHE Absicherung der Freigabe, weil `freigebenPlan()`
+ *     mit zwei getrennten UPDATE-Anweisungen ohne Transaktionsschutz
+ *     arbeitet. Ein handgeschriebenes Testschema haette daraus leicht
+ *     ein gewoehnliches UNIQUE gemacht — und damit einen Riegel geprueft,
+ *     den es nicht gibt.
+ *   • `prevent_locked_plan_edit()` — der Sperr-Trigger, mit derselben
+ *     Bedingung `OLD.gesperrt AND NEW.gesperrt`, die in der Zeiterfassung
+ *     die bekannte Luecke aufmacht.
+ *   • die drei CHECK-Listen (plan_typ, status, kategorie/prioritaet).
+ *
+ * `auth.users` traegt die Fremdschluessel von `erstellt_von` und
+ * `freigegeben_von`; die Aufrufer muessen ihre Akteure dort anlegen.
+ *
+ * Setzt baueKettenSchema() voraus (clients, organizations, auth.users).
+ */
+export async function bauePflegeplanungTabellen(db: PGlite): Promise<void> {
+  const M_PFLEGEDOKU = '20260810010000_pflegedokumentation.sql'
+  const M_EIN_AKTIVER = '20261009000000_pflege_massnahmenplaene_ein_aktiver_plan.sql'
+  const M_PFLEGE_AUDIT = '20260921040000_pflege_audit_log.sql'
+  const M_FUNKTIONEN = '20250101000050_missing_production_functions.sql'
+
+  // set_updated_at() kann schon aus bauePersonalTabellen() stammen.
+  await db.exec(funktionAusMigration(M_FUNKTIONEN, 'set_updated_at'))
+
+  await db.exec(tabelleAusMigration(M_PFLEGEDOKU, 'pflege_massnahmenplaene'))
+  await db.exec(tabelleAusMigration(M_PFLEGEDOKU, 'pflege_massnahmen'))
+  await db.exec(tabelleAusMigration(M_PFLEGE_AUDIT, 'pflege_audit_log'))
+
+  // Der Teilindex — Pruefgegenstand, deshalb wortgleich.
+  await db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS uq_pflege_massnahmenplaene_ein_aktiver_plan
+      ON public.pflege_massnahmenplaene (organization_id, client_id)
+      WHERE status = 'aktiv';
+  `)
+
+  await db.exec(funktionAusMigration(M_PFLEGEDOKU, 'prevent_locked_plan_edit'))
+  await db.exec(funktionAusMigration(M_PFLEGE_AUDIT, 'prevent_pflege_audit_log_update'))
+  await db.exec(funktionAusMigration(M_PFLEGE_AUDIT, 'prevent_pflege_audit_log_delete'))
+
+  await db.exec(`
+    CREATE TRIGGER trg_locked_plan BEFORE UPDATE ON pflege_massnahmenplaene
+      FOR EACH ROW EXECUTE FUNCTION prevent_locked_plan_edit();
+
+    CREATE TRIGGER trg_updated_at_pflege_massnahmenplaene BEFORE UPDATE ON pflege_massnahmenplaene
+      FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    CREATE TRIGGER trg_updated_at_pflege_massnahmen BEFORE UPDATE ON pflege_massnahmen
+      FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+    CREATE TRIGGER trg_pflege_audit_log_immutable_update BEFORE UPDATE ON public.pflege_audit_log
+      FOR EACH ROW EXECUTE FUNCTION public.prevent_pflege_audit_log_update();
+    CREATE TRIGGER trg_pflege_audit_log_immutable_delete BEFORE DELETE ON public.pflege_audit_log
+      FOR EACH ROW EXECUTE FUNCTION public.prevent_pflege_audit_log_delete();
+  `)
+}
