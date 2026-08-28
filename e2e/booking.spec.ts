@@ -127,6 +127,21 @@ test.describe('Booking-Entry-Points (Smoke)', () => {
       }),
     )
 
+    // Beobachter fuer die Diagnose weiter unten.
+    const konsole: string[] = []
+    const seitenfehler: string[] = []
+    const tokenAufrufe: Array<{ methode: string; status: number | string }> = []
+    const ratenAufrufe: string[] = []
+    page.on('console', m => {
+      if (m.type() === 'error' || m.type() === 'warning') konsole.push(`${m.type()}: ${m.text()}`)
+    })
+    page.on('pageerror', e => seitenfehler.push(e.message))
+    page.on('response', r => {
+      const u = r.url()
+      if (u.includes('/auth/v1/token')) tokenAufrufe.push({ methode: r.request().method(), status: r.status() })
+      if (u.includes('/api/auth/check-rate-limit')) ratenAufrufe.push(String(r.status()))
+    })
+
     await page.goto('/auth/login')
     await page.getByPlaceholder(/E-Mail/i).first().fill(`nonexistent-${Date.now()}@test.invalid`)
     await page.getByPlaceholder(/Passwort/i).first().fill('WrongPassword!123')
@@ -139,7 +154,30 @@ test.describe('Booking-Entry-Points (Smoke)', () => {
     // aber LEERES alert-Element. `.auth-error` ist die Klasse, die
     // app/auth/login/page.tsx fuer genau diese Meldung setzt.
     const banner = page.locator('.auth-error[role="alert"]')
-    await expect(banner.first()).toBeVisible({ timeout: 15_000 })
+    try {
+      await expect(banner.first()).toBeVisible({ timeout: 15_000 })
+    } catch (fehler) {
+      // Ein Test, der nur „element(s) not found" sagt, zwingt zum Raten.
+      // Diese Diagnose bleibt dauerhaft stehen: schlaegt der Test wieder
+      // fehl, steht im Protokoll, WORAN es lag — die Anmeldemaske kennt
+      // genau zwei stille Rueckwege ohne Meldung (Ratenzaehler gesperrt,
+      // oder Antwort ohne Nutzer und ohne Fehler), und die lassen sich
+      // von aussen nur an diesen Angaben unterscheiden.
+      const diagnose = {
+        knopfDeaktiviert: await submit.isDisabled().catch(() => 'unlesbar'),
+        knopfText: await submit.innerText().catch(() => 'unlesbar'),
+        tokenAufrufe: tokenAufrufe.map(a => `${a.methode} ${a.status}`),
+        ratenzaehlerAufrufe: ratenAufrufe.length,
+        konsole: konsole.slice(0, 10),
+        seitenfehler: seitenfehler.slice(0, 5),
+        kartentext: (await page.locator('.auth-card').first().innerText()
+          .catch(() => '(keine .auth-card)')).replace(/\s+/g, ' ').slice(0, 400),
+      }
+      throw new Error(
+        `Fehler-Banner blieb aus. Diagnose:\n${JSON.stringify(diagnose, null, 2)}\n\n`
+        + (fehler as Error).message,
+      )
+    }
 
     const text = (await banner.first().innerText()).trim().toLowerCase()
     expect(text.length).toBeGreaterThan(0)
