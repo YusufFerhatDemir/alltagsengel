@@ -66,8 +66,18 @@ const GUARDS = [
  */
 function inlineSchranke(rumpf: string): boolean {
   const sitzung = /auth\.getUser\s*\(/.test(rumpf)
+  // Track 7 (28.08.2026): die Rollenentscheidung laeuft in den Routen nicht
+  // mehr ueber `rolleDarf(profile.role, …)`, sondern ueber BEIDE
+  // Rollenquellen (quellenDuerfen / quellenSindAdministration /
+  // quellenSindRolle aus lib/auth/rollen-quelle.ts). Der Test haelt sonst
+  // die alte, schwaechere Form fest und meldet die staerkere als „keine
+  // Schranke". Die urspruengliche Aussage bleibt unveraendert: gefragt
+  // wird nach einer BERECHTIGUNG, nicht nur nach der Anmeldung.
   const rollenEntscheidung =
     /rolleDarf\s*\(/.test(rumpf)
+    || /quellenDuerfen\s*\(/.test(rumpf)
+    || /quellenSindAdministration\s*\(/.test(rumpf)
+    || /quellenSindRolle\s*\(/.test(rumpf)
     || /role\s*!==\s*'superadmin'/.test(rumpf)
     || /role\s*===\s*'superadmin'/.test(rumpf)
   return sitzung && rollenEntscheidung
@@ -116,7 +126,7 @@ describe('app/api/admin/** — jeder Handler hat eine Schranke', () => {
             geschuetzt,
             `${datei}::${h} hat keine Zugangsschranke. Entweder einen Helfer `
             + `aufrufen (${GUARDS.join(', ')}) oder von Hand pruefen: `
-            + 'auth.getUser() UND rolleDarf(). Neuer Helfer? In GUARDS eintragen.',
+            + 'auth.getUser() UND quellenDuerfen(). Neuer Helfer? In GUARDS eintragen.',
           ).toBe(true)
         })
       }

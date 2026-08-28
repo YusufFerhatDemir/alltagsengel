@@ -1,5 +1,5 @@
 import { apiErrorResponse } from '@/lib/api/error-sanitizer'
-import { rolleDarf } from '@/lib/auth/guard'
+import { quellenDuerfen } from '@/lib/auth/rollen-quelle'
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -51,7 +51,12 @@ export const POST = withTracking(async function POST(request: Request) {
       return NextResponse.json({ error: 'clientId und inhalt sind Pflichtfelder.' }, { status: 400 })
     }
 
-    const istAdmin = rolleDarf(auth.role, 'pflege.lesen')
+    // Entschieden wird ueber BEIDE Rollenquellen, nicht ueber die
+    // wirksame Rolle als Beschriftung: `auth.role` ist die engere der
+    // beiden Quellen, nicht deren Schnittmenge — bei gleich weiten, aber
+    // verschiedenen Rollen faellt `rolleDarf(auth.role, …)` anders aus als
+    // der Guard selbst.
+    const istAdmin = quellenDuerfen(auth.quellen, 'pflege.lesen')
     let supabase = await createClient()
     let organizationId: string | undefined
 

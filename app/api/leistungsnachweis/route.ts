@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { rolleDarf } from '@/lib/auth/guard'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { PDFDocument, rgb, type PDFPage, type PDFFont } from 'pdf-lib'
 import fontkit from '@pdf-lib/fontkit'
@@ -16,6 +15,7 @@ import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
 import { ladeUnterschriftsBild } from '@/lib/signaturen/unterschrift-bild'
 import { ohneStornierte } from '@/lib/leistungsnachweis/status-sync'
+import { holeRollenQuellenFuer, quellenDuerfen } from '@/lib/auth/rollen-quelle'
 const log = logger.child('leistungsnachweis')
 
 // ═══════════════════════════════════════════════════════════════
@@ -103,12 +103,8 @@ export const GET = withTracking(async function GET(request: Request) {
     if (!user) {
       return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
     }
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-    const isAdmin = !!profile && rolleDarf(profile.role, 'einsatz.lesen')
+    const quellen = await holeRollenQuellenFuer(supabase, user)
+    const isAdmin = quellenDuerfen(quellen, 'einsatz.lesen')
 
     const admin = createAdminClient()
     const orgId = await getActiveOrgId()

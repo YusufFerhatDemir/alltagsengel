@@ -4,6 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { invalidatePricingCache } from '@/lib/pricing-engine'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { holeRollenQuellenFuer, quellenSindRolle } from '@/lib/auth/rollen-quelle'
 
 // Admin auth check helper
 async function checkAdmin() {
@@ -11,13 +12,9 @@ async function checkAdmin() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { supabase, user: null, error: 'Nicht authentifiziert' }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
+  const quellen = await holeRollenQuellenFuer(supabase, user)
 
-  if (!profile || profile.role !== 'superadmin') {
+  if (!quellenSindRolle(quellen, 'superadmin')) {
     return { supabase, user: null, error: 'Nur Superadmins duerfen Preise verwalten (plattformweite Konfiguration).' }
   }
 

@@ -13,17 +13,21 @@ import { logAuditEvent } from '@/lib/audit-log'
 import { safeErrorResponse, safeDbError } from '@/lib/utils/api-error'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { holeRollenQuellenFuer, quellenDuerfen } from '@/lib/auth/rollen-quelle'
 const log = logger.child('einsatzplanung')
 
 async function requireStaff(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { ok: false as const, response: NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 }) }
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  const quellen = await holeRollenQuellenFuer(supabase, user)
   // Einsatzplanung gehoert zum Einsatzgeschehen: admin/superadmin und pdl.
-  if (!profile || !rolleDarf(profile.role, 'einsatz.lesen')) {
+  if (!quellenDuerfen(quellen, 'einsatz.lesen')) {
     return { ok: false as const, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
   }
-  return { ok: true as const, userId: user.id, role: profile.role }
+  // `quellen` wandert mit: die force_override-Regel weiter unten ist eine
+  // ZWEITE Entscheidung, und die gehoert auf dieselbe Grundlage wie diese
+  // hier — nicht auf die wirksame Rolle als blosse Beschriftung.
+  return { ok: true as const, userId: user.id, role: quellen.rolle, quellen }
 }
 
 export const GET = withTracking(async function GET(req: NextRequest) {
@@ -112,7 +116,7 @@ export const POST = withTracking(async function POST(req: NextRequest) {
 
   // D1: force_override nur fuer admin/superadmin
   // Uebersteuern einer fehlenden Einsatzfreigabe ist eine Personalentscheidung.
-  if (body.force_override && !rolleDarf(auth.role, 'personal.schreiben')) {
+  if (body.force_override && !quellenDuerfen(auth.quellen, 'personal.schreiben')) {
     return NextResponse.json(
       { error: 'force_override ist nur fuer Administratoren erlaubt.' },
       { status: 403 }
@@ -340,7 +344,7 @@ export const PATCH = withTracking(async function PATCH(req: NextRequest) {
   if (!id) return NextResponse.json({ error: 'id erforderlich' }, { status: 400 })
 
   // D1: force_override nur fuer admin/superadmin
-  if (force_override && !rolleDarf(auth.role, 'personal.schreiben')) {
+  if (force_override && !quellenDuerfen(auth.quellen, 'personal.schreiben')) {
     return NextResponse.json(
       { error: 'force_override ist nur fuer Administratoren erlaubt.' },
       { status: 403 }

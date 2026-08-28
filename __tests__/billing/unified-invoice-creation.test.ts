@@ -34,6 +34,7 @@ const serverSupabaseChain = {
   gte: vi.fn().mockReturnThis(),
   lte: vi.fn().mockReturnThis(),
   single: vi.fn(),
+  maybeSingle: vi.fn(),
 }
 
 const mockServerFrom = vi.fn((table: string) => {
@@ -42,6 +43,7 @@ const mockServerFrom = vi.fn((table: string) => {
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           single: mockProfileSelect,
+          maybeSingle: mockProfileSelect,
         }),
       }),
     }
@@ -64,6 +66,7 @@ const adminChain = {
   gte: vi.fn().mockReturnThis(),
   lte: vi.fn().mockReturnThis(),
   single: mockClientSelect,
+  maybeSingle: mockClientSelect,
 }
 
 const mockAdminFrom = vi.fn(() => adminChain)

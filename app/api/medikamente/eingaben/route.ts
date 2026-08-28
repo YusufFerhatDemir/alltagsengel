@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { apiErrorResponse, safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { rolleDarf } from '@/lib/auth/guard'
+import { quellenDuerfen, type RollenQuellen } from '@/lib/auth/rollen-quelle'
 import { requireMedUser } from '@/lib/medikamente/api-auth'
 import { listeEingaben, erfasseEingabe } from '@/lib/medikamente/medikamente'
 import type { EingabeFilter } from '@/lib/medikamente/types'
@@ -17,8 +17,15 @@ import { withTracking } from '@/lib/monitoring/tracker'
 // tatsaechlichen Verabreichungsnachweise. Engel bleiben bewusst auf dem
 // RLS-Client, damit eigene_caregiver_ids() sie weiter auf ihre zugewiesenen
 // Klienten begrenzt — das darf die Service-Role nicht umgehen.
-async function medikamenteClient(role: string, berechtigung: 'pflege.lesen' | 'pflege.schreiben') {
-  return rolleDarf(role, berechtigung) ? createAdminClient() : await createClient()
+// Die Weiche entscheidet ueber BEIDE Rollenquellen. Mit der wirksamen
+// Rolle als blossem Namen entschiede sie in einem Fall anders als der
+// Guard davor — und die Wahl faellt hier zwischen dem Dienstschluessel
+// (umgeht RLS) und dem RLS-Client des Nutzers.
+async function medikamenteClient(
+  quellen: RollenQuellen,
+  berechtigung: 'pflege.lesen' | 'pflege.schreiben',
+) {
+  return quellenDuerfen(quellen, berechtigung) ? createAdminClient() : await createClient()
 }
 
 export const GET = withTracking(async function GET(req: NextRequest) {
@@ -41,7 +48,7 @@ export const GET = withTracking(async function GET(req: NextRequest) {
   if (status) filter.status = status as EingabeFilter['status']
 
   try {
-    const sb = await medikamenteClient(auth.role, 'pflege.lesen')
+    const sb = await medikamenteClient(auth.quellen, 'pflege.lesen')
     const data = await listeEingaben(sb, auth.organizationId, filter)
     return NextResponse.json(data)
   } catch (e) {
@@ -58,7 +65,7 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     if (!body.medikament_id || !body.client_id || !body.einnahme_zeit || !body.geplant_um || !body.status) {
       return NextResponse.json({ error: 'Pflichtfelder: medikament_id, client_id, einnahme_zeit, geplant_um, status' }, { status: 400 })
     }
-    const sb = await medikamenteClient(auth.role, 'pflege.schreiben')
+    const sb = await medikamenteClient(auth.quellen, 'pflege.schreiben')
     const data = await erfasseEingabe(sb, auth.organizationId, auth.userId, body)
     return NextResponse.json(data, { status: 201 })
   } catch (e) {

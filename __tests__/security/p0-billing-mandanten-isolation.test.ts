@@ -312,19 +312,26 @@ describe('P0-5: tariffs GET erzwingt Rollen-Pruefung (MITTEL-Befund Finale Abnah
     expect(authAt, 'Auth-Guard muss vor dem Tarif-Load stehen').toBeLessThan(loadAt)
   })
 
+  // Track 7 (28.08.2026): die Route las die Rolle mit
+  // `.from('profiles').select('role')` und entschied mit
+  // `rolleDarf(profile.role, …)` — also aus EINER der beiden autoritativen
+  // Quellen. Eine Herabstufung, die nur in app_metadata steht, blieb damit
+  // wirkungslos. Der Test wird auf die neue, strengere Form gezogen; seine
+  // Aussage bleibt unveraendert: die Rolle wird VOR dem Tarif-Load geprueft
+  // und Kunden/Engel bekommen 403.
+  const ROLLENPRUEFUNG = /if\s*\(!quellenDuerfen\(/
+
   it('prueft die Rolle gegen internes Personal, nicht nur die Anmeldung', () => {
-    expect(get).toMatch(/\.from\('profiles'\)\s*\n\s*\.select\('role'\)/)
-    expect(get).toMatch(
-      /rolleDarf\(profile\.role, 'tarife\.lesen'\)/
-    )
-    const roleCheckAt = get.search(/if\s*\(!profile\s*\|\|\s*!rolleDarf\(/)
+    expect(get).toMatch(/holeRollenQuellenFuer\(supabase, user\)/)
+    expect(get).toMatch(/quellenDuerfen\(quellen, 'tarife\.lesen'\)/)
+    const roleCheckAt = get.search(ROLLENPRUEFUNG)
     const loadAt = get.indexOf("from('billing_tariffs')")
     expect(roleCheckAt, `${REL}: keine Rollen-Pruefung vor dem Tarif-Load`).toBeGreaterThan(-1)
     expect(roleCheckAt).toBeLessThan(loadAt)
   })
 
   it('lehnt Kunden/Engel (keine interne Rolle) mit 403 ab', () => {
-    const roleCheckAt = get.search(/if\s*\(!profile\s*\|\|\s*!rolleDarf\(/)
+    const roleCheckAt = get.search(ROLLENPRUEFUNG)
     expect(get.slice(roleCheckAt, roleCheckAt + 200)).toMatch(/status:\s*403/)
   })
 })

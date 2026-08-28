@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { rolleDarf } from '@/lib/auth/guard'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -17,6 +16,7 @@ import {
 import { logAuditEventOrWarn } from '@/lib/audit-log'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { holeRollenQuellenFuer, quellenDuerfen } from '@/lib/auth/rollen-quelle'
 const log = logger.child('api:bookings')
 
 // ─── Row-Formen des bookings-Selects (inkl. eingebetteter Joins) ───
@@ -158,8 +158,8 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     // Rolle wird immer geholt: sie entscheidet sowohl über die Berechtigung
     // als auch darüber, ob force_override erlaubt ist (D1-Regel wie in
     // /api/einsatzplanung — Override ausschließlich für Administratoren).
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-    const istAdmin = !!profile && rolleDarf(profile.role, 'einsatz.schreiben')
+    const quellen = await holeRollenQuellenFuer(supabase, user)
+    const istAdmin = quellenDuerfen(quellen, 'einsatz.schreiben')
 
     // Nur der zugewiesene Engel darf annehmen/ablehnen — Admins zur Nachsteuerung.
     if (booking.angel_id !== user.id && !istAdmin) {
@@ -255,7 +255,7 @@ export const POST = withTracking(async function POST(req: NextRequest) {
         await logAuditEventOrWarn({
           action: 'create',
           actorId: user.id,
-          actorRole: profile?.role ?? null,
+          actorRole: quellen.rolle ?? null,
           organizationId: orgId,
           entityType: 'assignment',
           entityId: kette.assignmentId,
@@ -290,7 +290,7 @@ export const POST = withTracking(async function POST(req: NextRequest) {
           await logAuditEventOrWarn({
             action: 'update',
             actorId: user.id,
-            actorRole: profile?.role ?? null,
+            actorRole: quellen.rolle ?? null,
             organizationId: orgId,
             entityType: 'booking',
             entityId: booking.id,

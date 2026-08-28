@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { rolleDarf } from '@/lib/auth/guard'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -10,6 +9,7 @@ import { logAuditEvent } from '@/lib/audit-log'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { adminLogger as log } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { holeRollenQuellenFuer, quellenDuerfen, quellenSindRolle } from '@/lib/auth/rollen-quelle'
 
 export const POST = withTracking(async function POST(request: NextRequest) {
   try {
@@ -20,13 +20,9 @@ export const POST = withTracking(async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
+  const quellen = await holeRollenQuellenFuer(supabase, user)
 
-  if (!profile?.role || !rolleDarf(profile.role, 'benutzer.verwalten')) {
+  if (!quellenDuerfen(quellen, 'benutzer.verwalten')) {
     return NextResponse.json({ error: 'Keine Admin-Berechtigung' }, { status: 403 })
   }
 
@@ -102,7 +98,7 @@ export const POST = withTracking(async function POST(request: NextRequest) {
     .select('role, email, first_name, last_name')
     .eq('id', targetUserId)
     .single()
-  if (targetProfile?.role && ['admin', 'superadmin'].includes(targetProfile.role) && profile.role !== 'superadmin') {
+  if (targetProfile?.role && ['admin', 'superadmin'].includes(targetProfile.role) && !quellenSindRolle(quellen, 'superadmin')) {
     return NextResponse.json({ error: 'Nur Superadmins können Admin-Passwörter zurücksetzen' }, { status: 403 })
   }
 
@@ -121,7 +117,7 @@ export const POST = withTracking(async function POST(request: NextRequest) {
   await logAuditEvent({
     action: 'password_reset',
     actorId: user.id,
-    actorRole: profile.role,
+    actorRole: quellen.rolle,
     organizationId,
     targetId: targetUserId,
     targetEmail: targetProfile?.email || email || null,

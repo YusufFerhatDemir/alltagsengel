@@ -13,7 +13,12 @@ describe('D1: force_override Autorisierung', () => {
       // Seit dem Rollenkonzept ist das Uebersteuern an die Berechtigung
       // 'personal.schreiben' gebunden (admin/superadmin/pdl), nicht mehr an
       // eine Rollenliste — lib/auth/rollen.ts.
-      expect(src).toContain("body.force_override && !rolleDarf(auth.role, 'personal.schreiben')")
+    // Track 7 (28.08.2026): die Entscheidung laeuft nicht mehr ueber
+      // `rolleDarf(auth.role, …)` — `auth.role` ist die wirksame Rolle als
+      // BESCHRIFTUNG (die engere der beiden Quellen), nicht deren
+      // Schnittmenge. Entschieden wird jetzt ueber beide Quellen. Die
+      // Aussage des Tests bleibt: force_override verlangt personal.schreiben.
+      expect(src).toContain("body.force_override && !quellenDuerfen(auth.quellen, 'personal.schreiben')")
     })
 
     it('gibt 403 bei nicht-autorisiertem force_override', () => {
@@ -23,7 +28,7 @@ describe('D1: force_override Autorisierung', () => {
 
   describe('PATCH — Rollenprüfung', () => {
     it('prüft Rolle vor Akzeptanz von force_override in PATCH', () => {
-      expect(src).toContain("force_override && !rolleDarf(auth.role, 'personal.schreiben')")
+      expect(src).toContain("force_override && !quellenDuerfen(auth.quellen, 'personal.schreiben')")
     })
   })
 

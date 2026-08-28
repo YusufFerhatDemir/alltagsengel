@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { processPending, checkFristen } from '@/lib/workflow/processing'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { holeRollenQuellenFuer, quellenSindRolle } from '@/lib/auth/rollen-quelle'
 
 export const POST = withTracking(async function POST(request: Request) {
   // Konstantzeit-Vergleich im gemeinsamen Helfer; fail-closed, wenn
@@ -18,9 +19,8 @@ export const POST = withTracking(async function POST(request: Request) {
     if (authError || !user) {
       return NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 })
     }
-    const { data: profile } = await supabase
-      .from('profiles').select('role').eq('id', user.id).single()
-    if (!profile || profile.role !== 'superadmin') {
+    const quellen = await holeRollenQuellenFuer(supabase, user)
+    if (!quellenSindRolle(quellen, 'superadmin')) {
       return NextResponse.json({ error: 'Nur fuer Superadmins — diese Route verarbeitet organisationsuebergreifende Daten.' }, { status: 403 })
     }
   }

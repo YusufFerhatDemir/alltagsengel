@@ -105,9 +105,16 @@ export const POST = withTracking(async function POST(req: NextRequest) {
   // Für assignment_id-Stops die Zeiten aus der DB laden
   const vorhandeneIds = stops.filter(s => s.assignment_id).map(s => s.assignment_id!)
   if (vorhandeneIds.length > 0) {
+    // Mandanten-Fence auch auf der VORAB-Lesung: aufloeseStops() weist
+    // fremde Einsaetze zwar ab, aber erst spaeter — bis dahin waeren hier
+    // Start- und Endzeiten fremder Einsaetze gelesen und in die
+    // Verfuegbarkeitspruefung eingegangen. Wenig Ertrag fuer einen
+    // Angreifer, aber ein Lesezugriff ueber die Mandantengrenze bleibt
+    // einer, und der Dienstschluessel hebt den org_fence auf.
     const { data: vorhandene } = await admin
       .from('assignments')
       .select('start_time, end_time')
+      .eq('organization_id', auth.ctx.organizationId)
       .in('id', vorhandeneIds)
     for (const a of vorhandene ?? []) {
       if (a.start_time) vorabStartZeiten.push(a.start_time)
@@ -208,6 +215,7 @@ export const POST = withTracking(async function POST(req: NextRequest) {
   const { data: wochenTouren } = await admin
     .from('tours')
     .select('id, gesamt_fahrzeit_minuten, tour_stops(geplante_ankunft, geplantes_ende, fahrzeit_minuten)')
+    .eq('organization_id', auth.ctx.organizationId)
     .eq('caregiver_id', caregiver_id)
     .gte('tour_date', datumBerlin(montag))
     .lte('tour_date', datumBerlin(sonntag))

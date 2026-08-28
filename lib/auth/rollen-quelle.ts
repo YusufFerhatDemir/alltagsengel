@@ -54,6 +54,40 @@ export async function holeRollenQuellen(
 ): Promise<RollenQuellen | null> {
   const { data: { user }, error } = await supabase.auth.getUser()
   if (error || !user) return null
+  return holeRollenQuellenFuer(supabase, user)
+}
+
+/**
+ * Minimaler Ausschnitt aus dem Supabase-Benutzer, den die Ermittlung braucht.
+ *
+ * Bewusst strukturell statt `User` aus @supabase/supabase-js: die Routen,
+ * die hier umgestellt wurden, halten den angemeldeten Benutzer in
+ * unterschiedlich eng typisierten Variablen, und ein Nominaltyp haette an
+ * jeder dieser Stellen einen Cast erzwungen — also genau die Zeile, die
+ * beim naechsten Umbau wieder falsch geschrieben wird.
+ */
+export interface RollenBenutzer {
+  id: string
+  app_metadata?: Record<string, unknown> | null
+}
+
+/**
+ * Wie `holeRollenQuellen()`, aber fuer Aufrufer, die `auth.getUser()`
+ * bereits ausgefuehrt haben.
+ *
+ * WARUM ES DIESE ZWEITE FORM GIBT: Die 49 API-Routen, die bis zum
+ * 28.08.2026 `profiles.select('role')` selbst gelesen und damit
+ * app_metadata gar nicht angewandt haben, pruefen den angemeldeten
+ * Benutzer davor ohnehin — sie brauchen den 401-Zweig mit ihrem eigenen
+ * Meldungstext. Ohne diese Form haette die Umstellung jeder dieser Routen
+ * einen ZWEITEN `auth.getUser()`-Aufruf beschert: ein zusaetzlicher
+ * Netzaufruf pro Anfrage, auf jedem Geldweg. Die Entscheidungsregel ist in
+ * beiden Formen dieselbe.
+ */
+export async function holeRollenQuellenFuer(
+  supabase: SupabaseClient,
+  user: RollenBenutzer,
+): Promise<RollenQuellen> {
 
   const appRolle =
     typeof user.app_metadata?.role === 'string' ? user.app_metadata.role : ''
@@ -95,4 +129,24 @@ export function quellenSindAdministration(
   quellen: Pick<RollenQuellen, 'appRolle' | 'profilRolle'>,
 ): boolean {
   return wirksamIstAdministration(quellen.appRolle, quellen.profilRolle)
+}
+
+/**
+ * Beide Quellen tragen GENAU die genannte Rolle.
+ *
+ * Fuer die wenigen Stellen, die nicht an einer Berechtigung haengen,
+ * sondern am Rollennamen selbst: die Rollenverwaltung, die
+ * plattformweite Preisverwaltung und der organisationsuebergreifende
+ * Workflow-Endpunkt verlangen alle drei ausdruecklich `superadmin`.
+ *
+ * Eine leere `appRolle` ist zulaessig — bei den allermeisten Konten ist
+ * app_metadata.role nie geschrieben worden, und die Regel darf nach dem
+ * Grundsatz aus lib/auth/rollen.ts nur einschraenken, nie aussperren.
+ */
+export function quellenSindRolle(
+  quellen: Pick<RollenQuellen, 'appRolle' | 'profilRolle'>,
+  rolle: string,
+): boolean {
+  if (quellen.profilRolle !== rolle) return false
+  return quellen.appRolle === '' || quellen.appRolle === rolle
 }

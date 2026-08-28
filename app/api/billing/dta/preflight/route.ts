@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-import { rolleDarf } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { preFlightValidierung } from '@/lib/abrechnung/kassenabrechnung-engine'
@@ -9,6 +8,7 @@ import { logBillingAction } from '@/lib/billing/core/audit'
 import { meldeAbrechnungsfehler } from '@/lib/automation/abrechnung-fehler-aufgabe'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { holeRollenQuellenFuer, quellenDuerfen } from '@/lib/auth/rollen-quelle'
 const log = logger.child('dta/preflight')
 
 export const POST = withTracking(async function POST(request: Request) {
@@ -19,13 +19,9 @@ export const POST = withTracking(async function POST(request: Request) {
       return NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 })
     }
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    const quellen = await holeRollenQuellenFuer(supabase, user)
 
-    if (!profile || !rolleDarf(profile.role, 'abrechnung.schreiben')) {
+    if (!quellenDuerfen(quellen, 'abrechnung.schreiben')) {
       return NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 })
     }
 

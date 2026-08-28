@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { rolleDarf } from '@/lib/auth/guard'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -9,6 +8,7 @@ import { getActiveOrgId } from '@/lib/organizations/server'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
 import { ohneStornierte } from '@/lib/leistungsnachweis/status-sync'
+import { holeRollenQuellenFuer, quellenDuerfen } from '@/lib/auth/rollen-quelle'
 const log = logger.child('auto-invoice')
 
 // ═══════════════════════════════════════════════════════════════
@@ -59,12 +59,8 @@ async function authorize(request: Request): Promise<AuthContext> {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-      if (profile && rolleDarf(profile.role, 'abrechnung.schreiben')) {
+      const quellen = await holeRollenQuellenFuer(supabase, user)
+      if (quellenDuerfen(quellen, 'abrechnung.schreiben')) {
         return { ok: true, role: 'admin', actor: `admin:${user.id}` }
       }
     }

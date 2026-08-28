@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from 'next/server'
-import { holeRollenQuellen, quellenDuerfen } from '@/lib/auth/rollen-quelle'
+import { holeRollenQuellen, quellenDuerfen, type RollenQuellen } from '@/lib/auth/rollen-quelle'
 import type { Berechtigung } from '@/lib/auth/rollen'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
@@ -11,7 +11,16 @@ import { getActiveOrgId } from '@/lib/organizations/server'
 export interface PflegeAuthContext {
   userId: string
   organizationId: string
+  /**
+   * Wirksame Rolle als BESCHRIFTUNG (Protokoll, Anzeige) — nicht als
+   * Entscheidungsgrundlage. Sie ist die engere der beiden Quellen, nicht
+   * deren Schnittmenge: bei gleich weiten, aber verschiedenen Rollen
+   * beantwortet `rolleDarf(ctx.role, …)` eine Frage anders als der Guard
+   * selbst. Fuer jede weitere Entscheidung ist `quellen` die Quelle.
+   */
   role: string
+  /** Beide Rollenquellen, fuer nachgelagerte Entscheidungen im Handler. */
+  quellen: RollenQuellen
   name: string
 }
 
@@ -52,7 +61,7 @@ export async function requirePflegeAdmin(
 
   return {
     ok: true,
-    ctx: { userId: quellen.userId, organizationId, role: quellen.rolle, name },
+    ctx: { userId: quellen.userId, organizationId, role: quellen.rolle, quellen, name },
   }
 }
 
@@ -62,7 +71,7 @@ export async function requirePflegeAdmin(
  * entscheidet RLS (engel_pflege_verlauf_insert über aktive assignments).
  */
 export async function requirePflegeUser(): Promise<
-  { ok: true; userId: string; role: string; name: string } | { ok: false; response: NextResponse }
+  { ok: true; userId: string; role: string; quellen: RollenQuellen; name: string } | { ok: false; response: NextResponse }
 > {
   const supabase = await createClient()
   const quellen = await holeRollenQuellen(supabase)
@@ -77,5 +86,5 @@ export async function requirePflegeUser(): Promise<
   }
 
   const name = quellen.name
-  return { ok: true, userId: quellen.userId, role: quellen.rolle ?? 'engel', name }
+  return { ok: true, userId: quellen.userId, role: quellen.rolle ?? 'engel', quellen, name }
 }

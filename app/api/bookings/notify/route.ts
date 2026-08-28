@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { rolleDarf } from '@/lib/auth/guard'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyAngelNewBooking, notifyCustomerBookingAccepted, type BookingNotifyData } from '@/lib/notifications'
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { holeRollenQuellenFuer, quellenDuerfen } from '@/lib/auth/rollen-quelle'
 
 // ─── Row-Formen des bookings-Selects (inkl. eingebetteter Joins) ───
 interface BookingProfile {
@@ -84,8 +84,8 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     // Sicherheit: Nur Beteiligte der Buchung oder Admins dürfen Notifications auslösen
     const isBookingParticipant = booking.customer_id === user.id || (booking.angel_id && booking.angel_id === user.id)
     if (!isBookingParticipant) {
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-      if (!profile || !rolleDarf(profile.role, 'einsatz.schreiben')) {
+      const quellen = await holeRollenQuellenFuer(supabase, user)
+      if (!quellenDuerfen(quellen, 'einsatz.schreiben')) {
         return NextResponse.json({ error: 'Keine Berechtigung für diese Buchung' }, { status: 403 })
       }
     }

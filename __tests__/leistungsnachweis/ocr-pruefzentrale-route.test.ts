@@ -58,6 +58,7 @@ function baueClient(antwort: (a: Aufruf) => { data: any; error: any; count?: num
         eq(spalte: string, wert: any) { a.filter[spalte] = wert; return b },
         single() { return Promise.resolve(antwort(a)) },
         maybeSingle() { return Promise.resolve(antwort(a)) },
+        maybeSingle() { return Promise.resolve(antwort(a)) },
         then(ok: any, fail: any) { return Promise.resolve(antwort(a)).then(ok, fail) },
       }
       return b
@@ -71,7 +72,12 @@ function alsPdl() {
   mockCreateClient.mockResolvedValue({
     auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u-pdl' } } }) },
     from: () => ({
-      select: () => ({ eq: () => ({ single: async () => ({ data: { role: 'pdl' }, error: null }) }) }),
+      // Track 7 (28.08.2026): die Rollenermittlung laeuft ueber
+      // holeRollenQuellenFuer() und liest profiles mit maybeSingle().
+      select: () => ({ eq: () => ({
+        single: async () => ({ data: { role: 'pdl' }, error: null }),
+        maybeSingle: async () => ({ data: { role: 'pdl' }, error: null }),
+      }) }),
     }),
   })
 }

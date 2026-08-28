@@ -60,6 +60,7 @@ function adminMitBestand(records: any[], billedItems: any[] = []) {
         limit() { return b },
         single() { return Promise.resolve(antwort(z)) },
         maybeSingle() { return Promise.resolve(antwort(z)) },
+        maybeSingle() { return Promise.resolve(antwort(z)) },
         then(ok: any, fail: any) { return Promise.resolve(antwort(z)).then(ok, fail) },
       }
       return b
@@ -82,7 +83,12 @@ function alsAdmin() {
   mockCreateClient.mockResolvedValue({
     auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'admin-user' } } }) },
     from: () => ({
-      select: () => ({ eq: () => ({ single: vi.fn().mockResolvedValue({ data: { role: 'admin' }, error: null }) }) }),
+      // Track 7 (28.08.2026): die Rollenermittlung laeuft ueber
+      // holeRollenQuellenFuer() und liest profiles mit maybeSingle().
+      select: () => ({ eq: () => ({
+        single: vi.fn().mockResolvedValue({ data: { role: 'admin' }, error: null }),
+        maybeSingle: vi.fn().mockResolvedValue({ data: { role: 'admin' }, error: null }),
+      }) }),
     }),
   })
   mockRequireCaregiverSession.mockResolvedValue({ ok: false, status: 401, error: 'Nicht autorisiert' })

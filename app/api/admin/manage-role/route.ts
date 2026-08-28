@@ -6,6 +6,7 @@ import { getActiveOrgId } from '@/lib/organizations/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { ROLLEN, ROLLEN_BEZEICHNUNG, istRolle, istVerwaltungsrolle, type Rolle } from '@/lib/auth/rollen'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { holeRollenQuellenFuer, quellenSindRolle } from '@/lib/auth/rollen-quelle'
 
 /**
  * Rollen, die ueber diese Route vergeben werden duerfen.
@@ -30,13 +31,9 @@ export const POST = withTracking(async function POST(request: NextRequest) {
 
     // 2. NUR superadmin darf Rollen ändern
     const adminSupabase = createAdminClient()
-    const { data: callerProfile } = await adminSupabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    const callerProfileQuellen = await holeRollenQuellenFuer(adminSupabase, user)
 
-    if (!callerProfile || callerProfile.role !== 'superadmin') {
+    if (!quellenSindRolle(callerProfileQuellen, 'superadmin')) {
       return NextResponse.json({ error: 'Nur Superadmins dürfen Rollen verwalten' }, { status: 403 })
     }
 
@@ -76,7 +73,7 @@ export const POST = withTracking(async function POST(request: NextRequest) {
 
     // 4. Sich selbst nicht herabstufen — sonst sperrt sich der letzte
     //    Superadmin mit einem Klick selbst aus.
-    if (userId === user.id && newRole !== callerProfile.role) {
+    if (userId === user.id && newRole !== callerProfileQuellen.rolle) {
       return NextResponse.json({ error: 'Die eigene Rolle kann hier nicht geändert werden' }, { status: 400 })
     }
 
@@ -127,7 +124,7 @@ export const POST = withTracking(async function POST(request: NextRequest) {
       // 'buchhaltung' nach 'kunde' ein revoke.
       action: istVerwaltungsrolle(newRole) ? 'role_grant' : 'role_revoke',
       actorId: user.id,
-      actorRole: callerProfile.role,
+      actorRole: callerProfileQuellen.rolle,
       organizationId,
       targetId: userId,
       targetEmail: targetProfile.email ?? null,

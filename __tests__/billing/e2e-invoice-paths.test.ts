@@ -206,10 +206,20 @@ function defaultE2EHandler(overrides: Partial<Record<string, Handler>> = {}): Ha
 function setupAdminAuth() {
   mockCreateClient.mockResolvedValue({
     auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: ADMIN_USER } } }) },
+    // Track 7 (28.08.2026): die Rollenermittlung laeuft ueber
+    // holeRollenQuellenFuer() und liest profiles mit maybeSingle().
     from: () => ({
       select: () => ({
         eq: () => ({
           single: vi.fn().mockResolvedValue({
+            data: { role: 'admin' },
+            error: null,
+          }),
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: { role: 'admin' },
+            error: null,
+          }),
+          maybeSingle: vi.fn().mockResolvedValue({
             data: { role: 'admin' },
             error: null,
           }),
@@ -354,6 +364,10 @@ describe('E2E: Cross-Org-Blocking', () => {
         select: () => ({
           eq: () => ({
             single: vi.fn().mockResolvedValue({
+              data: { role: 'admin' },
+              error: null,
+            }),
+            maybeSingle: vi.fn().mockResolvedValue({
               data: { role: 'admin' },
               error: null,
             }),
@@ -563,6 +577,10 @@ describe('E2E: Auth-Anforderungen pro Pfad', () => {
         select: () => ({
           eq: () => ({
             single: vi.fn().mockResolvedValue({
+              data: { role: 'kunde' },
+              error: null,
+            }),
+            maybeSingle: vi.fn().mockResolvedValue({
               data: { role: 'kunde' },
               error: null,
             }),
