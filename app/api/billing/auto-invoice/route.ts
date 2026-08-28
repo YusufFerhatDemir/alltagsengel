@@ -184,7 +184,10 @@ export const POST = withTracking(async function POST(request: Request) {
     // ── Alle Einsätze des Klienten im Monat — org-fence ──
     const { data: records, error: monthErr } = await admin
       .from('service_records')
-      .select('id, date, service_type, duration_minutes, amount, budget_type, status, proof_status, billing_status')
+      // signature_hash/client_signed_at/client_signature muessen mit: ohne sie
+      // laesst sich der Unterschriftsbeleg nicht pruefen und `proof_status`
+      // allein waere wieder die einzige Auskunft (Track 12, B2).
+      .select('id, date, service_type, duration_minutes, amount, budget_type, status, proof_status, billing_status, signature_hash, client_signed_at, client_signature')
       .eq('client_id', resolvedClientId)
       .eq('organization_id', orgId)
       .gte('date', periodStart)
@@ -254,6 +257,22 @@ export const POST = withTracking(async function POST(request: Request) {
         invoice: null,
       })
     }
+
+    // ── Unterschriftsbeleg ───────────────────────────────────────────
+    // `status === 'signed'` oben sagt nur, dass jemand den Nachweis auf
+    // unterschrieben GESETZT hat. Eine Pflegekraft kann das live per
+    // PostgREST auf ihrer eigenen Zeile selbst tun (Policy `sr_engel_own`
+    // ist FOR ALL) — und genau diese Route darf sie mit ihrem
+    // Native-Bearer-Token anschliessend aufrufen. Ohne eine Beleg-Pruefung
+    // liefe die Kette vom selbstgesetzten Status bis zur fertigen Rechnung
+    // durch, ohne dass je ein Kunde unterschrieben hat.
+    //
+    // Die Pruefung sitzt bewusst NICHT hier, sondern in createInvoiceDraft
+    // (lib/billing/core/invoice-engine.ts) — an der einen Stelle, durch die
+    // jeder Rechnungsweg laeuft. Eine zweite Kopie hier waere eine zweite
+    // Wahrheit, die auseinanderlaufen kann; und ein kuenftiger Weg, der
+    // diese Route nicht benutzt, waere von ihr nicht gedeckt.
+    // Siehe lib/billing/nachweis-beleg.ts.
 
     // ═══ GUARD: Direkter Supabase-Insert durch Billing-Engine ersetzt ═══
     // Alte direkte Inserts (invoices + invoice_items + service_records)

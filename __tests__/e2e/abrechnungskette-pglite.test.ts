@@ -614,7 +614,12 @@ describe('Regression: erste Zahlung auf eine frische Rechnung', () => {
       caregiver_initials: 'MB',
       status: 'signed',
       proof_status: 'UNTERSCHRIEBEN',
+      // client_signed_at gehoert dazu: compute_signature_hash bildet den
+      // Hash NUR zusammen mit dem Zeitstempel. Ein Hash ohne ihn ist ein
+      // Zustand, den die Datenbank nie erzeugt — und seit Track 12/B2 auch
+      // kein Unterschriftsbeleg (lib/billing/nachweis-beleg.ts).
       signature_hash: 'e'.repeat(64),
+      client_signed_at: new Date('2026-07-31T12:00:00Z').toISOString(),
     })
 
     const entwurf = await createInvoiceDraft(alsSupabase(admin), {
@@ -686,7 +691,12 @@ describe('Sammelrechnungslauf: mehrere Nachweise ⇒ eine Rechnung', () => {
         // ermittleGruppen() gar keine Gruppe.
         status: i === TAGE.length - 1 ? 'complete' : 'signed',
         proof_status: 'UNTERSCHRIEBEN',
+        // client_signed_at gehoert dazu: compute_signature_hash bildet den
+        // Hash NUR zusammen mit dem Zeitstempel. Ein Hash ohne ihn ist ein
+        // Zustand, den die Datenbank nie erzeugt — und seit Track 12/B2 auch
+        // kein Unterschriftsbeleg (lib/billing/nachweis-beleg.ts).
         signature_hash: 'c'.repeat(64),
+        client_signed_at: new Date('2026-07-31T12:00:00Z').toISOString(),
       })
     }
   }, 120000)
@@ -788,7 +798,12 @@ describe('Fail-Closed-Gegenprobe', () => {
       amount: ERWARTETER_BETRAG_EUR,
       status: 'signed',
       proof_status: 'UNTERSCHRIEBEN',
+      // client_signed_at gehoert dazu: compute_signature_hash bildet den
+      // Hash NUR zusammen mit dem Zeitstempel. Ein Hash ohne ihn ist ein
+      // Zustand, den die Datenbank nie erzeugt — und seit Track 12/B2 auch
+      // kein Unterschriftsbeleg (lib/billing/nachweis-beleg.ts).
       signature_hash: 'd'.repeat(64),
+      client_signed_at: new Date('2026-07-31T12:00:00Z').toISOString(),
     })
 
     await expect(createInvoiceDraft(alsSupabase(admin), {

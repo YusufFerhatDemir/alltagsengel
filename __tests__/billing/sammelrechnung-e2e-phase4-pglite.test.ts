@@ -162,7 +162,11 @@ async function klientMitNachweisen(ueber: {
       amount: BETRAG_EUR,
       status: unterschrieben ? 'signed' : 'complete',
       proof_status: unterschrieben ? 'UNTERSCHRIEBEN' : 'OFFEN',
+      // Hash UND Zeitstempel: compute_signature_hash bildet den Hash nur
+      // zusammen mit client_signed_at, und seit Track 12/B2 ist erst das
+      // Paar ein Unterschriftsbeleg (lib/billing/nachweis-beleg.ts).
       signature_hash: unterschrieben ? 'c'.repeat(64) : null,
+      client_signed_at: unterschrieben ? new Date('2026-07-31T12:00:00Z').toISOString() : null,
     })
   }
   return id
@@ -726,6 +730,7 @@ describe('Szenario 7: Probelauf ohne Seiteneffekte', () => {
       duration_minutes: DAUER_MINUTEN, service_type: 'Betreuung', budget_type: 'private',
       caregiver_initials: 'MB', amount: BETRAG_EUR, status: 'signed',
       proof_status: 'UNTERSCHRIEBEN', signature_hash: 'd'.repeat(64),
+      client_signed_at: new Date('2026-07-31T12:00:00Z').toISOString(),
     })
     const auditVorher = await zaehle('billing_audit_trail')
 

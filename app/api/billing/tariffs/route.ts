@@ -4,7 +4,10 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logger } from '@/lib/logger'
-import { pruefeObergrenze, pruefeObergrenzenStapel, meldungenAus } from '@/lib/billing/obergrenzen'
+import {
+  pruefeObergrenze, pruefeObergrenzenStapel, meldungenAus,
+  ladeObergrenzen, abweichungZurDatenbank,
+} from '@/lib/billing/obergrenzen'
 import { withTracking } from '@/lib/monitoring/tracker'
 import { holeRollenQuellenFuer, quellenDuerfen } from '@/lib/auth/rollen-quelle'
 const log = logger.child('api:billing')
@@ -243,6 +246,37 @@ export const POST = withTracking(async function POST(request: Request) {
       })
     }
 
+    // Track 12, B3: Die Auswahl dieses Moduls und die des DB-Triggers
+    // koennen auseinanderlaufen — der Trigger kennt den Angebotstyp nach
+    // §45a Abs. 1 S. 2 SGB XI nicht und zieht bei mehreren gleichwertigen
+    // Regelzeilen eine beliebige. Ohne diese Auskunft bekaeme die
+    // Tarifpflege entweder eine Sperre ohne Grund oder ein stillschweigendes
+    // Durchwinken ueber der gesetzlichen Grenze.
+    const grenzRegeln = obergrenzeBefund.regel
+      ? await ladeObergrenzen(admin, String(body.rechtsgrundlage ?? ''))
+      : null
+    const abweichung = grenzRegeln
+      ? abweichungZurDatenbank(grenzRegeln, {
+          preisCent: Number((body as Record<string, unknown>).preis_cent),
+          rechtsgrundlage: String(body.rechtsgrundlage ?? ''),
+          verguetungsart: String((body as Record<string, unknown>).verguetungsart ?? ''),
+          leistungsart: body.leistungsart ? String(body.leistungsart) : null,
+          bundesland: (body as Record<string, unknown>).bundesland
+            ? String((body as Record<string, unknown>).bundesland)
+            : null,
+          gueltigAb: String((body as Record<string, unknown>).gueltig_ab ?? ''),
+        })
+      : null
+    if (abweichung?.meldung) {
+      log.warn('Obergrenze: Anwendung und Datenbank waehlen unterschiedliche Regeln', {
+        organizationId,
+        leistungsart: body.leistungsart,
+        anwendungCent: abweichung.anwendungCent,
+        datenbankCent: abweichung.datenbankCent,
+        gleichwertigeZeilen: abweichung.gleichwertigeZeilen,
+      })
+    }
+
     // Admin-Client für den Insert verwenden (RLS erfordert Admin).
     // Org-Fence: organization_id kommt aus der Auth, NICHT aus dem Body — der
     // Spread steht davor, damit ein mitgeschicktes Feld ueberschrieben wird.
@@ -258,7 +292,13 @@ export const POST = withTracking(async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { ...tariff, warnungen: meldungenAus([obergrenzeBefund]) },
+      {
+        ...tariff,
+        warnungen: [
+          ...meldungenAus([obergrenzeBefund]),
+          ...(abweichung?.meldung ? [abweichung.meldung] : []),
+        ],
+      },
       { status: 201 },
     )
   } catch (err) {

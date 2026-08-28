@@ -100,12 +100,18 @@ describe('Track 9 Code-Zäune — Registration Admin-Client', () => {
     expect(vorUpsert).toMatch(/admin\s*=\s*createAdminClient\(\)/)
   })
 
-  it('der angels-Upsert geht über die admin-Variable, nicht über supabase', () => {
+  it('jeder angels-Schreibvorgang geht über die admin-Variable, nicht über supabase', () => {
+    // In Track 12 (B1) ist der `upsert` durch ein Bestand-lesen-dann-
+    // insert/update ersetzt worden — der upsert war die Umgehung genau
+    // dieser Sperre. Die Zaunregel bleibt dieselbe und deckt jetzt ALLE
+    // Schreibformen ab statt nur den upsert.
     const zeilen = regDatei.split('\n')
-    const upsertZeile = zeilen.find(z => z.includes("from('angels').upsert"))
-    expect(upsertZeile).toBeTruthy()
-    expect(upsertZeile).toMatch(/admin\.from/)
-    expect(upsertZeile).not.toMatch(/supabase\.from\('angels'\)\.upsert/)
+    const schreibZeilen = zeilen.filter(z => /from\('angels'\)\.(insert|update|upsert)/.test(z))
+    expect(schreibZeilen.length).toBeGreaterThan(0)
+    for (const zeile of schreibZeilen) {
+      expect(zeile).toMatch(/admin\.from/)
+      expect(zeile).not.toMatch(/supabase\.from\('angels'\)/)
+    }
   })
 })
 
@@ -248,11 +254,36 @@ describe('Gegenproben — alte Regel', () => {
   })
 
   it('GP5: Die ALTE Registration nutzte den User-Client für den angels-Upsert', () => {
-    // Gegenprobe: die NEUE Version nutzt den Admin-Client
+    // Gegenprobe: die NEUE Version nutzt den Admin-Client.
+    //
+    // Nachgezogen in Track 12 (B1): der `upsert` ist weg. Er war das offene
+    // Gegenstueck zu genau der Sperre, die GP6 unten prueft — ein `upsert`
+    // auf `id` ueber den Admin-Client ist idempotent per Konstruktion, und
+    // `requireAuth()` prueft nur, DASS jemand angemeldet ist. Ein laengst
+    // registrierter Engel konnte die Server Action ein zweites Mal aufrufen
+    // und dabei hourly_rate, qualification, is_certified und is_45b_capable
+    // frei setzen. Jetzt: Bestand lesen, dann INSERT (Erstanlage) oder
+    // UPDATE nur der selbstgepflegten Felder.
+    //
+    // Die Regel selbst wird NICHT gelockert — sie wird schaerfer: jeder
+    // angels-Schreibvorgang laeuft ueber den Admin-Client, und keiner davon
+    // ist mehr ein upsert.
     const reg = liesDatei('app/engel/register/actions.ts')
-    const upsertZeile = reg.split('\n').find(z => z.includes("from('angels').upsert"))
-    expect(upsertZeile).toBeTruthy()
-    expect(upsertZeile).toMatch(/admin\.from/)
+
+    expect(reg).not.toMatch(/from\('angels'\)\.upsert/)
+
+    const schreibZeilen = reg.split('\n').filter(z => /from\('angels'\)\.(insert|update|upsert)/.test(z))
+    expect(schreibZeilen.length).toBeGreaterThan(0)
+    for (const zeile of schreibZeilen) {
+      expect(zeile).toMatch(/admin\.from/)
+    }
+  })
+
+  it('GP5b: Die Registration setzt hourly_rate nicht mehr aus dem Aufruf (Track 12/B1)', () => {
+    // Der Stundensatz kommt aus der Serverkonstante, nicht aus data.
+    const reg = liesDatei('app/engel/register/actions.ts')
+    expect(reg).not.toMatch(/hourly_rate:\s*data\.hourlyRate/)
+    expect(reg).toMatch(/hourly_rate:\s*ENGEL_HOURLY_RATE/)
   })
 
   it('GP6: Die Migration entzieht hourly_rate dem authenticated-UPDATE', () => {
