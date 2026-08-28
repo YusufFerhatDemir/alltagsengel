@@ -57,6 +57,11 @@ export const POST = withTracking(async function POST(req: NextRequest) {
       const data = await createArbeitszeit(supabase, {
         ...body,
         organizationId: admin.ctx.organizationId,
+        // NACH dem Spread: der handelnde Benutzer kommt aus dem
+        // Auth-Kontext, niemals aus dem Body. Er landet in
+        // `geaendert_von` und ist die Quelle des Korrekturprotokolls
+        // (der Dienstschluessel hat kein auth.uid()).
+        benutzerId: admin.ctx.userId,
       })
       await writeAuditLog(supabase, {
         organizationId: admin.ctx.organizationId,
@@ -85,6 +90,7 @@ export const POST = withTracking(async function POST(req: NextRequest) {
       ...body,
       organizationId: orgId,
       caregiverId: user.caregiverId,
+      benutzerId: user.userId,
     })
     await writeAuditLog(supabase, {
       organizationId: orgId,

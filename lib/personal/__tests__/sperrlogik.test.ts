@@ -61,14 +61,30 @@ test('updateArbeitszeit: reines Entsperren bleibt möglich', async () => {
   await updateArbeitszeit(supabase, 'az-1', 'org-1', { gesperrt: false, bemerkung: 'Freigabe durch PDL' })
   assert.deepEqual(
     calls.find(c => c.method === 'update')!.args[0],
-    { gesperrt: false, bemerkung: 'Freigabe durch PDL' },
+    { gesperrt: false, bemerkung: 'Freigabe durch PDL', geaendert_von: null },
   )
 })
 
 test('updateArbeitszeit: nicht gesperrte Zeit bleibt frei korrigierbar', async () => {
   const { supabase, calls } = client({ gesperrt: false }, { data: { id: 'az-1' }, error: null })
   await updateArbeitszeit(supabase, 'az-1', 'org-1', { istMinuten: 500 })
-  assert.deepEqual(calls.find(c => c.method === 'update')!.args[0], { ist_minuten: 500 })
+  assert.deepEqual(calls.find(c => c.method === 'update')!.args[0], { ist_minuten: 500, geaendert_von: null })
+})
+
+/**
+ * `geaendert_von` steht IMMER im UPDATE — auch als `null`. Der DB-Trigger
+ * liest `NEW.geaendert_von`, und NEW uebernimmt unveraenderte Spalten aus
+ * OLD: bliebe das Feld weg, schriebe die naechste Korrektur den Urheber des
+ * VORIGEN Schreibvorgangs ins Revisionsprotokoll. Deshalb ist das `null`
+ * oben kein Beiwerk, sondern der Punkt.
+ */
+test('updateArbeitszeit: der handelnde Benutzer landet in geaendert_von', async () => {
+  const { supabase, calls } = client({ gesperrt: false }, { data: { id: 'az-1' }, error: null })
+  await updateArbeitszeit(supabase, 'az-1', 'org-1', { istMinuten: 500, benutzerId: 'pdl-7' })
+  assert.deepEqual(
+    calls.find(c => c.method === 'update')!.args[0],
+    { ist_minuten: 500, geaendert_von: 'pdl-7' },
+  )
 })
 
 test('updateArbeitszeit: unbekannte Zeit meldet 404 statt DB-Fehler', async () => {
