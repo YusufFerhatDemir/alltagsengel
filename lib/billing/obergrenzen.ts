@@ -146,7 +146,9 @@ export interface ObergrenzenBefund {
  *                      unter Nr. 1 oder Nr. 3.
  *   wegepauschale      Keine Zeitleistung; die 5-EUR-Pauschale ist laut
  *                      Quellenpruefung ohne PfluV-Grundlage und deshalb auch
- *                      nicht geseedet.
+ *                      nicht geseedet. ACHTUNG: der Live-Bestand sagt das
+ *                      Gegenteil — siehe OHNE_PFLUV_GRUNDLAGE weiter unten
+ *                      und Pruefung R1 in verify-abrechnung-live.mjs.
  *   sonstige           Sammelposten ohne fachliche Aussage.
  *
  * Fuer diese Schluessel prueft das Modul gegen die hoechste einschlaegige
@@ -160,6 +162,44 @@ export const ANGEBOTSTYP_VON_LEISTUNGSART: Readonly<Record<string, Angebotstyp>>
   hauswirtschaft:     'entlastungsangebot',
   einkaufsservice:    'entlastungsangebot',
 }
+
+/**
+ * Leistungsarten, zu denen dieses Modul festhaelt, dass es fuer sie KEINE
+ * Grenze nach der PfluV gibt — weil es die Leistung dort gar nicht gibt.
+ *
+ * ─────────────────────────────────────────────────────────────────────
+ * RESTPOSTEN R1 (Track 12) — hier steht ein WIDERSPRUCH, kein Ergebnis
+ * ─────────────────────────────────────────────────────────────────────
+ * Der Kommentar oben haelt zur Wegepauschale fest, die 5-EUR-Pauschale sei
+ * „laut Quellenpruefung ohne PfluV-Grundlage und deshalb auch nicht
+ * geseedet". Live (nachgemessen 28.08.2026) steht dagegen in
+ * `billing_tariffs`:
+ *
+ *   wegepauschale | §45b SGB XI | verified | aktiv=true | 500
+ *   wegepauschale | privat      | verified | aktiv=true | 500
+ *
+ * Der §45b-Eintrag steht auf `verified`. Von den 23 Tarifen sind 12
+ * `blocked`; die Wegepauschale ist damit einer der wenigen §45b-Tarife,
+ * ueber die heute ueberhaupt eine Kassenrechnung entstehen koennte — und
+ * ausgerechnet der, zu dem dieses Modul sagt, es gebe keine Grundlage.
+ *
+ * ZWEI STELLEN IM SYSTEM SAGEN GEGENTEILIGES. Welche recht hat, ist eine
+ * RECHTLICHE Frage und keine, die sich hier entscheiden laesst. Deshalb
+ * wird sie hier auch NICHT entschieden:
+ *
+ *   • Der Tarif wird nicht heimlich auf `blocked` gesetzt. Das waere eine
+ *     Abrechnungsentscheidung, die einem Agenten nicht zusteht, und sie
+ *     wuerde eine womoeglich rechtmaessige Position stilllegen.
+ *   • Der Kommentar wird nicht stillschweigend gestrichen. Dann waere der
+ *     Widerspruch weg und die Frage auch — das ist das Schlechteste von
+ *     beidem.
+ *
+ * Stattdessen steht die Liste ab hier als CODE statt als Prosa, damit
+ * `npm run verify:abrechnung` (Pruefung R1) sie gegen den Live-Bestand
+ * halten und den Widerspruch bei jedem Lauf benennen kann. Er wird damit
+ * nicht kleiner — aber er verschwindet auch nicht mehr aus dem Blick.
+ */
+export const OHNE_PFLUV_GRUNDLAGE: readonly string[] = ['wegepauschale']
 
 /** Angebotstyp zur Leistungsart, oder null wenn nicht eindeutig. */
 export function angebotstypVon(leistungsart: string | null): Angebotstyp | null {

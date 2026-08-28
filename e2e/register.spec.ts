@@ -15,6 +15,10 @@ import { test, expect } from '@playwright/test'
  */
 
 test.describe('Register-Flow: Kunde', () => {
+  // zxcvbn wird beim ersten Tastendruck nachgeladen; auf webkit dauert das
+  // spuerbar laenger als das Playwright-Standardlimit einraeumt.
+  test.slow()
+
   test('Form ist sichtbar und valide Eingabe-Felder zeigt', async ({ page }) => {
     await page.goto('/auth/register')
 
@@ -52,7 +56,9 @@ test.describe('Register-Flow: Kunde', () => {
     const submitButton = page.getByRole('button', { name: /registrieren|konto erstellen/i }).first()
     await expect(submitButton).toBeDisabled()
 
-    await page.getByRole('checkbox').first().check()
+    const agb = page.getByRole('checkbox').first()
+    await agb.scrollIntoViewIfNeeded()
+    await agb.check()
     await expect(submitButton).toBeEnabled()
 
     await submitButton.click()
@@ -60,8 +66,13 @@ test.describe('Register-Flow: Kunde', () => {
     // Auf das Fehler-Banner pruefen, nicht auf irgendeinen Text der Seite:
     // „Passwort" steht als Feldbeschriftung ohnehin da, die alte Zusicherung
     // war damit unabhaengig vom Verhalten gruen.
+    // Grosszuegiges Zeitlimit mit Grund: validatePasswordAsync laedt
+    // zxcvbn per dynamischem Import nach — ein grosses Woerterbuch-Modul.
+    // Auf dem mobile-safari-Projekt hat genau das den Test einmal
+    // flackern lassen. Das Zeitlimit gilt dem LADEN, nicht der
+    // Zusicherung: die bleibt unveraendert scharf.
     const banner = page.locator('[role="alert"]')
-    await expect(banner.first()).toBeVisible({ timeout: 10_000 })
+    await expect(banner.first()).toBeVisible({ timeout: 25_000 })
     await expect(banner.first()).toHaveText(/Mindestanforderungen|Zu schwach/i)
   })
 

@@ -26,8 +26,18 @@ export function liesMigration(datei: string): string {
  * @param name  Funktionsname ohne Schema
  */
 export function extrahiereFunktion(sql: string, name: string): string {
-  const start = sql.indexOf(`CREATE OR REPLACE FUNCTION public.${name}(`)
-  if (start === -1) throw new Error(`Funktion ${name} nicht in der Migration gefunden`)
+  // `public.` ist optional: die Personalmanagement-Migration legt ihre
+  // Trigger-Funktionen ohne Schemapraefix an (`CREATE OR REPLACE FUNCTION
+  // check_doppelbelegung()`), waehrend die neueren Migrationen es setzen.
+  // Ohne diese Nachsicht muesste jede Suite ihren eigenen Ausschneider
+  // mitbringen — und genau daran haengt, ob sie die Funktion aus der
+  // Migration prueft oder eine Abschrift davon.
+  const muster = new RegExp(
+    `CREATE OR REPLACE FUNCTION (?:public\\.)?${name}\\s*\\(`
+  )
+  const treffer = muster.exec(sql)
+  if (!treffer) throw new Error(`Funktion ${name} nicht in der Migration gefunden`)
+  const start = treffer.index
 
   // Öffnendes Dollar-Quote nach dem AS suchen.
   const asIdx = sql.indexOf('AS $', start)

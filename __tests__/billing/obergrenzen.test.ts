@@ -20,6 +20,8 @@
 // dem NICHT gewarnt werden darf.
 // ═══════════════════════════════════════════════════════════════════════
 
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, it, expect } from 'vitest'
 import {
   pruefeGegenRegeln,
@@ -31,6 +33,7 @@ import {
   ANGEBOTSTYP_VON_LEISTUNGSART,
   type ObergrenzenRegel,
   type ObergrenzenEingabe,
+  OHNE_PFLUV_GRUNDLAGE,
 } from '@/lib/billing/obergrenzen'
 import { erstelleFakeSupabase, hatFilter } from '../helpers/supabase-fake'
 import { TARIF_LEISTUNGSARTEN } from '@/lib/billing/leistungsarten'
@@ -353,5 +356,45 @@ describe('Stapelpruefung (Tarifliste, Import)', () => {
       eingabe({ preisCent: 2000 }),
     ])
     expect(befunde.every(b => b.meldung?.includes('NICHT gegen die PfluV-Saetze geprueft'))).toBe(true)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════
+// Restposten R1 — der Widerspruch bleibt sichtbar
+// ═══════════════════════════════════════════════════════════════════════
+//
+// OHNE_PFLUV_GRUNDLAGE steht an ZWEI Stellen: hier im Modul und als
+// SQL-Liste in scripts/verify-abrechnung-live.mjs (Pruefung R1). Das
+// Skript ist ein .mjs und kann kein TypeScript importieren — die
+// Doppelung ist deshalb unvermeidbar, das stille Auseinanderlaufen aber
+// nicht. Dieser Test haelt beide gegeneinander.
+//
+// Waechst die Liste und zieht jemand das Skript nicht nach, prueft R1
+// weiterhin nur die alte Leistungsart und meldet gruen fuer etwas, das
+// es gar nicht mehr abdeckt — genau die Sorte Drift, die bei E1 dazu
+// gefuehrt hat, dass eine laengst angewendete Migration monatelang als
+// offen gemeldet wurde.
+describe('R1 — Liste ohne PfluV-Grundlage', () => {
+  it('enthaelt die Wegepauschale', () => {
+    expect(OHNE_PFLUV_GRUNDLAGE).toContain('wegepauschale')
+  })
+
+  it('keine dieser Leistungsarten hat einen Angebotstyp', () => {
+    // Waere eine davon eindeutig zuordenbar, gaebe es fuer sie sehr wohl
+    // eine PfluV-Grenze — die Liste widerspraeche sich selbst.
+    for (const la of OHNE_PFLUV_GRUNDLAGE) {
+      expect(angebotstypVon(la)).toBeNull()
+    }
+  })
+
+  it('deckt sich mit der Liste in verify-abrechnung-live.mjs', () => {
+    const skript = readFileSync(
+      join(process.cwd(), 'scripts', 'verify-abrechnung-live.mjs'), 'utf8')
+    const stelle = skript.indexOf("where leistungsart in (")
+    expect(stelle).toBeGreaterThan(-1)
+    const liste = skript.slice(stelle, skript.indexOf(')', stelle))
+    for (const la of OHNE_PFLUV_GRUNDLAGE) {
+      expect(liste).toContain(`'${la}'`)
+    }
   })
 })
