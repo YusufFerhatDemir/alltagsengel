@@ -10,7 +10,7 @@
 -- RLS:       is_admin() (SECURITY DEFINER, KEINE profiles-Subquery — 42P17!)
 --            + org_fence current_org_id() RESTRICTIVE
 --            + Engel-SELECT über aktive assignments.
--- Rollback:  20260818010001_rollback_wunddokumentation.sql
+-- Rollback:  20260818030001_rollback_wunddokumentation.sql
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- ═══════════════════════════════════════════════════════════════════════════

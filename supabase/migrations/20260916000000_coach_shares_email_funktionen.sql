@@ -2,6 +2,7 @@
 -- Migration: coach_shares — Lookup-Funktionen für die Freigaben-Oberfläche
 -- Datum:     2026-09-16
 -- Projekt:   Alltagsengel UG — Digitaler PflegeCoach (Phase 3: GAP-SHARES-UI)
+-- Rollback:  20260916000001_rollback_coach_shares_email_funktionen.sql
 -- ═══════════════════════════════════════════════════════════════════════════
 -- IDEMPOTENT: CREATE OR REPLACE, keine Änderung an bestehenden Tabellen.
 --

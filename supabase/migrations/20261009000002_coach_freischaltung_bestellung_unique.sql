@@ -13,6 +13,7 @@
 -- stripe_subscription_id und coach_rechnungen.nummer" — coach_freischaltungen
 -- fehlte dabei. NULL bleibt bei UNIQUE mehrfach zulässig (Pilot-/Testzugänge
 -- ohne Bestellung), betrifft also nur echte Bestellungen.
+-- Rollback:  20261009000003_rollback_coach_freischaltung_bestellung_unique.sql
 -- ═══════════════════════════════════════════════════════════════
 
 BEGIN;

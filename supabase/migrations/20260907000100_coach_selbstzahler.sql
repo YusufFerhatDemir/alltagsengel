@@ -4,7 +4,7 @@
 -- Projekt:   Alltagsengel UG — Digitaler PflegeCoach
 -- Baut auf:  20260819010000_pflegecoach_dipa_modul.sql
 --            20260826010000_dipa_freischaltung_nachweise_eul.sql
--- Rollback:  20260907000001_rollback_coach_selbstzahler.sql
+-- Rollback:  20260907000101_rollback_coach_selbstzahler.sql
 -- ═══════════════════════════════════════════════════════════════════════════
 -- IDEMPOTENT: alle Statements mit IF NOT EXISTS / DO-Guards.
 --
