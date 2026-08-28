@@ -29,10 +29,10 @@ import {
 import { isRateLimited, RATE_LIMIT_REPLY } from '@/lib/whatsapp/rate-limit'
 import { sendWhatsAppMessage } from '@/lib/whatsapp/send'
 import { vorgangsId } from '@/lib/notifications/delivery-log'
-import { DEFAULT_ORG_ID } from '@/lib/organizations/types'
 import { isLowConfidenceReply, sanitizeNames, HOLDING_REPLY } from '@/lib/whatsapp/confidence'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { DEFAULT_ORG_ID } from '@/lib/organizations/types'
 const log = logger.child('wa-webhook')
 
 /**
@@ -203,6 +203,13 @@ async function processIncomingMessage(
 
   // 2. Inbound speichern
   await supabase.from('whatsapp_conversations').insert({
+    // Die Stamm-Organisation steht hier AUSDRUECKLICH, statt sich auf den
+    // Spalten-Default current_org_id() zu verlassen: dieser Weg laeuft mit
+    // dem Dienstschluessel ohne auth.uid(), der Default faellt dann auf
+    // genau diesen Wert zurueck — aber als fail-open-Rueckfall, nicht als
+    // Aussage. Hier ist er eine Aussage: die WhatsApp-Nummer gehoert der
+    // Stamm-Organisation, es gibt keinen anderen Mandanten dahinter.
+    organization_id: DEFAULT_ORG_ID,
     wa_phone: msg.from,
     wa_msg_id: msg.id,
     direction: 'inbound',
@@ -293,6 +300,7 @@ async function processIncomingMessage(
       },
     })
     await supabase.from('whatsapp_conversations').insert({
+      organization_id: DEFAULT_ORG_ID,
       wa_phone: msg.from,
       wa_msg_id: send.wamid || null,
       direction: 'outbound',
@@ -358,6 +366,7 @@ async function replyAndLog(
     },
   })
   await supabase.from('whatsapp_conversations').insert({
+    organization_id: DEFAULT_ORG_ID,
     wa_phone: to,
     wa_msg_id: send.wamid || null,
     direction: 'outbound',

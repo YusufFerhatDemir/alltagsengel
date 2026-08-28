@@ -100,6 +100,15 @@ export const POST = withTracking(async function POST(request: Request) {
       .from('service_signatures')
       .insert({
         service_record_id,
+        // Ohne diese Zeile greift der Spalten-Default current_org_id(). Der
+        // liest auth.uid() — beim Dienstschluessel gibt es keinen angemeldeten
+        // Nutzer, die Fallback-Kette laeuft ins Leere und endet in der fest
+        // verdrahteten Stamm-Organisation. Die Unterschrift eines fremden
+        // Mandanten laege dann dort, und der eigene Mandant saehe sie wegen
+        // service_signatures_org_fence (RESTRICTIVE) gar nicht mehr.
+        // Die Organisation steht schon fest: sie ist oben gegen
+        // auth.organizationId geprueft worden.
+        organization_id: record.organization_id,
         signer_role,
         signer_name,
         signature_image,

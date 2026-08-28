@@ -3,6 +3,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import crypto from 'node:crypto'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { DEFAULT_ORG_ID } from '@/lib/organizations/types'
 
 /**
  * Server-seitiges Conversion-Tracking.
@@ -64,6 +65,13 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     const supabase = createAdminClient()
 
     await supabase.from('conversions').insert({
+      // Die Stamm-Organisation steht hier AUSDRUECKLICH, statt sich auf den
+      // Spalten-Default current_org_id() zu verlassen: dieser Weg laeuft mit
+      // dem Dienstschluessel ohne auth.uid(), der Default faellt dann auf
+      // genau diesen Wert zurueck — aber als fail-open-Rueckfall, nicht als
+      // Aussage. Hier ist er eine Aussage: die oeffentliche Website gehoert
+      // der Stamm-Organisation, es gibt keinen anderen Mandanten dahinter.
+      organization_id: DEFAULT_ORG_ID,
       label,
       value,
       currency,

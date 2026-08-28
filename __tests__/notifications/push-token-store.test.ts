@@ -130,11 +130,20 @@ describe('registriereGeraet', () => {
     expect(z.platform).toBe('ios')
   })
 
-  it('laesst eine ungueltige Organisations-ID weg, statt sie zu schreiben', async () => {
+  // GEAENDERTE REGEL (Track 6): frueher wurde eine ungueltige Organisations-ID
+  // einfach WEGGELASSEN. Dann greift der Spalten-Default current_org_id() —
+  // und der endet beim Dienstschluessel (dieses Modul schreibt ueber
+  // createAdminClient) mangels auth.uid() in der fest verdrahteten
+  // Stamm-Organisation. Das Geraet eines fremden Mandanten haenge dort, der
+  // eigene Mandant saehe es hinter dem RESTRICTIVE org_fence nicht mehr, und
+  // Push ginge an den falschen Bestand. Keine Registrierung ist besser als
+  // eine beim falschen Mandanten.
+  it('weist eine ungueltige Organisations-ID ab, statt sie wegzulassen', async () => {
     const f = fake()
-    await registriereGeraet({ userId: NUTZER, organizationId: 'keine-uuid', token: TOKEN, admin: f.client })
-    const z = f.auf('fcm_tokens').find(a => a.operation === 'insert')!.payload as Record<string, unknown>
-    expect(z).not.toHaveProperty('organization_id')
+    const erg = await registriereGeraet({ userId: NUTZER, organizationId: 'keine-uuid', token: TOKEN, admin: f.client })
+    expect(erg.ok).toBe(false)
+    expect(erg.grund).toContain('Organisations-ID')
+    expect(f.auf('fcm_tokens').filter(a => a.operation === 'insert')).toHaveLength(0)
   })
 
   it('wiederholt bei fehlender Spalte im Altformat, statt die Registrierung zu verlieren', async () => {
@@ -152,8 +161,12 @@ describe('registriereGeraet', () => {
     const schreibversuche = f.auf('fcm_tokens').filter(a => a.operation === 'insert')
     expect(schreibversuche).toHaveLength(2)
     const zweiter = schreibversuche[1].payload as Record<string, unknown>
-    expect(zweiter).not.toHaveProperty('organization_id')
+    // last_used_at faellt weg — das ist der Zweck des Altformat-Versuchs.
     expect(zweiter).not.toHaveProperty('last_used_at')
+    // organization_id faellt AUSDRUECKLICH NICHT weg (Track 6): die Spalte ist
+    // live NOT NULL, ein Versuch ohne sie koennte 42703 gar nicht beheben —
+    // er wuerde das Geraet nur in der Stamm-Organisation ablegen.
+    expect(zweiter.organization_id).toBe(ORG_A)
   })
 
   it('meldet jeden anderen Schreibfehler zurueck, statt Erfolg zu behaupten', async () => {

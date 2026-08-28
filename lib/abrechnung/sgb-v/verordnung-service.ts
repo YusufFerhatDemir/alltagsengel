@@ -186,6 +186,12 @@ export async function legeHkpVerordnungAn(
   const { data: row, error } = await supabase
     .from('verordnungen')
     .insert({
+      // Die Organisation steht fest — der Klient ist zwei Zeilen darueber
+      // genau dagegen gefenced worden. Ohne sie greift der Spalten-Default
+      // current_org_id(), der beim Dienstschluessel mangels auth.uid() in der
+      // Stamm-Organisation endet: die Verordnung laege beim falschen Mandanten
+      // und waere fuer den eigenen hinter verordnungen_org_fence unsichtbar.
+      organization_id: organizationId,
       client_id: eingabe.clientId,
       verordnung_type: HKP_VERORDNUNG_TYPE,
       ist_verordnung: true,

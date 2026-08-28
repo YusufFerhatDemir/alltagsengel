@@ -70,6 +70,11 @@ export async function createServiceRecordAction(input: {
     }
 
     const recordInput: ServiceRecordInput = {
+      // requireAdmin() hat die Organisation bereits fail-closed ermittelt.
+      // Ausdruecklich mitgeben statt sich auf den Spalten-Default
+      // current_org_id() zu verlassen — der ist fail-open und liefert fuer
+      // einen Nutzer ohne organization_members die Stamm-Organisation.
+      organization_id: organizationId,
       client_id: input.client_id,
       caregiver_id: input.caregiver_id,
       date: input.date,

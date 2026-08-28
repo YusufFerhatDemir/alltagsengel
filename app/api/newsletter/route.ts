@@ -6,6 +6,7 @@ import { getClientIp } from '@/lib/rate-limit'
 import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { DEFAULT_ORG_ID } from '@/lib/organizations/types'
 const log = logger.child('newsletter')
 
 // ═══════════════════════════════════════════════════════════
@@ -43,7 +44,17 @@ export const POST = withTracking(async function POST(request: Request) {
     // In DB speichern
     const { error: dbError } = await supabaseAdmin
       .from('newsletter_subscribers')
-      .insert({ email: email.toLowerCase(), source: 'website' })
+      .insert({
+      // Die Stamm-Organisation steht hier AUSDRUECKLICH, statt sich auf den
+      // Spalten-Default current_org_id() zu verlassen: dieser Weg laeuft mit
+      // dem Dienstschluessel ohne auth.uid(), der Default faellt dann auf
+      // genau diesen Wert zurueck — aber als fail-open-Rueckfall, nicht als
+      // Aussage. Hier ist er eine Aussage: die oeffentliche Website gehoert
+      // der Stamm-Organisation, es gibt keinen anderen Mandanten dahinter.
+        organization_id: DEFAULT_ORG_ID,
+        email: email.toLowerCase(),
+        source: 'website',
+      })
 
     if (dbError) {
       log.errorWithException('DB Fehler', dbError)

@@ -490,6 +490,11 @@ export async function erzeugeRechnungsPaket(
   const { error: pkgErr } = await admin
     .from('invoice_packages')
     .upsert({
+      // Ohne sie greift der Spalten-Default current_org_id(); dieser Weg
+      // laeuft mit dem Dienstschluessel, dort gibt es kein auth.uid() und der
+      // Default endet in der Stamm-Organisation. Die Rechnung ist oben bereits
+      // gegen orgId geladen worden — dieselbe Organisation gehoert an ihr PDF.
+      organization_id: orgId,
       invoice_id: invoiceId,
       pdf_url: pdfUrl,
       page_count: pageCount,
