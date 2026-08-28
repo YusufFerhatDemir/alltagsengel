@@ -17,8 +17,24 @@ import { test, expect } from '@playwright/test'
 test.describe('Booking-Entry-Points (Smoke)', () => {
   test('Public Landing-Page lädt', async ({ page }) => {
     await page.goto('/')
-    // Site-Name erscheint irgendwo
-    await expect(page).toHaveTitle(/Alltagsengel/i)
+
+    // Der Homepage-Titel traegt die MARKE BEWUSST NICHT.
+    // app/page.tsx setzt title.absolute und umgeht damit das
+    // layout-Template '%s | Alltagsengel'; der Kommentar dort nennt den
+    // Grund (Marke steckt im Keyword-Set, Titel <= 60 Zeichen). Die
+    // fruehere Zusicherung /Alltagsengel/i auf den Titel hat genau diese
+    // Entscheidung fuer einen Fehler gehalten — sie ist der erste Test,
+    // der beim Einschalten der Suite rot wurde, und der Titel war nicht
+    // das Kaputte daran.
+    //
+    // Geprueft wird deshalb, was wirklich gelten soll: der Titel ist der
+    // gewollte, und die Marke steht dort, wo sie hingehoert — im
+    // OpenGraph-Satz aus app/layout.tsx. Wer den Titel spaeter aendert,
+    // faellt hier auf und muss die Entscheidung neu treffen statt sie zu
+    // ueberschreiben.
+    await expect(page).toHaveTitle('Alltagsbegleitung, Pflegebox & Krankenfahrten Frankfurt')
+    await expect(page.locator('meta[property="og:title"]'))
+      .toHaveAttribute('content', /Alltagsengel/i)
   })
 
   test('Unauth-Versuch auf Booking-Route redirectet auf Login', async ({ page }) => {
@@ -61,11 +77,17 @@ test.describe('Booking-Entry-Points (Smoke)', () => {
     // vergessen?", der IMMER da steht. Der Test war gruen, ohne dass je
     // eine Anmeldung stattgefunden haette. Genau diese Sorte Zusicherung
     // gehoert nicht in CI, wenn sie danach als Nachweis zaehlen soll.
-    const banner = page.locator('[role="alert"]')
-    await expect(banner.first()).toBeVisible({ timeout: 15_000 })
+    // Auf das Fehler-Banner der Anmeldemaske selbst, nicht auf irgendein
+    // [role="alert"] der Seite: der erste Lauf traf ein sichtbares, aber
+    // LEERES alert-Element und scheiterte an innerText.length > 0 — die
+    // Zusicherung war praezise genug, um rot zu werden, aber nicht
+    // praezise genug, um auf das Richtige zu zeigen. `.auth-error` ist die
+    // Klasse, die app/auth/login/page.tsx fuer genau diese Meldung setzt.
+    const banner = page.locator('.auth-error[role="alert"]')
+    await expect(banner.first()).toBeVisible({ timeout: 20_000 })
 
     // AUTH-005: die Meldung darf nicht verraten, ob es die Adresse gibt.
-    const text = (await banner.first().innerText()).toLowerCase()
+    const text = (await banner.first().innerText()).trim().toLowerCase()
     expect(text.length).toBeGreaterThan(0)
     expect(text).not.toMatch(/nicht registriert|kein konto|unbekannte e-mail|user not found|nicht gefunden/)
   })

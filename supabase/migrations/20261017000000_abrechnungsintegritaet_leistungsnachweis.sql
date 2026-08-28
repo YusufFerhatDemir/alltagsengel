@@ -1,9 +1,18 @@
 -- ═══════════════════════════════════════════════════════════════════════
 -- Track 12: Abrechnung & Finanzfluesse — Integritaet des Leistungsnachweises
 --
--- NICHT ANGEWENDET. Diese Datei ist eingecheckt und wartet auf die
--- manuelle Ausfuehrung im SQL-Editor (DDL ueber den Dienstschluessel wird
--- live mit 42501 abgewiesen). Rollback: 20261017000001.
+-- ANGEWENDET — live nachgemessen am 28.08.2026. Rollback: 20261017000001.
+--
+-- Belegt durch `npm run verify:abrechnung`:
+--   D1  keine FOR-ALL-Policy mit eigene_caregiver_ids() mehr auf
+--       service_records (sr_engel_own ist weg)
+--   F2  CHECK service_records_zeitfenster_gueltig vorhanden
+--   G2  Trigger trg_a_unterschrift_beleg vorhanden
+--
+-- Der frueher hier stehende Vermerk „NICHT ANGEWENDET" war ueberholt und
+-- ist bewusst ersetzt statt geloescht: ein Migrationskopf, der den
+-- Anwendungsstand behauptet, muss stimmen, sonst wird er zur Falle fuer
+-- den naechsten, der ihn liest.
 --
 -- ─────────────────────────────────────────────────────────────────────
 -- BEFUND B2 (P1) — "unterschrieben" ohne Unterschrift, an der Datenbank

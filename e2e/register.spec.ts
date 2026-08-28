@@ -38,8 +38,23 @@ test.describe('Register-Flow: Kunde', () => {
     await page.getByPlaceholder('PLZ').first().fill('60311')
     await page.getByPlaceholder('Stadt').first().fill('Frankfurt')
 
-    // Submit triggern (Button-Selektor: erster Submit im Form)
+    // ── AGB-Tor ────────────────────────────────────────────────────
+    // Der Absende-Knopf ist `disabled`, solange die AGB-Checkbox nicht
+    // gesetzt ist (app/auth/register/page.tsx: disabled={loading ||
+    // !agbAccepted}). Die fruehere Fassung dieses Tests kannte das Tor
+    // nicht und lief 30 s in einen click-Timeout — der erste Lauf der
+    // Suite hat es sichtbar gemacht.
+    //
+    // Das Tor wird hier ausdruecklich mitgeprueft statt nur umgangen:
+    // die Einwilligung in AGB und Datenschutz ist eine Zusage, keine
+    // Formalie, und ein Test, der sie stillschweigend wegklickt, wuerde
+    // ihren Wegfall nicht bemerken.
     const submitButton = page.getByRole('button', { name: /registrieren|konto erstellen/i }).first()
+    await expect(submitButton).toBeDisabled()
+
+    await page.getByRole('checkbox').first().check()
+    await expect(submitButton).toBeEnabled()
+
     await submitButton.click()
 
     // Auf das Fehler-Banner pruefen, nicht auf irgendeinen Text der Seite:

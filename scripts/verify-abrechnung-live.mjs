@@ -54,6 +54,23 @@ export async function orakel(sql) {
   return `(kein Treffer) HTTP ${res.status} ${text.slice(0, 500)}`
 }
 
+/**
+ * Bildet die Auswahl von `enforce_tariff_obergrenze` NACH — Stand nach
+ * Migration 20261017000002, also inklusive Angebotstyp.
+ *
+ * WARUM DAS HIER NACHGEZOGEN WURDE (28.08.2026): bis hierher stand in
+ * dieser Konstante die Auswahl VOR der Migration. Sie hat damit eine Frage
+ * beantwortet, die der Trigger gar nicht mehr stellt — und E1 meldete
+ * `hauswirtschaft=3000`, also OFFEN, obwohl die Migration live war. Der
+ * Live-Quelltext aus pg_proc ist gegen das Repo-Artefakt geprueft und bis
+ * auf SQL-Kommentare identisch. Eine Pruefung, deren Abfrage sich vom
+ * geprueften Gegenstand wegbewegt, meldet nicht „unsicher", sondern
+ * falsch — hier zu streng, anderswo waere es zu milde.
+ *
+ * Deshalb steht daneben E2: die Nachbildung allein kann nie beweisen,
+ * dass sie noch die des Triggers IST. E2 liest den Trigger-Quelltext
+ * selbst und schlaegt an, sobald er sich wieder unterscheidet.
+ */
 const TRIGGER_AUSWAHL = (leistungsart) =>
   "select o.obergrenze_cent::text "
   + "from public.billing_gesetzliche_obergrenzen o "
@@ -62,7 +79,16 @@ const TRIGGER_AUSWAHL = (leistungsart) =>
   + "and (o.bundesland is null or o.bundesland = 'hessen') "
   + `and (o.leistungsart is null or o.leistungsart = '${leistungsart}') `
   + "and o.gueltig_ab <= current_date and (o.gueltig_bis is null or o.gueltig_bis >= current_date) "
-  + "order by (o.bundesland is not null) desc, (o.leistungsart is not null) desc, o.gueltig_ab desc limit 1"
+  // DIE Bedingung aus 20261017000002 — ohne sie sind die beiden hessischen
+  // Zeilen fuer den Filter gleichwertig und LIMIT 1 entscheidet der Planer.
+  + `and (public.angebotstyp_von_leistungsart('${leistungsart}') is null `
+  + `     or o.angebotstyp is null `
+  + `     or o.angebotstyp = public.angebotstyp_von_leistungsart('${leistungsart}')) `
+  + "order by (o.bundesland is not null) desc, (o.leistungsart is not null) desc, "
+  + "(o.angebotstyp is not null) desc, "
+  + `case when public.angebotstyp_von_leistungsart('${leistungsart}') is null `
+  + "     then o.obergrenze_cent else 0 end desc, "
+  + "o.gueltig_ab desc limit 1"
 
 /**
  * Jede Pruefung liefert { ok, meldung }. `erwartung` beschreibt, was gruen
@@ -122,11 +148,30 @@ const PRUEFUNGEN = [
   {
     id: 'E1',
     titel: 'Obergrenze: trennt der Trigger Betreuung (30 EUR) von Entlastung (25 EUR)?',
-    erwartung: 'betreuung_45a → 3000 UND hauswirtschaft → 2500 '
-      + '(Migration 20261017000002 zieht den Angebotstyp nach)',
+    erwartung: 'betreuung_45a → 3000 UND demenzbetreuung → 3000 UND '
+      + 'hauswirtschaft → 2500 UND einkaufsservice → 2500 '
+      + '(Migration 20261017000002, live seit 28.08.2026)',
     sql: `select 'betreuung_45a='||coalesce((${TRIGGER_AUSWAHL('betreuung_45a')}),'-')`
-      + `||' hauswirtschaft='||coalesce((${TRIGGER_AUSWAHL('hauswirtschaft')}),'-')`,
-    pruefe: (t) => t.includes('betreuung_45a=3000') && t.includes('hauswirtschaft=2500'),
+      + `||' demenzbetreuung='||coalesce((${TRIGGER_AUSWAHL('demenzbetreuung')}),'-')`
+      + `||' hauswirtschaft='||coalesce((${TRIGGER_AUSWAHL('hauswirtschaft')}),'-')`
+      + `||' einkaufsservice='||coalesce((${TRIGGER_AUSWAHL('einkaufsservice')}),'-')`,
+    pruefe: (t) =>
+      t.includes('betreuung_45a=3000') && t.includes('demenzbetreuung=3000')
+      && t.includes('hauswirtschaft=2500') && t.includes('einkaufsservice=2500'),
+  },
+  {
+    id: 'E2',
+    titel: 'Obergrenze: faehrt der Trigger wirklich die Auswahl, die E1 nachbildet?',
+    erwartung: 'enforce_tariff_obergrenze ruft angebotstyp_von_leistungsart auf, '
+      + 'und die Funktion existiert — sonst prueft E1 eine Abfrage, die der '
+      + 'Trigger gar nicht stellt (genau dieser Drift liess E1 die bereits '
+      + 'angewendete Migration als offen melden)',
+    sql: "select coalesce((select case when prosrc like '%angebotstyp_von_leistungsart%' "
+      + "then 'TRIGGER_ZIEHT_ANGEBOTSTYP' else 'TRIGGER_ALTE_FASSUNG' end "
+      + "from pg_proc where proname='enforce_tariff_obergrenze'), 'TRIGGER_FEHLT')"
+      + "||' '||coalesce((select 'FUNKTION_DA' from pg_proc "
+      + "where proname='angebotstyp_von_leistungsart' limit 1), 'FUNKTION_FEHLT')",
+    pruefe: (t) => t.includes('TRIGGER_ZIEHT_ANGEBOTSTYP') && t.includes('FUNKTION_DA'),
   },
   {
     id: 'F1',
@@ -221,10 +266,11 @@ async function main() {
   console.log(`${gepruefte - offen} von ${gepruefte} Pruefungen bestanden, ${bericht} reine Berichte.`)
   if (offen > 0) {
     console.log(
-      '\nOffene Punkte sind erwartet, solange die Migrationen 20261017000000 und\n'
-      + '20261017000002 nicht angewendet sind — sie sind eingecheckt und warten auf\n'
-      + 'die manuelle Ausfuehrung im SQL-Editor (DDL ueber den Dienstschluessel wird\n'
-      + 'mit 42501 abgewiesen).',
+      '\nBEIDE Migrationen dieses Tracks sind angewendet (nachgemessen 28.08.2026):\n'
+      + '20261017000000 ueber D1/F2/G2, 20261017000002 ueber E1/E2 — der Live-\n'
+      + 'Quelltext aus pg_proc wurde gegen das Repo-Artefakt gehalten und ist bis\n'
+      + 'auf SQL-Kommentare identisch. Ein offener Punkt ist hier deshalb ab jetzt\n'
+      + 'ein echter Befund und kein Wartestand.',
     )
   }
   process.exit(offen === 0 ? 0 : 1)

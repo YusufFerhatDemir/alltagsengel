@@ -1,8 +1,25 @@
 -- ═══════════════════════════════════════════════════════════════════════
 -- Track 12: Abrechnung & Finanzfluesse — PfluV-Obergrenze nach Angebotstyp
 --
--- NICHT ANGEWENDET. Eingecheckt, wartet auf die manuelle Ausfuehrung im
--- SQL-Editor. Rollback: 20261017000003.
+-- ANGEWENDET — live nachgemessen am 28.08.2026. Rollback: 20261017000003.
+--
+-- Nachweis: der Quelltext von enforce_tariff_obergrenze und
+-- angebotstyp_von_leistungsart wurde aus pg_proc gezogen und gegen DIESE
+-- Datei gehalten — bis auf die SQL-Kommentare (die die Live-Fassung nicht
+-- traegt) identisch. Die Auswahl liefert live:
+--
+--   betreuung_45a    → 3000   demenzbetreuung  → 3000
+--   hauswirtschaft   → 2500   einkaufsservice  → 2500
+--
+-- also genau die Trennung, die der Befund B3 vermisst hat.
+--
+-- ACHTUNG fuer den naechsten Leser: `npm run verify:abrechnung` meldete
+-- diese Migration trotzdem monatelang als OFFEN. Der Grund lag nicht an
+-- der Datenbank, sondern an der Pruefung — TRIGGER_AUSWAHL im Skript bildete
+-- noch die Auswahl VOR dieser Migration nach und stellte damit eine Frage,
+-- die der Trigger gar nicht mehr stellt. Beides ist nachgezogen, und E2
+-- liest jetzt zusaetzlich den Trigger-Quelltext selbst, damit derselbe
+-- Drift nicht wieder unbemerkt bleibt.
 --
 -- ─────────────────────────────────────────────────────────────────────
 -- BEFUND B3 (P2, LIVE_VERIFIZIERT)
