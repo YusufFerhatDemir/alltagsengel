@@ -209,6 +209,13 @@ export interface CreateEintragParams {
   typ?: DienstplanTyp
   notizen?: string | null
   erstelltVon: string
+  /**
+   * Grund der Aenderung. Pflicht, sobald die Woche freigegeben ist — der
+   * DB-Trigger `pruefe_dienstplan_freigabe` (Migration 20261020000000)
+   * weist einen Dienst in einer freigegebenen Woche sonst ab. Ausserhalb
+   * einer Freigabe ohne Wirkung.
+   */
+  aenderungGrund?: string | null
 }
 
 export async function createEintrag(supabase: SupabaseClient, params: CreateEintragParams): Promise<DienstplanEintrag> {
@@ -217,9 +224,7 @@ export async function createEintrag(supabase: SupabaseClient, params: CreateEint
   assertDatum(params.datum)
   assertZeitfenster(params.startZeit, params.endZeit, params.pauseMinuten ?? 0, 'Dienst')
 
-  const { data, error } = await supabase
-    .from('dienstplan_eintraege')
-    .insert({
+  const zeile: Record<string, unknown> = {
       organization_id: params.organizationId,
       datum: params.datum,
       schicht_id: params.schichtId ?? null,
@@ -233,16 +238,61 @@ export async function createEintrag(supabase: SupabaseClient, params: CreateEint
       typ: params.typ ?? 'regulaer',
       notizen: params.notizen ?? null,
       erstellt_von: params.erstelltVon,
-    })
+  }
+
+  // `aenderung_grund` kommt aus Migration 20261020000000 und ist noch
+  // nicht angewendet. Ein 42703 fuehrt deshalb zu einem zweiten Versuch
+  // ohne die Spalte — sonst faellt heute jede Dienstanlage aus (siehe
+  // Projekt-Gedaechtnis „Schema-Drift 42703").
+  let antwort = await supabase
+    .from('dienstplan_eintraege')
+    .insert({ ...zeile, aenderung_grund: params.aenderungGrund?.trim() || null })
     .select('*')
     .single()
+  if (antwort.error?.code === '42703') {
+    antwort = await supabase.from('dienstplan_eintraege').insert(zeile).select('*').single()
+  }
+
+  const { data, error } = antwort
   if (error || !data) {
     const msg = error?.message ?? 'unbekannt'
     if (msg.includes('Doppelbelegung')) throw new UserFacingError('Doppelbelegung: Der Mitarbeiter hat bereits einen Dienst in diesem Zeitraum.')
     if (msg.includes('Konflikt')) throw new UserFacingError('Konflikt: Der Mitarbeiter ist an diesem Tag als abwesend gemeldet.')
+    const freigabe = freigabeFehler(msg)
+    if (freigabe) throw freigabe
     throw new Error(`Dienstplan-Eintrag konnte nicht angelegt werden: ${msg}`)
   }
   return data as DienstplanEintrag
+}
+
+/**
+ * Uebersetzt die drei Meldungen des Freigabe-Riegels in lesbare Fehler.
+ *
+ * Der Riegel selbst sitzt in der Datenbank (`pruefe_dienstplan_freigabe`)
+ * und ist damit auch fuer Schreibwege verbindlich, die an diesem Modul
+ * vorbeigehen. Hier steht nur die lesbare Haelfte.
+ */
+function freigabeFehler(msg: string): UserFacingError | null {
+  if (msg.includes('freigegebenen Woche kann nicht geloescht')) {
+    return new UserFacingError(
+      'Ein Dienst in einer freigegebenen Woche kann nicht gelöscht werden. '
+      + 'Statt zu löschen: den Dienst auf „ausgefallen" setzen.',
+      409,
+    )
+  }
+  if (msg.includes('braucht einen Grund')) {
+    return new UserFacingError(
+      'Der Dienstplan dieser Woche ist freigegeben — jede Änderung braucht einen Grund.',
+      409,
+    )
+  }
+  if (msg.includes('gehoert zu dieser Aenderung')) {
+    return new UserFacingError(
+      'Bitte für diese Änderung einen eigenen Grund angeben — der bisherige gehört zur vorigen.',
+      409,
+    )
+  }
+  return null
 }
 
 export interface ListEintraegeFilter {
@@ -288,6 +338,8 @@ export interface UpdateEintragParams {
   notizen?: string | null
   bestaetigtVon?: string | null
   bestaetigtAm?: string | null
+  /** Siehe CreateEintragParams.aenderungGrund. */
+  aenderungGrund?: string | null
 }
 
 /**
@@ -365,17 +417,32 @@ export async function updateEintrag(
 
   if (Object.keys(update).length === 0) throw new UserFacingError('Keine Änderungen übergeben.')
 
-  const { data, error } = await supabase
+  // Siehe createEintrag: die Spalte kommt aus 20261020000000 und ist noch
+  // nicht angewendet; ein 42703 fuehrt zum zweiten Versuch ohne sie.
+  let antwort = await supabase
     .from('dienstplan_eintraege')
-    .update(update)
+    .update({ ...update, aenderung_grund: patch.aenderungGrund?.trim() || null })
     .eq('id', id)
     .eq('organization_id', organizationId)
     .select('*')
     .single()
+  if (antwort.error?.code === '42703') {
+    antwort = await supabase
+      .from('dienstplan_eintraege')
+      .update(update)
+      .eq('id', id)
+      .eq('organization_id', organizationId)
+      .select('*')
+      .single()
+  }
+
+  const { data, error } = antwort
   if (error || !data) {
     const msg = error?.message ?? 'unbekannt'
     if (msg.includes('Doppelbelegung')) throw new UserFacingError('Doppelbelegung: Der Mitarbeiter hat bereits einen Dienst in diesem Zeitraum.')
     if (msg.includes('Konflikt')) throw new UserFacingError('Konflikt: Der Mitarbeiter ist an diesem Tag als abwesend gemeldet.')
+    const freigabe = freigabeFehler(msg)
+    if (freigabe) throw freigabe
     throw new Error(`Dienstplan-Eintrag konnte nicht aktualisiert werden: ${msg}`)
   }
   return data as DienstplanEintrag
@@ -404,7 +471,11 @@ export async function deleteEintrag(supabase: SupabaseClient, id: string, organi
     .delete()
     .eq('id', id)
     .eq('organization_id', organizationId)
-  if (error) throw new Error(`Dienstplan-Eintrag konnte nicht gelöscht werden: ${error.message}`)
+  if (error) {
+    const freigabe = freigabeFehler(error.message)
+    if (freigabe) throw freigabe
+    throw new Error(`Dienstplan-Eintrag konnte nicht gelöscht werden: ${error.message}`)
+  }
 }
 
 export async function listTagesansicht(supabase: SupabaseClient, organizationId: string, datum: string): Promise<DienstplanTagesansicht[]> {

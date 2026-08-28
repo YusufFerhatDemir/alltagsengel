@@ -311,11 +311,25 @@ describe('Berechtigung am Endpunkt', () => {
 describe('Rollen, die es live noch nicht gibt', () => {
   // Die Matrix trennt „Rechnungen lesen" von „Rechnungen erzeugen" — das
   // ist der Grund, warum der Mahnversand `abrechnung.schreiben` verlangt
-  // (Commit ffb969f). Nur: die Rollen, die diese Trennung tragen, lassen
-  // sich in `profiles` gar nicht anlegen. Der CHECK auf profiles.role
-  // kennt sie nicht. Solange das so ist, ist die feinere Rechteschwelle
-  // eine Absicht ohne Traeger, und der Test haelt das fest, statt eine
-  // Abstufung zu behaupten, die es nicht gibt.
+  // (Commit ffb969f).
+  //
+  // ── KORREKTUR EINER FRUEHEREN AUSSAGE HIER ─────────────────────────
+  // An dieser Stelle stand: „die Rollen, die diese Trennung tragen,
+  // lassen sich in profiles gar nicht anlegen — der CHECK kennt sie
+  // nicht." Das war eine Aussage ueber das TESTSCHEMA, nicht ueber die
+  // Produktion. Das Kettenschema schnitt `profiles` aus der
+  // Core-Baseline, die pdl/qm/buchhaltung noch nicht kannte; live steht
+  // seit 20260924000000 die weitere Fassung.
+  //
+  // Am 29.08.2026 aus pg_constraint gelesen:
+  //   CHECK (role = ANY (ARRAY['kunde','engel','fahrer','angehoerige',
+  //                            'pdl','qm','buchhaltung','admin','superadmin']))
+  //
+  // Die feinere Rechteschwelle ist trotzdem eine Absicht ohne Traeger —
+  // aber aus einem anderen Grund, und der ist eine Aussage ueber den
+  // BESTAND: von 65 Profilen traegt live KEIN einziges eine der drei
+  // Fachrollen (admin 1, superadmin 3, engel 22, fahrer 5, kunde 34).
+  // Anlegbar waeren sie; angelegt hat sie niemand.
   it('die Matrix trennt lesen und schreiben fuer die Pflegedienstleitung', () => {
     expect(rolleDarf('pdl', 'abrechnung.lesen')).toBe(true)
     expect(rolleDarf('pdl', 'abrechnung.schreiben')).toBe(false)
@@ -325,13 +339,28 @@ describe('Rollen, die es live noch nicht gibt', () => {
     expect(rolleDarf('buchhaltung', 'abrechnung.schreiben')).toBe(true)
   })
 
-  it('BEFUND: eine solche Rolle ist in profiles nicht anlegbar', async () => {
-    const nutzer = '00000000-0000-4000-8000-00000000a009'
-    await db.exec(`INSERT INTO auth.users (id, email) VALUES ('${nutzer}', 'pdl@example.org');`)
+  it('die drei Fachrollen sind in profiles anlegbar (wie live)', async () => {
+    for (const [nr, rolle] of ['pdl', 'qm', 'buchhaltung'].entries()) {
+      const nutzer = `00000000-0000-4000-8000-00000000a0${10 + nr}`
+      await db.exec(`INSERT INTO auth.users (id, email) VALUES ('${nutzer}', '${rolle}@example.org');`)
+      await db.exec(
+        `INSERT INTO public.profiles (id, email, role) VALUES ('${nutzer}', '${rolle}@example.org', '${rolle}');`
+      )
+    }
+    const { rows } = await db.query<{ anzahl: string }>(
+      `SELECT count(*)::text AS anzahl FROM public.profiles WHERE role IN ('pdl','qm','buchhaltung')`
+    )
+    expect(Number(rows[0].anzahl)).toBe(3)
+  })
+
+  it('eine erfundene Rolle bleibt abgewiesen — der CHECK ist nicht offen', async () => {
+    // Gegenprobe: waere der CHECK ganz weg, waere der Fall oben trivial.
+    const nutzer = '00000000-0000-4000-8000-00000000a020'
+    await db.exec(`INSERT INTO auth.users (id, email) VALUES ('${nutzer}', 'chef@example.org');`)
     let fehler: string | null = null
     try {
       await db.exec(
-        `INSERT INTO public.profiles (id, email, role) VALUES ('${nutzer}', 'pdl@example.org', 'pdl');`
+        `INSERT INTO public.profiles (id, email, role) VALUES ('${nutzer}', 'chef@example.org', 'oberchef');`
       )
     } catch (e) {
       fehler = e instanceof Error ? e.message : String(e)

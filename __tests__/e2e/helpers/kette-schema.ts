@@ -870,6 +870,24 @@ export async function bauePersonalTabellen(db: PGlite): Promise<void> {
 
   await db.exec(funktionAusMigration(M_FUNKTIONEN, 'set_updated_at'))
 
+  // ── caregivers erweitern (TEIL 1 der Migration, wortgleich) ───────
+  // `wochenstunden_soll` traegt die vertragliche Sollzeit und ist die
+  // Bezugsgroesse der Auslastung in lib/pdl/dienstplanfreigabe.ts.
+  await db.exec(`
+    ALTER TABLE caregivers
+      ADD COLUMN IF NOT EXISTS notfallkontakt_name text,
+      ADD COLUMN IF NOT EXISTS notfallkontakt_telefon text,
+      ADD COLUMN IF NOT EXISTS notfallkontakt_beziehung text,
+      ADD COLUMN IF NOT EXISTS vertragsstatus text DEFAULT 'aktiv',
+      ADD COLUMN IF NOT EXISTS einsatzgebiet_plz text[] DEFAULT '{}',
+      ADD COLUMN IF NOT EXISTS einsatzgebiet_radius_km int DEFAULT 25,
+      ADD COLUMN IF NOT EXISTS wochenstunden_soll numeric(5,2),
+      ADD COLUMN IF NOT EXISTS urlaubstage_jahresanspruch int DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS probezeitende date,
+      ADD COLUMN IF NOT EXISTS fahrzeug_kennzeichen text,
+      ADD COLUMN IF NOT EXISTS fuehrerschein_klassen text[] DEFAULT '{}';
+  `)
+
   // ── Abwesenheiten ─────────────────────────────────────────────────
   await db.exec(tabelleAusMigration(M_LIVE, 'absences'))
   await db.exec(`
@@ -1096,4 +1114,23 @@ export async function baueQmTabellen(db: PGlite): Promise<void> {
     CREATE TRIGGER trg_updated_at_qm_visite_befunde BEFORE UPDATE ON public.qm_visite_befunde
       FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
   `)
+}
+
+/**
+ * Dienstplanfreigabe (Migration 20261020000000) — die PDL-Strecke.
+ *
+ * Wie `wendeArbeitszeitAkteurMigrationAn` bewusst NICHT Teil von
+ * `bauePersonalTabellen()`: die Migration ist eingecheckt und (Stand
+ * 29.08.2026) nicht angewendet. Suiten, die den heutigen Zustand pruefen,
+ * duerfen sie nicht sehen.
+ *
+ * Setzt bauePersonalTabellen() voraus (dienstplan_eintraege,
+ * arbeitszeit_verstoesse, caregivers) und `is_internal_staff` fuer die
+ * Policies — die kommt hier mit, weil die Personal-Strecke sie nicht baut.
+ */
+export async function wendeDienstplanFreigabeMigrationAn(db: PGlite): Promise<void> {
+  await db.exec(
+    funktionAusMigration('20260706_monatsabschluss_ki_pruefzentrale.sql', 'is_internal_staff'),
+  )
+  await db.exec(transaktionsInhalt('20261020000000_dienstplan_freigabe.sql'))
 }
