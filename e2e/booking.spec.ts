@@ -55,7 +55,18 @@ test.describe('Booking-Entry-Points (Smoke)', () => {
     const submit = page.getByRole('button', { name: /anmelden|einloggen/i }).first()
     await submit.click()
 
-    // Fehler-Meldung erscheint (muss generisch sein nach AUTH-005 Fix)
-    await expect(page.getByText(/E-Mail|Passwort|falsch|ungültig/i).first()).toBeVisible({ timeout: 10_000 })
+    // Auf das Fehler-Banner selbst pruefen, nicht auf irgendeinen Text der
+    // Seite. Die fruehere Fassung suchte /E-Mail|Passwort|falsch|ungültig/
+    // ueber die ganze Seite — und traf damit sofort den Link „Passwort
+    // vergessen?", der IMMER da steht. Der Test war gruen, ohne dass je
+    // eine Anmeldung stattgefunden haette. Genau diese Sorte Zusicherung
+    // gehoert nicht in CI, wenn sie danach als Nachweis zaehlen soll.
+    const banner = page.locator('[role="alert"]')
+    await expect(banner.first()).toBeVisible({ timeout: 15_000 })
+
+    // AUTH-005: die Meldung darf nicht verraten, ob es die Adresse gibt.
+    const text = (await banner.first().innerText()).toLowerCase()
+    expect(text.length).toBeGreaterThan(0)
+    expect(text).not.toMatch(/nicht registriert|kein konto|unbekannte e-mail|user not found|nicht gefunden/)
   })
 })
