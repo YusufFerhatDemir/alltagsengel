@@ -42,8 +42,12 @@ test.describe('Register-Flow: Kunde', () => {
     const submitButton = page.getByRole('button', { name: /registrieren|konto erstellen/i }).first()
     await submitButton.click()
 
-    // Erwartete Fehlermeldung
-    await expect(page.getByText(/Passwort|Mindestanforderungen|häufig/i).first()).toBeVisible({ timeout: 5000 })
+    // Auf das Fehler-Banner pruefen, nicht auf irgendeinen Text der Seite:
+    // „Passwort" steht als Feldbeschriftung ohnehin da, die alte Zusicherung
+    // war damit unabhaengig vom Verhalten gruen.
+    const banner = page.locator('[role="alert"]')
+    await expect(banner.first()).toBeVisible({ timeout: 10_000 })
+    await expect(banner.first()).toHaveText(/Mindestanforderungen|Zu schwach/i)
   })
 
   test('Sichtbare Strength-Indicator bei starker Eingabe', async ({ page }) => {

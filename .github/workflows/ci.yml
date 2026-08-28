@@ -148,7 +148,7 @@ jobs:
         run: npm run build
 
   e2e:
-    name: E2E — PflegeCoach (DiPA QS-05) + Barrierefreiheit (BITV B-13)
+    name: E2E — vollstaendige Playwright-Suite (e2e/)
     runs-on: ubuntu-latest
     # Laeuft normal in ~4-5 Min (erfolgreiche Runs am 14.08.: 4m32s,
     # 4m21s, 5m02s). Das Job-Limit muss den Worst Case der Install-Schritte
@@ -246,16 +246,42 @@ jobs:
       - name: Run E2E suite
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:3000
-        # pflegecoach-axe.spec.ts (DiPA-Matrix BF-03) laeuft mit: axe-core
-        # WCAG 2.1 A/AA plus ein eigener Kontrastrechner. Letzterer existiert,
-        # weil axe den am 14.08.2026 gefundenen 1:1-Kontrast des primaeren
-        # Link-Buttons nur als "incomplete" meldete, nicht als Verstoss.
-        # landing-axe.spec.ts (BITV-Audit B-13) prueft zusaetzlich die
-        # oeffentlichen Hauptseiten und — als einziger Lauf ueberhaupt — das
-        # Fokus-Verhalten eines echten, geoeffneten Dialogs (Fokus hinein,
-        # Tab-Zyklus, ESC, Fokus-Rueckgabe). Er laeuft als Sperrklinke gegen
-        # eine dokumentierte Altlasten-Liste, siehe Kopf der Datei.
-        run: npx playwright test e2e/pflegecoach.spec.ts e2e/pflegecoach-axe.spec.ts e2e/landing-axe.spec.ts
+        # LAEUFT UEBER DAS GANZE VERZEICHNIS, NICHT UEBER EINE LISTE.
+        # Bis 28.08.2026 standen hier drei Dateinamen. Die Folge: e2e/
+        # auth-delete.spec.ts, e2e/register.spec.ts und e2e/booking.spec.ts
+        # lagen seit Monaten im Repo und sind in CI NIE gelaufen — die
+        # Completion-Matrix hat Auth/Login deshalb ausdruecklich bei
+        # PROVEN_LIVE gedeckelt statt bei E2E_PROVEN. Eine Allowlist ist
+        # genau die Sorte Konfiguration, die beim naechsten neuen Spec
+        # wieder vergessen wird; deshalb steht hier jetzt keine mehr.
+        #
+        # Was die Suite abdeckt:
+        #   pflegecoach.spec.ts       DiPA QS-05
+        #   pflegecoach-axe.spec.ts   DiPA BF-03 — axe-core WCAG 2.1 A/AA
+        #                             plus eigener Kontrastrechner (axe
+        #                             meldete den 1:1-Kontrast des primaeren
+        #                             Link-Buttons am 14.08.2026 nur als
+        #                             "incomplete", nicht als Verstoss)
+        #   landing-axe.spec.ts       BITV B-13 — oeffentliche Hauptseiten
+        #                             und als einziger Lauf ueberhaupt das
+        #                             Fokus-Verhalten eines echten,
+        #                             geoeffneten Dialogs
+        #   auth-delete.spec.ts       AUTH-003 — unauth DELETE gibt 401;
+        #                             die drei Tests mit Anmeldung
+        #                             ueberspringen sich selbst, solange
+        #                             PLAYWRIGHT_TEST_EMAIL/-PASSWORD
+        #                             nicht gesetzt sind
+        #   register.spec.ts          AUTH-011 — schwaches Passwort wird
+        #                             clientseitig abgewiesen, bevor
+        #                             ueberhaupt ein signUp rausgeht
+        #   booking.spec.ts           AUTH-005 + Zugangsriegel auf
+        #                             /kunde/buchen/*
+        #
+        # Kein Spec braucht ein erreichbares Supabase: die Platzhalter-URL
+        # am Workflow-Kopf loest nicht auf, und genau dieser Fall ist in
+        # jedem der drei neu aufgenommenen Specs der gepruefte Pfad
+        # (fail-closed 401 bzw. clientseitige Validierung vor dem Netz).
+        run: npx playwright test
 
       - name: Upload Playwright report
         if: always()
