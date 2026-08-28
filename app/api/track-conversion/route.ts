@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getClientIp } from '@/lib/rate-limit'
+import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import crypto from 'node:crypto'
 import { withTracking } from '@/lib/monitoring/tracker'
 import { DEFAULT_ORG_ID } from '@/lib/organizations/types'
@@ -19,20 +21,17 @@ import { DEFAULT_ORG_ID } from '@/lib/organizations/types'
  * - Label, Wert, Zeitstempel
  */
 
-// Rate Limit: max 30 Conversions pro IP pro Minute
-const rateLimit = new Map<string, { count: number; resetAt: number }>()
-
-function checkRate(ip: string): boolean {
-  const now = Date.now()
-  const entry = rateLimit.get(ip)
-  if (!entry || now > entry.resetAt) {
-    rateLimit.set(ip, { count: 1, resetAt: now + 60_000 })
-    return true
-  }
-  if (entry.count >= 30) return false
-  entry.count++
-  return true
-}
+// Rate Limit: max 30 Conversions pro IP pro Minute.
+//
+// Track 13 B2: instanzuebergreifend in der Datenbank statt in einer Map
+// im Modul-Scope. Auf Vercel startet jede neue Serverless-Instanz mit
+// leerem Zaehler — ein Modul-Scope-Limit ist dort keine Grenze. Diese
+// Route schreibt mit dem Dienstschluessel in `conversions` und legt dabei
+// die IP-Adresse des Aufrufers ab; ohne wirksames Limit waechst diese
+// Tabelle unbegrenzt. Derselbe Umbau ist am 19.08.2026 fuer
+// /api/visitor-alert gemacht worden; diese Route war uebersehen worden.
+const CONVERSION_LIMIT = 30
+const CONVERSION_FENSTER_MS = 60_000
 
 function sha256(input: string): string {
   return crypto.createHash('sha256').update(input.trim().toLowerCase()).digest('hex')
@@ -44,12 +43,9 @@ function normalizePhone(phone: string): string {
 
 export const POST = withTracking(async function POST(req: NextRequest) {
   try {
-    const ip =
-      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-      req.headers.get('x-real-ip') ||
-      'unknown'
+    const ip = getClientIp(req)
 
-    if (!checkRate(ip)) {
+    if (!(await rateLimitPersistent(`conversion:${ip}`, CONVERSION_LIMIT, CONVERSION_FENSTER_MS))) {
       return NextResponse.json({ ok: true })
     }
 

@@ -56,7 +56,8 @@
     "dipa:compliance": "tsx scripts/dipa-compliance-check.ts",
     "chairmatch:i18n:check": "node scripts/chairmatch-i18n-check.mjs",
     "chairmatch:i18n:coverage": "node scripts/chairmatch-i18n-coverage.mjs",
-    "verify:abrechnung": "node scripts/verify-abrechnung-live.mjs"
+    "verify:abrechnung": "node scripts/verify-abrechnung-live.mjs",
+    "verify:perimeter": "node scripts/verify-perimeter-live.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",

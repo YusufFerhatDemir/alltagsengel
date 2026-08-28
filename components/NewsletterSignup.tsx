@@ -20,7 +20,7 @@ export default function NewsletterSignup({
   subtitle = 'Kostenlose Ratgeber, Neuigkeiten und exklusive Angebote — kein Spam, versprochen.',
 }: Props) {
   const [email, setEmail] = useState('')
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error' | 'exists'>('idle')
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -33,12 +33,15 @@ export default function NewsletterSignup({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       })
-      const data = await res.json()
+      await res.json().catch(() => null)
+      // Track 13 B6: die Route unterscheidet nach aussen nicht mehr
+      // zwischen „neu eingetragen" und „stand schon drin" — sonst waere
+      // sie eine Auskunft darueber, wer im Verteiler steht. Der frueher
+      // hier ausgewertete Code `already_subscribed` existiert nicht mehr;
+      // beide Faelle sind ein Erfolg.
       if (res.ok) {
         setStatus('success')
         setEmail('')
-      } else if (data.code === 'already_subscribed') {
-        setStatus('exists')
       } else {
         setStatus('error')
       }
@@ -123,9 +126,6 @@ export default function NewsletterSignup({
 
       {status === 'error' && (
         <p style={{ color: '#E74C3C', fontSize: 12, marginTop: 8, textAlign: 'center' }}>Fehler — bitte erneut versuchen.</p>
-      )}
-      {status === 'exists' && (
-        <p style={{ color: '#C9963C', fontSize: 12, marginTop: 8, textAlign: 'center' }}>Sie sind bereits angemeldet!</p>
       )}
 
       <p style={{ color: '#555', fontSize: 11, marginTop: 10, textAlign: 'center' }}>

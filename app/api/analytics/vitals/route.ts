@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getClientIp } from '@/lib/rate-limit'
+import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { withTracking } from '@/lib/monitoring/tracker'
 import { DEFAULT_ORG_ID } from '@/lib/organizations/types'
 
@@ -21,27 +23,22 @@ interface VitalPayload {
 const ALLOWED_METRICS = new Set(['CLS', 'INP', 'LCP', 'FCP', 'TTFB', 'FID'])
 
 // Rate-Limit pro IP, 60 Events/Minute. Reicht für 12 Page-Loads pro Min.
-const limit = new Map<string, { c: number; r: number }>()
-function ok(ip: string) {
-  const now = Date.now()
-  const e = limit.get(ip)
-  if (!e || now > e.r) {
-    limit.set(ip, { c: 1, r: now + 60_000 })
-    return true
-  }
-  if (e.c >= 60) return false
-  e.c++
-  return true
-}
+//
+// Track 13 B2: instanzuebergreifend in der Datenbank statt in einer Map
+// im Modul-Scope. Auf Vercel startet jede neue Serverless-Instanz mit
+// leerem Zaehler. Diese Route schreibt mit dem Dienstschluessel in
+// `analytics_events` — ohne wirksames Limit waechst die Tabelle
+// unbegrenzt, und zwar aus einer Quelle, die niemand authentifiziert hat.
+const VITALS_LIMIT = 60
+const VITALS_FENSTER_MS = 60_000
 
 export const POST = withTracking(async function POST(req: NextRequest) {
   try {
-    const ip =
-      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-      req.headers.get('x-real-ip') ||
-      'unknown'
+    const ip = getClientIp(req)
 
-    if (!ok(ip)) return NextResponse.json({ ok: true })
+    if (!(await rateLimitPersistent(`vitals:${ip}`, VITALS_LIMIT, VITALS_FENSTER_MS))) {
+      return NextResponse.json({ ok: true })
+    }
 
     const raw = await req.text()
     if (!raw || raw.length > 2000) return NextResponse.json({ ok: true })

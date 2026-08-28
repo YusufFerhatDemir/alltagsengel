@@ -200,6 +200,15 @@ export const ENV_REGISTER: readonly EnvEintrag[] = [
     wirktNachAussen: true,
     beschreibung: "Einmal-Freigabe fuer den ERSTEN echten Rechnungsversand. Nur der exakte Wert '1' gibt frei; ohne die Variable laesst sich kein Freigabe-Token ausstellen und der begleitete Erstversand ist nicht moeglich. Ersetzt KEINEN der beiden Versand-Schalter, sondern kommt obendrauf: das Token gilt fuer genau eine Rechnung und genau einmal. Ausgewertet in lib/pilot/send-gate.ts (Gegenstueck zur einkompilierten Konstante FIRST_REAL_INVOICE_APPROVED).",
   },
+  {
+    name: 'PERIMETER_AUFBEWAHRUNG_AKTIV',
+    geltung: 'server',
+    notwendigkeit: 'optional',
+    wann: 'produktion',
+    geheim: false,
+    wirktNachAussen: false,
+    beschreibung: "Freigabe fuer den Aufbewahrungslauf am unauthentifizierten Perimeter (Track 13 B5). Nur der exakte Wert '1' schaltet scharf; ohne die Variable zaehlt /api/cron/perimeter-aufbewahrung nur und aendert NICHTS. Der Trockenlauf ist Absicht: mit den Fristen aus lib/perimeter/aufbewahrung.ts waeren beim ersten scharfen Lauf rund 4650 Zeilen betroffen (visitors, visitor_locations, conversions), die seit Maerz 2026 liegen. Diese Zahlen gehoeren vor dem Einschalten angesehen — der Trockenlauf und `npm run verify:perimeter` weisen sie aus.",
+  },
 
   // ═══ Externe Freigaben (lib/abrechnung/externe-freigaben.ts) ═══
   {

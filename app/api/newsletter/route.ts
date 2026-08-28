@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendRawEmail } from '@/lib/notifications'
 import { getClientIp } from '@/lib/rate-limit'
 import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
+import { abmeldeLink, normalisiereAdresse } from '@/lib/newsletter/abmelde-token'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
 import { DEFAULT_ORG_ID } from '@/lib/organizations/types'
@@ -30,15 +31,38 @@ export const POST = withTracking(async function POST(request: Request) {
       return NextResponse.json({ error: 'Ungültige E-Mail' }, { status: 400 })
     }
 
-    // Prüfe ob bereits angemeldet
-    const { data: existing } = await supabaseAdmin
+    const adresse = normalisiereAdresse(email)
+
+    // ── Track 13, Befund B6: kein Bestands-Orakel ────────────────────
+    // Frueher antwortete diese Route mit 409 `already_subscribed`, wenn
+    // die Adresse schon im Verteiler stand. Damit konnte JEDER von aussen
+    // pruefen, ob eine bestimmte Person bei uns eingetragen ist — eine
+    // Auskunft ueber eine dritte Person an einen Unbekannten.
+    //
+    // Der richtige Umgang steht seit dem 19.08.2026 nebenan in
+    // /api/auth/send-reset: dort ist eine unbekannte Adresse ausdruecklich
+    // ein Erfolg, mit dem Kommentar „kein Hinweis darauf, ob die Adresse
+    // existiert". Zwei Wege, dieselbe Frage, zwei Antworten — hier ist die
+    // zweite an die erste gezogen.
+    //
+    // Der Bestand wird weiter gelesen, aber nur noch fuer die
+    // ENTSCHEIDUNG, ob eine Willkommensmail rausgeht. Nach aussen ist die
+    // Antwort in beiden Faellen dieselbe.
+    const { data: bestand, error: bestandFehler } = await supabaseAdmin
       .from('newsletter_subscribers')
       .select('id')
-      .eq('email', email.toLowerCase())
-      .single()
+      .eq('email', adresse)
+      .maybeSingle()
 
-    if (existing) {
-      return NextResponse.json({ error: 'Bereits angemeldet', code: 'already_subscribed' }, { status: 409 })
+    if (bestandFehler) {
+      log.errorWithException('Bestandspruefung fehlgeschlagen', bestandFehler)
+      return NextResponse.json({ error: 'Speicherfehler' }, { status: 500 })
+    }
+
+    if (bestand) {
+      // Schon eingetragen: nichts schreiben, keine zweite Willkommensmail,
+      // und nach aussen dieselbe Antwort wie bei einer Neuanmeldung.
+      return NextResponse.json({ success: true })
     }
 
     // In DB speichern
@@ -52,7 +76,7 @@ export const POST = withTracking(async function POST(request: Request) {
       // Aussage. Hier ist er eine Aussage: die oeffentliche Website gehoert
       // der Stamm-Organisation, es gibt keinen anderen Mandanten dahinter.
         organization_id: DEFAULT_ORG_ID,
-        email: email.toLowerCase(),
+        email: adresse,
         source: 'website',
       })
 
@@ -64,17 +88,16 @@ export const POST = withTracking(async function POST(request: Request) {
     // Willkommens-Mail senden.
     //
     // Die Anmeldung steht schon in der Datenbank — ein Fehlschlag hier
-    // darf die Antwort deshalb nicht kippen (der Absender wuerde sich
-    // sonst ein zweites Mal anmelden und bekaeme 409). Er muss aber im
-    // Protokoll landen: das Resend-SDK wirft bei einer Ablehnung nicht,
-    // ein ungeprueftes Ergebnis sah bisher wie ein Erfolg aus.
+    // darf die Antwort deshalb nicht kippen. Er muss aber im Protokoll
+    // landen: das Resend-SDK wirft bei einer Ablehnung nicht, ein
+    // ungeprueftes Ergebnis sah bisher wie ein Erfolg aus.
     const willkommen = await sendRawEmail({
-      to: email,
+      to: adresse,
       subject: 'Willkommen beim Alltagsengel Newsletter!',
-      // Idempotenz: eine zweite Anmeldung derselben Adresse prallt oben
-      // an `already_subscribed` ab; der Schluessel deckt zusaetzlich den
+      // Idempotenz: eine zweite Anmeldung derselben Adresse endet oben
+      // bei der Bestandspruefung; der Schluessel deckt zusaetzlich den
       // Fall ab, dass zwei Aufrufe gleichzeitig durchlaufen.
-      idempotenzSchluessel: `newsletter-willkommen:${String(email).toLowerCase()}`,
+      idempotenzSchluessel: `newsletter-willkommen:${adresse}`,
       html: `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
 <body style="margin:0;padding:0;background:#F7F2EA;font-family:-apple-system,sans-serif">
@@ -101,7 +124,7 @@ export const POST = withTracking(async function POST(request: Request) {
     <p style="color:#888;font-size:13px">Herzliche Grüße,<br>Ihr Alltagsengel Team</p>
   </div>
   <div style="text-align:center;padding:16px 0;font-size:11px;color:#999">
-    <a href="https://alltagsengel.care/api/newsletter/unsubscribe?email=${encodeURIComponent(email)}" style="color:#999">Abmelden</a>
+    <a href="${abmeldeLink(adresse, process.env.NEXT_PUBLIC_SITE_URL || 'https://alltagsengel.care')}" style="color:#999">Abmelden</a>
   </div>
 </div>
 </body></html>`,
