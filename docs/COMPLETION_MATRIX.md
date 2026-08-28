@@ -53,6 +53,15 @@ Diese Sonden sind die Grundlage jeder `PROVEN_LIVE`-Vergabe unten.
 Zusätzlich live gelaufen: `npm run verify:perimeter` → **8 von 8 bestanden**
 (4 Berichte), `npm run verify:abrechnung` → **8 von 9 bestanden**
 (1 offen: E1, die Obergrenzen-Migration `20261017000002`).
+
+> **Korrektur vom 29.08.2026:** dieses „1 offen" war ein **Messfehler, kein
+> Befund**. Die Migration `20261017000002` ist live — der Quelltext aus
+> `pg_proc` wurde gegen das Repo-Artefakt gehalten und ist bis auf
+> SQL-Kommentare identisch. Die Prüfung E1 bildete noch die Auswahl *vor* der
+> Migration nach und stellte damit eine Frage, die der Trigger gar nicht mehr
+> stellt. Nachgezogen; `verify:abrechnung` steht jetzt bei **10/10**.
+> Daneben steht neu **E2**, das den Trigger-Quelltext selbst liest — eine
+> Nachbildung kann nie beweisen, dass sie noch die des Triggers *ist*.
 HTTP: `alltagsengel.care` → 200, `/sitemap.xml` → 200, `/api/health` → 200,
 `/admin` und `/kunde/home` → 307 (Wächter greift).
 
@@ -120,24 +129,31 @@ Backend und Edge Functions sind live, die **App ist es nicht**.
 
 ## 3. ALLTAGSENGEL
 
-Repo `/Users/work/alltagsengel` · HEAD `41bdfce4` · main == origin/main ·
-413 API-Routen · 353 Testdateien · 406 Migrationsdateien ·
-CI zuletzt **grün** (Run 33193896467, 28.08. 17:16).
+Repo `/Users/work/alltagsengel` · main == origin/main ·
+413 API-Routen · 357 Testdateien · 410 Migrationsdateien.
+
+> **Nachgemessen am 29.08.2026.** Nur dieser Abschnitt ist neu erhoben; die
+> Abschnitte zu ChairMatch und efy care stehen unverändert vom 28.08. und
+> tragen weiterhin die dort genannten Lücken.
+>
+> Vollständiger Testlauf: **8.042 vitest-Tests grün** (357 Dateien),
+> `tsc --noEmit` 0 Fehler, `lint:forbidden` 0 Treffer über 24.839 Dateien,
+> `verify:abrechnung` **10/10**, `verify:perimeter` 8/8.
 
 | # | Modul | Status | Punkte | Nachweis und was fehlt |
 |---|---|---|---|---|
-| 1 | **Auth/Login** | `PROVEN_LIVE` | 4 | 64 echte Profile live; `lib/auth` mit `konto-status.ts`, `rollen-quelle.ts`, `guard.ts`; `lint:route-auth` über 412 Routen = 0 in CI; Track 11 hat den wirkungslosen Soft-Delete geschlossen. **Kein E2E:** `e2e/auth-delete.spec.ts` und `register.spec.ts` existieren, laufen aber **nicht in CI** — die CI-E2E-Stufe startet ausdrücklich nur `pflegecoach*.spec.ts` und `landing-axe.spec.ts`. |
-| 2 | **Buchungssystem** | `E2E_PROVEN` | 5 | 10 `bookings` + 5 `assignments` live; `__tests__/e2e/buchung-einsatz-kette.test.ts` läuft in CI gegen **echtes Postgres** (PGlite). Offen: `bookings.customer_id` zeigt auf `profiles`, nicht auf `clients` — Klient-Termine leben in `assignments`, die Kette ist zweigleisig. |
-| 3 | **Engel-Verwaltung** | `PROVEN_LIVE` | 4 | 16 `angels` live; Track 9 Column-Level-GRANT **live belegt** (`has_column_privilege` für `hourly_rate` = false); Track 12 hat die Umgehung über `registerAsEngel` geschlossen. Kein durchgehender E2E-Lauf für Profil/Verfügbarkeit. |
-| 4 | **Kundenverwaltung** | `PROVEN_LIVE` | 4 | 4 `clients`, 4 `client_budgets`, 6 `organizations` live; Mandantenzaun `org_fence` RESTRICTIVE. Vier Klienten sind ein Pilotbestand, kein Betrieb. |
-| 5 | **Abrechnungssystem (§45a SGB XI)** | `E2E_PROVEN` | 5 | 3 Rechnungen, 15 Positionen, 23 Tarife live; `verify:abrechnung` **8/9 live bestanden**; PGlite-Ketten (`abrechnungskette`, `billing-e2e`, `go-live-pilot-hauptkette`) laufen in CI gegen echtes Postgres. **Nicht DONE:** `payments` = **0** — es wurde nie ein Zahlungseingang verbucht; Migration `20261017000002` (Obergrenze nach Angebotstyp) wartet, deshalb rechnet der Trigger `hauswirtschaft` mit 30 € statt 25 €; §45a-Bescheid Bayern extern offen. |
-| 6 | **Leistungsnachweis** | `E2E_PROVEN` | 5 | 30 `service_records` live, davon 15 abgerechnet; `nachweis-kette-pglite.test.ts` in CI; Beleg-Trigger `trg_a_unterschrift_beleg` und CHECK `service_records_zeitfenster_gueltig` **live nachgewiesen** (Migration `20261017000000` ist eingespielt). **Offener Live-Befund:** `is_locked` = false auf **allen** 30 Zeilen, `signature_hash` auf **keiner** — der Manipulationsschutz hat in dieser Datenbank noch nie gegriffen; die 15 abgerechneten Zeilen stammen aus der Zeit vor der Sperre. |
-| 7 | **Admin-Dashboard** | `PROVEN_LIVE` | 4 | 98 Bereiche unter `app/admin`; `/admin` antwortet live mit **307** (Wächter greift, kein Durchgriff); RLS-Lockdown der Betriebssystem-Tabellen per Impersonation belegt. **Bewusst nicht höher:** geprüft ist der Zugangsriegel und die Datenschicht — **nicht** die Funktion aller 98 Bereiche. |
-| 8 | **SEO/Landing Pages** | `E2E_PROVEN` | 5 | Das einzige Modul mit echtem Publikumsverkehr: **8.324 `page_views`** seit 26.03., 3.398 `visitors`, **32 `lead_inquiries`**, 38 `conversions`. Die Kette Besucher → Seitenaufruf → Anfrage ist **in Produktion mit echten Menschen** durchlaufen. `sitemap.xml` und `robots.txt` → 200; `landing-axe.spec.ts` (BITV) läuft in CI. Offen: Track 13 Aufbewahrungsfristen laufen als Trockenlauf (`PERIMETER_AUFBEWAHRUNG_AKTIV` nicht gesetzt), 6.641 Seitenaufrufe tragen volle IPs. |
-| 9 | **E-Mail-System** | `DEPLOYED` | 3 | Resend verdrahtet (9 Module), `lib/emails/*`, Versandkette samt `invoice_email_log` gebaut und getestet. **Warum nicht PROVEN_LIVE:** `invoice_email_log` = **0**, `notification_delivery_log` = **0**, `newsletter_subscribers` = **0**. Es ist über den produktiven Weg **nie eine Mail rausgegangen**. Ursache ist bekannt und extern: `RECHNUNGSVERSAND_AUTOMATISCH` und `MAHNVERSAND_AUTOMATISCH` sind in Vercel nicht gesetzt. |
-| 10 | **API-Sicherheit (RLS, Policies)** | `E2E_PROVEN` | 5 | Der belastbarste Teil des Systems. 310/310 Tabellen mit RLS; anon-Schreibrechte = 0; `verify:perimeter` **8/8 live**; 13 aufeinander aufbauende Härte-Tracks mit je eigenem Bericht; `lint:forbidden`, `lint:route-auth`, `lint:org-id` blockieren in CI. Die Kette anon → PostgREST → RLS ist **gegen Produktion** durchlaufen. **Nicht DONE:** Migration `20261017000002` offen; Restposten R1 (Wegepauschale §45b steht auf `verified`, obwohl `obergrenzen.ts` das Gegenteil festhält), R2 (fünf Tabellen hängen nur an einem Funktionsrecht statt an einer Policy). |
+| 1 | **Auth/Login** | `PROVEN_LIVE` | 4 | 64 echte Profile live; `lint:route-auth` über 412 Routen = 0 in CI. **CI-Lücke geschlossen (29.08.):** die E2E-Stufe lief über eine Drei-Datei-Allowlist, `auth-delete/register/booking.spec.ts` waren in CI nie gelaufen. Jetzt läuft `npx playwright test` über das ganze Verzeichnis. Der erste Lauf war rot — **drei echte Befunde**, keiner ein kaputter Test (Homepage-Titel, leeres `[role=alert]`, unbekanntes AGB-Tor). **Bewusst NICHT auf E2E_PROVEN gehoben:** die Suite läuft gegen eine Platzhalter-Supabase-URL. Die Anmeldekette selbst (Zugangsdaten → Sitzung → Rolle → Weiterleitung) wird damit nie durchlaufen — und die Stufe verlangt die vollständige Kette. **Was fehlt, ist genau eine Sache:** ein Testkonto in den CI-Secrets (`PLAYWRIGHT_TEST_EMAIL` / `_PASSWORD`). Die drei Tests dafür stehen fertig in `auth-delete.spec.ts` und überspringen sich selbst, solange die Variablen fehlen. → **Yusuf**, GitHub-Secrets. |
+| 2 | **Buchungssystem** | `E2E_PROVEN` | 5 | 10 `bookings` + 5 `assignments` live; `buchung-einsatz-kette.test.ts` in CI. Offen: `bookings.customer_id` zeigt auf `profiles`, Klient-Termine leben in `assignments` — die Kette ist zweigleisig. |
+| 3 | **Engel-Verwaltung** | `E2E_PROVEN` | 5 | **Neu (29.08.):** `engel-verwaltung-kette-pglite.test.ts`, 20 Tests, fährt `registerAsEngel` und die drei Verfügbarkeits-Actions gegen **echtes Postgres**. Enthält die Gegenprobe zu Track 12/B1 in beiden Richtungen: der zweite Aufruf lässt die vier an der DB gesperrten Spalten unangetastet **und** schreibt die selbstgepflegten weiter fort. **Befund beim Schreiben gefunden und behoben:** die Wochentagsprüfung lief gegen `0..6` (JavaScript `Date.getDay()`), Spalte und Oberfläche zählen nach ISO `1..7` — **Sonntag ließ sich nicht hinterlegen**. |
+| 4 | **Kundenverwaltung** | `E2E_PROVEN` | 5 | **Neu (29.08.):** `kundenverwaltung-kette-pglite.test.ts`, 18 Tests, Kette Berechtigung → Klient → Kundennummer → Budget durch den echten Route-Handler auf echtem Postgres. **Mandantenbefund (P2):** `clients_customer_number_key` ist live **global** eindeutig, die Route prüft mandantenweise — ein Mandant konnte eine Nummer nicht vergeben, die ein anderer führt, und die rohe 23505-Meldung ging als 500 nach außen. Route abgesichert (wirkt sofort), Migration `20260828210000` eingecheckt. |
+| 5 | **Abrechnungssystem (§45a SGB XI)** | `E2E_PROVEN` | 5 | 3 Rechnungen, 15 Positionen, 23 Tarife live; `verify:abrechnung` jetzt **10/10** (vorher 8/9). **Nicht DONE:** `payments` = **0** — es wurde nie ein Zahlungseingang verbucht; §45a-Bescheid extern offen; Restposten R1 (Wegepauschale) ist eine **rechtliche** Frage, siehe unten. |
+| 6 | **Leistungsnachweis** | `E2E_PROVEN` | 5 | **Der offene Live-Befund ist geklärt (29.08.), und die naheliegende Lesart war falsch.** `is_locked` = false auf allen 30 Zeilen, `signature_hash` auf keiner — aber der Trigger ist **nicht** kaputt: live hängen neun Trigger an `service_records`, alle aktiv, `compute_signature_hash` und `prevent_locked_record_change` sind byte-identisch mit `20260914010000`. Er hängt am **Ende einer Kette, die nie betreten wurde**: der einzige Schreiber von `UNTERSCHRIEBEN` im ganzen Repo weist alles ab, was nicht auf `ABGESCHLOSSEN` steht; alle 30 Zeilen stehen auf `ENTWURF`, `service_signatures` hat 0 Zeilen. Niemand hat je bestätigt, also konnte niemand je unterschreiben. Belegt durch `manipulationsschutz-nachweis-pglite.test.ts` (7 Tests). **Nicht DONE:** die 15 abgerechneten Zeilen stammen aus der Zeit vor der Sperre — ob nachzuunterschreiben, zu stornieren oder als Altbestand zu belassen, ist eine Entscheidung nach § 630f BGB. |
+| 7 | **Admin-Dashboard** | `PROVEN_LIVE` | 4 | 98 Bereiche unter `app/admin`; `/admin` live **307**. **Neu (29.08.):** `admin-cockpit-kette-pglite.test.ts`, 24 Tests — die **Wirkung** der zwei folgenreichsten Funktionen (Statuswechsel, Pflegegrad) gegen echtes Postgres, samt Mandantenzaun mit echtem zweitem Mandanten (beide Routen fahren mit dem Admin-Client, der RLS umgeht — der Zaun ist hier eine Codezeile, keine Policy). **Bewusst NICHT auf E2E_PROVEN gehoben:** das sind zwei von 98 Bereichen. Die Stufe würde bedeuten, das Modul sei durchgelaufen; es sind die zwei mit den weitesten Folgen. Das ist eine **Ermessensentscheidung** — wer den Modulbegriff enger fasst, kann hier 5 vergeben. |
+| 8 | **SEO/Landing Pages** | `E2E_PROVEN` | 5 | **8.324 `page_views`**, 3.398 `visitors`, **32 `lead_inquiries`** — die Kette Besucher → Seitenaufruf → Anfrage ist **in Produktion mit echten Menschen** durchlaufen. Offen: Aufbewahrungsfristen laufen als Trockenlauf, 6.641 Seitenaufrufe tragen volle IPs. |
+| 9 | **E-Mail-System** | `DEPLOYED` **· EXTERNAL_BLOCKED** | 3 | **Der Blocker ist jetzt gemessen, nicht angenommen (29.08.).** Neues `npm run verify:versand` prüft drei Schichten: **Zugang** — Resend-Schlüssel gültig, `alltagsengel.care` = `verified`, DKIM/SPF stehen (nur lesend). **Wirkung** — `invoice_email_log` = 0, `notification_delivery_log` = 0, `newsletter_subscribers` = 0. Zugang trägt, Spuren leer: **damit** ist `EXTERNAL_BLOCKED` die richtige Beschreibung und nicht bloß die naheliegende. Die Software ist vollständig; es fehlt eine Einstellung außerhalb des Repos. → **Yusuf**, Vercel: `RECHNUNGSVERSAND_AUTOMATISCH`, `MAHNVERSAND_AUTOMATISCH`, `CRON_SECRET`. |
+| 10 | **API-Sicherheit (RLS, Policies)** | `E2E_PROVEN` | 5 | 310/310 Tabellen mit RLS; anon-Schreibrechte = 0; `verify:perimeter` 8/8. **Migration `20261017000002` ist live — sie war nie offen.** Der Fehler lag in der Prüfung: `TRIGGER_AUSWAHL` in `verify-abrechnung-live.mjs` bildete die Auswahl *vor* der Migration nach und stellte eine Frage, die der Trigger nicht mehr stellt. Live liefert er `hauswirtschaft → 2500`, `betreuung_45a → 3000`. Nachgezogen, dazu neue Prüfung **E2**, die den Trigger-Quelltext selbst liest. **Offen:** R1 (Wegepauschale, rechtliche Frage — als stehender Bericht verdrahtet), R2 (fünf Geldtabellen hängen nur an einem Funktionsrecht; Migration `20260828200000` geschrieben, **nicht angewendet**). |
 
-**Alltagsengel: 44 von 60 Punkten = 73 %**
+**Alltagsengel: 46 von 60 Punkten = 77 %** (vorher 44 / 73 %)
 
 ---
 
@@ -196,10 +212,10 @@ Repo `/Users/work/efy-care` · HEAD `ce9af1b` · **Expo/React-Native-App**
 
 | Produkt | Module | Punkte | Maximum | Fertigstellung |
 |---|---|---|---|---|
-| **Alltagsengel** | 10 | 44 | 60 | **73 %** |
+| **Alltagsengel** | 10 | 46 | 60 | **77 %** ⬆ von 73 % |
 | **ChairMatch** | 9 | 35 | 54 | **65 %** |
 | **efy care** | 9 | 34 | 54 | **63 %** |
-| **Gesamt** | 28 | **113** | **168** | **67 %** |
+| **Gesamt** | 28 | **115** | **168** | **68 %** |
 
 ### Verteilung der Stufen
 
@@ -209,8 +225,8 @@ Repo `/Users/work/efy-care` · HEAD `ce9af1b` · **Expo/React-Native-App**
 | `IMPLEMENTED` | 0 | 0 | 0 | **0** |
 | `TESTED` | 0 | 0 | 0 | **0** |
 | `DEPLOYED` | 1 | 2 | 2 | **5** |
-| `PROVEN_LIVE` | 4 | 6 | 7 | **17** |
-| `E2E_PROVEN` | 5 | 1 | 0 | **6** |
+| `PROVEN_LIVE` | 2 | 6 | 7 | **15** |
+| `E2E_PROVEN` | 7 | 1 | 0 | **8** |
 | `DONE` | 0 | 0 | 0 | **0** |
 
 ---
@@ -235,15 +251,40 @@ Betrieb schon durch sie hindurchgelaufen ist.**
 - **efy care** hat das dichteste Regelwerk in der Datenbank (Tracks 9–16, je
   eine Migration mit Triggern und Constraints) und **keine ausgelieferte App**.
 
-### Die fünf Positionen, die am meisten Prozent bewegen würden
+### Die Positionen, die am meisten Prozent bewegen würden
 
 | # | Position | Wirkung | Wer kann das? |
 |---|---|---|---|
-| 1 | `RECHNUNGSVERSAND_AUTOMATISCH` + `MAHNVERSAND_AUTOMATISCH` + `CRON_SECRET` in Vercel setzen | AE E-Mail-System 3 → 5, Abrechnung Richtung DONE | **Yusuf** (Vercel-Dashboard) |
-| 2 | ChairMatch: sechs Stripe-Variablen in Vercel setzen | CM Zahlungsabwicklung 3 → 4/5 | **Yusuf** (Vercel-Dashboard) |
-| 3 | efy: `STRIPE_SECRET_KEY` als Supabase-Function-Secret setzen | behebt `stripe-webhook` `WORKER_ERROR` | **Yusuf** (Supabase-Dashboard) |
-| 4 | Drei wartende Migrationen anwenden: AE `20261017000002`, CM `20260828170738`, efy `20260828234500` | öffnet DONE für vier Module | **Yusuf** (SQL-Editor — Dienstschlüssel wird bei DDL mit 42501 abgewiesen) |
-| 5 | ChairMatch-Dienstschlüssel erneuern | macht CM überhaupt erst messbar; ohne ihn bleibt jede CM-Zeilenzahl in dieser Matrix eine Lücke | **Yusuf** (Supabase-Dashboard) |
+| 1 | `RECHNUNGSVERSAND_AUTOMATISCH` + `MAHNVERSAND_AUTOMATISCH` + `CRON_SECRET` in Vercel setzen | AE E-Mail-System 3 → 5, Abrechnung Richtung DONE. **Der Blocker ist jetzt gemessen** (`npm run verify:versand`): Zugang trägt, Domain verifiziert, Spuren leer. | **Yusuf** (Vercel-Dashboard) |
+| 2 | Testkonto in die GitHub-Secrets: `PLAYWRIGHT_TEST_EMAIL` / `PLAYWRIGHT_TEST_PASSWORD` | AE Auth/Login 4 → 5. Die drei Tests stehen fertig in `auth-delete.spec.ts` und überspringen sich selbst, solange die Variablen fehlen. **Ein Testprojekt nehmen, nicht die Produktion** — der Delete-Flow ist destruktiv. | **Yusuf** (GitHub-Secrets) |
+| 3 | ChairMatch: sechs Stripe-Variablen in Vercel setzen | CM Zahlungsabwicklung 3 → 4/5 | **Yusuf** (Vercel-Dashboard) |
+| 4 | efy: `STRIPE_SECRET_KEY` als Supabase-Function-Secret setzen | behebt `stripe-webhook` `WORKER_ERROR` | **Yusuf** (Supabase-Dashboard) |
+| 5 | Wartende Migrationen anwenden: AE `20260828200000` (anon-Riegel als Policy) und `20260828210000` (Kundennummer pro Mandant), CM `20260828170738`, efy `20260828234500` | öffnet DONE für mehrere Module. **AE `20261017000002` steht hier nicht mehr — sie ist live**, siehe Korrektur in Abschnitt 2. | **Yusuf** (SQL-Editor — DDL über den Dienstschlüssel wird mit 42501 abgewiesen) |
+| 6 | ChairMatch-Dienstschlüssel erneuern | macht CM überhaupt erst messbar; ohne ihn bleibt jede CM-Zeilenzahl in dieser Matrix eine Lücke | **Yusuf** (Supabase-Dashboard) |
+
+### Was am 29.08.2026 dazukam — und was es über die Matrix selbst sagt
+
+Sieben Lücken sind abgearbeitet. Drei Beobachtungen, die über die einzelnen
+Zeilen hinausgehen:
+
+1. **Zwei „offene" Punkte waren Messfehler.** Migration `20261017000002` war
+   angewendet, `20260907010000` ebenfalls — gemeldet wurden sie als offen,
+   weil die jeweilige Prüfung eine veraltete Frage stellte. Eine Prüfung, die
+   sich vom geprüften Gegenstand wegbewegt, meldet nicht „unsicher", sondern
+   **falsch** — hier zu streng, anderswo wäre es zu milde. Deshalb steht neben
+   der nachgezogenen Prüfung E1 jetzt E2, das den Trigger-Quelltext selbst
+   liest.
+
+2. **Der auffälligste Live-Befund war keiner.** `is_locked` = false auf allen
+   30 Nachweisen las sich wie ein kaputter Manipulationsschutz. Er ist intakt;
+   die Kette davor wurde nie betreten. Der Unterschied ist praktisch: an einem
+   kaputten Trigger repariert man Code, an einer nie betretenen Kette nicht.
+
+3. **Jeder neue Prüflauf hat einen echten Defekt gefunden.** Sonntag ließ sich
+   nicht als Verfügbarkeit hinterlegen; die Kundennummer war global statt pro
+   Mandant eindeutig; drei E2E-Specs waren gegen die Anwendung veraltet, weil
+   sie in CI nie liefen. Keiner davon wäre durch mehr Live-Sonden aufgefallen —
+   sie brauchten einen Lauf **durch** den Code, nicht einen Blick **auf** ihn.
 
 ### Wo diese Matrix bewusst nicht weiter geht
 
