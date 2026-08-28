@@ -7,6 +7,7 @@ import { UserFacingError } from '@/lib/api/user-facing-error'
 // ═══════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { assertBenutzerInOrg } from '@/lib/organizations/benutzer-guard'
 import {
   assertSisWert,
   relevanteThemenfelder,
@@ -54,6 +55,14 @@ export async function createAssessment(supabase: SupabaseClient, params: CreateS
   assertSisWert(params.assessmentTyp, SIS_ASSESSMENT_TYP_WERTE, 'assessment_typ')
   assertSisWert(params.versorgungsform, SIS_VERSORGUNGSFORM_WERTE, 'versorgungsform')
   const versorgungsform = params.versorgungsform ?? 'ambulant'
+
+  // Urheberschaft (Track 10): `erhobenVon` kommt aus dem Request-Rumpf
+  // (`body.erhobenVon ?? userId`) und ist `uuid REFERENCES auth.users(id)` —
+  // auth.users ist mandantenuebergreifend, die Fremdschluessel-Bedingung
+  // sagt also nur „irgendein Konto der Plattform". Die SIS ist ein
+  // amtliches Instrument der Pflegedokumentation; wer sie erhoben hat,
+  // ist Teil des Nachweises und darf nicht frei waehlbar sein.
+  await assertBenutzerInOrg(supabase, params.erhobenVon, params.organizationId, 'Erhoben von')
 
   const { data, error } = await supabase
     .from('sis_assessments')

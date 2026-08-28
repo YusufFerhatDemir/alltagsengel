@@ -26,6 +26,13 @@ function fakeClient(opts: {
   mitglieder?: string[]
   caregiverUserIds?: string[]
   elternNachricht?: Record<string, unknown> | null
+  /**
+   * Empfaenger-IDs, die an dem Verlauf beteiligt sind. Seit Track 10
+   * verlangt createAntwort Beteiligung am Thread (istThreadTeilnehmer) —
+   * ohne diesen Eintrag scheitert jeder Antwort-Test schon dort und
+   * pruefte damit nicht mehr das, was in seinem Namen steht.
+   */
+  threadEmpfaenger?: string[]
 } = {}) {
   const calls: Array<{ tabelle: string; filter: Record<string, unknown> }> = []
   const inserts: Array<{ tabelle: string; payload: unknown }> = []
@@ -46,8 +53,24 @@ function fakeClient(opts: {
               return kette
             },
             in(_col: string, ids: string[]) {
+              filter[`in:${_col}`] = ids
+              // Kette statt Promise: die Beteiligungspruefung haengt hinter
+              // .in() noch ein .limit(1). Aufgeloest wird in then().
+              return kette
+            },
+            limit: () => kette,
+            then(aufloesen: (v: unknown) => unknown) {
               calls.push({ tabelle, filter })
-              return Promise.resolve(inFilter(tabelle, _col, ids))
+              if (tabelle === 'organization_members' || tabelle === 'caregivers') {
+                const ids = (filter['in:user_id'] as string[]) ?? []
+                return Promise.resolve(inFilter(tabelle, 'user_id', ids)).then(aufloesen)
+              }
+              if (tabelle === 'ops_nachrichten_empfaenger') {
+                const beteiligt = (opts.threadEmpfaenger ?? []).includes(String(filter.empfaenger_id))
+                return Promise.resolve({ data: beteiligt ? [{ nachricht_id: 'n-1' }] : [], error: null }).then(aufloesen)
+              }
+              // ops_nachrichten: Liste der Antworten im Verlauf.
+              return Promise.resolve({ data: [], error: null }).then(aufloesen)
             },
             maybeSingle: async () => {
               calls.push({ tabelle, filter })
@@ -183,7 +206,11 @@ test('createNachricht ohne Empfänger prüft nichts und schreibt trotzdem', asyn
 })
 
 test('createAntwort lehnt fremde Empfänger ab, obwohl die Eltern-Nachricht zur Organisation gehört', async () => {
-  const { supabase, inserts } = fakeClient({ mitglieder: [], caregiverUserIds: [], elternNachricht: { id: 'n-1' } })
+  const { supabase, inserts } = fakeClient({
+    mitglieder: [], caregiverUserIds: [],
+    elternNachricht: { id: 'n-1', absender_id: 'user-1', eltern_id: null },
+    threadEmpfaenger: ['user-1'],
+  })
   await assert.rejects(
     () => createAntwort(supabase, {
       organizationId: 'org-1', elternId: 'n-1', data: basisData, empfaengerIds: ['user-fremd'],

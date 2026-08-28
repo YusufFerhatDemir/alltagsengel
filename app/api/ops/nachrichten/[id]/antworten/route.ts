@@ -1,7 +1,7 @@
 import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requireOpsUser } from '@/lib/ops/api-auth'
+import { requireOpsPostfachUser } from '@/lib/ops/api-auth'
 import { createAntwort } from '@/lib/ops/nachrichten'
 import { logAuditEvent } from '@/lib/audit-log'
 import { withTracking } from '@/lib/monitoring/tracker'
@@ -10,7 +10,7 @@ export const POST = withTracking(async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireOpsUser()
+  const auth = await requireOpsPostfachUser()
   if (!auth.ok) return auth.response
   const { id: elternId } = await params
   const supabase = createAdminClient()

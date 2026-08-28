@@ -6,6 +6,7 @@ import { UserFacingError } from '@/lib/api/user-facing-error'
 // ═══════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { assertBenutzerInOrg } from '@/lib/organizations/benutzer-guard'
 import { heuteBerlin } from '@/lib/utils/timezone'
 import { logPflegeAktivitaet } from './audit-log'
 import {
@@ -64,6 +65,12 @@ export async function createAufnahme(supabase: SupabaseClient, params: CreateAuf
   if (params.pflegegradBeiAufnahme != null && (params.pflegegradBeiAufnahme < 0 || params.pflegegradBeiAufnahme > 5)) {
     throw new UserFacingError('Pflegegrad muss zwischen 0 und 5 liegen.')
   }
+
+  // Urheberschaft (Track 10): dieselbe Form wie bei der SIS —
+  // `aufgenommenVon` kommt aus dem Rumpf und zeigt auf auth.users, also
+  // mandantenuebergreifend. Wer die Aufnahme gefuehrt hat, gehoert zum
+  // Nachweis und darf nicht frei gesetzt werden.
+  await assertBenutzerInOrg(supabase, params.aufgenommenVon, params.organizationId, 'Aufgenommen von')
 
   const { data, error } = await supabase
     .from('pflege_aufnahmen')

@@ -62,6 +62,86 @@ async function assertEmpfaengerGehoerenZuOrg(
   }
 }
 
+/**
+ * Ist der Nutzer an DIESEM Nachrichtenverlauf beteiligt?
+ *
+ * BEFUND (Track 10): `createAntwort` pruefte bisher nur, ob die
+ * Eltern-Nachricht existiert UND zur Organisation gehoert. Wer an dem
+ * Verlauf beteiligt ist, wurde nicht gefragt — obwohl `getNachricht` fuer
+ * das LESEN genau das verlangt (`isSender || isRecipient`, sonst null).
+ * Lesen und Schreiben beantworteten dieselbe Frage also verschieden.
+ *
+ * Die Wirkung: jedes angemeldete Konto der Organisation — einschliesslich
+ * `kunde` und `angehoerige`, die ueber `resolveUserOrgId()` ihre Org aus
+ * `clients` bekommen — konnte mit einer bekannten oder erratenen
+ * Nachrichten-UUID eine Antwort in einen fremden internen Verlauf
+ * schreiben. Die Antwort erscheint bei jedem echten Beteiligten unter
+ * `GET /api/ops/nachrichten/[id]` als Teil des Verlaufs, mit aufgeloestem
+ * Absendernamen aus `profiles`; ueber `empfaenger_ids` liess sie sich
+ * zusaetzlich in beliebige Postfaecher der Organisation legen.
+ *
+ * Beteiligt ist, wer Absender oder Empfaenger IRGENDEINER Nachricht des
+ * Verlaufs ist — nicht nur der unmittelbaren Eltern-Nachricht. Sonst
+ * koennte jemand, der berechtigt auf eine Antwort geantwortet hat, in
+ * derselben Kette weiter unten ausgesperrt werden.
+ *
+ * Fail-closed: Datenbankfehler werden geworfen, nicht als „nicht
+ * beteiligt" oder „beteiligt" gedeutet.
+ */
+export async function istThreadTeilnehmer(
+  supabase: SupabaseClient,
+  params: { organizationId: string; nachrichtId: string; userId: string },
+): Promise<boolean> {
+  if (!params.userId?.trim() || !params.nachrichtId?.trim()) return false
+
+  const { data: nachricht, error: nErr } = await supabase
+    .from('ops_nachrichten')
+    .select('id, absender_id, eltern_id')
+    .eq('organization_id', params.organizationId)
+    .eq('id', params.nachrichtId)
+    .maybeSingle()
+  if (nErr) throw new Error(`Nachrichtenverlauf konnte nicht geprueft werden: ${nErr.message}`)
+  if (!nachricht) return false
+
+  // Antworten tragen eltern_id, die Wurzel selbst nicht.
+  const wurzelId = (nachricht as { eltern_id: string | null }).eltern_id ?? (nachricht as { id: string }).id
+
+  const { data: wurzel, error: wErr } = await supabase
+    .from('ops_nachrichten')
+    .select('id, absender_id')
+    .eq('organization_id', params.organizationId)
+    .eq('id', wurzelId)
+    .maybeSingle()
+  if (wErr) throw new Error(`Nachrichtenverlauf konnte nicht geprueft werden: ${wErr.message}`)
+  if (!wurzel) return false
+
+  const { data: antworten, error: aErr } = await supabase
+    .from('ops_nachrichten')
+    .select('id, absender_id')
+    .eq('organization_id', params.organizationId)
+    .eq('eltern_id', wurzelId)
+  if (aErr) throw new Error(`Nachrichtenverlauf konnte nicht geprueft werden: ${aErr.message}`)
+
+  // Array.isArray statt `?? []`: PostgREST liefert bei einer Listenabfrage
+  // immer ein Array, ein Doppelgaenger im Test aber nicht zwingend — und ein
+  // `for…of` ueber ein Objekt waere hier ein TypeError mitten im
+  // Berechtigungspfad statt einer klaren Antwort.
+  const antwortListe = Array.isArray(antworten) ? (antworten as { id: string; absender_id: string }[]) : []
+  const knoten = [wurzel as { id: string; absender_id: string }, ...antwortListe]
+  if (knoten.some(k => k.absender_id === params.userId)) return true
+
+  const { data: empfaenger, error: eErr } = await supabase
+    .from('ops_nachrichten_empfaenger')
+    .select('nachricht_id')
+    .eq('organization_id', params.organizationId)
+    .eq('empfaenger_id', params.userId)
+    .in('nachricht_id', knoten.map(k => k.id))
+    .limit(1)
+  if (eErr) throw new Error(`Nachrichtenverlauf konnte nicht geprueft werden: ${eErr.message}`)
+
+  return Array.isArray(empfaenger) && empfaenger.length > 0
+}
+
 export async function listPosteingang(
   supabase: SupabaseClient,
   filter: ListPosteingangFilter,
@@ -151,6 +231,18 @@ export async function createAntwort(
     .eq('organization_id', params.organizationId)
     .maybeSingle()
   if (pErr || !parent) throw new UserFacingError('Eltern-Nachricht nicht gefunden oder gehoert nicht zur Organisation.')
+
+  // Beteiligung am Verlauf ist Voraussetzung fuer eine Antwort — dieselbe
+  // Frage, die getNachricht() fuer das Lesen stellt. Siehe die Begruendung
+  // an istThreadTeilnehmer().
+  if (!(await istThreadTeilnehmer(supabase, {
+    organizationId: params.organizationId,
+    nachrichtId: params.elternId,
+    userId: params.data.absender_id,
+  }))) {
+    throw new UserFacingError('Sie sind an diesem Nachrichtenverlauf nicht beteiligt.', 403)
+  }
+
   assertNachrichtGueltig(params.data, params.empfaengerIds)
   await assertEmpfaengerGehoerenZuOrg(supabase, params.empfaengerIds, params.organizationId)
 
