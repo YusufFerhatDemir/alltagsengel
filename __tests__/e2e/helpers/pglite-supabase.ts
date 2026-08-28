@@ -323,7 +323,21 @@ export function macheSupabaseClient(
     let spaltenAuswahl = '*'
     let zaehlen = false
     let nurKopf = false
-    let sortierung: { spalte: string; auf: boolean } | null = null
+    /**
+     * Sortierung — eine LISTE, nicht ein einzelner Eintrag.
+     *
+     * PostgREST haengt jedes `.order()` an und wertet sie in der
+     * Aufrufreihenfolge aus. Der Shim behielt bis hierher nur das LETZTE
+     * und warf die vorherigen still weg. Das ist kein Randfall: mehrere
+     * Listenfunktionen dieses Repos sortieren zweistufig
+     * (`listMassnahmen` nach sortierung, dann created_at;
+     * `listArbeitszeiten` nach datum, dann start_zeit;
+     * `listPlaene` nach gueltig_von, dann version) — gegen den Shim kam
+     * dort die Reihenfolge des ZWEITEN Kriteriums heraus, und ein Test,
+     * der die Sortierung prueft, haette das Gegenteil dessen bestaetigt,
+     * was live passiert.
+     */
+    const sortierung: Array<{ spalte: string; auf: boolean }> = []
     let grenze: number | null = null
 
     /** Ein einzelner Filter als SQL-Bedingung. Rekursiv fuer or/not. */
@@ -591,7 +605,11 @@ export function macheSupabaseClient(
         }
 
         let sql = `SELECT * FROM public."${tabelle}"${whereKlausel(params)}`
-        if (sortierung) sql += ` ORDER BY "${sortierung.spalte}" ${sortierung.auf ? 'ASC' : 'DESC'}`
+        if (sortierung.length > 0) {
+          sql += ' ORDER BY ' + sortierung
+            .map(s => `"${s.spalte}" ${s.auf ? 'ASC' : 'DESC'}`)
+            .join(', ')
+        }
         if (grenze != null) sql += ` LIMIT ${Number(grenze)}`
         const daten = await fuehreAus<Zeile>(sql, params)
         await ergaenzeEingebettet(tabelle, daten, eingebettet)
@@ -641,7 +659,7 @@ export function macheSupabaseClient(
         return b
       },
       order(spalte: string, opts?: { ascending?: boolean }) {
-        sortierung = { spalte, auf: opts?.ascending !== false }; return b
+        sortierung.push({ spalte, auf: opts?.ascending !== false }); return b
       },
       limit(n: number) { grenze = n; return b },
       returns() { return b },
