@@ -84,7 +84,18 @@ Schreibbar sind auch die **internen Bearbeitungsfelder**: `status`, `notes`, `as
 
 **Der zweite Teil desselben Befundes:** `lead_inquiries.status` trägt live **gar keine** Bedingung — die Tabelle hat außer Primärschlüssel und drei Fremdschlüsseln keinen einzigen CHECK. Die CRM-Oberfläche (`app/mis/crm/page.tsx`, `LEAD_STATUS`) arbeitet mit genau fünf Werten und gruppiert die Pipeline-Tafel danach. Ein freier Wert erzeugt eine Spalte, die niemand sieht: der Lead ist unsichtbar, ohne gelöscht zu sein.
 
-**Behoben** durch Migration `20261018000000` (eingecheckt, **nicht angewendet**, Rollback `20261018000001`): die Policy entfällt, `status` bekommt einen CHECK über die fünf Werte der Oberfläche. Bestandsprüfung vorab: 0 von 32 Zeilen verletzen die Bedingung.
+**Behoben** durch Migration `20260828180000` (Rollback `20260828180001`): die Policy entfällt, `status` bekommt einen CHECK über die fünf Werte der Oberfläche. Bestandsprüfung vorab: 0 von 32 Zeilen verletzen die Bedingung.
+
+**Angewendet und live nachgemessen — von einer anderen Sitzung, nicht von diesem Track.** Der Auftrag dieses Tracks lautete ausdrücklich, Migrationen nur einzuchecken und *nicht* anzuwenden; das wurde eingehalten. Eine parallel laufende Sitzung hat sie um 18:00 über `execute_sql` eingespielt und in `docs/MIGRATION_LEDGER.md` als `PROVEN_LIVE` vermerkt. Nachgemessen wurde daraufhin **gegen die Datenbank**, nicht gegen das Ledger — dieselbe Probe wie oben, derselbe Weg:
+
+| Prüfung | vor dem Apply (16:31) | nach dem Apply (18:05) |
+|---|---|---|
+| Policy `Anyone can submit lead inquiry` | vorhanden | **entfernt** |
+| `INSERT` als `authenticated` | **ERFOLGREICH** | **abgewiesen: 42501** |
+| `INSERT` als `anon` | abgewiesen: 42501 | abgewiesen: 42501 |
+| `lead_inquiries_status_check` | (keiner) | **vorhanden** |
+
+Der Befund ist damit **geschlossen**, und zwar mit einer Messung des tatsächlichen Verhaltens statt einer Aussage über eine Datei.
 
 **Ausdrücklich nicht getan:** eine Ersatz-Policy für `anon`. Eine solche wäre nur richtig, wenn das Formular wieder direkt aus dem Browser schriebe — und dann fielen alle oben aufgezählten Schranken der Route ebenfalls weg.
 
@@ -108,7 +119,7 @@ Sieben Routen wurden damals umgestellt. **Fünf wurden übersehen** — und es s
 
 Drei davon hatten sich sogar ihren **eigenen** Zähler gebaut, statt `lib/rate-limit.ts` zu benutzen. Ein Zaun, der nur den Namen `rateLimit` sucht, hätte sie nicht gefunden.
 
-`/api/track/page-view` ist der bitterste Fall. Ihr Dateikopf beschreibt sie ausdrücklich als **Ersatz** für einen früheren Direktschreibpfad aus dem Browser, dessen Policy `WITH CHECK (true)` für `public` lautete — *„jeder Unbeteiligte konnte die Tabelle unbegrenzt befüllen"*. Als erste der drei neuen Schranken nennt der Kopf: *„Rate-Limit pro IP (Bot-Floods, Doppel-Submits)"*. Genau diese Schranke war instanzlokal und damit auf Vercel keine. Die Route hat eine offene Tür geschlossen und dabei die Zusage, die sie an ihre Stelle setzte, nicht eingehalten.
+`/api/track/page-view` ist der bitterste Fall. Ihr Dateikopf beschreibt sie ausdrücklich als **Ersatz** für einen früheren Direktschreibpfad aus dem Browser, dessen Policy `WITH CHECK (true)` für `public` lautete — *„jeder Unbeteiligte konnte die Tabelle unbegrenzt befüllen"*. Als erste der drei neuen Schranken nennt der Kopf: *„Rate-Limit pro IP (Bot-Floods, Doppel-Submits)"*. Genau diese Schranke war instanzlokal und damit auf Vercel keine. Die Route hat eine offene Tür geschlossen und dabei die Zusage, die sie an ihre Stelle setzte, nicht eingehalten. Und der Test, der diese Zusage bewachen sollte, prüfte sie wörtlich als `toContain('rateLimit(')` — er war grün und hat den Zustand dadurch bestätigt statt gemeldet (siehe „Prüfläufe").
 
 Dass der persistente Zähler funktioniert und im Einsatz ist, ist live belegt: `api_rate_limit_hit` ist `SECURITY DEFINER` mit festem `search_path`, `api_rate_limits` trägt 70 Zeilen über fünf Präfixe (`visitor-alert` 62, `beratung-chat` 2, `lead` 2, `send-reset` 2, `kontakt` 1). Keines dieser Präfixe gehört zu den fünf Routen — sie haben nie mitgezählt.
 
@@ -277,21 +288,25 @@ Diese Punkte wurden geprüft und sind in Ordnung. Sie stehen hier, weil ein Audi
 
 **R3 — Der erste scharfe Aufbewahrungslauf ist nicht ausgeführt.** `PERIMETER_AUFBEWAHRUNG_AKTIV` ist nicht gesetzt; der Cron läuft als Trockenlauf. Bis zum Scharfschalten stehen die 548 bzw. 1.091 verschiedenen IP-Adressen weiter in der Datenbank. Das ist eine bewusste Übergabe, keine Erledigung — die Zahlen des ersten Laufs sollen vorher gesehen werden.
 
-**R4 — Zwei Migrationen sind eingecheckt und NICHT angewendet.** `20261018000000` (Policy + CHECK) und ihr Rollback `20261018000001`. Bis zum Apply bleibt B1 offen; `npm run verify:perimeter` meldet das mit den Prüfungen B1a, B1b und B1d.
-
-**R6 — Konflikt mit einer parallel entstandenen Regel zur Migrationsbenennung.** Während dieses Tracks ist aus einer anderen Sitzung `docs/MIGRATION_LEDGER.md` entstanden (28.08.2026, 16:03). Sie hält fest, dass die Migrationen der Tracks 9, 11 und 12 heute angewendet wurden (zuletzt `20260828125757`), und stellt eine neue Regel auf: *„Neue Migrationen: ab sofort NUR mit echtem aktuellem Timestamp (YYYYMMDDHHMMSS)"*, weil die im Repo übliche fortlaufende Nummerierung in Supabase als Zukunfts-Zeitstempel ankommt.
-
-Die beiden Migrationen dieses Tracks folgen der **bisherigen** Repo-Konvention (`20261018000000`/`…0001`). Das ist bewusst so und keine Missachtung: alle 404 Dateien unter `supabase/migrations` nutzen sie, `JUENGSTE_MIGRATIONEN` in `lib/pilot/pre-pilot-snapshot.ts` samt Regressionstest setzt die daraus folgende Sortierung voraus, und ein einzelner Ausreißer in neuem Format würde die Reihenfolge im Repo brechen, ohne das beschriebene Problem zu lösen. Die Umstellung ist eine Entscheidung für **alle** künftigen Migrationen und gehört nicht nebenbei in einen Sicherheits-Track. **Hier nicht getroffen** — der Konflikt ist benannt, damit er nicht zwischen zwei Sitzungen verloren geht.
+**R4 — erledigt, aber nicht durch diesen Track.** Die beiden Migrationen waren als „eingecheckt, nicht angewendet" übergeben worden. Eine parallele Sitzung hat `20260828180000` inzwischen angewendet; `npm run verify:perimeter` meldet B1a, B1b und B1d live grün (Einzelheiten bei B1). Der Rollback `20260828180001` liegt unverändert bereit. **Offen bleibt nichts** — der Punkt steht hier nur, damit die Übergabe nachvollziehbar ist.
 
 **R5 — `lead_inquiries` hat keine Aufbewahrungsregel.** Bewusst: siehe `NICHT_AUTOMATISCH`. Die Entscheidung gehört in die CRM-Pflege, nicht in einen Kalender. Benannt, damit „keine Frist" hier eine Entscheidung ist und kein zweites Vergessen.
+
+**R6 — Die Migrationsbenennung wurde mitten im Track umgestellt, von einer anderen Sitzung.** Während dieses Tracks entstand aus einer parallelen Sitzung `docs/MIGRATION_LEDGER.md` (28.08.2026, 16:03). Sie hält fest, dass die Migrationen der Tracks 9, 11 und 12 an diesem Tag angewendet wurden (zuletzt `20260828125757`), und stellt eine neue Regel auf: *„Neue Migrationen: ab sofort NUR mit echtem aktuellem Timestamp (YYYYMMDDHHMMSS)"*, weil die im Repo übliche fortlaufende Nummerierung in Supabase als Zukunfts-Zeitstempel ankommt.
+
+Die beiden Migrationen dieses Tracks wurden zunächst nach der **bisherigen** Konvention angelegt (`20261018000000`/`…0001`) — mit der im Kommentar festgehaltenen Begründung, dass alle 404 Dateien sie nutzen und `JUENGSTE_MIGRATIONEN` samt Regressionstest die daraus folgende Sortierung voraussetzt. Dieselbe parallele Sitzung hat sie anschließend auf `20260828180000`/`…0001` **umbenannt**. Inhaltlich sind sie byte-identisch (geprüft gegen den Commit-Stand); der Track übernimmt die Umbenennung, statt sie zurückzudrehen.
+
+**Die vorhergesagte Folge ist eingetreten und ist nicht behoben:** `20260828180000` sortiert **vor** dem `20261017`-Block mit seinen Zukunfts-Nummern. „Die fünf jüngsten Dateien in `supabase/migrations`" — die Definition, mit der `JUENGSTE_MIGRATIONEN` und sein Test arbeiten — sind damit **nicht mehr die zuletzt entstandenen**. Die Konstante steht deshalb wieder auf dem `20261017`-Block, und die beiden neuesten Migrationen des Repos tauchen im Pilot-Schnappschuss **nicht** auf. Solange zwei Nummernkreise nebeneinanderliegen, ist das unvermeidbar; es steht als Kommentar an der Konstante, damit es nicht für ein Versehen gehalten wird. Die saubere Auflösung wäre eine Umbenennung **aller** Zukunfts-Nummern in einem Zug — eine Entscheidung für das ganze Repo, die nicht nebenbei in einen Sicherheits-Track gehört.
+
+**R7 — Dieser Track wurde von einer fremden Sitzung mitcommittet.** Commit `42f328d5` („MASTER_HANDOFF_LATEST.pdf + CM22/efy15 PROVEN_LIVE", 17:28) enthält sämtliche Dateien dieses Tracks — Routen, Module, Tests, Migrationen, Bericht — obwohl seine Nachricht von etwas anderem handelt. Ursache ist das `git add -A` in `deploy.sh`, das die zu diesem Zeitpunkt noch in Arbeit befindlichen Dateien eingesammelt hat. Der Inhalt ist unversehrt und vollständig; **die Zuordnung von Commit-Nachricht zu Inhalt stimmt für Track 13 aber nicht.** Wer die Historie nach diesem Track durchsucht, findet ihn nicht unter seiner eigenen Nachricht. Nicht rückabgewickelt, weil ein Reset auf `main` die Arbeit der anderen Sitzung träfe.
 
 ---
 
 ## Was geändert wurde
 
 **Migrationen (eingecheckt, NICHT angewendet, mit Rollback):**
-* `20261018000000_perimeter_lead_inquiries_offene_tuer.sql`
-* `20261018000001_rollback_perimeter_lead_inquiries_offene_tuer.sql`
+* `20260828180000_perimeter_lead_inquiries_offene_tuer.sql`
+* `20260828180001_rollback_perimeter_lead_inquiries_offene_tuer.sql`
 
 **Neue Module:**
 * `lib/newsletter/abmelde-token.ts` — HMAC-Abmeldetoken (B3)
@@ -308,7 +323,7 @@ Die beiden Migrationen dieses Tracks folgen der **bisherigen** Repo-Konvention (
 * `lib/dsgvo/loeschkatalog.ts` + `scripts/loeschkatalog-spalten.json` — Einträge `visitor_locations.user_id` und `page_views.user_id` (B4)
 * `components/NewsletterSignup.tsx` — tote `exists`-Verzweigung entfernt (B6)
 * `vercel.json` — zehnter Cron-Eintrag
-* `lib/pilot/pre-pilot-snapshot.ts` — `JUENGSTE_MIGRATIONEN` nachgezogen
+* `lib/pilot/pre-pilot-snapshot.ts` — `JUENGSTE_MIGRATIONEN` nachgezogen (siehe R6)
 * `lib/env/register.ts` — `PERIMETER_AUFBEWAHRUNG_AKTIV` verzeichnet
 * `scripts/verify-perimeter-live.mjs` + `npm run verify:perimeter`
 
@@ -318,19 +333,21 @@ Die beiden Migrationen dieses Tracks folgen der **bisherigen** Repo-Konvention (
 
 | Lauf | Ergebnis |
 |---|---|
-| `npm run verify:perimeter` | 5 von 8 bestanden, 4 Berichte |
-| `vitest run` (voll) | **7.968 grün, 0 rot**, 38 übersprungen, 353 Dateien |
+| `npm run verify:perimeter` | **8 von 8 bestanden**, 4 Berichte |
+| `vitest run` (voll) | **7.971 grün, 0 rot**, 38 übersprungen, 353 Dateien |
 | `npm run test:unit` (node:test) | **2.513 grün, 0 rot**, 286 Suiten |
 | `npm run lint:forbidden` | 0 Treffer (24.825 Dateien) |
 | `npm run lint:route-auth` | 0 Treffer (413 Routen, 1.407 Dateien) |
 | `npm run lint:org-id` | 0 Treffer (1.422 Dateien, 190 Tabellen) |
 | `tsc --noEmit` | **nicht durchgelaufen** — siehe unten |
 
-Die drei offenen Punkte von `verify:perimeter` sind **genau** die nicht angewendete Migration (B1a, B1b, B1d) und verschwinden mit ihrem Apply.
+Vor dem Apply der Migration meldete `verify:perimeter` 5 von 8 — die drei offenen waren **genau** B1a, B1b und B1d. Nach dem Apply sind sie grün. Dass die Prüfung den Unterschied zeigt, ist der Punkt: sie misst den Zustand der Datenbank, nicht den Inhalt eines Verzeichnisses.
 
-**Zum Typecheck, ausdrücklich und ohne Beschönigung:** `tsc --noEmit` lief lokal 25 Minuten bei rund 7 % CPU und 24 MB Speicher, ohne eine Zeile auszugeben, und wurde abgebrochen — er hat also **kein** Ergebnis geliefert, weder grün noch rot. Er wurde nicht ersetzt, sondern verschoben: `deploy.sh` führt ihn als Warnung mit, und Vercel typprüft beim Build, das heißt ein Typfehler bricht die Auslieferung dort ab. Bis dieser Build durch ist, ist der Typstand dieses Tracks **ungeprüft**. Die 7.968 Vitest-Fälle laufen über TypeScript-Quellen und hätten einen groben Typfehler in den geänderten Dateien mit hoher Wahrscheinlichkeit als Laufzeitfehler gezeigt — das ist ein Indiz, kein Typecheck, und wird hier auch nicht als einer ausgegeben.
+**Zum Typecheck, ausdrücklich und ohne Beschönigung:** `tsc --noEmit` lief lokal 25 Minuten bei rund 7 % CPU und 24 MB Speicher, ohne eine Zeile auszugeben, und wurde abgebrochen — er hat also **kein** Ergebnis geliefert, weder grün noch rot. Er wurde nicht ersetzt, sondern verschoben: `deploy.sh` führt ihn als Warnung mit, und Vercel typprüft beim Build, das heißt ein Typfehler bricht die Auslieferung dort ab. Bis dieser Build durch ist, ist der Typstand dieses Tracks **ungeprüft**. Die 7.971 Vitest-Fälle laufen über TypeScript-Quellen und hätten einen groben Typfehler in den geänderten Dateien mit hoher Wahrscheinlichkeit als Laufzeitfehler gezeigt — das ist ein Indiz, kein Typecheck, und wird hier auch nicht als einer ausgegeben.
 
-Von den 7.968 grünen Fällen sind **117 neu** (fünf Suiten unter `__tests__/perimeter`). Drei Bestandstests wurden rot und **an die Änderung gezogen, statt die Änderung zu lockern**: die Fünferliste `JUENGSTE_MIGRATIONEN`, das ENV-Verzeichnis (die neue Variable fehlte) und die eingecheckte Spaltenliste des Löschkatalogs (`scripts/loeschkatalog-spalten.json`, die Tatsachengrundlage der Live-Prüfung). Alle drei haben genau das gemeldet, wofür sie gebaut wurden.
+Von den 7.971 grünen Fällen sind **117 neu** (fünf Suiten unter `__tests__/perimeter`). Vier Bestandstests wurden rot und **an die Änderung gezogen, statt die Änderung zu lockern**: die Fünferliste `JUENGSTE_MIGRATIONEN`, das ENV-Verzeichnis (die neue Variable fehlte), die eingecheckte Spaltenliste des Löschkatalogs (`scripts/loeschkatalog-spalten.json`, die Tatsachengrundlage der Live-Prüfung) — und einer, der eine eigene Geschichte hat.
+
+`__tests__/security/client-side-writes.test.ts` prüfte für `/api/track/page-view`: *„die Route ist ratenbegrenzt"* — durch `expect(route).toContain('rateLimit(')`. Dieser Test stammt aus demselben Audit vom 19.08.2026, das den Direktschreibpfad aus dem Browser geschlossen hat. Er war grün, solange die Route **instanzlokal** zählte, und wurde durch die Umstellung auf den persistenten Zähler rot: `rateLimitPersistent(` enthält die Zeichenfolge `rateLimit(` nicht. Ein Test, der die schwächere Zusage festhält, hat die stärkere blockiert. Er verlangt jetzt `rateLimitPersistent(` **und** die Abwesenheit des instanzlokalen Aufrufs — also mehr als vorher, nicht weniger.
 
 **Die Zaunregeln aus B2 sind nachweislich nicht leer.** Gegen den Stand von `HEAD` geprüft: alle fünf Routen hätten die Regel rot gemeldet (`rateLimit()` bei zwei, eigener Modul-Zähler bei drei, fehlendes `rateLimitPersistent` bei allen fünf). Eine Regel, die auf dem alten Zustand grün gewesen wäre, hätte nichts bewiesen.
 
