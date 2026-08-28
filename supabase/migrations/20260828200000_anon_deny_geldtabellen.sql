@@ -42,6 +42,10 @@
 -- unabhaengig vom Tabellenrecht und ist deshalb hier die belastbarere Wahl.
 -- ═══════════════════════════════════════════════════════════════════════
 
+-- VORFLUG gegen die Produktion (29.08.2026): alle fuenf Tabellen existieren
+-- und tragen RLS = true; keiner der fuenf Policy-Namen ist vergeben. Die
+-- Migration ist damit anwendbar, ohne etwas zu ueberschreiben.
+
 BEGIN;
 
 DROP POLICY IF EXISTS "client_budgets_anon_deny" ON public.client_budgets;
