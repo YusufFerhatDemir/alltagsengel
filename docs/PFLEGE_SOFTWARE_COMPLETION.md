@@ -14,6 +14,16 @@
 > Endkunden-Website, ChairMatch, Krankenfahrten, PflegeCoach/DiPA, das
 > MIS-Betriebssystem (`/mis`), efy care.
 
+> **FORTSCHREIBUNG 29.08.2026:** Diese Matrix bleibt in Kraft; was sich seit
+> dem 28.08. bewegt hat, steht in
+> `docs/PFLEGE_SOFTWARE_COMPLETION_FORTSCHREIBUNG_2026-08-29.md`
+> (172 statt 168 Punkte, 72,3 %). Dort auch **zwei Befunde**, die diese
+> Matrix noch nicht kannte — darunter ein P0: ein unterschriebener
+> Leistungsnachweis kann live nicht abgerechnet werden, weil der
+> Manipulationsschutz die Statusänderung der Rechnungs-RPC abweist. Der
+> Vorschlag in § 6.1 („einen echten Kunden komplett durchlaufen lassen")
+> wäre genau daran gescheitert.
+
 ---
 
 ## 1. Bewertungsmodell

@@ -66,10 +66,12 @@ export default function PflegevisiteDetailPage({ params }: { params: Promise<{ i
     if (res.visite?.zusammenfassung) setZusammenfassung(res.visite.zusammenfassung)
   }
 
+  // `laden` steht bewusst nicht in den Abhaengigkeiten: die Funktion wird
+  // bei jedem Rendern neu erzeugt und wuerde den Effekt in eine Schleife
+  // schicken. Der Effekt haengt an der Kennung, und nur an ihr.
   useEffect(() => {
     if (!id) return
     laden(id).catch(() => setError('Laden fehlgeschlagen.')).finally(() => setLoading(false))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   const befundJePunkt = useMemo(() => {
