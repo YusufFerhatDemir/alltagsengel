@@ -4,6 +4,84 @@ Separater Versionsstrang des DiPA-Produkts (unabhängig von Plattform-Deployment
 Jede MINOR-/MAJOR-Änderung ist vor Release regulatorisch zu bewerten
 (Änderungsanzeige? — BfArM-Frage 20, `bfarm_fragenkatalog.md`).
 
+## Unversioniert — Änderungen nach 0.5.0 (offener Punkt, 29.08.2026)
+
+**Das ist keine Release-Notiz, sondern ein Befund.** Seit dem Versionssprung auf
+0.5.0 am 14.08.2026 sind 35 Commits in `lib/coach/`, `app/pflegecoach/`,
+`app/api/coach/` und `app/api/dipa/` gelandet — darunter 15 neue Fachmodule und
+19 neue Seiten —, ohne dass `COACH_PRODUKT_VERSION` erhöht wurde. Die Konstante
+steht weiterhin auf `0.5.0` mit Stand `2026-08-14`.
+
+Warum das zählt: Diese Version wird nach aussen getragen. Sie steht in
+`Questionnaire.version` jedes FHIR-Bundles, in `Bundle.meta.source`, im
+Datenexport und in der Fusszeile. Ein Empfänger, der zwei Exporte aus
+verschiedenen Monaten vergleicht, sieht dieselbe Versionsnummer über zwei
+deutlich verschiedenen Produktständen. Für DiPA kommt hinzu, dass sich
+Änderungsanzeigen auf genau diese Version beziehen (BfArM-Frage 20,
+`bfarm_fragenkatalog.md`).
+
+Was seither hinzukam (aus der Commit-Historie, nicht aus Fliesstext):
+
+- **Selbstzahler-Weg vollständig** — `bestellung.ts`, `pricing.ts`,
+  `rechnung.ts`, `verkauf-server.ts`, Stripe-Checkout und -Webhook,
+  Abo-/Kündigungs-/Widerrufsweg, eigener Rechnungsnummernkreis. Der Weg ist
+  gebaut und AUSGESCHALTET: `/api/coach/tarife` antwortet
+  `{"verkauf_moeglich": false, "tarife": []}`, die Preiskonfiguration ist
+  fail-closed.
+- **Datenfreigabe an Angehörige/Pflegedienst** — `freigabe.ts`,
+  `inhalte-freigabe.ts`, zwei Routen, eigene Oberfläche; der
+  Mitgliedschafts-Lookup wurde später auf 10 Suchen je Nutzer und Stunde
+  gedeckelt.
+- **Zweiter Faktor** — `mfa.ts` samt Seite „Anmeldesicherheit".
+- **Interoperabilität** — `fhir.ts`, `interop.ts`, Export-Schema und die
+  Seite `/pflegecoach/interoperabilitaet`.
+- **Regulatorischer Apparat** — `regulatorik.ts`, `schalter.ts`,
+  `dipa-compliance.ts`, `anforderungskatalog.ts` und die Betriebsroute
+  `/api/dipa/schalter`.
+- **Rechtstexte und Support** — `rechtstexte.ts`, `support.ts`, AGB- und
+  Widerrufsseite.
+
+**Warum hier trotzdem keine Versionsnummer vergeben wird:** Nach den Regeln im
+Kopf von `lib/coach/version.ts` wäre das mindestens MINOR und damit
+„potenziell anzeigepflichtig". Welche Nummer richtig ist und ob daraus eine
+Anzeigepflicht folgt, ist eine Produkt- und Zulassungsentscheidung — keine, die
+beim Aufräumen der Testabdeckung nebenbei getroffen wird. Der Punkt steht
+deshalb offen und benannt, statt still eine Zahl hochzuzählen.
+
+---
+
+## 0.5.0 — 2026-08-14 (Modus-Umschaltung, Anfrageweg, Konto, Support)
+
+> **Nachträglich erstellt am 29.08.2026.** Dieser Abschnitt fehlte: Die
+> Konstante wurde am 14.08.2026 in Commit `c57c1dd9` von 0.4.0 auf 0.5.0
+> gesetzt, ohne dass hier ein Eintrag entstand — obwohl der Dateikopf von
+> `lib/coach/version.ts` genau das verlangt. Der Inhalt unten ist aus dem
+> Diff dieses Commits rekonstruiert und nicht aus der Erinnerung
+> geschrieben; er ist deshalb knapper als eine zeitnahe Release-Notiz und
+> beansprucht nicht, jede Nuance von damals zu treffen.
+
+**Regulatorische Bewertung dieser MINOR-Änderung:** wurde seinerzeit nicht
+festgehalten und wird hier ausdrücklich NICHT nachträglich behauptet. Die
+Zweckbestimmung wurde durch diesen Commit nicht berührt; `COACH_DIPA_MODUS`
+blieb Default `false`.
+
+- **Produktmodus als eigene Umschaltung** (`app/pflegecoach/_lib/Modus.tsx`):
+  Die Oberfläche unterscheidet seither ausdrücklich zwischen DiPA-Modus und
+  freiem Service, statt den Unterschied an einzelnen Stellen zu verstreuen.
+- **Anfrageweg ohne Anmeldung** (`/pflegecoach/anfrage` +
+  `/api/coach/anfrage`) — mit IP-Deckel statt Sitzung, weil der Weg vor
+  jeder Registrierung liegt.
+- **Konto- und Kündigungsseite** (`/pflegecoach/einstellungen/konto`).
+- **Support-Adresse als zentrale Konstante** (`COACH_SUPPORT_EMAIL`): Der
+  Hersteller-Support ist eine Produkteigenschaft (Verbraucherschutz) und muss
+  überall dieselbe sein — verstreute `mailto:`-Adressen können versehentlich
+  auf eine private Adresse zeigen.
+- **Produktseite mit Negativabgrenzung** auf `/pflegecoach/start`.
+- **Strukturtest der Produktgrenze** (`lib/coach/produktgrenze.test.ts`):
+  schlägt an, wenn im ungegateten Produktbereich eine Erstattungs- oder
+  Zulassungsaussage auftaucht.
+- **Dokumentation:** `docs/DIPA_MATRIX_FINAL.md`.
+
 ## 0.4.0 — 2026-08-13 (Widerruf wirkt, Schalter greifen, keine Sackgassen)
 
 **Regulatorische Bewertung dieser MINOR-Änderung:** Die Zweckbestimmung bleibt
