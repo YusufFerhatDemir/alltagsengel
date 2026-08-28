@@ -25,9 +25,9 @@ import { assertCaregiverInOrg } from './organization-guard'
  * den Trigger `COALESCE(auth.uid(), NEW.geaendert_von)` nehmen. Solange sie
  * nicht angewendet ist, kennt die Datenbank die Spalte nicht — ein 42703
  * ("column does not exist") fuehrt deshalb zu einem zweiten Versuch ohne
- * sie (siehe `mitAkteur`). Die Kette laeuft damit in beiden
- * Schemafassungen; ohne die Migration meldet sie die fehlende
- * Urheberschaft lesbar, statt die rohe Datenbankmeldung durchzureichen.
+ * sie. Die Kette laeuft damit in beiden Schemafassungen; ohne die Migration
+ * meldet sie die fehlende Urheberschaft lesbar, statt die rohe
+ * Datenbankmeldung durchzureichen.
  */
 export interface AkteurParams {
   /** Handelnder Benutzer (Routen: `admin.ctx.userId` bzw. `user.userId`). */
@@ -74,11 +74,20 @@ export async function createArbeitszeit(supabase: SupabaseClient, params: Create
     bemerkung: params.bemerkung ?? null,
   }
 
-  const { data, error } = await mitAkteur(
-    zeile,
-    params.benutzerId,
-    werte => supabase.from('personal_arbeitszeiten').insert(werte).select('*').single(),
-  )
+  // `geaendert_von` wird IMMER mitgeschrieben, auch als `null` — siehe
+  // AkteurParams. Kennt die Datenbank die Spalte noch nicht (Migration
+  // 20261018000000 nicht angewendet), antwortet sie mit 42703 und der
+  // zweite Versuch laeuft ohne sie.
+  let antwort = await supabase
+    .from('personal_arbeitszeiten')
+    .insert({ ...zeile, geaendert_von: params.benutzerId ?? null })
+    .select('*')
+    .single()
+  if (fehlerCode(antwort.error) === '42703') {
+    antwort = await supabase.from('personal_arbeitszeiten').insert(zeile).select('*').single()
+  }
+
+  const { data, error } = antwort
   if (error || !data) throw new Error(`Arbeitszeit konnte nicht angelegt werden: ${error?.message ?? 'unbekannt'}`)
   return data as PersonalArbeitszeit
 }
@@ -86,34 +95,6 @@ export async function createArbeitszeit(supabase: SupabaseClient, params: Create
 /** Fehlercode einer PostgREST-Antwort, soweit vorhanden. */
 function fehlerCode(error: unknown): string | undefined {
   return (error as { code?: string } | null)?.code
-}
-
-/**
- * Fuehrt den Schreibvorgang mit `geaendert_von` aus — und ohne, falls die
- * Datenbank die Spalte noch nicht kennt (Migration 20261018000000 nicht
- * angewendet). Siehe Kopfkommentar bei `AkteurParams`.
- *
- * Ohne diese Nachsicht waere die Wahl: entweder die Spalte nie schreiben
- * (dann bleibt die Korrektur kaputt, sobald die Migration da ist nicht
- * besser) oder sie immer schreiben (dann faellt HEUTE jede Erfassung mit
- * 42703 aus — genau das Muster aus dem Projekt-Gedaechtnis „Schema-Drift
- * 42703": eine unbekannte Spalte killt die Abfrage still).
- */
-async function mitAkteur<T>(
-  zeile: Record<string, unknown>,
-  benutzerId: string | null | undefined,
-  schreibe: (werte: Record<string, unknown>) => PromiseLike<{ data: T | null; error: { message: string; code?: string } | null }>,
-): Promise<{ data: T | null; error: { message: string; code?: string } | null }> {
-  // Die Spalte wird IMMER mitgeschrieben, auch als `null`. Sonst traegt eine
-  // Zeile beim naechsten UPDATE noch den Urheber des VORIGEN Schreibvorgangs
-  // — der Trigger liest NEW.geaendert_von, und NEW uebernimmt unveraenderte
-  // Spalten aus OLD. Eine Korrektur wuerde damit dem falschen Menschen
-  // zugeschrieben, und die Fail-Closed-Pruefung des Triggers liefe leer.
-  const ersterVersuch = await schreibe({ ...zeile, geaendert_von: benutzerId ?? null })
-  if (fehlerCode(ersterVersuch.error) !== '42703') return ersterVersuch
-
-  // Migration 20261018000000 ist nicht angewendet — ohne die Spalte weiter.
-  return schreibe(zeile)
 }
 
 export interface ListArbeitszeitenFilter {
@@ -228,17 +209,26 @@ export async function updateArbeitszeit(
 
   if (Object.keys(update).length === 0) throw new UserFacingError('Keine Änderungen übergeben.')
 
-  const { data, error } = await mitAkteur(
-    update,
-    patch.benutzerId,
-    werte => supabase
+  // Siehe createArbeitszeit: die Spalte steht immer im UPDATE, und ein
+  // 42703 fuehrt zu einem zweiten Versuch ohne sie.
+  let antwort = await supabase
+    .from('personal_arbeitszeiten')
+    .update({ ...update, geaendert_von: patch.benutzerId ?? null })
+    .eq('id', id)
+    .eq('organization_id', organizationId)
+    .select('*')
+    .single()
+  if (fehlerCode(antwort.error) === '42703') {
+    antwort = await supabase
       .from('personal_arbeitszeiten')
-      .update(werte)
+      .update(update)
       .eq('id', id)
       .eq('organization_id', organizationId)
       .select('*')
-      .single(),
-  )
+      .single()
+  }
+
+  const { data, error } = antwort
   if (error || !data) {
     const msg = error?.message ?? 'unbekannt'
     if (msg.includes('Gesperrte Arbeitszeit')) throw new UserFacingError('Gesperrte Arbeitszeit kann nicht bearbeitet werden.')

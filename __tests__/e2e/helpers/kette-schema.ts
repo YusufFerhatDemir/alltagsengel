@@ -219,6 +219,20 @@ ALTER TABLE public.client_budgets
 ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS postal_code TEXT;                     -- 20260101000100
 
+-- profiles_role_check aus 20260924000000_rollenkonzept_least_privilege.sql,
+-- WORTGLEICH. Das Kettenschema schneidet profiles aus der Core-Baseline,
+-- die die Rollen pdl/qm/buchhaltung noch nicht kennt — genau der Fall, den
+-- die Migration selbst im Kopf beschreibt („role='pdl' scheitert an
+-- profiles_role_check"). Ohne den Nachzug ist das Testschema STRENGER als
+-- die Produktion und weist Rollen ab, die live laengst gelten.
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check
+  CHECK (role IN (
+    'kunde', 'engel', 'fahrer', 'angehoerige',
+    'pdl', 'qm', 'buchhaltung',
+    'admin', 'superadmin'
+  ));
+
 -- assignments / bookings ──────────────────────────────────────────────
 ALTER TABLE public.assignments
   ADD COLUMN IF NOT EXISTS assignment_date DATE,          -- 20260719_booking_request_workflow
@@ -1030,5 +1044,56 @@ export async function bauePflegeplanungTabellen(db: PGlite): Promise<void> {
       FOR EACH ROW EXECUTE FUNCTION public.prevent_pflege_audit_log_update();
     CREATE TRIGGER trg_pflege_audit_log_immutable_delete BEFORE DELETE ON public.pflege_audit_log
       FOR EACH ROW EXECUTE FUNCTION public.prevent_pflege_audit_log_delete();
+  `)
+}
+
+/**
+ * Qualitaetsmanagement: Pflegevisite mit Befunden und Regelkreis.
+ *
+ * Alles WORTGLEICH aus 20261019000000. Die drei Riegel, die nur eine
+ * echte Datenbank beantwortet:
+ *
+ *   • `qm_visite_befunde_feststellung_belegt` — ein „nicht erfuellt"
+ *     ohne Feststellung ist ein Vorwurf ohne Sachverhalt
+ *   • `qm_visite_befunde_punkt_unique` — je Visite jeder Pruefpunkt
+ *     genau einmal, sonst stehen zwei Bewertungen nebeneinander
+ *   • `prevent_abgeschlossene_visite_change` / `…befund_change` — nach
+ *     dem Abschluss unveraenderlich, mit genau EINER Ausnahme
+ *     (massnahme_id und erledigt_am, weil die Abstellung nach der
+ *     Pruefung geschieht)
+ *
+ * Setzt baueKettenSchema() und bauePflegeplanungTabellen() voraus
+ * (clients, caregivers, auth.users, pflege_massnahmen).
+ */
+export async function baueQmTabellen(db: PGlite): Promise<void> {
+  const M_QM = '20261019000000_qm_pflegevisite.sql'
+  const M_FUNKTIONEN = '20250101000050_missing_production_functions.sql'
+  const M_INTERN = '20260706_monatsabschluss_ki_pruefzentrale.sql'
+
+  await db.exec(funktionAusMigration(M_FUNKTIONEN, 'set_updated_at'))
+  await db.exec(funktionAusMigration(M_INTERN, 'is_internal_staff'))
+
+  await db.exec(tabelleAusMigration(M_QM, 'qm_pflegevisiten'))
+  await db.exec(tabelleAusMigration(M_QM, 'qm_visite_befunde'))
+
+  await db.exec(funktionAusMigration(M_QM, 'prevent_abgeschlossene_visite_change'))
+  await db.exec(funktionAusMigration(M_QM, 'prevent_abgeschlossener_befund_change'))
+  await db.exec(funktionAusMigration(M_QM, 'prevent_befund_an_abgeschlossener_visite'))
+
+  await db.exec(`
+    CREATE TRIGGER trg_qm_visite_abgeschlossen
+      BEFORE UPDATE OR DELETE ON public.qm_pflegevisiten
+      FOR EACH ROW EXECUTE FUNCTION public.prevent_abgeschlossene_visite_change();
+    CREATE TRIGGER trg_qm_befund_abgeschlossen
+      BEFORE UPDATE OR DELETE ON public.qm_visite_befunde
+      FOR EACH ROW EXECUTE FUNCTION public.prevent_abgeschlossener_befund_change();
+    CREATE TRIGGER trg_qm_befund_insert_offen
+      BEFORE INSERT ON public.qm_visite_befunde
+      FOR EACH ROW EXECUTE FUNCTION public.prevent_befund_an_abgeschlossener_visite();
+
+    CREATE TRIGGER trg_updated_at_qm_pflegevisiten BEFORE UPDATE ON public.qm_pflegevisiten
+      FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+    CREATE TRIGGER trg_updated_at_qm_visite_befunde BEFORE UPDATE ON public.qm_visite_befunde
+      FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
   `)
 }

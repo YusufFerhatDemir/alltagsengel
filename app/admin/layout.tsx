@@ -266,6 +266,7 @@ const navGroups = [
       { href: '/admin/pdl-cockpit', label: 'PDL-Cockpit', icon: <IconChart size={18} /> },
       { href: '/admin/fristen', label: 'Fristen-Dashboard', icon: <IconCalendar size={18} /> },
       { href: '/admin/quality', label: 'Qualitätsmanagement', icon: <IconHeart size={18} /> },
+      { href: '/admin/pflegevisiten', label: 'Pflegevisite', icon: <IconClipboard size={18} /> },
       { href: '/admin/bonuses', label: 'Mitarbeiterbindung', icon: <IconTarget size={18} /> },
       { href: '/admin/partners', label: 'Kooperationspartner', icon: <IconHandshake size={18} /> },
       { href: '/admin/ops-audit', label: 'Aktivitätslog', icon: <IconDocument size={18} /> },
