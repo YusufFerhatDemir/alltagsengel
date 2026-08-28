@@ -81,24 +81,48 @@ test.describe('Booking-Entry-Points (Smoke)', () => {
     // bewiesen. Die Antwort wird deshalb abgefangen und durch die ECHTE
     // Absage von GoTrue ersetzt. Damit laeuft der Test durch den Zweig,
     // um den es geht, ist unabhaengig von jedem Backend und schnell.
-    await page.route('**/auth/v1/token**', route =>
-      route.fulfill({
+    // CORS MUSS MIT. Der Aufruf geht an eine FREMDE Herkunft
+    // (die Supabase-URL), und sein Content-Type ist application/json —
+    // damit ist er nach der Fetch-Spezifikation kein einfacher Aufruf,
+    // sondern loest einen OPTIONS-Preflight aus.
+    //
+    // Genau daran ist der erste Lauf gescheitert, und zwar NUR auf
+    // mobile-safari: chromium liess die abgefangene Antwort auch ohne
+    // CORS-Kopfzeilen durch, WebKit hat den Preflight abgelehnt. Die
+    // Anmeldung landete dann im Netzwerk-Zweig statt im geprueften — der
+    // Unterschied zwischen „gruen in einem Browser" und „richtig".
+    //
+    // Deshalb: der Preflight wird eigens beantwortet, und die eigentliche
+    // Antwort traegt dieselben Kopfzeilen.
+    const cors = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': '*',
+    }
+
+    await page.route('**/auth/v1/token**', route => {
+      if (route.request().method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: cors })
+      }
+      return route.fulfill({
         status: 400,
-        contentType: 'application/json',
+        headers: { ...cors, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           error: 'invalid_grant',
           error_description: 'Invalid login credentials',
           msg: 'Invalid login credentials',
         }),
-      }),
-    )
+      })
+    })
+
     // Der Ratenzaehler laeuft ueber eine eigene Route, die ihrerseits
     // Supabase anspricht. Ohne dieses Abfangen wartet der Test auf sie
-    // statt auf die Anmeldung.
+    // statt auf die Anmeldung. Gleiche Herkunft, also ohne Preflight —
+    // die Kopfzeilen schaden aber nicht und halten beide Faelle gleich.
     await page.route('**/api/auth/check-rate-limit', route =>
       route.fulfill({
         status: 200,
-        contentType: 'application/json',
+        headers: { ...cors, 'Content-Type': 'application/json' },
         body: JSON.stringify({ allowed: true, locked: false }),
       }),
     )

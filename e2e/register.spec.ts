@@ -32,7 +32,12 @@ test.describe('Register-Flow: Kunde', () => {
   })
 
   test('Schwaches Passwort wird abgelehnt (Regression: AUTH-011)', async ({ page }) => {
-    await page.goto('/auth/register')
+    // waitUntil: 'domcontentloaded' statt des Standards 'load'. Der erste
+    // mobile-safari-Versuch lief einmal in den 90-s-Deckel, der zweite war
+    // in 3 s durch — 'load' wartet auf JEDE Nebenressource, und eine
+    // haengende genuegt. Der Test braucht das Dokument und die Hydration,
+    // die die Zusicherungen unten ohnehin abwarten, nicht das letzte Bild.
+    await page.goto('/auth/register', { waitUntil: 'domcontentloaded' })
 
     await page.getByPlaceholder('Vorname').first().fill('Max')
     await page.getByPlaceholder('Nachname').first().fill('Mustermann')
