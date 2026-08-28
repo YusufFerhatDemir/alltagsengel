@@ -68,20 +68,21 @@ Alle drei Arbeitsbäume sind mit ihrem Remote deckungsgleich.
 | Ziel | HTTP | Inhalt |
 |---|---|---|
 | `https://alltagsengel.care` | **200** | — |
-| `https://alltagsengel.care/api/health` | **200** | `status: healthy`, `version: 31f9cc6` |
+| `https://alltagsengel.care/api/health` | **200** | `status: healthy` · erste Sonde `version: 31f9cc6`, Nachmessung **`5c2208f` = HEAD** |
 | `https://alltagsengel.care/pflegecoach` | **200** | öffentlich erreichbar |
 | `https://alltagsengel.care/api/coach/tarife` | **200** | `{"verkauf_moeglich": false, "tarife": []}` |
 | `https://www.chairmatch.de` | **200** | — |
 | `https://www.chairmatch.de/api/public-stats` | **200** | 50 Nutzer · 15 Salons · 1 Buchung · 48 Bewertungen · 7 Städte |
 | `https://efycare.de` | **000** | **kein DNS** — die App ist nicht ausgeliefert |
 
-> **Wichtig zur Alltagsengel-Deploy-Lage:** `/api/health` meldet `31f9cc6` — das
-> ist der **vorletzte** Commit. Der HEAD `5c2208fc` wurde von einer parallelen
-> Sitzung wenige Minuten vor Erstellung dieses Berichts gepusht; sein
-> CI-Durchlauf war zum Messzeitpunkt noch `in_progress`, die Auslieferung lief
-> also noch. Das ist kein Fehler, sondern der normale Zustand unmittelbar nach
-> einem Push — es wird hier genannt, weil „Produktion = HEAD" sonst eine
-> unbelegte Behauptung wäre.
+> **Zur Alltagsengel-Deploy-Lage — nachgemessen:** die erste Sonde für diesen
+> Bericht meldete `version: 31f9cc6`, also den **vorletzten** Commit; der HEAD
+> `5c2208fc` war wenige Minuten zuvor gepusht worden und noch in Auslieferung.
+> **Die Nachmessung eine halbe Stunde später meldet `5c2208f`** — Produktion und
+> HEAD sind deckungsgleich. Das wird hier ausdrücklich in beiden Schritten
+> festgehalten, weil „Produktion = HEAD" sonst eine unbelegte Behauptung wäre
+> und der Unterschied zwischen „ist gleich" und „war beim ersten Blick noch
+> nicht gleich" genau der ist, an dem eine Statusaussage kippt.
 
 ---
 
@@ -137,13 +138,25 @@ Repositories; die 14.479 schließen die node:test-Suite von Alltagsengel ein.)*
 | Commit | Job „Typecheck, Lint, Tests, Build" | Job „E2E — vollständige Playwright-Suite" |
 |---|---|---|
 | `31f9cc6a` | **success** | **failure** (AUTH-005, mobile-safari) |
-| `5c2208fc` (HEAD) | Lauf war beim Messen **in Arbeit** | Lauf war beim Messen **in Arbeit** |
+| `5c2208fc` | **success** | **success** |
 
-Der HEAD-Commit ist ausweislich seiner Commit-Nachricht genau die Behebung von
-AUTH-005: Ursache war ein CORS-Preflight, der an der Playwright-Routing-Schicht
-vorbei ins echte Netz lief und an der Namensauflösung scheiterte. **Der
-Wirksamkeitsnachweis steht aus**, weil der Lauf noch nicht fertig war — er wird
-hier deshalb **nicht** als grün ausgegeben.
+**AUTH-005 ist behoben, und der Nachweis liegt vor.** Ursache war ein
+CORS-Preflight, der an der Playwright-Routing-Schicht **vorbei** ins echte Netz
+lief und an der Namensauflösung scheiterte: der Anmeldeaufruf geht an eine fremde
+Herkunft und trägt `Content-Type: application/json`, ist damit kein einfacher
+Aufruf, und WebKit schickt zuerst ein `OPTIONS`. Was nie durch die Abfangregel
+kommt, lässt sich darin auch nicht beantworten — deshalb half es nicht, den
+Preflight einzeln zu beantworten.
+
+Damit ist **auch die vollständige Playwright-Suite in CI grün** — und zwar über
+das ganze Verzeichnis, nicht über eine Allowlist. Das ist der erste vollständig
+grüne CI-Durchlauf beider Stufen seit dem 28.08.
+
+> Der Bericht selbst wurde zuerst mit dem Vermerk „Lauf war beim Messen in
+> Arbeit" geschrieben und nach Abschluss des Laufs nachgezogen. Die Zwischenlage
+> steht bewusst noch im Text (Abschnitt 2.1): eine Aussage, die zum
+> Messzeitpunkt nicht belegt war, wird nicht rückwirkend so dargestellt, als
+> wäre sie es gewesen.
 
 ---
 
@@ -399,7 +412,7 @@ Tragweite sortiert.
 | I-9 | 12 Verordnungen | 1 Testdatei / 32 Fälle für HKP-Verordnungen; `verordnung_leistungen` ist live leer — die Positionsebene ist unbenutzt und ungetestet. | Testzählung + Live-Orakel |
 | I-10 | quer | **2 Views ohne `security_invoker`**: `ops_posteingang` und `state_settings_public`. Zweiteres ist so gewollt. `ops_posteingang` liefert derzeit 0 Zeilen — die Grenze hängt aber an der Leere der Sicht, nicht an RLS des Aufrufers. | `pg_class.reloptions` + anon-Sonde |
 | I-11 | 31 Rollen | **MFA ist nicht implementiert.** Für den Pflegebetrieb nicht zwingend, für eine DiPA-Listung Pflicht. | Code-Scan |
-| I-13 | 1 Auth | **Playwright AUTH-005 war rot** und ist mit dem HEAD-Commit behoben; der bestätigende CI-Lauf war zum Berichtszeitpunkt noch in Arbeit. | GitHub Actions |
+| ~~I-13~~ | 1 Auth | **GESCHLOSSEN während der Berichtserstellung.** Playwright AUTH-005 (mobile-safari) war rot; die Behebung liegt im HEAD-Commit, und der bestätigende CI-Lauf ist inzwischen **grün in beiden Stufen**. | GitHub Actions, Lauf zu `5c2208fc` |
 
 ### 8.2 ChairMatch
 
@@ -555,7 +568,7 @@ externen Aufträge.
 | **P2** | Kundennummer war **global** statt pro Mandant eindeutig; die rohe `23505`-Meldung ging als 500 nach außen | Route **sofort** abgesichert, Migration `20260828210000` wartet |
 | **P2** | Sonntag ließ sich als Engel-Verfügbarkeit nicht hinterlegen (Prüfung gegen `0..6` nach JavaScript, Spalte und Oberfläche zählen ISO `1..7`) | **behoben** |
 | **P1** | CI war seit 28.08. dauerhaft rot: die DSGVO-Shadow-DB-Suite räumte ihren eigenen Ratelimit-Zähler nicht weg (der Zähler steht **in der Datenbank** und überlebt den Testlauf) | **behoben** |
-| **P2** | Playwright AUTH-005 auf mobile-safari: CORS-Preflight lief an der Routing-Schicht vorbei ins echte Netz | mit HEAD behoben, **CI-Bestätigung stand beim Messen noch aus** |
+| **P2** | Playwright AUTH-005 auf mobile-safari: CORS-Preflight lief an der Routing-Schicht vorbei ins echte Netz | **behoben und CI-bestätigt** — beide CI-Stufen zu `5c2208fc` grün |
 | **P3** | ChairMatch: zeitzonenabhängiger Testfehler (Abschnitt 8.2, CM-1) | **offen**, Ursache exakt benannt |
 
 ---
@@ -600,11 +613,12 @@ Nach Wirkung sortiert, nicht nach Aufwand. Keiner davon ist Programmierarbeit.
 
 * **ChairMatch-Bestandszahlen fehlen.** Der Dienstschlüssel ist ungültig; die
   öffentlichen Kennzahlen sind ein Behelf, keine Zeilenzählung.
-* **Der HEAD-Deploy von Alltagsengel ist nicht bestätigt.** `/api/health` meldet
-  den vorletzten Commit; der CI-Lauf des HEAD war beim Messen noch in Arbeit.
-  Als grün ausgegeben wird er deshalb nicht.
-* **Der Playwright-Vollauf ist nicht Teil der genannten Testzahlen.** Er braucht
-  die laufende Anwendung und ein Testkonto in den CI-Secrets (X-3).
+* **Der Playwright-Vollauf ist nicht Teil der in Abschnitt 3 genannten
+  Testzahlen.** Er läuft in CI (und ist dort zu `5c2208fc` grün), nicht auf
+  dieser Maschine; die Zahlen in 3.1 bis 3.4 sind ausschließlich lokale Läufe.
+  Und er durchläuft die **Anmeldekette selbst** weiterhin nicht: dafür fehlt ein
+  Testkonto in den CI-Secrets (X-3). Ein grüner E2E-Lauf ist deshalb noch kein
+  Beleg dafür, dass sich jemand anmelden kann.
 * **Die efy-Ursachenannahme zu `stripe-webhook` ist nicht gemessen.** Das Fehlen
   des Secrets ist die naheliegende, aber nicht bewiesene Ursache; die Wirkung —
   jedes Stripe-Event schlägt fehl — steht unabhängig davon fest.
