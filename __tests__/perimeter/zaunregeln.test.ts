@@ -126,8 +126,8 @@ describe('B5 — der Aufbewahrungslauf haengt am Cron und am Tuersteher', () => 
 })
 
 describe('B1 — die Migration schliesst die offene Tuer und hat einen Rollback', () => {
-  const migration = 'supabase/migrations/20261018000000_perimeter_lead_inquiries_offene_tuer.sql'
-  const rollback = 'supabase/migrations/20261018000001_rollback_perimeter_lead_inquiries_offene_tuer.sql'
+  const migration = 'supabase/migrations/20260828180000_perimeter_lead_inquiries_offene_tuer.sql'
+  const rollback = 'supabase/migrations/20260828180001_rollback_perimeter_lead_inquiries_offene_tuer.sql'
 
   it('entfernt die Policy „Anyone can submit lead inquiry"', () => {
     expect(lies(migration)).toMatch(/DROP POLICY IF EXISTS "Anyone can submit lead inquiry"/)

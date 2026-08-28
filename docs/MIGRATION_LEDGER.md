@@ -22,8 +22,22 @@
 - **Neue Migrationen**: Ab sofort NUR mit echtem aktuellem Timestamp (YYYYMMDDHHMMSS)
 - Production-Objekte sind korrekt — kein Eingriff nötig
 
+## Applied Entries
+
+| Repo-Datei | Original-Name | Final-Version | Supabase-Name | Track | Methode | Status |
+|---|---|---|---|---|---|---|
+| `20260828180000_perimeter_lead_inquiries_offene_tuer.sql` | `20261018000000_…` (Future-TS umbenannt) | 20260828180000 | `20260828180000_perimeter_lead_inquiries_offene_tuer` | AE13 | execute_sql | PROVEN_LIVE |
+
+### AE13 Migration Verification (2026-08-28)
+
+- **Policy "Anyone can submit lead inquiry"**: ENTFERNT ✓
+- **Constraint lead_inquiries_status_check**: ANGELEGT ✓
+- **schema_migrations**: version=20260828180000 ✓
+- **Original Future-TS**: 20261018000000 → umbenannt auf 20260828180000
+- **Rollback**: 20260828180001_rollback_perimeter_lead_inquiries_offene_tuer.sql
+
 ## Gesamtstand
 
-- **Total Migrationen in Supabase**: 284
-- **Letzte Version**: 20260828125757
-- **HEAD**: f4231e6
+- **Total Migrationen in Supabase**: 285
+- **Letzte Version**: 20260828180000
+- **HEAD**: 42f328d5

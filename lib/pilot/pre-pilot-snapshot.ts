@@ -204,11 +204,19 @@ export const DOKUMENTIERTE_SICHERHEITSLAGE = {
  * Verifikationsskripte unter `scripts/verify-*.mjs`.
  */
 export const JUENGSTE_MIGRATIONEN = [
+  '20261016000001_rollback_loeschkette_bookings_angel_fk.sql',
+  '20261017000000_abrechnungsintegritaet_leistungsnachweis.sql',
   '20261017000001_rollback_abrechnungsintegritaet_leistungsnachweis.sql',
   '20261017000002_obergrenze_angebotstyp.sql',
   '20261017000003_rollback_obergrenze_angebotstyp.sql',
-  '20261018000000_perimeter_lead_inquiries_offene_tuer.sql',
-  '20261018000001_rollback_perimeter_lead_inquiries_offene_tuer.sql',
+  // HINWEIS (Track 13): die beiden Perimeter-Migrationen stehen hier NICHT,
+  // obwohl sie die zuletzt hinzugekommenen sind. Sie tragen seit dem
+  // 28.08.2026 einen ECHTEN Zeitstempel (20260828180000/…0001, Regel aus
+  // docs/MIGRATION_LEDGER.md) und sortieren damit VOR dem 20261017-Block
+  // mit seinen Zukunfts-Nummern. „Die fuenf juengsten Dateien" heisst in
+  // diesem Verzeichnis also nicht mehr „die zuletzt entstandenen" —
+  // solange beide Nummernkreise nebeneinander liegen, ist das unvermeidbar
+  // und hier ausdruecklich festgehalten statt stillschweigend hingenommen.
 ] as const
 
 // ---------------------------------------------------------------------------

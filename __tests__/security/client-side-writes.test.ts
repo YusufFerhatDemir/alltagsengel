@@ -77,8 +77,16 @@ describe('NIEDRIG-3: Seitenaufrufe laufen ueber eine ratenbegrenzte Route', () =
     expect(tracker).toContain('/api/track/page-view')
   })
 
-  it('die Route ist ratenbegrenzt', () => {
-    expect(route).toContain('rateLimit(')
+  it('die Route ist ratenbegrenzt — und zwar instanzuebergreifend', () => {
+    // Track 13 B2: an die neue Regel gezogen, NICHT gelockert. Die alte
+    // Fassung verlangte `rateLimit(` und war damit auch dann gruen, wenn
+    // der Zaehler eine Map im Modul-Scope war — also je Serverless-Instanz,
+    // und auf Vercel keine Grenze. Genau das war der Zustand, den sie
+    // bestaetigt hat: der Dateikopf dieser Route nennt das Limit als eine
+    // der drei Schranken, die den frueheren Direktschreibpfad aus dem
+    // Browser ersetzen, und diese Schranke war instanzlokal.
+    expect(route).toContain('rateLimitPersistent(')
+    expect(/(?<![A-Za-z])rateLimit\s*\(/.test(route)).toBe(false)
   })
 
   it('die Route setzt user_id aus der Session, nicht aus dem Body', () => {
