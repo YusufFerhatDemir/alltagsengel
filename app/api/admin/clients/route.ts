@@ -130,10 +130,56 @@ export const POST = withTracking(async function POST(req: Request) {
       }
     }
 
+    // ── Kollision auf der Kundennummer ───────────────────────────────
+    // Die Vorpruefung oben fragt mandantenweise
+    // (customer_number + organization_id). Der eindeutige Index in der
+    // Datenbank heisst live aber `clients_customer_number_key UNIQUE
+    // (customer_number)` und gilt GLOBAL ueber alle Mandanten — Vorpruefung
+    // und Index beantworten also verschiedene Fragen (Befund 28.08.2026).
+    //
+    // Ohne diesen Zweig lief der Fall so: die Vorpruefung meldet „frei",
+    // der INSERT scheitert mit 23505, und `insertError.message` ging als
+    // 500 an den Aufrufer — samt Constraint-Name und der Nummer selbst.
+    // Damit liess sich von aussen feststellen, dass eine Kundennummer
+    // irgendwo im System existiert, ueber die Mandantengrenze hinweg.
+    //
+    // Zwei Faelle, zwei Antworten:
+    //   • Der Aufrufer hat die Nummer VORGEGEBEN → 409 mit derselben
+    //     neutralen Meldung wie die Vorpruefung. Ob die Nummer im eigenen
+    //     oder in einem fremden Mandanten liegt, steht dort bewusst nicht.
+    //   • Die Nummer wurde ERZEUGT (vier Zufallsziffern hinter KD-JJMM-,
+    //     also 9000 Moeglichkeiten pro Monat ueber alle Mandanten) → einmal
+    //     neu ziehen. Ein Zufallstreffer darf die Anlage nicht kosten.
+    //
+    // Migration 20260828210000 zieht den Index auf
+    // (organization_id, customer_number) und beseitigt die Ursache. Dieser
+    // Zweig wirkt auch ohne sie und bleibt danach als Schutz gegen die
+    // echte Kollision INNERHALB eines Mandanten stehen.
+    const istNummernKollision = (e: { code?: string; message?: string } | null) =>
+      e?.code === '23505' && (e.message ?? '').includes('customer_number')
+
+    if (istNummernKollision(insertError)) {
+      if (body.customer_number) {
+        return NextResponse.json({ error: 'Kundennummer bereits vergeben.' }, { status: 409 })
+      }
+      ;({ data: client, error: insertError } = await admin
+        .from('clients')
+        .insert({ ...insertData, customer_number: generateCustomerNumber() })
+        .select()
+        .single())
+    }
+
     if (insertError || !client) {
-      return NextResponse.json(
-        { error: insertError?.message ?? 'Klient konnte nicht angelegt werden.' },
-        { status: 500 }
+      // Rohe Datenbankmeldungen gehoeren nicht in die Antwort — sie tragen
+      // Constraint-Namen und Werte nach aussen. Der Sanitizer entscheidet,
+      // was der Aufrufer zu sehen bekommt; die Einzelheiten bleiben im Log.
+      // In ein echtes Error umpacken: safeApiError macht aus allem
+      // anderen `String(err)`, und aus einem PostgrestError waere das
+      // "[object Object]" — die Meldung ginge dann auch im Log verloren,
+      // also genau dort, wo sie hingehoert.
+      return safeApiError(
+        new Error(insertError?.message ?? 'Klient konnte nicht angelegt werden.'),
+        req,
       )
     }
 
