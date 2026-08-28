@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { rolleDarf } from '@/lib/auth/guard'
 import type { Berechtigung } from '@/lib/auth/rollen'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
@@ -12,6 +11,7 @@ import {
   pruefeStammdaten,
 } from '@/lib/clients/stammdaten'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { holeRollenQuellenFuer, quellenDuerfen } from '@/lib/auth/rollen-quelle'
 
 /**
  * Lokaler Guard dieser Route. Prueft seit dem Rollenkonzept eine
@@ -24,8 +24,8 @@ async function requireAdmin(berechtigung: Berechtigung = 'stammdaten.lesen') {
   if (error || !user) {
     return { ok: false as const, response: NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 }) }
   }
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (!profile || !rolleDarf(profile.role, berechtigung)) {
+  const quellen = await holeRollenQuellenFuer(supabase, user)
+  if (!quellenDuerfen(quellen, berechtigung)) {
     return { ok: false as const, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
   }
   const organizationId = await getActiveOrgId()

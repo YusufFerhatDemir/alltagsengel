@@ -99,6 +99,7 @@ function createAdminMock(handler: Handler) {
         limit() { return builder },
         single() { return Promise.resolve(handler(state)) },
         maybeSingle() { return Promise.resolve(handler(state)) },
+        maybeSingle() { return Promise.resolve(handler(state)) },
         then(onFulfilled: any, onRejected: any) {
           return Promise.resolve(handler(state)).then(onFulfilled, onRejected)
         },
@@ -146,6 +147,7 @@ function authAsAdmin() {
       select: () => ({
         eq: () => ({
           single: vi.fn().mockResolvedValue({ data: { role: 'admin' }, error: null }),
+          maybeSingle: vi.fn().mockResolvedValue({ data: { role: 'admin' }, error: null }),
         }),
       }),
     }),

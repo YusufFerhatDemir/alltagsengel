@@ -1,6 +1,7 @@
 import type { IKimProvider, KimAddressVerification } from './provider-interface'
 import type { KimAddress, KimAddressType, KimClient } from './types'
 import { writeKimAuditLog } from './audit-service'
+import { postgrestSuchwert } from '@/lib/supabase/postgrest-filter'
 
 const KIM_ADDRESS_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 
@@ -41,7 +42,17 @@ export async function listKimAddresses(
 
   if (filter.address_type) query = query.eq('address_type', filter.address_type)
   if (filter.is_active !== undefined) query = query.eq('is_active', filter.is_active)
-  if (filter.search) query = query.or(`display_name.ilike.%${filter.search}%,kim_address.ilike.%${filter.search}%`)
+  if (filter.search) {
+    // BEFUND (28.08.2026, Track 7): der Suchbegriff stand hier ROH in der
+    // PostgREST-Filterzeichenkette. Ein Komma im Begriff haengte eine
+    // zweite Bedingung an — ueber jede beliebige Spalte der Tabelle,
+    // `ik_nummer` und `lanr` eingeschlossen. Die Mandantengrenze blieb
+    // dabei zwar stehen (`.eq('organization_id', …)` ist ein eigener,
+    // UND-verknuepfter Parameter), die Suche war aber ein frei
+    // formulierbares Abfragewerkzeug statt einer Suche.
+    const s = postgrestSuchwert(filter.search)
+    query = query.or(`display_name.ilike.${s},kim_address.ilike.${s}`)
+  }
 
   const { data, error } = await query
   if (error) throw new Error(`Adressbuch konnte nicht geladen werden: ${error.message}`)

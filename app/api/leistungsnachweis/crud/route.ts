@@ -12,6 +12,7 @@ import { pruefeBudget } from '@/lib/personal/einsatzfreigabe'
 import type { BudgetTyp } from '@/lib/config/budget-constants'
 import { logAuditEventOrWarn } from '@/lib/audit-log'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { holeRollenQuellenFuer, quellenDuerfen, type RollenQuellen } from '@/lib/auth/rollen-quelle'
 
 /**
  * service_records.budget_type ist ein anderes Vokabular als
@@ -30,13 +31,16 @@ function budgetTypFuerPruefung(serviceRecordBudgetType: string): BudgetTyp | nul
 async function requireAuth(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { ok: false as const, response: NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 }) }
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (!profile) return { ok: false as const, response: NextResponse.json({ error: 'Profil nicht gefunden' }, { status: 403 }) }
-  return { ok: true as const, userId: user.id, role: profile.role }
+  // BEIDE Quellen: profiles ist bindend, app_metadata schraenkt zusaetzlich
+  // ein (lib/auth/rollen.ts). Vorher stand hier allein profiles.role — eine
+  // Herabstufung, die nur im Token steht, blieb damit wirkungslos.
+  const quellen = await holeRollenQuellenFuer(supabase, user)
+  if (!quellen.profilRolle) return { ok: false as const, response: NextResponse.json({ error: 'Profil nicht gefunden' }, { status: 403 }) }
+  return { ok: true as const, userId: user.id, role: quellen.rolle, quellen }
 }
 
-function requireAdmin(auth: { ok: true; role: string }) {
-  if (!rolleDarf(auth.role, 'einsatz.schreiben')) {
+function requireAdmin(auth: { ok: true; quellen: RollenQuellen }) {
+  if (!quellenDuerfen(auth.quellen, 'einsatz.schreiben')) {
     return NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 })
   }
   return null
@@ -388,7 +392,7 @@ export const PATCH = withTracking(async function PATCH(req: NextRequest) {
   }
 
   if (action === 'cancel') {
-    if (!rolleDarf(auth.role, 'einsatz.schreiben')) {
+    if (!quellenDuerfen(auth.quellen, 'einsatz.schreiben')) {
       return NextResponse.json({ error: 'Nur Admins können stornieren' }, { status: 403 })
     }
 

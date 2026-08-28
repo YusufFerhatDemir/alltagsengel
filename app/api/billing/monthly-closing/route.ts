@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-import { rolleDarf } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
@@ -9,15 +8,15 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { euroZuCent } from '@/lib/geld'
 import { ohneStornierte } from '@/lib/leistungsnachweis/status-sync'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { holeRollenQuellenFuer, quellenDuerfen } from '@/lib/auth/rollen-quelle'
 export const GET = withTracking(async function GET(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) return NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 })
 
-    const { data: profile } = await supabase
-      .from('profiles').select('role').eq('id', user.id).single()
-    if (!profile || !rolleDarf(profile.role, 'abrechnung.lesen')) {
+    const quellen = await holeRollenQuellenFuer(supabase, user)
+    if (!quellenDuerfen(quellen, 'abrechnung.lesen')) {
       return NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 })
     }
 
@@ -163,9 +162,8 @@ export const POST = withTracking(async function POST(request: Request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) return NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 })
 
-    const { data: profile } = await supabase
-      .from('profiles').select('role').eq('id', user.id).single()
-    if (!profile || !rolleDarf(profile.role, 'abrechnung.schreiben')) {
+    const quellen = await holeRollenQuellenFuer(supabase, user)
+    if (!quellenDuerfen(quellen, 'abrechnung.schreiben')) {
       return NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 })
     }
 

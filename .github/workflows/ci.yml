@@ -96,6 +96,25 @@ jobs:
         # aus der Live-DB erzeugt) und braucht deshalb keinen DB-Zugang.
         run: npm run lint:org-id
 
+      - name: Lint — Rollenquelle und PostgREST-Filter in API-Routen
+        # Track 7 (28.08.2026). ZWEI REGELN:
+        #
+        # R1: Es gibt ZWEI nicht selbst beschreibbare Rollenquellen
+        #     (profiles.role und app_metadata.role). Die Entscheidungsregel
+        #     in lib/auth/rollen.ts ist die Schnittmenge: profiles bindend,
+        #     app_metadata nur einschraenkend. 49 API-Routen — praktisch der
+        #     gesamte Geldweg — haben ihre Rolle stattdessen selbst aus
+        #     profiles gelesen; eine Herabstufung, die nur im Token steht,
+        #     blieb dort wirkungslos.
+        #
+        # R2: `.or(…)` nimmt eine ZEICHENKETTE, in der PostgREST seine
+        #     eigene Filtergrammatik liest. Ein roher Suchbegriff darin
+        #     laesst den Suchenden Bedingungen ueber beliebige Spalten
+        #     anhaengen (Befund: KIM-Adressbuch).
+        #
+        # Beide Regeln laufen rein statisch und brauchen keinen DB-Zugang.
+        run: npm run lint:route-auth
+
       - name: Schema-Drift-Check (warn-only — blockiert nicht)
         # Findet Code, der Spalten anspricht, die es live nicht gibt.
         # PostgREST lehnt so eine Abfrage komplett ab (42703); im Code sieht

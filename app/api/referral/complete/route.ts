@@ -2,13 +2,43 @@ import { NextResponse, NextRequest } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { schreibeGutschrift } from '@/lib/referral/gutschrift'
+import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
+const log = logger.child('referral/complete')
 
-const supabaseAdmin = createAdminClient()
+// ═══════════════════════════════════════════════════════════════════════
+// POST /api/referral/complete — Empfehlung abschliessen und Bonus buchen
+// ═══════════════════════════════════════════════════════════════════════
+//
+// Der Nutzer muss angemeldet sein und kann nur die eigene Empfehlung
+// abschliessen (user_id === auth.uid()).
+//
+// ZWEI BEFUNDE aus Track 7 (28.08.2026), beide behoben:
+//
+// ERSTENS DIE GUTSCHRIFT KAM NIE AN. Sie lief ueber
+// `rpc('increment_referral_credit')` in einem try/catch mit einem
+// Lese-Schreib-Fallback im catch-Zweig. Die Funktion existiert live nicht
+// (aus pg_proc gelesen), und `supabase.rpc()` wirft nicht — der Fehler
+// steht im Rueckgabewert. Also lief weder die RPC noch der Fallback, und
+// die Route antwortete trotzdem „Bonus für beide Seiten gutgeschrieben“.
+// Die Buchung liegt jetzt in lib/referral/gutschrift.ts und ihr Ergebnis
+// wird geprueft.
+//
+// ZWEITENS KEIN SCHUTZ GEGEN DEN ZWEITEN AUFRUF. Gelesen wurde
+// `status='pending'`, geschrieben wurde danach `.eq('id', …)` OHNE
+// Statusbedingung. Zwei gleichzeitige Aufrufe kamen beide an der Pruefung
+// vorbei und haetten beide gebucht — sobald die Gutschrift ueberhaupt
+// wirkt, ist das der doppelte Bonus auf beiden Seiten. Der Vorgang wird
+// jetzt ZUERST per Compare-and-Swap beansprucht (pending → completed) und
+// erst danach gebucht; wer den Wettlauf verliert, bekommt 409 statt einer
+// zweiten Buchung.
+//
+// Scheitert eine Gutschrift NACH dem Beanspruchen, wird der Vorgang auf
+// 'pending' zurueckgesetzt und die Route antwortet 503 — lieber ein
+// wiederholbarer Fehlschlag als ein verbrannter Vorgang ohne Geld.
+// ═══════════════════════════════════════════════════════════════════════
 
-// ═══ POST: Referral abschließen nach erster Buchung ═══
-// Wird aufgerufen wenn ein referred User seine erste Buchung abschließt
-// Geschützt: Nutzer muss authentifiziert sein und kann nur eigene Referrals abschließen
 export const POST = withTracking(async function POST(request: NextRequest) {
   try {
     // Auth-Prüfung: Nur eingeloggte Nutzer
@@ -18,8 +48,8 @@ export const POST = withTracking(async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
     }
 
-    const body = await request.json()
-    const { user_id } = body
+    const body = await request.json().catch(() => null)
+    const user_id = typeof body?.user_id === 'string' ? body.user_id : ''
 
     if (!user_id) {
       return NextResponse.json({ error: 'user_id erforderlich' }, { status: 400 })
@@ -30,13 +60,15 @@ export const POST = withTracking(async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Nicht autorisiert für diesen Nutzer' }, { status: 403 })
     }
 
+    const supabaseAdmin = createAdminClient()
+
     // Pending Referral für diesen User finden
     const { data: referral } = await supabaseAdmin
       .from('referrals')
       .select('*')
       .eq('referred_id', user_id)
       .eq('status', 'pending')
-      .single()
+      .maybeSingle()
 
     if (!referral) {
       return NextResponse.json({ message: 'Kein offenes Referral' })
@@ -57,10 +89,14 @@ export const POST = withTracking(async function POST(request: NextRequest) {
       )
     }
 
-    const bonus = referral.bonus_amount || 20
+    const bonus = typeof referral.bonus_amount === 'number' && referral.bonus_amount > 0
+      ? referral.bonus_amount
+      : 20
 
-    // 1. Referral als completed markieren
-    await supabaseAdmin
+    // ── 1. Vorgang BEANSPRUCHEN (Compare-and-Swap) ──────────────────
+    // Erst der Statuswechsel, dann das Geld: so kann es den Bonus nur
+    // einmal geben, auch wenn zwei Anfragen gleichzeitig hier ankommen.
+    const { data: beansprucht, error: claimFehler } = await supabaseAdmin
       .from('referrals')
       .update({
         status: 'completed',
@@ -69,53 +105,65 @@ export const POST = withTracking(async function POST(request: NextRequest) {
         referred_credited: true,
       })
       .eq('id', referral.id)
+      .eq('status', 'pending')
+      .select('id')
 
-    // 2. Bonus für Referrer gutschreiben
-    try {
-      await supabaseAdmin.rpc('increment_referral_credit', {
-        user_id: referral.referrer_id,
-        amount: bonus,
-      })
-    } catch {
-      // Fallback wenn RPC nicht existiert
-      const { data: referrerProfile } = await supabaseAdmin
-        .from('profiles')
-        .select('referral_credit')
-        .eq('id', referral.referrer_id)
-        .single()
-
-      await supabaseAdmin
-        .from('profiles')
-        .update({ referral_credit: (referrerProfile?.referral_credit || 0) + bonus })
-        .eq('id', referral.referrer_id)
+    if (claimFehler) {
+      log.error('Referral konnte nicht beansprucht werden', { code: claimFehler.code })
+      return NextResponse.json(
+        { error: 'Der Empfehlungsbonus konnte gerade nicht gebucht werden. Bitte später erneut versuchen.' },
+        { status: 503 }
+      )
+    }
+    if (!beansprucht?.length) {
+      // Ein paralleler Aufruf war schneller — genau EINE Buchung.
+      return NextResponse.json({ error: 'Dieser Empfehlungsbonus wurde bereits gebucht.' }, { status: 409 })
     }
 
-    // 3. Bonus für Referred gutschreiben
-    try {
-      await supabaseAdmin.rpc('increment_referral_credit', {
-        user_id: referral.referred_id,
-        amount: bonus,
-      })
-    } catch {
-      const { data: referredProfile } = await supabaseAdmin
-        .from('profiles')
-        .select('referral_credit')
-        .eq('id', referral.referred_id)
-        .single()
+    // ── 2. Gutschriften ─────────────────────────────────────────────
+    const fuerWerber = await schreibeGutschrift(supabaseAdmin, referral.referrer_id, bonus)
+    const fuerGeworbenen = fuerWerber.ok
+      ? await schreibeGutschrift(supabaseAdmin, referral.referred_id, bonus)
+      : { ok: false, fehler: 'übersprungen' }
 
+    if (!fuerWerber.ok || !fuerGeworbenen.ok) {
+      // Rueckabwicklung: der Vorgang darf nicht als abgeschlossen
+      // stehenbleiben, wenn kein Geld geflossen ist — sonst ist er
+      // verbrannt und niemand merkt es. Gleiche Linie wie
+      // genehmigenAbwesenheit und protokolliereSignaturAudit.
       await supabaseAdmin
-        .from('profiles')
-        .update({ referral_credit: (referredProfile?.referral_credit || 0) + bonus })
-        .eq('id', referral.referred_id)
+        .from('referrals')
+        .update({
+          status: 'pending',
+          completed_at: null,
+          referrer_credited: false,
+          referred_credited: false,
+        })
+        .eq('id', referral.id)
+
+      log.error('Gutschrift fehlgeschlagen — Referral zurückgesetzt', {
+        werber: fuerWerber.fehler ?? null,
+        geworbener: fuerGeworbenen.fehler ?? null,
+      })
+      return NextResponse.json(
+        { error: 'Der Empfehlungsbonus konnte nicht gutgeschrieben werden. Bitte später erneut versuchen.' },
+        { status: 503 }
+      )
     }
 
-    // 4. Notification an Referrer senden
-    await supabaseAdmin.from('notifications').insert({
+    // ── 3. Benachrichtigung an den Werber ───────────────────────────
+    const { error: hinweisFehler } = await supabaseAdmin.from('notifications').insert({
       user_id: referral.referrer_id,
       title: 'Empfehlungsbonus erhalten!',
       message: `Deine Empfehlung hat die erste Buchung abgeschlossen. Du hast ${bonus} € Guthaben erhalten!`,
       type: 'referral',
     })
+    // Der Hinweis ist Beiwerk: das Geld ist gebucht, ein fehlgeschlagener
+    // Hinweis darf die Buchung nicht zurueckdrehen. Er verschwindet aber
+    // auch nicht still.
+    if (hinweisFehler) {
+      log.error('Referral-Benachrichtigung nicht zugestellt', { code: hinweisFehler.code })
+    }
 
     return NextResponse.json({
       success: true,

@@ -173,10 +173,16 @@ function authAsCaregiver(caregiverId: string) {
 function authAsAdmin() {
   mockCreateClient.mockResolvedValue({
     auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'admin-user' } } }) },
+    // Track 7 (28.08.2026): die Route liest die Rolle nicht mehr selbst,
+    // sondern ueber holeRollenQuellenFuer() — und das nutzt maybeSingle(),
+    // weil ein fehlender Profil-Datensatz ein regulaerer Fall ist und zu
+    // „keine Berechtigung" fuehren soll statt zu einem PostgREST-Fehler.
+    // Der Doppelgaenger beantwortet deshalb beide Endpunkte gleich.
     from: () => ({
       select: () => ({
         eq: () => ({
           single: vi.fn().mockResolvedValue({ data: { role: 'admin' }, error: null }),
+          maybeSingle: vi.fn().mockResolvedValue({ data: { role: 'admin' }, error: null }),
         }),
       }),
     }),

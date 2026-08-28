@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import { rolleDarf } from '@/lib/auth/guard'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { fuehreTaeglicheAutomatisierungAus } from '@/lib/automation'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { holeRollenQuellenFuer, quellenDuerfen } from '@/lib/auth/rollen-quelle'
 
 /**
  * POST /api/admin/automatisierung
@@ -20,8 +20,8 @@ export const POST = withTracking(async function POST() {
     return NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 })
   }
 
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (!profile || !rolleDarf(profile.role, 'system.verwalten')) {
+  const quellen = await holeRollenQuellenFuer(supabase, user)
+  if (!quellenDuerfen(quellen, 'system.verwalten')) {
     return NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 })
   }
 

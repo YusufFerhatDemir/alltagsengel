@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
-import { rolleDarf } from '@/lib/auth/guard'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { holeRollenQuellenFuer, quellenDuerfen } from '@/lib/auth/rollen-quelle'
 const log = logger.child('api/admin/ocr')
 
 // ═══════════════════════════════════════════════════════════════
@@ -40,12 +40,8 @@ export const POST = withTracking(async function POST(request: Request) {
     if (!user) {
       return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
     }
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-    if (!profile || !rolleDarf(profile.role, 'einsatz.schreiben')) {
+    const quellen = await holeRollenQuellenFuer(supabase, user)
+    if (!quellenDuerfen(quellen, 'einsatz.schreiben')) {
       return NextResponse.json({ error: 'Nur für Administratoren' }, { status: 403 })
     }
 

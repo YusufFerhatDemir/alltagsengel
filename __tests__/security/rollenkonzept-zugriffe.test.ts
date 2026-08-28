@@ -269,6 +269,13 @@ describe('Bestandsschutz: sensible Bereiche tragen die richtige Berechtigung', (
 
   it('Benutzerverwaltung verlangt benutzer.verwalten', () => {
     expect(lies('app/api/admin/reset-password/route.ts')).toContain("'benutzer.verwalten'")
-    expect(lies('app/api/admin/manage-role/route.ts')).toContain("callerProfile.role !== 'superadmin'")
+    // Track 7 (28.08.2026): die Rollenverwaltung fragte
+    // `callerProfile.role !== 'superadmin'` — also nur profiles. Eine
+    // Herabstufung, die nur im Token steht, liess den Vorgang damit
+    // weiterlaufen. Gefordert wird jetzt, dass BEIDE Quellen superadmin
+    // sagen; die Aussage des Tests (nur superadmin darf hier hinein)
+    // bleibt dieselbe, sie wird nur strenger geprueft.
+    expect(lies('app/api/admin/manage-role/route.ts'))
+      .toContain("quellenSindRolle(callerProfileQuellen, 'superadmin')")
   })
 })

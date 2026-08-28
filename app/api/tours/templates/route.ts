@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { uebersetzeDbFehler } from '@/lib/touren/server'
+import { caregiverGehoertZuOrg } from '@/lib/personal/organization-guard'
+import { clientGehoertZuOrg } from '@/lib/clients/organization-guard'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { withTracking } from '@/lib/monitoring/tracker'
 
 const TEMPLATE_SELECT =
@@ -13,6 +16,56 @@ interface TemplateStop {
   dauer_minuten: number
   service_type?: string
   notes?: string
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Mandanten-Fence auf die Fremdschluessel aus dem Request-Rumpf
+// ═══════════════════════════════════════════════════════════════════════
+//
+// BEFUND (28.08.2026, Track 7): POST und PATCH haben `caregiver_id` und
+// die `client_id` jedes Vorlagen-Stops UNGEPRUEFT aus dem Rumpf
+// uebernommen. Beide Wege schreiben mit dem Dienstschluessel, der RLS
+// umgeht — eine fremde UUID landete damit in der eigenen Vorlage.
+//
+// Das ist nicht bloss ein toter Verweis, sondern ein LESEWEG NACH DRAUSSEN:
+// GET liest dieselbe Tabelle mit dem Dienstschluessel und bettet
+// `caregivers:caregiver_id(first_name, last_name)` ein. PostgREST folgt
+// dem Fremdschluessel ohne jede Mandantenbedingung, und der
+// Dienstschluessel hebt auch den RESTRICTIVE org_fence auf. Ein einziges
+// POST mit der UUID einer fremden Betreuungskraft holte damit deren
+// KLARNAMEN in die eigene Vorlagenliste — dieselbe Bauform wie die drei
+// caregivers-Joins aus der Personalverwaltung, nur ohne View dazwischen.
+//
+// 404 statt 403, wie in lib/personal/organization-guard.ts: die
+// Unterscheidung „gibt es nicht" / „gehoert jemand anderem" waere selbst
+// schon eine Auskunft ueber fremde Bestaende.
+//
+// Bewusst KEINE RLS-Policy als Abhilfe: der Dienstschluessel umgeht jede
+// Policy, der Fence gehoert deshalb in den Code.
+async function fenceFremdschluessel(
+  admin: SupabaseClient,
+  organizationId: string,
+  caregiverId: unknown,
+  stops: unknown,
+): Promise<string | null> {
+  if (typeof caregiverId === 'string' && caregiverId.trim() !== '') {
+    if (!(await caregiverGehoertZuOrg(admin, caregiverId, organizationId))) {
+      return 'Mitarbeiter nicht gefunden.'
+    }
+  }
+  if (Array.isArray(stops)) {
+    const clientIds = [...new Set(
+      stops.map(s => (s as { client_id?: unknown })?.client_id).filter(
+        (v): v is string => typeof v === 'string' && v.trim() !== '',
+      ),
+    )]
+    for (const clientId of clientIds) {
+      if (!(await clientGehoertZuOrg(admin, clientId, organizationId))) {
+        return 'Klient nicht gefunden.'
+      }
+    }
+  }
+  return null
 }
 
 function validiereStops(stops: unknown): string | null {
@@ -57,6 +110,9 @@ export const POST = withTracking(async function POST(req: NextRequest) {
   }
 
   const admin = createAdminClient()
+  const fenceFehler = await fenceFremdschluessel(admin, auth.ctx.organizationId, caregiver_id, stops ?? [])
+  if (fenceFehler) return NextResponse.json({ error: fenceFehler }, { status: 404 })
+
   const { data, error } = await admin
     .from('tour_templates')
     .insert({
@@ -97,6 +153,11 @@ export const PATCH = withTracking(async function PATCH(req: NextRequest) {
   }
 
   const admin = createAdminClient()
+  const fenceFehler = await fenceFremdschluessel(
+    admin, auth.ctx.organizationId, updates.caregiver_id, updates.stops,
+  )
+  if (fenceFehler) return NextResponse.json({ error: fenceFehler }, { status: 404 })
+
   const { data, error } = await admin
     .from('tour_templates')
     .update(updates)

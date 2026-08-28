@@ -41,10 +41,17 @@ function zaehlenderClient(zugriffe: string[]) {
         select: () => kette, insert: () => kette, update: () => kette,
         eq: () => kette, in: () => kette, or: () => kette, is: () => kette,
         gte: () => kette, lte: () => kette, order: () => kette, limit: () => kette,
+        // Track 7 (28.08.2026): die Rollenermittlung laeuft ueber
+        // holeRollenQuellenFuer() und liest profiles mit maybeSingle() —
+        // beide Endpunkte muessen deshalb dieselbe Rolle liefern, sonst
+        // bleibt der Doppelgaenger rollenlos und die Route antwortet 403,
+        // bevor die eigentlich geprueften Zeitregeln ueberhaupt greifen.
         single: async () => (tabelle === 'profiles'
           ? { data: { role: 'admin' }, error: null }
           : { data: null, error: null }),
-        maybeSingle: async () => ({ data: null, error: null }),
+        maybeSingle: async () => (tabelle === 'profiles'
+          ? { data: { role: 'admin' }, error: null }
+          : { data: null, error: null }),
         then: (auf: any) => Promise.resolve(auf({ data: [], error: null })),
       }
       return kette

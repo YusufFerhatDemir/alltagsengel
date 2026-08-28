@@ -210,10 +210,13 @@ export interface ListDokumenteFilter {
  * Anfuehrungszeichen um den Wert nehmen den Sonderzeichen ihre Bedeutung;
  * Backslash und Anfuehrungszeichen im Begriff selbst werden maskiert.
  */
-export function postgrestWert(begriff: string): string {
-  const maskiert = begriff.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
-  return `"%${maskiert}%"`
-}
+// Die Maskierregel liegt jetzt in lib/supabase/postgrest-filter.ts, damit
+// sie nicht nur der Aktensuche zur Verfuegung steht (Befund Track 7: das
+// KIM-Adressbuch hatte sie nicht). Der hiesige Name bleibt als Re-Export
+// bestehen — die Aufrufer in diesem Modul und in lib/akten/suche.ts
+// muessen dafuer nicht angefasst werden.
+export { postgrestSuchwert as postgrestWert }
+import { postgrestSuchwert } from '@/lib/supabase/postgrest-filter'
 
 export async function listDokumente(supabase: SupabaseClient, filter: ListDokumenteFilter): Promise<AktenDokument[]> {
   let query = supabase
@@ -232,7 +235,7 @@ export async function listDokumente(supabase: SupabaseClient, filter: ListDokume
   if (filter.tag) query = query.contains('tags', [filter.tag])
   if (filter.ablaufBis) query = query.lte('ablaufdatum', filter.ablaufBis)
   if (filter.suche) {
-    const s = postgrestWert(filter.suche)
+    const s = postgrestSuchwert(filter.suche)
     query = query.or(`titel.ilike.${s},dateiname.ilike.${s}`)
   }
   if (filter.limit) query = query.range(filter.offset ?? 0, (filter.offset ?? 0) + filter.limit - 1)

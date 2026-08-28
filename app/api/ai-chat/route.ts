@@ -5,22 +5,27 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { holeRollenQuellenFuer, quellenSindAdministration } from '@/lib/auth/rollen-quelle'
+import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 const log = logger.child('api:ai-chat')
 
-// Rate limiter: max 10 requests per minute per user
-const rateLimit = new Map<string, { count: number; resetAt: number }>()
-
-function checkRateLimit(key: string): boolean {
-  const now = Date.now()
-  const entry = rateLimit.get(key)
-  if (!entry || now > entry.resetAt) {
-    rateLimit.set(key, { count: 1, resetAt: now + 60000 })
-    return true
-  }
-  if (entry.count >= 10) return false
-  entry.count++
-  return true
-}
+// ═══════════════════════════════════════════════════════════════════════
+// Zeitliche Begrenzung: 10 Anfragen pro Minute und Nutzer
+// ═══════════════════════════════════════════════════════════════════════
+//
+// BEFUND (28.08.2026, Track 7): hier stand eine `new Map()` im
+// Modulzustand. Auf Vercel laeuft jede Anfrage moeglicherweise in einer
+// anderen Instanz — die Zaehlung war damit pro Instanz, nicht pro Nutzer,
+// und liess sich durch blosse Parallelitaet umgehen. Dieselbe Klasse ist
+// fuer `rateLimit()` aus lib/rate-limit.ts bereits dokumentiert; die
+// Antwort darauf ist `rateLimitPersistent`, das ueber die Datenbank
+// zaehlt (api_rate_limit_hit) und bei Ausfall auf den lokalen Zaehler
+// zurueckfaellt statt durchzulassen.
+//
+// Diese Route reicht Live-Geschaeftsdaten an einen kostenpflichtigen
+// Fremdanbieter (Gemini/OpenAI). Ein wirkungsloses Limit ist hier nicht
+// nur ein Lastthema, sondern eine Kostenfrage.
+const KI_LIMIT_PRO_MINUTE = 10
 
 // Live-Daten aus Supabase holen — org-gefenced
 async function fetchLiveContext(orgId: string): Promise<string> {
@@ -259,18 +264,14 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     }
 
     // Admin-Rolle prüfen — normale User dürfen KEINE Geschäftsdaten sehen
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    const quellen = await holeRollenQuellenFuer(supabase, user)
 
-    if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
+    if (!quellenSindAdministration(quellen)) {
       return NextResponse.json({ error: 'Nur für Administratoren verfügbar' }, { status: 403 })
     }
 
-    // Rate limiting
-    if (!checkRateLimit(user.id)) {
+    // Rate limiting (instanzuebergreifend, s. o.)
+    if (!(await rateLimitPersistent(`ai-chat:${user.id}`, KI_LIMIT_PRO_MINUTE, 60_000))) {
       return NextResponse.json({ error: 'Zu viele Anfragen. Bitte warten Sie eine Minute.' }, { status: 429 })
     }
 

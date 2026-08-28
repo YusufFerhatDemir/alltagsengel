@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { holeRollenQuellen, quellenDuerfen } from '@/lib/auth/rollen-quelle'
+import { holeRollenQuellen, quellenDuerfen, type RollenQuellen } from '@/lib/auth/rollen-quelle'
 import type { Berechtigung } from '@/lib/auth/rollen'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId, resolveUserOrgId } from '@/lib/organizations/server'
@@ -7,7 +7,16 @@ import { getActiveOrgId, resolveUserOrgId } from '@/lib/organizations/server'
 export interface MedAuthContext {
   userId: string
   organizationId: string
+  /**
+   * Wirksame Rolle als BESCHRIFTUNG (Protokoll, Anzeige) — nicht als
+   * Entscheidungsgrundlage. Sie ist die engere der beiden Quellen, nicht
+   * deren Schnittmenge: bei gleich weiten, aber verschiedenen Rollen
+   * beantwortet `rolleDarf(ctx.role, …)` eine Frage anders als der Guard
+   * selbst. Fuer jede weitere Entscheidung ist `quellen` die Quelle.
+   */
   role: string
+  /** Beide Rollenquellen, fuer nachgelagerte Entscheidungen im Handler. */
+  quellen: RollenQuellen
   name: string
 }
 
@@ -44,12 +53,12 @@ export async function requireMedAdmin(
 
   return {
     ok: true,
-    ctx: { userId: quellen.userId, organizationId, role: quellen.rolle, name },
+    ctx: { userId: quellen.userId, organizationId, role: quellen.rolle, quellen, name },
   }
 }
 
 export async function requireMedUser(): Promise<
-  { ok: true; userId: string; role: string; organizationId: string } | { ok: false; response: NextResponse }
+  { ok: true; userId: string; role: string; quellen: RollenQuellen; organizationId: string } | { ok: false; response: NextResponse }
 > {
   const supabase = await createClient()
   const quellen = await holeRollenQuellen(supabase)
@@ -66,5 +75,5 @@ export async function requireMedUser(): Promise<
     return { ok: false, response: NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 }) }
   }
 
-  return { ok: true, userId: quellen.userId, role: quellen.rolle, organizationId }
+  return { ok: true, userId: quellen.userId, role: quellen.rolle, quellen, organizationId }
 }

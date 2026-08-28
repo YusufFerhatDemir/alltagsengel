@@ -85,7 +85,10 @@ describe('D6: API-Route /api/billing/invoices/[id]/abschreiben', () => {
   it('prüft Admin/Superadmin-Berechtigung', () => {
     // Abschreiben ist ein Abrechnungsvorgang: 'abrechnung.schreiben'
     // (admin/superadmin/buchhaltung), siehe lib/auth/rollen.ts.
-    expect(routeSrc).toContain("rolleDarf(profile.role, 'abrechnung.schreiben')")
+    // Track 7 (28.08.2026): aus `rolleDarf(profile.role, …)` — also aus
+    // EINER der beiden autoritativen Quellen — ist die Schnittmenge beider
+    // geworden. Gleiche Berechtigung, strengere Pruefung.
+    expect(routeSrc).toContain("quellenDuerfen(quellen, 'abrechnung.schreiben')")
   })
 
   it('verlangt Begründung (reason)', () => {
@@ -153,6 +156,7 @@ function makeSupabase(invoice: Record<string, unknown>, updateReturns?: Record<s
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       single: vi.fn().mockResolvedValue({ data: invoice, error: null }),
+      maybeSingle: vi.fn().mockResolvedValue({ data: invoice, error: null }),
       update: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({

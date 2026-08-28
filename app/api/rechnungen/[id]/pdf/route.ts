@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { rolleDarf } from '@/lib/auth/guard'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -7,6 +6,7 @@ import { getActiveOrgId } from '@/lib/organizations/server'
 import { RECHNUNGS_PDF_URL_TTL_SEKUNDEN } from '@/lib/pdf/rechnung-paket'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { holeRollenQuellenFuer, quellenDuerfen } from '@/lib/auth/rollen-quelle'
 const log = logger.child('rechnungen/pdf')
 
 /**
@@ -38,12 +38,8 @@ export const GET = withTracking(async function GET(
       return NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 })
     }
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-    const isAdmin = !!profile && rolleDarf(profile.role, 'abrechnung.lesen')
+    const quellen = await holeRollenQuellenFuer(supabase, user)
+    const isAdmin = quellenDuerfen(quellen, 'abrechnung.lesen')
 
     // Der Admin-Client umgeht RLS — die Eigentuemerpruefung passiert deshalb
     // hier explizit ueber clients.user_id.

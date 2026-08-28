@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-import { rolleDarf } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { createInvoiceDraft } from '@/lib/billing/core'
@@ -7,6 +6,7 @@ import { getActiveOrgId } from '@/lib/organizations/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { withTracking } from '@/lib/monitoring/tracker'
 import { ohneStornierte } from '@/lib/leistungsnachweis/status-sync'
+import { holeRollenQuellenFuer, quellenDuerfen } from '@/lib/auth/rollen-quelle'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -55,20 +55,18 @@ export const POST = withTracking(async function POST(request: Request) {
     }
 
     // ── 2. Rollen-Pruefung ────────────────────────────────────────────
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    // Beide nicht selbst beschreibbaren Quellen (profiles bindend,
+    // app_metadata nur einschraenkend) — siehe lib/auth/rollen.ts.
+    const quellen = await holeRollenQuellenFuer(supabase, user)
 
-    if (profileError || !profile) {
+    if (!quellen.profilRolle) {
       return NextResponse.json(
         { error: 'Benutzerprofil nicht gefunden.' },
         { status: 403 }
       )
     }
 
-    if (!rolleDarf(profile.role, 'abrechnung.schreiben')) {
+    if (!quellenDuerfen(quellen, 'abrechnung.schreiben')) {
       return NextResponse.json(
         { error: 'Nur fuer Administratoren.' },
         { status: 403 }
