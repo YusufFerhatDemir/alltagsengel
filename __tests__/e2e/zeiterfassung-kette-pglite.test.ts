@@ -54,7 +54,7 @@
  * ─────────────────────────────────────────────────────────────────────
  * ZWEI SCHEMAFASSUNGEN, WEIL ES ZWEI GIBT
  * ─────────────────────────────────────────────────────────────────────
- * Migration 20261018000000 behebt beide Befunde, ist aber EINGECHECKT und
+ * Migration 20260829005500 behebt beide Befunde, ist aber EINGECHECKT und
  * NICHT ANGEWENDET (DDL laeuft ueber den Dienstschluessel als 42501 auf).
  * Wer sie in den Schemaaufbau zoege, liesse die Suite gegen eine
  * Datenbank laufen, die es so noch nicht gibt — und der Befund waere in
@@ -460,7 +460,7 @@ function gemeinsameKette(hole: () => Umgebung, fassung: string) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// FASSUNG A — der heutige Live-Stand (Migration 20261018000000 NICHT da)
+// FASSUNG A — der heutige Live-Stand (Migration 20260829005500 NICHT da)
 // ═══════════════════════════════════════════════════════════════════════
 
 describe('Zeiterfassung gegen die LIVE-Fassung des Triggers', () => {
@@ -591,10 +591,10 @@ describe('Zeiterfassung gegen die LIVE-Fassung des Triggers', () => {
 })
 
 // ═══════════════════════════════════════════════════════════════════════
-// FASSUNG B — mit Migration 20261018000000 (der Zielzustand)
+// FASSUNG B — mit Migration 20260829005500 (der Zielzustand)
 // ═══════════════════════════════════════════════════════════════════════
 
-describe('Zeiterfassung mit Migration 20261018000000', () => {
+describe('Zeiterfassung mit Migration 20260829005500', () => {
   let u: Umgebung
   beforeAll(async () => { u = await baueUmgebung(true) }, 180_000)
 

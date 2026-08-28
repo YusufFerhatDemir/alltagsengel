@@ -979,7 +979,7 @@ export async function bauePersonalTabellen(db: PGlite): Promise<void> {
 }
 
 /**
- * Wendet Migration 20261018000000 auf ein bereits gebautes Personal-Schema
+ * Wendet Migration 20260829005500 auf ein bereits gebautes Personal-Schema
  * an — die Fassung, die den Akteur der Zeitkorrektur nachzieht und die
  * Sperre zur echten Schranke macht.
  *
@@ -993,7 +993,7 @@ export async function bauePersonalTabellen(db: PGlite): Promise<void> {
  * Setzt bauePersonalTabellen() voraus.
  */
 export async function wendeArbeitszeitAkteurMigrationAn(db: PGlite): Promise<void> {
-  await db.exec(transaktionsInhalt('20261018000000_arbeitszeit_korrektur_akteur.sql'))
+  await db.exec(transaktionsInhalt('20260829005500_arbeitszeit_korrektur_akteur.sql'))
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -1068,7 +1068,7 @@ export async function bauePflegeplanungTabellen(db: PGlite): Promise<void> {
 /**
  * Qualitaetsmanagement: Pflegevisite mit Befunden und Regelkreis.
  *
- * Alles WORTGLEICH aus 20261019000000. Die drei Riegel, die nur eine
+ * Alles WORTGLEICH aus 20260829005600. Die drei Riegel, die nur eine
  * echte Datenbank beantwortet:
  *
  *   • `qm_visite_befunde_feststellung_belegt` — ein „nicht erfuellt"
@@ -1084,7 +1084,7 @@ export async function bauePflegeplanungTabellen(db: PGlite): Promise<void> {
  * (clients, caregivers, auth.users, pflege_massnahmen).
  */
 export async function baueQmTabellen(db: PGlite): Promise<void> {
-  const M_QM = '20261019000000_qm_pflegevisite.sql'
+  const M_QM = '20260829005600_qm_pflegevisite.sql'
   const M_FUNKTIONEN = '20250101000050_missing_production_functions.sql'
   const M_INTERN = '20260706_monatsabschluss_ki_pruefzentrale.sql'
 
@@ -1117,7 +1117,7 @@ export async function baueQmTabellen(db: PGlite): Promise<void> {
 }
 
 /**
- * Dienstplanfreigabe (Migration 20261020000000) — die PDL-Strecke.
+ * Dienstplanfreigabe (Migration 20260829005700) — die PDL-Strecke.
  *
  * Wie `wendeArbeitszeitAkteurMigrationAn` bewusst NICHT Teil von
  * `bauePersonalTabellen()`: die Migration ist eingecheckt und (Stand
@@ -1132,5 +1132,5 @@ export async function wendeDienstplanFreigabeMigrationAn(db: PGlite): Promise<vo
   await db.exec(
     funktionAusMigration('20260706_monatsabschluss_ki_pruefzentrale.sql', 'is_internal_staff'),
   )
-  await db.exec(transaktionsInhalt('20261020000000_dienstplan_freigabe.sql'))
+  await db.exec(transaktionsInhalt('20260829005700_dienstplan_freigabe.sql'))
 }

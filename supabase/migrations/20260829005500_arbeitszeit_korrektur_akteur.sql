@@ -82,7 +82,7 @@
 -- Datum:     2026-08-29
 -- Projekt:   Alltagsengel UG
 -- IDEMPOTENT.
--- Rollback:  20261018000001_rollback_arbeitszeit_korrektur_akteur.sql
+-- Rollback:  20260829005501_rollback_arbeitszeit_korrektur_akteur.sql
 -- STATUS:    EINGECHECKT — NICHT ANGEWENDET (DDL laeuft ueber den
 --            Dienstschluessel als 42501 auf; siehe Projekt-Gedaechtnis
 --            „REVOKE braucht Owner-Rechte"). Die Anwendung ist so gebaut,
@@ -197,5 +197,33 @@ BEGIN
   RAISE EXCEPTION 'Zeitkorrekturen sind unveränderlich (Revisionssicherheit).';
 END;
 $function$;
+
+-- ── SECURITY-DEFINER-Funktionen absichern ──────────────────────────────────
+-- Gleiches Muster wie 20260823010000_secdef_trigger_revoke.sql: eine
+-- SECDEF-Funktion in `public` ist per Default fuer PUBLIC ausfuehrbar
+-- (siehe Projekt-Gedaechtnis „SECDEF-RPCs & Default-Privileges"). Bei
+-- Trigger-Funktionen ist das nicht akut ausnutzbar — PostgREST reicht sie
+-- nicht durch —, aber die Liste dort haette diese hier ohnehin aufnehmen
+-- muessen, und ein Recht, das niemand braucht, gehoert nicht vergeben.
+--
+-- ACHTUNG beim Anwenden: REVOKE braucht Owner-Rechte. Ueber den
+-- Dienstschluessel laeuft es als HTTP 204 ohne Wirkung durch — dieser
+-- Block gehoert in den SQL-Editor.
+DO $revoke$
+DECLARE sig text;
+BEGIN
+  FOR sig IN
+    SELECT p.oid::regprocedure::text
+      FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+     WHERE n.nspname = 'public'
+       AND p.prosecdef
+       AND p.proname = ANY(ARRAY['log_arbeitszeit_korrektur', 'prevent_zeitkorrektur_edit'])
+  LOOP
+    EXECUTE format('REVOKE ALL ON FUNCTION %s FROM PUBLIC', sig);
+    EXECUTE format('REVOKE ALL ON FUNCTION %s FROM anon', sig);
+    EXECUTE format('REVOKE ALL ON FUNCTION %s FROM authenticated', sig);
+    EXECUTE format('GRANT EXECUTE ON FUNCTION %s TO service_role', sig);
+  END LOOP;
+END $revoke$;
 
 COMMIT;

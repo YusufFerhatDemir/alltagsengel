@@ -46,7 +46,7 @@
 -- Datum:     2026-08-29
 -- Projekt:   Alltagsengel UG
 -- IDEMPOTENT.
--- Rollback:  20261019000001_rollback_qm_pflegevisite.sql
+-- Rollback:  20260829005601_rollback_qm_pflegevisite.sql
 -- STATUS:    EINGECHECKT — NICHT ANGEWENDET (DDL laeuft ueber den
 --            Dienstschluessel als 42501 auf). Die Anwendung meldet ohne
 --            diese Migration einen klaren Hinweis statt einer rohen
@@ -331,5 +331,35 @@ COMMENT ON TABLE public.qm_pflegevisiten IS
 COMMENT ON TABLE public.qm_visite_befunde IS
   'Einzelbefunde einer Pflegevisite. QM stellt fest und beantragt; die '
   'Massnahme selbst legt die Pflegedienstleitung an (Rollentrennung).';
+
+-- ── SECURITY-DEFINER-Funktionen absichern ──────────────────────────────────
+-- Gleiches Muster wie 20260823010000_secdef_trigger_revoke.sql: eine
+-- SECDEF-Funktion in `public` ist per Default fuer PUBLIC ausfuehrbar
+-- (siehe Projekt-Gedaechtnis „SECDEF-RPCs & Default-Privileges"). Bei
+-- Trigger-Funktionen ist das nicht akut ausnutzbar — PostgREST reicht sie
+-- nicht durch —, aber die Liste dort haette diese hier ohnehin aufnehmen
+-- muessen, und ein Recht, das niemand braucht, gehoert nicht vergeben.
+--
+-- ACHTUNG beim Anwenden: REVOKE braucht Owner-Rechte. Ueber den
+-- Dienstschluessel laeuft es als HTTP 204 ohne Wirkung durch — dieser
+-- Block gehoert in den SQL-Editor.
+DO $revoke$
+DECLARE sig text;
+BEGIN
+  FOR sig IN
+    SELECT p.oid::regprocedure::text
+      FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+     WHERE n.nspname = 'public'
+       AND p.prosecdef
+       AND p.proname = ANY(ARRAY['prevent_abgeschlossene_visite_change',
+                           'prevent_abgeschlossener_befund_change',
+                           'prevent_befund_an_abgeschlossener_visite'])
+  LOOP
+    EXECUTE format('REVOKE ALL ON FUNCTION %s FROM PUBLIC', sig);
+    EXECUTE format('REVOKE ALL ON FUNCTION %s FROM anon', sig);
+    EXECUTE format('REVOKE ALL ON FUNCTION %s FROM authenticated', sig);
+    EXECUTE format('GRANT EXECUTE ON FUNCTION %s TO service_role', sig);
+  END LOOP;
+END $revoke$;
 
 COMMIT;

@@ -318,7 +318,7 @@ export async function getFreigabe(
   if (error?.code === '42P01') {
     throw new UserFacingError(
       'Die Dienstplanfreigabe ist in dieser Datenbank noch nicht eingerichtet. '
-      + 'Migration 20261020000000 ist noch nicht angewendet.',
+      + 'Migration 20260829005700 ist noch nicht angewendet.',
       503,
     )
   }
@@ -466,7 +466,7 @@ export async function listFreigaben(
   if (error?.code === '42P01') {
     throw new UserFacingError(
       'Die Dienstplanfreigabe ist in dieser Datenbank noch nicht eingerichtet. '
-      + 'Migration 20261020000000 ist noch nicht angewendet.',
+      + 'Migration 20260829005700 ist noch nicht angewendet.',
       503,
     )
   }

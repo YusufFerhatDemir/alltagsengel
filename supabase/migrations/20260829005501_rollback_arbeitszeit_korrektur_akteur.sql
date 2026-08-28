@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- ROLLBACK zu 20261018000000_arbeitszeit_korrektur_akteur.sql
+-- ROLLBACK zu 20260829005500_arbeitszeit_korrektur_akteur.sql
 --
 -- WARNUNG — was dieses Rollback wiederherstellt, ist ein bekannter Defekt:
 --   • jede Zeitkorrektur ueber den Dienstschluessel scheitert danach

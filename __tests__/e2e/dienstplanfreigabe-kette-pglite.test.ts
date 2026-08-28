@@ -44,7 +44,7 @@
  * ─────────────────────────────────────────────────────────────────────
  * ZWEI SCHEMAFASSUNGEN
  * ─────────────────────────────────────────────────────────────────────
- * Migration 20261020000000 ist eingecheckt und NICHT angewendet. Die
+ * Migration 20260829005700 ist eingecheckt und NICHT angewendet. Die
  * Suite prueft deshalb beides: dass die Anwendung heute weiterlaeuft
  * (42703-Rueckfall) und dass der Riegel mit der Migration greift.
  */
@@ -564,7 +564,7 @@ describe('Nach der Freigabe: keine stillen Aenderungen', () => {
 })
 
 // ═══════════════════════════════════════════════════════════════════════
-describe('Ohne Migration 20261020000000 (heutiger Live-Stand)', () => {
+describe('Ohne Migration 20260829005700 (heutiger Live-Stand)', () => {
   let u: Umgebung
   beforeAll(async () => { u = await baueUmgebung(false) }, 180_000)
   beforeEach(async () => { await leere(u.db) })

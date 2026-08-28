@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- ROLLBACK zu 20261019000000_qm_pflegevisite.sql
+-- ROLLBACK zu 20260829005600_qm_pflegevisite.sql
 --
 -- WARNUNG: DROP TABLE loescht die Pruefergebnisse. Eine Pflegevisite ist
 -- ein Qualitaetsnachweis gegenueber dem Medizinischen Dienst; einmal

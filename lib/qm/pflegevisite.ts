@@ -78,7 +78,7 @@ function pruefeTabellenVorhanden(error: { code?: string; message?: string } | nu
   if (error?.code !== '42P01') return
   throw new UserFacingError(
     'Das Pflegevisiten-Modul ist in dieser Datenbank noch nicht eingerichtet. '
-    + 'Migration 20261019000000 ist noch nicht angewendet.',
+    + 'Migration 20260829005600 ist noch nicht angewendet.',
     503,
   )
 }

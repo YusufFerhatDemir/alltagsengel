@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- ROLLBACK zu 20261020000000_dienstplan_freigabe.sql
+-- ROLLBACK zu 20260829005700_dienstplan_freigabe.sql
 --
 -- WARNUNG: Ohne den Trigger aendert sich ein freigegebener Dienstplan
 -- wieder stillschweigend, und ohne die Tabelle laesst sich nicht mehr
