@@ -174,6 +174,30 @@ const PRUEFUNGEN = [
     pruefe: (t) => t.includes('TRIGGER_ZIEHT_ANGEBOTSTYP') && t.includes('FUNKTION_DA'),
   },
   {
+    id: 'R1',
+    titel: 'Wegepauschale: sagen Code und Datenbank dasselbe?',
+    erwartung:
+      'kein §45b-Tarif auf tarif_status=verified fuer eine Leistungsart, die '
+      + 'lib/billing/obergrenzen.ts in OHNE_PFLUV_GRUNDLAGE fuehrt. Steht hier '
+      + 'etwas, widersprechen sich zwei Stellen im System — das ist eine '
+      + 'RECHTLICHE Frage (Restposten R1 aus Track 12) und wird bewusst NICHT '
+      + 'im Code entschieden, sondern bei jedem Lauf benannt',
+    // Die Liste steht bewusst hier UND in obergrenzen.ts: das Skript kann
+    // kein TypeScript importieren. Weicht eine der beiden ab, faellt es
+    // ueber den Test in __tests__/billing auf, der beide gegeneinander haelt.
+    sql: "select leistungsart || ' | ' || rechtsgrundlage || ' | ' || tarif_status "
+      + "|| ' | ' || preis_cent::text || ' Cent' "
+      + "from public.billing_tariffs "
+      + "where leistungsart in ('wegepauschale') "
+      + "and rechtsgrundlage <> 'privat' and ist_aktiv and tarif_status = 'verified' "
+      + "order by 1",
+    pruefe: () => true,
+    // BERICHT, nicht Sperre: eine dauerhaft rote Pruefung, an der niemand
+    // etwas aendern DARF, wird nach zwei Wochen ueberlesen — und nimmt die
+    // echten roten Zeilen daneben mit.
+    nurBericht: true,
+  },
+  {
     id: 'F1',
     titel: 'Einsatzdauer: gibt es negative Dauern im Bestand?',
     erwartung: '0 — eine negative Dauer erzeugt eine Rechnungsposition, die Geld abzieht',

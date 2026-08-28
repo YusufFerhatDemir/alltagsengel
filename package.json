@@ -57,7 +57,8 @@
     "chairmatch:i18n:check": "node scripts/chairmatch-i18n-check.mjs",
     "chairmatch:i18n:coverage": "node scripts/chairmatch-i18n-coverage.mjs",
     "verify:abrechnung": "node scripts/verify-abrechnung-live.mjs",
-    "verify:perimeter": "node scripts/verify-perimeter-live.mjs"
+    "verify:perimeter": "node scripts/verify-perimeter-live.mjs",
+    "verify:versand": "node scripts/verify-versandbereitschaft.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",

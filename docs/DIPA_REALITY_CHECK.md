@@ -77,9 +77,12 @@ Einträgen, jeweils gegen Primärquelle statt Zusammenfassung). Fundstellen u. a
 `audit/DIPA_REGULATORIK_2026-08-09.md`.
 
 Wichtige Korrektur, die im Repo bereits festgehalten ist: Der Leistungsanspruch läuft über
-**§ 40b SGB XI**, nicht § 39a — § 39a betrifft Hospiz-/Palliativleistungen. Der frühere
-Eintrag „§ 40a Abs. 1a SGB XI, 70-€-Deckel" wurde als **falsch** verworfen
-(`docs/dipa/21_FINAL_MATRIX_2026-08-15.md`, Korrektur 3).
+**§ 40b Abs. 1 SGB XI** (40 € DiPA + 30 € ergänzende Unterstützungsleistungen, **getrennte**
+Beträge), nicht über § 39a — § 39a betrifft Hospiz-/Palliativleistungen. Eine früher
+eingetragene abweichende Anspruchsnorm mit gemeinsamem Deckel wurde als **falsch** verworfen
+(`docs/dipa/21_FINAL_MATRIX_2026-08-15.md`, Korrektur 3). Der Wortlaut der verworfenen
+Fassung wird hier bewusst nicht wiederholt — er steht als Sperrmuster in
+`scripts/forbidden-strings.json` und würde den Precommit-Guard auslösen.
 
 ### 1.5 FHIR / Interoperabilität — gebaut
 

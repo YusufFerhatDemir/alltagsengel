@@ -33,6 +33,61 @@ function schluessel() {
   return null
 }
 
+/**
+ * Fragt Resend nach den Domains des Kontos. NUR LESEND.
+ *
+ * Ausgelagert und exportiert, damit der rohe `Authorization: Bearer`-Header
+ * an GENAU EINER Stelle im Repo steht. Er ist hier richtig — Resend
+ * schreibt ihn vor, apiHeaders() aus scripts/lib/supabase-keys.mjs baut
+ * Supabase-Header und waere an dieser Adresse schlicht falsch. Aber der
+ * Scan in __tests__/security/supabase-key-migration.test.ts sucht nach dem
+ * LITERAL und nicht nach dem Ziel, und jede weitere Datei mit diesem
+ * Literal muesste in seine Ausnahmeliste. Eine Ausnahmeliste, die mit
+ * jedem neuen Skript waechst, hoert irgendwann auf, ein Zaun zu sein —
+ * deshalb importiert scripts/verify-versandbereitschaft.mjs diese Funktion,
+ * statt den Aufruf zu wiederholen.
+ *
+ * @returns {Promise<{ok: boolean, grund: string, domains: Array<object>, status: number|null}>}
+ */
+export async function holeResendDomains(apiKey) {
+  const antwort = await fetch('https://api.resend.com/domains', {
+    headers: { Authorization: `Bearer ${apiKey}` },
+    signal: AbortSignal.timeout(15_000),
+  }).catch(err => ({ fehler: err }))
+
+  if (antwort.fehler) {
+    return { ok: false, grund: `Netzwerkfehler: ${antwort.fehler.message}`, domains: [], status: null }
+  }
+  if (antwort.status === 401 || antwort.status === 403) {
+    return {
+      ok: false,
+      grund: `Schluessel wird von Resend abgelehnt (HTTP ${antwort.status}).`,
+      domains: [], status: antwort.status,
+    }
+  }
+  if (!antwort.ok) {
+    return {
+      ok: false, grund: `Unerwartete Antwort HTTP ${antwort.status}.`,
+      domains: [], status: antwort.status,
+    }
+  }
+  const koerper = await antwort.json()
+  return { ok: true, grund: 'Schluessel gueltig.', domains: koerper?.data ?? [], status: antwort.status }
+}
+
+/** Liest RESEND_API_KEY aus Umgebung oder .env-Dateien. */
+export { schluessel as resendSchluessel }
+
+// Ab hier der eigenstaendige Lauf. Nur, wenn die Datei direkt aufgerufen
+// wurde — sonst wuerde ein Import den ganzen Pruefer samt process.exit()
+// mit ausfuehren.
+const direktAufgerufen =
+  process.argv[1] && process.argv[1].endsWith('verify-resend.mjs')
+
+if (!direktAufgerufen) {
+  // Als Modul geladen: nichts tun, nur die Funktionen bereitstellen.
+} else {
+
 const key = schluessel()
 if (!key) {
   console.log('RESEND_API_KEY: nicht gesetzt — Zugang nicht pruefbar.')
@@ -40,28 +95,15 @@ if (!key) {
 }
 console.log(`RESEND_API_KEY: gesetzt (Praefix ${key.slice(0, 3)}, Laenge ${key.length}).`)
 
-const antwort = await fetch('https://api.resend.com/domains', {
-  headers: { Authorization: `Bearer ${key}` },
-  signal: AbortSignal.timeout(15_000),
-}).catch(err => ({ fehler: err }))
+const ergebnis = await holeResendDomains(key)
 
-if (antwort.fehler) {
-  console.log(`Netzwerkfehler: ${antwort.fehler.message} — Zugang NICHT verifiziert.`)
-  process.exit(3)
+console.log(`HTTP ${ergebnis.status ?? '—'}`)
+if (!ergebnis.ok) {
+  console.log(ergebnis.grund)
+  process.exit(ergebnis.status === 401 || ergebnis.status === 403 ? 1 : 3)
 }
 
-console.log(`HTTP ${antwort.status}`)
-if (antwort.status === 401 || antwort.status === 403) {
-  console.log('Schluessel wird von Resend ABGELEHNT (ungueltig oder eingeschraenkt).')
-  process.exit(1)
-}
-if (!antwort.ok) {
-  console.log('Unerwartete Antwort — Zugang nicht abschliessend beurteilbar.')
-  process.exit(3)
-}
-
-const koerper = await antwort.json()
-const domains = koerper?.data ?? []
+const domains = ergebnis.domains
 console.log(`Schluessel GUELTIG. ${domains.length} Domain(s) im Konto.`)
 let treffer = null
 for (const d of domains) {
@@ -78,3 +120,5 @@ if (treffer.status !== 'verified') {
 }
 console.log(`${ERWARTETE_DOMAIN} ist verifiziert — DKIM/SPF stehen.`)
 process.exit(0)
+
+}

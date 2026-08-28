@@ -64,6 +64,45 @@ test.describe('Booking-Entry-Points (Smoke)', () => {
   })
 
   test('Login mit falschen Credentials zeigt Fehler (Regression: AUTH-005)', async ({ page }) => {
+    // ── Warum hier abgefangen wird ──────────────────────────────────
+    // AUTH-005 ist eine Aussage ueber GENAU EINEN Zweig in
+    // app/auth/login/page.tsx: wenn Supabase „Invalid login credentials"
+    // oder „Email not confirmed" meldet, muss dieselbe generische Meldung
+    // erscheinen — sonst laesst sich von aussen abzaehlen, welche
+    // E-Mail-Adressen es gibt.
+    //
+    // In CI zeigt die Supabase-URL auf einen Platzhalter. Ein echter
+    // Anmeldeversuch landet damit NICHT in diesem Zweig, sondern im
+    // generischen Netzwerk-Zweig darunter — und der braucht so lange, wie
+    // die Namensaufloesung eben braucht. Der erste Lauf dieser Suite ist
+    // genau daran gescheitert: „element(s) not found" nach 20 Sekunden.
+    //
+    // Das Zeitlimit hochzudrehen haette den Lauf gruen gemacht und nichts
+    // bewiesen. Die Antwort wird deshalb abgefangen und durch die ECHTE
+    // Absage von GoTrue ersetzt. Damit laeuft der Test durch den Zweig,
+    // um den es geht, ist unabhaengig von jedem Backend und schnell.
+    await page.route('**/auth/v1/token**', route =>
+      route.fulfill({
+        status: 400,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          error: 'invalid_grant',
+          error_description: 'Invalid login credentials',
+          msg: 'Invalid login credentials',
+        }),
+      }),
+    )
+    // Der Ratenzaehler laeuft ueber eine eigene Route, die ihrerseits
+    // Supabase anspricht. Ohne dieses Abfangen wartet der Test auf sie
+    // statt auf die Anmeldung.
+    await page.route('**/api/auth/check-rate-limit', route =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ allowed: true, locked: false }),
+      }),
+    )
+
     await page.goto('/auth/login')
     await page.getByPlaceholder(/E-Mail/i).first().fill(`nonexistent-${Date.now()}@test.invalid`)
     await page.getByPlaceholder(/Passwort/i).first().fill('WrongPassword!123')
@@ -71,24 +110,22 @@ test.describe('Booking-Entry-Points (Smoke)', () => {
     const submit = page.getByRole('button', { name: /anmelden|einloggen/i }).first()
     await submit.click()
 
-    // Auf das Fehler-Banner selbst pruefen, nicht auf irgendeinen Text der
-    // Seite. Die fruehere Fassung suchte /E-Mail|Passwort|falsch|ungültig/
-    // ueber die ganze Seite — und traf damit sofort den Link „Passwort
-    // vergessen?", der IMMER da steht. Der Test war gruen, ohne dass je
-    // eine Anmeldung stattgefunden haette. Genau diese Sorte Zusicherung
-    // gehoert nicht in CI, wenn sie danach als Nachweis zaehlen soll.
     // Auf das Fehler-Banner der Anmeldemaske selbst, nicht auf irgendein
-    // [role="alert"] der Seite: der erste Lauf traf ein sichtbares, aber
-    // LEERES alert-Element und scheiterte an innerText.length > 0 — die
-    // Zusicherung war praezise genug, um rot zu werden, aber nicht
-    // praezise genug, um auf das Richtige zu zeigen. `.auth-error` ist die
-    // Klasse, die app/auth/login/page.tsx fuer genau diese Meldung setzt.
+    // [role="alert"] der Seite: ein frueherer Lauf traf ein sichtbares,
+    // aber LEERES alert-Element. `.auth-error` ist die Klasse, die
+    // app/auth/login/page.tsx fuer genau diese Meldung setzt.
     const banner = page.locator('.auth-error[role="alert"]')
-    await expect(banner.first()).toBeVisible({ timeout: 20_000 })
+    await expect(banner.first()).toBeVisible({ timeout: 15_000 })
 
-    // AUTH-005: die Meldung darf nicht verraten, ob es die Adresse gibt.
     const text = (await banner.first().innerText()).trim().toLowerCase()
     expect(text.length).toBeGreaterThan(0)
+
+    // AUTH-005: die Meldung darf nicht verraten, ob es die Adresse gibt.
     expect(text).not.toMatch(/nicht registriert|kein konto|unbekannte e-mail|user not found|nicht gefunden/)
+    // Und sie darf die Meldung von Supabase nicht durchreichen.
+    expect(text).not.toContain('invalid login credentials')
+    // Positiv: es ist die gemeinsame Meldung fuer „falsch" UND
+    // „nicht bestaetigt" — genau darin besteht der Schutz.
+    expect(text).toMatch(/e-mail oder passwort ist falsch/)
   })
 })
