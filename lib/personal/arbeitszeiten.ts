@@ -21,7 +21,7 @@ import { assertCaregiverInOrg } from './organization-guard'
  * (__tests__/e2e/zeiterfassung-kette-pglite.test.ts); live nicht, weil
  * `personal_arbeitszeiten` 0 Zeilen traegt — niemand hat je korrigiert.
  *
- * Migration 20261018000000 zieht deshalb `geaendert_von` nach und laesst
+ * Migration 20260829005500 zieht deshalb `geaendert_von` nach und laesst
  * den Trigger `COALESCE(auth.uid(), NEW.geaendert_von)` nehmen. Solange sie
  * nicht angewendet ist, kennt die Datenbank die Spalte nicht — ein 42703
  * ("column does not exist") fuehrt deshalb zu einem zweiten Versuch ohne
@@ -76,7 +76,7 @@ export async function createArbeitszeit(supabase: SupabaseClient, params: Create
 
   // `geaendert_von` wird IMMER mitgeschrieben, auch als `null` — siehe
   // AkteurParams. Kennt die Datenbank die Spalte noch nicht (Migration
-  // 20261018000000 nicht angewendet), antwortet sie mit 42703 und der
+  // 20260829005500 nicht angewendet), antwortet sie mit 42703 und der
   // zweite Versuch laeuft ohne sie.
   let antwort = await supabase
     .from('personal_arbeitszeiten')
@@ -165,7 +165,7 @@ export async function updateArbeitszeit(
   // Sperre liess sich also durch das Anhaengen eines einzigen Feldes
   // umgehen und der abgerechnete Zeitnachweis im selben Zug veraendern.
   // Belegt in __tests__/e2e/zeiterfassung-kette-pglite.test.ts gegen echtes
-  // Postgres; Migration 20261018000000 zieht den Trigger nach (Sperre an der
+  // Postgres; Migration 20260829005500 zieht den Trigger nach (Sperre an der
   // Absicht statt am Endzustand), ist aber noch nicht angewendet.
   //
   // Dieser Guard bleibt auch danach stehen: er liefert die lesbare 409,
@@ -234,7 +234,7 @@ export async function updateArbeitszeit(
     if (msg.includes('Gesperrte Arbeitszeit')) throw new UserFacingError('Gesperrte Arbeitszeit kann nicht bearbeitet werden.')
 
     // Der Urheber fehlt. Zwei Auspraegungen, eine Ursache:
-    //   • 23502 auf korrigiert_von — Migration 20261018000000 ist NICHT
+    //   • 23502 auf korrigiert_von — Migration 20260829005500 ist NICHT
     //     angewendet, der Trigger schreibt weiter blind auth.uid()
     //   • die Klartext-Ausnahme derselben Migration, wenn sie ANGEWENDET
     //     ist und die Anwendung trotzdem keinen Benutzer mitgibt

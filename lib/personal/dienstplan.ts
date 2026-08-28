@@ -211,7 +211,7 @@ export interface CreateEintragParams {
   erstelltVon: string
   /**
    * Grund der Aenderung. Pflicht, sobald die Woche freigegeben ist — der
-   * DB-Trigger `pruefe_dienstplan_freigabe` (Migration 20261020000000)
+   * DB-Trigger `pruefe_dienstplan_freigabe` (Migration 20260829005700)
    * weist einen Dienst in einer freigegebenen Woche sonst ab. Ausserhalb
    * einer Freigabe ohne Wirkung.
    */
@@ -240,7 +240,7 @@ export async function createEintrag(supabase: SupabaseClient, params: CreateEint
       erstellt_von: params.erstelltVon,
   }
 
-  // `aenderung_grund` kommt aus Migration 20261020000000 und ist noch
+  // `aenderung_grund` kommt aus Migration 20260829005700 und ist noch
   // nicht angewendet. Ein 42703 fuehrt deshalb zu einem zweiten Versuch
   // ohne die Spalte — sonst faellt heute jede Dienstanlage aus (siehe
   // Projekt-Gedaechtnis „Schema-Drift 42703").
@@ -417,7 +417,7 @@ export async function updateEintrag(
 
   if (Object.keys(update).length === 0) throw new UserFacingError('Keine Änderungen übergeben.')
 
-  // Siehe createEintrag: die Spalte kommt aus 20261020000000 und ist noch
+  // Siehe createEintrag: die Spalte kommt aus 20260829005700 und ist noch
   // nicht angewendet; ein 42703 fuehrt zum zweiten Versuch ohne sie.
   let antwort = await supabase
     .from('dienstplan_eintraege')

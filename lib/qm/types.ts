@@ -2,7 +2,7 @@
 // Qualitaetsmanagement — geteilte Typen
 //
 // Spiegelt 1:1 die Spalten und CHECK-Listen aus
-// supabase/migrations/20261019000000_qm_pflegevisite.sql. Weicht eine
+// supabase/migrations/20260829005600_qm_pflegevisite.sql. Weicht eine
 // Liste hier von der Datenbank ab, kommt die Verletzung als „Interner
 // Serverfehler" zurueck statt als lesbarer Hinweis — genau das Muster,
 // das lib/personal/types.ts fuer die Personalverwaltung beschreibt.

@@ -209,7 +209,7 @@ export const JUENGSTE_MIGRATIONEN = [
   '20261017000001_rollback_abrechnungsintegritaet_leistungsnachweis.sql',
   '20261017000002_obergrenze_angebotstyp.sql',
   '20261017000003_rollback_obergrenze_angebotstyp.sql',
-  // HINWEIS (Track 13): die beiden Perimeter-Migrationen stehen hier NICHT,
+  // HINWEIS (Track 13): die Perimeter-Migrationen stehen hier NICHT,
   // obwohl sie die zuletzt hinzugekommenen sind. Sie tragen seit dem
   // 28.08.2026 einen ECHTEN Zeitstempel (20260828180000/…0001, Regel aus
   // docs/MIGRATION_LEDGER.md) und sortieren damit VOR dem 20261017-Block
@@ -217,6 +217,16 @@ export const JUENGSTE_MIGRATIONEN = [
   // diesem Verzeichnis also nicht mehr „die zuletzt entstandenen" —
   // solange beide Nummernkreise nebeneinander liegen, ist das unvermeidbar
   // und hier ausdruecklich festgehalten statt stillschweigend hingenommen.
+  //
+  // NACHTRAG 29.08.2026: dasselbe gilt inzwischen fuer sechs weitere
+  // Dateien (20260829005500…005701 — Zeitkorrektur-Akteur, Pflegevisite,
+  // Dienstplanfreigabe) und die FHIR-Migration 20260829010000/…0001. Alle
+  // tragen einen echten Zeitstempel nach der Ledger-Regel und sortieren
+  // deshalb ebenfalls vor den Zukunfts-Nummern. Diese Liste bleibt damit
+  // unveraendert, OBWOHL acht Migrationen dazugekommen sind — was hier
+  // steht, sind die groessten Dateinamen, nicht die neuesten Dateien.
+  // Solange der 20261017-Block existiert, ist diese Konstante fuer die
+  // Frage „was ist zuletzt dazugekommen" NICHT zu gebrauchen.
 ] as const
 
 // ---------------------------------------------------------------------------
