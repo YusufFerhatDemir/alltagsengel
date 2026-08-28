@@ -1,5 +1,13 @@
 # COMPLETION-MATRIX — Alltagsengel · ChairMatch · efy care
 
+> **ABSCHLUSS-FORTSCHREIBUNG 29.08.2026.** Der zusammenfassende Bericht über
+> alle fünf Produkte steht in
+> `docs/reports/MASTER_FINAL_COMPLETION_REPORT.md` (+ PDF). Was sich in dieser
+> Matrix bewegt hat, steht in **Abschnitt 8** am Ende dieses Dokuments; die
+> Punktstände der Abschnitte 3–6 sind **unverändert** — mit Begründung dort.
+> Die Pflege-Software wird separat in `docs/PFLEGE_SOFTWARE_COMPLETION.md` und
+> deren Fortschreibung vom 29.08. geführt (172/238 = 72,3 %).
+
 > Erstellt: 2026-08-28 · Grundlage: Code-Scan der drei Repositories **plus**
 > eigene Sonden gegen die drei Produktions-Instanzen (PostgREST, HTTP,
 > Edge Functions). Keine Bewertung stammt aus einem Statusdokument allein;
@@ -132,13 +140,17 @@ Backend und Edge Functions sind live, die **App ist es nicht**.
 Repo `/Users/work/alltagsengel` · main == origin/main ·
 413 API-Routen · 357 Testdateien · 410 Migrationsdateien.
 
-> **Nachgemessen am 29.08.2026.** Nur dieser Abschnitt ist neu erhoben; die
-> Abschnitte zu ChairMatch und efy care stehen unverändert vom 28.08. und
-> tragen weiterhin die dort genannten Lücken.
+> **Nachgemessen am 29.08.2026, abschließend fortgeschrieben am selben Tag.**
+> Anders als in der Fassung vom 28.08. sind die Zahlen zu ChairMatch und efy
+> care inzwischen **selbst nachgelaufen** — siehe Abschnitt 8.
 >
-> Vollständiger Testlauf: **8.042 vitest-Tests grün** (357 Dateien),
-> `tsc --noEmit` 0 Fehler, `lint:forbidden` 0 Treffer über 24.839 Dateien,
-> `verify:abrechnung` **10/10**, `verify:perimeter` 8/8.
+> Vollständiger Testlauf (Abschlussmessung): **8.431 vitest-Tests grün / 0 rot**
+> (371 Dateien grün, 1 übersprungen, 38 Fälle übersprungen), **2.515 node:test
+> grün / 0 rot**, `tsc --noEmit` **0 Fehler**, `lint:forbidden` 0 Treffer über
+> 24.874 Dateien, `lint:route-auth` 0 über 417 Route-Dateien, `lint:org-id` 0
+> über 1.432 Dateien, `verify:abrechnung` **10/10**, `verify:perimeter` **8/8**,
+> `verify:e2e-ketten` **38/38**, `verify:personalverwaltung` **13/13**,
+> `verify:loeschkette` **8/10**.
 
 | # | Modul | Status | Punkte | Nachweis und was fehlt |
 |---|---|---|---|---|
@@ -299,3 +311,98 @@ Zeilen hinausgehen:
   jeweils letzten Commit-Berichten.
 - **`DEPLOYED` für efy** meint Backend plus Edge Functions. Die App ist es
   nicht. Wer diese Zeile als „ausgeliefert" liest, liest sie falsch.
+
+---
+
+## 8. Abschluss-Fortschreibung 29.08.2026
+
+> Diese Fortschreibung schließt den Zeitraum ab, in dem **alle intern lösbaren**
+> Arbeitspakete abgearbeitet wurden. Der zusammenfassende Bericht über alle fünf
+> Produkte ist `docs/reports/MASTER_FINAL_COMPLETION_REPORT.md`.
+
+### 8.1 Warum sich kein Punktstand bewegt hat
+
+**Die Punktstände der Abschnitte 3 bis 6 bleiben unverändert: Alltagsengel
+46/60 (77 %), ChairMatch 35/54 (65 %), efy care 34/54 (63 %), Gesamt 115/168
+(68 %).** Das ist kein Versäumnis der Fortschreibung, sondern die Folge des
+Bewertungsmodells aus Abschnitt 1:
+
+* Stufe 4 (`PROVEN_LIVE`) und höher wird **nur gegen Produktion** vergeben.
+* Seit der letzten Bewertung ist **keine** Migration angewendet worden — DDL
+  über den Dienstschlüssel läuft mit `42501` auf.
+* Kein Modul hat einen Live-Nachweis dazugewonnen, den es vorher nicht hatte.
+
+Bewegt hat sich die **Belastbarkeit**, nicht die Stufe: neue Ketten gegen echtes
+PostgreSQL, zwei gefundene und behobene Fehler, ein neu benannter P0. Das
+unverändert zu berichten ist ehrlicher als eine gerundete Verbesserung.
+
+### 8.2 Testzahlen — jetzt selbst nachgelaufen statt übernommen
+
+Abschnitt 7 hielt fest, die Testzahlen seien „übernommen, nicht nachgelaufen".
+**Diese Lücke ist geschlossen.** Alle drei Suiten liefen am 29.08.2026 auf
+dieser Maschine, `tsc` und `vitest` bewusst nacheinander:
+
+| Repo | vitest | node:test | Typecheck |
+|---|---|---|---|
+| Alltagsengel | **8.431 grün / 0 rot** (371 Dateien) | **2.515 grün / 0 rot** | **0 Fehler** |
+| ChairMatch | **1.614 grün / 1 rot** (81 Dateien) | — | **0 Fehler** |
+| efy care | **1.919 grün / 0 rot** (65 Dateien) | — | **0 Fehler** |
+
+### 8.3 Neuer Befund bei ChairMatch (Modul 3, Buchung/Miete)
+
+`src/app/api/rental-bookings/__tests__/cancel.e2e.test.ts` → „storniert am Tag
+vor dem Mietbeginn noch" erwartet 200 und bekommt **409**.
+
+**Ursache, nicht Vermutung:** der Test bildet „morgen" über
+`Date.getUTCDate() + 1` (**UTC**), die Route entscheidet über `berlinToday()`
+(**Europe/Berlin**, `cancel/route.ts:117`). Zwischen 22:00 UTC und Mitternacht
+UTC — im Sommer 00:00–02:00 Ortszeit — ist „UTC-morgen" bereits „Berlin-heute",
+der Riegel „Mietzeitraum hat bereits begonnen" greift, und der Fall wird rot.
+Der Lauf für diesen Bericht fiel um 01:31 Ortszeit genau in dieses Fenster.
+
+**Es ist ein Testfehler, kein Produktfehler.** Die Route verhält sich richtig;
+der Test stellt seine Frage in der falschen Zeitzone. Die Stufe von Modul 3
+bleibt deshalb `PROVEN_LIVE` (4). Der Fall ist deshalb bemerkenswert, weil er in
+**den meisten Läufen unsichtbar** ist — 22 von 24 Stunden am Tag ist er grün.
+
+### 8.4 Sieben wartende Migrationen — live geprüft, nicht aus Dateien geschlossen
+
+Jede Zeile ist gegen `pg_*` bzw. `information_schema` auf Produktion geprüft:
+
+| Migration | Live-Beleg, dass sie **fehlt** |
+|---|---|
+| `20260829011500` (**P0**) | `prevent_locked_record_change` kennt den Wert `invoiced` nicht |
+| `20260828200000` | keine der fünf Zieltabellen trägt eine anon-Deny-Policy |
+| `20260828210000` | live steht weiterhin `clients_customer_number_key` (global) |
+| `20260829005500` | Spalte `personal_arbeitszeiten.geaendert_von` existiert nicht |
+| `20260829005600` | `to_regclass('public.qm_pflegevisiten')` = NULL |
+| `20260829005700` | `to_regclass('public.dienstplan_freigaben')` = NULL |
+| `20260829010000` | `fhir_isip_audit_log` existiert nicht |
+
+Damit ist die in Abschnitt 7 genannte Position 5 („Wartende Migrationen
+anwenden") **präzisiert und live belegt** statt aus dem Ledger übernommen.
+
+### 8.5 Der P0, den dieser Zeitraum gefunden hat
+
+**Ein ordnungsgemäß unterschriebener Leistungsnachweis kann live nie abgerechnet
+werden.** `compute_signature_hash` setzt bei der Unterschrift `is_locked = true`;
+`prevent_locked_record_change` weist auf einer gesperrten Zeile jede Änderung ab;
+`create_invoice_draft_atomic` setzt nach dem Anlegen der Rechnung
+`service_records.status = 'invoiced'`. Der Trigger wirft, die RPC ist atomar,
+also rollt die **gesamte** Rechnungserstellung zurück.
+
+Das trifft Modul 6 (Leistungsnachweis) und Modul 5 (Abrechnungssystem) direkt.
+Beide bleiben bei `E2E_PROVEN` (5) — der Befund senkt die Stufe nicht, weil die
+Kette im Prüfstand gegen echtes Postgres durchläuft; er ist aber der Grund,
+warum keines der beiden `DONE` erreichen kann, und er hätte den Vorschlag
+„einen echten Kunden komplett durchlaufen lassen" genau zwischen Unterschrift
+und erster Rechnung scheitern lassen — ohne eine Meldung, aus der hervorginge
+warum.
+
+### 8.6 Was die Positionsliste aus Abschnitt 7 unverändert lässt
+
+Alle sechs dort genannten Positionen stehen weiterhin offen und sind sämtlich
+**außerhalb des Codes** zu lösen (Vercel-Variablen, GitHub-Secrets,
+Supabase-SQL-Editor, Schlüsselrotation). Neu hinzugekommen ist als **dringlichste**
+Position das Einspielen von `20260829011500` — sie ist die einzige der sieben
+wartenden Migrationen, die einen Weg öffnet, der heute geschlossen ist.
