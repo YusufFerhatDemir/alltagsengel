@@ -185,6 +185,21 @@ export const DELETE = withTracking(async function DELETE(
   const { id } = await params
 
   const admin = createAdminClient()
+
+  const { data: bestand } = await admin
+    .from('tours')
+    .select('id, status')
+    .eq('id', id)
+    .eq('organization_id', auth.ctx.organizationId)
+    .maybeSingle()
+  if (!bestand) return NextResponse.json({ error: 'Tour nicht gefunden.' }, { status: 404 })
+
+  try {
+    assertTourUebergang(bestand.status, 'STORNIERT')
+  } catch (err) {
+    return apiErrorResponse(err, _req, 422)
+  }
+
   const { data, error } = await admin
     .from('tours')
     .update({ status: 'STORNIERT' })
