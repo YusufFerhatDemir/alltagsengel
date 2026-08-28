@@ -18,6 +18,7 @@ import { logAuditEvent } from '@/lib/audit-log'
 import { emitEreignis } from '@/lib/ops/ereignis-emitter'
 import { heuteBerlin } from '@/lib/utils/timezone'
 import { logger } from '@/lib/logger'
+import { istStorniert, hatUnterschrift } from '@/lib/leistungsnachweis/status-sync'
 const log = logger.child('unterschrift-erinnerung')
 
 /** Tage nach Einsatzdatum, ab denen eine fehlende Unterschrift erinnert wird. */
@@ -28,6 +29,11 @@ interface OffenerNachweis {
   date: string
   client_id: string | null
   caregiver_id: string
+  status?: string | null
+  proof_status?: string | null
+  billing_status?: string | null
+  signature_hash?: string | null
+  client_signature?: string | null
 }
 
 export interface UnterschriftErinnerungErgebnis {
@@ -45,12 +51,20 @@ export async function erinnereFehlendeUnterschriften(
   grenzDatum.setDate(grenzDatum.getDate() - UNTERSCHRIFT_ERINNERUNG_TAGE)
   const grenzDatumStr = grenzDatum.toISOString().slice(0, 10)
 
+  // proof_status allein reicht als Ausschluss NICHT: der Sync laeuft nur in
+  // eine Richtung (proof_status -> status), ein von der Rechnungs-RPC auf
+  // 'invoiced' gesetzter Nachweis behaelt proof_status='ENTWURF'. Live am
+  // 28.08.2026 galt das fuer 28 von 30 Nachweisen. Die Kette hat damit an
+  // Unterschriften zu Einsaetzen erinnert, die bereits auf einer Rechnung
+  // stehen — eine Erinnerung, die niemand mehr erfuellen kann, weil der
+  // Nachweis gesperrt ist.
   const { data: offene, error } = await supabase
     .from('service_records')
-    .select('id, date, client_id, caregiver_id')
+    .select('id, date, client_id, caregiver_id, status, proof_status, billing_status, signature_hash, client_signature')
     .eq('organization_id', organizationId)
     .or('client_signature.is.null,client_signature.eq.false')
     .not('proof_status', 'in', '("STORNIERT","UNTERSCHRIEBEN","ABGERECHNET")')
+    .not('status', 'in', '("signed","invoiced")')
     .lt('date', grenzDatumStr)
     .limit(500)
 
@@ -58,7 +72,8 @@ export async function erinnereFehlendeUnterschriften(
     return { geprueft: 0, aufgabenErstellt: 0, fehler: [`service_records: ${error.message}`] }
   }
 
-  const offeneNachweise = (offene ?? []) as OffenerNachweis[]
+  const offeneNachweise = ((offene ?? []) as OffenerNachweis[])
+    .filter(r => !istStorniert(r) && !hatUnterschrift(r))
   const fehler: string[] = []
   let aufgabenErstellt = 0
 

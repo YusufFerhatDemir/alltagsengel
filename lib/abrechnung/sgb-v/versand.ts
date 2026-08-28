@@ -34,6 +34,7 @@ import { erzeugeSgbVDatei, exportImplementiert, SgbVSpecFehltError } from './gen
 import { aktuelleVersion, monatsStichtag, type SgbVFormat } from './versionen'
 import { ladeRouting, findeRouting } from './routing'
 import { pruefeAufbereitungTarife, type TarifBefund } from './validierung'
+import { ohneStornierte } from '@/lib/leistungsnachweis/status-sync'
 import {
   bereiteHkpVor, HKP_VERORDNUNG_TYPE,
   type HkpAufbereitung, type HkpLeistung, type HkpVerordnung, type HkpKlient,
@@ -96,7 +97,7 @@ export async function ladeAufbereitung(
   const [leistungenRes, verordnungenRes, klientenRes] = await Promise.all([
     supabase
       .from('service_records')
-      .select('id, client_id, verordnung_id, date, duration_minutes, service_type, amount')
+      .select('id, client_id, verordnung_id, date, duration_minutes, service_type, amount, proof_status, billing_status')
       .eq('organization_id', organizationId)
       .in('status', ['complete', 'signed', 'invoiced'])
       .gte('date', von)
@@ -117,7 +118,11 @@ export async function ladeAufbereitung(
   const verordnungen = (verordnungenRes.data || []) as HkpVerordnung[]
   const klienten = (klientenRes.data || []) as HkpKlient[]
   const hkpIds = new Set(verordnungen.map(v => v.id))
-  const leistungen = ((leistungenRes.data || []) as HkpLeistung[])
+  // Storno raus, bevor aufbereitet wird. Dies ist der ECHTE § 302-Lauf: was
+  // hier durchkommt, wird als Forderung an die Kasse uebermittelt. Ein
+  // widerrufener Nachweis bleibt wegen des fehlenden status-Gegenstuecks auf
+  // 'signed' stehen und kam durch den .in('status', …)-Filter.
+  const leistungen = ohneStornierte((leistungenRes.data || []) as HkpLeistung[])
     .filter(l => l.verordnung_id && hkpIds.has(l.verordnung_id))
 
   return bereiteHkpVor(leistungen, verordnungen, klienten)

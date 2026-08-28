@@ -15,6 +15,7 @@ import { one } from '@/lib/supabase/join'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
 import { ladeUnterschriftsBild } from '@/lib/signaturen/unterschrift-bild'
+import { ohneStornierte } from '@/lib/leistungsnachweis/status-sync'
 const log = logger.child('leistungsnachweis')
 
 // ═══════════════════════════════════════════════════════════════
@@ -173,7 +174,7 @@ export const GET = withTracking(async function GET(request: Request) {
     // ── Einsätze des Monats (erfasst/unterschrieben/abgerechnet) ──
     const baseQuery = admin
       .from('service_records')
-      .select('id, date, start_time, end_time, duration_minutes, service_type, budget_type, amount, status, client_signature, caregiver_initials, caregiver_id, caregiver:caregivers(id, first_name, last_name, lifetime_registration_number, ik_nummer, qualification_level)')
+      .select('id, date, start_time, end_time, duration_minutes, service_type, budget_type, amount, status, proof_status, billing_status, client_signature, caregiver_initials, caregiver_id, caregiver:caregivers(id, first_name, last_name, lifetime_registration_number, ik_nummer, qualification_level)')
       .eq('client_id', clientId)
       .eq('organization_id', orgId)
     const { data: records, error: recErr } = await (verordnung ? baseQuery.eq('verordnung_id', verordnung.id) : baseQuery)
@@ -190,14 +191,31 @@ export const GET = withTracking(async function GET(request: Request) {
       id: string; date: string; start_time?: string; end_time?: string
       duration_minutes?: number; service_type?: string; budget_type?: string
       amount?: number; status?: string; client_signature?: string
+      // Ausdruecklich getypt, nicht ueber die Index-Signatur: sonst waeren
+      // beide `unknown`, der Typ erfuellte StornoFelder nicht und
+      // ohneStornierte() faellt auf StornoFelder zurueck.
+      proof_status?: string | null; billing_status?: string | null
       caregiver_initials?: string; client_id?: string; caregiver_id?: string
       caregiver?: { id: string; first_name: string; last_name: string; lifetime_registration_number?: string; ik_nummer?: string; qualification_level?: string } | null
       [key: string]: unknown
     }
-    const rows = (records || []).map(r => ({ ...r, caregiver: one(r.caregiver) })) as LeistungsnachweisRecord[]
+    // Ein STORNIERTER Nachweis gehoert nicht auf den Leistungsnachweis.
+    // 'STORNIERT' hat kein Gegenstueck im status-Werteset (siehe
+    // lib/leistungsnachweis/status-sync.ts), der Widerruf bleibt deshalb
+    // auf status='signed' stehen und kam ueber den .in('status', …)-Filter
+    // ungehindert durch. Dieses PDF ist das Blatt, das die Pflegekasse zur
+    // Anerkennung bekommt — eine widerrufene Leistung darauf ist eine
+    // Forderung fuer etwas, das ausdruecklich zurueckgenommen wurde.
+    const alleRows = (records || []).map(r => ({ ...r, caregiver: one(r.caregiver) })) as LeistungsnachweisRecord[]
+    const rows = ohneStornierte(alleRows)
+    const stornierteAnzahl = alleRows.length - rows.length
     if (rows.length === 0) {
       return NextResponse.json(
-        { error: `Keine erfassten Einsätze für ${periodLabel}` },
+        {
+          error: stornierteAnzahl > 0
+            ? `Keine erfassten Einsätze für ${periodLabel} — ${stornierteAnzahl} storniert.`
+            : `Keine erfassten Einsätze für ${periodLabel}`,
+        },
         { status: 404 }
       )
     }

@@ -108,10 +108,21 @@ export const POST = withTracking(async function POST(request: Request) {
       .from('service-proofs')
       .createSignedUrl(filePath, 60 * 60 * 24 * 7)
 
+    // organization_id MUSS mitgeschrieben werden. Die Spalte ist NOT NULL
+    // mit Default current_org_id() — und diese Funktion liest auth.uid().
+    // Beim Dienstschluessel gibt es keinen angemeldeten Nutzer, die
+    // Fallback-Kette endet deshalb in der fest verdrahteten Stamm-
+    // Organisation. Ohne diese Zeile landete JEDER Prueffoto-Eintrag jedes
+    // Mandanten im Bestand der Stamm-Organisation: die eigene Pruefzentrale
+    // sah nichts (der RESTRICTIVE org_fence auf ocr_results filtert auf die
+    // eigene Organisation), die Stamm-Organisation dafuer die Eintraege
+    // fremder Mandanten. `auth.organizationId` ist derselbe Wert, gegen den
+    // der Nachweis oben schon gefenced wurde.
     const { data: ocrResult, error: ocrErr } = await admin
       .from('ocr_results')
       .insert({
         service_record_id,
+        organization_id: auth.organizationId,
         image_url: signedData?.signedUrl || filePath,
         status: 'pending',
       })

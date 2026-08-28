@@ -196,3 +196,103 @@ export function istStorniert(nachweis: StornoFelder | null | undefined): boolean
 export function ohneStornierte<T extends StornoFelder>(nachweise: readonly T[]): T[] {
   return nachweise.filter(n => !istStorniert(n))
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// Wirksamer Nachweisstand — status UND proof_status zusammen lesen
+// ═══════════════════════════════════════════════════════════════════
+//
+// BEFUND (P1, 28.08.2026)
+// Der Trigger `sync_service_record_status` (live aus pg_proc gelesen)
+// laeuft nur in EINE Richtung: proof_status -> status. Den Rueckweg gibt
+// es nirgends — weder als Trigger noch im Code. Jeder Schreibweg, der nur
+// `status` setzt (die Rechnungs-RPC setzt 'invoiced', der Verwaltungsweg
+// setzt 'signed'), laesst `proof_status` auf dem alten Wert stehen.
+//
+// Live am 28.08.2026: von 30 Nachweisen tragen 28 proof_status='ENTWURF',
+// davon 15 mit status='invoiced' — also bereits abgerechnet. Wer allein
+// `proof_status` liest, haelt einen bezahlten Einsatz fuer einen nie
+// eingereichten Nachweis. Das war nicht theoretisch:
+//   • lib/automation/nachweis-fehlt.ts fragt .eq('proof_status','ENTWURF')
+//     und legt daraus taeglich Aufgaben an — an die Betreuungskraft UND
+//     an die PDL. 28 Nachweise, zwei Empfaenger: 56 Aufgaben fuer Arbeit,
+//     die laengst erledigt und abgerechnet ist.
+//   • lib/automation/unterschrift-erinnerung.ts erinnert an Unterschriften
+//     zu Einsaetzen, die schon auf einer Rechnung stehen.
+//   • Die DTA-Vorpruefung meldete jeden einzelnen Nachweis als
+//     "nicht unterschrieben".
+//
+// REGEL: fuer die Frage "ist dieser Nachweis noch offen?" gilt der HOEHERE
+// der beiden Staende. Fuer die Frage "liegt eine Unterschrift vor?" gilt
+// das NICHT — dort zaehlt nur ein Beleg (siehe hatUnterschrift).
+
+/** Rang der proof_status-Werte, auf die status-Skala abgebildet. */
+const PROOF_RANG: Record<string, number> = {
+  ENTWURF: 0,
+  ABGESCHLOSSEN: 2,
+  UNTERSCHRIEBEN: 3,
+  ABGERECHNET: 4,
+}
+
+export interface NachweisStandFelder extends StornoFelder {
+  status?: string | null
+}
+
+/**
+ * Wirksamer Rang des Nachweises auf der status-Skala
+ * (0=draft … 4=invoiced), gebildet aus BEIDEN Spalten.
+ *
+ * Unbekannte bzw. fehlende Werte zaehlen als -1 und koennen den Rang
+ * damit nur nicht anheben — sie senken ihn nie.
+ */
+export function nachweisRang(rec: NachweisStandFelder | null | undefined): number {
+  if (!rec) return -1
+  const s = String(rec.status ?? '').trim()
+  const p = String(rec.proof_status ?? '').trim()
+  const rangStatus = s in STATUS_RANG ? STATUS_RANG[s as RecordStatus] : -1
+  const rangProof = p in PROOF_RANG ? PROOF_RANG[p] : -1
+  return Math.max(rangStatus, rangProof)
+}
+
+/**
+ * Ist dieser Nachweis noch offen — also weder abgeschlossen noch
+ * unterschrieben noch abgerechnet noch storniert?
+ *
+ * Das ist die Frage, die Erinnerungs- und Mahnketten stellen. Ein
+ * storniertes Blatt ist entschieden und braucht keine Erinnerung mehr.
+ */
+export function nachweisOffen(rec: NachweisStandFelder | null | undefined): boolean {
+  if (!rec) return false
+  if (istStorniert(rec)) return false
+  return nachweisRang(rec) < STATUS_RANG.complete
+}
+
+/**
+ * Liegt fuer diesen Nachweis eine Unterschrift VOR — belegbar?
+ *
+ * Bewusst NICHT ueber `status`: 'signed' kann auch aus einem direkten
+ * Verwaltungsschreibvorgang stammen, ohne dass je jemand unterschrieben
+ * haette. Genau diese Faelle soll die Pruefung zeigen, nicht verstecken.
+ * Live am 28.08.2026 sind das 4 von 30 Nachweisen — die anderen 26 tragen
+ * eine Unterschrift und wurden bis hierher trotzdem alle als
+ * "nicht unterschrieben" gemeldet, weil nur proof_status gelesen wurde.
+ *
+ * `signature_hash` setzt der DB-Trigger compute_signature_hash, sobald
+ * proof_status='UNTERSCHRIEBEN' mit client_signed_at zusammentrifft.
+ */
+export interface UnterschriftFelder {
+  proof_status?: string | null
+  signature_hash?: string | null
+  client_signature?: string | null
+}
+
+export function hatUnterschrift(rec: UnterschriftFelder | null | undefined): boolean {
+  if (!rec) return false
+  const p = String(rec.proof_status ?? '').trim()
+  if (p === 'UNTERSCHRIEBEN' || p === 'ABGERECHNET') return true
+  if (String(rec.signature_hash ?? '').trim() !== '') return true
+  const cs = rec.client_signature
+  if (cs === null || cs === undefined) return false
+  // client_signature ist live text; 'false' und '' sind Nicht-Unterschriften.
+  const s = String(cs).trim()
+  return s !== '' && s.toLowerCase() !== 'false'
+}

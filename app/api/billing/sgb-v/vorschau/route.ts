@@ -13,6 +13,7 @@ import { exportImplementiert } from '@/lib/abrechnung/sgb-v/generator'
 import { pruefeAufbereitungTarife } from '@/lib/abrechnung/sgb-v/validierung'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { ohneStornierte } from '@/lib/leistungsnachweis/status-sync'
 const log = logger.child('billing/sgb-v/vorschau')
 
 /**
@@ -47,7 +48,7 @@ export const GET = withTracking(async function GET(request: Request) {
     const [leistungenRes, verordnungenRes, klientenRes] = await Promise.all([
       admin
         .from('service_records')
-        .select('id, client_id, verordnung_id, date, duration_minutes, service_type, amount')
+        .select('id, client_id, verordnung_id, date, duration_minutes, service_type, amount, proof_status, billing_status')
         .eq('organization_id', organizationId)
         .in('status', ['complete', 'signed', 'invoiced'])
         .gte('date', von)
@@ -83,7 +84,14 @@ export const GET = withTracking(async function GET(request: Request) {
     // sind — sonst landet der gesamte § 105-Betrieb in der Ablehnungsliste und
     // die echten HKP-Probleme gehen darin unter.
     const hkpVerordnungIds = new Set(verordnungen.map(v => v.id))
-    const leistungen = ((leistungenRes.data || []) as HkpLeistung[])
+    // Stornierte Nachweise raus, BEVOR aufbereitet wird: 'STORNIERT' hat
+    // kein Gegenstueck im status-Werteset, der Widerruf bleibt auf
+    // status='signed' stehen und kam durch den .in('status', …)-Filter
+    // ungehindert in die Vorschau — und damit in die Fallzahl und die
+    // Summe, die der Anwender als abrechenbar liest.
+    const nichtStorniert = ohneStornierte((leistungenRes.data || []) as HkpLeistung[])
+    const storniertAusgelassen = ((leistungenRes.data || []) as HkpLeistung[]).length - nichtStorniert.length
+    const leistungen = nichtStorniert
       .filter(l => l.verordnung_id && hkpVerordnungIds.has(l.verordnung_id))
 
     const aufbereitung = bereiteHkpVor(leistungen, verordnungen, klienten)
@@ -116,6 +124,7 @@ export const GET = withTracking(async function GET(request: Request) {
       abrechnungsmonat: monat,
       zeitraum: { von, bis },
       faelle: tarifPruefung.faelle,
+      storniert_ausgelassen: storniertAusgelassen,
       abgelehnt: aufbereitung.abgelehnt,
       ohne_tarif: tarifPruefung.ohneTarif,
       summe_cent: tarifPruefung.faelle.reduce((s, f) => s + f.betrag_cent, 0),

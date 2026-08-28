@@ -16,6 +16,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { logBillingAction } from '../../billing/core/audit'
 import { HKP_VERORDNUNG_TYPE, gueltigBis, pruefePosition, type HkpVerordnung } from './positionen'
+import { istStorniert, nachweisRang } from '@/lib/leistungsnachweis/status-sync'
 
 /** Bereits im Schema etablierte SGB-V-Leistungsarten (verordnung_leistungen.leistungsart-CHECK). */
 export const SGB_V_LEISTUNGSARTEN = [
@@ -27,6 +28,7 @@ export type SgbVLeistungsart = (typeof SGB_V_LEISTUNGSARTEN)[number]
 export type HkpErfassungsProblem =
   | 'keine_verordnung' | 'verordnung_nicht_genehmigt'
   | 'ausserhalb_zeitraum' | 'nicht_abgeschlossen' | 'kein_betrag' | 'unbekannte_leistungsart'
+  | 'storniert'
 
 export const HKP_ERFASSUNGS_PROBLEM_TEXT: Record<HkpErfassungsProblem, string> = {
   keine_verordnung: 'Keiner gültigen HKP-Verordnung (§ 37 SGB V) zugeordnet.',
@@ -35,6 +37,7 @@ export const HKP_ERFASSUNGS_PROBLEM_TEXT: Record<HkpErfassungsProblem, string> =
   nicht_abgeschlossen: 'Leistungsnachweis ist nicht abgeschlossen/unterschrieben (proof_status).',
   kein_betrag: 'Kein Betrag erfasst.',
   unbekannte_leistungsart: `Leistungsart ist keine der bekannten § 37-Kategorien (${SGB_V_LEISTUNGSARTEN.join(', ')}).`,
+  storniert: 'Leistungsnachweis ist storniert und wird nicht abgerechnet.',
 }
 
 export interface HkpLeistungserfassung {
@@ -166,7 +169,7 @@ export async function pruefeVollstaendigkeit(
 ): Promise<HkpVollstaendigkeitsErgebnis[]> {
   const { data: leistungen, error: leistungenFehler } = await supabase
     .from('service_records')
-    .select('id, client_id, verordnung_id, date, amount, proof_status')
+    .select('id, client_id, verordnung_id, date, amount, proof_status, billing_status, status')
     .eq('organization_id', organizationId)
     .eq('billing_type', '§37')
     .gte('date', von)
@@ -196,7 +199,15 @@ export async function pruefeVollstaendigkeit(
       if ((von2 && l.date < von2) || (bisGrenze && l.date > bisGrenze)) probleme.push('ausserhalb_zeitraum')
     }
 
-    if (!['ABGESCHLOSSEN', 'UNTERSCHRIEBEN', 'ABGERECHNET'].includes(l.proof_status)) {
+    // Der Nachweisstand steht in ZWEI Spalten und der Sync laeuft nur in
+    // eine Richtung (proof_status -> status, siehe status-sync.ts). Wer
+    // allein proof_status liest, haelt jeden Nachweis, den der
+    // Verwaltungsweg oder die Rechnungs-RPC angefasst hat, fuer einen
+    // Entwurf: live am 28.08.2026 waren das 28 von 30 Nachweisen, 15 davon
+    // bereits abgerechnet. Massgeblich ist der hoehere der beiden Staende.
+    if (istStorniert(l)) {
+      probleme.push('storniert')
+    } else if (nachweisRang(l) < 2) {
       probleme.push('nicht_abgeschlossen')
     }
     if (!l.amount || Number(l.amount) <= 0) probleme.push('kein_betrag')

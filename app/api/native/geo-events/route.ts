@@ -18,6 +18,14 @@ const log = logger.child('api/native/geo-events')
 // zusätzlich als review_errors-Eintrag (geo_mismatch) für die
 // Büro-Prüfung protokolliert.
 //
+// MANDANT: geo_events und review_errors tragen organization_id NOT NULL
+// mit Default current_org_id(). Diese Funktion liest auth.uid() — beim
+// Dienstschluessel gibt es keinen angemeldeten Nutzer, und die Fallback-
+// Kette endet in der fest verdrahteten Stamm-Organisation. Beide Inserts
+// setzen die Organisation deshalb ausdruecklich aus der Session; ohne das
+// landete jedes Standort-Ereignis und jeder Geo-Pruefeintrag jedes
+// Mandanten im Bestand der Stamm-Organisation.
+//
 // Body:
 //   {
 //     service_record_id: string
@@ -64,8 +72,9 @@ export const POST = withTracking(async function POST(request: Request) {
 
     const { data: record, error: recErr } = await admin
       .from('service_records')
-      .select('id, caregiver_id, client_id')
+      .select('id, caregiver_id, client_id, organization_id')
       .eq('id', service_record_id)
+      .eq('organization_id', auth.organizationId)
       .single()
 
     if (recErr || !record) {
@@ -97,6 +106,7 @@ export const POST = withTracking(async function POST(request: Request) {
       .from('geo_events')
       .insert({
         service_record_id,
+        organization_id: auth.organizationId,
         caregiver_id: auth.caregiverId,
         event_type,
         gps_lat,
@@ -118,6 +128,7 @@ export const POST = withTracking(async function POST(request: Request) {
     if (withinRadius === false) {
       const { error: reviewErr } = await admin.from('review_errors').insert({
         service_record_id,
+        organization_id: auth.organizationId,
         error_type: 'geo_mismatch',
         severity: 'warning',
         description: `${event_type === 'check_in' ? 'Check-in' : 'Check-out'} außerhalb des erwarteten Einsatzortes (${distanceM} m entfernt, Radius ${radiusM} m).`,

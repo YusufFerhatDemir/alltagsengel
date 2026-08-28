@@ -21,6 +21,7 @@ import { generateAlleDateien, type AbrechnungsFall, type GeneratorOptionen, type
 import { validateEDIFACT, validateIK } from './edifact-validator'
 import { generateAuftragsdatei, auftragsdateiName } from './auftragsdatei'
 import { dateiindikatorFuer } from './betriebsmodus'
+import { ohneStornierte } from '@/lib/leistungsnachweis/status-sync'
 
 function encodeToLatin1(text: string): ArrayBuffer {
   const buf = new ArrayBuffer(text.length)
@@ -772,13 +773,24 @@ export async function exportiereLauf(
     0,
   ).getDate()
   const expEnd = `${exportPeriodMonth}-${String(expLastDay).padStart(2, '0')}`
-  const { data: records } = await supabase
+  const { data: alleRecords } = await supabase
     .from('service_records')
-    .select('id, client_id, date, service_type, duration_minutes, amount, caregiver_id, caregiver:caregivers(first_name, last_name)')
+    .select('id, client_id, date, service_type, duration_minutes, amount, caregiver_id, proof_status, billing_status, caregiver:caregivers(first_name, last_name)')
     .in('client_id', clientIds)
     .gte('date', expStart)
     .lte('date', expEnd)
     .in('status', ['complete', 'signed', 'invoiced'])
+
+  // STORNIERTE Nachweise raus. 'STORNIERT' hat kein Gegenstueck im
+  // status-Werteset (lib/leistungsnachweis/status-sync.ts) — der Widerruf
+  // bleibt auf status='signed' stehen und kam durch den .in('status', …)
+  // ungehindert in die EDIFACT-Datei. Dies ist der Weg, auf dem die
+  // Forderung die Pflegekasse tatsaechlich erreicht: eine widerrufene
+  // Leistung darin ist eine Abrechnung fuer etwas, das zurueckgenommen
+  // wurde. Der Riegel steht seit Migration 20261013000000 (v10) in
+  // create_invoice_draft_atomic; dieser Export lief daran vorbei, weil er
+  // die Leistungen selbst aus service_records liest.
+  const records = ohneStornierte(alleRecords || [])
 
   // AbrechnungsFall-Objekte aufbauen
   const faelleMap = new Map<string, AbrechnungsFall>()
@@ -787,7 +799,7 @@ export async function exportiereLauf(
     if (!client) continue
 
     const kt = kostentraegerByClient.get(inv.client_id)
-    const clientRecords = records?.filter((r: any) => r.client_id === inv.client_id) ?? []
+    const clientRecords = records.filter((r: any) => r.client_id === inv.client_id)
     const leistungen = clientRecords.map((r: any) => {
       const menge = (r.duration_minutes ?? 60) / 60
       const gesamtCent = euroZuCent(r.amount)
