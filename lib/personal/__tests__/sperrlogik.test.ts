@@ -65,10 +65,27 @@ test('updateArbeitszeit: reines Entsperren bleibt möglich', async () => {
   )
 })
 
+/**
+ * Seit GAP-13 (29.08.2026) wird `ist_minuten` serverseitig aus Beginn, Ende
+ * und Pause HERGELEITET statt aus dem Rumpf uebernommen. Ein Patch, der nur
+ * `istMinuten: 500` schickt, ist deshalb kein gueltiger Fall mehr — er wird
+ * zu Recht abgewiesen, weil 500 zu keinen Zeiten passt. Die Faelle hier
+ * korrigieren jetzt die ZEITEN; die Ist-Minuten fallen daraus ab, und dass
+ * sie es tun, wird gleich mitgeprueft.
+ */
 test('updateArbeitszeit: nicht gesperrte Zeit bleibt frei korrigierbar', async () => {
-  const { supabase, calls } = client({ gesperrt: false }, { data: { id: 'az-1' }, error: null })
-  await updateArbeitszeit(supabase, 'az-1', 'org-1', { istMinuten: 500 })
-  assert.deepEqual(calls.find(c => c.method === 'update')!.args[0], { ist_minuten: 500, geaendert_von: null })
+  const { supabase, calls } = client(
+    { gesperrt: false, start_zeit: '08:00', end_zeit: '16:00', pause_minuten: 30 },
+    { data: { id: 'az-1' }, error: null },
+  )
+  await updateArbeitszeit(supabase, 'az-1', 'org-1', { endZeit: '17:00' })
+  assert.deepEqual(
+    calls.find(c => c.method === 'update')!.args[0],
+    // 08:00–17:00 = 540 Minuten, minus 30 Minuten Pause aus dem Bestand.
+    // Die Pause steht nicht im Patch und trotzdem in der Rechnung — genau
+    // dafuer wird der VERSCHMOLZENE Stand hergeleitet, nicht der Patch.
+    { end_zeit: '17:00', ist_minuten: 510, geaendert_von: null },
+  )
 })
 
 /**
@@ -79,11 +96,14 @@ test('updateArbeitszeit: nicht gesperrte Zeit bleibt frei korrigierbar', async (
  * oben kein Beiwerk, sondern der Punkt.
  */
 test('updateArbeitszeit: der handelnde Benutzer landet in geaendert_von', async () => {
-  const { supabase, calls } = client({ gesperrt: false }, { data: { id: 'az-1' }, error: null })
-  await updateArbeitszeit(supabase, 'az-1', 'org-1', { istMinuten: 500, benutzerId: 'pdl-7' })
+  const { supabase, calls } = client(
+    { gesperrt: false, start_zeit: '08:00', end_zeit: '16:00', pause_minuten: 30 },
+    { data: { id: 'az-1' }, error: null },
+  )
+  await updateArbeitszeit(supabase, 'az-1', 'org-1', { endZeit: '17:00', benutzerId: 'pdl-7' })
   assert.deepEqual(
     calls.find(c => c.method === 'update')!.args[0],
-    { ist_minuten: 500, geaendert_von: 'pdl-7' },
+    { end_zeit: '17:00', ist_minuten: 510, geaendert_von: 'pdl-7' },
   )
 })
 
