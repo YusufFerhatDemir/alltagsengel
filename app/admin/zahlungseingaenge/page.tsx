@@ -68,6 +68,36 @@ interface Klaerfall {
   }
 }
 
+// Nur die Felder, die diese Ansicht liest — die Route liefert mehr.
+interface CamtPreflight {
+  modus: string
+  buchend: boolean
+  modusGrund: string
+  dateiname: string
+  format: string
+  kontoIbanKurz: string | null
+  auszugsDatum: string | null
+  dateiBereitsImportiert: boolean
+  parseFehler: string[]
+  gesamt: number
+  nachEinordnung: Record<string, number>
+  summeEingangCent: number
+  summeAusgangCent: number
+  summeBuchbarCent: number
+  freigabefaehig: boolean
+  blocker: string[]
+  warnungen: string[]
+}
+
+const EINORDNUNG_LABEL: Record<string, { label: string; color: string }> = {
+  MATCHED: { label: 'Zugeordnet', color: '#22c55e' },
+  AMBIGUOUS: { label: 'Mehrdeutig', color: '#f59e0b' },
+  UNMATCHED: { label: 'Nicht zuordenbar', color: '#ef4444' },
+  DUPLICATE: { label: 'Dublette', color: '#8b5cf6' },
+  INVALID: { label: 'Ungültig', color: '#b91c1c' },
+  CROSS_TENANT_BLOCKED: { label: 'Fremder Mandant', color: '#b91c1c' },
+}
+
 interface Kuerzung {
   id: string
   invoice_id: string
@@ -133,6 +163,8 @@ export default function ZahlungseingaengePage() {
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [uploadResult, setUploadResult] = useState<string | null>(null)
+  const [preflight, setPreflight] = useState<CamtPreflight | null>(null)
+  const [preflightDatei, setPreflightDatei] = useState<File | null>(null)
   const [oposFilter, setOposFilter] = useState<string>('alle')
   // null heisst „noch nicht geladen" und NICHT „keine Kuerzungen" —
   // „keine Kuerzungen" ist eine Aussage, die man nur machen darf, wenn
@@ -209,6 +241,48 @@ export default function ZahlungseingaengePage() {
   useEffect(() => { loadOpos() }, [loadOpos])
 
   // ─── CAMT Upload ───
+  // ═══════════════════════════════════════════════════════════
+  // ERST ANSEHEN, DANN BUCHEN
+  // ═══════════════════════════════════════════════════════════
+  //
+  // /api/billing/camt/preflight ist ein vollstaendiger Trockenlauf ueber
+  // eine echte Bankdatei — er BUCHT NIE, auch nicht wenn CAMT_IMPORT_MODE
+  // auf LIVE steht, und liefert je Buchung eine Einordnung (zugeordnet,
+  // mehrdeutig, unzuordenbar, Dublette, ungueltig, mandantenfremd), die
+  // Blocker und ein fail-closed `freigabefaehig`. Die Route wurde von
+  // KEINER Stelle der Oberflaeche aufgerufen.
+  //
+  // Bis hierhin ging eine abgelegte Datei unmittelbar an
+  // /api/billing/camt/import, und das BUCHT je nach Betriebsart. Die
+  // einzige Art zu sehen, was in einer Bankdatei steht, war also, sie zu
+  // verbuchen — bei einer Dublette oder einer Datei des falschen Kontos
+  // merkt man das erst danach.
+  //
+  // Deshalb liegt der Trockenlauf jetzt VOR dem Buchen und das Buchen
+  // hinter einem zweiten, ausdruecklichen Klick. Das ist eine bewusste
+  // Verhaltensaenderung: aus einem Klick werden zwei. Weggenommen wird
+  // nichts — nur die Reihenfolge ist jetzt die, in der man eine Geldbuchung
+  // ansieht, bevor sie passiert.
+  async function handlePreflight(file: File) {
+    setUploading(true)
+    setUploadResult(null)
+    setPreflight(null)
+    setPreflightDatei(null)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/billing/camt/preflight', { method: 'POST', body: formData })
+      const data = await res.json()
+      if (!res.ok) { setUploadResult(`Fehler: ${data.error}`); return }
+      setPreflight(data.preflight)
+      setPreflightDatei(file)
+    } catch {
+      setUploadResult('Prüfung fehlgeschlagen')
+    } finally {
+      setUploading(false)
+    }
+  }
+
   async function handleUpload(file: File) {
     setUploading(true)
     setUploadResult(null)
@@ -221,6 +295,11 @@ export default function ZahlungseingaengePage() {
         setUploadResult(
           `Importiert: ${data.buchungenGesamt} Buchungen, ${data.zugeordnet} zugeordnet, ${data.klaerfaelle} Klärfälle`
         )
+        // Das Prüfergebnis gehört zu einer Datei, die es jetzt nicht mehr
+        // nur als Vorschau gibt. Bliebe es stehen, stünde neben dem
+        // Buchungsergebnis weiter ein „würde gebucht"-Bericht.
+        setPreflight(null)
+        setPreflightDatei(null)
         await Promise.all([loadImports(), loadOpos(), loadKlaerfaelle()])
       } else {
         setUploadResult(`Fehler: ${data.error}`)
@@ -308,10 +387,10 @@ export default function ZahlungseingaengePage() {
                   e.preventDefault()
                   e.stopPropagation()
                   const f = e.dataTransfer.files[0]
-                  if (f) handleUpload(f)
+                  if (f) handlePreflight(f)
                 }}
                 {...klickbar(() => fileRef.current?.click())}
-                aria-label="camt.053-Datei auswählen oder hierher ziehen"
+                aria-label="camt.053-Datei auswählen oder hierher ziehen — wird zuerst geprüft, nicht gebucht"
                 style={{
                   border: '2px dashed #c8a84e', borderRadius: 12, padding: '32px 24px',
                   textAlign: 'center', cursor: 'pointer', marginBottom: 20,
@@ -326,15 +405,16 @@ export default function ZahlungseingaengePage() {
                   style={{ display: 'none' }}
                   onChange={e => {
                     const f = e.target.files?.[0]
-                    if (f) handleUpload(f)
+                    if (f) handlePreflight(f)
                   }}
                 />
                 <IconDocument size={32} color="#c8a84e" />
                 <p style={{ margin: '8px 0 4px', fontWeight: 600, color: '#92400e' }}>
-                  {uploading ? 'Wird importiert…' : 'CAMT-Datei hochladen'}
+                  {uploading ? 'Wird geprüft…' : 'CAMT-Datei prüfen'}
                 </p>
                 <p style={{ margin: 0, fontSize: 13, color: '#78716c' }}>
-                  Klicken oder Datei hierher ziehen (CAMT.053 / CAMT.054 XML)
+                  Klicken oder Datei hierher ziehen (CAMT.053 / CAMT.054 XML) —
+                  die Datei wird zuerst im Trockenlauf geprüft und <strong>nicht</strong> gebucht.
                 </p>
               </div>
 
@@ -345,6 +425,120 @@ export default function ZahlungseingaengePage() {
                   color: uploadResult.startsWith('Fehler') ? '#991b1b' : '#166534',
                 }}>
                   {uploadResult}
+                </div>
+              )}
+
+              {/* ─── Trockenlauf-Ergebnis ─── */}
+              {preflight && (
+                <div style={{
+                  border: `1px solid ${preflight.freigabefaehig ? '#22c55e' : '#ef4444'}`,
+                  borderRadius: 12, padding: 16, marginBottom: 20,
+                  background: preflight.freigabefaehig ? '#f0fdf4' : '#fef2f2',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
+                    <strong style={{ fontSize: 15 }}>Trockenlauf: {preflight.dateiname}</strong>
+                    <span style={{
+                      padding: '2px 10px', borderRadius: 999, fontSize: 12, fontWeight: 600,
+                      background: preflight.freigabefaehig ? '#dcfce7' : '#fee2e2',
+                      color: preflight.freigabefaehig ? '#166534' : '#991b1b',
+                    }}>
+                      {preflight.freigabefaehig ? 'Kann gebucht werden' : 'Nicht buchbar'}
+                    </span>
+                    <span style={{ fontSize: 12, color: '#666' }}>
+                      {preflight.format}
+                      {preflight.kontoIbanKurz ? ` · Konto ${preflight.kontoIbanKurz}` : ''}
+                      {preflight.auszugsDatum ? ` · Auszug ${formatDate(preflight.auszugsDatum)}` : ''}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: 13, color: '#555', marginBottom: 8 }}>
+                    {preflight.gesamt} {preflight.gesamt === 1 ? 'Buchung' : 'Buchungen'} ·
+                    Eingang {formatCurrency(preflight.summeEingangCent)} ·
+                    Ausgang {formatCurrency(preflight.summeAusgangCent)} ·
+                    davon automatisch zuordenbar {formatCurrency(preflight.summeBuchbarCent)}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                    {Object.entries(preflight.nachEinordnung)
+                      .filter(([, n]) => n > 0)
+                      .map(([schluessel, n]) => {
+                        const m = EINORDNUNG_LABEL[schluessel] ?? { label: schluessel, color: '#666' }
+                        return (
+                          <span key={schluessel} style={{
+                            padding: '3px 10px', borderRadius: 999, fontSize: 12, fontWeight: 600,
+                            color: m.color, background: `${m.color}1a`, border: `1px solid ${m.color}55`,
+                          }}>{m.label}: {n}</span>
+                        )
+                      })}
+                  </div>
+
+                  {/* Die Betriebsart steht dabei, weil sie entscheidet, ob der
+                      scharfe Lauf ueberhaupt schreibt — ohne diese Angabe
+                      koennte ein Lauf „erfolgreich" melden und nichts gebucht
+                      haben. */}
+                  <div style={{ fontSize: 12, color: '#666', marginBottom: 8 }}>
+                    Betriebsart <strong>{preflight.modus}</strong> — {preflight.modusGrund}
+                    {!preflight.buchend && ' (ein scharfer Lauf würde in dieser Betriebsart nichts buchen)'}
+                  </div>
+
+                  {preflight.dateiBereitsImportiert && (
+                    <div style={{ fontSize: 13, color: '#991b1b', fontWeight: 600, marginBottom: 6 }}>
+                      Diese Datei wurde bereits einmal importiert.
+                    </div>
+                  )}
+
+                  {preflight.parseFehler.length > 0 && (
+                    <div style={{ fontSize: 13, color: '#991b1b', marginBottom: 6 }}>
+                      <strong>Nicht lesbare Zeilen:</strong>
+                      <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
+                        {preflight.parseFehler.map((f, i) => <li key={i}>{f}</li>)}
+                      </ul>
+                    </div>
+                  )}
+
+                  {preflight.blocker.length > 0 && (
+                    <div style={{ fontSize: 13, color: '#991b1b', marginBottom: 6 }}>
+                      <strong>Blocker:</strong>
+                      <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
+                        {preflight.blocker.map((b, i) => <li key={i}>{b}</li>)}
+                      </ul>
+                    </div>
+                  )}
+
+                  {preflight.warnungen.length > 0 && (
+                    <div style={{ fontSize: 13, color: '#92400e', marginBottom: 6 }}>
+                      <strong>Hinweise:</strong>
+                      <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
+                        {preflight.warnungen.map((w, i) => <li key={i}>{w}</li>)}
+                      </ul>
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                    {/* Fail-closed: der Knopf ist gesperrt, solange `freigabefaehig`
+                        false ist. Die Entscheidung faellt im Preflight selbst, der
+                        bei Zweifeln nein sagt — die Oberflaeche legt sie nicht neu
+                        aus und bietet auch kein „trotzdem buchen" an. */}
+                    <button
+                      disabled={!preflight.freigabefaehig || uploading || !preflightDatei}
+                      onClick={() => preflightDatei && handleUpload(preflightDatei)}
+                      style={{
+                        padding: '8px 18px', borderRadius: 6, border: 'none', fontSize: 14, fontWeight: 600,
+                        cursor: preflight.freigabefaehig && !uploading ? 'pointer' : 'not-allowed',
+                        background: preflight.freigabefaehig ? '#166534' : '#cbd5e1',
+                        color: preflight.freigabefaehig ? '#fff' : '#64748b',
+                      }}
+                    >
+                      {uploading ? 'Läuft…' : 'Jetzt buchen'}
+                    </button>
+                    <button
+                      onClick={() => { setPreflight(null); setPreflightDatei(null) }}
+                      style={{
+                        padding: '8px 18px', borderRadius: 6, border: '1px solid #cbd5e1',
+                        background: '#fff', cursor: 'pointer', fontSize: 14,
+                      }}
+                    >Verwerfen</button>
+                  </div>
                 </div>
               )}
 
