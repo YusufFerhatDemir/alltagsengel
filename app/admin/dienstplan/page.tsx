@@ -1,8 +1,9 @@
 'use client'
 import { datumBerlin } from '@/lib/utils/timezone';
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { statusMeta, formatTime, DIENSTPLAN_STATUS, DIENSTPLAN_TYP, WEEKDAYS } from '@/lib/admin/ops'
 import { StatusBadge, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import type { DienstplanSchicht } from '@/lib/personal/types'
 import { logger } from '@/lib/logger';
 const log = logger.child('admin:dienstplan');
 
@@ -72,6 +73,24 @@ export default function DienstplanPage() {
     datum: '', caregiverId: '', startZeit: '08:00', endZeit: '16:00', typ: 'regulaer', notizen: '',
   })
 
+  // ── Schichtvorlagen ───────────────────────────────────────────────
+  // `dienstplan_schichten` und /api/personal/dienstplan/schichten waren
+  // vollstaendig — Anlegen, Auflisten, Aendern — und wurden von keiner
+  // Stelle aufgerufen. Die Tabelle traegt live 0 Zeilen: eine Vorlage, die
+  // sich nicht anlegen laesst, wird auch nicht benutzt.
+  //
+  // Ohne sie wurden Beginn und Ende bei JEDEM Eintrag von Hand getippt.
+  // Das ist nicht nur muehsam: die Zeiten eines Dienstes sind die
+  // Grundlage der ArbZG-Pruefung (§ 3, § 4, § 5), und ein Vertipper darin
+  // ist ein Verstoss, den niemand als Vertipper erkennt.
+  const [schichten, setSchichten] = useState<DienstplanSchicht[]>([])
+  const [zeigeSchichten, setZeigeSchichten] = useState(false)
+  const [schichtForm, setSchichtForm] = useState({
+    bezeichnung: '', kuerzel: '', startZeit: '06:00', endZeit: '14:00', pauseMinuten: '30',
+  })
+  const [schichtFehler, setSchichtFehler] = useState<string | null>(null)
+  const [schichtBusy, setSchichtBusy] = useState(false)
+
   const weekEnd = addDays(weekStart, 6)
 
   useEffect(() => {
@@ -105,6 +124,74 @@ export default function DienstplanPage() {
     }
     load()
   }, [weekStart])
+
+  const ladeSchichten = useCallback(async () => {
+    try {
+      // `nurAktive=false`: die Verwaltung soll auch die stillgelegten sehen —
+      // sonst laesst sich eine versehentlich deaktivierte Vorlage nicht
+      // wiederfinden und schon gar nicht wieder einschalten.
+      const res = await fetch('/api/personal/dienstplan/schichten?nurAktive=false')
+      if (!res.ok) return
+      const data = await res.json()
+      setSchichten(Array.isArray(data) ? data : (data.schichten ?? []))
+    } catch {
+      /* Der Wochenplan bleibt nutzbar */
+    }
+  }, [])
+
+  useEffect(() => { ladeSchichten() }, [ladeSchichten])
+
+  async function schichtAnlegen() {
+    setSchichtBusy(true)
+    setSchichtFehler(null)
+    try {
+      const res = await fetch('/api/personal/dienstplan/schichten', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bezeichnung: schichtForm.bezeichnung,
+          // Leer heisst „kein Kuerzel", nicht „leeres Kuerzel": die Spalte
+          // ist nullable, und ein leerer String saehe im Plan aus wie eine
+          // Vorlage ohne Namen.
+          kuerzel: schichtForm.kuerzel.trim() || null,
+          startZeit: schichtForm.startZeit,
+          endZeit: schichtForm.endZeit,
+          pauseMinuten: Number(schichtForm.pauseMinuten) || 0,
+        }),
+      })
+      const body = await res.json()
+      if (!res.ok) { setSchichtFehler(body.error || 'Vorlage konnte nicht angelegt werden.'); return }
+      setSchichtForm({ bezeichnung: '', kuerzel: '', startZeit: '06:00', endZeit: '14:00', pauseMinuten: '30' })
+      await ladeSchichten()
+    } catch {
+      setSchichtFehler('Vorlage konnte nicht angelegt werden.')
+    } finally { setSchichtBusy(false) }
+  }
+
+  async function schichtUmschalten(schicht: DienstplanSchicht) {
+    setSchichtFehler(null)
+    try {
+      // Stilllegen statt loeschen: eine Vorlage kann in bereits geplanten
+      // Diensten stecken, und ein Loeschen wuerde deren Herkunft entfernen.
+      const res = await fetch(`/api/personal/dienstplan/schichten/${schicht.id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ aktiv: !schicht.aktiv }),
+      })
+      const body = await res.json()
+      if (!res.ok) { setSchichtFehler(body.error || 'Änderung fehlgeschlagen.'); return }
+      await ladeSchichten()
+    } catch {
+      setSchichtFehler('Änderung fehlgeschlagen.')
+    }
+  }
+
+  /** Vorlage in das Anlageformular uebernehmen — Beginn und Ende aus einer Hand. */
+  function vorlageUebernehmen(id: string) {
+    const s = schichten.find(x => x.id === id)
+    if (!s) return
+    // `slice(0, 5)`: die Datenbank liefert `HH:MM:SS`, ein `<input type=time>`
+    // erwartet `HH:MM` und zeigt sonst gar nichts an.
+    setForm(f => ({ ...f, startZeit: s.start_zeit.slice(0, 5), endZeit: s.end_zeit.slice(0, 5) }))
+  }
 
   // Group entries by date
   const days = useMemo(() => {
@@ -211,6 +298,109 @@ export default function DienstplanPage() {
         </button>
       </div>
 
+      {/* ── Schichtvorlagen ─────────────────────────────────────── */}
+      <div style={{ marginBottom: 16 }}>
+        <button style={secondaryBtn} onClick={() => setZeigeSchichten(v => !v)}>
+          Schichtvorlagen ({schichten.filter(s => s.aktiv).length} aktiv)
+        </button>
+      </div>
+
+      {zeigeSchichten && (
+        <div style={{
+          background: 'var(--coal2)', border: '1px solid var(--border)', borderRadius: 12,
+          padding: 16, marginBottom: 16,
+        }}>
+          <h3 style={{ fontSize: 15, fontWeight: 600, margin: '0 0 4px' }}>Schichtvorlagen</h3>
+          <p style={{ fontSize: 12, color: 'var(--ink4)', margin: '0 0 12px' }}>
+            Beginn, Ende und Pause einmal festlegen statt bei jedem Eintrag zu tippen.
+            Eine Vorlage wird stillgelegt, nicht gelöscht — sie kann in bereits geplanten
+            Diensten stecken.
+          </p>
+          {schichtFehler && <div style={{ marginBottom: 12 }}><Banner tone="danger">{schichtFehler}</Banner></div>}
+
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'end', marginBottom: 16 }}>
+            <label style={{ fontSize: 13 }}>
+              Bezeichnung<br />
+              <input
+                type="text" value={schichtForm.bezeichnung}
+                onChange={e => setSchichtForm(f => ({ ...f, bezeichnung: e.target.value }))}
+                placeholder="z. B. Frühdienst" style={inputStyle}
+              />
+            </label>
+            <label style={{ fontSize: 13 }}>
+              Kürzel<br />
+              <input
+                type="text" value={schichtForm.kuerzel}
+                onChange={e => setSchichtForm(f => ({ ...f, kuerzel: e.target.value }))}
+                placeholder="F" style={{ ...inputStyle, width: 80 }}
+              />
+            </label>
+            <label style={{ fontSize: 13 }}>
+              Beginn<br />
+              <input
+                type="time" value={schichtForm.startZeit}
+                onChange={e => setSchichtForm(f => ({ ...f, startZeit: e.target.value }))}
+                style={inputStyle}
+              />
+            </label>
+            <label style={{ fontSize: 13 }}>
+              Ende<br />
+              <input
+                type="time" value={schichtForm.endZeit}
+                onChange={e => setSchichtForm(f => ({ ...f, endZeit: e.target.value }))}
+                style={inputStyle}
+              />
+            </label>
+            <label style={{ fontSize: 13 }}>
+              Pause (Min.)<br />
+              <input
+                type="number" value={schichtForm.pauseMinuten}
+                onChange={e => setSchichtForm(f => ({ ...f, pauseMinuten: e.target.value }))}
+                style={{ ...inputStyle, width: 100 }}
+              />
+            </label>
+            <button
+              style={primaryBtn}
+              onClick={schichtAnlegen}
+              disabled={schichtBusy || !schichtForm.bezeichnung.trim()}
+            >
+              Vorlage anlegen
+            </button>
+          </div>
+
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr><th>Bezeichnung</th><th>Kürzel</th><th>Zeit</th><th>Pause</th><th>Status</th><th>Aktion</th></tr>
+              </thead>
+              <tbody>
+                {schichten.length === 0
+                  ? <EmptyRow colSpan={6}>Noch keine Vorlage angelegt</EmptyRow>
+                  : schichten.map(sch => (
+                    <tr key={sch.id} style={{ opacity: sch.aktiv ? 1 : 0.55 }}>
+                      <td style={{ fontWeight: 600 }}>{sch.bezeichnung}</td>
+                      <td style={{ fontSize: 13 }}>{sch.kuerzel || '—'}</td>
+                      <td style={{ fontSize: 13 }}>{sch.start_zeit.slice(0, 5)}–{sch.end_zeit.slice(0, 5)}</td>
+                      <td style={{ fontSize: 13 }}>{sch.pause_minuten} Min.</td>
+                      <td>
+                        <StatusBadge
+                          label={sch.aktiv ? 'Aktiv' : 'Stillgelegt'}
+                          color={sch.aktiv ? '#5CB882' : '#999'}
+                        />
+                      </td>
+                      <td>
+                        <button style={secondaryBtn} onClick={() => schichtUmschalten(sch)}>
+                          {sch.aktiv ? 'Stilllegen' : 'Wieder aktivieren'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Create form */}
       {showCreate && (
         <div style={{
@@ -234,6 +424,27 @@ export default function DienstplanPage() {
               <input type="text" value={form.caregiverId} onChange={e => setForm({ ...form, caregiverId: e.target.value })}
                 placeholder="UUID" style={inputStyle} />
             </label>
+            {schichten.some(s => s.aktiv) && (
+              <label style={{ fontSize: 13 }}>
+                Schichtvorlage<br />
+                {/* Setzt nur Beginn und Ende und ist danach wieder leer:
+                    die Vorlage ist eine Eingabehilfe, keine Bindung. Der
+                    Eintrag speichert die ZEITEN, nicht die Vorlage — wer
+                    sie hinterher ändert, ändert keinen geplanten Dienst. */}
+                <select
+                  value=""
+                  onChange={e => { vorlageUebernehmen(e.target.value); e.target.value = '' }}
+                  style={inputStyle}
+                >
+                  <option value="">— übernehmen —</option>
+                  {schichten.filter(s => s.aktiv).map(s => (
+                    <option key={s.id} value={s.id}>
+                      {s.kuerzel ? `${s.kuerzel} · ` : ''}{s.bezeichnung} ({s.start_zeit.slice(0, 5)}–{s.end_zeit.slice(0, 5)})
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <label style={{ fontSize: 13 }}>
               Beginn<br />
               <input type="time" value={form.startZeit} onChange={e => setForm({ ...form, startZeit: e.target.value })}
