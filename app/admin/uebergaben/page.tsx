@@ -22,6 +22,7 @@ import {
   type PunktKategorie,
   type Schicht,
   type UebergabeProtokoll,
+  type UebergabePunkt,
 } from '@/lib/uebergabe/types'
 
 interface ClientOption { id: string; name: string }
@@ -57,6 +58,14 @@ export default function UebergabenPage() {
   const [fehler, setFehler] = useState<string | null>(null)
   const [hinweis, setHinweis] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  // ── Das Arbeitsblatt des Folgedienstes ────────────────────────────
+  // /api/uebergaben/handlungsbedarfe beschreibt sich selbst so und wurde
+  // von keiner Stelle aufgerufen: offene Handlungsbedarfe waren nur zu
+  // sehen, indem man jedes Protokoll einzeln oeffnete. Genau das ist die
+  // Frage, die ein uebernehmender Dienst als erste stellt — und je aelter
+  // ein offener Punkt ist, desto unwahrscheinlicher wird, dass ihn noch
+  // jemand in dem Protokoll sucht, in dem er entstanden ist.
+  const [handlungsbedarfe, setHandlungsbedarfe] = useState<UebergabePunkt[] | null>(null)
 
   // Neues Protokoll
   const [neuDatum, setNeuDatum] = useState(heute())
@@ -86,6 +95,22 @@ export default function UebergabenPage() {
     }
   }, [])
 
+  const ladeHandlungsbedarfe = useCallback(async () => {
+    // Eigener Fehlerweg: bleibt diese Liste aus, sollen Protokolle und
+    // Detailansicht trotzdem stehen. `null` heisst „noch nicht geladen
+    // oder nicht ladbar" und wird unten NICHT als „nichts offen" gezeigt —
+    // „keine offenen Handlungsbedarfe" ist eine Aussage, die man nur
+    // machen darf, wenn man nachgesehen hat.
+    try {
+      const res = await fetch('/api/uebergaben/handlungsbedarfe')
+      const json = await res.json()
+      if (!res.ok) return
+      setHandlungsbedarfe(json.punkte ?? [])
+    } catch {
+      /* Seite bleibt nutzbar */
+    }
+  }, [])
+
   const ladeDetail = useCallback(async (id: string) => {
     setFehler(null)
     try {
@@ -100,6 +125,7 @@ export default function UebergabenPage() {
   }, [])
 
   useEffect(() => { ladeProtokolle() }, [ladeProtokolle])
+  useEffect(() => { ladeHandlungsbedarfe() }, [ladeHandlungsbedarfe])
 
   useEffect(() => {
     // Klientenliste für den Klientenbezug eines Punktes — wie in den übrigen
@@ -161,6 +187,38 @@ export default function UebergabenPage() {
       setFehler((err as Error).message)
     } finally {
       setBusy(false)
+    }
+  }
+
+  /**
+   * Erledigung aus dem Arbeitsblatt heraus — ueber die `protokoll_id` des
+   * Punktes, nicht ueber das gerade geoeffnete Protokoll: die offenen
+   * Punkte stammen aus VERSCHIEDENEN Protokollen, und die meisten davon
+   * sind laengst abgeschlossen.
+   *
+   * Dass das erlaubt ist, steht ausdruecklich in lib/uebergabe/punkte.ts:
+   * „Erledigung nachziehen — das darf auch nach Abschluss des Protokolls
+   * passieren, denn der Handlungsbedarf wird typischerweise erst im
+   * Folgedienst abgearbeitet." Nur der INHALT eines abgeschlossenen
+   * Protokolls ist unveraenderlich.
+   */
+  async function handlungsbedarfErledigen(punkt: UebergabePunkt) {
+    setFehler(null)
+    try {
+      const res = await fetch(`/api/uebergaben/${punkt.protokoll_id}/punkte/${punkt.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ erledigt: true }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Erledigung konnte nicht gespeichert werden.')
+      await ladeHandlungsbedarfe()
+      // Steht derselbe Punkt gerade in der Detailansicht, muss sie mit —
+      // sonst zeigen zwei Listen auf demselben Bildschirm verschiedene
+      // Zustaende desselben Punktes.
+      if (detail?.id === punkt.protokoll_id) await ladeDetail(detail.id)
+    } catch (err) {
+      setFehler((err as Error).message)
     }
   }
 
@@ -237,6 +295,55 @@ export default function UebergabenPage() {
 
       {fehler && <div style={{ marginBottom: 16 }}><Banner tone="danger">{fehler}</Banner></div>}
       {hinweis && <div style={{ marginBottom: 16 }}><Banner tone="success">{hinweis}</Banner></div>}
+
+      {/* ── Arbeitsblatt des Folgedienstes ─────────────────────── */}
+      {handlungsbedarfe !== null && handlungsbedarfe.length > 0 && (
+        <div style={{ ...cardStyle, marginBottom: 20, borderColor: 'rgba(208,75,59,.35)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+            <h2 style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>
+              Offene Handlungsbedarfe ({handlungsbedarfe.length})
+            </h2>
+            <span style={{ fontSize: 12, color: 'var(--muted,#777)' }}>
+              Über alle Protokolle hinweg — auch aus bereits abgeschlossenen
+            </span>
+          </div>
+          <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {handlungsbedarfe.map(p => (
+              <div
+                key={p.id}
+                style={{
+                  display: 'flex', gap: 12, alignItems: 'flex-start',
+                  justifyContent: 'space-between', flexWrap: 'wrap',
+                  padding: '10px 12px', borderRadius: 8,
+                  border: '1px solid rgba(0,0,0,.08)',
+                }}
+              >
+                <div style={{ flex: '1 1 320px', minWidth: 0 }}>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 4 }}>
+                    <StatusBadge
+                      label={DRINGLICHKEIT_META[p.dringlichkeit]?.label ?? p.dringlichkeit}
+                      color={DRINGLICHKEIT_META[p.dringlichkeit]?.color ?? '#999'}
+                    />
+                    <span style={{ fontSize: 12, color: 'var(--muted,#777)' }}>
+                      {KATEGORIE_LABEL[p.kategorie] ?? p.kategorie} · {clientName(p.client_id)} · {formatDate(p.created_at)}
+                    </span>
+                    {p.nachtrag && <StatusBadge label="Nachtrag" color="#E8A000" />}
+                  </div>
+                  <div style={{ fontSize: 14, whiteSpace: 'pre-wrap' }}>{p.inhalt}</div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <button onClick={() => ladeDetail(p.protokoll_id)} style={ghostBtn}>
+                    Protokoll öffnen
+                  </button>
+                  <button onClick={() => handlungsbedarfErledigen(p)} style={primaryBtn}>
+                    Erledigt
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 360px) 1fr', gap: 20, alignItems: 'start' }}>
         {/* ── Liste + Anlage ───────────────────────────────── */}
