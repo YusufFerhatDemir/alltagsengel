@@ -1,7 +1,7 @@
 import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requireAktenAdmin } from '@/lib/akten/api-auth'
+import { personaldokumentAbgewehrt, requireAktenAdmin } from '@/lib/akten/api-auth'
 import { lockDokument, unlockDokument } from '@/lib/akten/dokumente'
 import { withTracking } from '@/lib/monitoring/tracker'
 
@@ -14,6 +14,9 @@ export const POST = withTracking(async function POST(request: Request, { params 
 
     const body = await request.json()
     const admin = createAdminClient()
+
+    const abwehr = await personaldokumentAbgewehrt(admin, id, auth.ctx)
+    if (abwehr) return abwehr
 
     if (body.gesperrt === false) {
       const dokument = await unlockDokument(admin, id, organizationId, userId, role)

@@ -2,7 +2,7 @@ import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requireAktenAdmin } from '@/lib/akten/api-auth'
+import { personaldokumentAbgewehrt, requireAktenAdmin } from '@/lib/akten/api-auth'
 import { getDokument, softDeleteDokument, updateDokument } from '@/lib/akten/dokumente'
 import { logAktenZugriff } from '@/lib/akten/zugriff-log'
 import type { DokumentKategorie, DokumentSichtbarkeit, DokumentStatus } from '@/lib/akten/types'
@@ -54,6 +54,10 @@ export const PATCH = withTracking(async function PATCH(request: Request, { param
 
     const body = await request.json()
     const admin = createAdminClient()
+
+    const abwehr = await personaldokumentAbgewehrt(admin, id, auth.ctx)
+    if (abwehr) return abwehr
+
     const dokument = await updateDokument(
       admin,
       id,
@@ -87,6 +91,10 @@ export const DELETE = withTracking(async function DELETE(_request: Request, { pa
     const { organizationId, userId, role } = auth.ctx
 
     const admin = createAdminClient()
+
+    const abwehr = await personaldokumentAbgewehrt(admin, id, auth.ctx)
+    if (abwehr) return abwehr
+
     await softDeleteDokument(admin, id, organizationId, userId, role)
 
     return NextResponse.json({ success: true })

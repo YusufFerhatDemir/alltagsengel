@@ -5,6 +5,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from 'next/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { holeRollenQuellen, quellenDuerfen } from '@/lib/auth/rollen-quelle'
 import type { Berechtigung } from '@/lib/auth/rollen'
 import { createClient } from '@/lib/supabase/server'
@@ -76,6 +77,59 @@ export async function requireAktenAdmin(
       darf: (weitere: Berechtigung) => quellenDuerfen(quellen, weitere),
     },
   }
+}
+
+/**
+ * Wehrt einen Schreibzugriff auf ein Dokument der PERSONALAKTE ab, wenn
+ * dem Aufrufer `personal.lesen` fehlt.
+ *
+ * BEFUND 29.08.2026, innerhalb EINER Datei sichtbar: In
+ * `app/api/akten/dokumente/[id]/route.ts` prueft der GET-Handler seit
+ * 0ba1d61e `dokument.caregiver_id && !ctx.darf('personal.lesen')` — PATCH
+ * und DELETE daneben nicht. Dasselbe fuer `[id]/sperren` und
+ * `[id]/version`. Wer die Personalakte nicht LESEN darf, konnte ein
+ * Dokument daraus also weiterhin umbenennen, sperren, ueberschreiben oder
+ * loeschen. Die Schreibseite war offener als die Leseseite, und das ist in
+ * jeder Richtung die falsche Reihenfolge.
+ *
+ * HEUTE IST DAS NICHT AUSNUTZBAR, und das ist ausdruecklich kein Grund,
+ * es stehen zu lassen: `stammdaten.schreiben` hat aus ROLLEN_MATRIX nur,
+ * wer auch `personal.lesen` hat (admin, superadmin, pdl). Der Riegel
+ * haengt damit heute an einer Eigenschaft der Rollentabelle statt an einer
+ * Pruefung — und die Rollentabelle ist genau die Stelle, an der jemand
+ * spaeter eine Rolle ergaenzt.
+ *
+ * Gibt `null` zurueck, wenn der Zugriff weitergehen darf.
+ *
+ * 403 und nicht 404: dass es das Dokument gibt, verraet die Kennung
+ * ohnehin; ein 404 wuerde behaupten, es existiere nicht, und diese
+ * Falschaussage loest spaeter niemand mehr auf. Ein unbekanntes Dokument
+ * faellt hier bewusst durch — den 404 vergibt der eigentliche Vorgang,
+ * der es ohnehin laedt.
+ */
+export async function personaldokumentAbgewehrt(
+  dienstClient: SupabaseClient,
+  dokumentId: string,
+  ctx: AktenAuthContext,
+): Promise<NextResponse | null> {
+  if (ctx.darf('personal.lesen')) return null
+
+  const { data } = await dienstClient
+    .from('akten_dokumente')
+    .select('caregiver_id')
+    // Der Mandanten-Fence muss von Hand stehen: der Dienstschluessel
+    // sieht `org_fence_akten_dokumente` nicht.
+    .eq('organization_id', ctx.organizationId)
+    .eq('id', dokumentId)
+    .maybeSingle()
+
+  if (data?.caregiver_id) {
+    return NextResponse.json(
+      { error: 'Dieses Dokument gehört zu einer Personalakte. Dafür fehlt Ihnen die Berechtigung.' },
+      { status: 403 },
+    )
+  }
+  return null
 }
 
 /**
