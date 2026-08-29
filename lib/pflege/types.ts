@@ -246,6 +246,15 @@ export interface PflegeMassnahme {
   ende_datum: string | null
   ergebnis: string | null
   sortierung: number
+  /**
+   * Abstand zwischen zwei Beurteilungen in Tagen (1–365, Migration
+   * 20260829185500). Ohne ihn schreibt der Trigger
+   * `trg_pflege_evaluation_wiedervorlage` keine neue Wiedervorlage fort —
+   * bewusst so: eine erfundene Frist taeuscht eine Verabredung vor.
+   */
+  evaluation_intervall_tage: number | null
+  /** Wann die Zielerreichung das naechste Mal zu beurteilen ist. */
+  naechste_evaluation: string | null
   erstellt_von: string
   created_at: string
   updated_at: string
