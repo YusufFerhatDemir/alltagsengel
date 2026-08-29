@@ -38,6 +38,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { euroZuCent, centZuEuro } from '@/lib/geld'
 import { heuteBerlin } from '@/lib/utils/timezone'
+import { MAHNBREMSE_STATUS } from '@/lib/billing/core/differenzen'
 import {
   DUNNING_DAYS,
   DUNNING_LEVEL_ORDER,
@@ -288,7 +289,7 @@ export async function pruefeMahnbarkeit(
     .from('payment_differences')
     .select('id')
     .eq('invoice_id', invoiceId)
-    .in('widerspruch_status', ['widerspruch_eingereicht', 'nachforderung'])
+    .in('widerspruch_status', [...MAHNBREMSE_STATUS])
 
   const beanstandungenAnzahl = (beanstandungen ?? []).length
   const differenzenAnzahl = (differenzen ?? []).length

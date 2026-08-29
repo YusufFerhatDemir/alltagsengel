@@ -3,6 +3,7 @@ import { logBillingAction } from './audit'
 import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 import { logger } from '@/lib/logger';
 import { euroZuCent } from '@/lib/geld'
+import { MAHNBREMSE_STATUS } from '@/lib/billing/core/differenzen'
 const log = logger.child('mahnlauf');
 
 // ---------------------------------------------------------------------------
@@ -190,7 +191,7 @@ export async function checkDunningBlocks(
     .from('payment_differences')
     .select('id, widerspruch_status')
     .eq('invoice_id', invoiceId)
-    .in('widerspruch_status', ['widerspruch_eingereicht', 'nachforderung'])
+    .in('widerspruch_status', [...MAHNBREMSE_STATUS])
 
   if (differences && differences.length > 0) {
     blocks.push({ invoiceId, reason: 'Offener Widerspruch gegen Kürzung' })
