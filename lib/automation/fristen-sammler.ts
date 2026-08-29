@@ -41,6 +41,30 @@ export interface FristItem {
   quelle: string
 }
 
+/**
+ * Die Quellen, aus denen Fristen stammen koennen — in der Reihenfolge der
+ * Abschnitte weiter unten.
+ *
+ * Steht hier und nicht im Dashboard, weil die Filterauswahl dort eine
+ * ABSCHRIFT dieser Liste war. Eine Abschrift driftet lautlos: `Zeiterfassung`
+ * kam am 29.08.2026 als Quelle dazu (ArbZG auf der erfassten Zeit,
+ * Migration 20260829184500) und haette in der Tabelle gestanden, ohne im
+ * Filter waehlbar zu sein — man haette sie sehen, aber nicht heraussuchen
+ * koennen. `__tests__/automation/fristen-quellen.test.ts` haelt die Liste
+ * gegen die Fundstellen im Quelltext.
+ */
+export const FRISTEN_QUELLEN = [
+  'Qualifikationen',
+  'Verordnungen',
+  'Schulungen',
+  'Dokumente',
+  'Abrechnung',
+  'Personal',
+  'Dienstplan',
+  'Zeiterfassung',
+  'Fixierungsprotokoll',
+] as const
+
 export function berechneDringlichkeit(tage: number): FristDringlichkeit {
   if (tage < 0) return 'ueberfaellig'
   if (tage <= 14) return 'kritisch'
@@ -54,7 +78,9 @@ export function tageVerbleibend(datumStr: string): number {
   return Math.ceil((d.getTime() - Date.now()) / 86400000)
 }
 
-function vollerName(row: { first_name?: string | null; last_name?: string | null } | null): string {
+type NamensZeile = { first_name?: string | null; last_name?: string | null }
+
+function vollerName(row: NamensZeile | null): string {
   if (!row) return 'Unbekannt'
   return `${row.first_name || ''} ${row.last_name || ''}`.trim() || 'Unbekannt'
 }
@@ -370,38 +396,73 @@ export async function sammleFristen(
   }
 
   // ── 8. Arbeitszeitgesetz-Verstöße (unquittiert) ─────────────────
+  //
+  // Seit Migration `20260829184500` kann ein Verstoß aus ZWEI Quellen
+  // stammen: aus dem Dienstplan (`basis = 'plan'`, die geplante Zeit) oder
+  // aus der Zeiterfassung (`basis = 'ist'`, die tatsächlich geleistete —
+  // die, an die § 2 Abs. 1 ArbZG bindet). Die Herkunft wird hier
+  // mitgeführt, weil sie sagt, WO die PDL nachsehen muss: bei einem
+  // Ist-Verstoß steht im Dienstplan nichts Auffälliges, der Überhang
+  // liegt im Zeiteintrag. Ein festes „Dienstplan" schickte sie an die
+  // falsche Stelle und ließe sie dort nichts finden.
   try {
-    const { data: verstoesse, error } = await supabase
+    const felder = 'id, caregiver_id, verstoss_art, datum, erkannt_am, caregivers(first_name, last_name)'
+    const abfrage = (auswahl: string) => supabase
       .from('arbeitszeit_verstoesse')
-      .select('id, caregiver_id, verstoss_art, datum, erkannt_am, caregivers(first_name, last_name)')
+      .select(auswahl)
       .eq('organization_id', organizationId)
       .eq('quittiert', false)
 
-    if (error) throw error
+    // Wie in lib/pdl/dienstplanfreigabe.ts: kennt das Schema die Spalte
+    // noch nicht, antwortet PostgREST mit 42703 — dann ohne sie lesen.
+    // Solche Zeilen sind ausnahmslos Plan-Verstöße, was sie auch waren:
+    // vor der Migration gab es keine andere Herkunft.
+    let antwort = await abfrage(`${felder}, basis`) as unknown as {
+      data: Array<Record<string, unknown>> | null
+      error: { message: string; code?: string } | null
+    }
+    if (antwort.error?.code === '42703') {
+      antwort = await abfrage(felder) as unknown as typeof antwort
+    }
+    if (antwort.error) throw antwort.error
 
-    for (const v of verstoesse || []) {
+    for (const roh of antwort.data || []) {
+      const v = roh as {
+        id: string; caregiver_id: string; verstoss_art: string
+        datum: string; erkannt_am: string; basis?: string | null
+        caregivers?: NamensZeile | NamensZeile[] | null
+      }
       const tage = tageVerbleibend(v.erkannt_am)
-      const caregiver = Array.isArray(v.caregivers) ? v.caregivers[0] : v.caregivers
+      // `?? null`, weil ein leeres Einbett-Array (kein Treffer auf dem
+      // Join) sonst `undefined` liefert und `vollerName` einen fehlenden
+      // Namen von einem gar nicht gelesenen nicht unterscheiden koennte.
+      const caregiver = (Array.isArray(v.caregivers) ? v.caregivers[0] : v.caregivers) ?? null
       // Der Klartext kommt aus lib/personal/arbzg.ts, NICHT aus einem
       // Ternaer: seit `pflichtpause` (§ 4 ArbZG) dazugekommen ist, haette
       // ein Zweiweg-Ausdruck jeden dritten Fall als „Mindestruhezeit"
       // etikettiert — eine Frist mit falschem Rechtsgrund im Titel.
       const artLabel = VERSTOSS_LABEL[v.verstoss_art as VerstossArt]
         ?? `ArbZG-Verstoß (${v.verstoss_art})`
+      // Nur der ausdrückliche Wert `ist` gilt als Erfassung. Alles andere
+      // — auch NULL oder ein unbekannter Wert — bleibt Plan: lieber die
+      // Herkunft zurückhaltend angeben als eine behaupten, die nicht in
+      // der Zeile steht.
+      const ausErfassung = v.basis === 'ist'
       fristen.push({
         id: `azv-${v.id}`,
         entitaetTyp: 'arbeitszeit_verstoss',
         entitaetId: v.id,
         typ: 'ArbZG-Verstoß',
         titel: artLabel,
-        beschreibung: `${artLabel} am ${v.datum} bei ${vollerName(caregiver)}`,
+        beschreibung: `${artLabel} am ${v.datum} bei ${vollerName(caregiver)}`
+          + (ausErfassung ? ' (aus der erfassten Arbeitszeit)' : ' (aus dem Dienstplan)'),
         bezug: vollerName(caregiver),
         caregiverId: v.caregiver_id,
         clientId: null,
         faelligAm: v.erkannt_am,
         tageVerbleibend: tage,
         dringlichkeit: 'ueberfaellig',
-        quelle: 'Dienstplan',
+        quelle: ausErfassung ? 'Zeiterfassung' : 'Dienstplan',
       })
     }
   } catch (e) {
