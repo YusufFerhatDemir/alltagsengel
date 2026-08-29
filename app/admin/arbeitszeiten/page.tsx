@@ -1,7 +1,8 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
-import { statusMeta, ARBEITSZEIT_STATUS, MONATSNAMEN } from '@/lib/admin/ops'
-import { StatusBadge, SearchInput, EmptyRow } from '@/components/admin/OpsUI'
+import { formatDate, statusMeta, ARBEITSZEIT_STATUS, MONATSNAMEN } from '@/lib/admin/ops'
+import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import type { PersonalZeitkorrektur } from '@/lib/personal/types'
 import { logger } from '@/lib/logger'
 const log = logger.child('admin:arbeitszeiten')
 
@@ -33,6 +34,13 @@ export default function ArbeitszeitenPage() {
   const now = new Date()
   const [monat, setMonat] = useState(now.getMonth() + 1)
   const [jahr, setJahr] = useState(now.getFullYear())
+  // Das Korrekturprotokoll zu einem Mitarbeiter — die Zahl in der Spalte
+  // „Korrigiert" stand bisher fuer sich allein: man sah, DASS korrigiert
+  // wurde, aber nicht was, von wem und warum. Ein Revisionsprotokoll, das
+  // niemand lesen kann, ist als Nachweis nichts wert.
+  const [korrekturFuer, setKorrekturFuer] = useState<Row | null>(null)
+  const [korrekturen, setKorrekturen] = useState<PersonalZeitkorrektur[] | null>(null)
+  const [korrekturFehler, setKorrekturFehler] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -63,6 +71,20 @@ export default function ArbeitszeitenPage() {
     setLoading(true)
     load()
   }, [monat, jahr])
+
+  async function korrekturenOeffnen(row: Row) {
+    setKorrekturFuer(row)
+    setKorrekturen(null)
+    setKorrekturFehler('')
+    try {
+      const res = await fetch(`/api/personal/arbeitszeiten/korrekturen?caregiverId=${row.caregiver_id}`)
+      const body = await res.json()
+      if (!res.ok) { setKorrekturFehler(body.error || 'Korrekturen konnten nicht geladen werden.'); return }
+      setKorrekturen(Array.isArray(body) ? body : (body.korrekturen ?? []))
+    } catch {
+      setKorrekturFehler('Korrekturen konnten nicht geladen werden.')
+    }
+  }
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -144,7 +166,16 @@ export default function ArbeitszeitenPage() {
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     {row.korrigierte_eintraege > 0 ? (
-                      <StatusBadge label={`${row.korrigierte_eintraege} Korr.`} color="#E8A000" />
+                      <button
+                        onClick={() => korrekturenOeffnen(row)}
+                        style={{
+                          background: 'none', border: 'none', padding: 0,
+                          cursor: 'pointer', font: 'inherit',
+                        }}
+                        aria-label={`Korrekturen von ${row.mitarbeiter} anzeigen`}
+                      >
+                        <StatusBadge label={`${row.korrigierte_eintraege} Korr.`} color="#E8A000" />
+                      </button>
                     ) : '—'}
                   </td>
                   <td style={{ textAlign: 'right' }}>
@@ -165,6 +196,57 @@ export default function ArbeitszeitenPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {korrekturFuer && (
+        <div style={{ marginTop: 20, border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+            <h2 style={{ margin: 0, fontSize: 16 }}>Korrekturprotokoll — {korrekturFuer.mitarbeiter}</h2>
+            <button
+              onClick={() => { setKorrekturFuer(null); setKorrekturen(null); setKorrekturFehler('') }}
+              style={{
+                fontSize: 13, color: 'var(--ink3)', background: 'var(--coal2)',
+                border: '1px solid var(--border)', borderRadius: 8,
+                padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              Schließen
+            </button>
+          </div>
+          {/* Ausdrueckliche Ansage statt eines stillen Monatsfilters: das
+              Protokoll fuehrt `created_at` — den Zeitpunkt der KORREKTUR,
+              nicht den der Arbeit. Eine im September vorgenommene Korrektur
+              an einer August-Zeit stuende unter September. Danach zu filtern
+              haette also eine andere Frage beantwortet als die Spalte, unter
+              der die Liste haengt — und das haette niemand gemerkt. */}
+          <p style={{ margin: '4px 0 12px', fontSize: 12, color: 'var(--ink4)' }}>
+            Alle Korrekturen dieses Mitarbeiters, jüngste zuerst — nicht auf {MONATSNAMEN[korrekturFuer.monat - 1]} eingegrenzt.
+            Das Protokoll führt den Zeitpunkt der Korrektur, nicht den der Arbeit.
+          </p>
+          {korrekturFehler && <Banner tone="danger">{korrekturFehler}</Banner>}
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr><th>Korrigiert am</th><th>Feld</th><th>Vorher</th><th>Nachher</th><th>Grund</th></tr>
+              </thead>
+              <tbody>
+                {korrekturen === null
+                  ? <EmptyRow colSpan={5}>{korrekturFehler ? '—' : 'Laden…'}</EmptyRow>
+                  : korrekturen.length === 0
+                    ? <EmptyRow colSpan={5}>Keine Korrekturen protokolliert</EmptyRow>
+                    : korrekturen.map(k => (
+                      <tr key={k.id}>
+                        <td style={{ fontSize: 13 }}>{formatDate(k.created_at)}</td>
+                        <td style={{ fontSize: 13, fontWeight: 600 }}>{k.feld}</td>
+                        <td style={{ fontSize: 13 }}>{k.alter_wert ?? '—'}</td>
+                        <td style={{ fontSize: 13 }}>{k.neuer_wert ?? '—'}</td>
+                        <td style={{ fontSize: 13, whiteSpace: 'pre-wrap' }}>{k.grund}</td>
+                      </tr>
+                    ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
