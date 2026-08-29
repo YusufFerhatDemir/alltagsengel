@@ -85,8 +85,12 @@ test('createArbeitszeit: weist ungültige Quelle ab', async () => {
 
 test('updateArbeitszeit: übersetzt gesperrte-Arbeitszeit-Fehler', async () => {
   const { supabase } = updateClient({}, 'Gesperrte Arbeitszeit kann nicht bearbeitet werden.')
+  // Geprüft wird die ÜBERSETZUNG der Datenbankmeldung, also muss der Aufruf
+  // bis zum UPDATE kommen. Ein Patch auf `istMinuten` täte das seit GAP-13
+  // nicht mehr: die Herleitung aus Beginn und Ende bricht vorher ab, und
+  // der Fall wäre grün, ohne je an der Übersetzung vorbeigekommen zu sein.
   await assert.rejects(
-    () => updateArbeitszeit(supabase, 'az-1', 'org-1', { istMinuten: 500 }),
+    () => updateArbeitszeit(supabase, 'az-1', 'org-1', { bemerkung: 'Korrektur durch PDL' }),
     /Gesperrte Arbeitszeit/,
   )
 })
@@ -110,25 +114,63 @@ test('updateArbeitszeit: mappt camelCase → snake_case korrekt', async () => {
   assert.equal(updates[0].ist_minuten, 450)
 })
 
-test('createArbeitszeit: weist istMinuten <= 0 ab', async () => {
+test('createArbeitszeit: weist übergebene Ist-Minuten ab, die nicht zu den Zeiten passen', async () => {
+  // Vor GAP-13 (29.08.2026) kam `istMinuten` unverändert aus dem Rumpf in
+  // die Spalte; abgewiesen wurde nur, was für sich genommen unplausibel
+  // war (<= 0 oder > 24 h). Seitdem wird der Wert aus Beginn, Ende und
+  // Pause HERGELEITET und ein mitgeschickter Wert dagegen geprüft. Damit
+  // greift bei 0 nicht mehr die Plausibilität, sondern der Abgleich — und
+  // das ist der schärfere Riegel: er weist auch die 60 ab, die für sich
+  // plausibel aussieht und zu einer Zwölfstundenschicht gehört.
   const { supabase } = insertClient()
   await assert.rejects(
     () => createArbeitszeit(supabase, {
       organizationId: 'org-1', caregiverId: 'cg-1', datum: '2026-08-11',
       startZeit: '08:00', endZeit: '16:00', istMinuten: 0,
     }),
+    /passen nicht zu Beginn, Ende und Pause/,
+  )
+  await assert.rejects(
+    () => createArbeitszeit(supabase, {
+      organizationId: 'org-1', caregiverId: 'cg-1', datum: '2026-08-11',
+      startZeit: '08:00', endZeit: '20:00', istMinuten: 60,
+    }),
+    /passen nicht zu Beginn, Ende und Pause/,
+  )
+})
+
+test('createArbeitszeit: weist eine Schicht ab, aus der sich 0 Minuten ergeben', async () => {
+  // Der Weg, auf dem „Ist-Minuten müssen größer als 0 sein" seit GAP-13
+  // noch erreichbar ist: nicht über den übergebenen Wert, sondern über die
+  // Herleitung. Eine Pause, die den ganzen Dienst auffrisst, ergibt netto
+  // 0 — ohne diesen Fall wäre die Plausibilitätsprüfung auf diesem Pfad
+  // gar nicht mehr abgedeckt.
+  const { supabase } = insertClient()
+  await assert.rejects(
+    () => createArbeitszeit(supabase, {
+      organizationId: 'org-1', caregiverId: 'cg-1', datum: '2026-08-11',
+      startZeit: '08:00', endZeit: '12:00', pauseMinuten: 240,
+    }),
     /Ist-Minuten müssen größer als 0 sein/,
   )
 })
 
 test('createArbeitszeit: weist istMinuten > 24h ab', async () => {
+  // Der Wert wird weiterhin abgewiesen, seit GAP-13 aber mit einer anderen
+  // Begründung: nicht „mehr als 24 Stunden", sondern „passt nicht zu den
+  // Zeiten". Die 24-Stunden-Schranke in `assertPlausibleZeiten` ist auf
+  // DIESEM Pfad nicht mehr erreichbar — `nettoMinuten()` begrenzt die
+  // Herleitung von sich aus auf 0…1440. Sie bleibt dort stehen, weil die
+  // Funktion auch von anderen Stellen aufgerufen wird; hier wird geprüft,
+  // was dieser Pfad tatsächlich tut, statt eine Meldung zu erwarten, die
+  // er nicht mehr erzeugen kann.
   const { supabase } = insertClient()
   await assert.rejects(
     () => createArbeitszeit(supabase, {
       organizationId: 'org-1', caregiverId: 'cg-1', datum: '2026-08-11',
       startZeit: '08:00', endZeit: '16:00', istMinuten: 1441,
     }),
-    /24 Stunden/,
+    /passen nicht zu Beginn, Ende und Pause/,
   )
 })
 
@@ -154,10 +196,29 @@ test('createArbeitszeit: akzeptiert Nachtdienst über Mitternacht (Ende < Start)
   assert.equal(inserts[0].end_zeit, '06:00')
 })
 
-test('updateArbeitszeit: weist istMinuten <= 0 im Patch ab', async () => {
-  const { supabase } = updateClient({ id: 'az-1' })
+test('updateArbeitszeit: weist istMinuten im Patch ab, die nicht zum Bestand passen', async () => {
+  // Der Bestand trägt jetzt Zeiten: ohne sie bräche die Herleitung schon an
+  // „Start- und Endzeit müssen im Format HH:MM angegeben werden" ab, und
+  // der Fall wäre grün, ohne den Abgleich je erreicht zu haben.
+  const { supabase } = updateClient({
+    id: 'az-1', start_zeit: '08:00', end_zeit: '16:00', pause_minuten: 30,
+  })
   await assert.rejects(
     () => updateArbeitszeit(supabase, 'az-1', 'org-1', { istMinuten: -5 }),
-    /Ist-Minuten müssen größer als 0 sein/,
+    /passen nicht zu Beginn, Ende und Pause/,
   )
+})
+
+test('updateArbeitszeit: eine Pausenkorrektur allein zieht die Ist-Minuten nach', async () => {
+  // Der Grund, warum aus dem VERSCHMOLZENEN Stand hergeleitet wird und
+  // nicht aus dem Patch: wer nur die Pause korrigiert, ändert damit die
+  // Arbeitszeit. Bliebe `ist_minuten` unangetastet, stünde in der Zeile
+  // eine Arbeitszeit, die nicht mehr zu ihren eigenen Zeiten passt — und
+  // jede spätere ArbZG-Prüfung führe den alten Wert.
+  const { supabase, updates } = updateClient({
+    id: 'az-1', start_zeit: '08:00', end_zeit: '16:00', pause_minuten: 30,
+  })
+  await updateArbeitszeit(supabase, 'az-1', 'org-1', { pauseMinuten: 60 })
+  assert.equal(updates[0].pause_minuten, 60)
+  assert.equal(updates[0].ist_minuten, 420)
 })
