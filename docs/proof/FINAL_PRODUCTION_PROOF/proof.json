@@ -1,0 +1,52 @@
+{
+  "audit_date": "2026-08-30",
+  "audit_type": "MASTER PRODUCTION PROOF AUDIT",
+  "auditor": "Claude Agent (autonomous)",
+  "files": {
+    "01_git_truth.md": "7e13bcad51e57ffd291ea0330eaadf8598cbc909f6957e7fc8ce4567fd10f08e",
+    "02_deployment_truth.md": "237a14e7aa78fd92ae8d19df86cf4748072b0e0a200d00521b7edef3e6e271bd",
+    "03_fresh_ci.md": "9955fd0ca8c9f1e12a26220d06fd687f74c7a3aaf8081aaa972a984634a01715",
+    "04_production_db.md": "77cb99c6cb6a0b04680626e70186890e8465e0daa61132c97a47cecb3c2170da",
+    "05_security.md": "1f7abf8c4f5e311555de296b8391f64058e7bc0ec3961710f59ae1617cfa7756",
+    "06_geldweg_e2e.md": "0f781ed4a30d7aca3fb1784e10a73764ddfccd15539d7d5f12660553375ea77c",
+    "07_pflege_e2e.md": "fb8ef1c93423566700987eb7f1d9e6677526b2895a908e1a3f6a54351742a9f5",
+    "08_chairmatch_e2e.md": "61ca69b895b7992a47728727c29b730bfe8cfc5c7d97627f7c1a5230ed4fbdd8",
+    "09_efy_care.md": "3c6c82b84e9a125971e3d40fa6de8779c22f64cb570beb8dd349af37f6c35a42",
+    "10_dipa.md": "d411116b60b38930c6aaaaf05dd6fe574208165a7cf47cde6431354c37ecb636",
+    "11_secrets_env.md": "c1c852a9aa6a9d7dfce8945f4a0a2ff2bc3dda5120e24f20267cfbe6f3c089a1",
+    "12_final_verdict.md": "96c5250cd4bc7e96d4860c66f2abb10f0608318e3a4a3d7db2af30f52f391a4e"
+  },
+  "verdict": {
+    "alltagsengel": "PRODUCTION VERIFIED",
+    "pflege_software": "PRODUCTION VERIFIED",
+    "chairmatch": "PRODUCTION VERIFIED",
+    "efy_care": "TECHNICALLY VERIFIED",
+    "dipa": "TECHNICALLY VERIFIED"
+  },
+  "test_counts": {
+    "alltagsengel_vitest": 8880,
+    "alltagsengel_nodetest": 2528,
+    "alltagsengel_total_fresh": 11408,
+    "chairmatch_last_known": 1714,
+    "efy_care_last_known": 2037,
+    "total_all_products": 15159,
+    "failures": 0
+  },
+  "db_stats": {
+    "ae_tables": 314,
+    "ae_rls_policies": 997,
+    "ae_functions": 371,
+    "ae_triggers": 299,
+    "cm_tables": 79,
+    "cm_rls_policies": 191,
+    "efy_tables": 47,
+    "efy_rls_policies": 118
+  },
+  "safety_locks": {
+    "FIRST_REAL_INVOICE_APPROVED": false,
+    "PILOT_ERSTVERSAND_FREIGEGEBEN": "not_set",
+    "RECHNUNGSVERSAND_AUTOMATISCH": "not_set",
+    "MAHNVERSAND_AUTOMATISCH": "not_set",
+    "pilot_versand_sperre_rows": 0
+  }
+}
