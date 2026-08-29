@@ -7,6 +7,45 @@ import {
   type ArbeitszeitQuelle, type ArbeitszeitStatus,
 } from './types'
 import { assertCaregiverInOrg } from './organization-guard'
+import { nettoMinuten } from './arbzg'
+
+/**
+ * Die Netto-Arbeitszeit wird SERVERSEITIG hergeleitet, nicht geglaubt.
+ *
+ * BEFUND GAP-13 (29.08.2026): `istMinuten` kam bisher unveraendert aus dem
+ * Request-Body in die Spalte `ist_minuten`. Die Oberflaeche rechnet zwar
+ * `(Ende − Start) − Pause`, aber die Route rechnete nichts nach. Ein
+ * Aufruf mit `startZeit 08:00, endZeit 20:00, pauseMinuten 0,
+ * istMinuten 60` legte damit eine Zwoelfstundenschicht an, die als eine
+ * Stunde in der Datenbank steht.
+ *
+ * Das ist nicht nur eine Zahl: `ist_minuten` traegt das Arbeitszeitkonto,
+ * die Lohnabrechnung und — seit GAP-13 — die ArbZG-Pruefung. Eine
+ * Pruefung auf einen frei waehlbaren Wert prueft nichts.
+ *
+ * Abgewiesen statt still ueberschrieben: ein stilles Korrigieren wuerde
+ * einen kaputten Client auf Dauer verdecken, und der Nutzer bekaeme ein
+ * gruenes „Gespeichert" fuer etwas anderes als das, was er eingegeben hat.
+ */
+function assertIstMinutenStimmig(
+  startZeit: string | null | undefined,
+  endZeit: string | null | undefined,
+  pauseMinuten: number | null | undefined,
+  uebergeben: number | null | undefined,
+): number {
+  const abgeleitet = nettoMinuten(startZeit, endZeit, pauseMinuten)
+  if (abgeleitet == null) {
+    throw new UserFacingError('Start- und Endzeit müssen im Format HH:MM angegeben werden.')
+  }
+  if (uebergeben == null) return abgeleitet
+  if (Number(uebergeben) !== abgeleitet) {
+    throw new UserFacingError(
+      `Die Ist-Minuten (${uebergeben}) passen nicht zu Beginn, Ende und Pause `
+      + `(daraus ergeben sich ${abgeleitet} Minuten). Bitte Zeiten korrigieren.`,
+    )
+  }
+  return abgeleitet
+}
 
 /**
  * Wer handelt gerade? Die Zeiterfassung faehrt durchgehend mit
@@ -41,7 +80,12 @@ export interface CreateArbeitszeitParams extends AkteurParams {
   startZeit: string
   endZeit: string
   pauseMinuten?: number
-  istMinuten: number
+  /**
+   * Optional. Wird serverseitig aus Beginn, Ende und Pause hergeleitet;
+   * ein mitgegebener abweichender Wert wird abgewiesen, nicht uebernommen
+   * (siehe `assertIstMinutenStimmig`).
+   */
+  istMinuten?: number
   sollMinuten?: number | null
   dienstplanEintragId?: string | null
   serviceRecordId?: string | null
@@ -51,7 +95,10 @@ export interface CreateArbeitszeitParams extends AkteurParams {
 
 export async function createArbeitszeit(supabase: SupabaseClient, params: CreateArbeitszeitParams): Promise<PersonalArbeitszeit> {
   assertErlaubt(params.quelle, ARBEITSZEIT_QUELLE_WERTE, 'quelle')
-  assertPlausibleZeiten({ istMinuten: params.istMinuten, pauseMinuten: params.pauseMinuten })
+  const istMinuten = assertIstMinutenStimmig(
+    params.startZeit, params.endZeit, params.pauseMinuten, params.istMinuten,
+  )
+  assertPlausibleZeiten({ istMinuten, pauseMinuten: params.pauseMinuten })
 
   // Mandanten-Fence VOR dem Schreiben (lib/personal/organization-guard.ts).
   // personal_arbeitszeitkonto joint `caregivers` ohne Mandanten-Bedingung —
@@ -66,7 +113,7 @@ export async function createArbeitszeit(supabase: SupabaseClient, params: Create
     start_zeit: params.startZeit,
     end_zeit: params.endZeit,
     pause_minuten: params.pauseMinuten ?? 0,
-    ist_minuten: params.istMinuten,
+    ist_minuten: istMinuten,
     soll_minuten: params.sollMinuten ?? null,
     dienstplan_eintrag_id: params.dienstplanEintragId ?? null,
     service_record_id: params.serviceRecordId ?? null,
@@ -155,7 +202,6 @@ export async function updateArbeitszeit(
   patch: UpdateArbeitszeitParams,
 ): Promise<PersonalArbeitszeit> {
   assertErlaubt(patch.status, ARBEITSZEIT_STATUS_WERTE, 'status')
-  assertPlausibleZeiten({ istMinuten: patch.istMinuten, pauseMinuten: patch.pauseMinuten })
 
   // Sperr-Logik VOR dem Schreiben.
   //
@@ -173,7 +219,7 @@ export async function updateArbeitszeit(
   // Hier wird deshalb der Bestand gelesen und entschieden.
   const { data: bestand, error: ladeFehler } = await supabase
     .from('personal_arbeitszeiten')
-    .select('gesperrt')
+    .select('gesperrt, start_zeit, end_zeit, pause_minuten, ist_minuten')
     .eq('id', id)
     .eq('organization_id', organizationId)
     .maybeSingle()
@@ -195,11 +241,36 @@ export async function updateArbeitszeit(
     }
   }
 
+  // Die Netto-Arbeitszeit wird aus dem VERSCHMOLZENEN Stand hergeleitet,
+  // nicht aus dem Patch allein: wer nur die Pause korrigiert, aendert damit
+  // die Arbeitszeit — Beginn und Ende stehen dann weiter im Bestand. Ein
+  // Patch, der nur `pauseMinuten` schickt und `ist_minuten` unangetastet
+  // laesst, haette sonst eine Zeile hinterlassen, deren Ist-Minuten nicht
+  // mehr zu ihren eigenen Zeiten passen — und jede spaetere ArbZG-Pruefung
+  // haette den alten Wert gemessen.
+  const beruehrtZeiten =
+    patch.startZeit !== undefined || patch.endZeit !== undefined
+    || patch.pauseMinuten !== undefined || patch.istMinuten !== undefined
+
+  let istMinutenNeu: number | undefined
+  if (beruehrtZeiten) {
+    istMinutenNeu = assertIstMinutenStimmig(
+      patch.startZeit ?? (bestand as { start_zeit?: string }).start_zeit,
+      patch.endZeit ?? (bestand as { end_zeit?: string }).end_zeit,
+      patch.pauseMinuten ?? (bestand as { pause_minuten?: number }).pause_minuten,
+      patch.istMinuten,
+    )
+    assertPlausibleZeiten({
+      istMinuten: istMinutenNeu,
+      pauseMinuten: patch.pauseMinuten,
+    })
+  }
+
   const update: Record<string, unknown> = {}
   if (patch.startZeit !== undefined) update.start_zeit = patch.startZeit
   if (patch.endZeit !== undefined) update.end_zeit = patch.endZeit
   if (patch.pauseMinuten !== undefined) update.pause_minuten = patch.pauseMinuten
-  if (patch.istMinuten !== undefined) update.ist_minuten = patch.istMinuten
+  if (istMinutenNeu !== undefined) update.ist_minuten = istMinutenNeu
   if (patch.sollMinuten !== undefined) update.soll_minuten = patch.sollMinuten
   if (patch.status !== undefined) update.status = patch.status
   if (patch.bestaetigtVon !== undefined) update.bestaetigt_von = patch.bestaetigtVon

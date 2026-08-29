@@ -996,6 +996,25 @@ export async function wendeArbeitszeitAkteurMigrationAn(db: PGlite): Promise<voi
   await db.exec(transaktionsInhalt('20260829005500_arbeitszeit_korrektur_akteur.sql'))
 }
 
+/**
+ * ArbZG auf der ERFASSTEN Arbeitszeit (Migration 20260829184500).
+ *
+ * Weitet `arbeitszeit_verstoesse` (nullable `eintrag_id`, neue Spalten
+ * `arbeitszeit_id` und `basis`, Verstoss-Art `pflichtpause`) und haengt
+ * `arbzg_pruefung_ist()` an `personal_arbeitszeiten`.
+ *
+ * Wie die beiden Helfer darueber bewusst NICHT Teil von
+ * `bauePersonalTabellen()`: der Grundaufbau muss den Zustand VOR der
+ * Migration abbilden koennen, sonst laesst sich nicht mehr belegen, dass
+ * die erfasste Arbeitszeit heute ungeprueft durchgeht — und genau das ist
+ * der Befund, den diese Migration behebt.
+ *
+ * Setzt bauePersonalTabellen() voraus.
+ */
+export async function wendeArbzgIstMigrationAn(db: PGlite): Promise<void> {
+  await db.exec(transaktionsInhalt('20260829184500_arbzg_ist_arbeitszeit.sql'))
+}
+
 // ─────────────────────────────────────────────────────────────────────
 // Pflegedokumentation: Massnahmenplanung
 // ─────────────────────────────────────────────────────────────────────
@@ -1070,6 +1089,36 @@ export async function bauePflegeplanungTabellen(db: PGlite): Promise<void> {
     CREATE TRIGGER trg_pflege_audit_log_immutable_delete BEFORE DELETE ON public.pflege_audit_log
       FOR EACH ROW EXECUTE FUNCTION public.prevent_pflege_audit_log_delete();
   `)
+}
+
+/**
+ * Evaluation der Massnahmen (Migration 20260829185500) — der sechste
+ * Schritt des Pflegeprozesses.
+ *
+ * Wie die anderen `wende…MigrationAn`-Helfer bewusst NICHT Teil von
+ * `bauePflegeplanungTabellen()`: die Migration ist eingecheckt und noch
+ * nicht angewendet. Der Grundaufbau muss den Zustand davor abbilden
+ * koennen, sonst laesst sich nicht mehr belegen, dass die Wiedervorlage
+ * heute fehlt.
+ *
+ * Zieht auch den geweiteten `pflege_audit_log_typ_check` nach — der kannte
+ * bis dahin sieben von fuenfzehn Typen.
+ *
+ * Setzt bauePflegeplanungTabellen() voraus.
+ */
+export async function wendeEvaluationMigrationAn(db: PGlite): Promise<void> {
+  // `eigene_caregiver_ids()` steht live in der Datenbank und wird von der
+  // Lese-Policy der Evaluationen gebraucht. Der Grundaufbau zieht die
+  // Pflege-Tabellen ueber `tabelleAusMigration()` herein, also OHNE ihre
+  // Policies — die Funktion fehlt deshalb hier. Bewusst eine leere Menge:
+  // die Suite faehrt mit dem Dienstschluessel, RLS ist nicht ihr
+  // Gegenstand, und eine Attrappe, die etwas zurueckgibt, wuerde eine
+  // Sichtbarkeit vortaeuschen, die niemand geprueft hat.
+  await db.exec(`
+    CREATE OR REPLACE FUNCTION public.eigene_caregiver_ids()
+      RETURNS SETOF uuid LANGUAGE sql STABLE AS $$ SELECT NULL::uuid WHERE false $$;
+  `)
+  await db.exec(transaktionsInhalt('20260829185500_pflege_massnahmen_evaluation.sql'))
 }
 
 /**

@@ -52,6 +52,7 @@ export const POST = withTracking(async function POST(request: Request) {
       beginnDatum: body.beginnDatum ?? null,
       endeDatum: body.endeDatum ?? null,
       sortierung: body.sortierung,
+      evaluationIntervallTage: body.evaluationIntervallTage,
       erstelltVon: userId,
     })
 

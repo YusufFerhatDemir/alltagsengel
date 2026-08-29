@@ -27,6 +27,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { UserFacingError } from '@/lib/api/user-facing-error'
 import { heuteBerlin } from '@/lib/utils/timezone'
+import type { VerstossArt } from '@/lib/personal/arbzg'
 
 // ─────────────────────────────────────────────────────────────────
 // Wochenrechnung
@@ -106,10 +107,21 @@ export interface WochenUebersicht {
   offeneVerstoesse: Array<{
     id: string
     caregiverId: string
-    art: 'max_tagesarbeitszeit' | 'mindestruhezeit'
+    art: VerstossArt
     datum: string
     gemessen: number
     grenzwert: number
+    /**
+     * Woraus der Verstoss stammt: `plan` = Dienstplan-Eintrag,
+     * `ist` = erfasste Arbeitszeit. Die PDL muss beides unterscheiden
+     * koennen: ein Plan-Verstoss laesst sich noch umplanen, ein
+     * Ist-Verstoss ist bereits geschehen und nur noch zu quittieren.
+     *
+     * Altzeilen aus der Zeit vor `20260829184500` tragen keine Spalte
+     * `basis`; sie werden als `plan` gefuehrt — was sie auch waren,
+     * denn vorher gab es nur die Plan-Pruefung.
+     */
+    basis: 'plan' | 'ist'
   }>
   freigabe: DienstplanFreigabe | null
 }
@@ -153,13 +165,7 @@ export async function ladeWochenUebersicht(
       .in('status', ['beantragt', 'genehmigt'])
       .lte('start_date', bis)
       .gte('end_date', von),
-    supabase
-      .from('arbeitszeit_verstoesse')
-      .select('id, caregiver_id, verstoss_art, datum, gemessener_wert_minuten, grenzwert_minuten')
-      .eq('organization_id', organizationId)
-      .eq('quittiert', false)
-      .gte('datum', von)
-      .lte('datum', bis),
+    ladeOffeneVerstoesse(supabase, organizationId, von, bis),
     getFreigabe(supabase, organizationId, von),
   ])
 
@@ -221,19 +227,59 @@ export async function ladeWochenUebersicht(
     geplanteMinuten,
     auslastung,
     abwesenheiten: (abwesenheitenRes.data ?? []).length,
-    offeneVerstoesse: ((verstoesseRes.data ?? []) as Array<{
-      id: string; caregiver_id: string; verstoss_art: string; datum: string
-      gemessener_wert_minuten: number; grenzwert_minuten: number
-    }>).map(v => ({
+    offeneVerstoesse: (verstoesseRes.data ?? []).map(v => ({
       id: v.id,
       caregiverId: v.caregiver_id,
-      art: v.verstoss_art as 'max_tagesarbeitszeit' | 'mindestruhezeit',
+      art: v.verstoss_art as VerstossArt,
       datum: v.datum,
       gemessen: Number(v.gemessener_wert_minuten),
       grenzwert: Number(v.grenzwert_minuten),
+      basis: v.basis === 'ist' ? 'ist' as const : 'plan' as const,
     })),
     freigabe,
   }
+}
+
+interface VerstossZeile {
+  id: string
+  caregiver_id: string
+  verstoss_art: string
+  datum: string
+  gemessener_wert_minuten: number
+  grenzwert_minuten: number
+  basis?: string | null
+}
+
+/**
+ * Offene ArbZG-Verstoesse der Woche — Plan UND Erfassung.
+ *
+ * Die Spalte `basis` kommt aus Migration `20260829184500`. Kennt die
+ * Datenbank sie noch nicht, antwortet PostgREST mit `42703`, und der
+ * zweite Versuch laeuft ohne sie. Ohne diesen Rueckfall waere die ganze
+ * Wochenuebersicht der PDL tot, sobald der Code vor der Migration
+ * ausgeliefert wird — und das ist die Reihenfolge, in der hier
+ * ausgeliefert wird (Code zuerst, Apply getrennt).
+ */
+async function ladeOffeneVerstoesse(
+  supabase: SupabaseClient,
+  organizationId: string,
+  von: string,
+  bis: string,
+): Promise<{ data: VerstossZeile[] | null; error: { message: string } | null }> {
+  const felder = 'id, caregiver_id, verstoss_art, datum, gemessener_wert_minuten, grenzwert_minuten'
+  const abfrage = (auswahl: string) => supabase
+    .from('arbeitszeit_verstoesse')
+    .select(auswahl)
+    .eq('organization_id', organizationId)
+    .eq('quittiert', false)
+    .gte('datum', von)
+    .lte('datum', bis)
+
+  const mitBasis = await abfrage(`${felder}, basis`)
+  if ((mitBasis.error as { code?: string } | null)?.code !== '42703') {
+    return mitBasis as unknown as { data: VerstossZeile[] | null; error: { message: string } | null }
+  }
+  return await abfrage(felder) as unknown as { data: VerstossZeile[] | null; error: { message: string } | null }
 }
 
 /**

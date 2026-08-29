@@ -152,19 +152,39 @@ export function useFokusFalle<T extends HTMLElement>(
       const ende = liste[liste.length - 1]
       const fokussiert = document.activeElement as HTMLElement | null
 
-      // Fokus außerhalb des Dialogs (z. B. nach einem Re-Render) → zurückholen.
-      if (!node.contains(fokussiert)) {
-        e.preventDefault()
+      // ── Warum JEDER Tab hier gesetzt wird, nicht nur der am Rand ────────
+      // Die frühere Fassung griff nur an den beiden Enden der Liste: am
+      // letzten Element vorwärts, am ersten rückwärts. Dazwischen ließ sie
+      // den Browser laufen — und setzte damit voraus, dass dessen
+      // Tab-Reihenfolge der DOM-Reihenfolge der Liste folgt.
+      //
+      // WebKit tut das nicht. Safari springt mit Tab standardmäßig nur
+      // zwischen FORMULARFELDERN; Links und Schaltflächen werden
+      // übersprungen, solange „Tab highlights each item" aus ist. Im
+      // Rückruf-Dialog der Startseite steht deshalb nach dem letzten
+      // Eingabefeld nicht das Listenende, sondern gar nichts mehr: der
+      // Fokus fiel auf `body`, und weil `fokussiert === ende` nie zutraf,
+      // hat die Falle es nicht einmal bemerkt. Gemessen am 29.08.2026 im
+      // `mobile-safari`-Lauf, reproduzierbar in jedem Versuch, nach dem
+      // dritten Tab.
+      //
+      // Jetzt bestimmt die Falle das Ziel selbst und der Browser bekommt
+      // den Tastendruck gar nicht mehr zu sehen. Damit ist die Reihenfolge
+      // im Dialog überall dieselbe — die des DOM — statt von einer
+      // Browser-Einstellung abzuhängen.
+      e.preventDefault()
+
+      // Fokus außerhalb des Dialogs (z. B. nach einem Re-Render, oder weil
+      // der Browser ihn ins Nichts gesetzt hat) → zurückholen.
+      const i = fokussiert && node.contains(fokussiert) ? liste.indexOf(fokussiert) : -1
+      if (i === -1) {
         ;(e.shiftKey ? ende : anfang).focus()
         return
       }
-      if (e.shiftKey && fokussiert === anfang) {
-        e.preventDefault()
-        ende.focus()
-      } else if (!e.shiftKey && fokussiert === ende) {
-        e.preventDefault()
-        anfang.focus()
-      }
+      const ziel = e.shiftKey
+        ? (i === 0 ? liste.length - 1 : i - 1)
+        : (i === liste.length - 1 ? 0 : i + 1)
+      liste[ziel].focus()
     }
 
     // Am Dokument, nicht am Dialog: so greift die Falle auch dann, wenn der
