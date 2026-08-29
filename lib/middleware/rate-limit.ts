@@ -149,9 +149,11 @@ export function handleRateLimit(req: NextRequest): NextResponse | null {
   // dadurch fehlt x-forwarded-for und getClientIP() liefert für JEDE
   // Anfrage aus JEDER Browser-Session denselben Schlüssel "ip:unknown".
   // 70 Tests × 2 Browser-Projekte × Retries teilen sich so EIN
-  // TIER_STANDARD-Budget (120/min) und lösen falsche 429er aus. Nur in
-  // diesem CI-Job gesetzt (.github/workflows/ci.yml) — überall sonst
-  // (Produktion, lokale Entwicklung) bleibt das Limit scharf.
+  // TIER_STANDARD-Budget (120/min) und lösen falsche 429er aus. Gesetzt
+  // im CI-Job (.github/workflows/ci.yml) und für den Dev-Server, den
+  // Playwright lokal selbst startet (playwright.config.ts, `webServer.env`)
+  // — überall sonst, Produktion wie normale Entwicklung, bleibt das Limit
+  // scharf.
   if (process.env.DISABLE_RATE_LIMIT_FOR_E2E === '1') return null
 
   const { pathname } = req.nextUrl
