@@ -192,6 +192,22 @@ export async function updateQualifikation(
 }
 
 export async function deleteQualifikation(supabase: SupabaseClient, id: string, organizationId: string): Promise<void> {
+  // Ohne diesen Nachschlag meldete das Loeschen ERFOLG, auch wenn nichts
+  // geloescht wurde — bei einer unbekannten Kennung ebenso wie bei einer
+  // Zeile eines fremden Mandanten. Der Org-Fence griff (es wurde nichts
+  // angefasst), die Antwort war trotzdem `{ ok: true }`. Bei einer
+  // Qualifikation faellt das doppelt ins Gewicht: sie steuert die
+  // Einsatzfreigabe, und wer sie fuer geloescht haelt, plant danach
+  // anders, als die Daten hergeben.
+  const { data: bestand, error: ladeFehler } = await supabase
+    .from('caregiver_qualifications')
+    .select('id')
+    .eq('id', id)
+    .eq('organization_id', organizationId)
+    .maybeSingle()
+  if (ladeFehler) throw new Error(`Qualifikation konnte nicht geladen werden: ${ladeFehler.message}`)
+  if (!bestand) throw new UserFacingError('Qualifikation nicht gefunden.', 404)
+
   const { error } = await supabase
     .from('caregiver_qualifications')
     .delete()

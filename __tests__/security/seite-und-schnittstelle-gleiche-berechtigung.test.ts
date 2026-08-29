@@ -68,6 +68,17 @@ const PAARE = [
     seite: '/admin/dienstplan',
     route: 'app/api/personal/dienstplan/eintraege/[id]/route.ts',
   },
+  {
+    // Die Personalakte korrigiert Qualifikationen und Schulungen. Die
+    // Seite liegt unter '/admin/personal' und erbt dessen Regel ueber die
+    // Praefix-Zuordnung.
+    seite: '/admin/personal',
+    route: 'app/api/personal/qualifikationen/[id]/route.ts',
+  },
+  {
+    seite: '/admin/personal',
+    route: 'app/api/personal/schulungen/[id]/route.ts',
+  },
 ] as const
 
 /**

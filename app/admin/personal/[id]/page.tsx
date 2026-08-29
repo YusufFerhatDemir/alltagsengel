@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -37,6 +37,8 @@ interface Stammdaten {
 interface Qualifikation {
   id: string
   bezeichnung: string
+  /** `qualification_type` — zum Korrigieren noetig, nicht nur zum Anzeigen. */
+  art: string
   gueltig_bis: string | null
   pflicht: boolean
   einsatzrelevant: boolean
@@ -54,6 +56,23 @@ interface Schulung {
   anbieter: string | null
   nachweis_url: string | null
 }
+
+/**
+ * Was gerade korrigiert wird. `null` heisst: nichts offen.
+ *
+ * BEFUND (29.08.2026): PATCH und DELETE auf
+ * /api/personal/qualifikationen/[id] und /api/personal/schulungen/[id]
+ * sind seit langem vollstaendig und wurden von KEINER Stelle aufgerufen.
+ * In der Personalakte liess sich alles anlegen und nichts korrigieren.
+ * Bei einer Schulung waere das laestig; bei einer Qualifikation ist es
+ * betrieblich: `valid_until`, `pflicht` und `einsatzrelevant` steuern die
+ * Einsatzfreigabe (lib/personal/einsatzfreigabe.ts) — ein falsch
+ * eingetragenes Ablaufdatum sperrt eine Pflegekraft fuer die Planung, und
+ * es gab keinen Weg, es zu berichtigen.
+ */
+type Korrektur =
+  | { art: 'qualifikation'; id: string; titel: string; gueltigBis: string; pflicht: boolean; einsatzrelevant: boolean }
+  | { art: 'schulung'; id: string; titel: string; beginn: string; anbieter: string; bestanden: boolean | null }
 
 interface Arbeitszeit {
   id: string
@@ -144,6 +163,13 @@ const inputStyle: React.CSSProperties = {
   fontFamily: "'Jost',sans-serif", boxSizing: 'border-box',
 }
 
+/** Knopf in einer Tabellenzeile — flach, damit die Zeile lesbar bleibt. */
+const zeilenBtn: React.CSSProperties = {
+  fontSize: 12, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer',
+  padding: '4px 8px', marginLeft: 6, borderRadius: 6, border: 'none',
+  background: 'transparent', color: 'var(--gold2)',
+}
+
 const fieldRow: React.CSSProperties = {
   display: 'grid', gridTemplateColumns: '180px 1fr', gap: 8, alignItems: 'center',
   padding: '8px 0', borderBottom: '1px solid var(--border)',
@@ -190,6 +216,9 @@ export default function PersonalDetailPage() {
   const [modalFehler, setModalFehler] = useState<string | null>(null)
   const [qualiForm, setQualiForm] = useState({ title: '', qualificationType: '', validUntil: '', pflicht: false, einsatzrelevant: false })
   const [schulungForm, setSchulungForm] = useState({ titel: '', schulungsart: 'pflichtschulung', beginn: '', dauerStunden: '', anbieter: '' })
+  const [korrektur, setKorrektur] = useState<Korrektur | null>(null)
+  const [korrekturFehler, setKorrekturFehler] = useState<string | null>(null)
+  const [korrekturBusy, setKorrekturBusy] = useState(false)
 
   // Load Stammdaten
   useEffect(() => {
@@ -233,8 +262,14 @@ export default function PersonalDetailPage() {
   }, [caregiverId])
 
   // Load tab data on tab change
-  useEffect(() => {
-    async function loadTab() {
+  //
+  // Als `useCallback` statt als Funktion IM Effekt: nach dem Anlegen oder
+  // Korrigieren eines Eintrags muss die Liste neu geladen werden, und dafuer
+  // stand hier bis 29.08.2026 der Umweg
+  //     setTab('stammdaten'); setTimeout(() => setTab('qualifikationen'), 50)
+  // — die Ansicht sprang sichtbar auf einen anderen Reiter und zurueck, und
+  // ob das Neuladen ueberhaupt passierte, haing an einer Frist von 50 ms.
+  const ladeReiter = useCallback(async () => {
       setTabLoading(true)
       try {
         if (tab === 'qualifikationen') {
@@ -244,6 +279,7 @@ export default function PersonalDetailPage() {
             setQualifikationen((data.qualifikationen || data || []).map((r: any) => ({
               id: r.id,
               bezeichnung: r.title || '—',
+              art: r.qualification_type || '',
               gueltig_bis: r.valid_until || null,
               pflicht: r.pflicht ?? false,
               einsatzrelevant: r.einsatzrelevant ?? false,
@@ -332,9 +368,11 @@ export default function PersonalDetailPage() {
       } finally {
         setTabLoading(false)
       }
-    }
-    if (tab !== 'stammdaten') loadTab()
   }, [tab, caregiverId, azMonat, azJahr])
+
+  useEffect(() => {
+    if (tab !== 'stammdaten') ladeReiter()
+  }, [tab, ladeReiter])
 
   // Save Stammdaten
   async function saveStammdaten() {
@@ -386,6 +424,66 @@ export default function PersonalDetailPage() {
     }
   }
 
+  // ── Korrigieren und entfernen ─────────────────────────────────────
+  async function korrekturSpeichern() {
+    if (!korrektur) return
+    setKorrekturBusy(true); setKorrekturFehler(null)
+    try {
+      const [pfad, koerper] = korrektur.art === 'qualifikation'
+        ? [
+            `/api/personal/qualifikationen/${korrektur.id}`,
+            {
+              title: korrektur.titel,
+              // Leeres Datum heisst „unbefristet", nicht „leerer String":
+              // `valid_until` ist nullable, und ein leerer String scheitert
+              // an der Datumspruefung der Route.
+              validUntil: korrektur.gueltigBis || null,
+              pflicht: korrektur.pflicht,
+              einsatzrelevant: korrektur.einsatzrelevant,
+            },
+          ]
+        : [
+            `/api/personal/schulungen/${korrektur.id}`,
+            {
+              titel: korrektur.titel,
+              beginn: korrektur.beginn || null,
+              anbieter: korrektur.anbieter || null,
+              bestanden: korrektur.bestanden,
+            },
+          ]
+      const res = await fetch(pfad, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(koerper),
+      })
+      const body = await res.json().catch(() => null)
+      if (!res.ok) { setKorrekturFehler(body?.error || 'Änderung konnte nicht gespeichert werden.'); return }
+      setKorrektur(null)
+      await ladeReiter()
+    } catch (err) {
+      log.errorWithException('Korrektur fehlgeschlagen', err)
+      setKorrekturFehler('Änderung konnte nicht gespeichert werden.')
+    } finally { setKorrekturBusy(false) }
+  }
+
+  async function eintragEntfernen(art: 'qualifikationen' | 'schulungen', id: string, titel: string) {
+    // Beides sind harte Loeschungen (kein Soft-Delete in der Route), und
+    // eine geloeschte Qualifikation aendert die Einsatzfreigabe sofort.
+    // Deshalb die Rueckfrage mit Namen — „wirklich loeschen?" allein sagt
+    // nicht, WAS gleich verschwindet.
+    if (!window.confirm(`„${titel}" endgültig aus der Personalakte entfernen?`)) return
+    setKorrekturBusy(true); setKorrekturFehler(null)
+    try {
+      const res = await fetch(`/api/personal/${art}/${id}`, { method: 'DELETE' })
+      const body = await res.json().catch(() => null)
+      if (!res.ok) { setKorrekturFehler(body?.error || 'Entfernen fehlgeschlagen.'); return }
+      setKorrektur(null)
+      await ladeReiter()
+    } catch (err) {
+      log.errorWithException('Entfernen fehlgeschlagen', err)
+      setKorrekturFehler('Entfernen fehlgeschlagen.')
+    } finally { setKorrekturBusy(false) }
+  }
+
   // Add Qualifikation
   async function addQualifikation() {
     try {
@@ -398,9 +496,7 @@ export default function PersonalDetailPage() {
         setModalFehler(null)
         setShowQualiModal(false)
         setQualiForm({ title: '', qualificationType: '', validUntil: '', pflicht: false, einsatzrelevant: false })
-        // Reload
-        setTab('stammdaten')
-        setTimeout(() => setTab('qualifikationen'), 50)
+        await ladeReiter()
       } else {
         // Ohne diesen Zweig blieb das Fenster bei jedem Fehler unveraendert
         // stehen — ohne Meldung, ohne Hinweis, was fehlt.
@@ -429,8 +525,7 @@ export default function PersonalDetailPage() {
         setModalFehler(null)
         setShowSchulungModal(false)
         setSchulungForm({ titel: '', schulungsart: 'pflichtschulung', beginn: '', dauerStunden: '', anbieter: '' })
-        setTab('stammdaten')
-        setTimeout(() => setTab('schulungen'), 50)
+        await ladeReiter()
       } else {
         const fehler = await res.json().catch(() => null)
         setModalFehler(fehler?.error || 'Schulung konnte nicht angelegt werden.')
@@ -602,11 +697,12 @@ export default function PersonalDetailPage() {
                     <th>Pflicht</th>
                     <th>Einsatzrelevant</th>
                     <th>Status</th>
+                    <th style={{ textAlign: 'right' }}>Aktion</th>
                   </tr>
                 </thead>
                 <tbody>
                   {qualifikationen.length === 0 ? (
-                    <EmptyRow colSpan={5}>Keine Qualifikationen vorhanden</EmptyRow>
+                    <EmptyRow colSpan={6}>Keine Qualifikationen vorhanden</EmptyRow>
                   ) : qualifikationen.map(q => {
                     const qs = statusMeta(
                       { valid: { label: 'Gültig', color: '#5CB882' }, expiring: { label: 'Läuft ab', color: '#E8A000' }, expired: { label: 'Abgelaufen', color: '#D04B3B' } },
@@ -619,6 +715,18 @@ export default function PersonalDetailPage() {
                         <td>{q.pflicht ? <StatusBadge label="Pflicht" color="#D04B3B" /> : '—'}</td>
                         <td>{q.einsatzrelevant ? <StatusBadge label="Einsatzrelevant" color="#2196F3" /> : '—'}</td>
                         <td><StatusBadge label={qs.label} color={qs.color} /></td>
+                        <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                          <button style={zeilenBtn} disabled={korrekturBusy} onClick={() => {
+                            setKorrekturFehler(null)
+                            setKorrektur({
+                              art: 'qualifikation', id: q.id, titel: q.bezeichnung,
+                              gueltigBis: q.gueltig_bis ?? '', pflicht: q.pflicht,
+                              einsatzrelevant: q.einsatzrelevant,
+                            })
+                          }}>Bearbeiten</button>
+                          <button style={{ ...zeilenBtn, color: '#D04B3B' }} disabled={korrekturBusy}
+                            onClick={() => eintragEntfernen('qualifikationen', q.id, q.bezeichnung)}>Entfernen</button>
+                        </td>
                       </tr>
                     )
                   })}
@@ -696,11 +804,12 @@ export default function PersonalDetailPage() {
                     <th style={{ textAlign: 'right' }}>Stunden</th>
                     <th>Bestanden</th>
                     <th>Anbieter</th>
+                    <th style={{ textAlign: 'right' }}>Aktion</th>
                   </tr>
                 </thead>
                 <tbody>
                   {schulungen.length === 0 ? (
-                    <EmptyRow colSpan={6}>Keine Schulungen vorhanden</EmptyRow>
+                    <EmptyRow colSpan={7}>Keine Schulungen vorhanden</EmptyRow>
                   ) : schulungen.map(s => {
                     const sm = statusMeta(SCHULUNGSART, s.art)
                     return (
@@ -715,6 +824,30 @@ export default function PersonalDetailPage() {
                           {s.bestanden === null && '—'}
                         </td>
                         <td style={{ fontSize: 13 }}>{s.anbieter || '—'}</td>
+                        <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                          {/* Eine BESTANDENE Schulung ist ein Nachweis:
+                              `updateSchulung` weist jede Aenderung daran
+                              mit 409 ab, und seit dem 29.08.2026 auch das
+                              Loeschen. Knoepfe anzubieten, die sicher
+                              scheitern, ist schlechter als der Satz, der
+                              sagt warum. */}
+                          {s.bestanden === true ? (
+                            <span style={{ fontSize: 12, color: 'var(--ink4)' }}>Nachweis — unveränderlich</span>
+                          ) : (
+                            <>
+                              <button style={zeilenBtn} disabled={korrekturBusy} onClick={() => {
+                                setKorrekturFehler(null)
+                                setKorrektur({
+                                  art: 'schulung', id: s.id, titel: s.titel,
+                                  beginn: s.datum ?? '', anbieter: s.anbieter ?? '',
+                                  bestanden: s.bestanden,
+                                })
+                              }}>Bearbeiten</button>
+                              <button style={{ ...zeilenBtn, color: '#D04B3B' }} disabled={korrekturBusy}
+                                onClick={() => eintragEntfernen('schulungen', s.id, s.titel)}>Entfernen</button>
+                            </>
+                          )}
+                        </td>
                       </tr>
                     )
                   })}
@@ -755,6 +888,102 @@ export default function PersonalDetailPage() {
             </Modal>
           )}
         </div>
+      )}
+
+      {/* ── Korrektur eines vorhandenen Eintrags ───────────────
+          Ein eigener Dialog und nicht das Anlageformular: was hier
+          geaendert wird, EXISTIERT schon, und ein Formular, das je nach
+          Zustand anlegt oder aendert, verwechselt die beiden Faelle
+          frueher oder spaeter. */}
+      {korrektur && (
+        <Modal
+          title={korrektur.art === 'qualifikation' ? 'Qualifikation korrigieren' : 'Schulung korrigieren'}
+          onClose={() => { setKorrekturFehler(null); setKorrektur(null) }}
+        >
+          <label style={{ fontSize: 13 }}>
+            {korrektur.art === 'qualifikation' ? 'Bezeichnung' : 'Titel'}
+            <input type="text" value={korrektur.titel}
+              onChange={e => setKorrektur({ ...korrektur, titel: e.target.value })}
+              style={{ ...inputStyle, marginTop: 4, marginBottom: 12 }} />
+          </label>
+
+          {korrektur.art === 'qualifikation' ? (
+            <>
+              <label style={{ fontSize: 13 }}>
+                G&uuml;ltig bis
+                <input type="date" value={korrektur.gueltigBis}
+                  onChange={e => setKorrektur({ ...korrektur, gueltigBis: e.target.value })}
+                  style={{ ...inputStyle, marginTop: 4, marginBottom: 4 }} />
+              </label>
+              {/* Ausgeschrieben, weil es die Folge ist, die man beim
+                  Eintippen eines Datums nicht vor Augen hat. */}
+              <p style={{ fontSize: 12, color: 'var(--ink4)', margin: '0 0 12px' }}>
+                Leer lassen heißt „unbefristet". Ein Ablaufdatum in der Vergangenheit
+                sperrt die Mitarbeiterin oder den Mitarbeiter für die Einsatzplanung,
+                sofern die Qualifikation einsatzrelevant oder Pflicht ist.
+              </p>
+              <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+                  <input type="checkbox" checked={korrektur.pflicht}
+                    onChange={e => setKorrektur({ ...korrektur, pflicht: e.target.checked })}
+                    style={{ accentColor: '#C9963C' }} />
+                  Pflicht
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+                  <input type="checkbox" checked={korrektur.einsatzrelevant}
+                    onChange={e => setKorrektur({ ...korrektur, einsatzrelevant: e.target.checked })}
+                    style={{ accentColor: '#C9963C' }} />
+                  Einsatzrelevant
+                </label>
+              </div>
+            </>
+          ) : (
+            <>
+              <label style={{ fontSize: 13 }}>
+                Datum
+                <input type="date" value={korrektur.beginn}
+                  onChange={e => setKorrektur({ ...korrektur, beginn: e.target.value })}
+                  style={{ ...inputStyle, marginTop: 4, marginBottom: 12 }} />
+              </label>
+              <label style={{ fontSize: 13 }}>
+                Anbieter
+                <input type="text" value={korrektur.anbieter}
+                  onChange={e => setKorrektur({ ...korrektur, anbieter: e.target.value })}
+                  style={{ ...inputStyle, marginTop: 4, marginBottom: 12 }} />
+              </label>
+              <label style={{ fontSize: 13 }}>
+                Ergebnis
+                {/* Drei Zustaende, nicht zwei: „noch offen" ist etwas
+                    anderes als „nicht bestanden", und eine Schulung, die
+                    gerade erst stattgefunden hat, ist weder das eine noch
+                    das andere. */}
+                <select
+                  value={korrektur.bestanden === null ? '' : String(korrektur.bestanden)}
+                  onChange={e => setKorrektur({
+                    ...korrektur,
+                    bestanden: e.target.value === '' ? null : e.target.value === 'true',
+                  })}
+                  style={{ ...inputStyle, marginTop: 4, marginBottom: 12 }}
+                >
+                  <option value="">— noch offen —</option>
+                  <option value="true">Bestanden</option>
+                  <option value="false">Nicht bestanden</option>
+                </select>
+              </label>
+              <p style={{ fontSize: 12, color: 'var(--ink4)', margin: '-4px 0 12px' }}>
+                „Bestanden" schreibt den Eintrag fest: er lässt sich danach weder
+                ändern noch entfernen — nur die Bemerkung bleibt pflegbar.
+              </p>
+            </>
+          )}
+
+          {korrekturFehler && (
+            <p style={{ color: '#D04B3B', fontSize: 13, marginBottom: 12 }}>{korrekturFehler}</p>
+          )}
+          <button style={primaryBtn} onClick={korrekturSpeichern} disabled={korrekturBusy}>
+            {korrekturBusy ? 'Speichern…' : 'Speichern'}
+          </button>
+        </Modal>
       )}
 
       {/* ── Tab: Arbeitszeiten ───────────────────────────────── */}

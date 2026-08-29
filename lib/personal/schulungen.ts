@@ -202,6 +202,37 @@ export async function updateSchulung(
 }
 
 export async function deleteSchulung(supabase: SupabaseClient, id: string, organizationId: string): Promise<void> {
+  // ZWEI BEFUNDE, 29.08.2026, beim Verdrahten der Personalakte gefunden:
+  //
+  // 1. Ohne diesen Nachschlag meldete das Loeschen ERFOLG, auch wenn gar
+  //    nichts geloescht wurde — bei einer unbekannten Kennung ebenso wie
+  //    bei einer Zeile eines fremden Mandanten. Der Org-Fence tat dabei
+  //    seine Arbeit (es wurde nichts angefasst), aber die Antwort war
+  //    `{ ok: true }`. Ein „geloescht", nach dem die Zeile noch da ist,
+  //    ist schlimmer als eine Fehlermeldung: niemand sieht nach.
+  //
+  // 2. `updateSchulung` weist jede Aenderung an einer BESTANDENEN Schulung
+  //    mit 409 ab — sie ist ein Nachweis. Das Loeschen war davon nicht
+  //    erfasst, und Loeschen ist der staerkere Eingriff: was sich nicht
+  //    korrigieren laesst, darf erst recht nicht verschwinden. Der Weg
+  //    fuer einen falsch erfassten Nachweis bleibt derselbe wie beim
+  //    Aendern — die Bemerkung, die ausdruecklich pflegbar bleibt.
+  const { data: bestand, error: ladeFehler } = await supabase
+    .from('personal_schulungen')
+    .select('bestanden')
+    .eq('id', id)
+    .eq('organization_id', organizationId)
+    .maybeSingle()
+  if (ladeFehler) throw new Error(`Schulung konnte nicht geladen werden: ${ladeFehler.message}`)
+  if (!bestand) throw new UserFacingError('Schulung nicht gefunden.', 404)
+  if (bestand.bestanden === true) {
+    throw new UserFacingError(
+      'Eine bestandene Schulung ist ein Nachweis und kann nicht gelöscht werden. '
+      + 'Ein falsch erfasster Eintrag lässt sich in der Bemerkung richtigstellen.',
+      409,
+    )
+  }
+
   const { error } = await supabase
     .from('personal_schulungen')
     .delete()
