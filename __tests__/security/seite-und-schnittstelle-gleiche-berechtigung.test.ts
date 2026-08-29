@@ -37,6 +37,10 @@ const PAARE = [
     seite: '/admin/dienstplanfreigabe',
     route: 'app/api/personal/dienstplan/freigabe/route.ts',
   },
+  {
+    seite: '/admin/monitoring',
+    route: 'app/api/admin/monitoring/abrechnung/route.ts',
+  },
 ] as const
 
 /**
