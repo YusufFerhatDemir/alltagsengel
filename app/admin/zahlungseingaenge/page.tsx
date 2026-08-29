@@ -5,12 +5,14 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { IconMoney, IconDocument, IconChart, IconTarget } from '@/components/Icons'
 import { klickbar } from '@/lib/a11y'
+import { DIFFERENCE_STATUS } from '@/lib/admin/ops'
+import { WIDERSPRUCH_STATUS, istMahnbremse } from '@/lib/billing/core/differenzen'
 
 // ═══════════════════════════════════════════════════════════════
 // Zahlungseingänge — CAMT Import, OPOS, Klärfälle
 // ═══════════════════════════════════════════════════════════════
 
-type Tab = 'import' | 'opos' | 'klaerfaelle'
+type Tab = 'import' | 'opos' | 'klaerfaelle' | 'kuerzungen'
 
 interface CamtImport {
   id: string
@@ -66,6 +68,32 @@ interface Klaerfall {
   }
 }
 
+interface Kuerzung {
+  id: string
+  invoice_id: string
+  soll_cents: number
+  ist_cents: number
+  differenz_cents: number
+  kuerzung_grund: string | null
+  kuerzung_kategorie: string | null
+  widerspruch_status: string
+  widerspruch_frist: string | null
+  widerspruch_at: string | null
+  widerspruch_notes: string | null
+  nachforderung_cents: number | null
+  gutschrift_cents: number | null
+  abschreibung_cents: number | null
+  resolved_at: string | null
+  created_at: string
+  invoice: {
+    id: string
+    invoice_number: string | null
+    invoice_number_formatted: string | null
+    total_amount: number | null
+    client: { first_name: string | null; last_name: string | null } | null
+  } | null
+}
+
 // ═══════════════════════════════════════════════════════════════
 // Hilfsfunktionen
 // ═══════════════════════════════════════════════════════════════
@@ -106,6 +134,13 @@ export default function ZahlungseingaengePage() {
   const [uploading, setUploading] = useState(false)
   const [uploadResult, setUploadResult] = useState<string | null>(null)
   const [oposFilter, setOposFilter] = useState<string>('alle')
+  // null heisst „noch nicht geladen" und NICHT „keine Kuerzungen" —
+  // „keine Kuerzungen" ist eine Aussage, die man nur machen darf, wenn
+  // wirklich nachgesehen wurde.
+  const [kuerzungen, setKuerzungen] = useState<Kuerzung[] | null>(null)
+  const [kuerzungFehler, setKuerzungFehler] = useState<string | null>(null)
+  const [kuerzungLaeuft, setKuerzungLaeuft] = useState(false)
+  const [nurOffeneKuerzungen, setNurOffeneKuerzungen] = useState(true)
   const fileRef = useRef<HTMLInputElement>(null)
 
   // ─── Daten laden ───
@@ -128,6 +163,37 @@ export default function ZahlungseingaengePage() {
     } catch { /* */ }
   }, [oposFilter])
 
+  const loadKuerzungen = useCallback(async () => {
+    setKuerzungFehler(null)
+    try {
+      const res = await fetch('/api/billing/differences')
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Kürzungen konnten nicht geladen werden.')
+      setKuerzungen(data.differences || [])
+    } catch (e) {
+      // Eigener Fehlerpfad: ein Fehlschlag darf nicht als leere Liste
+      // durchgehen. „Keine Kürzungen offen" ist die beruhigendste aller
+      // falschen Antworten — hier haengt eine Widerspruchsfrist daran.
+      setKuerzungFehler(e instanceof Error ? e.message : 'Unbekannter Fehler.')
+    }
+  }, [])
+
+  const patchKuerzung = useCallback(async (id: string, felder: Record<string, unknown>) => {
+    setKuerzungLaeuft(true)
+    setKuerzungFehler(null)
+    try {
+      const res = await fetch('/api/billing/differences', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...felder }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setKuerzungFehler(data.error || 'Änderung fehlgeschlagen.'); return }
+      await loadKuerzungen()
+    } finally {
+      setKuerzungLaeuft(false)
+    }
+  }, [loadKuerzungen])
+
   const loadKlaerfaelle = useCallback(async () => {
     try {
       const res = await fetch('/api/billing/klaerfaelle')
@@ -137,8 +203,8 @@ export default function ZahlungseingaengePage() {
 
   useEffect(() => {
     setLoading(true)
-    Promise.all([loadImports(), loadOpos(), loadKlaerfaelle()]).finally(() => setLoading(false))
-  }, [loadImports, loadOpos, loadKlaerfaelle])
+    Promise.all([loadImports(), loadOpos(), loadKlaerfaelle(), loadKuerzungen()]).finally(() => setLoading(false))
+  }, [loadImports, loadOpos, loadKlaerfaelle, loadKuerzungen])
 
   useEffect(() => { loadOpos() }, [loadOpos])
 
@@ -189,6 +255,11 @@ export default function ZahlungseingaengePage() {
     .reduce((s, i) => s + i.zugeordnet_anzahl, 0)
   const klaerfaelleOffen = klaerfaelle.filter(k => k.status === 'offen').length
   const oposGesamt = oposData?.gesamtOffen ?? 0
+  // Nur was noch nicht ueber das Geld entschieden ist zaehlt als offen;
+  // erledigte Kuerzungen sonst haetten die Zahl fuer immer wachsen lassen.
+  const kuerzungenOffen = (kuerzungen ?? []).filter(
+    k => !['gutschrift', 'abschreibung', 'erledigt'].includes(k.widerspruch_status),
+  ).length
 
   return (
     <div style={{ padding: '24px 32px', maxWidth: 1300 }}>
@@ -212,6 +283,7 @@ export default function ZahlungseingaengePage() {
           { key: 'import' as Tab, label: 'Import' },
           { key: 'opos' as Tab, label: 'OPOS' },
           { key: 'klaerfaelle' as Tab, label: `Klärfälle${klaerfaelleOffen > 0 ? ` (${klaerfaelleOffen})` : ''}` },
+          { key: 'kuerzungen' as Tab, label: `Kürzungen${kuerzungenOffen > 0 ? ` (${kuerzungenOffen})` : ''}` },
         ]).map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
             padding: '8px 18px', borderRadius: 6, border: 'none', cursor: 'pointer',
@@ -463,6 +535,56 @@ export default function ZahlungseingaengePage() {
               )}
             </div>
           )}
+
+          {/* ─── Tab: Kürzungen ─── */}
+          {/*
+            payment_differences war bis heute nur beschreibbar: POST erfasst
+            eine Kürzung, GET listet sie — und KEINE Stelle der Oberfläche rief
+            beides je auf. Der Zustand blieb damit für immer 'offen', und die
+            beiden Mahnbremsen, die auf 'widerspruch_eingereicht' und
+            'nachforderung' warten, konnten nie greifen: eine bestrittene
+            Forderung wurde weitergemahnt.
+          */}
+          {tab === 'kuerzungen' && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+                <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Kürzungen der Kostenträger</h3>
+                <span style={{ flex: 1 }} />
+                <label style={{ fontSize: 13, color: '#555', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <input type="checkbox" checked={nurOffeneKuerzungen}
+                    onChange={e => setNurOffeneKuerzungen(e.target.checked)} />
+                  Nur unerledigte
+                </label>
+              </div>
+              <p style={{ fontSize: 13, color: '#666', marginTop: 0, marginBottom: 16 }}>
+                Solange eine Kürzung als <strong>Widerspruch eingereicht</strong> oder{' '}
+                <strong>Nachforderung</strong> geführt wird, mahnt der Mahnlauf die
+                zugehörige Rechnung nicht — eine bestrittene Forderung wird nicht gemahnt.
+              </p>
+
+              {kuerzungFehler && (
+                <div style={{ padding: '10px 16px', borderRadius: 8, marginBottom: 16, fontSize: 14, background: '#fee2e2', color: '#991b1b' }}>
+                  {kuerzungFehler}
+                </div>
+              )}
+
+              {kuerzungen === null && !kuerzungFehler && <p style={{ color: '#888', fontSize: 14 }}>Laden…</p>}
+              {kuerzungen !== null && kuerzungen.length === 0 && (
+                <p style={{ color: '#888', fontSize: 14 }}>Keine Kürzung erfasst.</p>
+              )}
+
+              {(kuerzungen ?? [])
+                .filter(k => !nurOffeneKuerzungen || !['gutschrift', 'abschreibung', 'erledigt'].includes(k.widerspruch_status))
+                .map(k => (
+                  <KuerzungCard
+                    key={k.id}
+                    kuerzung={k}
+                    laeuft={kuerzungLaeuft}
+                    onPatch={patchKuerzung}
+                  />
+                ))}
+            </div>
+          )}
         </>
       )}
     </div>
@@ -528,3 +650,166 @@ function AltersKlasseCard({ label, data, color }: {
 // ═══════════════════════════════════════════════════════════════
 const thStyle: React.CSSProperties = { padding: '8px 12px', fontWeight: 600, fontSize: 13, color: '#555' }
 const tdStyle: React.CSSProperties = { padding: '8px 12px' }
+
+// ═══════════════════════════════════════════════════════════════
+// Eine Kürzung mit ihrem Lebenszyklus
+// ═══════════════════════════════════════════════════════════════
+function KuerzungCard({ kuerzung: k, laeuft, onPatch }: {
+  kuerzung: Kuerzung
+  laeuft: boolean
+  onPatch: (id: string, felder: Record<string, unknown>) => Promise<void>
+}) {
+  const [offen, setOffen] = useState(false)
+  const [status, setStatus] = useState(k.widerspruch_status)
+  const [frist, setFrist] = useState(k.widerspruch_frist ?? '')
+  const [notizen, setNotizen] = useState(k.widerspruch_notes ?? '')
+  const [nachforderung, setNachforderung] = useState(String(((k.nachforderung_cents ?? 0) / 100).toFixed(2)))
+  const [gutschrift, setGutschrift] = useState(String(((k.gutschrift_cents ?? 0) / 100).toFixed(2)))
+  const [abschreibung, setAbschreibung] = useState(String(((k.abschreibung_cents ?? 0) / 100).toFixed(2)))
+
+  const anzeige = DIFFERENCE_STATUS[k.widerspruch_status] ?? { label: k.widerspruch_status, color: '#666' }
+  const klient = k.invoice?.client
+    ? [k.invoice.client.first_name, k.invoice.client.last_name].filter(Boolean).join(' ')
+    : '—'
+  const rechnung = k.invoice?.invoice_number_formatted || k.invoice?.invoice_number || '—'
+  const bremst = istMahnbremse(k.widerspruch_status)
+
+  // Fristampel: die Widerspruchsfrist ist der Punkt, ab dem das Geld ohne
+  // weiteres Zutun verloren ist. Sie wird nur gezeigt, solange der Widerspruch
+  // noch möglich ist — nach dem Einreichen läuft sie nicht weiter.
+  const fristTage = k.widerspruch_frist && k.widerspruch_status === 'offen'
+    ? Math.ceil((new Date(`${k.widerspruch_frist}T00:00:00`).getTime() - new Date(`${heuteBerlin()}T00:00:00`).getTime()) / 86400000)
+    : null
+
+  // Euro-Eingabe zu Cent: über Math.round auf dem Euro-Wert *100, damit
+  // 12,35 € nicht als 1234 Cent ankommt (0.1+0.2-Problem in Binärgleitkomma).
+  const zuCent = (wert: string): number | null => {
+    const zahl = Number(wert.replace(',', '.'))
+    if (!Number.isFinite(zahl) || zahl < 0) return null
+    return Math.round(zahl * 100)
+  }
+
+  const speichern = async () => {
+    const felder: Record<string, unknown> = {}
+    if (status !== k.widerspruch_status) felder.status = status
+    if ((frist || null) !== (k.widerspruch_frist || null)) felder.frist = frist || null
+    if ((notizen.trim() || '') !== (k.widerspruch_notes || '')) felder.notizen = notizen
+    for (const [wert, alt, name] of [
+      [nachforderung, k.nachforderung_cents ?? 0, 'nachforderungCents'],
+      [gutschrift, k.gutschrift_cents ?? 0, 'gutschriftCents'],
+      [abschreibung, k.abschreibung_cents ?? 0, 'abschreibungCents'],
+    ] as const) {
+      const cents = zuCent(wert)
+      if (cents === null) return
+      if (cents !== alt) felder[name] = cents
+    }
+    if (Object.keys(felder).length === 0) { setOffen(false); return }
+    await onPatch(k.id, felder)
+    setOffen(false)
+  }
+
+  return (
+    <div style={{
+      border: '1px solid #e5e7eb', borderLeft: `4px solid ${anzeige.color}`,
+      borderRadius: 10, padding: 14, marginBottom: 10, background: '#fff',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <span style={{ fontWeight: 600, fontSize: 15 }}>{klient}</span>
+        <span style={{ fontSize: 13, color: '#666' }}>Rechnung {rechnung}</span>
+        <span style={{
+          padding: '2px 10px', borderRadius: 999, fontSize: 12, fontWeight: 600,
+          color: anzeige.color, background: `${anzeige.color}22`, border: `1px solid ${anzeige.color}55`,
+        }}>{anzeige.label}</span>
+        {bremst && (
+          <span style={{ fontSize: 12, color: '#166534', background: '#dcfce7', padding: '2px 10px', borderRadius: 999 }}>
+            Mahnlauf gestoppt
+          </span>
+        )}
+        <span style={{ flex: 1 }} />
+        <button onClick={() => setOffen(o => !o)} style={{
+          padding: '6px 14px', borderRadius: 6, border: '1px solid #cbd5e1',
+          background: '#f8fafc', cursor: 'pointer', fontSize: 13,
+        }}>{offen ? 'Schließen' : 'Bearbeiten'}</button>
+      </div>
+
+      <div style={{ fontSize: 13, color: '#555', marginTop: 6 }}>
+        Soll {formatCurrency(k.soll_cents)} · Ist {formatCurrency(k.ist_cents)} ·{' '}
+        <strong style={{ color: '#b91c1c' }}>gekürzt um {formatCurrency(k.differenz_cents)}</strong>
+        {k.kuerzung_kategorie && ` · ${k.kuerzung_kategorie.replace(/_/g, ' ')}`}
+      </div>
+      {k.kuerzung_grund && (
+        <div style={{ fontSize: 13, color: '#555', marginTop: 2 }}>Grund: {k.kuerzung_grund}</div>
+      )}
+      {fristTage !== null && (
+        <div style={{
+          fontSize: 13, marginTop: 6, fontWeight: 600,
+          color: fristTage < 0 ? '#991b1b' : fristTage <= 14 ? '#b45309' : '#166534',
+        }}>
+          {fristTage < 0
+            ? `Widerspruchsfrist am ${formatDate(k.widerspruch_frist)} abgelaufen`
+            : `Widerspruch noch ${fristTage} Tage möglich (bis ${formatDate(k.widerspruch_frist)})`}
+        </div>
+      )}
+      {k.widerspruch_at && (
+        <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+          Widerspruch eingelegt am {formatDate(k.widerspruch_at)}
+        </div>
+      )}
+      {k.widerspruch_notes && !offen && (
+        <div style={{ fontSize: 13, color: '#555', marginTop: 4 }}>{k.widerspruch_notes}</div>
+      )}
+
+      {offen && (
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #e5e7eb' }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+            <label style={{ fontSize: 13, color: '#555' }}>
+              Stand<br />
+              <select value={status} onChange={e => setStatus(e.target.value)} style={feldStyle}>
+                {WIDERSPRUCH_STATUS.map(w => (
+                  <option key={w} value={w}>{DIFFERENCE_STATUS[w]?.label ?? w}</option>
+                ))}
+              </select>
+            </label>
+            <label style={{ fontSize: 13, color: '#555' }}>
+              Widerspruchsfrist<br />
+              <input type="date" value={frist} onChange={e => setFrist(e.target.value)} style={feldStyle} />
+            </label>
+          </div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+            {([
+              ['Nachforderung €', nachforderung, setNachforderung],
+              ['Gutschrift €', gutschrift, setGutschrift],
+              ['Abschreibung €', abschreibung, setAbschreibung],
+            ] as const).map(([label, wert, setter]) => (
+              <label key={label} style={{ fontSize: 13, color: '#555' }}>
+                {label}<br />
+                <input type="number" min={0} step="0.01" value={wert}
+                  onChange={e => setter(e.target.value)} style={{ ...feldStyle, width: 130 }} />
+              </label>
+            ))}
+          </div>
+          {/* Die Summe der drei kann die Kürzung nicht übersteigen — sie teilen
+              denselben einbehaltenen Betrag auf. Die Route weist das ab; hier
+              steht der Rahmen, damit man es vor dem Absenden sieht. */}
+          <div style={{ fontSize: 12, color: '#666', marginBottom: 10 }}>
+            Zusammen höchstens {formatCurrency(k.differenz_cents)} — Nachforderung, Gutschrift
+            und Abschreibung teilen den einbehaltenen Betrag auf.
+          </div>
+          <label style={{ fontSize: 13, color: '#555', display: 'block', marginBottom: 10 }}>
+            Notiz<br />
+            <textarea value={notizen} onChange={e => setNotizen(e.target.value)} rows={2}
+              style={{ ...feldStyle, width: '100%', maxWidth: 620 }} />
+          </label>
+          <button onClick={speichern} disabled={laeuft} style={{
+            padding: '8px 18px', borderRadius: 6, border: 'none', cursor: 'pointer',
+            background: '#1a365d', color: '#fff', fontWeight: 600, fontSize: 14,
+          }}>{laeuft ? 'Speichere…' : 'Speichern'}</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+const feldStyle: React.CSSProperties = {
+  padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13,
+}
