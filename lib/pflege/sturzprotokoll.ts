@@ -67,8 +67,22 @@ export function validiereSturzZeitpunkt(eingabe: SturzZeitEingabe): string {
   }
   if (eingabe.sturzDatum === heute) {
     // 5-Minuten-Puffer gegen Rundung im Formular / Client-Uhr-Skew.
+    const jetzt = berlinParts(new Date())
     const puffer = berlinParts(new Date(Date.now() + 5 * 60 * 1000))
-    const jetztMitPuffer = `${puffer.hour}:${puffer.minute}`
+
+    // BEFUND 29.08.2026, aufgefallen durch einen Testlauf um 23:54 Berlin:
+    // Der Puffer kippt in den letzten fuenf Minuten des Tages ueber
+    // Mitternacht. `puffer.hour` ist dann '00', die Obergrenze also
+    // '00:03' — und JEDE Uhrzeit dieses Tages ist groesser als das. Ein
+    // Sturz von 14:30, um 23:57 nachgetragen, wurde mit
+    // „Sturzuhrzeit darf nicht in der Zukunft liegen" abgewiesen.
+    //
+    // Fuenf Minuten am Tag, in denen das Sturzprotokoll nicht erfassbar
+    // ist — und ausgerechnet ein Sturz wird oft am Ende der Spaetschicht
+    // nachgetragen. Kippt der Puffer, ist die Obergrenze das Tagesende.
+    const kipptUeberMitternacht = puffer.hour < jetzt.hour
+    const jetztMitPuffer = kipptUeberMitternacht ? '23:59' : `${puffer.hour}:${puffer.minute}`
+
     if (eingabe.sturzUhrzeit > jetztMitPuffer) {
       throw new UserFacingError('Sturzuhrzeit darf nicht in der Zukunft liegen.')
     }

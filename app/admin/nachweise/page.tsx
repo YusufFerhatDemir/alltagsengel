@@ -4,10 +4,8 @@
 // ═══════════════════════════════════════════════════════════════
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { daysUntil, formatDate } from '@/lib/admin/ops'
 import { EmptyRow, Banner, SearchInput } from '@/components/admin/OpsUI'
-import { one } from '@/lib/supabase/join'
 
 interface NachweisRow {
   id: string
@@ -42,25 +40,58 @@ export default function AdminNachweisePage() {
       setLoading(true)
       setError('')
       try {
-        const supabase = createClient()
-        const [caregivers, qualifikationen] = await Promise.all([
-          supabase.from('caregivers').select('id, first_name, last_name, fuehrungszeugnis_gueltig_bis, fuehrungszeugnis_datum, erste_hilfe_gueltig_bis, erste_hilfe_datum'),
-          supabase.from('caregiver_qualifications').select('id, caregiver_id, title, qualification_type, issued_date, valid_until, pflicht, einsatzrelevant, caregivers(first_name, last_name)'),
+        // ── WARUM UEBER DIE ROUTEN UND NICHT UEBER DEN BROWSER-CLIENT ──
+        //
+        // BEFUND 29.08.2026: hier stand `createClient()` aus
+        // `@/lib/supabase/client`, die Seite las also unter RLS. Auf
+        // `caregiver_qualifications` steht live genau eine verwaltende
+        // Policy: `is_admin()` — beschraenkt auf admin/superadmin. Fuer
+        // die Pflegedienstleitung, fuer die diese Seite gebaut ist, kam
+        // damit eine LEERE Liste zurueck. Kein Fehler, keine Meldung:
+        // „Keine Nachweise vorhanden." Eine Seite, die Ablaufwarnungen zu
+        // Fuehrungszeugnissen zeigen soll, sagte der Rolle, die sie
+        // braucht, dass alles in Ordnung sei.
+        //
+        // Beide Routen fahren hinter `requirePersonalAdmin('personal.lesen')`
+        // mit dem Dienstschluessel und dem Mandanten aus dem Kontext — der
+        // Riegel ist die Route, nicht RLS.
+        //
+        // `npm run lint:rls-sicht` findet Seiten dieser Art.
+        const [qRes, cRes] = await Promise.all([
+          fetch('/api/personal/qualifikationen'),
+          fetch('/api/personal/stammdaten'),
         ])
+        // AUSDRUECKLICH GEPRUEFT statt verschluckt: ein fehlgeschlagener
+        // Ladevorgang darf nicht als leere Liste erscheinen — das ist
+        // genau der Fehler, den diese Seite hatte.
+        if (!qRes.ok || !cRes.ok) {
+          const body = await (qRes.ok ? cRes : qRes).json().catch(() => null)
+          setError(body?.error || 'Nachweise konnten nicht geladen werden.')
+          return
+        }
+        const qualifikationen = await qRes.json()
+        const kraefte = await cRes.json()
+
+        const nameVon = new Map<string, string>()
+        for (const cg of (Array.isArray(kraefte) ? kraefte : [])) {
+          nameVon.set(cg.id, `${cg.first_name ?? ''} ${cg.last_name ?? ''}`.trim() || cg.id)
+        }
 
         const acc: NachweisRow[] = []
-        for (const q of (qualifikationen.data || [])) {
-          const cg = one(q.caregivers)
+        for (const q of (Array.isArray(qualifikationen) ? qualifikationen : [])) {
           acc.push({
             id: q.id, caregiver_id: q.caregiver_id,
-            caregiver_name: cg ? `${cg.first_name} ${cg.last_name}` : '—',
+            caregiver_name: nameVon.get(q.caregiver_id) ?? '—',
             titel: q.title, typ: q.qualification_type,
             ausgestellt: q.issued_date, gueltig_bis: q.valid_until,
             pflicht: q.pflicht ?? false, einsatzrelevant: q.einsatzrelevant ?? false,
           })
         }
-        for (const cg of (caregivers.data || [])) {
-          const name = `${cg.first_name} ${cg.last_name}`
+        // Fuehrungszeugnis und Erste-Hilfe-Nachweis stehen NICHT in
+        // `caregiver_qualifications`, sondern als eigene Spalten an
+        // `caregivers` — deshalb der zweite Aufruf.
+        for (const cg of (Array.isArray(kraefte) ? kraefte : [])) {
+          const name = nameVon.get(cg.id) ?? '—'
           if (cg.fuehrungszeugnis_gueltig_bis || cg.fuehrungszeugnis_datum) {
             acc.push({ id: `fz-${cg.id}`, caregiver_id: cg.id, caregiver_name: name, titel: 'Führungszeugnis', typ: 'fuehrungszeugnis', ausgestellt: cg.fuehrungszeugnis_datum, gueltig_bis: cg.fuehrungszeugnis_gueltig_bis, pflicht: true, einsatzrelevant: true })
           }

@@ -45,12 +45,18 @@ export default function MitarbeiteraktePage() {
     setError('')
     try {
       const supabase = createClient()
-      const [caregiverRes, qualiRes, dokRes, vertragRes] = await Promise.all([
+      const [caregiverRes, qualiAntwort, dokRes, vertragRes] = await Promise.all([
         supabase.from('caregivers').select('*').eq('id', caregiverId).single(),
-        supabase.from('caregiver_qualifications').select('*').eq('caregiver_id', caregiverId).order('valid_until'),
+        // Nicht ueber den Browser-Client: auf `caregiver_qualifications`
+        // steht live nur `is_admin()`, die Pflegedienstleitung saehe hier
+        // sonst eine leere Liste ohne jede Meldung. Die Route faehrt
+        // hinter `requirePersonalAdmin('personal.lesen')`.
+        // Gefunden mit `npm run lint:rls-sicht`.
+        fetch(`/api/personal/qualifikationen?caregiverId=${caregiverId}`),
         fetch(`/api/akten/dokumente?caregiverId=${caregiverId}`).then(r => r.json()),
         fetch(`/api/akten/vertraege?caregiverId=${caregiverId}`).then(r => r.json()),
       ])
+      const qualiRes = { data: qualiAntwort.ok ? await qualiAntwort.json() : [] }
 
       if (caregiverRes.error || !caregiverRes.data) { setError('Mitarbeiter nicht gefunden.'); setLoading(false); return }
       setCaregiver(caregiverRes.data)

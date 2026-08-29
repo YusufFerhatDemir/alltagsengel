@@ -75,6 +75,18 @@ export interface CaregiverStammdaten {
   has_vehicle: boolean | null
   /** Führerschein vorhanden (caregivers.has_drivers_license). */
   has_drivers_license: boolean | null
+  // ── Zwei Nachweise, die NICHT in caregiver_qualifications stehen ──────
+  // Fuehrungszeugnis und Erste-Hilfe-Nachweis liegen als eigene Spalten an
+  // `caregivers`. Sie gehoeren in diese Auswahl, weil die
+  // Nachweisuebersicht sie zeigt und sonst ueber den Browser-Client
+  // nachladen muesste — und dort steht auf `caregivers` zwar eine
+  // rk_-Policy, auf `caregiver_qualifications` daneben aber nur
+  // `is_admin()`: die Seite saehe fuer die Pflegedienstleitung die eine
+  // Haelfte und die andere nicht.
+  fuehrungszeugnis_datum: string | null
+  fuehrungszeugnis_gueltig_bis: string | null
+  erste_hilfe_datum: string | null
+  erste_hilfe_gueltig_bis: string | null
 }
 
 export interface PersonalSchulung {

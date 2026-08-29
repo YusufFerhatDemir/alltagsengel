@@ -152,7 +152,13 @@ const navGroups = [
     items: [
       { href: '/admin/personal', label: 'Stammdaten', icon: <IconUsers size={18} /> },
       { href: '/admin/caregivers', label: 'Betreuungskräfte', icon: <IconUsers size={18} /> },
-      { href: '/admin/nachweise', label: 'Qualifikationen', icon: <IconClipboard size={18} /> },
+      { href: '/admin/nachweise', label: 'Qualifikationsnachweise', icon: <IconClipboard size={18} /> },
+      // BEFUND 29.08.2026: die Seite gab es, in BEREICHE stand sie, und in
+      // der Navigation fehlte sie — kein einziger Verweis aus dem ganzen
+      // Quelltext fuehrte hin (nur lib/auth/bereiche.ts nannte den Pfad,
+      // und das ist eine Rechtetabelle, kein Link). Sie zeigt genau die
+      // ablaufenden Nachweise, die die Einsatzfreigabe steuern.
+      { href: '/admin/qualifikationen', label: 'Ablaufwarnungen', icon: <IconClipboard size={18} /> },
       { href: '/admin/einsatzfreigabe', label: 'Einsatzfreigabe', icon: <IconTarget size={18} /> },
       { href: '/admin/applications', label: 'Bewerbungen', icon: <IconClipboard size={18} /> },
       { href: '/admin/mitarbeitergespraeche', label: 'Mitarbeitergespräche', icon: <IconChat size={18} /> },
