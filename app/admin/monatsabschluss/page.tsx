@@ -7,7 +7,9 @@ import {
   euro, fullName, statusMeta, summarizeBudget,
   AMPEL_META, CLOSING_STATUS, type Ampel, type BudgetSummary,
 } from '@/lib/admin/ops'
-import { AmpelDot, BudgetBar, StatusBadge, SearchInput, EmptyRow } from '@/components/admin/OpsUI'
+import { AmpelDot, BudgetBar, StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { BUNDESLAND_NAMEN } from '@/lib/expansion/types'
+import type { MonatsabschlussErgebnis } from '@/lib/abrechnung/monatsabschluss'
 import AmpelSummaryWidget from '@/components/admin/AmpelSummaryWidget'
 import { logger } from '@/lib/logger';
 import { klickbareZeile } from '@/lib/a11y'
@@ -39,7 +41,12 @@ function MonatsabschlussInner() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | Ampel>('all')
   const [search, setSearch] = useState('')
-  const refreshKey = 0
+  // War eine Konstante `0`, stand aber als Abhaengigkeit im Ladeeffekt und
+  // im AmpelSummaryWidget — die Abhaengigkeit konnte damit nie feuern, ein
+  // Neuladen war gar nicht ausloesbar. Jetzt echter State: nach einem
+  // Abschlusslauf aendern sich die Perioden-Status, und die Tabelle darf
+  // die alten nicht weiterzeigen.
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -152,6 +159,53 @@ function MonatsabschlussInner() {
     router.replace(`/admin/monatsabschluss?year=${newYear}&month=${newMonth}`)
   }
 
+  // ── Abschlusslauf ─────────────────────────────────────────────────
+  // BEFUND (29.08.2026): POST /api/billing/monthly-closing fuehrt den
+  // Abschluss aus — mit ausdruecklichem `dryRun` fuer einen reinen
+  // Pruef-/Vorschaulauf — und wurde von KEINER Stelle aufgerufen. Diese
+  // Seite las den Bestand direkt aus Supabase und zeigte, WAS im Monat
+  // liegt; ausloesen liess sich der Abschluss nirgends.
+  //
+  // Das Muster ist im Haus bereits etabliert: /admin/mahnwesen und
+  // /admin/sammelrechnung bieten beide Simulation UND Echtlauf mit
+  // Rueckfrage. Hier steht dasselbe, nichts Neues erfunden.
+  const [bundesland, setBundesland] = useState('hessen')
+  const [lauf, setLauf] = useState<(MonatsabschlussErgebnis & { modus: string }) | null>(null)
+  const [laufLaeuft, setLaufLaeuft] = useState<'vorschau' | 'abschluss' | null>(null)
+  const [laufFehler, setLaufFehler] = useState<string | null>(null)
+
+  async function starteLauf(dryRun: boolean) {
+    // Der Echtlauf schreibt `monthly_closings` fort. Die Rueckfrage steht
+    // hier wie beim Mahnlauf: was danach auf `closed` oder `sent` steht,
+    // laesst sich nicht mehr ueberschreiben
+    // (ABGESCHLOSSENE_CLOSING_STATUS in lib/abrechnung/monatsabschluss.ts).
+    if (!dryRun && !confirm(
+      `Monatsabschluss ${MONTH_NAMES[month - 1]} ${year} jetzt ausführen? `
+      + 'Die Perioden werden fortgeschrieben; abgeschlossene Perioden lassen sich nicht mehr überschreiben.'
+    )) return
+
+    setLaufLaeuft(dryRun ? 'vorschau' : 'abschluss')
+    setLaufFehler(null)
+    try {
+      const res = await fetch('/api/billing/monthly-closing', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        // `month` als YYYY-MM, wie die Route es verlangt — nicht Jahr und
+        // Monat getrennt: sie weist alles andere mit 400 ab.
+        body: JSON.stringify({ month: `${year}-${String(month).padStart(2, '0')}`, bundesland, dryRun }),
+      })
+      const body = await res.json()
+      if (!res.ok) { setLaufFehler(body.error || 'Abschlusslauf fehlgeschlagen.'); return }
+      setLauf(body)
+      // Nur nach dem Echtlauf neu laden: die Vorschau aendert nichts, und
+      // ein Neuladen wuerde die Vorschau gegen unveraenderte Zahlen stellen.
+      if (!dryRun) setRefreshKey((k: number) => k + 1)
+    } catch {
+      setLaufFehler('Abschlusslauf fehlgeschlagen.')
+    } finally {
+      setLaufLaeuft(null)
+    }
+  }
+
   return (
     <div className="admin-page">
       <div className="admin-page-header">
@@ -170,6 +224,105 @@ function MonatsabschlussInner() {
       </div>
 
       <AmpelSummaryWidget year={year} month={month} refreshKey={refreshKey} />
+
+      {/* ── Abschlusslauf ───────────────────────────────────────── */}
+      <div style={{ border: '1px solid var(--border)', borderRadius: 10, padding: 16, margin: '16px 0' }}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'end' }}>
+          <label style={{ fontSize: 13 }}>
+            Bundesland des Leistungsorts<br />
+            {/* PFLICHTANGABE ohne Vorbelegung in der Route: ohne sie zöge die
+                Preissuche landesfremde Sätze. Hier steht Hessen vorne, weil
+                dort abgerechnet wird — die Auswahl bleibt aber offen und
+                sichtbar, statt die Annahme zu verstecken. */}
+            <select value={bundesland} onChange={e => setBundesland(e.target.value)} style={{ ...selectStyle, marginTop: 4 }}>
+              {Object.entries(BUNDESLAND_NAMEN).map(([code, name]) => (
+                <option key={code} value={code}>{name}</option>
+              ))}
+            </select>
+          </label>
+          <button
+            className="admin-btn"
+            onClick={() => void starteLauf(true)}
+            disabled={laufLaeuft !== null}
+            style={{ ...selectStyle, cursor: 'pointer' }}
+          >
+            {laufLaeuft === 'vorschau' ? 'Vorschau läuft…' : 'Vorschau (schreibt nichts)'}
+          </button>
+          <button
+            className="admin-btn admin-btn-primary"
+            onClick={() => void starteLauf(false)}
+            disabled={laufLaeuft !== null}
+            style={{ ...selectStyle, cursor: 'pointer', fontWeight: 600 }}
+          >
+            {laufLaeuft === 'abschluss' ? 'Abschluss läuft…' : 'Monat abschließen'}
+          </button>
+        </div>
+
+        {laufFehler && <div style={{ marginTop: 12 }}><Banner tone="danger">{laufFehler}</Banner></div>}
+
+        {lauf && (
+          <div style={{ marginTop: 12 }}>
+            <Banner tone={lauf.modus === 'vorschau' ? 'info' : 'success'}>
+              {lauf.modus === 'vorschau' ? 'Vorschau' : 'Abschluss'} für {lauf.monat}
+              {' '}({lauf.zeitraum.von} bis {lauf.zeitraum.bis}):
+              {' '}{lauf.verordnungen_geprueft} Verordnung(en) geprüft,
+              {' '}{lauf.positionen_abrechenbar} Position(en) abrechenbar,
+              {' '}{lauf.positionen_blockiert} blockiert,
+              {' '}Summe {(lauf.gesamt_cent / 100).toFixed(2)} €.
+              {lauf.modus === 'vorschau'
+                // Ausdrücklich benannt: eine Vorschau, die aussieht wie ein
+                // Ergebnis, wird für eines gehalten.
+                ? ' Es wurde nichts geschrieben.'
+                : ` ${lauf.closings_geschrieben} Periode(n) fortgeschrieben.`}
+            </Banner>
+
+            {lauf.warnungen.length > 0 && (
+              <div className="admin-table-wrap" style={{ marginTop: 12 }}>
+                <table className="admin-table">
+                  <thead>
+                    <tr><th>Schwere</th><th>Klient</th><th>Befund</th></tr>
+                  </thead>
+                  <tbody>
+                    {lauf.warnungen.map((w, i) => (
+                      <tr key={`${w.verordnung_id ?? 'ohne'}-${i}`}>
+                        <td>
+                          <StatusBadge
+                            label={w.schwere === 'fehler' ? 'Fehler' : w.schwere === 'warnung' ? 'Warnung' : 'Hinweis'}
+                            color={w.schwere === 'fehler' ? '#D04B3B' : w.schwere === 'warnung' ? '#E8A000' : '#999'}
+                          />
+                        </td>
+                        <td style={{ fontSize: 13 }}>{w.client ?? '—'}</td>
+                        <td style={{ fontSize: 13 }}>{w.text}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {lauf.gruppen.length > 0 && (
+              <div className="admin-table-wrap" style={{ marginTop: 12 }}>
+                <table className="admin-table">
+                  <thead>
+                    <tr><th>Kostenträger</th><th>Typ</th><th>IK</th><th style={{ textAlign: 'right' }}>Positionen</th><th style={{ textAlign: 'right' }}>Summe</th></tr>
+                  </thead>
+                  <tbody>
+                    {lauf.gruppen.map(g => (
+                      <tr key={`${g.kostentraeger_name}-${g.ik_nummer ?? 'ohne'}`}>
+                        <td style={{ fontWeight: 600 }}>{g.kostentraeger_name}</td>
+                        <td style={{ fontSize: 13 }}>{g.kostentraeger_typ}</td>
+                        <td style={{ fontSize: 13 }}>{g.ik_nummer ?? '—'}</td>
+                        <td style={{ fontSize: 13, textAlign: 'right' }}>{g.positionen.length}</td>
+                        <td style={{ fontSize: 13, textAlign: 'right' }}>{(g.summe_cent / 100).toFixed(2)} €</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       <div style={{ margin: '4px 0 16px' }}>
         <SearchInput value={search} onChange={setSearch} placeholder="Klient suchen…" />

@@ -47,6 +47,13 @@ const PAARE = [
     seite: '/admin/abrechnung',
     route: 'app/api/billing/audit/route.ts',
   },
+  {
+    // Der einzige Eintrag bisher, bei dem die Route BEIDE Richtungen
+    // getrennt fuehrt: `abrechnung.lesen` im GET, `abrechnung.schreiben`
+    // im POST. Damit prueft die Suite hier auch wirklich beide Zusicherungen.
+    seite: '/admin/monatsabschluss',
+    route: 'app/api/billing/monthly-closing/route.ts',
+  },
 ] as const
 
 /**
