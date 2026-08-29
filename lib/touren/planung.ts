@@ -193,3 +193,62 @@ export function tourGesamtMinuten(stops: PlanStop[]): number {
     return summe + einsatz + (stop.fahrzeit_minuten ?? 0)
   }, 0)
 }
+
+// ═══════════════════════════════════════════════════════════
+// WOCHENTAG EINER TOURVORLAGE
+// ═══════════════════════════════════════════════════════════
+//
+// tour_templates.weekday zaehlt nach ISO-8601: Montag = 1 … Sonntag = 7.
+// Genau so validiert es auch POST /api/tours/templates.
+//
+// Beim ANWENDEN einer Vorlage prueft die Route den Wochentag NICHT — und
+// das ist richtig so: eine Montagstour an einem Mittwoch nachzuholen ist
+// ein zulaessiger Vorgang, kein Fehler. Ungeprueft bliebe es aber auch
+// unbemerkt, und eine Vorlage, die versehentlich auf den falschen Tag
+// gelegt wird, erzeugt eine vollstaendige Tour mit allen Klienten am
+// falschen Datum. Deshalb: warnen, nicht blockieren.
+
+/** Wochentag eines ISO-Datums (YYYY-MM-DD) nach ISO-8601: Mo=1 … So=7. */
+export function isoWochentag(datumIso: string): number | null {
+  if (typeof datumIso !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(datumIso)) return null
+  // ORTSZEIT-Parse ueber das angehaengte 'T00:00:00' — bewusst NICHT
+  // new Date('2026-08-30'). Der kurze Form-Parse ist nach Norm UTC-Mitternacht;
+  // in jeder Zone westlich von UTC faellt getDay() dann auf den VORTAG und die
+  // Warnung meldete den falschen Wochentag (bzw. schwiege, wenn sie warnen muesste).
+  const d = new Date(`${datumIso}T00:00:00`)
+  const tag = d.getDay()
+  if (Number.isNaN(tag)) return null
+  // RUECKPROBE statt blossem NaN-Riegel, und das aus einem beim Testen
+  // gefundenen Grund: ein Datum wie 2026-02-30 ergibt KEIN Invalid Date —
+  // JavaScript rollt es stillschweigend auf den 2. Maerz weiter. Der
+  // NaN-Riegel allein haette dafuer „Montag" geliefert, also genau den
+  // erfundenen Wochentag, den er verhindern soll. Nur der Vergleich mit den
+  // eingegebenen Zahlen deckt den Ueberlauf auf.
+  const [jahr, monat, tagImMonat] = datumIso.split('-').map(Number)
+  if (d.getFullYear() !== jahr || d.getMonth() + 1 !== monat || d.getDate() !== tagImMonat) return null
+  return tag === 0 ? 7 : tag
+}
+
+const WOCHENTAG_NAMEN = ['', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
+
+/** Name eines ISO-Wochentags (1–7), sonst null. */
+export function wochentagName(weekday: number | null | undefined): string | null {
+  if (typeof weekday !== 'number' || !Number.isInteger(weekday) || weekday < 1 || weekday > 7) return null
+  return WOCHENTAG_NAMEN[weekday]
+}
+
+/**
+ * Warnt, wenn eine Vorlage mit hinterlegtem Wochentag auf ein Datum mit
+ * einem anderen Wochentag angewendet wird. Kein hinterlegter Wochentag,
+ * unlesbares Datum oder Uebereinstimmung ergeben null (= keine Warnung).
+ */
+export function vorlagenWochentagWarnung(
+  weekday: number | null | undefined,
+  datumIso: string,
+): string | null {
+  const soll = wochentagName(weekday)
+  if (soll === null) return null
+  const ist = isoWochentag(datumIso)
+  if (ist === null || ist === weekday) return null
+  return `Die Vorlage ist für ${soll} hinterlegt, das gewählte Datum ist ein ${wochentagName(ist)}.`
+}
