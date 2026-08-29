@@ -196,6 +196,7 @@ const navGroups = [
       { href: '/admin/monatsabschluss-vorbereitung', label: 'Monatsabschluss-Vorb.', icon: <IconChart size={18} /> },
       { href: '/admin/monatsabschluss', label: 'Monatsabschluss', icon: <IconChart size={18} /> },
       { href: '/admin/pruefprotokoll', label: 'Prüfprotokoll', icon: <IconTarget size={18} /> },
+      { href: '/admin/abrechnung/audit', label: 'Abrechnungs-Audit', icon: <IconClipboard size={18} /> },
     ],
   },
   {

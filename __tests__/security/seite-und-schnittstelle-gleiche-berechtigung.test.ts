@@ -41,6 +41,12 @@ const PAARE = [
     seite: '/admin/monitoring',
     route: 'app/api/admin/monitoring/abrechnung/route.ts',
   },
+  {
+    // Erbt seine Regel ueber die Praefix-Zuordnung von '/admin/abrechnung'
+    // — `bereichFuerPfad` sucht den laengsten passenden Praefix.
+    seite: '/admin/abrechnung',
+    route: 'app/api/billing/audit/route.ts',
+  },
 ] as const
 
 /**
@@ -62,8 +68,21 @@ function berechtigungenDerRoute(datei: string): { lesen: string[]; schreiben: st
     const naechster = rest.indexOf('\nexport const ')
     const block = naechster === -1 ? rest : rest.slice(0, naechster)
 
-    for (const t of block.matchAll(/require[A-Za-z]*\(\s*'([^']+)'/g)) {
-      ;(methode === 'GET' ? lesen : schreiben).push(t[1])
+    // Zwei Schreibweisen im Haus, beide zaehlen:
+    //   requireXAdmin('abrechnung.lesen')       — der gebuendelte Waechter
+    //   quellenDuerfen(quellen, 'abrechnung.lesen') — die Inline-Fassung
+    // Wer nur die erste liest, haelt eine Route mit der zweiten faelschlich
+    // fuer ungeschuetzt — und die Probe „verlangt ueberhaupt einen
+    // Waechter" haette dann ausgerechnet dort angeschlagen, wo alles
+    // richtig ist.
+    const muster = [
+      /require[A-Za-z]*\(\s*'([^']+)'/g,
+      /quellenDuerfen\(\s*[A-Za-z_$][\w$]*\s*,\s*'([^']+)'/g,
+    ]
+    for (const m of muster) {
+      for (const t of block.matchAll(m)) {
+        ;(methode === 'GET' ? lesen : schreiben).push(t[1])
+      }
     }
   }
   return { lesen, schreiben }
