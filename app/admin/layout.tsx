@@ -223,6 +223,7 @@ const navGroups = [
       { href: '/admin/sepa', label: 'SEPA-Lastschrift', icon: <IconMoney size={18} /> },
       { href: '/admin/mahnwesen', label: 'Mahnwesen', icon: <IconDocument size={18} /> },
       { href: '/admin/datev', label: 'DATEV-Export', icon: <IconMoney size={18} /> },
+      { href: '/admin/monitoring', label: 'Abrechnungs-Monitoring', icon: <IconChart size={18} /> },
     ],
   },
   {

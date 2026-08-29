@@ -174,6 +174,12 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   '/mis/contracts':                   { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
   '/mis/crm':                         { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
   '/mis/documents':                   { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
+  // Fachliches Abrechnungs-Monitoring. `system.verwalten`, weil die Route
+  // dahinter (requireOpsAdmin('system.verwalten')) genau das verlangt —
+  // NICHT `berichte.lesen`, obwohl die Seite nur liest: sie zeigt die
+  // Geldwege der ganzen Organisation, und die Schnittstelle entscheidet.
+  '/admin/monitoring':                { lesen: 'system.verwalten' },
+
   '/mis/dataroom':                    { lesen: 'system.verwalten' },
   '/mis/settings':                    { lesen: 'system.verwalten' },
   '/mis/ai-assistant':                { lesen: 'system.verwalten' },
