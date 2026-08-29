@@ -8,8 +8,9 @@
 import Link from 'next/link'
 import { use, useCallback, useEffect, useState } from 'react'
 import {
-  PFLEGE_MASSNAHME_KATEGORIE, PFLEGE_MASSNAHME_STATUS, PFLEGE_PLAN_STATUS,
-  PFLEGE_PLAN_TYP, PFLEGE_PRIORITAET, formatDate, statusMeta,
+  PFLEGE_EVALUATION_FOLGERUNG, PFLEGE_MASSNAHME_KATEGORIE, PFLEGE_MASSNAHME_STATUS,
+  PFLEGE_PLAN_STATUS, PFLEGE_PLAN_TYP, PFLEGE_PRIORITAET, PFLEGE_ZIELERREICHUNG,
+  daysUntil, formatDate, statusMeta,
 } from '@/lib/admin/ops'
 import { Banner, EmptyRow, StatusBadge } from '@/components/admin/OpsUI'
 import {
@@ -17,14 +18,36 @@ import {
   pflegeMiniBtn, pflegePrimaryBtn, pflegeSecondaryBtn,
 } from '@/components/admin/PflegeUI'
 import {
-  MASSNAHME_STATUS_WERTE,
-  type PflegeMassnahme, type PflegeMassnahmenplan,
+  EVALUATION_FOLGERUNG_WERTE, MASSNAHME_STATUS_WERTE, ZIELERREICHUNG_WERTE,
+  type PflegeMassnahme, type PflegeMassnahmeEvaluation, type PflegeMassnahmenplan,
 } from '@/lib/pflege/types'
 
 const MASSNAHME_LEER = {
   kategorie: 'koerperpflege', titel: '', beschreibung: '', ziel: '',
   haeufigkeit: '', verantwortlich: '', prioritaet: 'normal',
   beginnDatum: '', endeDatum: '', sortierung: '0',
+  // Leer heisst „keine Wiedervorlage". Kein Vorgabewert: welcher Abstand
+  // fachlich richtig ist, haengt an der Massnahme, und eine erfundene Frist
+  // sieht im Nachhinein wie eine getroffene Verabredung aus.
+  evaluationIntervallTage: '',
+}
+
+// Die Auswahl fuer die Beurteilung. Reihenfolge wie in lib/pflege/types.ts,
+// damit Oberflaeche und Datenbank dieselbe Liste zeigen.
+const ZIELERREICHUNG_OPTIONEN = Object.fromEntries(
+  ZIELERREICHUNG_WERTE.map(w => [w, PFLEGE_ZIELERREICHUNG[w]]),
+) as Record<string, { label: string; color: string }>
+
+const FOLGERUNG_OPTIONEN = Object.fromEntries(
+  EVALUATION_FOLGERUNG_WERTE.map(w => [w, PFLEGE_EVALUATION_FOLGERUNG[w]]),
+) as Record<string, { label: string; color: string }>
+
+const EVALUATION_LEER = {
+  zielerreichung: 'teilweise_erreicht',
+  bewertung: '',
+  folgerung: 'fortfuehren',
+  evaluiertAm: '',
+  naechsteEvaluation: '',
 }
 
 export default function AdminMassnahmenplanPage({ params }: { params: Promise<{ id: string }> }) {
@@ -38,6 +61,10 @@ export default function AdminMassnahmenplanPage({ params }: { params: Promise<{ 
   const [hinweis, setHinweis] = useState('')
   const [zeigeMassnahmeForm, setZeigeMassnahmeForm] = useState(false)
   const [massnahmeForm, setMassnahmeForm] = useState(MASSNAHME_LEER)
+  // Evaluation: offene Massnahme, ihre bisherigen Beurteilungen, das Formular.
+  const [evalFuer, setEvalFuer] = useState<PflegeMassnahme | null>(null)
+  const [evalListe, setEvalListe] = useState<PflegeMassnahmeEvaluation[] | null>(null)
+  const [evalForm, setEvalForm] = useState(EVALUATION_LEER)
   const [planForm, setPlanForm] = useState({ titel: '', planTyp: 'versorgungsplan', gueltigVon: '', gueltigBis: '', betreuungsziele: '', pflegeziele: '' })
 
   const load = useCallback(async () => {
@@ -144,6 +171,11 @@ export default function AdminMassnahmenplanPage({ params }: { params: Promise<{ 
           beginnDatum: massnahmeForm.beginnDatum || null,
           endeDatum: massnahmeForm.endeDatum || null,
           sortierung: Number(massnahmeForm.sortierung) || 0,
+          // Leer = keine Wiedervorlage. `Number('')` waere 0 und damit ein
+          // Wert, den der CHECK (1–365) zu Recht abweist.
+          evaluationIntervallTage: massnahmeForm.evaluationIntervallTage
+            ? Number(massnahmeForm.evaluationIntervallTage)
+            : null,
         }),
       })
       const body = await res.json()
@@ -164,6 +196,60 @@ export default function AdminMassnahmenplanPage({ params }: { params: Promise<{ 
       const body = await res.json()
       if (!res.ok) { setError(body.error || 'Aktion fehlgeschlagen.'); return }
       setMassnahmen(ms => ms.map(m => (m.id === massnahmeId ? body.massnahme : m)))
+    } finally { setBusy(false) }
+  }
+
+  // ── Evaluation (Schritt 6 des Pflegeprozesses) ───────────────────
+  //
+  // Die Beurteilung wird ANGELEGT, nie geaendert: `pflege_massnahmen_evaluationen`
+  // ist per Trigger unveraenderlich (trg_pme_unveraenderlich_update/-delete).
+  // Deshalb gibt es hier bewusst kein Bearbeiten und kein Loeschen — eine
+  // Reihe von Beurteilungen, die sich nachtraeglich glaetten laesst, ist als
+  // Nachweis nichts wert.
+  async function evaluationOeffnen(massnahme: PflegeMassnahme) {
+    setEvalFuer(massnahme)
+    setEvalForm(EVALUATION_LEER)
+    setEvalListe(null)
+    setError('')
+    try {
+      const res = await fetch(`/api/pflege/evaluationen?massnahmeId=${massnahme.id}`)
+      const body = await res.json()
+      if (!res.ok) { setError(body.error || 'Beurteilungen konnten nicht geladen werden.'); return }
+      setEvalListe(body.evaluationen || [])
+    } catch {
+      setError('Beurteilungen konnten nicht geladen werden.')
+    }
+  }
+
+  async function evaluationSpeichern() {
+    if (!evalFuer) return
+    setBusy(true); setError(''); setHinweis('')
+    try {
+      const res = await fetch('/api/pflege/evaluationen', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          massnahmeId: evalFuer.id,
+          zielerreichung: evalForm.zielerreichung,
+          bewertung: evalForm.bewertung,
+          folgerung: evalForm.folgerung,
+          // Leere Felder NICHT als leerer String senden: die API unterscheidet
+          // „nicht angegeben" von „ausdruecklich gesetzt". Beim Datum vergibt
+          // sie dann heute, bei der Wiedervorlage rechnet der DB-Trigger sie
+          // aus dem Intervall der Massnahme — oder es gibt eben keine.
+          evaluiertAm: evalForm.evaluiertAm || undefined,
+          naechsteEvaluation: evalForm.naechsteEvaluation || null,
+        }),
+      })
+      const body = await res.json()
+      if (!res.ok) { setError(body.error || 'Beurteilung konnte nicht gespeichert werden.'); return }
+      setEvalForm(EVALUATION_LEER)
+      setHinweis('Beurteilung festgehalten.')
+      // Neu laden statt anzuhaengen: der DB-Trigger schreibt die Wiedervorlage
+      // an der Massnahme fort, und die steht in der Tabelle darunter.
+      await load()
+      const aktualisiert = await fetch(`/api/pflege/evaluationen?massnahmeId=${evalFuer.id}`)
+        .then(r => r.json()).catch(() => null)
+      if (aktualisiert?.evaluationen) setEvalListe(aktualisiert.evaluationen)
     } finally { setBusy(false) }
   }
 
@@ -302,6 +388,13 @@ export default function AdminMassnahmenplanPage({ params }: { params: Promise<{ 
               <TextFeld label="Beginn" type="date" value={massnahmeForm.beginnDatum} onChange={v => setMassnahmeForm(f => ({ ...f, beginnDatum: v }))} />
               <TextFeld label="Ende" type="date" value={massnahmeForm.endeDatum} onChange={v => setMassnahmeForm(f => ({ ...f, endeDatum: v }))} />
               <TextFeld label="Sortierung" type="number" value={massnahmeForm.sortierung} onChange={v => setMassnahmeForm(f => ({ ...f, sortierung: v }))} />
+              <TextFeld
+                label="Evaluation alle … Tage"
+                type="number"
+                value={massnahmeForm.evaluationIntervallTage}
+                onChange={v => setMassnahmeForm(f => ({ ...f, evaluationIntervallTage: v }))}
+                placeholder="leer = keine Wiedervorlage"
+              />
             </FeldRaster>
             <div style={{ marginTop: 12, display: 'grid', gap: 12 }}>
               <TextBereich label="Beschreibung" value={massnahmeForm.beschreibung} onChange={v => setMassnahmeForm(f => ({ ...f, beschreibung: v }))} rows={2} />
@@ -317,11 +410,11 @@ export default function AdminMassnahmenplanPage({ params }: { params: Promise<{ 
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
-              <tr><th>#</th><th>Titel</th><th>Kategorie</th><th>Häufigkeit</th><th>Priorität</th><th>Status</th><th>Aktionen</th></tr>
+              <tr><th>#</th><th>Titel</th><th>Kategorie</th><th>Häufigkeit</th><th>Priorität</th><th>Status</th><th>Wiedervorlage</th><th>Aktionen</th></tr>
             </thead>
             <tbody>
               {massnahmen.length === 0
-                ? <EmptyRow colSpan={7}>Noch keine Maßnahmen — ein Plan ohne Maßnahmen kann nicht freigegeben werden</EmptyRow>
+                ? <EmptyRow colSpan={8}>Noch keine Maßnahmen — ein Plan ohne Maßnahmen kann nicht freigegeben werden</EmptyRow>
                 : massnahmen.map(m => (
                   <tr key={m.id}>
                     <td style={{ fontSize: 13, color: 'var(--ink4)' }}>{m.sortierung}</td>
@@ -330,19 +423,49 @@ export default function AdminMassnahmenplanPage({ params }: { params: Promise<{ 
                     <td style={{ fontSize: 13 }}>{m.haeufigkeit || '—'}</td>
                     <td><StatusBadge label={statusMeta(PFLEGE_PRIORITAET, m.prioritaet).label} color={statusMeta(PFLEGE_PRIORITAET, m.prioritaet).color} /></td>
                     <td><StatusBadge label={statusMeta(PFLEGE_MASSNAHME_STATUS, m.status).label} color={statusMeta(PFLEGE_MASSNAHME_STATUS, m.status).color} /></td>
+                    <td style={{ fontSize: 13 }}>
+                      {/* Ueberfaellig wird ausgewiesen, nicht nur das Datum
+                          gezeigt: „steht seit 12 Tagen an" ist die Angabe,
+                          nach der bei einer Pruefung nach § 114 SGB XI
+                          gefragt wird. Abgeschlossene und abgebrochene
+                          Massnahmen sind nicht faellig, sondern vorbei —
+                          genau wie im Teilindex der Migration. */}
+                      {m.naechste_evaluation
+                        ? (() => {
+                            const tage = daysUntil(m.naechste_evaluation)
+                            const offen = m.status === 'geplant' || m.status === 'aktiv'
+                            const ueberfaellig = offen && tage !== null && tage < 0
+                            return (
+                              <span style={{ color: ueberfaellig ? 'var(--danger, #D04B3B)' : undefined, fontWeight: ueberfaellig ? 600 : 400 }}>
+                                {formatDate(m.naechste_evaluation)}
+                                {ueberfaellig && ` · ${Math.abs(tage)} Tage überfällig`}
+                              </span>
+                            )
+                          })()
+                        : <span style={{ color: 'var(--ink4)' }}>—</span>}
+                    </td>
                     <td>
-                      {!gesperrt && (
-                        <select
-                          value={m.status}
-                          onChange={e => massnahmeStatus(m.id, e.target.value)}
-                          disabled={busy}
-                          style={{ ...pflegeMiniBtn, padding: '4px 6px' }}
-                        >
-                          {MASSNAHME_STATUS_WERTE.map(s => (
-                            <option key={s} value={s}>{statusMeta(PFLEGE_MASSNAHME_STATUS, s).label}</option>
-                          ))}
-                        </select>
-                      )}
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                        {!gesperrt && (
+                          <select
+                            value={m.status}
+                            onChange={e => massnahmeStatus(m.id, e.target.value)}
+                            disabled={busy}
+                            style={{ ...pflegeMiniBtn, padding: '4px 6px' }}
+                          >
+                            {MASSNAHME_STATUS_WERTE.map(s => (
+                              <option key={s} value={s}>{statusMeta(PFLEGE_MASSNAHME_STATUS, s).label}</option>
+                            ))}
+                          </select>
+                        )}
+                        {/* Auch bei gesperrtem Plan lesbar: die Sperre gilt
+                            Plan und Massnahmen, nicht der Beurteilung. Ob
+                            geschrieben werden darf, entscheidet weiter unten
+                            der Plan-Status — ein Entwurf hat nie gewirkt. */}
+                        <button onClick={() => evaluationOeffnen(m)} style={pflegeMiniBtn}>
+                          Beurteilen
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -350,6 +473,104 @@ export default function AdminMassnahmenplanPage({ params }: { params: Promise<{ 
           </table>
         </div>
       </Karte>
+
+      {evalFuer && (
+        <Karte
+          titel={`Evaluation — ${evalFuer.titel}`}
+          aktion={<button onClick={() => { setEvalFuer(null); setEvalListe(null) }} style={pflegeSecondaryBtn}>Schließen</button>}
+        >
+          {evalFuer.ziel
+            ? <p style={{ marginTop: 0, color: 'var(--ink4)', fontSize: 13 }}>Ziel: {evalFuer.ziel}</p>
+            : <Banner tone="info">Diese Maßnahme hat kein festgehaltenes Ziel — beurteilt wird dann, was tatsächlich vereinbart war.</Banner>}
+
+          {/* Ein Plan im Entwurf hat nie gewirkt. Die API weist das mit 409 ab
+              (lib/pflege/evaluation.ts) und der DB-Trigger
+              pflege_evaluation_plan_in_kraft ebenso; hier steht die Fassung,
+              die der Nutzer vor dem Absenden liest statt danach. */}
+          {plan.status === 'entwurf' ? (
+            <Banner tone="info">
+              Der Plan ist noch ein Entwurf und hat nie gewirkt — er lässt sich deshalb nicht beurteilen.
+              Erst freigeben, dann evaluieren. Die bisherigen Beurteilungen bleiben unten lesbar.
+            </Banner>
+          ) : (
+            <div style={{ marginBottom: 20, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
+              <FeldRaster>
+                <AuswahlFeld
+                  label="Zielerreichung *"
+                  value={evalForm.zielerreichung}
+                  onChange={v => setEvalForm(f => ({ ...f, zielerreichung: v }))}
+                  optionen={ZIELERREICHUNG_OPTIONEN}
+                />
+                <AuswahlFeld
+                  label="Folgerung *"
+                  value={evalForm.folgerung}
+                  onChange={v => setEvalForm(f => ({ ...f, folgerung: v }))}
+                  optionen={FOLGERUNG_OPTIONEN}
+                />
+                <TextFeld
+                  label="Beurteilt am"
+                  type="date"
+                  value={evalForm.evaluiertAm}
+                  onChange={v => setEvalForm(f => ({ ...f, evaluiertAm: v }))}
+                />
+                <TextFeld
+                  label="Nächste Beurteilung"
+                  type="date"
+                  value={evalForm.naechsteEvaluation}
+                  onChange={v => setEvalForm(f => ({ ...f, naechsteEvaluation: v }))}
+                  placeholder={evalFuer.evaluation_intervall_tage
+                    ? `leer = automatisch in ${evalFuer.evaluation_intervall_tage} Tagen`
+                    : 'leer = keine Wiedervorlage'}
+                />
+              </FeldRaster>
+              <div style={{ marginTop: 12 }}>
+                <TextBereich
+                  label="Beurteilung im Klartext *"
+                  value={evalForm.bewertung}
+                  onChange={v => setEvalForm(f => ({ ...f, bewertung: v }))}
+                  rows={3}
+                  placeholder="Woran ist die Zielerreichung festgemacht? Ein Häkchen ist bei einer Prüfung nichts wert."
+                />
+              </div>
+              <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  onClick={evaluationSpeichern}
+                  disabled={busy || evalForm.bewertung.trim().length < 3}
+                  style={pflegePrimaryBtn}
+                >
+                  Beurteilung festhalten
+                </button>
+                <span style={{ fontSize: 12, color: 'var(--ink4)' }}>
+                  Eine festgehaltene Beurteilung ist unveränderlich und lässt sich nicht löschen.
+                </span>
+              </div>
+            </div>
+          )}
+
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr><th>Beurteilt am</th><th>Zielerreichung</th><th>Folgerung</th><th>Beurteilung</th><th>Nächste</th></tr>
+              </thead>
+              <tbody>
+                {evalListe === null
+                  ? <EmptyRow colSpan={5}>Laden…</EmptyRow>
+                  : evalListe.length === 0
+                    ? <EmptyRow colSpan={5}>Noch nicht beurteilt — der Regelkreis ist an dieser Maßnahme offen</EmptyRow>
+                    : evalListe.map(e => (
+                      <tr key={e.id}>
+                        <td style={{ fontSize: 13 }}>{formatDate(e.evaluiert_am)}</td>
+                        <td><StatusBadge label={statusMeta(PFLEGE_ZIELERREICHUNG, e.zielerreichung).label} color={statusMeta(PFLEGE_ZIELERREICHUNG, e.zielerreichung).color} /></td>
+                        <td><StatusBadge label={statusMeta(PFLEGE_EVALUATION_FOLGERUNG, e.folgerung).label} color={statusMeta(PFLEGE_EVALUATION_FOLGERUNG, e.folgerung).color} /></td>
+                        <td style={{ fontSize: 13, whiteSpace: 'pre-wrap' }}>{e.bewertung}</td>
+                        <td style={{ fontSize: 13 }}>{e.naechste_evaluation ? formatDate(e.naechste_evaluation) : '—'}</td>
+                      </tr>
+                    ))}
+              </tbody>
+            </table>
+          </div>
+        </Karte>
+      )}
 
       <div style={{ display: 'flex', gap: 8 }}>
         <Link href={`/admin/pflegedoku/verlauf/${plan.client_id}`} style={pflegeSecondaryBtn}>Verlaufsdokumentation →</Link>

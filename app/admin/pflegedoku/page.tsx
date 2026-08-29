@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { PFLEGE_AUFNAHMESTATUS, formatDate, statusMeta } from '@/lib/admin/ops'
 import { Banner, EmptyRow, SearchInput, StatusBadge } from '@/components/admin/OpsUI'
+import type { FaelligeEvaluation } from '@/lib/pflege/evaluation'
 import type { PflegeUebersichtZeile } from '@/lib/pflege/types'
 import { pflegegradVon } from '@/lib/clients/pflegegrad'
 
@@ -24,6 +25,11 @@ export default function AdminPflegedokuPage() {
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'alle' | 'ohne_anamnese' | 'ohne_plan' | 'offene_aufnahme'>('alle')
+  // Faellige Evaluationen (Migration 20260829185500). Bis dahin war die
+  // Frage „welche Massnahmen stehen zur Beurteilung an" gar nicht
+  // beantwortbar — und genau danach wird bei einer Qualitaetspruefung
+  // nach § 114 SGB XI gefragt.
+  const [faellig, setFaellig] = useState<FaelligeEvaluation[] | null>(null)
 
   useEffect(() => {
     fetch('/api/pflege/uebersicht')
@@ -35,6 +41,18 @@ export default function AdminPflegedokuPage() {
       })
       .catch(() => setError('Laden fehlgeschlagen.'))
       .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    // Eigener Aufruf mit eigenem Fehlerweg: bleibt die Faelligkeitsliste
+    // aus, soll die Uebersicht trotzdem stehen — und umgekehrt. Ein
+    // gemeinsames `catch` haette aus einem Teilausfall eine leere Seite
+    // gemacht. `null` heisst „noch nicht geladen oder nicht ladbar" und
+    // wird unten NICHT als „nichts faellig" ausgegeben.
+    fetch('/api/pflege/evaluationen?faellig=true')
+      .then(r => r.json())
+      .then(body => { if (!body.error) setFaellig(body.faellig || []) })
+      .catch(() => { /* Uebersicht bleibt nutzbar */ })
   }, [])
 
   const gefiltert = useMemo(() => {
@@ -67,6 +85,38 @@ export default function AdminPflegedokuPage() {
           <Stat label="Ohne aktiven Plan" value={zusammenfassung.ohne_aktiven_plan} tone="warn" active={filter === 'ohne_plan'} onClick={() => setFilter('ohne_plan')} />
           <Stat label="Offene Aufnahmen" value={zusammenfassung.offene_aufnahmen} tone="warn" active={filter === 'offene_aufnahme'} onClick={() => setFilter('offene_aufnahme')} />
           <Stat label="Mit aktiven Risiken" value={zusammenfassung.mit_risiken} tone="danger" active={false} onClick={() => setFilter('alle')} />
+        </div>
+      )}
+
+      {faellig !== null && faellig.length > 0 && (
+        <div style={{ marginBottom: 20, border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+            <h2 style={{ margin: 0, fontSize: 16 }}>Evaluationen fällig ({faellig.length})</h2>
+            <span style={{ fontSize: 12, color: 'var(--ink4)' }}>
+              Maßnahmen, deren Zielerreichung heute oder früher zu beurteilen war
+            </span>
+          </div>
+          <div className="admin-table-wrap" style={{ marginTop: 12 }}>
+            <table className="admin-table">
+              <thead>
+                <tr><th>Maßnahme</th><th>Fällig seit</th><th>Offen</th><th>Aktionen</th></tr>
+              </thead>
+              <tbody>
+                {faellig.map(f => (
+                  <tr key={f.massnahmeId}>
+                    <td style={{ fontWeight: 600 }}>{f.titel}</td>
+                    <td style={{ fontSize: 13 }}>{formatDate(f.naechsteEvaluation)}</td>
+                    <td style={{ fontSize: 13, color: f.ueberfaelligTage > 0 ? '#D04B3B' : 'var(--ink3)', fontWeight: f.ueberfaelligTage > 0 ? 600 : 400 }}>
+                      {f.ueberfaelligTage === 0 ? 'heute' : `${f.ueberfaelligTage} Tage`}
+                    </td>
+                    <td>
+                      <Link href={`/admin/pflegedoku/massnahmenplan/${f.planId}`} style={secondaryBtn}>Zum Plan →</Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

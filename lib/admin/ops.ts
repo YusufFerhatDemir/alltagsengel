@@ -1004,6 +1004,25 @@ export const PFLEGE_MASSNAHME_STATUS: Record<string, { label: string; color: str
   abgebrochen: { label: 'Abgebrochen', color: '#D04B3B' },
 }
 
+// Der sechste Schritt des Pflegeprozesses (Migration 20260829185500).
+// Zielerreichung und Folgerung sind ausdruecklich ZWEI Angaben: was mit dem
+// ZIEL ist, und was daraus folgt. Eine abgebrochene Massnahme kann ihr Ziel
+// erreicht haben, eine laufende es verfehlen — ein gemeinsames Feld haette
+// das eine als das andere ausgegeben.
+export const PFLEGE_ZIELERREICHUNG: Record<string, { label: string; color: string }> = {
+  erreicht: { label: 'Erreicht', color: '#5CB882' },
+  teilweise_erreicht: { label: 'Teilweise erreicht', color: '#E8A000' },
+  nicht_erreicht: { label: 'Nicht erreicht', color: '#D04B3B' },
+  nicht_beurteilbar: { label: 'Nicht beurteilbar', color: '#999' },
+}
+
+export const PFLEGE_EVALUATION_FOLGERUNG: Record<string, { label: string; color: string }> = {
+  fortfuehren: { label: 'Fortführen', color: '#5CB882' },
+  anpassen: { label: 'Anpassen', color: '#E8A000' },
+  beenden: { label: 'Beenden', color: '#2196F3' },
+  neue_massnahme: { label: 'Neue Maßnahme', color: '#26A69A' },
+}
+
 export const PFLEGE_VERLAUF_TYP: Record<string, { label: string; color: string }> = {
   verlauf: { label: 'Verlauf', color: '#5CB882' },
   ereignis: { label: 'Ereignis', color: '#2196F3' },
