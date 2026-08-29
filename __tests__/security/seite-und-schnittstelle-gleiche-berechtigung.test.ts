@@ -61,6 +61,13 @@ const PAARE = [
     seite: '/admin/rechnungen',
     route: 'app/api/billing/invoices/[id]/abschreiben/route.ts',
   },
+  {
+    // Aendern und Loeschen eines geplanten Dienstes. Die Route fuehrt nur
+    // schreibende Handler (PATCH, DELETE) — der Vergleich prueft hier also
+    // ausschliesslich die Schreibseite, und das ist richtig so.
+    seite: '/admin/dienstplan',
+    route: 'app/api/personal/dienstplan/eintraege/[id]/route.ts',
+  },
 ] as const
 
 /**

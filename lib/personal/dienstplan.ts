@@ -2,7 +2,7 @@ import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   assertErlaubt,
-  DIENSTPLAN_STATUS_WERTE, DIENSTPLAN_TYP_WERTE,
+  DIENSTPLAN_STATUS_WERTE, DIENSTPLAN_TYP_WERTE, DIENSTPLAN_ENDZUSTAENDE,
   type DienstplanSchicht, type DienstplanEintrag, type DienstplanTagesansicht,
   type DienstplanStatus, type DienstplanTyp,
 } from './types'
@@ -354,7 +354,6 @@ export interface UpdateEintragParams {
  * keinen Status-Guard-Trigger (20260811010000_personalmanagement.sql). Diese
  * Pruefung ist die einzige Stelle, an der die Regel gilt.
  */
-const DIENSTPLAN_ENDZUSTAENDE: DienstplanStatus[] = ['abgeschlossen', 'ausgefallen']
 
 /** Feld-Aenderungen, die an einem entschiedenen Dienst nichts mehr zu suchen haben. */
 const DIENST_KERNFELDER: Array<keyof UpdateEintragParams> = [

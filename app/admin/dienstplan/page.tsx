@@ -3,7 +3,7 @@ import { datumBerlin } from '@/lib/utils/timezone';
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { statusMeta, formatTime, DIENSTPLAN_STATUS, DIENSTPLAN_TYP, WEEKDAYS } from '@/lib/admin/ops'
 import { StatusBadge, EmptyRow, Banner } from '@/components/admin/OpsUI'
-import type { DienstplanSchicht } from '@/lib/personal/types'
+import { DIENSTPLAN_ENDZUSTAENDE, type DienstplanSchicht } from '@/lib/personal/types'
 import { logger } from '@/lib/logger';
 const log = logger.child('admin:dienstplan');
 
@@ -75,6 +75,25 @@ interface CreateForm {
   notizen: string
 }
 
+/** Nur die Felder, die der Wochenplan von einer Pflegekraft braucht. */
+interface Kraft {
+  id: string
+  first_name: string | null
+  last_name: string | null
+  vertragsstatus: string | null
+  einsatzfreigabe: boolean | null
+}
+
+function kraftName(k: Kraft): string {
+  return `${k.first_name ?? ''} ${k.last_name ?? ''}`.trim() || k.id
+}
+
+/** Die Wochenfreigabe, soweit der Wochenplan sie braucht. */
+interface Freigabe {
+  woche_start: string
+  status: 'freigegeben' | 'zurueckgezogen'
+}
+
 const primaryBtn: React.CSSProperties = {
   fontSize: 14, color: 'var(--coal)', fontWeight: 600,
   background: 'linear-gradient(135deg,var(--gold2),var(--gold))', border: 'none',
@@ -135,6 +154,38 @@ export default function DienstplanPage() {
   const [schichtFehler, setSchichtFehler] = useState<string | null>(null)
   const [schichtBusy, setSchichtBusy] = useState(false)
 
+  // ── Mitarbeitende zur Auswahl ─────────────────────────────────────
+  // BEFUND (29.08.2026): das Anlageformular hatte an dieser Stelle ein
+  // freies Textfeld mit dem Platzhalter „UUID". Wer einen Dienst plante,
+  // musste die Kennung der Pflegekraft von Hand abtippen. Ein Vertipper
+  // ergibt entweder einen Fehler — oder, wenn er zufaellig auf eine
+  // andere gueltige Kennung faellt, einen Dienst fuer die falsche Person,
+  // und DAS faellt niemandem auf, weil im Plan danach ein Name steht.
+  // /api/personal/stammdaten liefert die Liste und verlangt genau das
+  // Recht, das diese Seite ohnehin voraussetzt (personal.lesen).
+  const [kraefte, setKraefte] = useState<Kraft[]>([])
+
+  // ── Bearbeiten eines geplanten Dienstes ───────────────────────────
+  // PATCH und DELETE auf /api/personal/dienstplan/eintraege/[id] gab es
+  // seit langem; aufgerufen hat sie niemand. Ein einmal eingetragener
+  // Dienst liess sich weder verschieben noch umbesetzen noch absagen —
+  // und ein Dienstplan, der sich nicht aendern laesst, ist keiner: der
+  // haeufigste Vorgang der Woche ist die Umplanung.
+  const [bearbeitung, setBearbeitung] = useState<Eintrag | null>(null)
+  const [bearbForm, setBearbForm] = useState({
+    caregiverId: '', startZeit: '', endZeit: '', typ: '', status: '',
+    notizen: '', aenderungGrund: '',
+  })
+  const [bearbFehler, setBearbFehler] = useState<string | null>(null)
+  const [bearbBusy, setBearbBusy] = useState(false)
+
+  // ── Wochenfreigabe ────────────────────────────────────────────────
+  // Der Riegel aus 20260829005700 (live) sperrt in einer freigegebenen
+  // Woche das Loeschen ganz und verlangt fuer jede Aenderung einen
+  // eigenen Grund. Ohne diese Angabe hier kaeme die Datenbankmeldung
+  // roh an der Oberflaeche an, und zwar erst NACH dem Absenden.
+  const [freigabe, setFreigabe] = useState<Freigabe | null>(null)
+
   const weekEnd = addDays(weekStart, 6)
 
   const ladeWoche = useCallback(async () => {
@@ -174,6 +225,35 @@ export default function DienstplanPage() {
   }, [])
 
   useEffect(() => { ladeSchichten() }, [ladeSchichten])
+
+  const ladeKraefte = useCallback(async () => {
+    try {
+      const res = await fetch('/api/personal/stammdaten')
+      if (!res.ok) return
+      const data = await res.json()
+      setKraefte(Array.isArray(data) ? data : (data.stammdaten ?? []))
+    } catch {
+      /* Der Wochenplan bleibt lesbar; nur die Auswahl fehlt dann. */
+    }
+  }, [])
+
+  useEffect(() => { ladeKraefte() }, [ladeKraefte])
+
+  const ladeFreigabe = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/personal/dienstplan/freigabe?woche=${formatISO(weekStart)}`)
+      if (!res.ok) { setFreigabe(null); return }
+      const data = await res.json()
+      setFreigabe(data?.uebersicht?.freigabe ?? null)
+    } catch {
+      // Bewusst `null` und nicht „nicht freigegeben": unbekannt ist nicht
+      // dasselbe wie frei. Der Riegel sitzt ohnehin in der Datenbank; die
+      // Oberflaeche zeigt hier nur, was sie weiss.
+      setFreigabe(null)
+    }
+  }, [weekStart])
+
+  useEffect(() => { ladeFreigabe() }, [ladeFreigabe])
 
   async function schichtAnlegen() {
     setSchichtBusy(true)
@@ -278,6 +358,108 @@ export default function DienstplanPage() {
     } finally {
       setCreating(false)
     }
+  }
+
+  const wocheFreigegeben = freigabe?.status === 'freigegeben'
+
+  function bearbeitungOeffnen(e: Eintrag) {
+    setBearbFehler(null)
+    setBearbeitung(e)
+    setBearbForm({
+      // `slice(0, 5)`: die Datenbank liefert `HH:MM:SS`, ein
+      // `<input type="time">` zeigt bei Sekunden gar nichts an.
+      caregiverId: e.caregiver_id ?? '',
+      startZeit: (e.start_zeit ?? '').slice(0, 5),
+      endZeit: (e.end_zeit ?? '').slice(0, 5),
+      typ: e.typ ?? 'regulaer',
+      status: e.status ?? 'geplant',
+      notizen: e.notizen ?? '',
+      aenderungGrund: '',
+    })
+  }
+
+  /**
+   * Schickt einen Patch an die Route und laedt die Woche neu.
+   *
+   * `felder` ist bewusst nur das, was sich WIRKLICH aendern soll — nicht
+   * das ganze Formular. Wer ausschliesslich absagen will, soll nicht
+   * nebenbei Zeiten mitschreiben, die er gar nicht angefasst hat.
+   */
+  async function dienstPatchen(felder: Record<string, unknown>, grundNoetig: boolean) {
+    if (!bearbeitung) return
+    if (grundNoetig && !bearbForm.aenderungGrund.trim()) {
+      setBearbFehler('Die Woche ist freigegeben — jede Änderung braucht einen Grund.')
+      return
+    }
+    setBearbBusy(true); setBearbFehler(null)
+    try {
+      const res = await fetch(`/api/personal/dienstplan/eintraege/${bearbeitung.id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...felder,
+          // Leer heisst „kein Grund angegeben". Ihn immer mitzuschicken ist
+          // wichtig: der Riegel verlangt bei einer freigegebenen Woche einen
+          // Grund, der sich vom vorigen UNTERSCHEIDET — ein stehen
+          // gebliebener Grund deckte sonst jede weitere Aenderung mit ab.
+          aenderungGrund: bearbForm.aenderungGrund.trim() || null,
+        }),
+      })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setBearbFehler(body?.error || 'Änderung konnte nicht gespeichert werden.')
+        return
+      }
+      setBearbeitung(null)
+      await ladeWoche()
+    } catch (err) {
+      log.errorWithException('Dienst ändern fehlgeschlagen', err)
+      setBearbFehler('Änderung konnte nicht gespeichert werden (Netzwerkfehler).')
+    } finally { setBearbBusy(false) }
+  }
+
+  async function dienstSpeichern() {
+    await dienstPatchen({
+      caregiverId: bearbForm.caregiverId || null,
+      startZeit: bearbForm.startZeit,
+      endZeit: bearbForm.endZeit,
+      typ: bearbForm.typ,
+      status: bearbForm.status,
+      notizen: bearbForm.notizen,
+    }, wocheFreigegeben)
+  }
+
+  /**
+   * Absagen statt loeschen. Genau dieser Weg ist in einer freigegebenen
+   * Woche der einzig zulaessige — der Riegel sagt es woertlich: „Statt zu
+   * loeschen: den Dienst auf ausgefallen setzen." Der Dienst bleibt damit
+   * im Plan sichtbar, und das ist der Punkt: ein ausgefallener Dienst ist
+   * eine Luecke, die jemand fuellen muss, ein geloeschter ist unsichtbar.
+   */
+  async function dienstAbsagen() {
+    if (!window.confirm('Diesen Dienst als ausgefallen kennzeichnen? Er bleibt im Plan sichtbar.')) return
+    await dienstPatchen({ status: 'ausgefallen' }, wocheFreigegeben)
+  }
+
+  async function dienstLoeschen() {
+    if (!bearbeitung) return
+    if (wocheFreigegeben) {
+      setBearbFehler(
+        'In einer freigegebenen Woche kann ein Dienst nicht gelöscht werden — bitte auf "ausgefallen" setzen.'
+      )
+      return
+    }
+    if (!window.confirm('Diesen Dienst endgültig aus dem Plan entfernen?')) return
+    setBearbBusy(true); setBearbFehler(null)
+    try {
+      const res = await fetch(`/api/personal/dienstplan/eintraege/${bearbeitung.id}`, { method: 'DELETE' })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) { setBearbFehler(body?.error || 'Löschen fehlgeschlagen.'); return }
+      setBearbeitung(null)
+      await ladeWoche()
+    } catch (err) {
+      log.errorWithException('Dienst löschen fehlgeschlagen', err)
+      setBearbFehler('Löschen fehlgeschlagen (Netzwerkfehler).')
+    } finally { setBearbBusy(false) }
   }
 
   const weekLabel = `${weekStart.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit' })} – ${weekEnd.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: 'numeric' })}`
@@ -447,9 +629,28 @@ export default function DienstplanPage() {
                 style={inputStyle} />
             </label>
             <label style={{ fontSize: 13 }}>
-              Mitarbeiter-ID<br />
-              <input type="text" value={form.caregiverId} onChange={e => setForm({ ...form, caregiverId: e.target.value })}
-                placeholder="UUID" style={inputStyle} />
+              Mitarbeiter/in<br />
+              {/* Vorher stand hier ein freies Textfeld mit dem Platzhalter
+                  „UUID". Solange die Liste (noch) nicht geladen ist, bleibt
+                  das Feld als Rueckfallweg bestehen — sonst waere der
+                  Wochenplan bei einer fehlgeschlagenen Abfrage gar nicht
+                  mehr bedienbar. */}
+              {kraefte.length > 0 ? (
+                <select value={form.caregiverId} onChange={e => setForm({ ...form, caregiverId: e.target.value })}
+                  style={inputStyle}>
+                  <option value="">— unbesetzt —</option>
+                  {kraefte.map(k => (
+                    <option key={k.id} value={k.id}>
+                      {kraftName(k)}
+                      {k.vertragsstatus && k.vertragsstatus !== 'aktiv' ? ` (${k.vertragsstatus})` : ''}
+                      {k.einsatzfreigabe === false ? ' — nicht freigegeben' : ''}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input type="text" value={form.caregiverId} onChange={e => setForm({ ...form, caregiverId: e.target.value })}
+                  placeholder="Kennung" style={inputStyle} />
+              )}
             </label>
             {schichten.some(s => s.aktiv) && (
               <label style={{ fontSize: 13 }}>
@@ -502,6 +703,143 @@ export default function DienstplanPage() {
         </div>
       )}
 
+      {/* ── Wochenfreigabe ────────────────────────────────────────────
+          Steht ueber dem Plan und nicht darin: sie gilt fuer die ganze
+          Woche und aendert, was mit JEDEM Dienst darin noch getan werden
+          darf. Wer sie erst beim Absenden erfaehrt, hat den Vorgang
+          bereits versucht. */}
+      {wocheFreigegeben && (
+        <div style={{ marginBottom: 12 }}>
+          <Banner tone="warn">
+            Diese Woche ist freigegeben. Änderungen sind möglich, brauchen aber
+            jeweils einen eigenen Grund; gelöscht werden kann kein Dienst mehr —
+            ein Ausfall wird auf „ausgefallen" gesetzt und bleibt sichtbar.
+          </Banner>
+        </div>
+      )}
+
+      {/* ── Dienst bearbeiten ─────────────────────────────────────── */}
+      {bearbeitung && (
+        <div style={{
+          background: 'var(--coal2)', border: '1px solid var(--gold)',
+          borderRadius: 12, padding: 16, marginBottom: 16,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
+            <div>
+              <h3 style={{ fontSize: 15, margin: 0 }}>
+                Dienst am {new Date(bearbeitung.datum + 'T12:00').toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', weekday: 'long', day: '2-digit', month: '2-digit' })}
+              </h3>
+              <p className="admin-subtitle" style={{ margin: '2px 0 0' }}>
+                {bearbeitung.caregiver_name}
+                {bearbeitung.kunde_name ? ` · ${bearbeitung.kunde_name}` : ''}
+              </p>
+            </div>
+            <button style={secondaryBtn} onClick={() => setBearbeitung(null)}>Schließen</button>
+          </div>
+
+          {bearbFehler && <div style={{ marginBottom: 12 }}><Banner tone="danger">{bearbFehler}</Banner></div>}
+
+          {/* Ein abgeschlossener oder ausgefallener Dienst ist gelaufen:
+              `updateEintrag` weist Kernfelder und Status mit 409 ab. Das
+              hier zu zeigen statt es zu versuchen erspart eine Meldung,
+              die erst nach dem Klick kommt. */}
+          {DIENSTPLAN_ENDZUSTAENDE.includes(bearbeitung.status as never) ? (
+            <Banner tone="info">
+              Dieser Dienst steht auf „{statusMeta(DIENSTPLAN_STATUS, bearbeitung.status).label}" und ist
+              abgeschlossen. Zeiten, Besetzung und Status lassen sich nicht mehr ändern.
+            </Banner>
+          ) : (
+            <>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'end' }}>
+                <label style={{ fontSize: 13 }}>
+                  Mitarbeiter/in<br />
+                  {kraefte.length > 0 ? (
+                    <select value={bearbForm.caregiverId}
+                      onChange={ev => setBearbForm({ ...bearbForm, caregiverId: ev.target.value })}
+                      style={inputStyle}>
+                      <option value="">— unbesetzt —</option>
+                      {kraefte.map(k => (
+                        <option key={k.id} value={k.id}>
+                          {kraftName(k)}
+                          {k.vertragsstatus && k.vertragsstatus !== 'aktiv' ? ` (${k.vertragsstatus})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input type="text" value={bearbForm.caregiverId}
+                      onChange={ev => setBearbForm({ ...bearbForm, caregiverId: ev.target.value })}
+                      style={inputStyle} />
+                  )}
+                </label>
+                <label style={{ fontSize: 13 }}>
+                  Beginn<br />
+                  <input type="time" value={bearbForm.startZeit}
+                    onChange={ev => setBearbForm({ ...bearbForm, startZeit: ev.target.value })} style={inputStyle} />
+                </label>
+                <label style={{ fontSize: 13 }}>
+                  Ende<br />
+                  <input type="time" value={bearbForm.endZeit}
+                    onChange={ev => setBearbForm({ ...bearbForm, endZeit: ev.target.value })} style={inputStyle} />
+                </label>
+                <label style={{ fontSize: 13 }}>
+                  Typ<br />
+                  <select value={bearbForm.typ} onChange={ev => setBearbForm({ ...bearbForm, typ: ev.target.value })}
+                    style={inputStyle}>
+                    {Object.entries(DIENSTPLAN_TYP).map(([k, v]) => (
+                      <option key={k} value={k}>{v.label}</option>
+                    ))}
+                  </select>
+                </label>
+                <label style={{ fontSize: 13 }}>
+                  Status<br />
+                  <select value={bearbForm.status} onChange={ev => setBearbForm({ ...bearbForm, status: ev.target.value })}
+                    style={inputStyle}>
+                    {Object.entries(DIENSTPLAN_STATUS).map(([k, v]) => (
+                      <option key={k} value={k}>{v.label}</option>
+                    ))}
+                  </select>
+                </label>
+                <label style={{ fontSize: 13 }}>
+                  Bemerkung<br />
+                  <input type="text" value={bearbForm.notizen}
+                    onChange={ev => setBearbForm({ ...bearbForm, notizen: ev.target.value })} style={inputStyle} />
+                </label>
+                {/* Nur bei freigegebener Woche verlangt, aber immer
+                    angeboten: ein Grund schadet nie, und er landet im
+                    Audit-Trail der Personalverwaltung. */}
+                <label style={{ fontSize: 13 }}>
+                  Änderungsgrund{wocheFreigegeben ? ' (Pflicht)' : ' (optional)'}<br />
+                  <input type="text" value={bearbForm.aenderungGrund}
+                    onChange={ev => setBearbForm({ ...bearbForm, aenderungGrund: ev.target.value })}
+                    placeholder={wocheFreigegeben ? 'z. B. Krankmeldung' : 'Optional'} style={inputStyle} />
+                </label>
+              </div>
+
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 14 }}>
+                <button style={primaryBtn} onClick={dienstSpeichern} disabled={bearbBusy}>
+                  {bearbBusy ? 'Speichern…' : 'Speichern'}
+                </button>
+                <button style={secondaryBtn} onClick={dienstAbsagen} disabled={bearbBusy}>
+                  Dienst absagen
+                </button>
+                {/* In einer freigegebenen Woche gar nicht erst anbieten:
+                    der Riegel weist das Loeschen ab, und ein Knopf, der
+                    immer scheitert, ist schlimmer als keiner. */}
+                {!wocheFreigegeben && (
+                  <button
+                    style={{ ...secondaryBtn, color: '#D04B3B', borderColor: 'rgba(208,75,59,.4)' }}
+                    onClick={dienstLoeschen}
+                    disabled={bearbBusy}
+                  >
+                    Löschen
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {/* 7-column grid */}
       {loading ? <p>Laden...</p> : (
         <div style={{
@@ -528,16 +866,29 @@ export default function DienstplanPage() {
                   <div style={{ fontSize: 12, color: 'var(--ink4)', textAlign: 'center', padding: 8 }}>—</div>
                 ) : entries.map(e => {
                   const sm = statusMeta(DIENSTPLAN_STATUS, e.status)
+                  const offen = bearbeitung?.id === e.id
                   return (
-                    <div key={e.id} style={{
+                    /* Die Kachel oeffnet den Bearbeitungsbereich. Ein Dienst
+                       ohne jede Handhabe war der eigentliche Mangel dieser
+                       Seite: eintragen ging, umplanen nicht. */
+                    <div key={e.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => bearbeitungOeffnen(e)}
+                      onKeyDown={ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); bearbeitungOeffnen(e) } }}
+                      title="Dienst bearbeiten"
+                      style={{
                       background: e.abwesend
                         ? 'rgba(208,75,59,.12)'
                         : e.schicht_farbe
                           ? `${e.schicht_farbe}22`
                           : 'var(--coal3)',
-                      border: e.abwesend ? '1px solid rgba(208,75,59,.4)' : '1px solid transparent',
+                      border: offen
+                        ? '1px solid var(--gold)'
+                        : e.abwesend ? '1px solid rgba(208,75,59,.4)' : '1px solid transparent',
                       borderRadius: 8, padding: '6px 8px', marginBottom: 6, fontSize: 12,
                       borderLeft: e.schicht_farbe ? `3px solid ${e.schicht_farbe}` : undefined,
+                      cursor: 'pointer', textAlign: 'left', width: '100%',
                     }}>
                       <div style={{ fontWeight: 600, marginBottom: 2 }}>{e.caregiver_name}</div>
                       <div style={{ color: 'var(--ink4)' }}>
