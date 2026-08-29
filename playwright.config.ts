@@ -58,5 +58,26 @@ export default defineConfig({
         url: 'http://localhost:3000',
         timeout: 120 * 1000,
         reuseExistingServer: true,
+        // Gleiche Bedingungen wie im CI-Job (.github/workflows/ci.yml).
+        // Playwright spricht den Server direkt an, ohne Reverse-Proxy —
+        // `x-forwarded-for` fehlt, und getClientIP() vergibt fuer JEDE
+        // Anfrage aus JEDER Browser-Sitzung denselben Schluessel. Alle
+        // Tests beider Browser-Projekte teilen sich damit EIN Budget von
+        // 120 Anfragen/Minute, und der Zaehler schlaegt mitten im Lauf zu.
+        //
+        // Gemessen am 29.08.2026: in e2e/pflegecoach.spec.ts fielen genau
+        // die Faelle /belastung und /verlauf um — reproduzierbar, auch bei
+        // warmem Server, einzeln aber gruen. Die Seite zeigte „Zu viele
+        // Anfragen": /api/coach/profil antwortete 429 statt 401, und der
+        // Zugangs-Guard leitet nur bei 401 auf die Startseite (das bleibt
+        // richtig so — bei 429 ist der Anmeldestand schlicht unbekannt).
+        // Ohne diese Zeile prueft der lokale Lauf den Ratenzaehler mit,
+        // nicht den Zugangsschutz, um den es geht.
+        //
+        // Der Schalter gilt NUR fuer den Server, den Playwright selbst
+        // startet. Ein bereits laufender `npm run dev` wird per
+        // `reuseExistingServer` weiterverwendet und behaelt sein scharfes
+        // Limit — dort schlaegt der Lauf also weiterhin fehl.
+        env: { DISABLE_RATE_LIMIT_FOR_E2E: '1' },
       },
 })

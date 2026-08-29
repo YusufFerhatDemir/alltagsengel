@@ -91,6 +91,49 @@ const FOKUSSIERBAR = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(',')
 
+// ── Wer hat den Dialog ausgelöst? ────────────────────────────────────────
+// `document.activeElement` allein beantwortet das nicht zuverlässig. WebKit
+// fokussiert eine Schaltfläche beim Anklicken NICHT — Safari (macOS wie iOS)
+// gibt den Fokus per Klick nur an Formularfelder — und räumt beim `mousedown`
+// zusätzlich den bestehenden Fokus ab. In dem Moment, in dem der Dialog
+// aufgeht, steht dort also `body`. Die Fokus-Rückgabe unten lief damit ins
+// Leere: nach dem Schließen stand der Fokus am Seitenanfang statt auf der
+// auslösenden Schaltfläche, und die Tastaturbedienung begann von vorn
+// (WCAG 2.4.3). Gemessen am 29.08.2026 im `mobile-safari`-Lauf; in Chromium
+// fiel es nicht auf, weil dort der Klick den Fokus mitnimmt.
+//
+// Deshalb wird mitgeschrieben, was zuletzt bedient wurde. `focusin` deckt
+// Tastatur und alle Browser ab, die den Fokus beim Klick mitführen;
+// `pointerdown` deckt genau den WebKit-Fall ab, in dem das ausbleibt.
+// Beide hören in der Erfassungsphase, damit ein `stopPropagation` einer
+// Komponente den Eintrag nicht verschluckt.
+//
+// Die Beobachter müssen VOR dem auslösenden Klick stehen — der Dialog wird
+// erst danach eingehängt, sein Effekt käme zu spät. Sie hängen deshalb am
+// Modul, nicht am Hook. Der Verweis wird nur gelesen und beim Schließen
+// gegen `document.contains` geprüft; er hält kein entferntes Element fest,
+// das nicht ohnehin bis zum nächsten Klick im Speicher bliebe.
+let zuletztBedient: HTMLElement | null = null
+
+if (typeof document !== 'undefined') {
+  document.addEventListener(
+    'focusin',
+    e => {
+      const ziel = e.target as HTMLElement | null
+      if (ziel && ziel !== document.body) zuletztBedient = ziel
+    },
+    true,
+  )
+  document.addEventListener(
+    'pointerdown',
+    e => {
+      const ziel = (e.target as HTMLElement | null)?.closest?.(FOKUSSIERBAR) as HTMLElement | null
+      if (ziel) zuletztBedient = ziel
+    },
+    true,
+  )
+}
+
 export function useFokusFalle<T extends HTMLElement>(
   onClose?: () => void,
   optionen?: {
@@ -115,7 +158,12 @@ export function useFokusFalle<T extends HTMLElement>(
     if (!aktiv || !node) return
 
     // Auslösendes Element merken, damit der Fokus dorthin zurückkehren kann.
-    const ausloeser = document.activeElement as HTMLElement | null
+    // `document.activeElement` bleibt die erste Quelle, solange es etwas
+    // Sinnvolles zeigt; steht dort `body` (oder nichts), greift der oben
+    // mitgeschriebene letzte Bedienvorgang.
+    const aktiv0 = document.activeElement as HTMLElement | null
+    const ausloeser =
+      aktiv0 && aktiv0 !== document.body ? aktiv0 : zuletztBedient
 
     // Nur wirklich sichtbare Elemente zählen: unsichtbare haben keine
     // Client-Rechtecke (deckt display:none, visibility:hidden und
@@ -192,8 +240,11 @@ export function useFokusFalle<T extends HTMLElement>(
     document.addEventListener('keydown', onKeyDown, true)
     return () => {
       document.removeEventListener('keydown', onKeyDown, true)
-      // Nur zurückgeben, wenn das Element noch im Dokument hängt.
-      if (ausloeser && document.contains(ausloeser)) ausloeser.focus()
+      // Nur zurückgeben, wenn das Element noch im Dokument hängt — und nicht
+      // in den Dialog selbst, der gerade verschwindet.
+      if (ausloeser && document.contains(ausloeser) && !node.contains(ausloeser)) {
+        ausloeser.focus()
+      }
     }
   }, [aktiv, fangen])
 

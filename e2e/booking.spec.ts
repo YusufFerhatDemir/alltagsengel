@@ -165,8 +165,43 @@ test.describe('Booking-Entry-Points (Smoke)', () => {
     })
 
     await page.goto('/auth/login')
-    await page.getByPlaceholder(/E-Mail/i).first().fill(`nonexistent-${Date.now()}@test.invalid`)
-    await page.getByPlaceholder(/Passwort/i).first().fill('WrongPassword!123')
+
+    // ── Hydrations-Tor ─────────────────────────────────────────────
+    // Die Maske ist ein Client-Component mit kontrollierten Feldern
+    // (app/auth/login/page.tsx:445 ff., `value={email}`). Wer tippt,
+    // bevor React hydratisiert hat, schreibt in das servergerenderte
+    // DOM — die Hydration ueberschreibt es gleich darauf aus dem noch
+    // leeren State. Genau das ist passiert: im Fehlerbild stand die
+    // E-Mail (zuerst gefuellt) leer, das Passwort (danach gefuellt)
+    // noch drin; der Klick lief ins Leere, weil `required` am leeren
+    // E-Mail-Feld die Absendung nativ abfing. Deshalb blieb die
+    // Diagnose stumm: kein Konsolenfehler, kein Seitenfehler, kein
+    // Netzverkehr, der Knopf unveraendert auf „ANMELDEN".
+    //
+    // Einzeln lief der Test durch, in der vollen Datei nicht — eine
+    // Rennbedingung, kein fester Fehler. Ein Zeitpuffer wuerde sie
+    // verdecken statt schliessen.
+    //
+    // Der Umschalter neben dem Passwortfeld wechselt seine
+    // Beschriftung ueber React-State (setShowPassword). Dieser Wechsel
+    // KANN vor der Hydration nicht eintreten und ist damit ein Beleg.
+    const umschalter = page.getByRole('button', { name: /anzeigen|verbergen/i }).first()
+    await expect(umschalter).toHaveText(/anzeigen/i)
+    await umschalter.click()
+    await expect(umschalter).toHaveText(/verbergen/i)
+    await umschalter.click()
+    await expect(umschalter).toHaveText(/anzeigen/i)
+
+    const emailFeld = page.getByPlaceholder(/E-Mail/i).first()
+    const passwortFeld = page.getByPlaceholder(/Passwort/i).first()
+    await emailFeld.fill(`nonexistent-${Date.now()}@test.invalid`)
+    await passwortFeld.fill('WrongPassword!123')
+
+    // Beleg, dass beide Eingaben wirklich im Formular stehen. Ohne ihn
+    // erschiene ein erneuter Ruecksetzer wieder als „Banner fehlt"
+    // statt als das, was er ist.
+    await expect(emailFeld).not.toHaveValue('')
+    await expect(passwortFeld).toHaveValue('WrongPassword!123')
 
     const submit = page.getByRole('button', { name: /anmelden|einloggen/i }).first()
     await submit.click()

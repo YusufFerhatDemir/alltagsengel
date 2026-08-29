@@ -48,7 +48,41 @@ test.describe('Register-Flow: Kunde', () => {
     // die die Zusicherungen unten ohnehin abwarten, nicht das letzte Bild.
     await page.goto('/auth/register', { waitUntil: 'domcontentloaded' })
 
-    await page.getByPlaceholder('Vorname').first().fill('Max')
+    const submitButton = page.getByRole('button', { name: /registrieren|konto erstellen/i }).first()
+    const agb = page.getByRole('checkbox').first()
+
+    // ── AGB-Tor, und zugleich das Hydrations-Tor ───────────────────
+    // Reihenfolge mit Grund: Die Felder werden ERST nach diesem Block
+    // gefuellt. `domcontentloaded` gibt die Seite frei, sobald das
+    // servergerenderte HTML steht — React hat dann noch nicht
+    // hydratisiert. Wer davor tippt, schreibt in Inputs, die die
+    // Hydration gleich darauf aus dem (leeren) React-State
+    // ueberschreibt: die Felder standen im Fehlerbild leer da, das
+    // Formular kam nie zum Absenden, und der Browser meldete nur noch
+    // sein eigenes „Please fill out this field". Nur PLZ und Stadt —
+    // die beiden zuletzt gefuellten — hatten ihre Werte behalten.
+    //
+    // Das Umschalten der Checkbox aendert `disabled` am Absende-Knopf
+    // ueber React-State (app/auth/register/page.tsx: disabled={loading
+    // || !agbAccepted}). Diese Aenderung KANN vor der Hydration nicht
+    // eintreten — sie ist damit ein Beleg, kein Zeitpuffer.
+    //
+    // Das Tor selbst wird ausdruecklich mitgeprueft statt nur umgangen:
+    // die Einwilligung in AGB und Datenschutz ist eine Zusage, keine
+    // Formalie, und ein Test, der sie stillschweigend wegklickt, wuerde
+    // ihren Wegfall nicht bemerken. Geprueft wird in beide Richtungen
+    // und nach der Hydration — vorher waere „ist deaktiviert" auch dann
+    // wahr, wenn es die Regel gar nicht mehr gaebe.
+    await agb.scrollIntoViewIfNeeded()
+    await agb.check()
+    await expect(submitButton).toBeEnabled()
+    await agb.uncheck()
+    await expect(submitButton).toBeDisabled()
+    await agb.check()
+    await expect(submitButton).toBeEnabled()
+
+    const vorname = page.getByPlaceholder('Vorname').first()
+    await vorname.fill('Max')
     await page.getByPlaceholder('Nachname').first().fill('Mustermann')
     await page.getByPlaceholder('E-Mail-Adresse').fill(`test-${Date.now()}@example.de`)
     // Ein häufiges Passwort — soll von validatePassword + isCommonPassword geblockt werden
@@ -56,25 +90,12 @@ test.describe('Register-Flow: Kunde', () => {
     await page.getByPlaceholder('PLZ').first().fill('60311')
     await page.getByPlaceholder('Stadt').first().fill('Frankfurt')
 
-    // ── AGB-Tor ────────────────────────────────────────────────────
-    // Der Absende-Knopf ist `disabled`, solange die AGB-Checkbox nicht
-    // gesetzt ist (app/auth/register/page.tsx: disabled={loading ||
-    // !agbAccepted}). Die fruehere Fassung dieses Tests kannte das Tor
-    // nicht und lief 30 s in einen click-Timeout — der erste Lauf der
-    // Suite hat es sichtbar gemacht.
-    //
-    // Das Tor wird hier ausdruecklich mitgeprueft statt nur umgangen:
-    // die Einwilligung in AGB und Datenschutz ist eine Zusage, keine
-    // Formalie, und ein Test, der sie stillschweigend wegklickt, wuerde
-    // ihren Wegfall nicht bemerken.
-    const submitButton = page.getByRole('button', { name: /registrieren|konto erstellen/i }).first()
-    await expect(submitButton).toBeDisabled()
+    // Beleg, dass die Eingaben wirklich im Formular stehen. Ohne diese
+    // Zusicherung wuerde ein erneuter Ruecksetzer wieder als „Banner
+    // fehlt" erscheinen statt als das, was er ist.
+    await expect(vorname).toHaveValue('Max')
 
-    const agb = page.getByRole('checkbox').first()
-    await agb.scrollIntoViewIfNeeded()
-    await agb.check()
-    await expect(submitButton).toBeEnabled()
-
+    // ── Absenden ───────────────────────────────────────────────────
     await submitButton.click()
 
     // Auf das Fehler-Banner pruefen, nicht auf irgendeinen Text der Seite:
@@ -85,9 +106,17 @@ test.describe('Register-Flow: Kunde', () => {
     // Auf dem mobile-safari-Projekt hat genau das den Test einmal
     // flackern lassen. Das Zeitlimit gilt dem LADEN, nicht der
     // Zusicherung: die bleibt unveraendert scharf.
-    const banner = page.locator('[role="alert"]')
-    await expect(banner.first()).toBeVisible({ timeout: 25_000 })
-    await expect(banner.first()).toHaveText(/Mindestanforderungen|Zu schwach/i)
+    //
+    // Nicht `[role="alert"]` allein: Next haengt einen eigenen
+    // Route-Announcer (`#__next-route-announcer__`) mit genau dieser Rolle
+    // in die Seite. Der steht im DOM VOR dem Banner, ist dauerhaft leer und
+    // traegt trotzdem eine Box — `.first()` griff also immer ihn, die
+    // Sichtbarkeits-Zusicherung war damit inhaltsleer gruen und erst der
+    // Text-Vergleich fiel um. Geprueft wird jetzt der Banner selbst
+    // (`.auth-error`, app/auth/register/page.tsx:481).
+    const banner = page.locator('.auth-error[role="alert"]')
+    await expect(banner).toBeVisible({ timeout: 25_000 })
+    await expect(banner).toHaveText(/Mindestanforderungen|Zu schwach/i)
   })
 
   test('Sichtbare Strength-Indicator bei starker Eingabe', async ({ page }) => {
