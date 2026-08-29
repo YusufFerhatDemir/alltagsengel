@@ -144,13 +144,29 @@ describe('Track 11 — Löschkatalog: die Entscheidung steht im Code', () => {
     expect(ausJson).toEqual(ausTs)
   })
 
-  it('die drei live blockierenden Spalten sind als solche markiert', () => {
-    // Live gelesen mit `npm run verify:loeschkette` (Prüfung F).
+  it('die live blockierenden Spalten sind als solche markiert — und nur die', () => {
+    // Live gelesen mit `npm run verify:loeschkette` (Prüfung F). Der
+    // Abgleich läuft dort in BEIDE Richtungen: eine fehlende Marke lässt
+    // den Lauf mitten in der Löschung auflaufen, eine überzählige
+    // verweigert eine Löschung, die längst ginge.
     expect(blockierendeEintraege().map(e => `${e.tabelle}.${e.spalte}`).sort()).toEqual([
       'angehoerigen_audit_log.user_id',
-      'bookings.angel_id',
       'signaturen.signatar_id',
     ])
+  })
+
+  it('bookings.angel_id blockiert NICHT mehr — der Fremdschlüssel steht live auf SET NULL', () => {
+    // Gegenprobe zum Befund, der Migration 20261016000000 ausgelöst hat.
+    // Die Migration ist angewendet (bookings_angel_id_fkey: ON DELETE SET
+    // NULL, am 29.08.2026 aus pg_constraint gelesen); die Marke im Katalog
+    // blieb danach stehen und war der einzige Grund, aus dem Prüfung F rot
+    // meldete. Der Eintrag selbst bleibt: die Buchung wird weiterhin
+    // aufbewahrt (§ 147 AO), nur der Personenbezug fällt jetzt von selbst
+    // weg.
+    const eintrag = LOESCHKATALOG.find(e => e.tabelle === 'bookings' && e.spalte === 'angel_id')
+    expect(eintrag).toBeTruthy()
+    expect(eintrag!.entscheidung).toBe('aufbewahren')
+    expect(eintrag!.blockiert).toBeUndefined()
   })
 
   it('verbleibendeBereiche() nennt jede aufbewahrte Tabelle genau einmal', () => {
@@ -257,7 +273,7 @@ describe('Track 11 — Vorprüfung: kein halb gelöschtes Konto', () => {
 
   it('FAIL-CLOSED: ein Fehler beim Zählen gilt als blockiert, nicht als frei', async () => {
     const { fake, umgebung } = baueUmgebung(aufruf => {
-      if (aufruf.tabelle === 'bookings' && aufruf.head) {
+      if (aufruf.tabelle === 'angehoerigen_audit_log' && aufruf.head) {
         return { count: null, error: { message: 'timeout', code: '57014' } }
       }
       return undefined
@@ -266,8 +282,23 @@ describe('Track 11 — Vorprüfung: kein halb gelöschtes Konto', () => {
     const ergebnis = await loescheKonto(umgebung, KANDIDAT)
 
     expect(ergebnis.status).toBe('blockiert')
-    expect(ergebnis.blockiertDurch?.join(' ')).toContain('bookings.angel_id')
+    expect(ergebnis.blockiertDurch?.join(' ')).toContain('angehoerigen_audit_log.user_id')
     expect(fake.aufrufe.some(a => a.operation === 'delete')).toBe(false)
+  })
+
+  it('bookings wird gar nicht mehr vorgezählt — die Zeile hält nichts mehr auf', async () => {
+    // Gegenprobe: solange die Marke stand, verweigerte der Lauf jedes
+    // Engel-Konto mit einer Buchung. Jetzt darf eine vorhandene Buchung
+    // die Löschung nicht mehr aufhalten.
+    const { fake, umgebung } = baueUmgebung(aufruf => {
+      if (aufruf.tabelle === 'bookings' && aufruf.head) return { count: 7, error: null }
+      return undefined
+    })
+
+    const ergebnis = await loescheKonto(umgebung, KANDIDAT)
+
+    expect(ergebnis.status).toBe('geloescht')
+    expect(fake.auf('bookings').some(a => a.head)).toBe(false)
   })
 
   it('eine unbekannte Tabelle in der Vorprüfung blockiert NICHT', async () => {

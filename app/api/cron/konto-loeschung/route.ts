@@ -148,6 +148,45 @@ export const GET = withTracking(async function GET(request: Request) {
 
     const ergebnis = await fuehreKontoLoeschungAus(umgebung, (kandidaten ?? []) as LoeschKandidat[])
 
+    // ── Lauf-Beleg ───────────────────────────────────────────────────
+    // JEDER Lauf hinterlaesst eine Zeile, auch der mit null Kandidaten.
+    //
+    // WARUM: dass der Takt ueberhaupt schlaegt, war von aussen bisher
+    // nicht nachweisbar. Die Kontozeilen entstehen nur, wenn es Kandidaten
+    // gibt; ohne Kandidaten sieht ein stiller Ausfall genauso aus wie ein
+    // erfolgreicher Lauf — und genau das war der Zustand, den der
+    // pg_cron-Job mit seiner NULL-URL jahrelang erzeugt hat. Ein fehlendes
+    // oder abweichendes CRON_SECRET in der Produktion faellt hier ebenso
+    // auf: dann kommt der Lauf nie bis hierher, und der Beleg altert.
+    //
+    // `npm run verify:loeschkette` liest das Alter dieser Zeile (Pruefung
+    // B). Ein Fehler beim Schreiben bricht den Lauf NICHT ab — geloescht
+    // ist geloescht, und ein fehlender Beleg ist der harmlosere Ausgang
+    // als eine abgebrochene Loeschung.
+    const { error: belegFehler } = await admin.from('mis_audit_log').insert({
+      action: 'user_hard_delete_cron',
+      actor_id: null,
+      actor_role: 'system',
+      target_id: null,
+      target_email: null,
+      entity_type: 'cron_lauf',
+      entity_id: null,
+      organization_id: DEFAULT_ORG_ID,
+      details: {
+        status: 'lauf',
+        stichtag,
+        gepruefte: ergebnis.gepruefte,
+        geloescht: ergebnis.geloescht,
+        blockiert: ergebnis.blockiert,
+        fehler: ergebnis.fehler,
+      },
+      ip_address: null,
+      user_agent: 'cron/konto-loeschung',
+    })
+    if (belegFehler) {
+      log.error('Lauf-Beleg nicht geschrieben', { code: belegFehler.code, name: belegFehler.message })
+    }
+
     if (ergebnis.blockiert > 0 || ergebnis.fehler > 0) {
       log.error('Kontoloeschung unvollstaendig', {
         blockiert: ergebnis.blockiert,

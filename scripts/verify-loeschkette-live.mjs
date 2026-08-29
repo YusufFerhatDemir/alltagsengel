@@ -13,9 +13,12 @@
  *   A) Weich geloeschte Profile insgesamt — und wie viele davon die
  *      60-Tage-Frist ueberschritten haben. Jede ueberfaellige Zeile ist
  *      ein Beleg dafuer, dass die endgueltige Loeschung nicht laeuft.
- *   B) Ist der pg_cron-Job 'account-hard-delete-daily' eingeplant, und
- *      ist die GUC `app.settings.supabase_url` ueberhaupt gesetzt? Ohne
- *      sie baut der Job eine NULL-URL und der Aufruf verpufft.
+ *   B) Traegt der Takt der endgueltigen Loeschung? Geprueft wird der
+ *      Taktgeber, der ihn HEUTE stellt: `vercel.json` ->
+ *      `/api/cron/konto-loeschung`, samt Probe gegen die Produktion.
+ *      Der alte pg_cron-Job und die GUC `app.settings.supabase_url`
+ *      werden weiterhin gelesen und ausgewiesen — sie sind der Grund,
+ *      aus dem der Takt umgezogen ist, aber nicht mehr das Kriterium.
  *   C) Welche Tabellen haengen per Fremdschluessel an auth.users bzw.
  *      public.profiles, und mit welcher ON-DELETE-Regel? Daraus folgt,
  *      was eine endgueltige Loeschung wirklich entfernt — und was als
@@ -99,7 +102,21 @@ pruefe('A_keine_ueberfaelligen', ueberfaellig === 0,
     ? `keine ueberfaellige Zeile (weich geloescht insgesamt: ${weichGesamt})`
     : `${ueberfaellig} Konten stehen laenger als 60 Tage auf deleted_at — die endgueltige Loeschung laeuft nicht`)
 
-// ── B) pg_cron-Job und seine Voraussetzungen ───────────────────
+// ── B) Der Takt der endgueltigen Loeschung ─────────────────────
+// WAS HIER GEPRUEFT WIRD UND WARUM NICHT MEHR DIE GUC:
+// Bis Track 11 hing der Takt an einem pg_cron-Job (Migration
+// 20260918020000), der seine URL aus `app.settings.supabase_url` baut.
+// Die GUC ist live nicht gesetzt, der Aufruf lief ins Leere. Repariert
+// wurde das NICHT durch Setzen der GUC — das waere die schlechteste
+// Variante gewesen (die Pruefung wuerde gruen, der Takt bliebe tot):
+// derselbe Job braucht zusaetzlich den Dienstschluessel aus einer
+// zweiten GUC, er schickt ihn als Bearer, waehrend die Edge Function
+// gegen CRON_SECRET vergleicht, und diese Function ist seit Track 11
+// stillgelegt (410 ohne HARD_DELETE_EDGE_AKTIV).
+// Der Takt liegt seither in `vercel.json` -> `/api/cron/konto-loeschung`.
+// Also wird geprueft, was den Takt heute traegt: dass er eingeplant ist
+// und dass die Route in der PRODUKTION steht und fail-closed antwortet.
+// Der tote Job wird mit Migration 20260829081149 abgeraeumt.
 const erweiterung = await orakel(
   `SELECT CASE WHEN EXISTS (SELECT 1 FROM pg_extension WHERE extname='pg_cron')
           THEN 'vorhanden' ELSE 'fehlt' END`)
@@ -108,13 +125,66 @@ const job = await versuche(
           THEN 'eingeplant' ELSE 'nicht-eingeplant' END`)
 const guc = await orakel(
   `SELECT coalesce(nullif(current_setting('app.settings.supabase_url', true), ''), '(nicht gesetzt)')`)
-console.log(`B) pg_cron: ${erweiterung} | Job: ${job.lesbar ? job.wert : `nicht lesbar (${job.wert})`}`)
+console.log(`B) pg_cron: ${erweiterung} | alter Job: ${job.lesbar ? job.wert : `nicht lesbar (${job.wert})`}`)
 console.log(`   app.settings.supabase_url: ${guc}`)
 pruefe('B_cron_erweiterung', erweiterung === 'vorhanden', `pg_cron-Erweiterung: ${erweiterung}`)
-pruefe('B_cron_url_gesetzt', guc !== '(nicht gesetzt)',
-  guc === '(nicht gesetzt)'
-    ? 'app.settings.supabase_url ist NICHT gesetzt — der eingeplante Aufruf baut damit eine NULL-URL'
-    : 'app.settings.supabase_url ist gesetzt')
+
+// Sobald Migration 20260829081149 angewendet ist, ist die Frage „haengt
+// noch ein Taktgeber an einer ungesetzten GUC" von aussen nachlesbar.
+// Vorher ist sie es nicht — und eine nicht lesbare Tatsache wird als
+// solche gemeldet, nie als „in Ordnung".
+const diagnose = await versuche(
+  `SELECT jobname || ' | haengt_an_app_settings=' || haengt_an_guc::text
+   FROM public.loeschkette_takt_diagnose() WHERE haengt_an_guc`)
+console.log(`   GUC-abhaengige Jobs: ${
+  diagnose.lesbar
+    ? (diagnose.wert === '(leer)' ? 'keine' : diagnose.wert.replace(/\n/g, ', '))
+    : 'nicht lesbar (Migration 20260829081149 noch nicht angewendet)'}`)
+
+// Der Lauf-Beleg: jeder Lauf der Route schreibt eine Zeile, auch der mit
+// null Kandidaten. Vor dem ersten naechtlichen Lauf nach dem Einspielen
+// ist er leer — deshalb steht er hier als Tatsache, nicht als Kriterium.
+const beleg = await orakel(
+  `SELECT coalesce((
+     SELECT to_char(max(created_at), 'YYYY-MM-DD HH24:MI') || ' UTC (vor '
+            || round(extract(epoch FROM (now() - max(created_at))) / 3600)::text || ' h)'
+     FROM public.mis_audit_log
+     WHERE action = 'user_hard_delete_cron' AND details->>'status' = 'lauf'), '(noch kein Lauf belegt)')`)
+console.log(`   letzter belegter Lauf: ${beleg}`)
+
+// Die Probe gegen die Produktion. Zwei Aufrufe, weil einer nichts sagt:
+// ohne Geheimnis muss die Route 401 antworten UND ein nicht existierender
+// Nachbarpfad 404 — sonst waere das 401 nur die Antwort, die diese Domain
+// auf alles gibt.
+const BASIS = process.env.PRODUKTION_BASIS ?? 'https://alltagsengel.care'
+const TAKT_PFAD = '/api/cron/konto-loeschung'
+let taktEingeplant = false
+let taktSchedule = '(kein Eintrag)'
+try {
+  const vercel = JSON.parse((await import('node:fs')).readFileSync(new URL('../vercel.json', import.meta.url), 'utf8'))
+  const eintrag = (vercel.crons ?? []).find(c => c.path === TAKT_PFAD)
+  taktEingeplant = Boolean(eintrag)
+  taktSchedule = eintrag?.schedule ?? '(kein Eintrag)'
+} catch (err) {
+  taktSchedule = `vercel.json nicht lesbar: ${err.message}`
+}
+
+async function status(pfad) {
+  try {
+    const res = await fetch(`${BASIS}${pfad}`, { redirect: 'manual' })
+    return res.status
+  } catch (err) {
+    return `Netzfehler: ${err.message}`
+  }
+}
+const ohneGeheimnis = await status(TAKT_PFAD)
+const gegenprobe = await status('/api/cron/gibt-es-nicht')
+console.log(`   vercel.json: ${TAKT_PFAD} -> ${taktSchedule}`)
+console.log(`   ${BASIS}${TAKT_PFAD} ohne Geheimnis: ${ohneGeheimnis} | Gegenprobe unbekannter Pfad: ${gegenprobe}`)
+pruefe('B_takt_erreichbar', taktEingeplant && ohneGeheimnis === 401 && gegenprobe === 404,
+  taktEingeplant && ohneGeheimnis === 401 && gegenprobe === 404
+    ? `Takt eingeplant (${taktSchedule}), Route live und fail-closed (401; unbekannter Pfad 404)`
+    : `Takt eingeplant: ${taktEingeplant} (${taktSchedule}) | Route ohne Geheimnis: ${ohneGeheimnis} (erwartet 401) | unbekannter Pfad: ${gegenprobe} (erwartet 404)`)
 
 // ── C) Was haengt an auth.users / profiles, und wie ────────────
 // Die Edge Function loescht ausdruecklich nur neun Tabellen. Alles
