@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { cookieBannerVorwegBeantworten } from './helpers/consent'
 
 /**
  * E2E: Register-Flow — Kunde
@@ -13,6 +14,14 @@ import { test, expect } from '@playwright/test'
  * sollte ein Test-Projekt mit Random-Emails genutzt werden, damit keine
  * Production-Datenbank verschmutzt wird. In Entwicklung via Supabase-Local.
  */
+
+// Der Cookie-Banner legt sich 800 ms nach dem Laden ueber den unteren
+// Seitenrand und verdeckt auf `mobile-safari` die Absende-Knoepfe. Er wird
+// deshalb vorweg beantwortet — geprueft wird er selbst in
+// e2e/cookie-consent.spec.ts, nicht hier als Beifang.
+test.beforeEach(async ({ page }) => {
+  await cookieBannerVorwegBeantworten(page)
+})
 
 test.describe('Register-Flow: Kunde', () => {
   // zxcvbn wird beim ersten Tastendruck nachgeladen; auf webkit dauert das

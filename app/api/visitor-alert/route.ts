@@ -5,6 +5,7 @@ import { escapeHtml, getClientIp } from '@/lib/rate-limit'
 import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { istPlausibleIp } from '@/lib/perimeter/ip-plausibilitaet'
 const log = logger.child('api:visitor-alert')
 
 // Einzeiler + Längen-Cap für Felder, die in E-Mail-HTML landen.
@@ -60,23 +61,12 @@ const COOLDOWN_MS = 3_600_000
 const ALARM_BUDGET_JE_AUFRUFER = 5
 const ALARM_BUDGET_FENSTER_MS = 3_600_000
 
-/**
- * Sieht der gemeldete Wert wie eine IP-Adresse aus?
- *
- * Bewusst grob: es geht nicht darum, jede gueltige Adresse exakt zu
- * treffen, sondern darum, dass der Wert als LIKE-Praefix und als
- * Cooldown-Schluessel taugt. Leer, zu kurz oder mit Platzhaltern gespickt
- * faellt durch.
- */
-export function istPlausibleIp(wert: unknown): boolean {
-  if (typeof wert !== 'string') return false
-  const s = wert.trim()
-  if (s.length < 7 || s.length > 45) return false
-  const ipv4 = /^(\d{1,3}\.){3}\d{1,3}$/
-  const ipv6 = /^[0-9a-fA-F:]+$/
-  if (ipv4.test(s)) return s.split('.').every(t => Number(t) <= 255)
-  return ipv6.test(s) && s.includes(':')
-}
+// `istPlausibleIp` lebt in `lib/perimeter/ip-plausibilitaet.ts`. Sie stand
+// bis zum 29.08.2026 hier — als zusaetzlicher Export neben den Handlern,
+// und genau das laesst Next.js nicht zu: die erzeugte Typdatei der Route
+// erlaubt nur bekannte Namen, jeder weitere Export schlaegt als TS2344
+// auf. Der Fehler entsteht in `.next/dev/types/…` und faellt deshalb erst
+// nach dem Webpack-Lauf auf — im Vercel-Build ganz am Ende.
 
 export const POST = withTracking(async function POST(req: NextRequest) {
   try {

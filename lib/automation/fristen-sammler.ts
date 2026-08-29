@@ -16,6 +16,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { VERSTOSS_LABEL, type VerstossArt } from '@/lib/personal/arbzg'
 
 export type FristDringlichkeit = 'ueberfaellig' | 'kritisch' | 'warnung' | 'ok'
 export type FristEntitaetTyp = 'qualifikation' | 'verordnung' | 'genehmigung' | 'schulung' | 'dokument' | 'abrechnungsfrist'
@@ -381,7 +382,12 @@ export async function sammleFristen(
     for (const v of verstoesse || []) {
       const tage = tageVerbleibend(v.erkannt_am)
       const caregiver = Array.isArray(v.caregivers) ? v.caregivers[0] : v.caregivers
-      const artLabel = v.verstoss_art === 'max_tagesarbeitszeit' ? 'Tageshöchstarbeitszeit überschritten (§3 ArbZG)' : 'Mindestruhezeit unterschritten (§5 ArbZG)'
+      // Der Klartext kommt aus lib/personal/arbzg.ts, NICHT aus einem
+      // Ternaer: seit `pflichtpause` (§ 4 ArbZG) dazugekommen ist, haette
+      // ein Zweiweg-Ausdruck jeden dritten Fall als „Mindestruhezeit"
+      // etikettiert — eine Frist mit falschem Rechtsgrund im Titel.
+      const artLabel = VERSTOSS_LABEL[v.verstoss_art as VerstossArt]
+        ?? `ArbZG-Verstoß (${v.verstoss_art})`
       fristen.push({
         id: `azv-${v.id}`,
         entitaetTyp: 'arbeitszeit_verstoss',

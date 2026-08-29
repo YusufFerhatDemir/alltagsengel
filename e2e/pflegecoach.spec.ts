@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { cookieBannerVorwegBeantworten } from './helpers/consent'
 
 /**
  * E2E: Digitaler PflegeCoach — Produktbereich
@@ -45,6 +46,14 @@ const GESCHUETZT = [
   '/pflegecoach/einstellungen/konto',
   '/pflegecoach/checkout',
 ]
+
+// Der Cookie-Banner legt sich 800 ms nach dem Laden ueber den unteren
+// Seitenrand und verdeckt auf `mobile-safari` die Absende-Knoepfe. Er wird
+// deshalb vorweg beantwortet — geprueft wird er selbst in
+// e2e/cookie-consent.spec.ts, nicht hier als Beifang.
+test.beforeEach(async ({ page }) => {
+  await cookieBannerVorwegBeantworten(page)
+})
 
 test.describe('PflegeCoach — Erreichbarkeit und Zugangsschutz', () => {
   for (const seite of OEFFENTLICH) {

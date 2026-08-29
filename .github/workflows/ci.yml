@@ -276,12 +276,38 @@ jobs:
         #                             ueberhaupt ein signUp rausgeht
         #   booking.spec.ts           AUTH-005 + Zugangsriegel auf
         #                             /kunde/buchen/*
+        #   cookie-consent.spec.ts    DSGVO Art. 6/7 — Erscheinen, beide
+        #                             Antwortwege, Fortbestand ueber den
+        #                             Reload, Widerruf ueber den Footer,
+        #                             eigener axe-Durchgang. Seit 29.08.2026:
+        #                             die uebrigen Specs beantworten den
+        #                             Banner vorweg (e2e/helpers/consent.ts),
+        #                             weil er auf mobile-safari die
+        #                             Absende-Knoepfe verdeckte. Damit er
+        #                             dabei nicht ungeprueft aus der Suite
+        #                             faellt, ist er hier Gegenstand statt
+        #                             wie vorher zufaelliger Beifang der
+        #                             axe-Laeufe.
         #
         # Kein Spec braucht ein erreichbares Supabase: die Platzhalter-URL
         # am Workflow-Kopf loest nicht auf, und genau dieser Fall ist in
         # jedem der drei neu aufgenommenen Specs der gepruefte Pfad
         # (fail-closed 401 bzw. clientseitige Validierung vor dem Netz).
         run: npx playwright test
+
+      - name: Flackerbericht (warn-only — blockiert nicht)
+        # `retries: 2` faengt Infrastruktur-Aussetzer ab und faerbt dabei
+        # auch echte Fehler gruen, die im zweiten Versuch zufaellig
+        # durchkommen. Am 28.08.2026 (Lauf 33221611581) stand genau so ein
+        # Befund als „1 flaky" zwischen 133 gruenen Haken und ist
+        # untergegangen — es war der Cookie-Banner, der auf mobile-safari
+        # den Absende-Knopf der Registrierung vollstaendig verdeckte.
+        #
+        # Der Schritt hebt Flackerer in die Job-Zusammenfassung, blockiert
+        # aber bewusst nicht (Begruendung im Skriptkopf). `if: always()`,
+        # weil er gerade dann interessant ist, wenn der Lauf rot war.
+        if: always()
+        run: node scripts/e2e-flake-report.mjs
 
       - name: Upload Playwright report
         if: always()

@@ -14,7 +14,7 @@
  * Wert als Praefix und Cooldown-Schluessel taugt, der keine Adresse ist.
  */
 import { describe, it, expect } from 'vitest'
-import { istPlausibleIp } from '@/app/api/visitor-alert/route'
+import { istPlausibleIp } from '@/lib/perimeter/ip-plausibilitaet'
 
 describe('istPlausibleIp — was durchkommt', () => {
   it.each([

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { cookieBannerVorwegBeantworten } from './helpers/consent'
 
 /**
  * E2E: Booking-Flow & Public-Entry-Points
@@ -13,6 +14,14 @@ import { test, expect } from '@playwright/test'
  * Full-Stack-Booking-Tests (mit Test-Account + Supabase-Test-Daten)
  * sollten in Sprint 2 als separate Suite hinzukommen (`e2e/booking-e2e.spec.ts`).
  */
+
+// Der Cookie-Banner legt sich 800 ms nach dem Laden ueber den unteren
+// Seitenrand und verdeckt auf `mobile-safari` die Absende-Knoepfe. Er wird
+// deshalb vorweg beantwortet — geprueft wird er selbst in
+// e2e/cookie-consent.spec.ts, nicht hier als Beifang.
+test.beforeEach(async ({ page }) => {
+  await cookieBannerVorwegBeantworten(page)
+})
 
 test.describe('Booking-Entry-Points (Smoke)', () => {
   test('Public Landing-Page lädt', async ({ page }) => {

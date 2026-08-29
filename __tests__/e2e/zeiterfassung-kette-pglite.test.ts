@@ -206,7 +206,12 @@ function zeitParams(ueber: Record<string, unknown> = {}) {
     startZeit: '08:00',
     endZeit: '16:00',
     pauseMinuten: 30,
-    istMinuten: 450,
+    // `istMinuten` steht hier BEWUSST NICHT: seit GAP-13 (29.08.2026)
+    // leitet `createArbeitszeit` die Netto-Arbeitszeit aus Beginn, Ende
+    // und Pause her und weist einen abweichenden Wert ab. Stuende hier
+    // ein fester Wert, muesste ihn jede Abwandlung mitpflegen — und ein
+    // vergessener Nachzug saehe aus wie ein Fehler in der Regel.
+    // 08:00–16:00 abzueglich 30 min Pause = 450 min.
     sollMinuten: 420,
     benutzerId: PDL,
     ...ueber,
@@ -244,7 +249,14 @@ function gemeinsameKette(hole: () => Umgebung, fassung: string) {
     })
 
     it('haelt einen Minusstand fest, wenn die Ist-Zeit unter dem Soll liegt', async () => {
-      const zeit = await createArbeitszeit(hole().supabase, zeitParams({ istMinuten: 360, sollMinuten: 420 }))
+      // 08:00–14:30 abzueglich 30 min Pause = 360 min gegen 420 min Soll.
+      // Die Ist-Minuten werden aus den ZEITEN hergeleitet, nicht mehr
+      // uebergeben — ein frei gesetztes `istMinuten` weist
+      // `assertIstMinutenStimmig` seit GAP-13 ab.
+      const zeit = await createArbeitszeit(hole().supabase, zeitParams({
+        endZeit: '14:30', sollMinuten: 420,
+      }))
+      expect(Number(zeit.ist_minuten)).toBe(360)
       expect(Number(zeit.ueberstunden_minuten)).toBe(-60)
     })
 
@@ -259,7 +271,7 @@ function gemeinsameKette(hole: () => Umgebung, fassung: string) {
       const { supabase } = hole()
       await createArbeitszeit(supabase, zeitParams())
       const zweite = await createArbeitszeit(supabase, zeitParams({
-        startZeit: '18:00', endZeit: '20:00', istMinuten: 120, sollMinuten: null,
+        startZeit: '18:00', endZeit: '20:00', pauseMinuten: 0, sollMinuten: null,
       }))
       expect(zweite.id).toBeTruthy()
     })
@@ -284,12 +296,36 @@ function gemeinsameKette(hole: () => Umgebung, fassung: string) {
 
     it('weist unplausible Minutenwerte ab, bevor sie die Datenbank erreichen', async () => {
       const { supabase } = hole()
-      await expect(createArbeitszeit(supabase, zeitParams({ istMinuten: 0 })))
+      // Pause laenger als der Dienst → 0 Minuten Arbeitszeit.
+      await expect(createArbeitszeit(supabase, zeitParams({ pauseMinuten: 600 })))
         .rejects.toThrow(/Ist-Minuten/)
-      await expect(createArbeitszeit(supabase, zeitParams({ istMinuten: 1441 })))
-        .rejects.toThrow(/24 Stunden/)
       await expect(createArbeitszeit(supabase, zeitParams({ pauseMinuten: -5 })))
         .rejects.toThrow(/Pause-Minuten/)
+      await expect(createArbeitszeit(supabase, zeitParams({ startZeit: 'acht' })))
+        .rejects.toThrow(/HH:MM/)
+    })
+
+    it('weist eine Ist-Minuten-Angabe ab, die nicht zu den Zeiten passt (GAP-13)', async () => {
+      // Bis zum 29.08.2026 kam `istMinuten` unveraendert aus dem
+      // Request-Body in die Spalte. Ein Aufruf mit 08:00–20:00, Pause 0
+      // und istMinuten 60 legte damit eine Zwoelfstundenschicht an, die
+      // als eine Stunde in der Datenbank steht — und die ArbZG-Pruefung
+      // liefe auf einen frei waehlbaren Wert.
+      const { supabase, db } = hole()
+      await expect(createArbeitszeit(supabase, zeitParams({
+        startZeit: '08:00', endZeit: '20:00', pauseMinuten: 0, istMinuten: 60,
+      }))).rejects.toThrow(/passen nicht zu Beginn, Ende und Pause/)
+
+      const { rows } = await db.query('SELECT id FROM personal_arbeitszeiten')
+      expect(rows).toHaveLength(0)
+    })
+
+    it('nimmt einen passenden Ist-Minuten-Wert an, statt ihn zu verwerfen', async () => {
+      // Die Oberflaeche rechnet dieselbe Formel und schickt das Ergebnis
+      // mit. Es abzuweisen waere ebenso falsch wie es ungeprueft zu
+      // uebernehmen.
+      const zeit = await createArbeitszeit(hole().supabase, zeitParams({ istMinuten: 450 }))
+      expect(Number(zeit.ist_minuten)).toBe(450)
     })
 
     it('weist eine unbekannte Quelle ab (kontrolliertes Vokabular)', async () => {
@@ -300,8 +336,11 @@ function gemeinsameKette(hole: () => Umgebung, fassung: string) {
     it('nimmt einen Nachtdienst ueber Mitternacht an (Ende vor Start ist erlaubt)', async () => {
       // Bewusst KEINE Ablehnung: 22:00–06:00 ist ein legitimer Dienst.
       const zeit = await createArbeitszeit(hole().supabase, zeitParams({
-        startZeit: '22:00', endZeit: '06:00', istMinuten: 480, sollMinuten: 480,
+        startZeit: '22:00', endZeit: '06:00', pauseMinuten: 0, sollMinuten: 480,
       }))
+      // 22:00–06:00 sind acht Stunden, nicht minus sechzehn: die
+      // Herleitung der Ist-Minuten rechnet ueber Mitternacht.
+      expect(Number(zeit.ist_minuten)).toBe(480)
       expect(zeit.start_zeit).toBe('22:00:00')
       expect(Number(zeit.ueberstunden_minuten)).toBe(0)
     })
@@ -416,7 +455,8 @@ function gemeinsameKette(hole: () => Umgebung, fassung: string) {
       const { supabase } = hole()
       await createArbeitszeit(supabase, zeitParams())
       await createArbeitszeit(supabase, zeitParams({
-        datum: '2026-09-08', istMinuten: 400, sollMinuten: 420,
+        // 08:00–16:00 abzueglich 80 min Pause = 400 min.
+        datum: '2026-09-08', pauseMinuten: 80, sollMinuten: 420,
       }))
 
       const konto = await listArbeitszeitKonto(supabase, ORG, CG, 2026, 9)
@@ -453,7 +493,7 @@ function gemeinsameKette(hole: () => Umgebung, fassung: string) {
     it('weist eine Zeit aus einem fremden Mandanten als „nicht gefunden" ab', async () => {
       const { supabase } = hole()
       const zeit = await createArbeitszeit(supabase, zeitParams())
-      await expect(updateArbeitszeit(supabase, zeit.id, FREMD_ORG, { istMinuten: 470, benutzerId: PDL }))
+      await expect(updateArbeitszeit(supabase, zeit.id, FREMD_ORG, { pauseMinuten: 10, benutzerId: PDL }))
         .rejects.toThrow(/nicht gefunden/)
     })
   })
@@ -486,13 +526,13 @@ describe('Zeiterfassung gegen die LIVE-Fassung des Triggers', () => {
       // relation personal_zeitkorrekturen violates not-null constraint"
       // beim Nutzer an — samt Spalten- und Tabellennamen.
       const zeit = await createArbeitszeit(u.supabase, zeitParams())
-      await expect(updateArbeitszeit(u.supabase, zeit.id, ORG, { istMinuten: 470, benutzerId: PDL }))
+      await expect(updateArbeitszeit(u.supabase, zeit.id, ORG, { pauseMinuten: 10, benutzerId: PDL }))
         .rejects.toThrow(/bearbeitende Benutzer fehlt/)
     })
 
     it('und aendert dabei nichts — die Zeit steht unveraendert da', async () => {
       const zeit = await createArbeitszeit(u.supabase, zeitParams())
-      await expect(updateArbeitszeit(u.supabase, zeit.id, ORG, { istMinuten: 470, benutzerId: PDL }))
+      await expect(updateArbeitszeit(u.supabase, zeit.id, ORG, { pauseMinuten: 10, benutzerId: PDL }))
         .rejects.toThrow()
       expect(Number((await rohZeile(u.db, zeit.id)).ist_minuten)).toBe(450)
     })
@@ -620,17 +660,21 @@ describe('Zeiterfassung mit Migration 20260829005500', () => {
       // COALESCE(auth.uid(), NEW.geaendert_von). Unter dem Dienstschluessel
       // ist der erste Teil NULL, der zweite traegt.
       const zeit = await createArbeitszeit(u.supabase, zeitParams())
-      await updateArbeitszeit(u.supabase, zeit.id, ORG, { istMinuten: 470, benutzerId: PDL })
+      await updateArbeitszeit(u.supabase, zeit.id, ORG, { pauseMinuten: 10, benutzerId: PDL })
 
+      // Zwei Eintraege, nicht einer: `ist_minuten` laesst sich seit
+      // GAP-13 nicht mehr fuer sich aendern — es haengt an Beginn, Ende
+      // und Pause. Wer die Pause korrigiert, korrigiert zwangslaeufig
+      // auch die Arbeitszeit, und beides gehoert ins Protokoll.
       const eintraege = await korrekturen(u.db, zeit.id)
-      expect(eintraege).toHaveLength(1)
-      expect(eintraege[0].korrigiert_von).toBe(PDL)
+      expect(eintraege.map(e => e.feld)).toEqual(['ist_minuten', 'pause_minuten'])
+      expect(eintraege.every(e => e.korrigiert_von === PDL)).toBe(true)
     })
 
     it('uebernimmt die Bemerkung als Korrekturgrund', async () => {
       const zeit = await createArbeitszeit(u.supabase, zeitParams())
       await updateArbeitszeit(u.supabase, zeit.id, ORG, {
-        istMinuten: 400, bemerkung: 'Tippfehler', benutzerId: PDL,
+        pauseMinuten: 80, bemerkung: 'Tippfehler', benutzerId: PDL,
       })
       expect((await korrekturen(u.db, zeit.id))[0].grund).toBe('Tippfehler')
     })
@@ -639,7 +683,7 @@ describe('Zeiterfassung mit Migration 20260829005500', () => {
       // Ein Revisionsprotokoll ohne Urheber waere schlimmer als keins: es
       // saehe vollstaendig aus. Deshalb bricht der Trigger mit Klartext ab.
       const zeit = await createArbeitszeit(u.supabase, zeitParams())
-      await expect(updateArbeitszeit(u.supabase, zeit.id, ORG, { istMinuten: 470 }))
+      await expect(updateArbeitszeit(u.supabase, zeit.id, ORG, { pauseMinuten: 10 }))
         .rejects.toThrow(/bearbeitende Benutzer fehlt/)
 
       expect(Number((await rohZeile(u.db, zeit.id)).ist_minuten)).toBe(450)
@@ -649,7 +693,7 @@ describe('Zeiterfassung mit Migration 20260829005500', () => {
     it('hebt den Status auf „korrigiert", wenn die Zeit schon bestaetigt war', async () => {
       const zeit = await createArbeitszeit(u.supabase, zeitParams())
       await updateArbeitszeit(u.supabase, zeit.id, ORG, { status: 'bestaetigt', benutzerId: PDL })
-      const nachher = await updateArbeitszeit(u.supabase, zeit.id, ORG, { istMinuten: 470, benutzerId: PDL })
+      const nachher = await updateArbeitszeit(u.supabase, zeit.id, ORG, { pauseMinuten: 10, benutzerId: PDL })
 
       expect(nachher.status).toBe('korrigiert')
     })
@@ -657,7 +701,7 @@ describe('Zeiterfassung mit Migration 20260829005500', () => {
     it('GEGENPROBE: eine frisch erfasste Zeit bleibt bei „erfasst"', async () => {
       // Ohne diese Gegenprobe waere „alles wird korrigiert" ebenfalls gruen.
       const zeit = await createArbeitszeit(u.supabase, zeitParams())
-      const nachher = await updateArbeitszeit(u.supabase, zeit.id, ORG, { istMinuten: 470, benutzerId: PDL })
+      const nachher = await updateArbeitszeit(u.supabase, zeit.id, ORG, { pauseMinuten: 10, benutzerId: PDL })
       expect(nachher.status).toBe('erfasst')
     })
 
@@ -669,7 +713,7 @@ describe('Zeiterfassung mit Migration 20260829005500', () => {
 
     it('laesst das Korrekturprotokoll weder aendern noch loeschen (Revisionssicherheit)', async () => {
       const zeit = await createArbeitszeit(u.supabase, zeitParams())
-      await updateArbeitszeit(u.supabase, zeit.id, ORG, { istMinuten: 470, benutzerId: PDL })
+      await updateArbeitszeit(u.supabase, zeit.id, ORG, { pauseMinuten: 10, benutzerId: PDL })
 
       await expect(u.db.exec(`UPDATE personal_zeitkorrekturen SET neuer_wert = '999'`))
         .rejects.toThrow(/unver/i)
@@ -736,7 +780,7 @@ describe('Zeiterfassung mit Migration 20260829005500', () => {
     it('erlaubt nach dem Entsperren die Korrektur — mit Protokolleintrag', async () => {
       const id = await gesperrteZeit()
       await updateArbeitszeit(u.supabase, id, ORG, { gesperrt: false, benutzerId: PDL })
-      await updateArbeitszeit(u.supabase, id, ORG, { istMinuten: 470, bemerkung: 'Nachtrag', benutzerId: PDL })
+      await updateArbeitszeit(u.supabase, id, ORG, { pauseMinuten: 10, bemerkung: 'Nachtrag', benutzerId: PDL })
 
       expect(Number((await rohZeile(u.db, id)).ist_minuten)).toBe(470)
       expect((await korrekturen(u.db, id)).map(k => k.feld)).toContain('ist_minuten')

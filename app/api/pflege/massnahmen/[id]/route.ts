@@ -26,6 +26,7 @@ export const PATCH = withTracking(async function PATCH(request: Request, { param
       endeDatum: body.endeDatum,
       ergebnis: body.ergebnis,
       sortierung: body.sortierung,
+      evaluationIntervallTage: body.evaluationIntervallTage,
     })
 
     return NextResponse.json({ massnahme })

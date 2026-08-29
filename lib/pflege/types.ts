@@ -339,14 +339,60 @@ export type PflegeAuditEntitaetTyp =
   | 'medikament' | 'wunddokumentation' | 'sturzprotokoll'
   | 'fixierungsprotokoll' | 'lagerungsprotokoll'
   | 'wund_assessment' | 'wund_behandlung' | 'fem_ueberwachung'
+  | 'evaluation'
 
+/**
+ * Diese Liste MUSS deckungsgleich mit `pflege_audit_log_typ_check` sein.
+ * Sie war es bis zum 29.08.2026 nicht: der CHECK kannte sieben Werte, die
+ * Liste fuenfzehn — jeder Audit-Eintrag zu einem Medikament, einer
+ * Wunddokumentation oder einem Sturzprotokoll lief am Constraint auf.
+ * `__tests__/pflege/audit-typen-abgleich.test.ts` haelt beide Seiten
+ * gegeneinander; Migration `20260829185500` hat den CHECK nachgezogen.
+ */
 export const PFLEGE_AUDIT_ENTITAET_TYP_WERTE: PflegeAuditEntitaetTyp[] = [
   'aufnahme', 'anamnese', 'diagnose', 'risiko',
   'verlauf', 'massnahme', 'massnahmenplan',
   'medikament', 'wunddokumentation', 'sturzprotokoll',
   'fixierungsprotokoll', 'lagerungsprotokoll',
   'wund_assessment', 'wund_behandlung', 'fem_ueberwachung',
+  'evaluation',
 ]
+
+// ── pflege_massnahmen_evaluationen ───────────────────────────────
+//
+// Der sechste Schritt des Pflegeprozesses. Bis zum 29.08.2026 fehlte er
+// vollstaendig; was danach aussah, war das Freitextfeld
+// `pflege_massnahmen.ergebnis` — ohne Datum, ohne Urheber, ohne
+// Wiedervorlage und ueberschreibbar, also ohne Historie.
+
+/** Wurde das ZIEL erreicht? Nicht: was ist mit der Massnahme geschehen. */
+export type Zielerreichung =
+  | 'erreicht' | 'teilweise_erreicht' | 'nicht_erreicht' | 'nicht_beurteilbar'
+
+export const ZIELERREICHUNG_WERTE: Zielerreichung[] = [
+  'erreicht', 'teilweise_erreicht', 'nicht_erreicht', 'nicht_beurteilbar',
+]
+
+/** Was aus der Beurteilung folgt — hier schliesst sich der Regelkreis. */
+export type EvaluationFolgerung =
+  | 'fortfuehren' | 'anpassen' | 'beenden' | 'neue_massnahme'
+
+export const EVALUATION_FOLGERUNG_WERTE: EvaluationFolgerung[] = [
+  'fortfuehren', 'anpassen', 'beenden', 'neue_massnahme',
+]
+
+export interface PflegeMassnahmeEvaluation {
+  id: string
+  organization_id: string
+  massnahme_id: string
+  evaluiert_am: string
+  zielerreichung: Zielerreichung
+  bewertung: string
+  folgerung: EvaluationFolgerung
+  naechste_evaluation: string | null
+  evaluiert_von: string
+  created_at: string
+}
 
 export type PflegeAuditAktion =
   | 'erstellt' | 'aktualisiert' | 'geloescht'

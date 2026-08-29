@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { cookieBannerVorwegBeantworten } from './helpers/consent'
 
 /**
  * E2E: Account-Löschung (AUTH-003 Regression)
@@ -16,6 +17,14 @@ import { test, expect } from '@playwright/test'
  *    PLAYWRIGHT_TEST_PASSWORD voraus — werden übersprungen, wenn nicht
  *    gesetzt, damit CI ohne Test-Account durchläuft.)
  */
+
+// Der Cookie-Banner legt sich 800 ms nach dem Laden ueber den unteren
+// Seitenrand und verdeckt auf `mobile-safari` die Absende-Knoepfe. Er wird
+// deshalb vorweg beantwortet — geprueft wird er selbst in
+// e2e/cookie-consent.spec.ts, nicht hier als Beifang.
+test.beforeEach(async ({ page }) => {
+  await cookieBannerVorwegBeantworten(page)
+})
 
 test.describe('Account-Löschung — AUTH-003', () => {
   test('Unauth-Request auf /api/user/delete gibt 401', async ({ request }) => {
