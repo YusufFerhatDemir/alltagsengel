@@ -349,3 +349,129 @@ export async function listArbeitszeitKonto(
   if (error) throw new Error(`Arbeitszeitkonto konnte nicht geladen werden: ${error.message}`)
   return (data ?? []) as ArbeitszeitKonto[]
 }
+
+// ═══════════════════════════════════════════════════════════════
+// ArbZG-Verstöße am Arbeitszeitkonto
+//
+// BEFUND (29.08.2026): Seit Migration `20260829184500` legt der Trigger
+// `arbzg_pruefung_ist()` beim Speichern einer erfassten Arbeitszeit
+// Verstöße an — § 3 (Tageshöchstarbeitszeit), § 4 (Ruhepausen), § 5
+// (Ruhezeit), gemessen an der GELEISTETEN Zeit, an die § 2 Abs. 1 ArbZG
+// bindet. Gesehen hat sie danach nur das Fristen-Dashboard.
+//
+// Das Arbeitszeitkonto — die Ansicht, in der eine PDL über Arbeitszeit
+// entscheidet — zeigte davon nichts. Wer dort Ist- und Sollstunden
+// nebeneinander sieht, sieht damit die Zahl, aber nicht, dass sie unter
+// Bruch einer Schutzvorschrift zustande kam. Genau deshalb steht die
+// Zählung hier und nicht nur im Fristen-Dashboard: eine Überstunde ist
+// eine Frage der Abrechnung, ein ArbZG-Verstoß eine der Zulässigkeit.
+// ═══════════════════════════════════════════════════════════════
+
+/** Offene (unquittierte) Verstöße eines Mitarbeiters, nach Herkunft getrennt. */
+export interface VerstossZaehlung {
+  caregiverId: string
+  gesamt: number
+  /** `basis = 'ist'` — aus der erfassten Arbeitszeit. */
+  ausErfassung: number
+  /** `basis = 'plan'` — aus dem Dienstplan. */
+  ausDienstplan: number
+}
+
+/** Letzter Tag eines Monats als `YYYY-MM-DD`. */
+function monatsEnde(jahr: number, monat: number): string {
+  // Tag 0 des Folgemonats ist der letzte des gesuchten — in UTC gerechnet,
+  // weil die lokale Zeitzone am Umstellungstag um einen Tag daneben liegen
+  // kann und der letzte Monatstag dann fehlt.
+  const tag = new Date(Date.UTC(jahr, monat, 0)).getUTCDate()
+  return `${jahr}-${String(monat).padStart(2, '0')}-${String(tag).padStart(2, '0')}`
+}
+
+/**
+ * Zählt offene ArbZG-Verstöße je Mitarbeiter.
+ *
+ * `jahr`/`monat` wirken nur GEMEINSAM: ein Jahr ohne Monat würde sonst
+ * einen Zeitraum abgrenzen, den die aufrufende Ansicht gar nicht zeigt,
+ * und die Zahl stünde neben einer Monatszeile, ohne zu ihr zu gehören.
+ */
+export async function zaehleOffeneArbzgVerstoesse(
+  supabase: SupabaseClient,
+  organizationId: string,
+  jahr?: number,
+  monat?: number,
+  caregiverId?: string,
+): Promise<VerstossZaehlung[]> {
+  const abfrage = (auswahl: string) => {
+    let q = supabase
+      .from('arbeitszeit_verstoesse')
+      .select(auswahl)
+      .eq('organization_id', organizationId)
+      .eq('quittiert', false)
+    if (caregiverId) q = q.eq('caregiver_id', caregiverId)
+    if (jahr && monat) {
+      q = q.gte('datum', `${jahr}-${String(monat).padStart(2, '0')}-01`)
+           .lte('datum', monatsEnde(jahr, monat))
+    }
+    return q
+  }
+
+  // Wie in lib/pdl/dienstplanfreigabe.ts und lib/automation/fristen-sammler.ts:
+  // kennt das Schema `basis` noch nicht, antwortet PostgREST mit 42703.
+  // Solche Zeilen sind ausnahmslos Plan-Verstöße — vor der Migration gab es
+  // keine andere Herkunft.
+  let antwort = await abfrage('caregiver_id, basis') as unknown as {
+    data: Array<{ caregiver_id: string; basis?: string | null }> | null
+    error: { message: string; code?: string } | null
+  }
+  if (antwort.error?.code === '42703') {
+    antwort = await abfrage('caregiver_id') as unknown as typeof antwort
+  }
+  if (antwort.error) {
+    throw new Error(`ArbZG-Verstöße konnten nicht gezählt werden: ${antwort.error.message}`)
+  }
+
+  const nach = new Map<string, VerstossZaehlung>()
+  for (const zeile of antwort.data ?? []) {
+    const eintrag = nach.get(zeile.caregiver_id)
+      ?? { caregiverId: zeile.caregiver_id, gesamt: 0, ausErfassung: 0, ausDienstplan: 0 }
+    eintrag.gesamt += 1
+    // Nur der ausdrückliche Wert `ist` gilt als Erfassung; NULL und
+    // Unbekanntes bleiben Plan — lieber die Herkunft zurückhaltend angeben
+    // als eine behaupten, die nicht in der Zeile steht.
+    if (zeile.basis === 'ist') eintrag.ausErfassung += 1
+    else eintrag.ausDienstplan += 1
+    nach.set(zeile.caregiver_id, eintrag)
+  }
+  return [...nach.values()]
+}
+
+export type KontoMitVerstoessen = ArbeitszeitKonto & {
+  verstoesse_offen: number
+  verstoesse_aus_erfassung: number
+}
+
+/**
+ * Hängt die Zählung an die Kontozeilen.
+ *
+ * Getrennt von der Abfrage und ohne Datenbank, damit die Zuordnung selbst
+ * prüfbar ist: der Fehler, den man hier macht, ist eine Zahl neben dem
+ * falschen Namen — und der fällt in einem Lauf gegen echte Daten erst auf,
+ * wenn ihn jemand nachrechnet.
+ *
+ * Ein Mitarbeiter ohne Verstöße bekommt ausdrücklich `0`, nicht `undefined`:
+ * die Ansicht soll „keine" zeigen können und nicht „unbekannt" mit „keine"
+ * verwechseln.
+ */
+export function verbindeKontoMitVerstoessen(
+  konten: ArbeitszeitKonto[],
+  zaehlungen: VerstossZaehlung[],
+): KontoMitVerstoessen[] {
+  const nach = new Map(zaehlungen.map(z => [z.caregiverId, z]))
+  return konten.map(k => {
+    const z = nach.get(k.caregiver_id)
+    return {
+      ...k,
+      verstoesse_offen: z?.gesamt ?? 0,
+      verstoesse_aus_erfassung: z?.ausErfassung ?? 0,
+    }
+  })
+}

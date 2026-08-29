@@ -15,6 +15,15 @@ interface Row {
   soll_stunden: number
   ueberstunden: number
   korrigierte_eintraege: number
+  /**
+   * Offene (unquittierte) ArbZG-Verstoesse im Monat. Steht neben Ist- und
+   * Sollstunden, weil eine Ueberstunde eine Frage der Abrechnung ist und
+   * ein ArbZG-Verstoss eine der Zulaessigkeit — wer nur die Zahl sieht,
+   * sieht nicht, ob sie unter Bruch einer Schutzvorschrift zustande kam.
+   */
+  verstoesse_offen: number
+  /** Davon aus der ERFASSTEN Zeit (§ 2 Abs. 1 ArbZG), nicht aus dem Plan. */
+  verstoesse_aus_erfassung: number
 }
 
 export default function ArbeitszeitenPage() {
@@ -42,6 +51,8 @@ export default function ArbeitszeitenPage() {
           soll_stunden: (r.soll_minuten_gesamt ?? 0) / 60,
           ueberstunden: (r.ueberstunden_gesamt ?? 0) / 60,
           korrigierte_eintraege: r.korrigierte_eintraege ?? 0,
+          verstoesse_offen: r.verstoesse_offen ?? 0,
+          verstoesse_aus_erfassung: r.verstoesse_aus_erfassung ?? 0,
         })))
       } catch (err) {
         log.errorWithException('Arbeitszeiten laden fehlgeschlagen', err)
@@ -111,11 +122,12 @@ export default function ArbeitszeitenPage() {
                 <th style={{ textAlign: 'right' }}>Soll-Stunden</th>
                 <th style={{ textAlign: 'right' }}>Überstunden</th>
                 <th style={{ textAlign: 'right' }}>Korrigiert</th>
+                <th style={{ textAlign: 'right' }}>ArbZG</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <EmptyRow colSpan={6}>
+                <EmptyRow colSpan={7}>
                   {search ? 'Keine Treffer' : 'Keine Arbeitszeitdaten vorhanden'}
                 </EmptyRow>
               ) : filtered.map(row => (
@@ -133,6 +145,20 @@ export default function ArbeitszeitenPage() {
                   <td style={{ textAlign: 'right' }}>
                     {row.korrigierte_eintraege > 0 ? (
                       <StatusBadge label={`${row.korrigierte_eintraege} Korr.`} color="#E8A000" />
+                    ) : '—'}
+                  </td>
+                  <td style={{ textAlign: 'right' }}>
+                    {/* Rot, nicht gelb: ein ArbZG-Verstoss ist keine Auffaelligkeit,
+                        sondern ein Bruch einer Schutzvorschrift. Die Herkunft steht
+                        dabei, weil sie sagt, WO nachzusehen ist — bei einem
+                        Ist-Verstoss steht im Dienstplan nichts Auffaelliges. */}
+                    {row.verstoesse_offen > 0 ? (
+                      <StatusBadge
+                        label={row.verstoesse_aus_erfassung > 0
+                          ? `${row.verstoesse_offen} offen · ${row.verstoesse_aus_erfassung} aus Erfassung`
+                          : `${row.verstoesse_offen} offen`}
+                        color="#D04B3B"
+                      />
                     ) : '—'}
                   </td>
                 </tr>
