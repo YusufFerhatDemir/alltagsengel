@@ -18,6 +18,21 @@ export interface AktenSucheParams {
   von?: string
   bis?: string
   limit?: number
+  /**
+   * Klammert Mitarbeiterdokumente aus (`caregiver_id IS NULL`).
+   *
+   * Fuer Aufrufer mit `stammdaten.lesen`, aber OHNE `personal.lesen` — die
+   * Rolle `buchhaltung` ist genau dieser Fall und laut lib/auth/rollen.ts
+   * ausdruecklich ohne Zugriff auf Personalakten. Die Suche mischt beide
+   * Bestaende in einer Antwort; ohne diesen Riegel waeren Fuehrungszeugnis,
+   * Arbeitsvertrag und Qualifikationsnachweis ueber sie lesbar, waehrend
+   * die Mitarbeiterakte selbst sie verweigert.
+   *
+   * Bewusst am `caregiver_id` und nicht am Dokumenttyp: welcher Typ
+   * personenbezogen ist, ist Auslegung — an welcher Akte ein Dokument
+   * haengt, steht in der Zeile.
+   */
+  ohnePersonaldokumente?: boolean
 }
 
 export interface AktenSucheTreffer extends AktenDokument {
@@ -34,6 +49,7 @@ export async function sucheDokumente(supabase: SupabaseClient, params: AktenSuch
     .order('created_at', { ascending: false })
     .limit(params.limit ?? 100)
 
+  if (params.ohnePersonaldokumente) query = query.is('caregiver_id', null)
   if (params.clientId) query = query.eq('client_id', params.clientId)
   if (params.caregiverId) query = query.eq('caregiver_id', params.caregiverId)
   if (params.dokumentTyp) query = query.eq('dokument_typ', params.dokumentTyp)

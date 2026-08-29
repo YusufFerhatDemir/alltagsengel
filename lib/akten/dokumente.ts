@@ -194,6 +194,24 @@ export interface ListDokumenteFilter {
   ablaufBis?: string
   limit?: number
   offset?: number
+  /**
+   * Klammert Mitarbeiterdokumente aus (`caregiver_id IS NULL`).
+   *
+   * Fuer Aufrufer mit `stammdaten.lesen`, aber OHNE `personal.lesen`. Die
+   * Rolle `buchhaltung` ist genau dieser Fall; lib/auth/rollen.ts haelt
+   * woertlich fest, sie brauche „die Klienten-Stammdaten als
+   * Rechnungsempfaenger … aber KEINE Gesundheitsdaten und keine
+   * Personalakten". Die Dokumentenliste mischt beide Bestaende, und die
+   * Seite /admin/dokumente steht in der Navigation — Fuehrungszeugnis,
+   * Arbeitsvertrag und Qualifikationsnachweis waren damit einen Klick
+   * entfernt, waehrend die Mitarbeiterakte selbst (`personal.lesen`) sie
+   * derselben Rolle verweigert.
+   *
+   * Am `caregiver_id` abgegrenzt und nicht am Dokumenttyp: welcher Typ
+   * personenbezogen ist, ist Auslegung — an welcher Akte ein Dokument
+   * haengt, steht in der Zeile.
+   */
+  ohnePersonaldokumente?: boolean
 }
 
 /**
@@ -226,6 +244,7 @@ export async function listDokumente(supabase: SupabaseClient, filter: ListDokume
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
+  if (filter.ohnePersonaldokumente) query = query.is('caregiver_id', null)
   if (filter.clientId) query = query.eq('client_id', filter.clientId)
   if (filter.caregiverId) query = query.eq('caregiver_id', filter.caregiverId)
   if (filter.dokumentTyp) query = query.eq('dokument_typ', filter.dokumentTyp)
