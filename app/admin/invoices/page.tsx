@@ -48,6 +48,7 @@ const INVOICE_FILTERS: { key: string; matches: string[] }[] = [
   { key: 'strittig', matches: ['disputed', 'strittig'] },
   { key: 'abgelehnt', matches: ['rejected', 'abgelehnt', 'korrektur_erforderlich'] },
   { key: 'storniert', matches: ['storniert'] },
+  { key: 'abgeschrieben', matches: ['abgeschrieben'] },
 ]
 
 // Alle nicht-terminalen Status (für "offen"-Summe)

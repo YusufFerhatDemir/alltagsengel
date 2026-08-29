@@ -143,11 +143,17 @@ vi.mock('@/lib/billing/core/audit', () => ({
   computeContentHash: vi.fn().mockResolvedValue('test-hash'),
 }))
 
-vi.mock('@/lib/billing/core/status-machine', () => ({
+// Nur die drei Validierungsfunktionen werden ersetzt — alles andere kommt
+// aus dem echten Modul. Die Aufzaehlung stand hier frueher vollstaendig als
+// Attrappe, und das ist die teurere Bauart: als `WRITE_OFF_ALLOWED_FROM` in
+// der Engine am 29.08.2026 auf `ABSCHREIBBAR_VON` umgestellt wurde, kannte
+// die Attrappe diesen Export nicht und elf Faelle wurden rot, ohne dass an
+// der Fachlogik etwas falsch war. Konstanten gehoeren nicht nachgebaut.
+vi.mock('@/lib/billing/core/status-machine', async (importActual) => ({
+  ...(await importActual<typeof import('@/lib/billing/core/status-machine')>()),
   isTerminalStatus: vi.fn((s: string) => ['bezahlt', 'storniert', 'akzeptiert', 'abgeschrieben'].includes(s)),
   isValidInvoiceStatus: vi.fn(() => true),
   validateTransition: vi.fn(),
-  INVOICE_NUMBER_PREFIX: { storno: 'ST', korrektur: 'KR', gutschrift: 'GS' },
 }))
 
 function makeSupabase(invoice: Record<string, unknown>, updateReturns?: Record<string, unknown> | null) {

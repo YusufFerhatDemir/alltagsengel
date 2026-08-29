@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { euro, formatDate, fullName, statusMeta, INVOICE_STATUS } from '@/lib/admin/ops'
 import { StatusBadge, Banner } from '@/components/admin/OpsUI'
+import { ABSCHREIBBAR_VON, isTerminalStatus, isValidInvoiceStatus } from '@/lib/billing/core/status-machine'
 import Link from 'next/link'
 
 interface Invoice {
@@ -100,6 +101,7 @@ export default function InvoiceDetailPage() {
         : action === 'credit' ? `/api/billing/invoices/${id}/credit`
         : action === 'zahlung' ? `/api/billing/invoices/${id}/zahlung`
         : action === 'versenden' ? `/api/billing/invoices/${id}/versenden`
+        : action === 'abschreiben' ? `/api/billing/invoices/${id}/abschreiben`
         : null
       if (!endpoint) return
 
@@ -147,6 +149,33 @@ export default function InvoiceDetailPage() {
           body.erneutSenden = true
         }
       }
+      if (action === 'abschreiben') {
+        // Abschreiben ist ein Endstatus: die Forderung ist danach ausgebucht
+        // und die Rechnung nimmt keinen Uebergang mehr an. Deshalb die
+        // Rueckfrage, und deshalb nennt sie den Betrag — es ist der offene,
+        // nicht der Gesamtbetrag, und diese beiden gehen bei einer
+        // Teilzahlung auseinander.
+        // Denselben Weg wie 'zahlung': aus `inv` gerechnet, nicht aus einer
+        // erst weiter unten deklarierten Variablen der Renderfunktion.
+        const offenEuro = (inv?.total_amount || 0) - (inv?.paid_amount || 0)
+        const ok = window.confirm(
+          `Offene Forderung von ${euro(offenEuro)} als uneinbringlich ausbuchen?\n\n`
+          + 'Die Rechnung erhaelt den Endstatus "Abgeschrieben". Sie kann danach '
+          + 'nicht mehr storniert, bezahlt oder gemahnt werden.'
+        )
+        if (!ok) { setActionLoading(false); return }
+        const reason = window.prompt('Grund der Abschreibung (mind. 5 Zeichen):')
+        if (!reason) { setActionLoading(false); return }
+        // Die Route weist eine zu kurze Begruendung mit 400 ab. Sie hier zu
+        // pruefen ist kein zweiter Riegel, sondern erspart dem Bedienenden
+        // eine Fehlermeldung ueber etwas, das schon beim Tippen feststand.
+        if (reason.trim().length < 5) {
+          setError('Die Begruendung muss mindestens 5 Zeichen haben.')
+          setActionLoading(false)
+          return
+        }
+        body.reason = reason.trim()
+      }
       if (action === 'credit') {
         // Eingabe in Euro, die API erwartet Cent.
         const amountRaw = window.prompt('Gutschriftbetrag in Euro (z. B. 35,00):')
@@ -172,6 +201,15 @@ export default function InvoiceDetailPage() {
         // Der Versand antwortet auch bei 'uebersprungen'/'fehlgeschlagen' mit
         // HTTP 200 — der Grund steht im Body und muss sichtbar werden, sonst
         // sieht ein nicht erfolgter Versand wie ein erfolgter aus.
+        if (action === 'abschreiben') {
+          // Die Route antwortet mit dem tatsaechlich ausgebuchten Betrag in
+          // Cent. Ihn anzuzeigen ist nicht Zierrat: er kann vom Betrag der
+          // Rueckfrage abweichen, wenn zwischendurch eine Zahlung einging.
+          setVersandHinweis(
+            `Forderung ueber ${euro((json.writtenOffAmountCents ?? 0) / 100)} abgeschrieben `
+            + `(vorher: ${statusMeta(INVOICE_STATUS, json.previousStatus).label}).`
+          )
+        }
         if (action === 'versenden') {
           if (json.status === 'versendet') {
             setVersandHinweis(`Rechnung an ${json.empfaenger} versendet.`)
@@ -192,7 +230,21 @@ export default function InvoiceDetailPage() {
 
   const sm = statusMeta(INVOICE_STATUS, inv.status)
   const openAmount = (inv.total_amount || 0) - (inv.paid_amount || 0)
-  const isTerminal = ['bezahlt', 'akzeptiert', 'storniert'].includes(inv.status)
+  // Die Liste stand hier bis 29.08.2026 als eigene Aufzaehlung und kannte
+  // 'abgeschrieben' nicht — auf einer abgeschriebenen Rechnung waeren also
+  // weiter "Zahlung verbuchen", "Gutschrift" und "Stornieren" angeboten
+  // worden, obwohl die Statusmaschine keinen dieser Uebergaenge mehr
+  // zulaesst. Jetzt kommt die Antwort von der Maschine selbst.
+  // Alt-Status ('paid', 'sent', …) kennt sie nicht; fuer die bleibt die
+  // ausdrueckliche Liste stehen, sonst gaelte ein bezahlter Altbestand
+  // ploetzlich wieder als offen.
+  const isTerminal = isValidInvoiceStatus(inv.status)
+    ? isTerminalStatus(inv.status)
+    : ['paid', 'storniert'].includes(inv.status)
+  // Abschreiben setzt einen offenen Restbetrag voraus — bei 0 wirft die
+  // Route "Keine offene Forderung zum Abschreiben vorhanden".
+  const darfAbschreiben =
+    isValidInvoiceStatus(inv.status) && ABSCHREIBBAR_VON.has(inv.status) && openAmount > 0.01
 
   return (
     <div className="admin-page">
@@ -245,6 +297,12 @@ export default function InvoiceDetailPage() {
           )}
           {!isTerminal && (
             <ActionBtn label="Stornieren" onClick={() => handleAction('cancel')} loading={actionLoading} danger />
+          )}
+          {/* Abschreiben: die Forderung ist nicht eintreibbar und wird
+              ausgebucht. Nicht dasselbe wie Stornieren — die Rechnung bleibt
+              bestehen und behaelt ihre Nummer, nur der Anspruch entfaellt. */}
+          {darfAbschreiben && (
+            <ActionBtn label="Forderung abschreiben" onClick={() => handleAction('abschreiben')} loading={actionLoading} danger />
           )}
           <ActionBtn label="PDF erstellen" onClick={() => handleAction('pdf')} loading={actionLoading} />
           {/* Versand erst nach Festschreibung: ein Entwurf darf das Haus nicht

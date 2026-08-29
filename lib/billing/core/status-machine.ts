@@ -140,6 +140,21 @@ export function getAllowedTransitions(status: InvoiceStatus): InvoiceStatus[] {
 }
 
 /**
+ * Aus welchen Status heraus eine Forderung abgeschrieben werden darf.
+ *
+ * ABGELEITET, NICHT AUFGEZAEHLT: die Menge ergibt sich aus derselben
+ * Uebergangstabelle, die auch `isTransitionAllowed` befragt. Bis 29.08.2026
+ * stand daneben in `invoice-engine.ts` eine zweite, wortgleiche Liste
+ * (`WRITE_OFF_ALLOWED_FROM`). Zwei Listen ueber dieselbe Frage sind so lange
+ * richtig, bis eine von beiden gepflegt wird — und dann faellt es nicht auf,
+ * weil beide fuer sich gelesen stimmig aussehen. Hier gibt es nur noch eine.
+ */
+export const ABSCHREIBBAR_VON: ReadonlySet<InvoiceStatus> = new Set(
+  (Object.keys(INVOICE_TRANSITIONS) as InvoiceStatus[])
+    .filter((s) => INVOICE_TRANSITIONS[s].includes('abgeschrieben'))
+);
+
+/**
  * Prueft ob ein Status endgueltig ist (kein Weg zurueck).
  */
 export function isTerminalStatus(status: InvoiceStatus): boolean {
