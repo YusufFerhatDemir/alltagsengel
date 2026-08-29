@@ -16,10 +16,54 @@ interface Eintrag {
   end_zeit: string
   status: string
   typ: string
+  schicht_bezeichnung: string | null
   schicht_farbe: string | null
-  konflikt: boolean
+  /** Der eingeteilte Mitarbeiter ist an diesem Tag abwesend. */
+  abwesend: boolean
+  abwesenheit_typ: string | null
   kunde_name: string | null
   notizen: string | null
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WOCHENPLAN LIEST DIE SICHT, NICHT DIE TABELLE
+// ═══════════════════════════════════════════════════════════════
+//
+// BEFUND (29.08.2026): die Seite las /api/personal/dienstplan/eintraege,
+// und diese Route gibt Zeilen aus `dienstplan_eintraege` mit select('*')
+// zurueck — eine Tabelle, die NUR Fremdschluessel fuehrt. Der Mapper der
+// Seite griff aber nach caregiver_name, kunde_name und schicht_farbe.
+// Keines dieser Felder gab es je in der Antwort: der Wochenplan zeigte an
+// JEDER Stelle, an der ein Mitarbeitername stehen sollte, den Ersatzwert
+// '—'. Ein Dienstplan, aus dem nicht hervorgeht, wer Dienst hat.
+//
+// Die Sicht `dienstplan_tagesansicht` fuehrt genau diese Felder — und
+// zusaetzlich `hat_abwesenheit`: ein Dienst, der auf jemanden gebucht ist,
+// der an dem Tag nicht da ist. Sie hatte bis heute keinen einzigen
+// Aufrufer, weil die zugehoerige Route nur einen EINZELNEN Tag lesen
+// konnte und der Wochenplan eine Woche braucht.
+//
+// `konflikt` ist dabei ersatzlos entfallen: das Feld wurde nie befuellt
+// (die Tabelle hat es nicht, die Sicht auch nicht) und stand deshalb
+// dauerhaft auf false — eine Konfliktmarkierung, die nie erschien. An
+// seine Stelle tritt die Abwesenheit, die es wirklich gibt.
+function zuEintrag(r: Record<string, unknown>): Eintrag {
+  return {
+    id: String(r.id),
+    datum: String(r.datum ?? ''),
+    caregiver_name: (r.caregiver_name as string) || '—',
+    caregiver_id: (r.caregiver_id as string) ?? '',
+    start_zeit: (r.start_zeit as string) || '',
+    end_zeit: (r.end_zeit as string) || '',
+    status: (r.status as string) || 'geplant',
+    typ: (r.typ as string) || 'regulaer',
+    schicht_bezeichnung: (r.schicht_bezeichnung as string) ?? null,
+    schicht_farbe: (r.schicht_farbe as string) ?? null,
+    abwesend: r.hat_abwesenheit === true,
+    abwesenheit_typ: (r.abwesenheit_typ as string) ?? null,
+    kunde_name: (r.client_name as string) ?? null,
+    notizen: (r.notizen as string) ?? null,
+  }
 }
 
 interface CreateForm {
@@ -93,37 +137,27 @@ export default function DienstplanPage() {
 
   const weekEnd = addDays(weekStart, 6)
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true)
-      try {
-        const von = formatISO(weekStart)
-        const bis = formatISO(weekEnd)
-        const res = await fetch(`/api/personal/dienstplan/eintraege?datumVon=${von}&datumBis=${bis}`)
-        if (!res.ok) { log.error('Dienstplan laden fehlgeschlagen'); setLoading(false); return }
-        const data = await res.json()
-        setEintraege((data.eintraege || data || []).map((r: any) => ({
-          id: r.id,
-          datum: r.datum || r.date,
-          caregiver_name: r.caregiver_name || r.mitarbeiter || '—',
-          caregiver_id: r.caregiver_id,
-          start_zeit: r.start_zeit || '',
-          end_zeit: r.end_zeit || '',
-          status: r.status || 'geplant',
-          typ: r.typ || r.type || 'regulaer',
-          schicht_farbe: r.schicht_farbe || r.shift_color || null,
-          konflikt: r.konflikt ?? r.conflict ?? false,
-          kunde_name: r.kunde_name || r.client_name || null,
-          notizen: r.notizen || null,
-        })))
-      } catch (err) {
-        log.errorWithException('Dienstplan laden fehlgeschlagen', err)
-      } finally {
-        setLoading(false)
-      }
+  const ladeWoche = useCallback(async () => {
+    const von = formatISO(weekStart)
+    const bis = formatISO(addDays(weekStart, 6))
+    const res = await fetch(`/api/personal/dienstplan/tagesansicht?datumVon=${von}&datumBis=${bis}`)
+    if (!res.ok) {
+      log.error('Dienstplan laden fehlgeschlagen')
+      return false
     }
-    load()
+    const data = await res.json()
+    setEintraege((Array.isArray(data) ? data : (data.eintraege ?? [])).map(zuEintrag))
+    return true
   }, [weekStart])
+
+  useEffect(() => {
+    let abgebrochen = false
+    setLoading(true)
+    ladeWoche()
+      .catch(err => { log.errorWithException('Dienstplan laden fehlgeschlagen', err) })
+      .finally(() => { if (!abgebrochen) setLoading(false) })
+    return () => { abgebrochen = true }
+  }, [ladeWoche])
 
   const ladeSchichten = useCallback(async () => {
     try {
@@ -207,7 +241,8 @@ export default function DienstplanPage() {
     return map
   }, [eintraege, weekStart])
 
-  const conflicts = eintraege.filter(e => e.konflikt)
+  // Dienste, die auf jemanden gebucht sind, der an dem Tag abwesend ist.
+  const abwesenheiten = eintraege.filter(e => e.abwesend)
 
   async function createEintrag() {
     if (!form.datum || !form.startZeit || !form.endZeit) return
@@ -222,25 +257,10 @@ export default function DienstplanPage() {
       if (res.ok) {
         setShowCreate(false)
         setForm({ datum: '', caregiverId: '', startZeit: '08:00', endZeit: '16:00', typ: 'regulaer', notizen: '' })
-        // Reload
-        const von = formatISO(weekStart)
-        const bis = formatISO(weekEnd)
-        const reload = await fetch(`/api/personal/dienstplan/eintraege?datumVon=${von}&datumBis=${bis}`)
-        if (reload.ok) {
-          const data = await reload.json()
-          setEintraege((data.eintraege || data || []).map((r: any) => ({
-            id: r.id, datum: r.datum || r.date,
-            caregiver_name: r.caregiver_name || r.mitarbeiter || '—',
-            caregiver_id: r.caregiver_id,
-            start_zeit: r.start_zeit || '',
-            end_zeit: r.end_zeit || '',
-            status: r.status || 'geplant', typ: r.typ || r.type || 'regulaer',
-            schicht_farbe: r.schicht_farbe || r.shift_color || null,
-            konflikt: r.konflikt ?? r.conflict ?? false,
-            kunde_name: r.kunde_name || r.client_name || null,
-            notizen: r.notizen || null,
-          })))
-        }
+        // Derselbe Ladeweg wie beim Oeffnen — vorher stand der Mapper hier ein
+        // zweites Mal wortgleich, und zwei Kopien eines Mappers zeigen nach der
+        // ersten Aenderung an einer der beiden Stellen verschiedene Felder an.
+        await ladeWoche()
       } else {
         // Bisher wurde ein Fehler (z.B. Doppelbelegung, Cross-Tenant-Sperre,
         // fehlende Einsatzfreigabe) hier still verschluckt — Nutzer sah keine
@@ -274,9 +294,16 @@ export default function DienstplanPage() {
         </button>
       </div>
 
-      {conflicts.length > 0 && (
+      {/* Vorher stand hier „N Konflikte" auf einem Feld, das nie befuellt
+          wurde — die Meldung konnte gar nicht erscheinen. Jetzt steht dort
+          die Abwesenheit, die die Sicht wirklich liefert: ein eingeteilter
+          Dienst fuer jemanden, der an dem Tag nicht da ist, ist ein
+          unbesetzter Dienst. */}
+      {abwesenheiten.length > 0 && (
         <Banner tone="danger">
-          <strong>{conflicts.length} Konflikte</strong> in dieser Woche erkannt.
+          <strong>{abwesenheiten.length} {abwesenheiten.length === 1 ? 'Dienst' : 'Dienste'}</strong>{' '}
+          in dieser Woche {abwesenheiten.length === 1 ? 'ist' : 'sind'} auf abwesende Mitarbeiter
+          eingeteilt und damit unbesetzt.
         </Banner>
       )}
 
@@ -503,12 +530,12 @@ export default function DienstplanPage() {
                   const sm = statusMeta(DIENSTPLAN_STATUS, e.status)
                   return (
                     <div key={e.id} style={{
-                      background: e.konflikt
+                      background: e.abwesend
                         ? 'rgba(208,75,59,.12)'
                         : e.schicht_farbe
                           ? `${e.schicht_farbe}22`
                           : 'var(--coal3)',
-                      border: e.konflikt ? '1px solid rgba(208,75,59,.4)' : '1px solid transparent',
+                      border: e.abwesend ? '1px solid rgba(208,75,59,.4)' : '1px solid transparent',
                       borderRadius: 8, padding: '6px 8px', marginBottom: 6, fontSize: 12,
                       borderLeft: e.schicht_farbe ? `3px solid ${e.schicht_farbe}` : undefined,
                     }}>
@@ -516,15 +543,18 @@ export default function DienstplanPage() {
                       <div style={{ color: 'var(--ink4)' }}>
                         {formatTime(e.start_zeit)} – {formatTime(e.end_zeit)}
                       </div>
+                      {e.schicht_bezeichnung && (
+                        <div style={{ color: 'var(--ink4)', fontSize: 11 }}>{e.schicht_bezeichnung}</div>
+                      )}
                       {e.kunde_name && (
                         <div style={{ color: 'var(--ink4)', fontSize: 11 }}>{e.kunde_name}</div>
                       )}
                       <div style={{ marginTop: 4 }}>
                         <StatusBadge label={sm.label} color={sm.color} />
                       </div>
-                      {e.konflikt && (
+                      {e.abwesend && (
                         <div style={{ color: '#D04B3B', fontSize: 11, fontWeight: 600, marginTop: 2 }}>
-                          Konflikt
+                          Abwesend{e.abwesenheit_typ ? ` (${e.abwesenheit_typ})` : ''} — unbesetzt
                         </div>
                       )}
                     </div>

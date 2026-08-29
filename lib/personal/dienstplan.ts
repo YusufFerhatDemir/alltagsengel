@@ -478,12 +478,73 @@ export async function deleteEintrag(supabase: SupabaseClient, id: string, organi
   }
 }
 
-export async function listTagesansicht(supabase: SupabaseClient, organizationId: string, datum: string): Promise<DienstplanTagesansicht[]> {
-  const { data, error } = await supabase
+export interface TagesansichtFilter {
+  /** Ein einzelner Tag. Schliesst datumVon/datumBis aus. */
+  datum?: string
+  datumVon?: string
+  datumBis?: string
+  caregiverId?: string
+}
+
+/** Groesste Spanne, die auf einmal gelesen wird. */
+export const TAGESANSICHT_MAX_TAGE = 62
+
+/**
+ * Dienstplan aus der Sicht `dienstplan_tagesansicht` — mit aufgeloesten
+ * Namen, der Schichtvorlage und dem Abwesenheitskennzeichen.
+ *
+ * Warum diese Sicht und nicht die Tabelle: `dienstplan_eintraege` fuehrt
+ * nur Fremdschluessel. Wer den Plan ANSIEHT, braucht aber Namen — und vor
+ * allem `hat_abwesenheit`: ein Dienst, der auf jemanden gebucht ist, der an
+ * dem Tag gar nicht da ist, ist ein unbesetzter Dienst. Ohne dieses Feld
+ * faellt das erst am Tag selbst auf.
+ *
+ * ZEITRAUM IST PFLICHT. Eine Sicht auf den Dienstplan waechst mit jedem
+ * geplanten Dienst und wird nie kleiner; eine Abfrage ohne Grenze wird mit
+ * der Zeit von selbst zum Problem, ohne dass sich am Code etwas aendert.
+ * Und „der ganze Dienstplan" ist keine Frage, die jemand stellt.
+ */
+export async function listTagesansicht(
+  supabase: SupabaseClient,
+  organizationId: string,
+  filter: TagesansichtFilter,
+): Promise<DienstplanTagesansicht[]> {
+  const { datum, datumVon, datumBis, caregiverId } = filter ?? {}
+
+  if (!datum && !(datumVon && datumBis)) {
+    throw new Error('Zeitraum erforderlich: entweder datum oder datumVon und datumBis.')
+  }
+  if (datumVon && datumBis) {
+    if (datumBis < datumVon) {
+      throw new Error('datumBis liegt vor datumVon.')
+    }
+    // Spanne in Tagen ueber UTC-Mitternacht: beide Grenzen sind reine
+    // Datumsangaben, eine Ortszeit-Rechnung liefe hier an der Sommerzeit
+    // um eine Stunde daneben und koennte einen Tag verschlucken.
+    const tage = Math.round(
+      (Date.parse(`${datumBis}T00:00:00Z`) - Date.parse(`${datumVon}T00:00:00Z`)) / 86400000,
+    ) + 1
+    if (!Number.isFinite(tage)) {
+      throw new Error('datumVon oder datumBis ist kein gültiges Datum (JJJJ-MM-TT).')
+    }
+    if (tage > TAGESANSICHT_MAX_TAGE) {
+      throw new Error(
+        `Zeitraum umfasst ${tage} Tage und überschreitet die Grenze von ${TAGESANSICHT_MAX_TAGE} Tagen.`,
+      )
+    }
+  }
+
+  let query = supabase
     .from('dienstplan_tagesansicht')
     .select('*')
     .eq('organization_id', organizationId)
-    .eq('datum', datum)
+
+  if (datum) query = query.eq('datum', datum)
+  else query = query.gte('datum', datumVon!).lte('datum', datumBis!)
+  if (caregiverId) query = query.eq('caregiver_id', caregiverId)
+
+  const { data, error } = await query
+    .order('datum', { ascending: true })
     .order('start_zeit', { ascending: true })
   if (error) throw new Error(`Tagesansicht konnte nicht geladen werden: ${error.message}`)
   return (data ?? []) as DienstplanTagesansicht[]
