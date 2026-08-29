@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Banner } from '@/components/admin/OpsUI'
 import DialogOverlay from '@/components/DialogOverlay'
+import { vorlagenWochentagWarnung, wochentagName } from '@/lib/touren/planung'
 
 // ── Status ─────────────────────────────────────────────────────
 const TOUR_STATUS: Record<string, { label: string; color: string }> = {
@@ -74,6 +75,19 @@ interface Kandidat {
   hat_fahrzeug: boolean
 }
 interface NeuerStop { client_id: string; geplante_ankunft: string; geplantes_ende: string; service_type: string }
+
+interface VorlagenStop { client_id: string; dauer_minuten: number; service_type?: string; notes?: string }
+interface VorlageRow {
+  id: string
+  name: string
+  caregiver_id: string | null
+  weekday: number | null
+  start_zeit: string | null
+  stops: VorlagenStop[] | null
+  aktiv: boolean
+  notes: string | null
+  caregivers: PersonRef | PersonRef[] | null
+}
 
 // ── Helfer ─────────────────────────────────────────────────────
 function isoDate(d: Date): string {
@@ -148,6 +162,7 @@ export default function TourenplanungPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
   const [vertretungOpen, setVertretungOpen] = useState(false)
+  const [vorlagenOpen, setVorlagenOpen] = useState(false)
 
   const selected = useMemo(
     () => touren.find(t => t.id === selectedId) ?? null,
@@ -316,6 +331,7 @@ export default function TourenplanungPage() {
           <option value="">Alle Mitarbeiter</option>
           {caregivers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
+        <button onClick={() => setVorlagenOpen(true)} style={btn}>Vorlagen</button>
         <button onClick={() => setCreateOpen(true)} style={btnPrimary}>+ Neue Tour</button>
       </div>
 
@@ -404,6 +420,30 @@ export default function TourenplanungPage() {
           defaultDate={view === 'day' ? rangeStart : isoDate(new Date())}
           onClose={() => setCreateOpen(false)}
           onDone={(warn) => { setCreateOpen(false); setWarnungen(warn); load() }}
+        />
+      )}
+
+      {/* Tourvorlagen */}
+      {vorlagenOpen && (
+        <TourvorlagenDialog
+          caregivers={caregivers}
+          clients={clients}
+          defaultDate={view === 'day' ? rangeStart : isoDate(new Date())}
+          onClose={() => setVorlagenOpen(false)}
+          onAngewendet={(warn, tourDate) => {
+            setVorlagenOpen(false)
+            setWarnungen(warn)
+            // AUF DAS DATUM DER NEUEN TOUR SPRINGEN. Eine Vorlage wird oft auf
+            // einen Tag ausserhalb der gerade gezeigten Woche angewendet — ohne
+            // diesen Sprung meldete die Oberflaeche Erfolg und der Plan bliebe
+            // sichtbar unveraendert, was wie ein Fehlschlag aussieht.
+            setBaseDate(new Date(`${tourDate}T00:00:00`))
+            // UND ausdruecklich neu laden: liegt das Datum in der bereits
+            // gezeigten Woche, aendern sich rangeStart/rangeEnd nicht, der
+            // Lade-Effekt haengt aber genau daran — die neue Tour erschiene
+            // dann erst beim naechsten Wochenwechsel.
+            load()
+          }}
         />
       )}
 
@@ -854,5 +894,310 @@ function TourDruck({ tour }: { tour: TourRow }) {
         Alltagsengel · Tourenplan erstellt am {new Date().toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })} · Änderungen vorbehalten
       </p>
     </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TOURVORLAGEN
+// ═══════════════════════════════════════════════════════════════
+//
+// tour_templates und /api/tours/templates (Auflisten, Anlegen, Aendern)
+// samt /api/tours/templates/[id]/anwenden waren vollstaendig gebaut und
+// wurden von KEINER Stelle der Oberflaeche aufgerufen; die Tabelle traegt
+// live 0 Zeilen. Ohne diesen Abschnitt musste jede wiederkehrende Tour an
+// JEDEM Tag neu Stop fuer Stop zusammengeklickt werden — dieselben
+// Klienten, dieselben Dauern, jeden Montag von Hand.
+//
+// GELADEN WIRD MIT aktiv=alle: die Route filtert sonst auf aktiv=true, und
+// eine stillgelegte Vorlage waere unauffindbar — also auch nicht wieder
+// einzuschalten. Ein DELETE gibt es an der Route bewusst nicht;
+// Stilllegen ist der einzige Weg, eine Vorlage aus dem Alltag zu nehmen.
+function TourvorlagenDialog({ caregivers, clients, defaultDate, onClose, onAngewendet }: {
+  caregivers: Option[]
+  clients: Option[]
+  defaultDate: string
+  onClose: () => void
+  onAngewendet: (warnungen: string[], tourDate: string) => void
+}) {
+  const [vorlagen, setVorlagen] = useState<VorlageRow[] | null>(null)
+  const [fehler, setFehler] = useState<string | null>(null)
+  const [laeuft, setLaeuft] = useState(false)
+
+  // Anwenden-Zustand je Vorlage
+  const [anwendenId, setAnwendenId] = useState<string | null>(null)
+  const [anwendenDatum, setAnwendenDatum] = useState(defaultDate)
+  const [anwendenCaregiver, setAnwendenCaregiver] = useState('')
+
+  // Anlage-Formular
+  const [neuOffen, setNeuOffen] = useState(false)
+  const [nName, setNName] = useState('')
+  const [nCaregiver, setNCaregiver] = useState('')
+  const [nWeekday, setNWeekday] = useState('')
+  const [nStart, setNStart] = useState('08:00')
+  const [nNotes, setNNotes] = useState('')
+  const [nStops, setNStops] = useState<VorlagenStop[]>([
+    { client_id: '', dauer_minuten: 60, service_type: SERVICE_TYPES[0] },
+  ])
+
+  const laden = useCallback(async () => {
+    setFehler(null)
+    try {
+      const res = await fetch('/api/tours/templates?aktiv=alle')
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Vorlagen konnten nicht geladen werden.')
+      setVorlagen(Array.isArray(data) ? data : [])
+    } catch (e) {
+      setFehler(e instanceof Error ? e.message : 'Unbekannter Fehler.')
+      // vorlagen bleibt null: „noch nicht geladen" ist NICHT dasselbe wie
+      // „keine Vorlagen vorhanden" — die zweite Aussage darf nur stehen,
+      // wenn wirklich nachgesehen wurde.
+    }
+  }, [])
+
+  useEffect(() => { laden() }, [laden])
+
+  const anlegen = async () => {
+    const gueltige = nStops.filter(s => s.client_id && Number(s.dauer_minuten) > 0)
+    if (!nName.trim()) { setFehler('Bezeichnung ist Pflicht.'); return }
+    if (gueltige.length === 0) { setFehler('Mindestens ein Stop mit Klient und Dauer erforderlich.'); return }
+    setLaeuft(true)
+    setFehler(null)
+    try {
+      const res = await fetch('/api/tours/templates', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: nName.trim(),
+          // Leere Auswahl heisst „keiner hinterlegt" und muss als null gehen.
+          // Ein leerer String liefe in die uuid-Spalte und scheiterte dort.
+          caregiver_id: nCaregiver || null,
+          weekday: nWeekday ? Number(nWeekday) : null,
+          start_zeit: nStart || null,
+          notes: nNotes.trim() || null,
+          stops: gueltige.map(s => ({
+            client_id: s.client_id,
+            dauer_minuten: Number(s.dauer_minuten),
+            service_type: s.service_type || undefined,
+          })),
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setFehler(data.error || 'Vorlage konnte nicht angelegt werden.'); return }
+      setNeuOffen(false)
+      setNName(''); setNCaregiver(''); setNWeekday(''); setNStart('08:00'); setNNotes('')
+      setNStops([{ client_id: '', dauer_minuten: 60, service_type: SERVICE_TYPES[0] }])
+      await laden()
+    } finally {
+      setLaeuft(false)
+    }
+  }
+
+  const setzeAktiv = async (v: VorlageRow, aktiv: boolean) => {
+    setLaeuft(true)
+    setFehler(null)
+    try {
+      const res = await fetch('/api/tours/templates', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: v.id, aktiv }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setFehler(data.error || 'Änderung fehlgeschlagen.'); return }
+      await laden()
+    } finally {
+      setLaeuft(false)
+    }
+  }
+
+  const anwenden = async (v: VorlageRow, force: boolean) => {
+    if (!anwendenDatum) { setFehler('Datum ist Pflicht.'); return }
+    const caregiverId = anwendenCaregiver || v.caregiver_id
+    if (!caregiverId) {
+      setFehler('Diese Vorlage hat keinen hinterlegten Mitarbeiter — bitte einen auswählen.')
+      return
+    }
+    setLaeuft(true)
+    setFehler(null)
+    try {
+      const res = await fetch(`/api/tours/templates/${v.id}/anwenden`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tour_date: anwendenDatum,
+          caregiver_id: anwendenCaregiver || undefined,
+          force_override: force,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        // Dieselbe Rueckfrage wie bei der normalen Tour-Anlage: die Route
+        // reicht die Antwort von POST /api/tours unveraendert durch, also
+        // auch deren 422 mit `hinweis` (z. B. Doppelbelegung).
+        if (res.status === 422 && data.hinweis && confirm(`${data.error}\n\nTrotzdem anlegen?`)) {
+          await anwenden(v, true)
+          return
+        }
+        setFehler(data.error || 'Vorlage konnte nicht angewendet werden.')
+        return
+      }
+      onAngewendet(data.warnungen ?? [], anwendenDatum)
+    } finally {
+      setLaeuft(false)
+    }
+  }
+
+  return (
+    <DialogOverlay className="" onClose={onClose} style={modalWrap}>
+      <div role="dialog" aria-modal="true" aria-label="Tourvorlagen" style={modalBox} onClick={e => e.stopPropagation()}>
+        <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', marginBottom: 4 }}>Tourvorlagen</h3>
+        <p style={{ fontSize: 12, color: 'var(--ink4)', marginBottom: 12 }}>
+          Wiederkehrende Touren einmal hinterlegen und auf ein Datum anwenden. Die Zeiten
+          werden ab der Startzeit aus Stop-Dauer und geschätzter Fahrzeit aufgebaut; alle
+          Prüfungen der normalen Tour-Anlage laufen dabei mit.
+        </p>
+
+        {fehler && <div style={{ marginBottom: 10 }}><Banner tone="danger">{fehler}</Banner></div>}
+
+        {vorlagen === null && !fehler && <p style={{ color: 'var(--ink4)', fontSize: 13 }}>Laden…</p>}
+        {vorlagen !== null && vorlagen.length === 0 && (
+          <p style={{ color: 'var(--ink4)', fontSize: 13 }}>Noch keine Vorlage hinterlegt.</p>
+        )}
+
+        {(vorlagen ?? []).map(v => {
+          const stops = Array.isArray(v.stops) ? v.stops : []
+          const offen = anwendenId === v.id
+          const wtWarnung = offen ? vorlagenWochentagWarnung(v.weekday, anwendenDatum) : null
+          return (
+            <div key={v.id} style={{
+              ...card, padding: 10, marginBottom: 8,
+              opacity: v.aktiv ? 1 : 0.6,
+              borderColor: v.aktiv ? 'var(--line)' : '#9E9E9E55',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink2)' }}>{v.name}</span>
+                {!v.aktiv && <Pille label="Stillgelegt" color="#9E9E9E" />}
+                {v.weekday != null && <Pille label={wochentagName(v.weekday) ?? `Tag ${v.weekday}`} color="#2196F3" />}
+                <span style={{ flex: 1 }} />
+                <button style={{ ...btn, padding: '4px 10px' }} disabled={laeuft}
+                  onClick={() => setzeAktiv(v, !v.aktiv)}>
+                  {v.aktiv ? 'Stilllegen' : 'Aktivieren'}
+                </button>
+                {v.aktiv && (
+                  <button style={{ ...btnPrimary, padding: '4px 10px' }}
+                    onClick={() => {
+                      setFehler(null)
+                      setAnwendenCaregiver('')
+                      setAnwendenId(offen ? null : v.id)
+                    }}>
+                    {offen ? 'Schließen' : 'Anwenden'}
+                  </button>
+                )}
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--ink4)', marginTop: 4 }}>
+                {person(v.caregivers) !== '–' ? person(v.caregivers) : 'Kein Mitarbeiter hinterlegt'}
+                {' · '}ab {zeit(v.start_zeit)}
+                {' · '}{stops.length} {stops.length === 1 ? 'Stop' : 'Stops'}
+                {' · '}{stops.reduce((s, x) => s + (Number(x.dauer_minuten) || 0), 0)} Min Einsatzzeit
+              </div>
+              {v.notes && <div style={{ fontSize: 12, color: 'var(--ink4)', marginTop: 2 }}>{v.notes}</div>}
+
+              {offen && (
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <input type="date" aria-label="Datum für die Tour" value={anwendenDatum}
+                      onChange={e => setAnwendenDatum(e.target.value)} style={input} />
+                    <select aria-label="Abweichender Mitarbeiter" value={anwendenCaregiver}
+                      onChange={e => setAnwendenCaregiver(e.target.value)} style={{ ...input, minWidth: 200 }}>
+                      <option value="">
+                        {v.caregiver_id ? 'Mitarbeiter der Vorlage' : 'Mitarbeiter wählen… (Pflicht)'}
+                      </option>
+                      {caregivers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                    <button style={btnPrimary} disabled={laeuft} onClick={() => anwenden(v, false)}>
+                      {laeuft ? 'Lege an…' : 'Tour anlegen'}
+                    </button>
+                  </div>
+                  {/* Die Route prueft den Wochentag NICHT — eine Montagsvorlage
+                      laesst sich an jedem Tag anwenden. Das ist zulaessig
+                      (Nachholtermin), aber ohne Hinweis auch unbemerkt. */}
+                  {wtWarnung && (
+                    <div style={{ marginTop: 8 }}><Banner tone="warn">{wtWarnung}</Banner></div>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })}
+
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--line)' }}>
+          {!neuOffen ? (
+            <button style={btn} onClick={() => { setFehler(null); setNeuOffen(true) }}>+ Neue Vorlage</button>
+          ) : (
+            <>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink3)', marginBottom: 8 }}>Neue Vorlage</div>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                <input aria-label="Bezeichnung" placeholder="Bezeichnung" value={nName}
+                  onChange={e => setNName(e.target.value)} style={{ ...input, flex: 1, minWidth: 180 }} />
+                <select aria-label="Mitarbeiter der Vorlage" value={nCaregiver}
+                  onChange={e => setNCaregiver(e.target.value)} style={{ ...input, minWidth: 180 }}>
+                  <option value="">Mitarbeiter (optional)</option>
+                  {caregivers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                <select aria-label="Wochentag" value={nWeekday} onChange={e => setNWeekday(e.target.value)} style={input}>
+                  <option value="">Wochentag (optional)</option>
+                  {[1, 2, 3, 4, 5, 6, 7].map(w => <option key={w} value={w}>{wochentagName(w)}</option>)}
+                </select>
+                <input type="time" aria-label="Startzeit" value={nStart}
+                  onChange={e => setNStart(e.target.value)} style={input} />
+                <input aria-label="Notiz" placeholder="Notiz (optional)" value={nNotes}
+                  onChange={e => setNNotes(e.target.value)} style={{ ...input, flex: 1, minWidth: 160 }} />
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink3)', marginBottom: 6 }}>
+                Stops in Reihenfolge — die Vorlage haelt DAUERN, keine Uhrzeiten; die
+                konkreten Zeiten entstehen beim Anwenden.
+              </div>
+              {nStops.map((s, i) => (
+                <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span style={{ color: 'var(--ink4)', fontSize: 12, width: 16 }}>{i + 1}.</span>
+                  <select aria-label={`Klient für Stop ${i + 1}`} value={s.client_id}
+                    onChange={e => setNStops(st => st.map((x, j) => j === i ? { ...x, client_id: e.target.value } : x))}
+                    style={{ ...input, minWidth: 180 }}>
+                    <option value="">Klient wählen…</option>
+                    {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                  <input type="number" min={1} max={1440} aria-label={`Dauer in Minuten für Stop ${i + 1}`}
+                    value={s.dauer_minuten}
+                    onChange={e => setNStops(st => st.map((x, j) => j === i ? { ...x, dauer_minuten: Number(e.target.value) } : x))}
+                    style={{ ...input, width: 90 }} />
+                  <span style={{ fontSize: 12, color: 'var(--ink4)' }}>Min</span>
+                  <select aria-label={`Leistungsart für Stop ${i + 1}`} value={s.service_type ?? SERVICE_TYPES[0]}
+                    onChange={e => setNStops(st => st.map((x, j) => j === i ? { ...x, service_type: e.target.value } : x))}
+                    style={input}>
+                    {SERVICE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                  {nStops.length > 1 && (
+                    <button style={{ ...btn, padding: '3px 8px', color: '#D04B3B' }}
+                      onClick={() => setNStops(st => st.filter((_, j) => j !== i))}>✕</button>
+                  )}
+                </div>
+              ))}
+              <button style={{ ...btn, marginBottom: 12 }}
+                onClick={() => setNStops(st => [...st, { client_id: '', dauer_minuten: 60, service_type: SERVICE_TYPES[0] }])}>
+                + weiterer Stop
+              </button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button style={btnPrimary} disabled={laeuft} onClick={anlegen}>
+                  {laeuft ? 'Speichere…' : 'Vorlage anlegen'}
+                </button>
+                <button style={btn} onClick={() => setNeuOffen(false)}>Abbrechen</button>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div style={{ marginTop: 14, textAlign: 'right' }}>
+          <button style={btn} onClick={onClose}>Schließen</button>
+        </div>
+      </div>
+    </DialogOverlay>
   )
 }
