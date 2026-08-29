@@ -36,8 +36,24 @@ export const GET = withTracking(async function GET(request: Request) {
     const entityId = searchParams.get('entity_id')
     const from = searchParams.get('from')
     const to = searchParams.get('to')
+    // BEFUND (29.08.2026): `parseInt('viele', 10)` ist NaN, und NaN
+    // ueberlebt Math.max und Math.min unveraendert — die Klammerung sah
+    // nach einer Quotierung aus und reichte in Wahrheit `.limit(NaN)`
+    // durch. Ein unbrauchbarer Wert wird jetzt ABGEWIESEN statt in etwas
+    // Undefiniertes umgedeutet; dieselbe Klasse wie bei
+    // /api/personal/arbeitszeiten/korrekturen.
     const limitParam = searchParams.get('limit')
-    const limit = limitParam ? Math.min(Math.max(parseInt(limitParam, 10), 1), 1000) : 100
+    let limit = 100
+    if (limitParam !== null) {
+      const n = Number(limitParam)
+      if (!Number.isInteger(n) || n < 1 || n > 1000) {
+        return NextResponse.json(
+          { error: 'limit muss eine ganze Zahl zwischen 1 und 1000 sein.' },
+          { status: 400 },
+        )
+      }
+      limit = n
+    }
 
     // Audit-Trail abfragen mit optionalen Filtern
     let query = supabase
