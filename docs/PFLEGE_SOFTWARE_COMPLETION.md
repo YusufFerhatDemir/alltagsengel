@@ -14,6 +14,14 @@
 > Endkunden-Website, ChairMatch, Krankenfahrten, PflegeCoach/DiPA, das
 > MIS-Betriebssystem (`/mis`), efy care.
 
+> **ZWEITE FORTSCHREIBUNG, Abend des 29.08.2026:**
+> `docs/PFLEGE_SOFTWARE_FORTSCHREIBUNG_2026-08-29_ABEND.md` — sechs
+> Implementierungsblöcke. Dort sind **zwei Befunde dieser Matrix überholt**:
+> I-1 („Die Löschautomatik läuft nicht") ist geschlossen,
+> `npm run verify:loeschkette` meldet 10/10; I-7 (ZUGFeRD ohne
+> Konformitätsprüfung) hat jetzt eine — sie fand drei echte Fehler, von
+> denen einer (die fehlende Ausgabebedingung) offen bleibt.
+>
 > **FORTSCHREIBUNG 29.08.2026:** Diese Matrix bleibt in Kraft; was sich seit
 > dem 28.08. bewegt hat, steht in
 > `docs/PFLEGE_SOFTWARE_COMPLETION_FORTSCHREIBUNG_2026-08-29.md`
