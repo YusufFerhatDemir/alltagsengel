@@ -17,6 +17,18 @@ export const SCHULUNGSART_WERTE: Schulungsart[] = ['pflichtschulung', 'fortbildu
 export type DienstplanStatus = 'geplant' | 'bestaetigt' | 'in_bearbeitung' | 'abgeschlossen' | 'ausgefallen' | 'vertretung'
 export const DIENSTPLAN_STATUS_WERTE: DienstplanStatus[] = ['geplant', 'bestaetigt', 'in_bearbeitung', 'abgeschlossen', 'ausgefallen', 'vertretung']
 
+/**
+ * Endzustaende eines geplanten Dienstes: was hier steht, ist gelaufen —
+ * Kernfelder und Status lassen sich danach nicht mehr aendern (nur
+ * Notizen bleiben ergaenzbar, siehe `updateEintrag`).
+ *
+ * Stand bis 29.08.2026 als private Konstante in `lib/personal/dienstplan.ts`
+ * und war damit fuer die Oberflaeche unerreichbar: der Wochenplan konnte
+ * einen abgeschlossenen Dienst zur Bearbeitung anbieten und lief in eine
+ * 409 der Route. Hier steht sie client-sicher.
+ */
+export const DIENSTPLAN_ENDZUSTAENDE: DienstplanStatus[] = ['abgeschlossen', 'ausgefallen']
+
 export type DienstplanTyp = 'regulaer' | 'vertretung' | 'ueberstunden' | 'bereitschaft' | 'notdienst'
 export const DIENSTPLAN_TYP_WERTE: DienstplanTyp[] = ['regulaer', 'vertretung', 'ueberstunden', 'bereitschaft', 'notdienst']
 
