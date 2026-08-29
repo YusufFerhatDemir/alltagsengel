@@ -316,11 +316,109 @@ test('listEintraege: wirft bei DB-Fehler', async () => {
 
 test('listTagesansicht: liefert die Tagesliste', async () => {
   const { builder } = mockQuery({ listResult: { data: [{ id: 't-1' }], error: null } })
-  const result = await listTagesansicht(supabaseWith(builder), 'org-1', '2026-09-01')
+  const result = await listTagesansicht(supabaseWith(builder), 'org-1', { datum: '2026-09-01' })
   assert.equal(result.length, 1)
 })
 
 test('listTagesansicht: wirft bei DB-Fehler', async () => {
   const { builder } = mockQuery({ listResult: { data: null, error: { message: 'db kaputt' } } })
-  await assert.rejects(() => listTagesansicht(supabaseWith(builder), 'org-1', '2026-09-01'), /db kaputt/)
+  await assert.rejects(
+    () => listTagesansicht(supabaseWith(builder), 'org-1', { datum: '2026-09-01' }),
+    /db kaputt/,
+  )
+})
+
+// ── Zeitraum statt einzelner Tag ────────────────────────────────────
+// Die Sicht hatte bis zum 29.08.2026 keinen Aufrufer, weil sie nur einen
+// EINZELNEN Tag lesen konnte und der Wochenplan eine Woche braucht.
+
+test('listTagesansicht: ohne Zeitraum wird gar nicht erst abgefragt', async () => {
+  // Ohne Grenze waere das ein Vollscan ueber einen Dienstplan, der mit jedem
+  // geplanten Dienst waechst und nie kleiner wird. Wichtig ist dabei, dass die
+  // Abfrage NICHT laeuft — eine Pruefung, die den Fehler erst nach dem Lesen
+  // wirft, hat die Last schon verursacht.
+  const { builder, calls } = mockQuery({ listResult: { data: [], error: null } })
+  await assert.rejects(
+    () => listTagesansicht(supabaseWith(builder), 'org-1', {}),
+    /Zeitraum erforderlich/,
+  )
+  assert.equal(calls.length, 0)
+})
+
+test('listTagesansicht: halber Zeitraum zaehlt nicht als Zeitraum', async () => {
+  const { builder } = mockQuery({ listResult: { data: [], error: null } })
+  await assert.rejects(
+    () => listTagesansicht(supabaseWith(builder), 'org-1', { datumVon: '2026-09-01' }),
+    /Zeitraum erforderlich/,
+  )
+  await assert.rejects(
+    () => listTagesansicht(supabaseWith(builder), 'org-1', { datumBis: '2026-09-07' }),
+    /Zeitraum erforderlich/,
+  )
+})
+
+test('listTagesansicht: Zeitraum setzt gte UND lte', async () => {
+  const { builder, calls } = mockQuery({ listResult: { data: [{ id: 't-1' }], error: null } })
+  await listTagesansicht(supabaseWith(builder), 'org-1', { datumVon: '2026-09-01', datumBis: '2026-09-07' })
+  const gte = calls.find(c => c.method === 'gte')
+  const lte = calls.find(c => c.method === 'lte')
+  assert.deepEqual(gte?.args, ['datum', '2026-09-01'])
+  assert.deepEqual(lte?.args, ['datum', '2026-09-07'])
+  // Und KEIN Gleichheitsfilter auf datum — der haette den Zeitraum auf einen
+  // Tag zusammengezogen, und die Woche saehe aus, als waere sie fast leer.
+  assert.equal(calls.filter(c => c.method === 'eq' && (c.args as string[])[0] === 'datum').length, 0)
+})
+
+test('listTagesansicht: einzelner Tag setzt eq und keinen Bereich', async () => {
+  const { builder, calls } = mockQuery({ listResult: { data: [], error: null } })
+  await listTagesansicht(supabaseWith(builder), 'org-1', { datum: '2026-09-01' })
+  assert.ok(calls.some(c => c.method === 'eq' && (c.args as string[])[0] === 'datum'))
+  assert.equal(calls.filter(c => c.method === 'gte' || c.method === 'lte').length, 0)
+})
+
+test('listTagesansicht: verdrehter Zeitraum wird abgewiesen', async () => {
+  // Ohne diesen Riegel liefe gte > lte durch und ergaebe IMMER eine leere
+  // Liste — ein Dienstplan, der aussieht, als waere nichts geplant.
+  const { builder, calls } = mockQuery({ listResult: { data: [], error: null } })
+  await assert.rejects(
+    () => listTagesansicht(supabaseWith(builder), 'org-1', { datumVon: '2026-09-07', datumBis: '2026-09-01' }),
+    /liegt vor/,
+  )
+  assert.equal(calls.length, 0)
+})
+
+test('listTagesansicht: Zeitraumgrenze greift genau bei 62 Tagen', async () => {
+  const { builder } = mockQuery({ listResult: { data: [], error: null } })
+  // 62 Tage einschliesslich beider Grenzen: 01.09. + 61 Tage = 01.11.
+  await listTagesansicht(supabaseWith(builder), 'org-1', { datumVon: '2026-09-01', datumBis: '2026-11-01' })
+  await assert.rejects(
+    () => listTagesansicht(supabaseWith(builder), 'org-1', { datumVon: '2026-09-01', datumBis: '2026-11-02' }),
+    /überschreitet die Grenze/,
+  )
+})
+
+test('listTagesansicht: Zeitraumbreite rechnet ueber die Sommerzeit-Umstellung richtig', async () => {
+  // In Europe/Berlin faellt die Umstellung auf den 25.10.2026. Ueber Ortszeit
+  // gerechnet ergaebe die Spanne dort 61,96 Tage — abgerundet 61 statt 62,
+  // und die Grenze griffe einen Tag zu spaet. Deshalb wird in UTC gerechnet.
+  const { builder } = mockQuery({ listResult: { data: [], error: null } })
+  await assert.rejects(
+    () => listTagesansicht(supabaseWith(builder), 'org-1', { datumVon: '2026-10-01', datumBis: '2026-12-02' }),
+    /überschreitet die Grenze/,
+  )
+})
+
+test('listTagesansicht: caregiverId wird als Filter durchgereicht', async () => {
+  const { builder, calls } = mockQuery({ listResult: { data: [], error: null } })
+  await listTagesansicht(supabaseWith(builder), 'org-1', {
+    datumVon: '2026-09-01', datumBis: '2026-09-07', caregiverId: 'cg-1',
+  })
+  assert.ok(calls.some(c => c.method === 'eq' && (c.args as string[])[0] === 'caregiver_id'))
+})
+
+test('listTagesansicht: Mandanten-Fence sitzt auf jeder Abfrage', async () => {
+  const { builder, calls } = mockQuery({ listResult: { data: [], error: null } })
+  await listTagesansicht(supabaseWith(builder), 'org-1', { datumVon: '2026-09-01', datumBis: '2026-09-07' })
+  const fence = calls.find(c => c.method === 'eq' && (c.args as string[])[0] === 'organization_id')
+  assert.deepEqual(fence?.args, ['organization_id', 'org-1'])
 })
