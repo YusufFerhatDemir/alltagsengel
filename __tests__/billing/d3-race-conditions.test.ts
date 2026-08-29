@@ -93,11 +93,15 @@ vi.mock('@/lib/billing/core/audit', () => ({
   computeContentHash: vi.fn().mockResolvedValue('test-hash'),
 }))
 
-vi.mock('@/lib/billing/core/status-machine', () => ({
+// Nur die Validierungsfunktionen werden ersetzt; alle Konstanten kommen aus
+// dem echten Modul. Eine vollstaendig nachgebaute Attrappe faellt still aus
+// dem Tritt, sobald das Modul einen Export dazubekommt — am 29.08.2026
+// genau so geschehen, als `ABSCHREIBBAR_VON` hinzukam.
+vi.mock('@/lib/billing/core/status-machine', async (importActual) => ({
+  ...(await importActual<typeof import('@/lib/billing/core/status-machine')>()),
   isTerminalStatus: vi.fn((s: string) => ['bezahlt', 'storniert', 'akzeptiert', 'abgeschrieben'].includes(s)),
   isValidInvoiceStatus: vi.fn(() => true),
   validateTransition: vi.fn(),
-  INVOICE_NUMBER_PREFIX: { storno: 'ST', korrektur: 'KR', gutschrift: 'GS' },
 }))
 
 describe('createCreditNote — CAS-Schutz gegen Doppel-Gutschrift', () => {

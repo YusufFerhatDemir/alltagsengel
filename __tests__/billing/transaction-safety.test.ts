@@ -37,10 +37,14 @@ vi.mock('@/lib/billing/core/audit', () => ({
   computeSnapshotChecksum: vi.fn().mockResolvedValue('test-checksum'),
 }))
 
-vi.mock('@/lib/billing/core/status-machine', () => ({
+// Nur die Validierungsfunktionen werden ersetzt; alle Konstanten kommen aus
+// dem echten Modul. Eine vollstaendig nachgebaute Attrappe faellt still aus
+// dem Tritt, sobald das Modul einen Export dazubekommt — am 29.08.2026
+// genau so geschehen, als `ABSCHREIBBAR_VON` hinzukam.
+vi.mock('@/lib/billing/core/status-machine', async (importActual) => ({
+  ...(await importActual<typeof import('@/lib/billing/core/status-machine')>()),
   validateTransition: vi.fn(),
   isValidInvoiceStatus: vi.fn(() => true),
-  INVOICE_NUMBER_PREFIX: { storno: 'ST', korrektur: 'KR', gutschrift: 'GS' },
 }))
 
 // ═══════════════════════════════════════════════════════════════

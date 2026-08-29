@@ -22,6 +22,7 @@ import {
   validateTransition,
   isValidInvoiceStatus,
   INVOICE_NUMBER_PREFIX,
+  ABSCHREIBBAR_VON,
   type InvoiceStatus,
 } from './status-machine';
 import { logBillingAction, computeSnapshotChecksum } from './audit';
@@ -1599,11 +1600,10 @@ export async function createCreditNote(
 // writeOffInvoice (Forderungsabschreibung)
 // ---------------------------------------------------------------------------
 
-const WRITE_OFF_ALLOWED_FROM: ReadonlySet<string> = new Set([
-  'freigegeben', 'uebermittelt', 'quittiert', 'teilweise_bezahlt',
-  'gekuerzt', 'abgelehnt', 'korrektur_erforderlich',
-  'erneut_eingereicht', 'strittig',
-]);
+// Die Liste stand hier bis 29.08.2026 ein zweites Mal woertlich, neben der
+// Uebergangstabelle der Statusmaschine. Sie kommt jetzt aus genau dieser
+// Tabelle — siehe `ABSCHREIBBAR_VON` in `status-machine.ts`.
+const WRITE_OFF_ALLOWED_FROM: ReadonlySet<string> = ABSCHREIBBAR_VON;
 
 export async function writeOffInvoice(
   supabase: SupabaseClient,

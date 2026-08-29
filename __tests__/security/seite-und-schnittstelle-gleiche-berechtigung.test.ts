@@ -54,6 +54,13 @@ const PAARE = [
     seite: '/admin/monatsabschluss',
     route: 'app/api/billing/monthly-closing/route.ts',
   },
+  {
+    // Die Forderungsabschreibung: eine Rechnung endgueltig ausbuchen. Sie
+    // haengt an der Detailseite unter '/admin/rechnungen' und erbt deren
+    // Regel ueber die Praefix-Zuordnung.
+    seite: '/admin/rechnungen',
+    route: 'app/api/billing/invoices/[id]/abschreiben/route.ts',
+  },
 ] as const
 
 /**

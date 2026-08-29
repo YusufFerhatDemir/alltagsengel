@@ -161,6 +161,10 @@ export const INVOICE_STATUS: Record<string, { label: string; color: string }> = 
   storniert: { label: 'Storniert', color: '#9E9E9E' },
   erneut_eingereicht: { label: 'Erneut eingereicht', color: '#03A9F4' },
   strittig: { label: 'Strittig', color: '#FF7043' },
+  // Endstatus wie 'storniert': die Forderung ist ausgebucht, nicht bezahlt.
+  // Bewusst in Grau und nicht in Gruen — ein abgeschriebener Betrag sieht
+  // sonst aus wie ein eingegangener.
+  abgeschrieben: { label: 'Abgeschrieben', color: '#9E9E9E' },
 }
 
 export const CLIENT_STATUS: Record<string, { label: string; color: string }> = {

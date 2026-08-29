@@ -32,6 +32,10 @@ const FILTERS: { key: string; label: string; matches: string[] }[] = [
   { key: 'bezahlt', label: 'Bezahlt', matches: ['paid', 'bezahlt', 'akzeptiert'] },
   { key: 'offen', label: 'Offen', matches: ['teilweise_bezahlt', 'partial', 'gekuerzt', 'strittig'] },
   { key: 'problem', label: 'Probleme', matches: ['abgelehnt', 'korrektur_erforderlich', 'storniert'] },
+  // Ohne eigenen Eintrag waere eine abgeschriebene Rechnung nur unter
+  // "Alle" auffindbar: sie ist weder offen noch bezahlt, und in die
+  // Problemgruppe gehoert sie nicht — die Entscheidung ist ja gefallen.
+  { key: 'abgeschrieben', label: 'Abgeschrieben', matches: ['abgeschrieben'] },
 ]
 
 const OPEN_STATUSES = new Set([
