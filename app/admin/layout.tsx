@@ -165,6 +165,7 @@ const navGroups = [
       { href: '/admin/schedule', label: 'Einsatzplanung', icon: <IconHome size={18} /> },
       { href: '/admin/tourenplanung', label: 'Tourenplanung', icon: <IconTarget size={18} /> },
       { href: '/admin/dienstplan', label: 'Dienstplan', icon: <IconCalendar size={18} /> },
+      { href: '/admin/dienstplanfreigabe', label: 'Dienstplan-Freigabe', icon: <IconClipboard size={18} /> },
       { href: '/admin/uebergaben', label: 'Dienstübergabe', icon: <IconClipboard size={18} /> },
       { href: '/admin/kalender', label: 'Kalender', icon: <IconClipboard size={18} /> },
       { href: '/admin/arbeitszeiten', label: 'Arbeitszeiten', icon: <IconClock size={18} /> },
