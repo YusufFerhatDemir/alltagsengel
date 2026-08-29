@@ -7,7 +7,9 @@ const STAMMDATEN_SELECT = `id, first_name, last_name, email, phone,
   vertragsstatus, einsatzgebiet_plz, einsatzgebiet_radius_km,
   wochenstunden_soll, urlaubstage_jahresanspruch, probezeitende,
   fahrzeug_kennzeichen, fuehrerschein_klassen, einsatzfreigabe, qualification_level,
-  has_vehicle, has_drivers_license`
+  has_vehicle, has_drivers_license,
+  fuehrungszeugnis_datum, fuehrungszeugnis_gueltig_bis,
+  erste_hilfe_datum, erste_hilfe_gueltig_bis`
 
 export interface ListStammdatenFilter {
   organizationId: string

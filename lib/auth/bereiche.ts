@@ -62,6 +62,25 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   '/admin/caregivers':                { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
   '/admin/mitarbeiterakte':           { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
   '/admin/qualifikationen':           { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
+  // BEFUND 29.08.2026 — eine Namenskollision hat hier die falsche
+  // Berechtigung erzeugt: '/admin/nachweise' stand im Block der
+  // LEISTUNGSnachweise (records, leistungsnachweis*, alle `einsatz.lesen`).
+  // Die Seite zeigt aber QUALIFIKATIONSnachweise der Mitarbeitenden —
+  // Fuehrungszeugnis, Erste-Hilfe-Nachweis, Zertifikate je Pflegekraft —
+  // und steht in der Navigation unter „Personal & Qualifikation".
+  //
+  // `buchhaltung` hat `einsatz.lesen` und ausdruecklich NICHT
+  // `personal.lesen`; lib/auth/rollen.ts haelt woertlich fest, dass sie
+  // „KEINE Gesundheitsdaten und keine Personalakten" bekommt. Ueber diese
+  // Seite waeren sie ihr offen gestanden.
+  //
+  // DASS ES BISHER NICHT AUFFIEL, hat einen zweiten Grund, der die Sache
+  // nicht besser macht: die Seite las `caregiver_qualifications` mit dem
+  // BROWSER-Client, und dort steht live nur `is_admin()` — buchhaltung sah
+  // deshalb eine leere Liste. Ein falscher Riegel, verdeckt von einem
+  // unbeteiligten Mechanismus: wer die Blindheit repariert (rk_-Policy),
+  // oeffnet damit die Luecke. Deshalb steht die Berechtigung ZUERST richtig.
+  '/admin/nachweise':                 { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
   '/admin/dienstplan':                { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
   // Bewusst `einsatz.*` und NICHT `personal.*` wie der Dienstplan daneben:
   // die Seite ruft ausschliesslich /api/personal/dienstplan/freigabe auf, und
@@ -91,7 +110,6 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   '/admin/ausfallmanagement':         { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
   '/admin/pdl-cockpit':               { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
   '/admin/records':                   { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
-  '/admin/nachweise':                 { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
   '/admin/leistungsnachweis':         { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
   '/admin/leistungsnachweis-digital': { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
   '/admin/leistungsnachweis-upload':  { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },

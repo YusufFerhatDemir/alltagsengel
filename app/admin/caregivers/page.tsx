@@ -59,10 +59,16 @@ export default function AdminCaregiversPage() {
     async function load() {
       try {
         const supabase = createClient()
-        const [cgRes, qualRes] = await Promise.all([
+        const [cgRes, qualAntwort] = await Promise.all([
           supabase.from('caregivers').select('*').order('last_name'),
-          supabase.from('caregiver_qualifications').select('*'),
+        // Nicht ueber den Browser-Client: auf `caregiver_qualifications`
+        // steht live nur `is_admin()`, die Pflegedienstleitung saehe hier
+        // sonst eine leere Liste ohne jede Meldung. Die Route faehrt
+        // hinter `requirePersonalAdmin('personal.lesen')`.
+        // Gefunden mit `npm run lint:rls-sicht`.
+          fetch('/api/personal/qualifikationen'),
         ])
+        const qualRes = { data: qualAntwort.ok ? await qualAntwort.json() : [] }
         const qualsByCg = new Map<string, Qualification[]>()
         ;(qualRes.data || []).forEach((q: any) => {
           const { ampel, daysLeft } = qualAmpel(q.valid_until)
