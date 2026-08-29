@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { formatDate } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { klickbar } from '@/lib/a11y'
+import { FRISTEN_QUELLEN } from '@/lib/automation/fristen-sammler'
 
 // ═══════════════════════════════════════════════════════════════
 // Fristen-Dashboard — Zentrale Fristenübersicht für PDL/Admin
@@ -35,7 +36,11 @@ const DRINGLICHKEIT_META: Record<string, { label: string; color: string; dotColo
   ok: { label: 'OK', color: '#5CB882', dotColor: '#5CB882' },
 }
 
-const QUELLE_OPTIONS = ['Alle', 'Qualifikationen', 'Verordnungen', 'Schulungen', 'Dokumente', 'Abrechnung', 'Personal', 'Dienstplan', 'Fixierungsprotokoll']
+// Nicht abschreiben, sondern beziehen: die frühere Kopie hätte
+// „Zeiterfassung" (ArbZG auf der erfassten Zeit, Migration 20260829184500)
+// nicht gekannt — die Frist stünde in der Tabelle, ließe sich aber nicht
+// herausfiltern, und niemandem fiele auf, warum.
+const QUELLE_OPTIONS = ['Alle', ...FRISTEN_QUELLEN]
 const DRINGLICHKEIT_OPTIONS = ['alle', 'ueberfaellig', 'kritisch', 'warnung', 'ok']
 
 const selectStyle: React.CSSProperties = {
