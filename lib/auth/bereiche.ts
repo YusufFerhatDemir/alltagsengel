@@ -63,6 +63,13 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   '/admin/mitarbeiterakte':           { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
   '/admin/qualifikationen':           { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
   '/admin/dienstplan':                { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
+  // Bewusst `einsatz.*` und NICHT `personal.*` wie der Dienstplan daneben:
+  // die Seite ruft ausschliesslich /api/personal/dienstplan/freigabe auf, und
+  // die Route verlangt einsatz.lesen bzw. einsatz.schreiben. Stuende hier
+  // personal.*, oeffnete sich die Seite fuer jemanden, dem die Schnittstelle
+  // dahinter alles verweigert — dieselbe Falle wie bei /admin/bonuses, wo
+  // Seite, Schnittstelle und Datenbank drei verschiedene Antworten gaben.
+  '/admin/dienstplanfreigabe':        { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
   '/admin/arbeitszeiten':             { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
   '/admin/applications':              { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
   // Boni sind Verguetung, nicht Personalstammdaten: die Seite oeffnete sich
