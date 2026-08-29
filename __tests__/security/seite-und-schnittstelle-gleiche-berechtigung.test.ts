@@ -79,6 +79,12 @@ const PAARE = [
     seite: '/admin/personal',
     route: 'app/api/personal/schulungen/[id]/route.ts',
   },
+  {
+    // Kontaktpersonen der Kundenakte — Betreuer, Bevollmaechtigte,
+    // Notfallkontakte. Reine Schreibroute (PATCH, DELETE).
+    seite: '/admin/kundenakte',
+    route: 'app/api/akten/kontaktpersonen/[id]/route.ts',
+  },
 ] as const
 
 /**

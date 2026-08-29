@@ -4,6 +4,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { logAktenZugriff } from './zugriff-log'
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { AktenKontaktperson, KontaktRolle, VollmachtTyp } from './types'
 
 export interface CreateKontaktpersonParams {
@@ -109,6 +110,13 @@ export async function updateKontaktperson(
   if (patch.istHauptkontakt !== undefined) update.ist_hauptkontakt = patch.istHauptkontakt
   if (patch.bemerkung !== undefined) update.bemerkung = patch.bemerkung
 
+  // Ein Patch ohne bekanntes Feld ist keine Aenderung, sondern eine
+  // verworfene Eingabe. Ihn durchzulassen erzeugte ein leeres UPDATE, eine
+  // Erfolgsantwort und einen Protokolleintrag „bearbeitet" ueber nichts.
+  if (Object.keys(update).length === 0) {
+    throw new UserFacingError('Keine Änderungen übergeben.', 400)
+  }
+
   const { data, error } = await supabase
     .from('akten_kontaktpersonen')
     .update(update)
@@ -127,12 +135,26 @@ export async function updateKontaktperson(
 }
 
 export async function softDeleteKontaktperson(supabase: SupabaseClient, id: string, organizationId: string, actorId: string, actorRole?: string): Promise<void> {
-  const { error } = await supabase
+  // BEFUND 29.08.2026: Ein UPDATE, das keine Zeile trifft, ist in PostgREST
+  // KEIN Fehler. Bei unbekannter Kennung oder einer Zeile eines fremden
+  // Mandanten lief das Loeschen damit durch, die Route antwortete
+  // `{ success: true }` — und schrieb einen Zugriffsprotokoll-Eintrag
+  // „geloescht" ueber eine Kontaktperson, die es weiter gibt. Ein
+  // Protokoll, das eine nicht erfolgte Loeschung festhaelt, ist schlimmer
+  // als gar keines: es wird spaeter gelesen und geglaubt.
+  //
+  // `.select('id')` macht aus dem UPDATE eine Auskunft darueber, ob es
+  // getroffen hat — ohne zweite Abfrage, und ohne die Wettlaufluecke, die
+  // ein vorgeschaltetes Nachschlagen haette.
+  const { data, error } = await supabase
     .from('akten_kontaktpersonen')
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', id)
     .eq('organization_id', organizationId)
+    .select('id')
+    .maybeSingle()
   if (error) throw new Error(`Kontaktperson konnte nicht gelöscht werden: ${error.message}`)
+  if (!data) throw new UserFacingError('Kontaktperson nicht gefunden.', 404)
 
   await logAktenZugriff(supabase, {
     organizationId, entitaetTyp: 'kontaktperson', entitaetId: id, aktion: 'geloescht',

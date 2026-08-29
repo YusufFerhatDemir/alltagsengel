@@ -12,7 +12,7 @@ import {
 } from '@/lib/admin/ops'
 import { StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
 import AktenUpload from '@/components/admin/AktenUpload'
-import type { AktenDokument, AktenKontaktperson, AktenVertrag, AktenZugriffLogEntry } from '@/lib/akten/types'
+import type { AktenDokument, AktenKontaktperson, AktenVertrag, AktenZugriffLogEntry, VollmachtTyp } from '@/lib/akten/types'
 
 type Tab = 'stammdaten' | 'dokumente' | 'vertraege' | 'verordnungen' | 'kontaktpersonen' | 'korrespondenz' | 'audit'
 
@@ -41,6 +41,83 @@ export default function KundenaktePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showUpload, setShowUpload] = useState(false)
+
+  // ── Kontaktpersonen ───────────────────────────────────────────────
+  // BEFUND (29.08.2026): Der Reiter zeigte die Liste und sonst nichts.
+  // POST /api/akten/kontaktpersonen und PATCH/DELETE auf
+  // /api/akten/kontaktpersonen/[id] sind vollstaendig und wurden von
+  // KEINER Stelle aufgerufen — eine Kontaktperson liess sich also weder
+  // anlegen noch aendern noch entfernen. Fuer eine Liste, in der
+  // Betreuer, Bevollmaechtigte und Notfallkontakte stehen, heisst das:
+  // sie war in dem Zustand eingefroren, in dem sie einmal aus einer
+  // anderen Quelle hineingekommen ist, und eine falsche Telefonnummer
+  // eines Notfallkontakts ist kein Schoenheitsfehler.
+  const LEERE_KONTAKTPERSON = {
+    id: '', rolle: 'angehoeriger', vorname: '', nachname: '',
+    telefon: '', mobil: '', email: '', beziehung: '',
+    vollmachtTyp: '', istHauptkontakt: false, bemerkung: '',
+  }
+  const [kontaktForm, setKontaktForm] = useState<typeof LEERE_KONTAKTPERSON | null>(null)
+  const [kontaktFehler, setKontaktFehler] = useState<string | null>(null)
+  const [kontaktBusy, setKontaktBusy] = useState(false)
+
+  async function kontaktSpeichern() {
+    if (!kontaktForm) return
+    if (!kontaktForm.vorname.trim() || !kontaktForm.nachname.trim()) {
+      setKontaktFehler('Vor- und Nachname sind Pflichtfelder.')
+      return
+    }
+    setKontaktBusy(true); setKontaktFehler(null)
+    try {
+      // Leere Textfelder gehen als null und nicht als leerer String: die
+      // Spalten sind nullable, und „" saehe in der Liste aus wie eine
+      // erfasste, aber leere Angabe.
+      const leerAlsNull = (w: string) => (w.trim() ? w.trim() : null)
+      const rumpf = {
+        rolle: kontaktForm.rolle,
+        vorname: kontaktForm.vorname.trim(),
+        nachname: kontaktForm.nachname.trim(),
+        telefon: leerAlsNull(kontaktForm.telefon),
+        mobil: leerAlsNull(kontaktForm.mobil),
+        email: leerAlsNull(kontaktForm.email),
+        beziehung: leerAlsNull(kontaktForm.beziehung),
+        vollmachtTyp: (leerAlsNull(kontaktForm.vollmachtTyp) as VollmachtTyp | null),
+        istHauptkontakt: kontaktForm.istHauptkontakt,
+        bemerkung: leerAlsNull(kontaktForm.bemerkung),
+      }
+      const neu = !kontaktForm.id
+      const res = await fetch(
+        neu ? '/api/akten/kontaktpersonen' : `/api/akten/kontaktpersonen/${kontaktForm.id}`,
+        {
+          method: neu ? 'POST' : 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(neu ? { ...rumpf, clientId } : rumpf),
+        },
+      )
+      const body = await res.json().catch(() => null)
+      if (!res.ok) { setKontaktFehler(body?.error || 'Speichern fehlgeschlagen.'); return }
+      setKontaktForm(null)
+      await loadAll()
+    } catch {
+      setKontaktFehler('Speichern fehlgeschlagen.')
+    } finally { setKontaktBusy(false) }
+  }
+
+  async function kontaktEntfernen(k: AktenKontaktperson) {
+    // Die Route setzt einen Soft-Delete — die Zeile bleibt fuer die
+    // Historie erhalten. Die Rueckfrage nennt trotzdem den Namen: „wirklich
+    // loeschen?" allein sagt nicht, WER gleich aus der Akte verschwindet.
+    if (!window.confirm(`„${k.vorname} ${k.nachname}" aus der Kundenakte entfernen?`)) return
+    setKontaktBusy(true); setKontaktFehler(null)
+    try {
+      const res = await fetch(`/api/akten/kontaktpersonen/${k.id}`, { method: 'DELETE' })
+      const body = await res.json().catch(() => null)
+      if (!res.ok) { setKontaktFehler(body?.error || 'Entfernen fehlgeschlagen.'); return }
+      await loadAll()
+    } catch {
+      setKontaktFehler('Entfernen fehlgeschlagen.')
+    } finally { setKontaktBusy(false) }
+  }
 
   async function loadAll() {
     setLoading(true)
@@ -206,24 +283,124 @@ export default function KundenaktePage() {
       )}
 
       {tab === 'kontaktpersonen' && (
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead><tr><th>Name</th><th>Rolle</th><th>Telefon</th><th>E-Mail</th><th>Vollmacht</th><th>Hauptkontakt</th></tr></thead>
-            <tbody>
-              {kontaktpersonen.length === 0
-                ? <EmptyRow colSpan={6}>Keine Kontaktpersonen erfasst</EmptyRow>
-                : kontaktpersonen.map(k => (
-                  <tr key={k.id}>
-                    <td style={{ fontWeight: 600 }}>{k.vorname} {k.nachname}</td>
-                    <td><StatusBadge label={statusMeta(KONTAKT_ROLLE, k.rolle).label} color={statusMeta(KONTAKT_ROLLE, k.rolle).color} /></td>
-                    <td style={{ fontSize: 13 }}>{k.telefon || k.mobil || '—'}</td>
-                    <td style={{ fontSize: 13 }}>{k.email || '—'}</td>
-                    <td style={{ fontSize: 13 }}>{k.vollmacht_typ || '—'}</td>
-                    <td>{k.ist_hauptkontakt ? '✓' : '—'}</td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+            <button
+              onClick={() => { setKontaktFehler(null); setKontaktForm({ ...LEERE_KONTAKTPERSON }) }}
+              style={kontaktPrimaerBtn}
+            >
+              + Kontaktperson
+            </button>
+          </div>
+
+          {kontaktFehler && <div style={{ marginBottom: 12 }}><Banner tone="danger">{kontaktFehler}</Banner></div>}
+
+          {kontaktForm && (
+            <div style={{
+              background: 'var(--coal2)', border: '1px solid var(--gold)',
+              borderRadius: 12, padding: 16, marginBottom: 16,
+            }}>
+              <h3 style={{ fontSize: 15, margin: '0 0 12px' }}>
+                {kontaktForm.id ? 'Kontaktperson ändern' : 'Neue Kontaktperson'}
+              </h3>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'end' }}>
+                <label style={{ fontSize: 13 }}>
+                  Rolle<br />
+                  <select value={kontaktForm.rolle} onChange={e => setKontaktForm({ ...kontaktForm, rolle: e.target.value })} style={kontaktFeld}>
+                    {Object.entries(KONTAKT_ROLLE).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                  </select>
+                </label>
+                <label style={{ fontSize: 13 }}>
+                  Vorname<br />
+                  <input type="text" value={kontaktForm.vorname} onChange={e => setKontaktForm({ ...kontaktForm, vorname: e.target.value })} style={kontaktFeld} />
+                </label>
+                <label style={{ fontSize: 13 }}>
+                  Nachname<br />
+                  <input type="text" value={kontaktForm.nachname} onChange={e => setKontaktForm({ ...kontaktForm, nachname: e.target.value })} style={kontaktFeld} />
+                </label>
+                <label style={{ fontSize: 13 }}>
+                  Telefon<br />
+                  <input type="tel" value={kontaktForm.telefon} onChange={e => setKontaktForm({ ...kontaktForm, telefon: e.target.value })} style={kontaktFeld} />
+                </label>
+                <label style={{ fontSize: 13 }}>
+                  Mobil<br />
+                  <input type="tel" value={kontaktForm.mobil} onChange={e => setKontaktForm({ ...kontaktForm, mobil: e.target.value })} style={kontaktFeld} />
+                </label>
+                <label style={{ fontSize: 13 }}>
+                  E-Mail<br />
+                  <input type="email" value={kontaktForm.email} onChange={e => setKontaktForm({ ...kontaktForm, email: e.target.value })} style={kontaktFeld} />
+                </label>
+                <label style={{ fontSize: 13 }}>
+                  Beziehung<br />
+                  <input type="text" value={kontaktForm.beziehung} onChange={e => setKontaktForm({ ...kontaktForm, beziehung: e.target.value })} placeholder="z. B. Tochter" style={kontaktFeld} />
+                </label>
+                <label style={{ fontSize: 13 }}>
+                  Vollmacht<br />
+                  {/* Die zulaessigen Werte stehen im CHECK der Spalte
+                      (lib/akten/types.ts: VollmachtTyp). Als Freitextfeld
+                      koennte hier per Definition nichts Gueltiges
+                      entstehen — dieselbe Falle wie frueher beim
+                      Qualifikationstyp der Personalakte. */}
+                  <select value={kontaktForm.vollmachtTyp} onChange={e => setKontaktForm({ ...kontaktForm, vollmachtTyp: e.target.value })} style={kontaktFeld}>
+                    <option value="">— keine —</option>
+                    <option value="vorsorgevollmacht">Vorsorgevollmacht</option>
+                    <option value="betreuungsvollmacht">Betreuungsvollmacht</option>
+                    <option value="patientenverfuegung">Patientenverfügung</option>
+                    <option value="generalvollmacht">Generalvollmacht</option>
+                    <option value="bankvollmacht">Bankvollmacht</option>
+                    <option value="sonstige">Sonstige</option>
+                  </select>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, paddingBottom: 8 }}>
+                  <input type="checkbox" checked={kontaktForm.istHauptkontakt}
+                    onChange={e => setKontaktForm({ ...kontaktForm, istHauptkontakt: e.target.checked })}
+                    style={{ accentColor: '#C9963C' }} />
+                  Hauptkontakt
+                </label>
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+                <button style={kontaktPrimaerBtn} onClick={kontaktSpeichern} disabled={kontaktBusy}>
+                  {kontaktBusy ? 'Speichern…' : 'Speichern'}
+                </button>
+                <button style={kontaktSekundaerBtn} onClick={() => { setKontaktFehler(null); setKontaktForm(null) }}>
+                  Abbrechen
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead><tr><th>Name</th><th>Rolle</th><th>Telefon</th><th>E-Mail</th><th>Vollmacht</th><th>Hauptkontakt</th><th style={{ textAlign: 'right' }}>Aktion</th></tr></thead>
+              <tbody>
+                {kontaktpersonen.length === 0
+                  ? <EmptyRow colSpan={7}>Keine Kontaktpersonen erfasst</EmptyRow>
+                  : kontaktpersonen.map(k => (
+                    <tr key={k.id}>
+                      <td style={{ fontWeight: 600 }}>{k.vorname} {k.nachname}</td>
+                      <td><StatusBadge label={statusMeta(KONTAKT_ROLLE, k.rolle).label} color={statusMeta(KONTAKT_ROLLE, k.rolle).color} /></td>
+                      <td style={{ fontSize: 13 }}>{k.telefon || k.mobil || '—'}</td>
+                      <td style={{ fontSize: 13 }}>{k.email || '—'}</td>
+                      <td style={{ fontSize: 13 }}>{k.vollmacht_typ || '—'}</td>
+                      <td>{k.ist_hauptkontakt ? '✓' : '—'}</td>
+                      <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        <button style={kontaktZeilenBtn} disabled={kontaktBusy} onClick={() => {
+                          setKontaktFehler(null)
+                          setKontaktForm({
+                            id: k.id, rolle: k.rolle, vorname: k.vorname, nachname: k.nachname,
+                            telefon: k.telefon ?? '', mobil: k.mobil ?? '', email: k.email ?? '',
+                            beziehung: k.beziehung ?? '', vollmachtTyp: k.vollmacht_typ ?? '',
+                            istHauptkontakt: !!k.ist_hauptkontakt, bemerkung: k.bemerkung ?? '',
+                          })
+                        }}>Bearbeiten</button>
+                        <button style={{ ...kontaktZeilenBtn, color: '#D04B3B' }} disabled={kontaktBusy}
+                          onClick={() => kontaktEntfernen(k)}>Entfernen</button>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -293,4 +470,29 @@ const miniBtn: React.CSSProperties = {
   background: 'transparent', border: '1px solid var(--border)',
   borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontFamily: 'inherit',
   marginRight: 6,
+}
+
+const kontaktFeld: React.CSSProperties = {
+  padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)',
+  background: 'var(--coal3)', color: 'var(--ink)', fontSize: 14,
+  fontFamily: "'Jost',sans-serif", marginTop: 4,
+}
+
+const kontaktPrimaerBtn: React.CSSProperties = {
+  fontSize: 14, color: 'var(--coal)', fontWeight: 600,
+  background: 'linear-gradient(135deg,var(--gold2),var(--gold))', border: 'none',
+  borderRadius: 8, padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit',
+}
+
+const kontaktSekundaerBtn: React.CSSProperties = {
+  fontSize: 13, color: 'var(--ink3)', fontWeight: 500,
+  background: 'var(--coal2)', border: '1px solid var(--border)',
+  borderRadius: 8, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit',
+}
+
+/** Knopf in einer Tabellenzeile — flach, damit die Zeile lesbar bleibt. */
+const kontaktZeilenBtn: React.CSSProperties = {
+  fontSize: 12, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer',
+  padding: '4px 8px', marginLeft: 6, borderRadius: 6, border: 'none',
+  background: 'transparent', color: 'var(--gold2)',
 }

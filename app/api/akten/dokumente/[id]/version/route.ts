@@ -1,7 +1,7 @@
 import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requireAktenAdmin } from '@/lib/akten/api-auth'
+import { personaldokumentAbgewehrt, requireAktenAdmin } from '@/lib/akten/api-auth'
 import { addDokumentVersion, getDokument, uploadDokumentDatei } from '@/lib/akten/dokumente'
 import { withTracking } from '@/lib/monitoring/tracker'
 
@@ -13,6 +13,10 @@ export const POST = withTracking(async function POST(request: Request, { params 
     const { organizationId, userId, role } = auth.ctx
 
     const admin = createAdminClient()
+
+    const abwehr = await personaldokumentAbgewehrt(admin, id, auth.ctx)
+    if (abwehr) return abwehr
+
     const existing = await getDokument(admin, id, organizationId)
     if (!existing) return NextResponse.json({ error: 'Dokument nicht gefunden.' }, { status: 404 })
 
