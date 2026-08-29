@@ -92,8 +92,7 @@
   {
     "tabelle": "bookings",
     "spalte": "angel_id",
-    "entscheidung": "aufbewahren",
-    "blockiert": true
+    "entscheidung": "aufbewahren"
   },
   {
     "tabelle": "krankenfahrten",

@@ -172,8 +172,8 @@ export const LOESCHKATALOG: readonly LoeschEintrag[] = [
     begruendung: '§ 147 AO: abrechnungsrelevanter Beleg. Die Migration 20260804400000 hat das bereits entschieden (SET NULL, „Buchungsdaten — erhalten bleiben"); die Edge Function löschte sie trotzdem.',
   },
   {
-    tabelle: 'bookings', spalte: 'angel_id', entscheidung: 'aufbewahren', blockiert: true,
-    begruendung: '§ 147 AO wie customer_id — dieselbe Buchung, andere Seite. Die Migration 20260804400000 hat nur customer_id auf SET NULL gezogen; angel_id blieb live auf NO ACTION und blockiert damit jede Löschung eines Engel-Kontos. Migration 20261016000000 liegt bereit, ist aber NICHT angewendet.',
+    tabelle: 'bookings', spalte: 'angel_id', entscheidung: 'aufbewahren',
+    begruendung: '§ 147 AO wie customer_id — dieselbe Buchung, andere Seite. Die Migration 20260804400000 zog nur customer_id auf SET NULL; angel_id blieb auf NO ACTION und blockierte damit jede Löschung eines Engel-Kontos. Migration 20261016000000 hat das behoben und ist ANGEWENDET: live steht bookings_angel_id_fkey auf ON DELETE SET NULL (am 29.08.2026 aus pg_constraint gelesen), die Spalte ist nullable. Die Marke `blockiert` ist damit weggefallen — sie stand danach noch im Katalog und ließ Prüfung F auflaufen.',
   },
   {
     tabelle: 'krankenfahrten', spalte: 'customer_id', entscheidung: 'aufbewahren',

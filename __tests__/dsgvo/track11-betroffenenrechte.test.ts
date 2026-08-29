@@ -221,6 +221,77 @@ describe('Track 11 — der Takt: Cron-Route statt NULL-URL', () => {
     const fn = lies('supabase/functions/account-hard-delete/index.ts')
     expect(fn.indexOf('HARD_DELETE_EDGE_AKTIV')).toBeLessThan(fn.indexOf(".from('notifications')"))
   })
+
+  it('JEDER Lauf hinterlässt einen Beleg — auch der ohne Kandidaten', () => {
+    // Ohne diese Zeile ist ein stiller Ausfall des Taktes von aussen nicht
+    // vom erfolgreichen Lauf zu unterscheiden: die Kontozeilen entstehen
+    // nur, wenn es Kandidaten gibt. Genau so blieb der tote pg_cron-Job
+    // mit seiner NULL-URL unbemerkt.
+    const route = ohneKommentare(lies('app/api/cron/konto-loeschung/route.ts'))
+    expect(route).toContain("entity_type: 'cron_lauf'")
+    expect(route).toContain("status: 'lauf'")
+    // Der Beleg steht NACH dem Lauf — sonst belegt er einen Lauf, der
+    // vielleicht gar nicht bis zum Ende kam.
+    expect(route.indexOf('fuehreKontoLoeschungAus(umgebung'))
+      .toBeLessThan(route.indexOf("entity_type: 'cron_lauf'"))
+    // Und er verwendet den einzigen action-Wert, den der CHECK auf
+    // mis_audit_log.action zulaesst (Pruefung G).
+    expect(route).toContain("action: 'user_hard_delete_cron'")
+  })
+
+  it('ein fehlgeschlagener Beleg bricht den Lauf NICHT ab', () => {
+    // Geloescht ist geloescht: ein fehlender Beleg ist der harmlosere
+    // Ausgang als eine abgebrochene Loeschung.
+    const route = ohneKommentare(lies('app/api/cron/konto-loeschung/route.ts'))
+    expect(route).toContain('if (belegFehler) {')
+    expect(route).not.toMatch(/if \(belegFehler\) \{[\s\S]{0,120}return NextResponse/)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════
+describe('Track 11 — der tote pg_cron-Takt wird abgeräumt', () => {
+  const MIGRATION = 'supabase/migrations/20260829081149_loeschkette_toter_pg_cron_takt.sql'
+
+  it('die Migration entfernt den Job, statt die fehlende GUC zu setzen', () => {
+    const sql = lies(MIGRATION)
+    expect(sql).toContain("cron.unschedule('account-hard-delete-daily')")
+    // GEGENPROBE: die GUC zu setzen waere die schlechteste Variante —
+    // die Pruefung wuerde gruen, der Takt bliebe tot (der Job braucht
+    // zusaetzlich ein Geheimnis, schickt es als falschen Vergleichswert,
+    // und die Ziel-Function ist stillgelegt).
+    expect(sql).not.toMatch(/ALTER\s+DATABASE[\s\S]{0,200}app\.settings/i)
+  })
+
+  it('die Diagnosefunktion gibt niemals den Befehlstext eines Jobs zurück', () => {
+    // Im Befehl eines pg_cron-Jobs koennen Geheimnisse stehen. Zurueck
+    // gehen nur Jobname und ein Ja/Nein.
+    const sql = lies(MIGRATION)
+    expect(sql).toContain('RETURNS TABLE (jobname text, haengt_an_guc boolean, guc_gesetzt boolean)')
+    // Jede Erwaehnung des Befehlstextes ist ein Vergleich, keine Ausgabe:
+    // gleich viele Treffer fuer `j.command` wie fuer `j.command ILIKE`.
+    const erwaehnungen = sql.split('j.command').length - 1
+    const vergleiche = sql.split('j.command ILIKE').length - 1
+    expect(erwaehnungen).toBeGreaterThan(0)
+    expect(vergleiche).toBe(erwaehnungen)
+  })
+
+  it('die Diagnosefunktion ist SECDEF mit festem search_path und für anon gesperrt', () => {
+    // Jede public-Funktion ist per Default fuer anon ausfuehrbar; ohne
+    // REVOKE waere sie eine neue SECDEF-Tuer (Pruefung N2 des Perimeters).
+    const sql = lies(MIGRATION)
+    expect(sql).toContain('SECURITY DEFINER')
+    expect(sql).toMatch(/SET search_path = pg_catalog, public, pg_temp/)
+    expect(sql).toContain('REVOKE ALL ON FUNCTION public.loeschkette_takt_diagnose() FROM PUBLIC')
+    expect(sql).toContain('REVOKE ALL ON FUNCTION public.loeschkette_takt_diagnose() FROM anon')
+    expect(sql).toContain('REVOKE ALL ON FUNCTION public.loeschkette_takt_diagnose() FROM authenticated')
+    expect(sql).toContain('GRANT EXECUTE ON FUNCTION public.loeschkette_takt_diagnose() TO service_role')
+  })
+
+  it('es gibt eine Rücknahme zu dieser Migration', () => {
+    const rollback = lies('supabase/migrations/20260829081150_rollback_loeschkette_toter_pg_cron_takt.sql')
+    expect(rollback).toContain('DROP FUNCTION IF EXISTS public.loeschkette_takt_diagnose()')
+    expect(rollback).toContain("cron.schedule(")
+  })
 })
 
 // ════════════════════════════════════════════════════════════════════
