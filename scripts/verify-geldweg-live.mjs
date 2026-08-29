@@ -195,7 +195,9 @@ BEGIN
     END IF;
 
     -- ── Station 4: die Position traegt den Tarif, nicht die App-Zahl ───
-    SELECT count(*), sum(amount), min(tariff_id), min(price_source), min(abweichung_cent)
+    -- min(uuid) gibt es in Postgres nicht; die Probe darunter verlangt ohnehin
+    -- genau eine Position, deshalb ist das erste Element gleichbedeutend.
+    SELECT count(*), sum(amount), (array_agg(tariff_id))[1], min(price_source), min(abweichung_cent)
       INTO v_pos_anzahl, v_pos_betrag, v_pos_tarif, v_pos_quelle, v_pos_abw
       FROM public.invoice_items WHERE invoice_id = v_invoice;
 
