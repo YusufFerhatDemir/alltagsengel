@@ -88,6 +88,9 @@ export interface ListVertraegeFilter {
   status?: VertragsStatus
   vertragstyp?: VertragsTyp
   auslaufendBis?: string
+  /** Siehe `ListDokumenteFilter.ohnePersonaldokumente` — Arbeitsvertraege
+   *  sind Personalakte und gehen `stammdaten.lesen` allein nichts an. */
+  ohnePersonaldokumente?: boolean
 }
 
 export async function listVertraege(supabase: SupabaseClient, filter: ListVertraegeFilter): Promise<AktenVertrag[]> {
@@ -98,6 +101,7 @@ export async function listVertraege(supabase: SupabaseClient, filter: ListVertra
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
+  if (filter.ohnePersonaldokumente) query = query.is('caregiver_id', null)
   if (filter.clientId) query = query.eq('client_id', filter.clientId)
   if (filter.caregiverId) query = query.eq('caregiver_id', filter.caregiverId)
   if (filter.status) query = query.eq('status', filter.status)

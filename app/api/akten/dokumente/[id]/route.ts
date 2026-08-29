@@ -19,6 +19,21 @@ export const GET = withTracking(async function GET(request: Request, { params }:
     const dokument = await getDokument(admin, id, organizationId)
     if (!dokument) return NextResponse.json({ error: 'Dokument nicht gefunden.' }, { status: 404 })
 
+    // Personalakte hat eine eigene Berechtigung. Auf den Listen wird das
+    // als Filter durchgesetzt (app/api/akten/dokumente/route.ts) — hier,
+    // beim Zugriff ueber die Id, muss es an der ZEILE haengen: eine Id
+    // kennt man auch ohne Liste, etwa aus einem Verweis.
+    //
+    // 403 und nicht 404: dass es das Dokument gibt, verraet die Id
+    // ohnehin. Ein 404 wuerde behaupten, es existiere nicht — eine
+    // Falschaussage, die spaeter niemand mehr aufloest.
+    if (dokument.caregiver_id && !auth.ctx.darf('personal.lesen')) {
+      return NextResponse.json(
+        { error: 'Für Mitarbeiterdokumente fehlt Ihnen die Berechtigung.' },
+        { status: 403 },
+      )
+    }
+
     await logAktenZugriff(admin, {
       organizationId, entitaetTyp: 'dokument', entitaetId: id, aktion: 'angesehen',
       benutzerId: userId, benutzerRolle: role, dokumentId: id,

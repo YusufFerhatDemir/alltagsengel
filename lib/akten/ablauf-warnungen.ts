@@ -10,6 +10,9 @@ export interface AblaufFilter {
   clientId?: string
   caregiverId?: string
   dringlichkeit?: AktenAblaufEintrag['dringlichkeit']
+  /** Siehe `ListDokumenteFilter.ohnePersonaldokumente`. Eine ablaufende
+   *  Qualifikation ist Personalakte, auch wenn sie nur als Frist erscheint. */
+  ohnePersonaldokumente?: boolean
 }
 
 export async function getAblaufDashboard(supabase: SupabaseClient, filter: AblaufFilter): Promise<AktenAblaufEintrag[]> {
@@ -19,6 +22,7 @@ export async function getAblaufDashboard(supabase: SupabaseClient, filter: Ablau
     .eq('organization_id', filter.organizationId)
     .order('ablaufdatum', { ascending: true })
 
+  if (filter.ohnePersonaldokumente) query = query.is('caregiver_id', null)
   if (filter.clientId) query = query.eq('client_id', filter.clientId)
   if (filter.caregiverId) query = query.eq('caregiver_id', filter.caregiverId)
   if (filter.dringlichkeit) query = query.eq('dringlichkeit', filter.dringlichkeit)

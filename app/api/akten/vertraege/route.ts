@@ -17,10 +17,24 @@ export const GET = withTracking(async function GET(request: Request) {
 
     const params = new URL(request.url).searchParams
     const admin = createAdminClient()
+
+    // Arbeitsvertraege sind Personalakte. Siehe die ausfuehrliche
+    // Begruendung in app/api/akten/dokumente/route.ts — hier gilt sie
+    // wortgleich, nur fuer `akten_vertraege`.
+    const darfPersonal = auth.ctx.darf('personal.lesen')
+    const caregiverId = params.get('caregiverId') ?? undefined
+    if (!darfPersonal && caregiverId) {
+      return NextResponse.json(
+        { error: 'Für Mitarbeiterverträge fehlt Ihnen die Berechtigung.' },
+        { status: 403 },
+      )
+    }
+
     const vertraege = await listVertraege(admin, {
       organizationId,
+      ohnePersonaldokumente: !darfPersonal,
       clientId: params.get('clientId') ?? undefined,
-      caregiverId: params.get('caregiverId') ?? undefined,
+      caregiverId,
       status: (params.get('status') as VertragsStatus) ?? undefined,
       vertragstyp: (params.get('vertragstyp') as VertragsTyp) ?? undefined,
       auslaufendBis: params.get('auslaufendBis') ?? undefined,

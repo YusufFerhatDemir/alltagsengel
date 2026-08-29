@@ -17,10 +17,34 @@ export const GET = withTracking(async function GET(request: Request) {
     const params = url.searchParams
     const admin = createAdminClient()
 
+    // ── Personalakten sind eine eigene Berechtigung ────────────────
+    // Diese Liste mischt Klienten- und Mitarbeiterdokumente, verlangt aber
+    // nur `stammdaten.lesen`. Die Rolle `buchhaltung` hat genau die und
+    // ausdruecklich NICHT `personal.lesen` (lib/auth/rollen.ts, woertlich:
+    // „keine Gesundheitsdaten und keine Personalakten"). Die Seite
+    // /admin/dokumente steht in der Navigation — Fuehrungszeugnis,
+    // Arbeitsvertrag und Qualifikationsnachweis waren damit einen Klick
+    // entfernt, waehrend /admin/mitarbeiterakte (`personal.lesen`) sie
+    // derselben Rolle verweigert. Zwei Wege zum selben Bestand mit zwei
+    // verschiedenen Antworten.
+    //
+    // Ein ausdruecklich gefilterter `caregiverId` wird ABGEWIESEN statt
+    // still zu einer leeren Liste zu fuehren: „keine Dokumente" waere eine
+    // Aussage ueber den Bestand, und die waere falsch.
+    const darfPersonal = auth.ctx.darf('personal.lesen')
+    const caregiverId = params.get('caregiverId') ?? undefined
+    if (!darfPersonal && caregiverId) {
+      return NextResponse.json(
+        { error: 'Für Mitarbeiterdokumente fehlt Ihnen die Berechtigung.' },
+        { status: 403 },
+      )
+    }
+
     const dokumente = await listDokumente(admin, {
       organizationId,
+      ohnePersonaldokumente: !darfPersonal,
       clientId: params.get('clientId') ?? undefined,
-      caregiverId: params.get('caregiverId') ?? undefined,
+      caregiverId,
       dokumentTyp: (params.get('dokumentTyp') as DokumentTyp) ?? undefined,
       kategorie: (params.get('kategorie') as DokumentKategorie) ?? undefined,
       status: (params.get('status') as DokumentStatus) ?? undefined,

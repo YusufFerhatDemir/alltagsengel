@@ -14,6 +14,25 @@ export interface AktenAuthContext {
   userId: string
   organizationId: string
   role: string
+  /**
+   * Prueft eine WEITERE Berechtigung desselben Aufrufers, ohne die
+   * Rollenquellen erneut zu laden.
+   *
+   * Gebraucht, wo eine Route mehrere Bestaende in EINER Antwort mischt.
+   * `/api/akten/suche` ist der Fall: sie liefert Klienten- UND
+   * Mitarbeiterdokumente, verlangt aber nur `stammdaten.lesen`. Die Rolle
+   * `buchhaltung` hat genau diese und ausdruecklich NICHT `personal.lesen`
+   * — lib/auth/rollen.ts haelt das woertlich fest („keine
+   * Gesundheitsdaten und keine Personalakten"). Ueber die Suche waren
+   * Fuehrungszeugnisse, Arbeitsvertraege und Qualifikationsnachweise
+   * trotzdem lesbar.
+   *
+   * Der Weg fuehrt ueber `quellenDuerfen` und damit ueber BEIDE
+   * Rollenquellen — nicht ueber `ctx.role` allein: `app_metadata.role`
+   * kann einschraenken, und wer nur die Profilrolle liest, kaeme zu einer
+   * weiteren Antwort als der Guard darueber.
+   */
+  darf: (berechtigung: Berechtigung) => boolean
 }
 
 export type AktenAuthResult =
@@ -48,7 +67,15 @@ export async function requireAktenAdmin(
     return { ok: false, response: NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 }) }
   }
 
-  return { ok: true, ctx: { userId: quellen.userId, organizationId, role: quellen.rolle } }
+  return {
+    ok: true,
+    ctx: {
+      userId: quellen.userId,
+      organizationId,
+      role: quellen.rolle,
+      darf: (weitere: Berechtigung) => quellenDuerfen(quellen, weitere),
+    },
+  }
 }
 
 /**
