@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { fuehreWiederholungslaufAus } from '@/lib/notifications/retry-worker'
+import { sendeOffeneSicherheitsmeldungen } from '@/lib/security/nachzuegler'
 import { pruefeCronGeheimnis } from '@/lib/api/cron-auth'
 import { withTracking } from '@/lib/monitoring/tracker'
 
@@ -46,6 +47,24 @@ export const GET = withTracking(async function GET(request: Request) {
   try {
     const ergebnis = await fuehreWiederholungslaufAus({ zeitbudgetMs: 45_000 })
 
+    // Sicherheitsmeldungen zu Ereignissen, die die DATENBANK geschrieben
+    // hat (Trigger auf auth.users und profiles). Ein Trigger kann keine
+    // Mail senden; ohne diesen Nachlauf staende die Anmeldung oder die
+    // Adressaenderung im Protokoll, und niemand erfuehre davon.
+    //
+    // Haengt bewusst HIER und nicht an einem eigenen Cron: der Tarif
+    // loest Vercel-Cronjobs nur taeglich aus, und der 5-Minuten-Takt
+    // dieses Laufs ist genau der, den eine Sicherheitsmeldung braucht.
+    //
+    // Fail-soft: ein Fehler im Nachlauf darf den Wiederholungslauf nicht
+    // rot faerben — der ist die wichtigere Aufgabe dieser Route.
+    let sicherheit = { geprueft: 0, gemeldet: 0, uebersprungen: 0, fehler: 0 }
+    try {
+      sicherheit = await sendeOffeneSicherheitsmeldungen()
+    } catch {
+      sicherheit.fehler++
+    }
+
     // 200 auch bei 'blockiert' und 'nicht_bereit': beides sind gueltige
     // Betriebszustaende, keine Stoerungen. Vercel wuerde einen 5xx als
     // fehlgeschlagenen Cron werten und Alarm schlagen, obwohl nichts
@@ -58,6 +77,7 @@ export const GET = withTracking(async function GET(request: Request) {
       grund: ergebnis.grund ?? null,
       dauerMs: ergebnis.dauerMs,
       metriken: ergebnis.metriken,
+      sicherheitsmeldungen: sicherheit,
     })
   } catch (err) {
     return safeApiError(err, request)

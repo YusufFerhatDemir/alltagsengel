@@ -99,6 +99,17 @@ export const EREIGNISSE: Readonly<Record<string, EreignisRegel>> = {
     bezeichnung: 'Sitzung beendet',
   },
 
+  // App-Start mit bestehender Sitzung. Die native Huelle ist ein
+  // WKWebView der Live-Seite — der Server sieht einen gewoehnlichen
+  // Seitenaufruf und kann den Start NICHT von einer Navigation
+  // unterscheiden. Deshalb meldet die App ihn selbst (Beacon an
+  // /api/security/app-start); WER sich meldet, entscheidet dabei nicht
+  // die App, sondern die serverseitig gepruefte Sitzung.
+  app_start: {
+    kategorie: 'session', schweregrad: 'info', meldepflichtig: false,
+    bezeichnung: 'App gestartet',
+  },
+
   // ── device ────────────────────────────────────────────────────────
   unknown_device: {
     kategorie: 'device', schweregrad: 'warning', meldepflichtig: true,
@@ -143,6 +154,22 @@ export const EREIGNISSE: Readonly<Record<string, EreignisRegel>> = {
   critical_data_change: {
     kategorie: 'data', schweregrad: 'critical', meldepflichtig: true,
     bezeichnung: 'Kritische Daten geaendert',
+  },
+  // Kontodaten. Getrennt gefuehrt, weil eine Adress- oder
+  // Rufnummernaenderung der erste Schritt einer Kontouebernahme ist:
+  // wer die Adresse aendert, bekommt danach den
+  // Passwort-Zuruecksetzen-Link.
+  email_change: {
+    kategorie: 'data', schweregrad: 'critical', meldepflichtig: true,
+    bezeichnung: 'E-Mail-Adresse geaendert',
+  },
+  phone_change: {
+    kategorie: 'data', schweregrad: 'warning', meldepflichtig: true,
+    bezeichnung: 'Telefonnummer geaendert',
+  },
+  account_data_change: {
+    kategorie: 'data', schweregrad: 'warning', meldepflichtig: true,
+    bezeichnung: 'Kontodaten geaendert',
   },
   data_export: {
     kategorie: 'data', schweregrad: 'warning', meldepflichtig: true,
@@ -199,6 +226,72 @@ export const EREIGNISSE: Readonly<Record<string, EreignisRegel>> = {
 }
 
 export type Ereignistyp = keyof typeof EREIGNISSE
+
+// ───────────────────────────────────────────────────────────────────────
+// Ueberwachte Konten
+// ───────────────────────────────────────────────────────────────────────
+
+/**
+ * Der volle Meldesatz fuer ausdruecklich ueberwachte Konten
+ * (security_watchlist mit alle_ereignisse = true).
+ *
+ * ER IST EINE OBERMENGE von `meldepflichtig: true`, keine zweite,
+ * konkurrierende Liste. Ein privilegiertes Konto bekommt Meldungen nur
+ * fuer die Ereignisse, die im Katalog oben `meldepflichtig` tragen — ein
+ * ueberwachtes Konto zusaetzlich fuer die, die im Normalbetrieb zu
+ * haeufig sind, um sie jedem zu schicken: jede Abmeldung, jeder
+ * Fehlversuch, jeder App-Start.
+ *
+ * WARUM DAS NICHT EINFACH „ALLES" IST
+ * `security_notification_sent` steht bewusst NICHT drin. Eine Meldung
+ * ueber eine Meldung erzeugt eine Endlosschleife — die erste Mail
+ * schriebe eine Nachweiszeile, die eine zweite Mail ausloeste, und so
+ * fort. Auch `device_known` fehlt: es ist der Normalfall jeder
+ * Anmeldung und stuende sonst doppelt neben `login_success`.
+ */
+export const UEBERWACHUNGS_EREIGNISSE: readonly string[] = [
+  // Anmeldung und Sitzung
+  'login_success',
+  'login_failed',
+  'logout',
+  'session_start',
+  'session_end',
+  'app_start',
+  // Geraet
+  'unknown_device',
+  // Zugangsdaten
+  'password_changed',
+  'password_reset_requested',
+  'mfa_enrolled',
+  'mfa_removed',
+  'mfa_challenge_failed',
+  // Kontodaten
+  'email_change',
+  'phone_change',
+  'account_data_change',
+  'profile_change',
+  // Rolle und Rechte
+  'role_change',
+  'permission_change',
+  'org_change',
+  // Sicherheit
+  'security_action',
+  'blocked_action',
+  'security_error',
+  'unusual_login_series',
+  'critical_data_change',
+  'data_export',
+  // Verwaltung
+  'admin_action',
+  'account_created',
+  'account_deleted',
+  'watchlist_change',
+]
+
+/** Meldet dieses Ereignis fuer ein ausdruecklich ueberwachtes Konto? */
+export function ueberwachungspflichtig(eventType: string): boolean {
+  return UEBERWACHUNGS_EREIGNISSE.includes(eventType)
+}
 
 /** Regel fuer einen unbekannten Typ: sichtbar, aber nicht meldepflichtig. */
 export const UNBEKANNTE_REGEL: EreignisRegel = {

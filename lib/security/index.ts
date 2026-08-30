@@ -32,8 +32,15 @@ export {
 export type { SicherheitsEreignis, EreignisErgebnis } from './audit'
 export {
   meldeSicherheitsereignis, meldungenAktiv, PRIVILEGIERTE_ROLLEN,
-  SPERRFRIST_STUNDEN, MELDE_NACHWEIS, baueMeldung,
+  SPERRFRIST_STUNDEN, MELDE_NACHWEIS, SICHERHEITSMELDUNG_ART,
+  baueMeldung, meldetFuer, kontoLage, ergebnisAus,
 } from './benachrichtigung'
+export type { MeldeKontext, KontoLage } from './benachrichtigung'
+export {
+  ueberwachungFuer, ueberwachteKonten, leseWatchlist, setzeUeberwachung,
+  leereZwischenspeicher,
+} from './watchlist'
+export type { WatchlistEintrag, WatchlistZeile, WatchlistEingabe } from './watchlist'
 export * from './geraet'
 
 // ─────────────────────────────────────────────────────────────────────
@@ -166,6 +173,11 @@ export async function erfasseSicherheitsereignis(
     userAgent: merkmale.userAgent,
     plattform: merkmale.plattform,
     geraet: merkmale.bezeichnung,
+    appVersion: merkmale.appVersion,
+    browser: typeof merkmale.deviceInfo.browser === 'string' ? merkmale.deviceInfo.browser : null,
+    betriebssystem: typeof merkmale.deviceInfo.betriebssystem === 'string'
+      ? merkmale.deviceInfo.betriebssystem : null,
+    sessionReference: ereignis.sessionReference ?? null,
     zeitpunkt: new Date(),
     metadata: {
       ...(ereignis.metadata ?? {}),
@@ -253,6 +265,11 @@ export async function erfasseAnmeldung(opts: {
         userAgent: merkmale.userAgent,
         plattform: merkmale.plattform,
         geraet: merkmale.bezeichnung,
+        appVersion: merkmale.appVersion,
+        browser: typeof merkmale.deviceInfo.browser === 'string' ? merkmale.deviceInfo.browser : null,
+        betriebssystem: typeof merkmale.deviceInfo.betriebssystem === 'string'
+          ? merkmale.deviceInfo.betriebssystem : null,
+        sessionReference: opts.sessionReference ?? null,
         zeitpunkt: new Date(),
         metadata: haupt.geraeteHash ? { geraet_hash: haupt.geraeteHash } : {},
       })

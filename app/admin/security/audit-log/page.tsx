@@ -60,6 +60,22 @@ interface Antwort {
   katalog: Katalog
 }
 
+interface WatchlistZeile {
+  id: string
+  userId: string
+  aktiv: boolean
+  alleEreignisse: boolean
+  ohneSperrfrist: boolean
+  meldeEmail: string | null
+  emailKontrolle: string | null
+  kontoEmail: string | null
+  name: string | null
+  rolle: string | null
+  grund: string
+  createdAt: string
+  adressenAbweichung: boolean
+}
+
 interface Filter {
   suche: string
   userId: string
@@ -119,6 +135,13 @@ export default function SicherheitsspurSeite() {
   const [offen, setOffen] = useState<string | null>(null)
   const [exportLaeuft, setExportLaeuft] = useState(false)
 
+  // ── Überwachungsliste (ACCOUNT_SECURITY_ALERTS) ──
+  const [wlOffen, setWlOffen] = useState(false)
+  const [wl, setWl] = useState<WatchlistZeile[]>([])
+  const [wlFormular, setWlFormular] = useState({ userId: '', grund: '', meldeEmail: '', emailKontrolle: '' })
+  const [wlMeldung, setWlMeldung] = useState<{ ton: 'info' | 'warn' | 'danger'; text: string } | null>(null)
+  const [wlLaeuft, setWlLaeuft] = useState(false)
+
   const abfrage = useMemo(() => {
     const p = new URLSearchParams()
     if (filter.suche) p.set('suche', filter.suche)
@@ -160,6 +183,49 @@ export default function SicherheitsspurSeite() {
   }, [abfrage, seite])
 
   useEffect(() => { void laden() }, [laden])
+
+  const ladeWatchlist = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/security/watchlist')
+      if (!res.ok) return
+      const json = (await res.json()) as { eintraege: WatchlistZeile[] }
+      setWl(json.eintraege ?? [])
+    } catch (err) {
+      log.errorWithException('Überwachungsliste konnte nicht geladen werden', err)
+    }
+  }, [])
+
+  useEffect(() => { if (wlOffen) void ladeWatchlist() }, [wlOffen, ladeWatchlist])
+
+  async function watchlistSetzen(userId: string, aktiv: boolean, grund: string, meldeEmail: string, emailKontrolle: string) {
+    setWlLaeuft(true)
+    setWlMeldung(null)
+    try {
+      const res = await fetch('/api/admin/security/watchlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, aktiv, grund, meldeEmail: meldeEmail || null, emailKontrolle: emailKontrolle || null }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setWlMeldung({ ton: 'danger', text: json?.error ?? 'Die Änderung ist fehlgeschlagen.' })
+        return
+      }
+      setWlMeldung(
+        json?.adressenAbweichung
+          ? { ton: 'warn', text: json.hinweis }
+          : { ton: 'info', text: aktiv ? 'Alarm für dieses Konto ist aktiv.' : 'Alarm für dieses Konto ist abgeschaltet.' },
+      )
+      setWlFormular({ userId: '', grund: '', meldeEmail: '', emailKontrolle: '' })
+      await ladeWatchlist()
+      await laden()
+    } catch (err) {
+      log.errorWithException('Überwachung konnte nicht gesetzt werden', err)
+      setWlMeldung({ ton: 'danger', text: 'Die Änderung ist fehlgeschlagen.' })
+    } finally {
+      setWlLaeuft(false)
+    }
+  }
 
   async function exportieren() {
     setExportLaeuft(true)
@@ -211,6 +277,118 @@ export default function SicherheitsspurSeite() {
       </p>
 
       {fehler && <Banner tone="danger">{fehler}</Banner>}
+
+      {/* ── Überwachungsliste ── */}
+      <div style={{ marginBottom: 14, border: '1px solid var(--border)', borderRadius: 10, background: 'var(--coal2)' }}>
+        <button
+          onClick={() => setWlOffen(o => !o)}
+          aria-expanded={wlOffen}
+          style={{ ...knopf, width: '100%', textAlign: 'left', border: 'none', background: 'transparent', padding: '12px 14px', fontWeight: 600 }}
+        >
+          {wlOffen ? '▾' : '▸'} Überwachte Konten (ACCOUNT_SECURITY_ALERTS)
+          {wl.length > 0 && <span style={{ color: '#888', fontWeight: 400 }}> · {wl.filter(w => w.aktiv).length} aktiv</span>}
+        </button>
+
+        {wlOffen && (
+          <div style={{ padding: '0 14px 14px' }}>
+            <p style={{ color: '#888', fontSize: 12, lineHeight: 1.5, marginTop: 0, maxWidth: 760 }}>
+              Konten mit aktivem Alarm bekommen eine E-Mail bei jedem Ereignis des
+              Überwachungssatzes — auch bei Abmeldung, Fehlversuch und App-Start —
+              und ohne die 12-Stunden-Bremse. Konten mit Verwaltungsrolle sind
+              ohnehin gemeldet und brauchen hier keinen Eintrag. Die Zuordnung
+              hängt an der Konto-Kennung, nicht an der E-Mail-Adresse: die ist
+              veränderlich. Jede Änderung hier wird selbst protokolliert.
+            </p>
+
+            {wlMeldung && <Banner tone={wlMeldung.ton}>{wlMeldung.text}</Banner>}
+
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 12 }}>
+              <thead>
+                <tr>
+                  <th style={kopf}>Konto</th>
+                  <th style={kopf}>Rolle</th>
+                  <th style={kopf}>Meldung an</th>
+                  <th style={kopf}>Grund</th>
+                  <th style={kopf}>Alarm</th>
+                  <th style={kopf}> </th>
+                </tr>
+              </thead>
+              <tbody>
+                {wl.length === 0 && <EmptyRow colSpan={6}>Kein Konto ausdrücklich überwacht.</EmptyRow>}
+                {wl.map(w => (
+                  <tr key={w.id}>
+                    <td style={zelle}>
+                      <div>{w.name ?? '—'}</div>
+                      <div style={{ fontSize: 11, color: '#888' }}>{w.kontoEmail ?? '—'}</div>
+                      <div style={{ fontSize: 10, color: '#666', fontFamily: 'monospace' }}>{w.userId}</div>
+                      {w.adressenAbweichung && (
+                        <div style={{ fontSize: 11, color: '#C9963C' }}>
+                          angegeben war: {w.emailKontrolle}
+                        </div>
+                      )}
+                    </td>
+                    <td style={zelle}>{w.rolle ?? '—'}</td>
+                    <td style={zelle}>{w.meldeEmail ?? w.kontoEmail ?? '—'}</td>
+                    <td style={{ ...zelle, maxWidth: 260 }}>{w.grund}</td>
+                    <td style={zelle}>
+                      <span style={{ color: w.aktiv ? '#2D8F5E' : '#888' }}>
+                        {w.aktiv ? 'aktiv' : 'aus'}
+                      </span>
+                    </td>
+                    <td style={zelle}>
+                      <button
+                        style={{ ...knopf, padding: '4px 10px', fontSize: 12 }}
+                        disabled={wlLaeuft}
+                        onClick={() => watchlistSetzen(w.userId, !w.aktiv, w.grund, w.meldeEmail ?? '', w.emailKontrolle ?? '')}
+                      >
+                        {w.aktiv ? 'Abschalten' : 'Einschalten'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'flex-start' }}>
+              <input
+                style={{ ...eingabe, minWidth: 300, fontFamily: 'monospace' }}
+                placeholder="Konto-Kennung (UUID)"
+                value={wlFormular.userId}
+                onChange={e => setWlFormular(f => ({ ...f, userId: e.target.value }))}
+                aria-label="Konto-Kennung"
+              />
+              <input
+                style={{ ...eingabe, minWidth: 220 }}
+                placeholder="E-Mail (nur Gegenprobe)"
+                value={wlFormular.emailKontrolle}
+                onChange={e => setWlFormular(f => ({ ...f, emailKontrolle: e.target.value }))}
+                aria-label="E-Mail zur Gegenprobe"
+              />
+              <input
+                style={{ ...eingabe, minWidth: 220 }}
+                placeholder="Meldung an (leer = Konto selbst)"
+                value={wlFormular.meldeEmail}
+                onChange={e => setWlFormular(f => ({ ...f, meldeEmail: e.target.value }))}
+                aria-label="Abweichende Meldeadresse"
+              />
+              <input
+                style={{ ...eingabe, minWidth: 280 }}
+                placeholder="Grund (Pflicht)"
+                value={wlFormular.grund}
+                onChange={e => setWlFormular(f => ({ ...f, grund: e.target.value }))}
+                aria-label="Grund der Überwachung"
+              />
+              <button
+                style={knopf}
+                disabled={wlLaeuft || !wlFormular.userId || wlFormular.grund.trim().length < 5}
+                onClick={() => watchlistSetzen(wlFormular.userId.trim(), true, wlFormular.grund.trim(), wlFormular.meldeEmail.trim(), wlFormular.emailKontrolle.trim())}
+              >
+                {wlLaeuft ? 'Wird gespeichert …' : 'Alarm einschalten'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* ── Filter ── */}
       <div style={{

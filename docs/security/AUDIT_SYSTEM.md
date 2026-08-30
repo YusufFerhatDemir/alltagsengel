@@ -176,12 +176,16 @@ privilegierten und überwachten Konten eine E-Mail aus.
 | `mfa_challenge_failed` | auth | warning | ja |
 | `session_start` | session | info | ja |
 | `session_end` | session | info | nein |
+| `app_start` | session | info | nein |
 | `unknown_device` | device | warning | ja |
 | `device_known` | device | info | nein |
 | `role_change` | role | critical | ja |
 | `permission_change` | role | critical | ja |
 | `org_change` | role | warning | ja |
 | `profile_change` | data | info | nein |
+| `email_change` | data | critical | ja |
+| `phone_change` | data | warning | ja |
+| `account_data_change` | data | warning | ja |
 | `customer_change` | data | info | nein |
 | `employee_change` | data | info | nein |
 | `critical_data_change` | data | critical | ja |
@@ -221,17 +225,51 @@ sein, der sie vergeben hat.
 
 Zusätzlich geht jede Meldung an `SECURITY_MELDE_POSTFACH`, falls gesetzt.
 
-**Offen benannt:** für `security_watchlist` gibt es noch **keine
-Oberfläche**. Einträge werden derzeit direkt in der Datenbank angelegt
-(Supabase-SQL-Editor). Privilegierte Konten sind davon nicht betroffen — sie
-werden über `profiles.role` erkannt und brauchen keinen Eintrag. Die
-Überwachungsliste ist nur nötig, um ein Konto **ohne** Verwaltungsrolle
-zusätzlich zu beobachten.
+### ACCOUNT_SECURITY_ALERTS — der kontobezogene Schalter
 
-```sql
-INSERT INTO public.security_watchlist (user_id, organization_id, grund, angelegt_von)
-VALUES ('<konto-uuid>', '<org-uuid>', 'Grund in einem Satz', '<eigene-uuid>');
+`security_watchlist.aktiv` **ist** ACCOUNT_SECURITY_ALERTS. Es gibt keinen
+zweiten Mechanismus und keine Sonderbehandlung einzelner Adressen im Code.
+
+| Spalte | Bedeutung |
+|---|---|
+| `aktiv` | Alarm an/aus |
+| `alle_ereignisse` | `true` = voller Überwachungssatz (unten), `false` = nur der Katalogsatz wie bei privilegierten Konten |
+| `ohne_sperrfrist` | `true` = keine 12-Stunden-Bremse, jede Anmeldung meldet |
+| `melde_email` | Zieladresse. **Leer = die Adresse des Kontos selbst.** Für eine Admin-Meldung hier die Verwaltungsadresse eintragen |
+| `email_kontrolle` | Die beim Einrichten angegebene Adresse — nur Gegenprobe |
+| `grund` | Pflicht. Ein Eintrag ohne Grund ist in einem halben Jahr nicht mehr erklärbar |
+
+**Überwachungssatz** (`UEBERWACHUNGS_EREIGNISSE`, Obermenge von
+`meldepflichtig`): zusätzlich `login_failed`, `logout`, `session_end`,
+`app_start`, `profile_change`, `blocked_action`, `admin_action`. Ausdrücklich
+**nicht** enthalten: `security_notification_sent` — sonst löste jede Mail die
+nächste aus.
+
+**Einrichten** — zwei Wege, beide schreiben ein `watchlist_change`-Ereignis:
+
+1. Oberfläche: `/admin/security/audit-log` → „Überwachte Konten".
+2. Kommandozeile (Trockenlauf ohne `--ja`):
+
 ```
+npm run security:watchlist -- --email <adresse> --grund "<text>" --melde-an <admin-adresse> --ja
+npm run security:watchlist -- --liste
+npm run security:watchlist -- --user-id <uuid> --aus --ja
+```
+
+**Die Zuordnung hängt an `user_id`, nie an der Adresse.** Die Adresse ist
+veränderlich — sie ist sogar eines der Ereignisse, die dieses System meldet.
+Weicht die angegebene Adresse von der des Kontos ab, sagen Skript, API-Antwort
+und Oberfläche das ausdrücklich, statt still das falsche Konto einzutragen.
+
+**Kein Personenbezug im Repository.** Keine Migration und keine Quelldatei
+trägt einen Namen oder eine Adresse. Wer überwacht wird, steht in der
+Datenbank — ein Name in der Versionsgeschichte ließe sich nicht mehr löschen.
+
+**Arbeitsrecht.** Die dauerhafte Überwachung eines einzelnen
+Beschäftigtenkontos ist nach § 26 BDSG / Art. 88 DSGVO begründungs- und
+dokumentationspflichtig und in mitbestimmten Betrieben mitbestimmungspflichtig.
+Das Feld `grund` ist dafür da; die Rechtsgrundlage zu prüfen ist eine
+Entscheidung der Geschäftsführung, nicht dieses Systems.
 
 ### Absender
 
@@ -242,9 +280,15 @@ Unterschrift: „Herzliche Grüße / Ihr Team von Alltagsengel".
 
 ### Inhalt
 
-Benutzerkonto · Ereignis · Datum/Uhrzeit (Europe/Berlin) · Zugang (Web/App) ·
-IP-Adresse · Gerät · User-Agent · Organisation · Ereignis-ID. Alle Werte
-HTML-escaped (`esc()`), weil ein User-Agent ein Wert von außen ist.
+Benutzername · Benutzerkonto · Benutzer-ID · Rolle · Ereignis · Ergebnis
+(SUCCESS/FAILED) · Schweregrad · Zeit UTC · Zeit lokal (Europe/Berlin) ·
+betroffene Funktion · vorheriger Wert · neuer Wert · Zugang (Web/App) ·
+App-/Web-Version · Browser · Betriebssystem · Gerät · User-Agent · IP-Adresse ·
+Organisation · Sitzungsbezug · Audit-Event-ID.
+
+Leere Felder werden weggelassen statt als „—" gezeigt. Alle Werte HTML-escaped
+(`esc()`), weil ein User-Agent ein Wert von außen ist. Der Inhalt entsteht
+ausschließlich aus der Ereigniszeile — und die ist bereits gefiltert.
 
 ### Stille Zeit
 
@@ -306,7 +350,34 @@ es entscheidet nicht über Zugang.
 | `app/api/admin/reset-password/route.ts` | `password_reset_requested` (critical, Weg „administration") |
 | `app/api/auth/send-reset/route.ts` | `password_reset_requested` (Weg „selbst_angefordert") |
 | `app/api/admin/security/audit-log/route.ts` | `data_export` beim CSV-Export |
+| `app/api/admin/security/watchlist/route.ts` | `watchlist_change` (kritisch) |
+| `app/api/security/app-start/route.ts` | `app_start` (Beacon der nativen Hülle) |
+| `lib/audit-log.ts` → `logAuditEvent` | `admin_action` — Spiegel jeder Verwaltungshandlung, **nur** für überwachte Konten |
 | DB-Trigger auf `auth.users` | `login_success` (Sicherheitsnetz für Wege ohne Anwendungscode) |
+| DB-Trigger auf `profiles` | `email_change`, `phone_change`, `role_change`, `account_data_change` |
+
+### Retry-Queue und Nachzügler
+
+Zwei getrennte Wege, damit keine Meldung verlorengeht:
+
+1. **Zustellspur + Wiederholungslauf.** Jeder Versand trägt einen
+   Zustellkontext (`vorgangArt: 'sicherheitsmeldung'`, `vorgangRef` = die
+   Ereignis-ID). Scheitert er, steht er in `notification_delivery_log`; der
+   Wiederholungslauf (alle 5 Minuten,
+   `.github/workflows/zustellung-retry.yml`) baut die Mail aus der
+   Ereigniszeile neu auf — `lib/notifications/vorgaenge/sicherheitsmeldung.ts`.
+   Ereignisse ohne Organisation bekommen keinen Zustellkontext (das Feld ist
+   pflichtig); dort bleibt nur der Sofortversuch.
+2. **Nachzügler.** `lib/security/nachzuegler.ts` läuft im selben
+   Fünf-Minuten-Takt (angehängt an `/api/cron/zustellung-retry`) und sendet
+   die Meldungen zu Ereignissen, die die **Datenbank** geschrieben hat — die
+   Trigger auf `auth.users` und `profiles`. Ein Trigger kann keine Mail
+   senden; ohne diesen Lauf stünde die Adressänderung im Protokoll und
+   niemand erführe davon.
+
+Gegen Doppelversand wirken drei Riegel: vorhandener Versandnachweis, bereits
+in der Zustellspur, und der Idempotenzschlüssel `sec-<ereignis>-<adresse>`
+(Resend, 24-Stunden-Fenster).
 
 ### Was noch **nicht** angebunden ist — offen benannt
 
@@ -314,11 +385,17 @@ es entscheidet nicht über Zugang.
   verdrahtet. Engel-, Kunden- und Fahrerprofil melden sich weiterhin ohne
   Protokollzeile ab.
 * **`session_end`** wird nirgends geschrieben. Ein Sitzungsende ohne
-  Abmeldung (Ablauf des Tokens) merkt der Server nicht.
-* **`profile_change`, `customer_change`, `employee_change`,
-  `critical_data_change`** sind im Katalog vorgesehen, aber an keiner
-  Schreibroute verdrahtet. Diese Änderungen stehen weiterhin in
-  `mis_audit_log`; die Sicherheitssicht darauf fehlt.
+  Abmeldung (Ablauf des Tokens) merkt der Server nicht — das ist keine
+  Nachlässigkeit, sondern eine Grenze: ein ablaufendes Token erzeugt keinen
+  Aufruf.
+* **`app_start`** meldet nur die native Hülle (Capacitor). Im Browser gibt es
+  kein „App-Start"; dort sind Sitzungsbeginn und Anmeldung die Ereignisse.
+  Der Beacon setzt voraus, dass die App die Live-Seite lädt — er ist gegen
+  Fluten auf 6 Meldungen je Konto und Stunde begrenzt.
+* **`customer_change` / `employee_change` / `critical_data_change`** sind im
+  Katalog vorgesehen, aber an keiner Schreibroute verdrahtet. Solche
+  Änderungen erscheinen für überwachte Konten als `admin_action` (Spiegel aus
+  `mis_audit_log`), nicht mit fachlichem Vorher/Nachher.
 * **`mfa_enrolled` / `mfa_removed`** desgleichen.
 
 ---
@@ -367,6 +444,8 @@ exportiert, hinterlässt eine Spur.
 | `20261018000001_rollback_…` | Rücknahme (behält `marketing.verwalten`) |
 | `20261018000002_security_audit_log.sql` | Tabellen, RLS, Funktionen, Trigger |
 | `20261018000003_rollback_…` | Rücknahme **mit Datenverlust** — vorher exportieren |
+| `20261018000004_security_watchlist_kontoalarm.sql` | Schalter-Spalten + Trigger auf `profiles` |
+| `20261018000005_rollback_…` | Rücknahme (Einträge bleiben stehen) |
 
 **Reihenfolge beachten:** `public.rollen_matrix` ist eine geteilte Funktion.
 Jede Migration, die eine Berechtigung ergänzt, setzt sie **vollständig** neu;
@@ -390,3 +469,4 @@ Anwendungspfad protokolliert weiterhin, nur das Sicherheitsnetz fehlt.
 | `__tests__/security/security-audit-lib.test.ts` | Geheimnis-Filter, Ereigniskatalog, Gerätemerkmale, Hash-Stabilität, Meldemail |
 | `__tests__/security/rollenkonzept-pglite.test.ts` | Gleichstand `rollen_matrix` (SQL) ↔ `ROLLEN_MATRIX` (TypeScript) |
 | `__tests__/security/rollenkonzept.test.ts` | Vorbehalte der Administration |
+| `__tests__/security/security-kontoalarm-pglite.test.ts` | Schalter-Spalten, Teilindex, `profiles`-Trigger (Vorher/Nachher, wer mitgeschrieben wird und wer nicht), Rollback |

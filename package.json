@@ -62,6 +62,7 @@
     "verify:perimeter": "node scripts/verify-perimeter-live.mjs",
     "verify:versand": "node scripts/verify-versandbereitschaft.mjs",
     "verify:security-audit": "node scripts/verify-security-audit-live.mjs",
+    "security:watchlist": "node scripts/security-watchlist.mjs",
     "verify:marketing": "node scripts/verify-marketing.mjs"
   },
   "dependencies": {

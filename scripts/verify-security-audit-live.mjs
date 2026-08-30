@@ -245,6 +245,47 @@ const PRUEFUNGEN = [
       + 'entfernt — siehe docs/security/AUDIT_SYSTEM.md, Abschnitt 2.',
   },
 
+  {
+    id: 'S13',
+    titel: 'Kontoalarm: die drei Schalter-Spalten stehen',
+    erwartung: 'alle_ereignisse, email_kontrolle, ohne_sperrfrist',
+    lauf: () => orakel(
+      `select case
+                when not exists (
+                  select 1 from information_schema.tables
+                   where table_schema='public' and table_name='security_watchlist'
+                ) then 'TABELLE FEHLT'
+                else coalesce((
+                  select string_agg(column_name, ', ' order by column_name)
+                    from information_schema.columns
+                   where table_schema='public' and table_name='security_watchlist'
+                     and column_name in ('alle_ereignisse','ohne_sperrfrist','email_kontrolle')
+                ), 'SPALTEN FEHLEN')
+              end as z`,
+    ),
+    pruefe: t => t.includes('alle_ereignisse') && t.includes('ohne_sperrfrist') && t.includes('email_kontrolle'),
+    hinweisWennRot:
+      'Migration 20261018000004_security_watchlist_kontoalarm.sql ist NICHT '
+      + 'angewendet. Ohne sie meldet ein ueberwachtes Konto nur den Katalogsatz '
+      + '— nicht Abmeldung, Fehlversuch und App-Start.',
+  },
+  {
+    id: 'S14',
+    titel: 'Trigger auf profiles schreibt Kontoaenderungen mit',
+    erwartung: 'trg_security_audit_profil_aenderung, enabled=O',
+    lauf: () => orakel(
+      `select coalesce(string_agg(tgname || ' enabled=' || tgenabled::text, ', '), '(keiner)') as z
+         from pg_trigger
+        where tgrelid = 'public.profiles'::regclass
+          and tgname = 'trg_security_audit_profil_aenderung'`,
+    ),
+    pruefe: t => t.includes('trg_security_audit_profil_aenderung') && t.includes('enabled=O'),
+    hinweisWennRot:
+      'Ohne diesen Trigger bleibt jede Adress-, Rufnummern- und Namensaenderung '
+      + 'unprotokolliert, die ueber die Profilseiten laeuft — die schreiben mit '
+      + 'dem Browser-Client direkt in profiles, an jeder Serverroute vorbei.',
+  },
+
   // ── Berichte (kein Pass/Fail, aber die Zahlen, die man wissen will) ──
   {
     id: 'S9',
@@ -276,11 +317,34 @@ const PRUEFUNGEN = [
   {
     id: 'S12',
     nurBericht: true,
-    titel: 'Ueberwachte Konten (security_watchlist)',
+    titel: 'Ueberwachte Konten (ACCOUNT_SECURITY_ALERTS)',
     lauf: () => orakel(
-      `select coalesce(count(*)::text, '0') || ' Eintraege, davon aktiv: '
-           || coalesce(count(*) filter (where aktiv)::text, '0') as z
-         from public.security_watchlist`,
+      `select w.user_id::text
+           || '  ' || case when w.aktiv then 'AKTIV' else 'aus  ' end
+           || '  melde_an=' || coalesce(w.melde_email, '(Konto)')
+           || '  konto=' || coalesce(p.email, '—')
+           || case
+                when w.email_kontrolle is not null
+                 and lower(w.email_kontrolle) is distinct from lower(coalesce(p.email,''))
+                then '  ADRESSE WEICHT AB (angegeben: ' || w.email_kontrolle || ')'
+                else ''
+              end
+           || '  grund=' || w.grund as z
+         from public.security_watchlist w
+         left join public.profiles p on p.id = w.user_id
+        order by w.created_at desc`,
+    ),
+  },
+  {
+    id: 'S15',
+    nurBericht: true,
+    titel: 'Meldungen der letzten 24 Stunden',
+    lauf: () => orakel(
+      `select coalesce(metadata->>'bezug_event_type','—') || ': ' || count(*)::text as z
+         from public.security_audit_log
+        where event_type = 'security_notification_sent'
+          and created_at > now() - interval '24 hours'
+        group by 1 order by count(*) desc`,
     ),
   },
 ]
