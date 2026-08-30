@@ -1,0 +1,113 @@
+{
+  "audit_date": "2026-08-30",
+  "audit_version": "V3.1",
+  "audit_type": "MASTER FINAL CLOSING — Remaining Proof Gaps",
+  "auditor": "Claude Agent (autonomous)",
+  "consistency_check": {
+    "errors": 0,
+    "warnings": 1,
+    "error_details": [],
+    "warning_details": [
+      "efy_care: No HTTP endpoint AND no production build"
+    ],
+    "contradictions": 0
+  },
+  "evidence": {
+    "alltagsengel": {
+      "repo_head": "a7517afe597d3723d32bf717aebfe558b5719008",
+      "origin_main": "a7517afe597d3723d32bf717aebfe558b5719008",
+      "deploy_sha_verified": true,
+      "deploy_method": "Vercel API + GitHub API (double-verified, V3 commit)",
+      "http_status": 200,
+      "http_timestamp": "2026-08-30T09:49:28Z",
+      "db_tables": 337,
+      "db_rls": 1014,
+      "db_functions": 371,
+      "tables_without_rls": 3,
+      "protection_functions": 5,
+      "ci_passed": 11408,
+      "ci_failed": 0,
+      "e2e_chains": 13,
+      "security_ok": true,
+      "safety_locks_active": true
+    },
+    "pflege_software": {
+      "repo_head": "a7517afe597d3723d32bf717aebfe558b5719008",
+      "origin_main": "a7517afe597d3723d32bf717aebfe558b5719008",
+      "deploy_sha_verified": true,
+      "deploy_method": "Transitiv über AE (gleicher Vercel-Projekt prj_Wre4nj8w11Kv6YAPUorBS24x03qA)",
+      "separate_deployment": false,
+      "route_files_in_repo": 524,
+      "http_status": 200,
+      "http_timestamp": "2026-08-30T09:49:28Z",
+      "db_tables": 337,
+      "db_rls": 1014,
+      "ci_passed": 11408,
+      "security_ok": true
+    },
+    "chairmatch": {
+      "repo_head": "5227751d5d44bb9ddd8d741d23405b6805057572",
+      "origin_main": "5227751d5d44bb9ddd8d741d23405b6805057572",
+      "deploy_sha_verified": true,
+      "deploy_method": "Vercel API + GitHub API (double-verified)",
+      "http_status": 200,
+      "http_timestamp": "2026-08-30T09:49:29Z",
+      "db_tables": 83,
+      "db_rls": 199,
+      "rls_enabled_tables": 79,
+      "live_data": {
+        "salons": 16,
+        "reviews": 48,
+        "services": 64
+      },
+      "ci_passed": 1714,
+      "ci_failed": 0,
+      "e2e_chains": 4,
+      "security_ok": true
+    },
+    "efy_care": {
+      "repo_head": "129144a001d54285411d33a8a59a017af233d9b2",
+      "origin_main": "129144a001d54285411d33a8a59a017af233d9b2",
+      "deploy_sha_verified": false,
+      "production_build_exists": false,
+      "build_attempt_result": "FAILED — iOS Distribution Certificate not configured",
+      "build_blocker": "eas credentials --platform ios (requires manual Apple login)",
+      "http_status": null,
+      "db_tables": 47,
+      "db_rls": 118,
+      "db_functions": 130,
+      "security_functions": 2,
+      "ci_passed": 2037,
+      "ci_failed": 0,
+      "e2e_chains": 2,
+      "security_ok": true
+    },
+    "dipa": {
+      "repo_head": "a7517afe597d3723d32bf717aebfe558b5719008",
+      "deploy_sha_verified": true,
+      "http_status": 200,
+      "technical_complete": true,
+      "regulatory_blockers": [
+        "TR-03161",
+        "ISO 27001",
+        "BfArM-Antrag"
+      ],
+      "regulatory_complete": false
+    }
+  },
+  "verdicts": {
+    "alltagsengel": "PRODUCTION VERIFIED",
+    "pflege_software": "PRODUCTION VERIFIED",
+    "chairmatch": "PRODUCTION VERIFIED",
+    "efy_care": "TECHNICALLY VERIFIED — RELEASE BUILD BLOCKED",
+    "dipa": "REGULATORY BLOCKED"
+  },
+  "safety_locks": {
+    "FIRST_REAL_INVOICE_APPROVED": false,
+    "PILOT_ERSTVERSAND_FREIGEGEBEN": "not_set",
+    "RECHNUNGSVERSAND_AUTOMATISCH": "not_set",
+    "MAHNVERSAND_AUTOMATISCH": "not_set",
+    "COACH_DIPA_MODUS": "not_set",
+    "COACH_PREISE_FREIGEGEBEN": "not_set"
+  }
+}
