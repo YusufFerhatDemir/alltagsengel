@@ -182,9 +182,18 @@ describe('Bestandsschutz: keine hartkodierten Rollenlisten', () => {
    *
    * Wichtig bleibt die urspruengliche Aussage des Tests: gefragt wird nach
    * einer BERECHTIGUNG, nicht nach einer Rollenliste.
+   *
+   * Nachtrag 30.08.2026: `requireBerechtigung(` zaehlt ebenfalls. Es ist
+   * der allgemeine Guard aus lib/auth/guard.ts und ruft intern
+   * wirksamDarfAlle() — also dieselbe Frage gegen BEIDE autoritativen
+   * Quellen, plus MFA und Organisationsaufloesung. Ein Fach-Guard, der
+   * nur eine duenne Huelle darum ist (lib/marketing/api-auth.ts:
+   * requireBerechtigung('marketing.verwalten')), stellt die
+   * Berechtigungsfrage damit strenger als rolleDarf() und nicht
+   * schwaecher — er reicht sie nur eine Ebene weiter.
    */
   const BERECHTIGUNGSFRAGE =
-    /rolleDarf\(|quellenDuerfen\(|wirksamDarf\(|sichtbareDokumenttypen\(/
+    /rolleDarf\(|quellenDuerfen\(|wirksamDarf\(|sichtbareDokumenttypen\(|requireBerechtigung\(/
 
   it('kein Fach-Guard prueft noch gegen eine Rollenliste', () => {
     const guards = dateien("find lib -name 'api-auth.ts'; echo lib/abrechnung/require-admin.ts")

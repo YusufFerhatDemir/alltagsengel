@@ -56,6 +56,13 @@ export type AuditAction =
   | 'reject'
   | 'share'
   | 'archive'
+  // Werbeversand (Block 20). Der CHECK in der Datenbank kennt diese drei
+  // seit 20261019000004 — ohne die Migration scheitert der Insert mit
+  // 23514, und weil der Audit-Weg fail-soft ist, liefe der Versand dann
+  // OHNE Spur. Wer hier etwas ergaenzt, ergaenzt den CHECK mit.
+  | 'marketing_kampagne_freigegeben'
+  | 'marketing_kampagne_versendet'
+  | 'marketing_kampagne_versand_abgebrochen'
 
 export interface AuditLogInput {
   /** Aktions-Typ (Pflicht, synchron mit DB-CHECK). */
@@ -117,6 +124,23 @@ export async function logAuditEvent(input: AuditLogInput): Promise<boolean> {
 
     const { error } = await adminClient.from('mis_audit_log').insert(row)
 
+    // ── Spiegel in die Sicherheitsspur ──
+    // „Wesentliche Aktionen im Audit-Log" gehoeren bei einem ueberwachten
+    // Konto in die Sicherheitsmeldung. Gespiegelt wird NUR fuer Konten,
+    // die auf der Ueberwachungsliste stehen — sonst schriebe jede der
+    // 436 Aufrufstellen eine zweite Zeile fuer jeden Nutzer.
+    //
+    // Gespiegelt wird in BEIDE Richtungen: als Akteur (was hat die Person
+    // getan) und als Ziel (was wurde mit ihrem Konto getan). Die zweite
+    // Richtung ist die wichtigere — sie faengt den Fall, dass jemand
+    // ANDERES etwas am ueberwachten Konto aendert.
+    if (!error) {
+      await spiegeleInSicherheitsspur(input).catch(() => {
+        // Fail-soft: der Spiegel darf die Hauptaktion nie beeinflussen.
+        // Ein Fehlschlag steht bereits im Protokoll von lib/security.
+      })
+    }
+
     if (error) {
       // AUTH-002: kein rohes err-Objekt loggen — könnte sensible Info enthalten
       log.error('insert failed', {
@@ -135,6 +159,55 @@ export async function logAuditEvent(input: AuditLogInput): Promise<boolean> {
     })
     return false
   }
+}
+
+/**
+ * Spiegelt eine Verwaltungshandlung in die Sicherheitsspur — aber nur,
+ * wenn Akteur oder Ziel ein ueberwachtes Konto ist.
+ *
+ * Die Importe stehen INNERHALB der Funktion. Grund: lib/security zieht
+ * den Mailversand und damit lib/notifications mit sich; ein Import auf
+ * Modulebene wuerde das in jede der 436 Aufrufstellen dieses Moduls
+ * hineinziehen, auch in die, die nie spiegeln.
+ */
+async function spiegeleInSicherheitsspur(input: AuditLogInput): Promise<void> {
+  const [{ ueberwachteKonten }, { erfasseSicherheitsereignis }] = await Promise.all([
+    import('@/lib/security/watchlist'),
+    import('@/lib/security'),
+  ])
+
+  const admin = createAdminClient()
+  const ueberwacht = await ueberwachteKonten(admin)
+  if (ueberwacht.size === 0) return
+
+  const betroffen = [input.targetId, input.actorId].filter(
+    (id): id is string => !!id && ueberwacht.has(id),
+  )
+  if (betroffen.length === 0) return
+
+  // Genau EIN Ereignis, auch wenn Akteur und Ziel beide ueberwacht sind:
+  // es ist eine Handlung. Das Ziel gewinnt — die Frage „was ist mit
+  // diesem Konto passiert" ist die, die die Ueberwachung stellt.
+  const userId = betroffen[0]
+
+  await erfasseSicherheitsereignis({
+    eventType: 'admin_action',
+    userId,
+    userEmail: input.targetEmail ?? null,
+    organizationId: input.organizationId ?? null,
+    request: input.request,
+    severity: 'warning',
+    metadata: {
+      funktion: `${input.entityType}.${input.action}`,
+      aktion: input.action,
+      entitaet: input.entityType,
+      entitaet_id: input.entityId ?? null,
+      akteur: input.actorId,
+      akteur_rolle: input.actorRole ?? null,
+      als_ziel: input.targetId === userId,
+      ergebnis: 'SUCCESS',
+    },
+  })
 }
 
 /**
