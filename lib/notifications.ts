@@ -284,6 +284,19 @@ export interface RawEmailParams {
    * weg — dort sind zwei Mails die Absicht.
    */
   idempotenzSchluessel?: string
+  /**
+   * Zusaetzliche Kopfzeilen.
+   *
+   * WOFUER DAS DA IST: Werbepost braucht nach RFC 8058 die Kopfzeilen
+   * `List-Unsubscribe` und `List-Unsubscribe-Post`. Ohne sie zeigen
+   * Gmail und Outlook den Ein-Klick-Abmeldeknopf nicht an — die
+   * Empfaenger greifen dann zum Spam-Knopf, und der beschaedigt die
+   * Zustellbarkeit ALLER Mails der Domain, auch der Rechnungen.
+   *
+   * Transaktionspost setzt hier nichts: eine Rechnung ist kein Verteiler,
+   * und ein Abmeldeknopf daran waere eine falsche Zusage.
+   */
+  headers?: Record<string, string>
 }
 
 export type RawEmailErgebnis =
@@ -352,6 +365,9 @@ export async function sendRawEmail(params: RawEmailParams): Promise<RawEmailErge
           html: params.html,
           ...(params.text ? { text: params.text } : {}),
           ...(params.replyTo ? { replyTo: params.replyTo } : {}),
+          ...(params.headers && Object.keys(params.headers).length > 0
+            ? { headers: params.headers }
+            : {}),
           ...(params.attachments?.length
             ? {
                 attachments: params.attachments.map(a => ({

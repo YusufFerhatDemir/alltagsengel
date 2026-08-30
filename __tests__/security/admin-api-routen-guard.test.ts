@@ -54,6 +54,16 @@ const GUARDS = [
   // ohne eigene Huelle. Benutzt von /api/admin/security/audit-log
   // ('sicherheit.lesen').
   'requireBerechtigung',
+  // Duenne Huelle um requireBerechtigung('marketing.verwalten') fuer
+  // /api/admin/marketing/**. Eigener Helfer, weil Werbepost ueber die
+  // Aussenwirkung gegenueber der gesamten Kundschaft entscheidet: wer eine
+  // Kampagne freigibt, schreibt in einem Zug jedes Segmentmitglied an, und
+  // eine rausgegangene Mail holt niemand zurueck. Die Antwort muss deshalb
+  // dieselbe sein, die die marketing_*/email_*-Policies live geben
+  // (is_admin()) — 'marketing.verwalten' steht in NUR_ADMINISTRATION und
+  // bezeichnet genau diese Menge. Gleiche Begruendung wie bei
+  // requireBonusVerwaltung.
+  'requireMarketing',
   'checkAdmin',
   'handleVerifizierungPatch',
   'handleDetailGet',

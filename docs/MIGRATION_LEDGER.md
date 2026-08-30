@@ -41,3 +41,56 @@
 - **Total Migrationen in Supabase**: 285
 - **Letzte Version**: 20260828180000
 - **HEAD**: 42f328d5
+
+---
+
+## Block 20 — Marketing/CRM (2026-08-30), NOCH NICHT ANGEWENDET
+
+| Repo-Datei | Zweck | Status |
+|---|---|---|
+| `20261019000000_marketing_crm.sql` | 6 Tabellen: marketing_consents, email_suppression_list, email_templates, email_campaigns, email_campaign_logs, marketing_automations | **OFFEN — im SQL-Editor einzuspielen** |
+| `20261019000002_rollenmatrix_marketing_verwalten.sql` | SQL-Spiegel der Rollenmatrix um `marketing.verwalten` ergänzt | **OFFEN** |
+| `20261019000004_audit_action_marketing.sql` | `mis_audit_log_action_check` um drei Marketing-Aktionen erweitert | **OFFEN** |
+
+Rollbacks: `…000001`, `…000003`, `…000005`.
+
+### Warum diese Dateien einen Zukunfts-Zeitstempel tragen
+
+Die Regel oben lautet „neue Migrationen nur mit echtem aktuellem
+Timestamp". **Dieser Block weicht bewusst ab** — und der Grund ist die
+Reihenfolge, nicht Bequemlichkeit:
+
+`20261019000002` ersetzt `public.rollen_matrix()` per `CREATE OR REPLACE`
+**vollständig**. Dieselbe Funktion wird von `20261014000000`
+(`bonus.verwalten`) und `20261018000000` (`sicherheit.lesen`) ebenfalls
+ganz ersetzt. Die **zuletzt angewendete Fassung gewinnt**.
+
+Ein echter Zeitstempel (`20260830…`) würde vor den gesamten
+`20261014`–`20261018`-Block sortieren. Der Dateiname behauptete dann eine
+Anwendungsreihenfolge, die der tatsächlichen widerspricht — und genau
+daraus entsteht die Klasse Fehler, gegen die dieser Block sich absichert.
+
+**Zusätzliche Absicherung:** alle drei Matrix-Migrationen führen inzwischen
+die *vollständige* Berechtigungsliste. `20261018000000` trägt
+`marketing.verwalten` mit, `20261019000002` trägt `sicherheit.lesen` mit.
+Damit ist das Endergebnis in **jeder** Anwendungsreihenfolge dasselbe. Wer
+künftig eine Berechtigung ergänzt, übernimmt die vollständige Liste aus
+`lib/auth/rollen.ts` und verlässt sich nicht auf die letzte Migration, die
+er zufällig gelesen hat.
+
+### Anwenden
+
+DDL ist mit dem Dienstschlüssel nicht möglich (42501, siehe
+`REVOKE braucht Owner-Rechte`). Die drei Dateien gehören in den
+Supabase-SQL-Editor, in dieser Reihenfolge:
+
+1. `20261019000000_marketing_crm.sql`
+2. `20261019000002_rollenmatrix_marketing_verwalten.sql`
+3. `20261019000004_audit_action_marketing.sql`
+
+Danach `npm run verify:marketing` — das Skript prüft alle sechs Tabellen,
+sperrt `anon` gegen und meldet Exit 1, solange etwas fehlt.
+
+**Bis dahin ist der Marketing-Code vollständig und wirkungslos:** die
+Routen laufen in „Tabelle existiert nicht" und das Cockpit zeigt einen
+Ladefehler. Das ist der richtige Zustand — kein Versand ohne Schema.
