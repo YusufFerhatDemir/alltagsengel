@@ -13,5 +13,6 @@
 
 import '@/lib/notifications/vorgaenge/buchung'
 import '@/lib/notifications/vorgaenge/rechnung'
+import '@/lib/notifications/vorgaenge/sicherheitsmeldung'
 
 export { registrierteVorgaenge } from '@/lib/notifications/wiederherstellung'

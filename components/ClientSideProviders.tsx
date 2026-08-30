@@ -21,6 +21,10 @@ const WhatsAppButton = dynamic(() => import('@/components/WhatsAppButton'), { ss
 const CallbackWidget = dynamic(() => import('@/components/CallbackWidget'), { ssr: false })
 const BeratungsChat = dynamic(() => import('@/components/BeratungsChat'), { ssr: false })
 const InstallPrompt = dynamic(() => import('@/components/InstallPrompt'), { ssr: false })
+// Sicherheitsspur: meldet den App-Start der nativen Huelle. Steht in
+// BEIDEN Zweigen — auch im PflegeCoach, denn die Sicherheitsspur ist
+// kein Tracking und kein Marketing, sondern Art.-32-Nachweis.
+const AppStartMelder = dynamic(() => import('@/components/AppStartMelder'), { ssr: false })
 
 export default function ClientSideProviders() {
   const pathname = usePathname()
@@ -33,6 +37,7 @@ export default function ClientSideProviders() {
     return (
       <>
         <SessionKeepAlive />
+        <AppStartMelder />
         <CapacitorLinkInterceptor />
         <ServiceWorkerRegister />
         <PushProvider />
@@ -48,6 +53,7 @@ export default function ClientSideProviders() {
       <TikTokPixel />
       <VisitorTracker />
       <SessionKeepAlive />
+      <AppStartMelder />
       <SplashController />
       <CapacitorLinkInterceptor />
       <WhatsAppButton />

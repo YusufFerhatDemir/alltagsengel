@@ -17,13 +17,16 @@ import { describe, it, expect } from 'vitest'
 import {
   EREIGNISSE, KATEGORIEN, SCHWEREGRADE, regelFuer, UNBEKANNTE_REGEL,
   hoechsterSchweregrad, istKategorie, istSchweregrad,
+  UEBERWACHUNGS_EREIGNISSE, ueberwachungspflichtig,
 } from '@/lib/security/ereignisse'
 import {
   geraeteMerkmale, geraeteHash, normalisierterUserAgent, ipAus, istIp,
   plattformAus, MAC_NICHT_VERFUEGBAR,
 } from '@/lib/security/geraet'
 import { bereinigeMetadaten, VERBOTENE_SCHLUESSEL, ENTFERNT } from '@/lib/security/audit'
-import { baueMeldung, PRIVILEGIERTE_ROLLEN } from '@/lib/security/benachrichtigung'
+import {
+  baueMeldung, PRIVILEGIERTE_ROLLEN, meldetFuer, ergebnisAus, MELDE_NACHWEIS,
+} from '@/lib/security/benachrichtigung'
 
 const UA_CHROME_MAC =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
@@ -293,5 +296,208 @@ describe('Meldemail', () => {
     expect([...PRIVILEGIERTE_ROLLEN].sort()).toEqual(
       ['admin', 'buchhaltung', 'pdl', 'qm', 'superadmin'],
     )
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════
+// Kontobezogener Alarm (ACCOUNT_SECURITY_ALERTS)
+// ═══════════════════════════════════════════════════════════════════════
+
+const OHNE = { privilegiert: false, ueberwachung: null }
+const PRIVILEGIERT = { privilegiert: true, ueberwachung: null }
+
+function ueberwacht(opts: Partial<{ alleEreignisse: boolean; aktiv: boolean }> = {}) {
+  return {
+    privilegiert: false,
+    ueberwachung: {
+      id: 'w1', userId: 'u1', organizationId: null,
+      aktiv: opts.aktiv ?? true,
+      alleEreignisse: opts.alleEreignisse ?? true,
+      ohneSperrfrist: true, meldeEmail: null, emailKontrolle: null,
+      grund: 'Test', angelegtVon: null, createdAt: '2026-08-30T00:00:00Z',
+    },
+  }
+}
+
+describe('Ueberwachungssatz', () => {
+  it('nennt nur Ereignisse, die es im Katalog gibt', () => {
+    for (const typ of UEBERWACHUNGS_EREIGNISSE) {
+      expect(Object.keys(EREIGNISSE), `${typ} steht nicht im Katalog`).toContain(typ)
+    }
+  })
+
+  it('ist eine OBERMENGE der meldepflichtigen Ereignisse', () => {
+    // Sonst bekaeme ein ausdruecklich ueberwachtes Konto WENIGER Meldungen
+    // als ein privilegiertes — genau umgekehrt zur Absicht.
+    for (const [typ, regel] of Object.entries(EREIGNISSE)) {
+      if (!regel.meldepflichtig) continue
+      if (typ === MELDE_NACHWEIS) continue
+      expect(UEBERWACHUNGS_EREIGNISSE, `${typ} fehlt im Ueberwachungssatz`).toContain(typ)
+    }
+  })
+
+  it('deckt jeden in der Anforderung genannten Vorgang ab', () => {
+    for (const typ of [
+      'login_success', 'login_failed', 'session_start', 'session_end',
+      'app_start', 'unknown_device', 'logout',
+      'password_changed', 'password_reset_requested',
+      'email_change', 'phone_change', 'account_data_change',
+      'role_change', 'permission_change',
+      'security_action', 'admin_action',
+    ]) {
+      expect(ueberwachungspflichtig(typ), `${typ} wird nicht ueberwacht`).toBe(true)
+    }
+  })
+
+  it('nimmt den Versandnachweis ausdruecklich AUS', () => {
+    // Sonst schriebe jede Mail eine Nachweiszeile, die die naechste Mail
+    // ausloest — eine Endlosschleife mit Postversand.
+    expect(UEBERWACHUNGS_EREIGNISSE).not.toContain(MELDE_NACHWEIS)
+    expect(ueberwachungspflichtig(MELDE_NACHWEIS)).toBe(false)
+  })
+
+  it('kennt einen unbekannten Typ nicht', () => {
+    expect(ueberwachungspflichtig('irgendwas_neues')).toBe(false)
+  })
+})
+
+describe('Wer bekommt wofuer eine Meldung', () => {
+  it('gibt einem gewoehnlichen Konto gar nichts', () => {
+    for (const typ of ['login_success', 'role_change', 'logout', 'app_start']) {
+      expect(meldetFuer(typ, OHNE).melden, typ).toBe(false)
+    }
+  })
+
+  it('gibt einem privilegierten Konto die meldepflichtigen Ereignisse', () => {
+    expect(meldetFuer('login_success', PRIVILEGIERT).melden).toBe(true)
+    expect(meldetFuer('role_change', PRIVILEGIERT).melden).toBe(true)
+  })
+
+  it('laesst das Alltaegliche beim privilegierten Konto weg', () => {
+    // Sonst bekaeme jede Verwaltungskraft jede eigene Abmeldung per Mail.
+    expect(meldetFuer('logout', PRIVILEGIERT).melden).toBe(false)
+    expect(meldetFuer('app_start', PRIVILEGIERT).melden).toBe(false)
+    expect(meldetFuer('login_failed', PRIVILEGIERT).melden).toBe(false)
+  })
+
+  it('gibt einem ueberwachten Konto AUCH das Alltaegliche', () => {
+    for (const typ of ['logout', 'app_start', 'login_failed', 'session_end', 'profile_change']) {
+      expect(meldetFuer(typ, ueberwacht()).melden, typ).toBe(true)
+    }
+  })
+
+  it('meldet niemals den Versandnachweis', () => {
+    for (const lage of [OHNE, PRIVILEGIERT, ueberwacht()]) {
+      expect(meldetFuer(MELDE_NACHWEIS, lage).melden).toBe(false)
+    }
+  })
+
+  it('faellt mit alle_ereignisse = false auf den Katalogsatz zurueck', () => {
+    const eng = ueberwacht({ alleEreignisse: false })
+    expect(meldetFuer('login_success', eng).melden).toBe(true)
+    expect(meldetFuer('logout', eng).melden).toBe(false)
+  })
+
+  it('schweigt bei einem abgeschalteten Eintrag', () => {
+    const aus = ueberwacht({ aktiv: false })
+    expect(meldetFuer('logout', aus).melden).toBe(false)
+    expect(meldetFuer('login_success', aus).melden).toBe(false)
+  })
+
+  it('nennt in jedem Fall einen Grund', () => {
+    for (const lage of [OHNE, PRIVILEGIERT, ueberwacht()]) {
+      expect(meldetFuer('login_success', lage).grund.length).toBeGreaterThan(5)
+    }
+  })
+})
+
+describe('SUCCESS / FAILED', () => {
+  const basis = {
+    ereignisId: 'e1', severity: 'info' as const, userId: 'u1',
+    userEmail: 'a@b.test', organizationId: null, ip: null, userAgent: null,
+    plattform: 'web', geraet: null, zeitpunkt: new Date('2026-08-30T09:15:00Z'),
+  }
+
+  it('nennt Fehlversuche FAILED', () => {
+    for (const typ of ['login_failed', 'mfa_challenge_failed', 'blocked_action', 'security_error']) {
+      expect(ergebnisAus({ ...basis, eventType: typ }), typ).toBe('FAILED')
+    }
+  })
+
+  it('nennt alles andere SUCCESS', () => {
+    for (const typ of ['login_success', 'role_change', 'email_change', 'app_start']) {
+      expect(ergebnisAus({ ...basis, eventType: typ }), typ).toBe('SUCCESS')
+    }
+  })
+
+  it('laesst den Aufrufer widersprechen', () => {
+    expect(ergebnisAus({ ...basis, eventType: 'role_change', metadata: { ergebnis: 'FAILED' } }))
+      .toBe('FAILED')
+  })
+})
+
+describe('Meldemail eines ueberwachten Kontos', () => {
+  const k = {
+    ereignisId: 'e1e1e1e1-0000-4000-8000-000000000001',
+    eventType: 'email_change',
+    severity: 'critical' as const,
+    userId: '5fa1df42-0000-4000-8000-000000000001',
+    userEmail: 'konto@example.test',
+    organizationId: 'aaaaaaaa-0000-4000-8000-000000000001',
+    ip: '203.0.113.9',
+    userAgent: UA_CHROME_MAC,
+    plattform: 'ios',
+    geraet: 'Safari auf iPhone',
+    zeitpunkt: new Date('2026-08-30T09:15:00Z'),
+    benutzerName: 'Vorname Nachname',
+    rolle: 'engel',
+    appVersion: '3.2.1',
+    browser: 'Safari',
+    betriebssystem: 'iPhone',
+    sessionReference: 'sess-abc',
+    metadata: { funktion: 'profiles.email', vorher: 'alt@x.test', nachher: 'neu@x.test' },
+  }
+
+  it('traegt jede in der Anforderung genannte Angabe', () => {
+    const { html, text } = baueMeldung(k, 'Alltagsengel UG')
+    for (const inhalt of [
+      'Vorname Nachname', k.userId, 'konto@example.test', 'engel',
+      'email_change', '2026-08-30T09:15:00.000Z', 'SUCCESS',
+      'profiles.email', 'alt@x.test', 'neu@x.test',
+      '3.2.1', 'Safari', 'iPhone', '203.0.113.9',
+      'sess-abc', k.ereignisId, 'Alltagsengel UG',
+    ]) {
+      expect(html, `HTML ohne ${inhalt}`).toContain(inhalt)
+      expect(text, `Text ohne ${inhalt}`).toContain(inhalt)
+    }
+  })
+
+  it('nennt UTC und lokale Zeit getrennt', () => {
+    const { text } = baueMeldung(k, null)
+    expect(text).toContain('Zeit (UTC)')
+    expect(text).toContain('Zeit (lokal)')
+    expect(text).toContain('2026-08-30T09:15:00.000Z')
+    // Europe/Berlin liegt im August zwei Stunden vor UTC.
+    expect(text).toMatch(/11:15:00/)
+  })
+
+  it('markiert einen Fehlversuch schon im Betreff', () => {
+    const { betreff } = baueMeldung({ ...k, eventType: 'login_failed', severity: 'warning' }, null)
+    expect(betreff).toContain('FEHLGESCHLAGEN')
+  })
+
+  it('nennt den Namen im Betreff — die Mail geht an die Verwaltung', () => {
+    expect(baueMeldung(k, null).betreff).toContain('Vorname Nachname')
+  })
+
+  it('traegt weder Passwort noch Token, auch wenn es in den Metadaten steht', () => {
+    const { html, text } = baueMeldung(
+      { ...k, metadata: { ...k.metadata, password: 'hunter2', access_token: 'geheim' } },
+      null,
+    )
+    expect(html).not.toContain('hunter2')
+    expect(html).not.toContain('geheim')
+    expect(text).not.toContain('hunter2')
+    expect(text).not.toContain('geheim')
   })
 })
