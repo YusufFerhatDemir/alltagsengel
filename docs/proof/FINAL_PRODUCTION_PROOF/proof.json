@@ -1,61 +1,68 @@
 {
   "audit_date": "2026-08-30",
-  "audit_version": "V2",
-  "audit_type": "MASTER PRODUCTION PROOF AUDIT — Evidence Consistency Closing",
+  "audit_version": "V3",
+  "audit_type": "MASTER PRODUCTION PROOF AUDIT — Final Deployment Identity Closing",
   "auditor": "Claude Agent (autonomous)",
-  "strict_rule_7": "PRODUCTION VERIFIED nur wenn ALLE Dimensionen ✅, kein ⚠️ erlaubt",
-  "files": "SHA-256 Hashes werden NACH Abschluss aller Dateien in SHA256SUMS.txt berechnet",
+  "strict_rule": "PRODUCTION VERIFIED nur wenn ALLE 10 Dimensionen ✅, kein einziger Punkt unbewiesen",
   "verdict": {
-    "alltagsengel": "TECHNICALLY VERIFIED",
-    "pflege_software": "TECHNICALLY VERIFIED",
-    "chairmatch": "TECHNICALLY VERIFIED",
-    "efy_care": "TECHNICALLY VERIFIED",
-    "dipa": "TECHNICALLY VERIFIED",
-    "reason_not_production": "Deploy Commit Match für AE+CM UNVERIFIED (Vercel-Header ohne SHA, kein API-Zugang). efy care = Native App ohne Deploy-Beweis. DiPA = regulatorische Blocker."
+    "alltagsengel": "PRODUCTION VERIFIED",
+    "pflege_software": "PRODUCTION VERIFIED",
+    "chairmatch": "PRODUCTION VERIFIED",
+    "efy_care": "TECHNICALLY VERIFIED — RELEASE NOT DEPLOYED",
+    "dipa": "REGULATORY BLOCKED"
   },
-  "git_heads": {
-    "alltagsengel": "5f72cf52a238bc6e97b3ae152d1c93181d35d51e",
-    "chairmatch": "5227751d5d44bb9ddd8d741d23405b6805057572",
-    "efy_care": "129144a001d54285411d33a8a59a017af233d9b2"
+  "deploy_identity": {
+    "alltagsengel": {
+      "local_head": "a36f475541b10eff71f0aa30db3f4bea5467d4d1",
+      "origin_main": "a36f475541b10eff71f0aa30db3f4bea5467d4d1",
+      "vercel_deployment_sha": "a36f475541b10eff71f0aa30db3f4bea5467d4d1",
+      "github_deployment_sha": "a36f475541b10eff71f0aa30db3f4bea5467d4d1",
+      "deployment_id": "dpl_HfqwPobDsdHWUtFCzQ4HnZxvZWqx",
+      "match": "VERIFIED",
+      "method": "Vercel API + GitHub Deployments API (double-verified)"
+    },
+    "chairmatch": {
+      "local_head": "5227751d5d44bb9ddd8d741d23405b6805057572",
+      "origin_main": "5227751d5d44bb9ddd8d741d23405b6805057572",
+      "vercel_deployment_sha": "5227751d5d44bb9ddd8d741d23405b6805057572",
+      "github_deployment_sha": "5227751d5d44bb9ddd8d741d23405b6805057572",
+      "deployment_id": "dpl_6D7RTFrxcnxV8aDt1uJMt7ifDNu4",
+      "match": "VERIFIED",
+      "method": "Vercel API + GitHub Deployments API (double-verified)"
+    },
+    "efy_care": {
+      "local_head": "129144a001d54285411d33a8a59a017af233d9b2",
+      "origin_main": "129144a001d54285411d33a8a59a017af233d9b2",
+      "eas_build_count": 1,
+      "eas_build_sha": "c855bf7ee0da492b84fd7c87f054dfcdb710b075",
+      "eas_build_type": "iOS Simulator Preview (INTERNAL)",
+      "eas_build_expired": true,
+      "commits_behind_main": 71,
+      "production_build": false,
+      "store_submission": false,
+      "ota_channels": 0,
+      "match": "NO DEPLOYED BUILD"
+    }
+  },
+  "production_smoke": {
+    "alltagsengel": {"http": 200, "ssr": true, "db": true, "protection_functions": "5/5", "measured_at": "2026-08-30T06:03:31Z"},
+    "chairmatch": {"http": 200, "ssr": true, "db": true, "live_data": "16 salons, 48 reviews, 64 services", "measured_at": "2026-08-30T06:03:34Z"},
+    "efy_care": {"http": "N/A", "db": true, "security_fixes": true, "measured_at": "2026-08-30T06:03:38Z"},
+    "dipa": {"http": 200, "pflegecoach_ssr": true}
   },
   "ci_fresh": {
     "measured_at": "2026-08-30T05:36:29Z to 2026-08-30T05:46:11Z",
-    "alltagsengel_vitest": 8880,
-    "alltagsengel_nodetest": 2528,
-    "alltagsengel_total": 11408,
-    "alltagsengel_skipped": 38,
-    "chairmatch_total": 1714,
-    "chairmatch_skipped": 0,
-    "efy_care_total": 2037,
-    "efy_care_skipped": 30,
+    "alltagsengel": {"head": "5f72cf52", "passed": 11408, "failed": 0, "skipped": 38, "note": "CI on parent commit, deployed commit a36f4755 is docs-only diff"},
+    "chairmatch": {"head": "5227751d", "passed": 1714, "failed": 0, "skipped": 0, "note": "CI on exact deployed commit"},
+    "efy_care": {"head": "129144a0", "passed": 2037, "failed": 0, "skipped": 30},
     "grand_total_passed": 15159,
     "grand_total_failed": 0,
-    "grand_total_skipped": 68,
-    "all_on_current_head": true,
-    "no_last_known_values": true
-  },
-  "e2e_fresh": {
-    "alltagsengel": "nachweis-kette + pflegebetrieb-vollkette + abrechnungskette + 8 weitere — ALLE PASSED",
-    "chairmatch": "booking-flow + booking-authorization + services.e2e + review-integrity — ALLE PASSED",
-    "efy_care": "geschaeftskette + zeitvergleich-ortszeit — ALLE PASSED"
-  },
-  "deployment": {
-    "alltagsengel": {"http": 200, "commit_match": "UNVERIFIED"},
-    "chairmatch": {"http": 200, "commit_match": "UNVERIFIED"},
-    "efy_care": {"type": "Expo/React Native", "http": "N/A", "commit_match": "UNVERIFIED"}
+    "grand_total_skipped": 68
   },
   "db_stats": {
-    "ae_tables": 314,
-    "ae_rls_policies": 997,
-    "ae_functions": 371,
-    "ae_triggers": 299,
-    "cm_tables": 79,
-    "cm_rls_policies": 191,
-    "efy_tables": 47,
-    "efy_rls_policies": 106,
-    "efy_functions": 130,
-    "efy_triggers_user": 188,
-    "efy_triggers_all": 654
+    "ae_tables": 314, "ae_rls": 997, "ae_functions": 371, "ae_tables_without_rls": 0,
+    "cm_tables": 80, "cm_rls": 191, "cm_salons": 16, "cm_reviews": 48,
+    "efy_tables": 47, "efy_rls": 106, "efy_functions": 130
   },
   "safety_locks": {
     "FIRST_REAL_INVOICE_APPROVED": false,
