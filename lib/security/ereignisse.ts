@@ -206,6 +206,32 @@ export const EREIGNISSE: Readonly<Record<string, EreignisRegel>> = {
     bezeichnung: 'Ratengrenze ueberschritten',
   },
 
+  // ── Standortfreigabe (TRACK G2) ───────────────────────────────────
+  // Das Einschalten ist meldepflichtig, das Ausschalten nicht. Die
+  // gefaehrliche Richtung ist genau eine: wer ein fremdes Konto
+  // uebernimmt, koennte damit den Aufenthaltsort der Person sichtbar
+  // machen — und das muss bei DER PERSON ankommen, nicht nur in einer
+  // Liste. Der Widerruf dagegen ist die Handlung, die dieses System
+  // ausdruecklich jederzeit erlauben soll; eine Mail dafuer waere eine
+  // Bremse ohne Schutzwirkung.
+  location_sharing_enabled: {
+    kategorie: 'security', schweregrad: 'warning', meldepflichtig: true,
+    bezeichnung: 'Standortfreigabe eingeschaltet',
+  },
+  location_sharing_disabled: {
+    kategorie: 'security', schweregrad: 'info', meldepflichtig: false,
+    bezeichnung: 'Standortfreigabe ausgeschaltet',
+  },
+  // Ein Standortpunkt, den die Datenbank oder der Anwendungscode
+  // abgewiesen hat — weil keine Freigabe aktiv war, weil der gemeldete
+  // Modus nicht zur Freigabe passte oder weil im Einsatzmodus kein
+  // laufender Einsatz vorlag. Ein einzelner Fall ist ein nachlaufender
+  // Client; eine Serie ist ein Befund.
+  location_update_rejected: {
+    kategorie: 'security', schweregrad: 'warning', meldepflichtig: false,
+    bezeichnung: 'Standortmeldung abgewiesen',
+  },
+
   // ── admin ─────────────────────────────────────────────────────────
   admin_action: {
     kategorie: 'admin', schweregrad: 'info', meldepflichtig: false,
@@ -222,6 +248,15 @@ export const EREIGNISSE: Readonly<Record<string, EreignisRegel>> = {
   watchlist_change: {
     kategorie: 'admin', schweregrad: 'critical', meldepflichtig: true,
     bezeichnung: 'Ueberwachungsliste geaendert',
+  },
+  // Wer die Standortkarte oeffnet, hinterlaesst eine Spur — dieselbe
+  // Regel wie beim CSV-Export der Sicherheitsspur. Eine Ansicht auf den
+  // Aufenthaltsort von Kolleginnen und Kollegen, die niemand nachlesen
+  // kann, waere genau die verdeckte Ueberwachung, die dieses Modul
+  // ausschliessen soll.
+  location_tracking_view: {
+    kategorie: 'admin', schweregrad: 'warning', meldepflichtig: false,
+    bezeichnung: 'Standortansicht geoeffnet',
   },
 }
 
@@ -281,11 +316,15 @@ export const UEBERWACHUNGS_EREIGNISSE: readonly string[] = [
   'unusual_login_series',
   'critical_data_change',
   'data_export',
+  'location_sharing_enabled',
+  'location_sharing_disabled',
+  'location_update_rejected',
   // Verwaltung
   'admin_action',
   'account_created',
   'account_deleted',
   'watchlist_change',
+  'location_tracking_view',
 ]
 
 /** Meldet dieses Ereignis fuer ein ausdruecklich ueberwachtes Konto? */

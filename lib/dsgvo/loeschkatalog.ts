@@ -234,6 +234,23 @@ export const LOESCHKATALOG: readonly LoeschEintrag[] = [
     begruendung: 'Die Überwachung eines Kontos endet mit dem Konto. ON DELETE CASCADE ist gesetzt.',
   },
   {
+    tabelle: 'location_updates', spalte: 'user_id', entscheidung: 'loeschen',
+    begruendung:
+      'TRACK G2: Standortpunkte (Position, Genauigkeit, Zeitpunkt, Gerät) samt ip_address. '
+      + 'Kein Aufbewahrungsgrund — die Erhebung beruht ausschließlich auf einer Einwilligung, und '
+      + 'mit dem Konto endet auch sie. „aufbewahren" wäre hier dieselbe falsche Aussage wie bei '
+      + '[[visitor_locations]]: die Position eines Menschen bleibt ein Personenbezug, auch wenn das '
+      + 'Etikett fehlt. ON DELETE CASCADE ist gesetzt; der Eintrag steht hier, weil der Katalog die '
+      + 'Entscheidungsstelle ist und nicht der Fremdschlüssel.',
+  },
+  {
+    tabelle: 'location_sharing_settings', spalte: 'user_id', entscheidung: 'loeschen',
+    begruendung:
+      'TRACK G2: die Einwilligung selbst. Sie endet mit dem Konto; der NACHWEIS über Erteilung und '
+      + 'Widerruf liegt getrennt in security_audit_log (location_sharing_enabled/-disabled) und '
+      + 'überlebt die Löschung dort mit SET NULL. ON DELETE CASCADE ist gesetzt.',
+  },
+  {
     tabelle: 'angehoerigen_audit_log', spalte: 'user_id', entscheidung: 'aufbewahren', blockiert: true,
     begruendung: 'Wer wann welche Gesundheitsdaten Dritter eingesehen hat — genau die Nachweispflicht aus Art. 30 DSGVO. ACHTUNG: der Fremdschlüssel steht live auf NO ACTION und blockiert die Löschung; siehe lib/dsgvo/loeschung.ts.',
   },

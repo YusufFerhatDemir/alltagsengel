@@ -85,6 +85,16 @@ const PAARE = [
     seite: '/admin/kundenakte',
     route: 'app/api/akten/kontaktpersonen/[id]/route.ts',
   },
+  {
+    // Standortansicht (TRACK G2). Die Seite liegt unter
+    // '/admin/location/tracking' und erbt ihre Regel ueber die
+    // Praefix-Zuordnung von '/admin/location'; geprueft wird hier der
+    // Praefix-Eintrag selbst, weil der Test den Schluessel direkt
+    // nachschlaegt. Die Route hat bewusst NUR einen GET-Handler — es
+    // gibt keinen Verwaltungsweg, der eine Standortfreigabe einschaltet.
+    seite: '/admin/location',
+    route: 'app/api/admin/location/tracking/route.ts',
+  },
 ] as const
 
 /**
