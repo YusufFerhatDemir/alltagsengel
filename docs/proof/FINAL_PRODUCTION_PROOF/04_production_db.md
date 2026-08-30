@@ -68,19 +68,27 @@ Alle 24 geprüften Subsystem-Tabellen existieren mit RLS enabled und mindestens 
 
 ## efy care (nsfbwhpjesmathsrqkfi)
 
-| Metrik | Wert |
-|--------|------|
-| Tabellen | 47 |
-| Funktionen | 129 |
-| Trigger | 275 |
-| RLS-Policies | 118 |
-| Tabellen mit RLS enabled | 47/47 |
-| MCP-Zugang | **FUNKTIONIERT** (vorher: LegacyPlatformAuthRequiredError) |
+**Definitive Messung nach beiden Migrationen (zeitvergleich_ortszeit + einladungsweg)**
+
+| Metrik | Wert | Abfragemethode |
+|--------|------|----------------|
+| Tabellen (public, BASE TABLE) | 47 | `information_schema.tables` |
+| Funktionen (public) | 130 | `pg_proc JOIN pg_namespace` |
+| User-Trigger (NOT internal, public) | 188 | `pg_trigger NOT tgisinternal` |
+| Alle Trigger (inkl. internal) | 654 | `pg_trigger` (ohne Filter) |
+| RLS-Policies (public) | 106 | `pg_policies` |
+| Tabellen mit RLS enabled | 47/47 (100%) | `pg_class.relrowsecurity` |
+
+**Erklärung der Zahlendifferenz zur V1:** Die V1 nannte 129 Funktionen / 275 Trigger / 118 RLS. Die Differenz entsteht durch:
+1. +1 Funktion: `invite_to_organization_by_email()` durch einladungsweg-Migration
+2. Trigger/RLS: Die V1-Abfrage verwendete einen anderen Filter (möglicherweise inkl. interner Trigger oder cross-schema). Die V2-Abfrage ist definiert und reproduzierbar (nur public, NOT tgisinternal).
+
+**Es gilt ausschließlich der V2-Zahlenstand.**
 
 ## Bewertung
 
 | Produkt | DB-Status |
 |---------|-----------|
-| Alltagsengel | **PRODUCTION VERIFIED** |
-| ChairMatch | **PRODUCTION VERIFIED** |
-| efy care | **PRODUCTION VERIFIED** (MCP-Zugang jetzt funktional) |
+| Alltagsengel | **VERIFIED** — 314 Tabellen, 997 RLS, 11/11 Schutzmechanismen |
+| ChairMatch | **VERIFIED** — 79 Tabellen, 191 RLS, alle enabled |
+| efy care | **VERIFIED** — 47 Tabellen, 106 RLS, alle enabled, beide Migrationen applied |
