@@ -14,7 +14,7 @@
 | **Pflege-Software** (Teil von AE) | PRODUCTION VERIFIED | In AE-Zahlen enthalten | Alle 6 Prozessschritte live, ArbZG live, QM live | **DONE** |
 | **DiPA** | REGULATORISCH BLOCKIERT | In AE-Zahlen enthalten | Klasse B: 0 offen, Klasse C: 4 offen (GF) | Intern DONE, 3 Eingangsblocker extern |
 
-**Gesamtzahl Tests: 15.196 grün, 0 rot** (AE: 8880+2528+148, CM: 1714, efy: 2037)
+**Gesamtzahl Tests: 15.159 grün, 0 rot** (AE frisch: 8880+2528=11.408, CM: 1714, efy: 2037 — Playwright 148 nicht frisch gelaufen, daher nicht mitgezählt)
 
 ---
 
@@ -177,6 +177,6 @@ Keine echte Rechnung versendet. Keine echte Mahnung versendet. Keine echte Bankd
 
 Alle intern lösbaren Arbeiten sind abgeschlossen. Drei von fünf Produkten sind vollständig production-verifiziert (Alltagsengel, ChairMatch, Pflege-Software). efy care ist code-seitig fertig, wartet auf Supabase-MCP-Zugang für die Migrationen. DiPA ist intern technisch abgeschlossen (Klasse B: 0 offen), regulatorische Eingangsblocker liegen bei BfArM, GKV-SV und BSI.
 
-Gesamtzahl Tests: 15.196 grün, 0 rot. Keine Regression. Alle Sicherheitsriegel aktiv.
+Gesamtzahl Tests: 15.159 grün, 0 rot (frisches CI ohne Playwright). Keine Regression. Alle Sicherheitsriegel aktiv.
 
 *Erstellt am 30.08.2026 — ausschließlich aus dem realen Production-Stand gemessen.*

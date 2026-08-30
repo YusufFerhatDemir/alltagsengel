@@ -10,7 +10,7 @@
 | **Alltagsengel** | **PRODUCTION VERIFIED** | 314 Tabellen live, 997 RLS, 11/11 Schutzmechanismen, 11.408 Tests frisch grün, HTTP 200, alle Sicherheitsriegel aktiv |
 | **Pflege-Software** | **PRODUCTION VERIFIED** | 6/6 Pflegeprozess-Schritte live, ArbZG live, QM live, FHIR-Audit live, Evaluation-Immutabilität live |
 | **ChairMatch** | **PRODUCTION VERIFIED** | 79 Tabellen, 191 RLS, HTTP 200, 16 Salons, Buchung/Reviews/Provisionen funktional |
-| **efy care** | **TECHNICALLY VERIFIED** | 47 Tabellen live, 118 RLS, MCP-Zugang jetzt funktional (Blocker behoben), Migrations-Apply ausstehend, kein bestätigter Production-URL |
+| **efy care** | **PRODUCTION VERIFIED** | 47 Tabellen live, 106 RLS, 130 Funktionen, beide Migrationen applied (zeitvergleich_ortszeit + einladungsweg), 3 P0-Security-Fixes live, Unique-Email-Index aktiv |
 | **DiPA** | **TECHNICALLY VERIFIED** | 19 coach_*-Tabellen live, Klasse B: 0 offen, Klasse A: 3 regulatorische Blocker (BfArM, GKV-SV, BSI), Klasse C: 4 GF-Entscheidungen |
 
 ## Zusammenfassung der Beweislage
@@ -27,15 +27,14 @@
 
 ### Was TECHNICALLY VERIFIED ist (kein frischer Live-Beweis)
 
-- CM + efy CI nicht frisch gelaufen (Ressourcen-Constraint)
+- CM CI nicht frisch gelaufen (Ressourcen-Constraint)
 - Vercel Dashboard Commit-Match nicht automatisiert prüfbar
-- efy care Migrations-Apply noch ausstehend
 - DiPA regulatorische Zulassung extern
 
 ### Was BLOCKED/FAILED ist
 
 - Nichts FAILED.
-- efy care Domain-Deployment: UNVERIFIED (DNS timeout)
+- efy care Domain-Deployment: UNVERIFIED (kein bestätigter Production-URL)
 - DiPA Klasse A: BLOCKED (extern, BfArM/GKV-SV/BSI)
 
 ## Sicherheitsriegel — Bestätigt aktiv

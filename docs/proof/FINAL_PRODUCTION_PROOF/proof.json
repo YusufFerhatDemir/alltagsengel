@@ -20,7 +20,7 @@
     "alltagsengel": "PRODUCTION VERIFIED",
     "pflege_software": "PRODUCTION VERIFIED",
     "chairmatch": "PRODUCTION VERIFIED",
-    "efy_care": "TECHNICALLY VERIFIED",
+    "efy_care": "PRODUCTION VERIFIED",
     "dipa": "TECHNICALLY VERIFIED"
   },
   "test_counts": {
@@ -40,7 +40,9 @@
     "cm_tables": 79,
     "cm_rls_policies": 191,
     "efy_tables": 47,
-    "efy_rls_policies": 118
+    "efy_rls_policies": 106,
+    "efy_functions": 130,
+    "efy_triggers": 188
   },
   "safety_locks": {
     "FIRST_REAL_INVOICE_APPROVED": false,
