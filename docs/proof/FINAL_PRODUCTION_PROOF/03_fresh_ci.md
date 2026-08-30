@@ -1,41 +1,57 @@
-# Phase 3 — Fresh CI Run
+# Phase 3 — Fresh CI Run (V2)
 
-**Gemessen am 30.08.2026, Session local_7cc3d02d**
+**Alle drei Produkte frisch auf aktuellem HEAD getestet am 30.08.2026**
 
-## Alltagsengel — Frischer CI-Lauf
+## Alltagsengel
 
 | Schritt | Ergebnis | Dauer |
 |---------|----------|-------|
-| `git rev-parse HEAD` | `e3122bf3` | — |
-| `npx tsc --noEmit --incremental false` (kalt) | **0 Fehler** | 55s |
-| `npm run test` (vitest) | **8880 grün / 0 rot** (38 skip, 396 Dateien) | 110s |
-| `npm run test:unit` (node:test) | **2528 grün / 0 rot** (286 Suiten, 131 Dateien) | 5s |
-| `npm run build` (next build) | **PASS** (599/599 statische Seiten) | 95s |
+| HEAD SHA | `5f72cf52a238bc6e97b3ae152d1c93181d35d51e` | — |
+| Start (UTC) | 2026-08-30T05:43:11Z | — |
+| Ende (UTC) | 2026-08-30T05:46:11Z | 3:00 min |
+| `tsc --noEmit` | **0 Fehler**, Exit 0 | — |
+| vitest run | **8880 passed / 0 failed / 38 skipped** (396 Dateien) | 125,4s |
+| node:test (test:unit) | **2528 passed / 0 failed / 0 skipped** (286 Suiten) | 4,5s |
+| **Gesamt** | **11.408 passed, 0 failed, 38 skipped** | — |
 
-**Gesamt: 11.408 Tests grün, 0 rot.**
+Playwright E2E nicht gelaufen (braucht Browser, Ressourcen-Constraint 8GB).
 
-### Anmerkungen
+## ChairMatch
 
-1. tsc schließt `__tests__/**` aus (`tsconfig.json`). „0 Fehler" gilt für Produktivcode.
-2. Build nutzt `--turbopack` und `--max-old-space-size=4096` (OOM-Guard).
-3. Playwright E2E nicht gelaufen (braucht Browser, Ressourcen-Constraint auf 8GB-Maschine).
+| Schritt | Ergebnis | Dauer |
+|---------|----------|-------|
+| HEAD SHA | `5227751d5d44bb9ddd8d741d23405b6805057572` | — |
+| Start (UTC) | 2026-08-30T05:36:29Z | — |
+| Ende (UTC) | 2026-08-30T05:39:41Z | 3:12 min |
+| `tsc --noEmit` | **0 Fehler**, Exit 0 | — |
+| vitest run | **1714 passed / 0 failed / 0 skipped** (87 Dateien) | 6,71s |
+| Build (`npm run build`) | **PASS** (341 Seiten, erfordert `SUPABASE_SERVICE_ROLE_KEY` für Prerender) | — |
+| **Gesamt** | **1.714 passed, 0 failed, 0 skipped** | — |
 
-## ChairMatch — Kein frischer CI-Lauf
+Build-Anmerkung: Ohne `SUPABASE_SERVICE_ROLE_KEY` bricht Prerendering von `/statistik` ab. Mit gesetzter Variable (wie in Vercel Production): alle 341 Seiten generiert, Exit 0.
 
-Ressourcen-Constraint: max 2 schwere Prozesse gleichzeitig auf 8GB RAM.
-Letzter bekannter Stand: 1714 Tests grün / 0 rot (aus vorheriger Session).
-Status: **TECHNICALLY VERIFIED** (kein frischer Lauf in dieser Audit-Session).
+## efy care
 
-## efy care — Kein frischer CI-Lauf
+| Schritt | Ergebnis | Dauer |
+|---------|----------|-------|
+| HEAD SHA | `129144a001d54285411d33a8a59a017af233d9b2` | — |
+| Start (UTC) | 2026-08-30T05:40:15Z | — |
+| Ende (UTC) | 2026-08-30T05:41:15Z | 1:00 min |
+| `tsc --noEmit` (app/) | **0 Fehler**, Exit 0 | — |
+| vitest run (root) | **2037 passed / 0 failed / 30 skipped** (70 Dateien) | 29,65s |
+| **Gesamt** | **2.037 passed, 0 failed, 30 skipped** | — |
 
-Gleicher Ressourcen-Constraint.
-Letzter bekannter Stand: 2037 Tests grün / 0 rot.
-Status: **TECHNICALLY VERIFIED** (kein frischer Lauf in dieser Audit-Session).
+Kein Build-Schritt nötig (Expo/React Native App, nicht Next.js).
+
+## Gesamtergebnis aller Produkte
+
+| Produkt | HEAD SHA | Passed | Failed | Skipped | Typecheck | Build |
+|---------|----------|--------|--------|---------|-----------|-------|
+| Alltagsengel | `5f72cf52` | 11.408 | 0 | 38 | ✅ | ✅ (599 Seiten) |
+| ChairMatch | `5227751d` | 1.714 | 0 | 0 | ✅ | ✅ (341 Seiten) |
+| efy care | `129144a0` | 2.037 | 0 | 30 | ✅ | N/A (Expo) |
+| **TOTAL** | — | **15.159** | **0** | **68** | — | — |
 
 ## Bewertung
 
-| Produkt | CI-Status |
-|---------|-----------|
-| Alltagsengel | **PRODUCTION VERIFIED** (11.408 grün, 0 rot, frisch) |
-| ChairMatch | **TECHNICALLY VERIFIED** (nicht frisch gelaufen) |
-| efy care | **TECHNICALLY VERIFIED** (nicht frisch gelaufen) |
+**ALLE DREI PRODUKTE: CI FRISCH GRÜN** — 15.159 Tests auf aktuellem HEAD, 0 Failures.

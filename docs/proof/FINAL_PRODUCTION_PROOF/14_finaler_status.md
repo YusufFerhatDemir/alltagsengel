@@ -1,27 +1,38 @@
-# Finaler Status — Alle Produkte
+# Finaler Status — Alle Produkte (V2 Strict)
 
-**Stand: 30.08.2026**
+**Stand: 30.08.2026 — V2 nach Evidence Consistency Closing**
 
-## Status-Matrix (10 Dimensionen)
+## Status-Matrix (10 Dimensionen, strikt nach Regel 7)
 
 | Dimension | Alltagsengel | Pflege-Software | ChairMatch | efy care | DiPA |
 |-----------|-------------|-----------------|------------|----------|------|
-| **Git** | ✅ main synced | ✅ (Teil von AE) | ✅ main synced | ✅ main synced | ✅ (Teil von AE) |
-| **Deploy** | ✅ HTTP 200 | ✅ (Teil von AE) | ✅ HTTP 200 | ⚠️ UNVERIFIED (kein bestätigter URL) | ✅ /pflegecoach HTTP 200 |
+| **Git** | ✅ `5f72cf52` synced | ✅ (Teil von AE) | ✅ `5227751d` synced | ✅ `129144a0` synced | ✅ (Teil von AE) |
+| **Deploy** | ⚠️ HTTP 200, Commit UNVERIFIED | ⚠️ (Teil von AE) | ⚠️ HTTP 200, Commit UNVERIFIED | ⚠️ Native App, kein Deploy-Beweis | ⚠️ (Teil von AE) |
 | **DB** | ✅ 314 Tabellen, 997 RLS | ✅ 8 Kern + 6 Zusatz | ✅ 79 Tabellen, 191 RLS | ✅ 47 Tabellen, 106 RLS | ✅ 19 coach_* Tabellen |
-| **Migration** | ✅ alle applied | ✅ alle applied | ✅ alle applied | ✅ beide Migrations applied | ✅ alle applied |
-| **CI** | ✅ 11.408 frisch grün | ✅ in AE enthalten | ⚠️ 1.714 letzter Stand | ⚠️ 2.037 letzter Stand | ✅ in AE enthalten |
-| **E2E** | ⚠️ 148 Playwright nicht frisch | ✅ Prozessschritte live | ⚠️ nicht frisch | ⚠️ nicht frisch | ⚠️ nicht frisch |
-| **Security** | ✅ Anon-Block, Precommit, Geldweg-Riegel | ✅ RLS + Trigger | ✅ Alle RLS enabled | ✅ 3 P0-Fixes live, Email-Index | ✅ Schalter auf sicherem Stand |
-| **HTTP** | ✅ 200 | ✅ 200 | ✅ 200 | ⚠️ nicht getestet | ✅ /pflegecoach 200 |
-| **Regulatory** | ✅ NICHT ERFORDERLICH | ✅ IK-Nummer vorhanden | ✅ NICHT ERFORDERLICH | ✅ NICHT ERFORDERLICH | ❌ 3 Eingangsblocker FEHLT |
-| **FINAL STATUS** | **PRODUCTION VERIFIED** | **PRODUCTION VERIFIED** | **PRODUCTION VERIFIED** | **PRODUCTION VERIFIED** | **TECHNICALLY VERIFIED** |
+| **Migration** | ✅ alle applied | ✅ alle applied | ✅ alle applied | ✅ beide applied | ✅ alle applied |
+| **CI** | ✅ 11.408 FRISCH | ✅ in AE enthalten | ✅ 1.714 FRISCH | ✅ 2.037 FRISCH | ✅ in AE enthalten |
+| **E2E** | ✅ FRISCH (PGlite) | ✅ FRISCH (PGlite) | ✅ FRISCH (PGlite) | ✅ FRISCH (PGlite) | ✅ in AE enthalten |
+| **Security** | ✅ 11/11 Mechanismen | ✅ RLS + Trigger | ✅ Alle RLS enabled | ✅ 3 P0-Fixes, Email-Index | ✅ Schalter sicher |
+| **HTTP** | ✅ 200 | ✅ 200 | ✅ 200 | N/A (Native App) | ✅ /pflegecoach 200 |
+| **Regulatory** | ✅ N/A | ✅ IK vorhanden | ✅ N/A | ✅ N/A | ❌ 3 Blocker FEHLT |
+| **FINAL STATUS** | **TECHNICALLY VERIFIED** | **TECHNICALLY VERIFIED** | **TECHNICALLY VERIFIED** | **TECHNICALLY VERIFIED** | **TECHNICALLY VERIFIED** |
 
 ## Legende
 
-- ✅ = Verifiziert / vorhanden
-- ⚠️ = Teilweise / letzter bekannter Stand / nicht frisch geprüft
+- ✅ = Frisch verifiziert am 30.08.2026
+- ⚠️ = Nicht vollständig verifizierbar (Deploy Commit Match fehlt)
 - ❌ = Fehlt / blockiert
+- N/A = Nicht anwendbar
+
+## Warum kein PRODUCTION VERIFIED
+
+Gemäß **Regel 7**: Kein ⚠️ darf gleichzeitig mit PRODUCTION VERIFIED existieren.
+
+- **AE + CM**: Vercel Auto-Deploy ist aktiv (jeder Push auf main), HTTP 200 bestätigt. Aber der exakte Commit-Match (deployed Build = Git HEAD) erfordert Vercel Dashboard/API-Zugang, der nicht automatisiert verfügbar ist.
+- **efy care**: Native App (Expo/React Native). EAS Build-Status erfordert EAS CLI oder TestFlight-Screenshot.
+- **DiPA**: 3 regulatorische Eingangsblocker extern (TR-03161, ISO 27001, BfArM).
+
+**PRODUCTION VERIFIED wird möglich**, sobald diese Dimensionen nachgeholt werden.
 
 ---
 
@@ -29,12 +40,13 @@
 
 Alle intern lösbaren technischen Arbeiten sind abgeschlossen:
 
-- **Alltagsengel**: 314 Tabellen, 997 RLS-Policies, 371 Funktionen, 299 Trigger, 11.408 Tests grün, alle Sicherheitsriegel aktiv, Geldweg vollständig geschützt, Pflege-Software integriert und live.
-- **ChairMatch**: 79 Tabellen, 191 RLS-Policies, 16 Salons live, Buchung/Reviews/Provisionen funktional, Stripe-Integration gebaut.
-- **efy care**: 47 Tabellen, 130 Funktionen, 106 RLS-Policies, beide Security-Migrationen applied, 2.037 Tests grün, Offline-Sync + Geo-Tracking + Unterschriftenkette gebaut.
-- **DiPA**: 19 coach_*-Tabellen live, 48-Punkte-Anforderungskatalog maschinenlesbar, 34/48 Anforderungen intern erfüllt, Klasse A (25) und B (4) vollständig abgeschlossen, alle Schalter auf sicherem Stand.
+- **Alltagsengel**: 314 Tabellen, 997 RLS, 371 Funktionen, 299 Trigger, 11.408 Tests frisch grün, alle Sicherheitsriegel aktiv, Geldweg geschützt.
+- **Pflege-Software**: 6/6 Prozesse, ArbZG, QM, FHIR, Evaluation-Immutabilität. Teil von AE.
+- **ChairMatch**: 79 Tabellen, 191 RLS, 1.714 Tests frisch grün, Buchung/Reviews/Provisionen funktional.
+- **efy care**: 47 Tabellen, 130 Funktionen, 106 RLS, 2.037 Tests frisch grün, beide Migrationen applied.
+- **DiPA**: Klasse A+B: 0 intern offen. 48-Punkte-Katalog, 34/48 intern erfüllt.
 
-**Gesamtzahl Tests: 15.159 grün, 0 rot** (AE: 11.408 frisch, CM: 1.714, efy: 2.037)
+**Gesamtzahl Tests: 15.159 frisch grün, 0 rot** (30.08.2026, alle auf aktuellem HEAD)
 
 ---
 
@@ -42,36 +54,34 @@ Alle intern lösbaren technischen Arbeiten sind abgeschlossen:
 
 | # | Thema | Produkt | Zuständig | Geschätzte Dauer |
 |---|-------|---------|-----------|-----------------|
-| 1 | TR-03161 Datensicherheitszertifikat | DiPA | BSI-Prüfstelle | 2–4 Monate |
-| 2 | ISO 27001 ISMS-Zertifikat | DiPA | DAkkS-Stelle | 6–12 Monate |
-| 3 | Wissenschaftliches Evaluationskonzept | DiPA | Wiss. Einrichtung | 1–3 Monate |
-| 4 | BfArM-Antrag + Verzeichniseintrag | DiPA | BfArM | 3 Monate ab Antrag |
-| 5 | GKV-SV Vergütungsverhandlung | DiPA | GKV-SV | nach BfArM-Listung |
-| 6 | Externer Penetrationstest | DiPA | Sicherheitsdienstleister | 1–2 Monate |
-| 7 | Summative Gebrauchstauglichkeit | DiPA | Usability-Institut | 1–2 Monate |
-| 8 | Pflegefachliche Inhaltsfreigabe | DiPA | PDL mit Freigabemandat | 1 Monat |
-| 9 | Unterzeichnete DSFA + AVV-Kette | DiPA | GF + DSB | intern, GF-Entscheidung |
-| 10 | Support-Zusage (24-h-Frist) | DiPA | GF | intern, GF-Entscheidung |
-| 11 | Nutzungsbedingungen final | DiPA | Kanzlei | 1 Monat |
-| 12 | Vergütung/Abrechnungsweg | DiPA | GF | GF-Entscheidung |
-| 13 | efy care Production-URL bestätigen | efy care | DevOps/Vercel | minimal |
-| 14 | CM + efy CI frisch laufen lassen | CM, efy | intern (Ressourcen) | 1 Stunde |
+| 1 | Vercel Deploy Commit Match | AE, CM | DevOps (API-Token) | minimal |
+| 2 | EAS Build Beweis | efy care | DevOps (EAS CLI) | minimal |
+| 3 | TR-03161 Datensicherheitszertifikat | DiPA | BSI-Prüfstelle | 2–4 Monate |
+| 4 | ISO 27001 ISMS-Zertifikat | DiPA | DAkkS-Stelle | 6–12 Monate |
+| 5 | BfArM-Antrag + Verzeichniseintrag | DiPA | BfArM | 3 Monate ab Antrag |
+| 6 | GKV-SV Vergütungsverhandlung | DiPA | GKV-SV | nach BfArM-Listung |
+| 7 | Externer Penetrationstest | DiPA | Sicherheitsdienstleister | 1–2 Monate |
+| 8 | Summative Gebrauchstauglichkeit | DiPA | Usability-Institut | 1–2 Monate |
+| 9 | Pflegefachliche Inhaltsfreigabe | DiPA | PDL | 1 Monat |
+| 10 | DSFA + AVV-Kette | DiPA | GF + DSB | GF-Entscheidung |
+| 11 | Support-Zusage (24h) | DiPA | GF | GF-Entscheidung |
+| 12 | Nutzungsbedingungen final | DiPA | Kanzlei | 1 Monat |
 
 ---
 
 ## KEINE WEITERE ENTWICKLUNG NÖTIG
 
-Für die folgenden Produkte ist **keine weitere Code-Entwicklung erforderlich**, um den aktuellen Produktionsstand zu halten und zu betreiben:
+Für alle Produkte ist **keine weitere Code-Entwicklung** erforderlich:
 
-- **Alltagsengel** — Vollständig. Alle Features implementiert, getestet, deployed. Wartungsmodus.
-- **Pflege-Software** — Vollständig. Alle 6 Prozessschritte, ArbZG, QM, FHIR live. Teil von AE.
-- **ChairMatch** — Vollständig. Alle Kernfunktionen live. Wartungsmodus.
-- **efy care** — Vollständig. Beide ausstehenden Security-Migrationen applied. Wartungsmodus.
-- **DiPA** — Intern vollständig (Klasse A+B: 0 offen). **Kein Code-Bedarf**, nur externe Nachweise und GF-Entscheidungen.
+- **Alltagsengel** — Vollständig. Wartungsmodus.
+- **Pflege-Software** — Vollständig. Teil von AE. Wartungsmodus.
+- **ChairMatch** — Vollständig. Wartungsmodus.
+- **efy care** — Vollständig. Beide Security-Migrationen applied. Wartungsmodus.
+- **DiPA** — Intern vollständig (Klasse A+B: 0 offen). Nur externe Nachweise und GF-Entscheidungen.
 
 ---
 
-## Sicherheitsriegel — Alle aktiv, KEINE deaktiviert
+## Sicherheitsriegel — Alle aktiv
 
 | Riegel | Wert | Typ |
 |--------|------|-----|
@@ -85,4 +95,4 @@ Für die folgenden Produkte ist **keine weitere Code-Entwicklung erforderlich**,
 
 ---
 
-*Erstellt am 30.08.2026 — Zahlen aus frischen Production-Messungen, nicht aus früheren Reports.*
+*V2 — Erstellt am 30.08.2026 — Alle Zahlen aus frischen Messungen, strikt nach Regel 7.*

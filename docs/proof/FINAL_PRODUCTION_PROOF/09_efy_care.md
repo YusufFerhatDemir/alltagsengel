@@ -61,14 +61,34 @@
 | audit_logs | 2 |
 | quality_audits | 2 |
 
+## Frischer CI-Lauf (30.08.2026)
+
+| Schritt | Ergebnis |
+|---------|----------|
+| HEAD SHA | `129144a001d54285411d33a8a59a017af233d9b2` |
+| Start (UTC) | 2026-08-30T05:40:15Z |
+| Ende (UTC) | 2026-08-30T05:41:15Z |
+| `tsc --noEmit` (app/) | **0 Fehler**, Exit 0 |
+| vitest run | **2037 passed / 0 failed / 30 skipped** (70 Dateien) |
+| E2E geschaeftskette | ✅ PASSED (Aufnahme→Zuordnung→Einsatz→Nachweis→Rechnung→Beleg) |
+
 ## Git-Stand
 
 | Metrik | Wert |
 |--------|------|
-| HEAD | `129144a` |
+| HEAD | `129144a0` |
 | origin/main | identisch |
 | Working Tree | sauber |
-| Tests (letzter bekannter Stand) | 2037 grün / 0 rot |
+
+## Deployment-Stand
+
+| Metrik | Wert |
+|--------|------|
+| Typ | Expo/React Native (NICHT Web) |
+| Auslieferung | EAS Build → App Store (ascAppId: 6787737319) |
+| bundle ID | com.efy.care |
+| Production Build | **UNVERIFIED** — kein EAS CLI Zugang, kein TestFlight/Store-Status prüfbar |
+| Web-URL | NICHT ANWENDBAR |
 
 ## Sicherheitsfunktionen verifiziert
 
@@ -80,4 +100,6 @@
 
 ## Bewertung
 
-**PRODUCTION VERIFIED** — 47 Tabellen, alle RLS enabled, beide Migrationen applied, 3 P0-Security-Fixes live, Unique-Email-Index aktiv, Rate-Limiting konfiguriert.
+**TECHNICALLY VERIFIED** — 47 Tabellen, alle RLS enabled, beide Migrationen applied, 3 P0-Security-Fixes live, Unique-Email-Index aktiv, Rate-Limiting konfiguriert, 2037 Tests frisch grün, E2E Geschäftskette bestanden.
+
+**Grund für TECHNICALLY statt PRODUCTION VERIFIED:** efy care ist eine Expo/React Native App. Ein Production-Build-Beweis (EAS Build Status, TestFlight/Store-Deployment) ist ohne EAS CLI Zugang nicht automatisiert prüfbar. Regel 7 verbietet PRODUCTION VERIFIED bei UNVERIFIED-Dimensionen.
