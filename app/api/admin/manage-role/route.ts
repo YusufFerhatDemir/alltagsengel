@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logAuditEvent } from '@/lib/audit-log'
+import { erfasseSicherheitsereignis } from '@/lib/security'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { ROLLEN, ROLLEN_BEZEICHNUNG, istRolle, istVerwaltungsrolle, type Rolle } from '@/lib/auth/rollen'
@@ -136,6 +137,27 @@ export const POST = withTracking(async function POST(request: NextRequest) {
         target_name: [targetProfile.first_name, targetProfile.last_name].filter(Boolean).join(' ') || null,
       },
       request,
+    })
+
+    // Sicherheitsspur (Track Security-Audit): ein Rollenwechsel ist das
+    // Ereignis, bei dem eine Meldung am wenigsten unterdrueckt werden
+    // darf — 'role_change' traegt deshalb Schweregrad 'critical' und
+    // umgeht die Sperrfrist. Gemeldet wird an das BETROFFENE Konto:
+    // wer eine Rolle bekommt oder verliert, soll davon erfahren, ohne
+    // auf die Auskunft desjenigen angewiesen zu sein, der sie vergeben
+    // hat.
+    await erfasseSicherheitsereignis({
+      eventType: 'role_change',
+      userId,
+      userEmail: targetProfile.email ?? null,
+      organizationId,
+      request,
+      metadata: {
+        alte_rolle: targetProfile.role,
+        neue_rolle: newRole,
+        veranlasst_von: user.id,
+        veranlasser_rolle: callerProfileQuellen.rolle,
+      },
     })
 
     const anzeigeName =

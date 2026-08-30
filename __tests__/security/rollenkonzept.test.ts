@@ -86,9 +86,10 @@ describe('Vorbehaltsbereiche', () => {
     }
   })
 
-  it('fuehrt tarife.schreiben, benutzer.verwalten, system.verwalten und bonus.verwalten als Vorbehalt', () => {
+  it('fuehrt die Vorbehalte der Administration abschliessend auf', () => {
     expect([...NUR_ADMINISTRATION].sort()).toEqual([
-      'benutzer.verwalten', 'bonus.verwalten', 'system.verwalten', 'tarife.schreiben',
+      'benutzer.verwalten', 'bonus.verwalten', 'marketing.verwalten',
+      'sicherheit.lesen', 'system.verwalten', 'tarife.schreiben',
     ])
   })
 })

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { erfasseSicherheitsereignis } from '@/lib/security'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -24,6 +25,28 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
+      // Sitzungsbeginn in die Sicherheitsspur. Diese Route ist der Weg
+      // fuer Magic-Link, Bestaetigungsmail und Passwort-Zuruecksetzung —
+      // Anmeldungen also, die NICHT ueber das Anmeldeformular laufen und
+      // von app/auth/login/actions.ts deshalb nie gesehen wuerden.
+      // Fail-soft: eine Protokollzeile darf keine Weiterleitung
+      // verhindern.
+      try {
+        const { data: { user: angemeldet } } = await supabase.auth.getUser()
+        if (angemeldet) {
+          await erfasseSicherheitsereignis({
+            eventType: 'session_start',
+            userId: angemeldet.id,
+            userEmail: angemeldet.email ?? null,
+            request,
+            metadata: { weg: isRecoveryFlow ? 'wiederherstellung' : 'callback', typ: type ?? null },
+            geraetePruefung: true,
+          })
+        }
+      } catch {
+        // bewusst still — siehe oben
+      }
+
       // Recovery hat IMMER Vorrang — nicht ins Rollen-Home schicken
       if (isRecoveryFlow) {
         return NextResponse.redirect(`${origin}/auth/reset-password`)

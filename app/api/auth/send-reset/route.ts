@@ -6,6 +6,7 @@ import { getClientIp } from '@/lib/rate-limit'
 import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { authLogger as log } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { erfasseSicherheitsereignis } from '@/lib/security'
 
 /**
  * POST /api/auth/send-reset
@@ -47,6 +48,18 @@ export const POST = withTracking(async function POST(request: Request) {
     }
 
     const userName = profile.first_name || 'Nutzer'
+
+    // Sicherheitsspur. Steht bewusst NACH der Existenzpruefung: fuer eine
+    // unbekannte Adresse antwortet die Route absichtlich mit Erfolg
+    // (keine Konto-Enumeration), und eine Protokollzeile dafuer haette
+    // keinen Bezugspunkt.
+    await erfasseSicherheitsereignis({
+      eventType: 'password_reset_requested',
+      userId: profile.id,
+      userEmail: email,
+      request,
+      metadata: { weg: 'selbst_angefordert' },
+    })
 
     // Generate a recovery link via admin API.
     // AUTH-010: Supabase-Default für Recovery-Links ist 24h — viel zu lang.

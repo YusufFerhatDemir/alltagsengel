@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { IconChart, IconUsers, IconClipboard, IconWings, IconLogout, IconTarget, IconHeart, IconMoney, IconDocument, IconHandshake, IconHome, IconCalendar, IconClock, IconChat, IconBell, IconWorkflow } from '@/components/Icons'
+import { IconChart, IconUsers, IconClipboard, IconWings, IconLogout, IconTarget, IconHeart, IconMoney, IconDocument, IconHandshake, IconHome, IconCalendar, IconClock, IconChat, IconBell, IconWorkflow, IconShield } from '@/components/Icons'
 import NotificationBell from '@/components/NotificationBell'
 import OpsNotificationBell from '@/components/OpsNotificationBell'
 import OrgSwitcher from '@/components/OrgSwitcher'
@@ -12,6 +12,7 @@ import { BundeslandProvider } from '@/components/admin/BundeslandContext'
 import { MFA_AUSNAHME_PFADE } from '@/lib/admin/mfa'
 import { istVerwaltungsrolle, wirksameRolle } from '@/lib/auth/rollen'
 import { darfPfad } from '@/lib/auth/bereiche'
+import { protokolliereAbmeldung } from '@/app/auth/login/actions'
 import { ReactNode } from 'react'
 
 // ═══════════════════════════════════════════════════════════════
@@ -279,6 +280,7 @@ const navGroups = [
       { href: '/admin/bonuses', label: 'Mitarbeiterbindung', icon: <IconTarget size={18} /> },
       { href: '/admin/partners', label: 'Kooperationspartner', icon: <IconHandshake size={18} /> },
       { href: '/admin/ops-audit', label: 'Aktivitätslog', icon: <IconDocument size={18} /> },
+      { href: '/admin/security/audit-log', label: 'Sicherheitsspur', icon: <IconShield size={18} /> },
       { href: '/admin/sync-status', label: 'Sync-Status', icon: <IconWorkflow size={18} /> },
       { href: '/admin/sync-konflikte', label: 'Sync-Konflikte', icon: <IconClock size={18} /> },
       { href: '/admin/fhir', label: 'FHIR / Interoperabilität', icon: <IconDocument size={18} /> },
@@ -464,6 +466,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   async function handleLogout() {
     const supabase = createClient()
+    // Abmeldung in die Sicherheitsspur — VOR signOut(), danach ist die
+    // Sitzung weg und das Konto serverseitig nicht mehr feststellbar.
+    try { await protokolliereAbmeldung() } catch {}
     await supabase.auth.signOut()
     router.push('/auth/login')
     router.refresh()

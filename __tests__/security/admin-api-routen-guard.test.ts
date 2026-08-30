@@ -47,6 +47,13 @@ const GUARDS = [
   // vorher stand dort berichte.lesen und liess pdl/qm/buchhaltung in eine
   // stille Leerliste bzw. einen erfundenen Serverfehler laufen.
   'requireBonusVerwaltung',
+  // Der allgemeine Berechtigungs-Guard aus lib/auth/guard.ts. Er ermittelt
+  // die Rolle aus BEIDEN nicht selbst beschreibbaren Quellen
+  // (profiles bindend, app_metadata einschraenkend) und prueft gegen die
+  // Rollenmatrix — dieselbe Entscheidung wie die Fach-Guards oben, nur
+  // ohne eigene Huelle. Benutzt von /api/admin/security/audit-log
+  // ('sicherheit.lesen').
+  'requireBerechtigung',
   'checkAdmin',
   'handleVerifizierungPatch',
   'handleDetailGet',

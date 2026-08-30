@@ -60,7 +60,9 @@
     "verify:abrechnung": "node scripts/verify-abrechnung-live.mjs",
     "verify:geldweg": "node scripts/verify-geldweg-live.mjs",
     "verify:perimeter": "node scripts/verify-perimeter-live.mjs",
-    "verify:versand": "node scripts/verify-versandbereitschaft.mjs"
+    "verify:versand": "node scripts/verify-versandbereitschaft.mjs",
+    "verify:security-audit": "node scripts/verify-security-audit-live.mjs",
+    "verify:marketing": "node scripts/verify-marketing.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",

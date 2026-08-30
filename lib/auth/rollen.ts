@@ -102,6 +102,14 @@ export const BERECHTIGUNGEN = [
   'tarife.schreiben',
   // Revisionsspuren
   'audit.lesen',
+  // Sicherheitsspur: Anmeldungen, Geraete, IP-Adressen, Rechteaenderungen
+  // (security_audit_log). Bewusst GETRENNT von 'audit.lesen': die
+  // fachliche Revisionsspur brauchen pdl, qm und buchhaltung fuer ihre
+  // Arbeit. Die Sicherheitsspur enthaelt daneben das Anmeldeverhalten
+  // von Kolleginnen und Kollegen — Material zur Mitarbeiterueberwachung,
+  // das in keine Fachrolle gehoert. Deshalb Vorbehalt der Administration
+  // (NUR_ADMINISTRATION, siehe lib/security/).
+  'sicherheit.lesen',
   // Konten, Rollen, Passwortzurücksetzung
   'benutzer.verwalten',
   // Systemeinstellungen, Feature-Flags, Schnittstellen (KIM/FHIR/Sync)
@@ -116,6 +124,16 @@ export const BERECHTIGUNGEN = [
   // also admin|superadmin. Ohne eigene Berechtigung liefe die
   // Schnittstelle der Datenbank voraus (siehe lib/analytics/bonus-auth.ts).
   'bonus.verwalten',
+  // Werbepost: Verteiler, Kampagnen, Einwilligungen, Sperrliste (Block 20).
+  // Eigene Berechtigung, weil hier ueber die AUSSENWIRKUNG gegenueber der
+  // gesamten Kundschaft entschieden wird: wer eine Kampagne freigibt,
+  // schreibt in einem Zug jeden Empfaenger im Segment an — und eine
+  // rausgegangene Mail holt niemand zurueck. Dazu kommt die
+  // Einwilligungsverwaltung: wer sie aendern kann, kann die Grundlage
+  // erzeugen, auf die er sich beim Versand beruft. Beides zusammen ist
+  // ein Vorbehalt der Administration, kein Fachrecht (siehe
+  // NUR_ADMINISTRATION und lib/marketing/api-auth.ts).
+  'marketing.verwalten',
 ] as const
 
 export type Berechtigung = (typeof BERECHTIGUNGEN)[number]
@@ -135,6 +153,8 @@ export const NUR_ADMINISTRATION: readonly Berechtigung[] = [
   'benutzer.verwalten',
   'system.verwalten',
   'bonus.verwalten',
+  'marketing.verwalten',
+  'sicherheit.lesen',
 ]
 
 // ───────────────────────────────────────────────────────────────────────

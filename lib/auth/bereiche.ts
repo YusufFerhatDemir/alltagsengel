@@ -263,6 +263,27 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   '/api/admin/sync-status':           { lesen: 'system.verwalten' },
 
   // Vorbehaltsbereiche
+  // Die Sicherheitsspur (security_audit_log) haengt an einer EIGENEN
+  // Berechtigung, nicht an 'audit.lesen': dort steht das
+  // Anmeldeverhalten von Kolleginnen und Kollegen, und pdl/qm/
+  // buchhaltung haben in dieser Ansicht nichts zu suchen.
+  '/admin/security':                  { lesen: 'sicherheit.lesen' },
+  '/api/admin/security':              { lesen: 'sicherheit.lesen' },
+  // Werbepost. Eigene Berechtigung aus demselben Grund wie /admin/bonuses:
+  // Seite, Schnittstelle und Datenbank sollen EINE Antwort geben. Die
+  // marketing_*/email_*-Policies stehen auf is_admin(), also
+  // admin|superadmin — und genau diese Menge bezeichnet
+  // 'marketing.verwalten' (NUR_ADMINISTRATION). Stuende hier etwa
+  // 'berichte.lesen', oeffnete sich die Seite fuer qm und buchhaltung,
+  // waehrend die Datenbank sie abweist: leere Listen statt eines
+  // ehrlichen 403.
+  //
+  // BEWUSST NICHT hier: '/api/marketing/abmeldung'. Das ist der
+  // Abmeldeweg fuer Empfaenger und muss OHNE Anmeldung erreichbar sein —
+  // Art. 21 DSGVO verbietet, den Widerspruch zu erschweren. Er ist
+  // stattdessen durch das HMAC-Token und eine Ratenbegrenzung gesichert.
+  '/admin/marketing':                 { lesen: 'marketing.verwalten', schreiben: 'marketing.verwalten' },
+  '/api/admin/marketing':             { lesen: 'marketing.verwalten', schreiben: 'marketing.verwalten' },
   '/api/admin/manage-role':           { lesen: 'benutzer.verwalten' },
   '/api/admin/reset-password':        { lesen: 'benutzer.verwalten' },
   '/api/admin/pricing':               { lesen: 'tarife.lesen', schreiben: 'tarife.schreiben' },
