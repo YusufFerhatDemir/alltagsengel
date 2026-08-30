@@ -174,7 +174,7 @@ const PRUEFUNGEN = [
     titel: 'Unveraenderlichkeits-Trigger steht und ist scharf',
     erwartung: 'trg_security_audit_log_unveraenderlich, enabled=O',
     lauf: () => orakel(
-      `select coalesce(string_agg(tgname || ' enabled=' || tgenabled, ', '), '(keiner)') as z
+      `select coalesce(string_agg(tgname || ' enabled=' || tgenabled::text, ', '), '(keiner)') as z
          from pg_trigger
         where tgrelid = 'public.security_audit_log'::regclass and not tgisinternal`,
     ),
@@ -188,7 +188,7 @@ const PRUEFUNGEN = [
     titel: 'Fremdschluessel auf auth.users steht auf SET NULL',
     erwartung: 'a (= ON DELETE SET NULL)',
     lauf: () => orakel(
-      `select coalesce(string_agg(c.conname || '=' || c.confdeltype, ', '), '(keiner)') as z
+      `select coalesce(string_agg(c.conname || '=' || c.confdeltype::text, ', '), '(keiner)') as z
          from pg_constraint c
         where c.conrelid='public.security_audit_log'::regclass and c.contype='f'`,
     ),
@@ -217,17 +217,32 @@ const PRUEFUNGEN = [
   {
     id: 'S10',
     titel: 'Keine Spalte, die ein Geheimnis tragen koennte',
-    erwartung: '(keine)',
+    erwartung: 'keine',
+    // Die Abfrage muss ZUERST feststellen, dass es die Tabelle gibt.
+    // Sonst liefert sie „(keine) verdaechtige Spalte" auch dann, wenn es
+    // ueberhaupt keine Spalte gibt — ein gruener Haken fuer eine Pruefung,
+    // die gar nicht stattgefunden hat.
     lauf: () => orakel(
-      `select coalesce(string_agg(column_name, ', '), '(keine)') as z
-         from information_schema.columns
-        where table_schema='public' and table_name='security_audit_log'
-          and (column_name ilike '%passwor%' or column_name ilike '%token%'
-            or column_name ilike '%cookie%' or column_name ilike '%secret%'
-            or column_name ilike '%mac%')`,
+      `select case
+                when not exists (
+                  select 1 from information_schema.tables
+                   where table_schema='public' and table_name='security_audit_log'
+                ) then 'TABELLE FEHLT'
+                else coalesce((
+                  select string_agg(column_name, ', ')
+                    from information_schema.columns
+                   where table_schema='public' and table_name='security_audit_log'
+                     and (column_name ilike '%passwor%' or column_name ilike '%token%'
+                       or column_name ilike '%cookie%' or column_name ilike '%secret%'
+                       or column_name ilike '%mac%')
+                ), 'keine')
+              end as z`,
     ),
-    pruefe: t => t.includes('(keine)') || t.includes('(leer)'),
-    hinweisWennRot: 'Eine solche Spalte gehoert entfernt — siehe docs/security/AUDIT_SYSTEM.md.',
+    pruefe: t => t.includes('keine') && !t.includes('TABELLE FEHLT'),
+    hinweisWennRot:
+      '„TABELLE FEHLT" heisst: Migration nicht angewendet, die Pruefung hat '
+      + 'nicht stattgefunden. Steht dort ein Spaltenname, gehoert die Spalte '
+      + 'entfernt — siehe docs/security/AUDIT_SYSTEM.md, Abschnitt 2.',
   },
 
   // ── Berichte (kein Pass/Fail, aber die Zahlen, die man wissen will) ──
