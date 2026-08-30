@@ -269,6 +269,18 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   // buchhaltung haben in dieser Ansicht nichts zu suchen.
   '/admin/security':                  { lesen: 'sicherheit.lesen' },
   '/api/admin/security':              { lesen: 'sicherheit.lesen' },
+  // Standortfreigabe (TRACK G2). Dieselbe Berechtigung wie die
+  // Sicherheitsspur und aus demselben Grund: die Ansicht zeigt, wo sich
+  // Kolleginnen und Kollegen aufgehalten haben. Ausdruecklich NICHT
+  // 'personal.lesen' und nicht 'einsatz.lesen' — die Einsatzleitung
+  // braucht den Dienstplan, nicht den Aufenthaltsort.
+  //
+  // Nur die AUFSICHT haengt hier. Die eigene Freigabe (/api/location/**)
+  // steht bewusst NICHT im Katalog: sie haengt an der Sitzung des
+  // Kontos selbst, nicht an einer Rolle — jedes angemeldete Konto
+  // verwaltet seine eigene, und keine Rolle verwaltet eine fremde.
+  '/admin/location':                  { lesen: 'sicherheit.lesen' },
+  '/api/admin/location':              { lesen: 'sicherheit.lesen' },
   // Werbepost. Eigene Berechtigung aus demselben Grund wie /admin/bonuses:
   // Seite, Schnittstelle und Datenbank sollen EINE Antwort geben. Die
   // marketing_*/email_*-Policies stehen auf is_admin(), also

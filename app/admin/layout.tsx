@@ -281,6 +281,7 @@ const navGroups = [
       { href: '/admin/partners', label: 'Kooperationspartner', icon: <IconHandshake size={18} /> },
       { href: '/admin/ops-audit', label: 'Aktivitätslog', icon: <IconDocument size={18} /> },
       { href: '/admin/security/audit-log', label: 'Sicherheitsspur', icon: <IconShield size={18} /> },
+      { href: '/admin/location/tracking', label: 'Standortansicht', icon: <IconShield size={18} /> },
       { href: '/admin/sync-status', label: 'Sync-Status', icon: <IconWorkflow size={18} /> },
       { href: '/admin/sync-konflikte', label: 'Sync-Konflikte', icon: <IconClock size={18} /> },
       { href: '/admin/fhir', label: 'FHIR / Interoperabilität', icon: <IconDocument size={18} /> },
