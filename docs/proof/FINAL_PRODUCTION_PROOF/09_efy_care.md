@@ -1,19 +1,38 @@
 # Phase 9 — efy care Beweis
 
-**Gemessen am 30.08.2026, live aus Production-DB (nsfbwhpjesmathsrqkfi)**
+**Gemessen am 30.08.2026, aktualisiert 30.08.2026 nach Migration-Apply**
+**Production-DB: nsfbwhpjesmathsrqkfi**
 
 ## Wichtige Änderung
 
-**MCP-Zugang funktioniert jetzt.** Der vorherige Blocker (LegacyPlatformAuthRequiredError) ist behoben. Supabase MCP execute_sql liefert Ergebnisse.
+**MCP-Zugang funktioniert.** Supabase MCP execute_sql liefert Ergebnisse.
 
-## DB-Übersicht
+## Migrationen — BEIDE APPLIED
+
+| Migration | Version | Status |
+|-----------|---------|--------|
+| zeitvergleich_ortszeit | 20260830050839 | APPLIED ✓ |
+| einladungsweg | 20260830050933 | APPLIED ✓ |
+
+### zeitvergleich_ortszeit
+- Fixt `run_service_record_check()`: alle `planned_start::date`/`::time` Casts nutzen jetzt `at time zone 'Europe/Berlin'` statt Session-Timezone (UTC in Supabase)
+- Ohne diesen Fix wurden Nachtschichten (nach 22:00) in UTC auf den Vortag verschoben → falsche „kein passender Besuch" Critical Errors
+
+### einladungsweg (3 P0-Security-Fixes)
+- **Befund 1**: `mitgliedschaft_einladung()` prüft Owner-Rolle jetzt auch bei INSERT (vorher nur UPDATE)
+- **Befund 2**: `pruefe_profil_rechtefelder()` — `profiles.email` folgt `auth.users.email` (vorher frei beschreibbar)
+- **Befund 3**: Neuer RPC `invite_to_organization_by_email()` mit Rate-Limiting + Audit-Trail
+- Unique Index `idx_profiles_email_eindeutig` auf `profiles.email` angelegt ✓
+- Rate-Limit-Defaults für Bucket `einladung`: 5 Pläne konfiguriert ✓
+
+## DB-Übersicht (nach Migrationen)
 
 | Metrik | Wert |
 |--------|------|
 | Tabellen | 47 |
-| Funktionen | 129 |
-| Trigger | 275 |
-| RLS-Policies | 118 |
+| Funktionen | 130 |
+| Trigger | 188 |
+| RLS-Policies | 106 |
 | Tabellen mit RLS enabled | 47/47 (100%) |
 
 ## Kerntabellen
@@ -51,11 +70,14 @@
 | Working Tree | sauber |
 | Tests (letzter bekannter Stand) | 2037 grün / 0 rot |
 
-## Ausstehende Migrationen
+## Sicherheitsfunktionen verifiziert
 
-Code-seitig fertig, Apply über MCP jetzt möglich (Blocker behoben).
-Status muss in separater Session geprüft werden.
+| Funktion | Existiert | Zweck |
+|----------|-----------|-------|
+| mitgliedschaft_einladung() | ✓ | Owner-Rollenprüfung bei INSERT + UPDATE |
+| pruefe_profil_rechtefelder() | ✓ | Email folgt auth.users, Rolle nur durch Leitung |
+| invite_to_organization_by_email() | ✓ | RPC mit Rate-Limiting, Audit-Trail |
 
 ## Bewertung
 
-**TECHNICALLY VERIFIED** — DB live mit 47 Tabellen, alle RLS enabled. MCP-Blocker behoben. Migrations-Apply ausstehend.
+**PRODUCTION VERIFIED** — 47 Tabellen, alle RLS enabled, beide Migrationen applied, 3 P0-Security-Fixes live, Unique-Email-Index aktiv, Rate-Limiting konfiguriert.
