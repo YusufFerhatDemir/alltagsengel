@@ -153,6 +153,26 @@ export const ENV_REGISTER: readonly EnvEintrag[] = [
     beschreibung: 'Empfänger interner Benachrichtigungen (Kontaktformular, Coach-Anfrage, Besucher-Alarm).',
   },
 
+  // ═══ Sicherheitsmeldungen (security_audit_log) ═══
+  {
+    name: 'SECURITY_MAIL_AKTIV',
+    geltung: 'server',
+    notwendigkeit: 'optional',
+    wann: 'produktion',
+    geheim: false,
+    wirktNachAussen: true,
+    beschreibung: "Hauptschalter der Sicherheitsmeldungen (lib/security/benachrichtigung.ts). BEWUSST UMGEKEHRT zu den Versand-Schaltern: hier ist das FEHLEN der Variable 'an'. Ein Sicherheitssystem, das standardmäßig schweigt, ist keines. '0'/'false'/'aus' schaltet die Mails ab. Empfänger sind ausschließlich privilegierte Konten (profiles.role) und Einträge in security_watchlist — nie Kundschaft. Ohne RESEND_API_KEY geht ohnehin nichts raus.",
+  },
+  {
+    name: 'SECURITY_MELDE_POSTFACH',
+    geltung: 'server',
+    notwendigkeit: 'optional',
+    wann: 'produktion',
+    geheim: false,
+    wirktNachAussen: true,
+    beschreibung: 'Zusätzliches Sicherheitspostfach. Bekommt jede ausgelöste Sicherheitsmeldung als Zweitzustellung — zusätzlich zum betroffenen Konto, nicht statt seiner. Leer ⇒ keine Zweitzustellung.',
+  },
+
   // ═══ Versand-Schalter: steuern echte Post an echte Kunden ═══
   {
     name: 'RECHNUNGSVERSAND_AUTOMATISCH',
@@ -199,6 +219,15 @@ export const ENV_REGISTER: readonly EnvEintrag[] = [
     geheim: false,
     wirktNachAussen: true,
     beschreibung: "Einmal-Freigabe fuer den ERSTEN echten Rechnungsversand. Nur der exakte Wert '1' gibt frei; ohne die Variable laesst sich kein Freigabe-Token ausstellen und der begleitete Erstversand ist nicht moeglich. Ersetzt KEINEN der beiden Versand-Schalter, sondern kommt obendrauf: das Token gilt fuer genau eine Rechnung und genau einmal. Ausgewertet in lib/pilot/send-gate.ts (Gegenstueck zur einkompilierten Konstante FIRST_REAL_INVOICE_APPROVED).",
+  },
+  {
+    name: 'MARKETINGVERSAND_FREIGEGEBEN',
+    geltung: 'server',
+    notwendigkeit: 'optional',
+    wann: 'produktion',
+    geheim: false,
+    wirktNachAussen: true,
+    beschreibung: "Freigaberiegel fuer den Werbeversand (lib/marketing/freigabe.ts). Nur der exakte Wert '1' schaltet scharf; ohne die Variable laufen Trockenlauf, Vorschau und Testversand an eigene Adressen weiter, aber KEINE Kampagne erreicht echte Empfaenger. BEWUSST GETRENNT von RECHNUNGSVERSAND_AUTOMATISCH / MAHNVERSAND_AUTOMATISCH: jene steuern Transaktionspost, die einen Vertrag erfuellt (Art. 6 Abs. 1 lit. b DSGVO), diese hier steuert Werbung, die eine Einwilligung braucht (§ 7 Abs. 2 Nr. 2 UWG). Ein gemeinsamer Schalter haette bedeutet, dass mit dem Rechnungsversand unbemerkt die Werbung mit scharf wird. Ersetzt KEINE der Kampagnen-Freigaben: jede Kampagne braucht zusaetzlich einen Trockenlauf und die Freigabe eines Menschen, gebunden an die dabei gesehene Empfaengerzahl. Die Umgebungstrennung nutzt dieselbe Ausnahme VERSAND_NICHT_PRODUKTION_ERLAUBT.",
   },
   {
     name: 'PERIMETER_AUFBEWAHRUNG_AKTIV',

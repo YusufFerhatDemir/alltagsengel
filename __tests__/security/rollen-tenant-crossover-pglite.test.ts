@@ -537,8 +537,25 @@ describe('PGlite: Rollenmodell gegen zwei Mandanten', () => {
       //     TypeScript-Matrix (lib/analytics/bonus-auth.ts). Die
       //     Berechtigung existiert damit auf beiden Seiten, taucht aber
       //     in keinem Policy-Ausdruck als Zeichenkette auf.
+      //   sicherheit.lesen — security_audit_log IST per RLS geschuetzt,
+      //     aber ueber public.ist_sicherheitsadmin() statt ueber die
+      //     Zeichenkette darf('sicherheit.lesen'). Das ist Absicht:
+      //     rollen_matrix ist eine von mehreren Migrationen GETEILTE
+      //     Funktion, und faellt die Berechtigung dort durch eine spaetere
+      //     Ueberschreibung heraus, waere die Sicherheitsspur sonst fuer
+      //     ALLE unlesbar — ein stiller Ausfall der Aufsicht.
+      //     ist_sicherheitsadmin() fragt zusaetzlich is_admin(), also
+      //     dieselbe Personengruppe. Ausserdem legt die zugehoerige
+      //     Migration diese Instanz gar nicht an; sie steht hier nicht im
+      //     Migrationspfad.
+      //   marketing.verwalten — dieselbe Lage wie bonus.verwalten
+      //     (Block 20, Migration 20261019000002).
       expect(offen.sort()).toEqual(
-        ['benutzer.verwalten', 'berichte.lesen', 'bonus.verwalten', 'qm.lesen', 'qm.schreiben', 'system.verwalten'].sort(),
+        [
+          'benutzer.verwalten', 'berichte.lesen', 'bonus.verwalten',
+          'marketing.verwalten', 'qm.lesen', 'qm.schreiben',
+          'sicherheit.lesen', 'system.verwalten',
+        ].sort(),
       )
     })
   })

@@ -6,6 +6,7 @@ import { buildRecoveryLink } from '@/lib/supabase/recovery-link'
 import { sendEmailNotification } from '@/lib/notifications'
 import { validatePasswordAsync } from '@/lib/password-validation'
 import { logAuditEvent } from '@/lib/audit-log'
+import { erfasseSicherheitsereignis } from '@/lib/security'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { adminLogger as log } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
@@ -128,6 +129,26 @@ export const POST = withTracking(async function POST(request: NextRequest) {
       target_role: targetProfile?.role ?? null,
     },
     request,
+  })
+
+  // Sicherheitsspur: ein von der Administration ausgeloestes
+  // Zuruecksetzen ist der klassische Uebernahmeweg fuer ein fremdes
+  // Konto. Gemeldet wird an das BETROFFENE Konto, nicht an die
+  // ausloesende Person — nur so faellt es auf, wenn die ausloesende
+  // Person es nicht haette tun duerfen.
+  await erfasseSicherheitsereignis({
+    eventType: 'password_reset_requested',
+    userId: targetUserId,
+    userEmail: targetProfile?.email || email || null,
+    organizationId,
+    request,
+    severity: 'critical',
+    metadata: {
+      weg: 'administration',
+      veranlasst_von: user.id,
+      veranlasser_rolle: quellen.rolle,
+      benachrichtigung_angefordert: Boolean(sendNotification),
+    },
   })
 
   // AUTH-001 + AUTH-004 Fix: Klartext-Passwort NIE per E-Mail senden.

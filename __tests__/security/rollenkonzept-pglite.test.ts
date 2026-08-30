@@ -35,6 +35,16 @@ const ROLLBACK = '20260924000001_rollback_rollenkonzept_least_privilege.sql'
  * eigentliche Zusage und faellt sonst genau hier auf.
  */
 const MIGRATION_BONUS = '20261014000000_rollenmatrix_bonus_verwalten.sql'
+/**
+ * Nachtrag 30.08.2026: 'sicherheit.lesen' als Vorbehalt der
+ * Administration (Sicherheitsspur, lib/security/). Die Matrix ist eine
+ * GETEILTE Funktion — jede dieser Migrationen setzt sie vollstaendig neu,
+ * die zuletzt angewendete gewinnt. Diese hier fuehrt deshalb auch
+ * 'marketing.verwalten' mit; sie muss als LETZTE der Matrix-Migrationen
+ * laufen, sonst faellt eine Berechtigung stillschweigend heraus. Genau
+ * das faellt unten im Zellenvergleich SQL ↔ TypeScript auf.
+ */
+const MIGRATION_SICHERHEIT = '20261018000000_rollenmatrix_sicherheit_lesen.sql'
 
 const ADMIN_ID = '00000000-0000-4000-8000-00000000a001'
 const SUPER_ID = '00000000-0000-4000-8000-00000000a002'
@@ -131,6 +141,7 @@ beforeAll(async () => {
 
   await db.exec(fs.readFileSync(path.join(MIGRATIONS_DIR, MIGRATION), 'utf-8'))
   await db.exec(fs.readFileSync(path.join(MIGRATIONS_DIR, MIGRATION_BONUS), 'utf-8'))
+  await db.exec(fs.readFileSync(path.join(MIGRATIONS_DIR, MIGRATION_SICHERHEIT), 'utf-8'))
 
   await db.exec(`INSERT INTO public.profiles (id, role) VALUES ('${PDL_ID}', 'pdl')`)
 })

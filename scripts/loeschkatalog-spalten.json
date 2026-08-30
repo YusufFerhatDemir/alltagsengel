@@ -140,5 +140,30 @@
     "spalte": "signatar_id",
     "entscheidung": "aufbewahren",
     "blockiert": true
+  },
+  {
+    "tabelle": "security_audit_log",
+    "spalte": "user_id",
+    "entscheidung": "aufbewahren"
+  },
+  {
+    "tabelle": "security_known_devices",
+    "spalte": "user_id",
+    "entscheidung": "loeschen"
+  },
+  {
+    "tabelle": "security_watchlist",
+    "spalte": "user_id",
+    "entscheidung": "loeschen"
+  },
+  {
+    "tabelle": "marketing_consents",
+    "spalte": "user_id",
+    "entscheidung": "loeschen"
+  },
+  {
+    "tabelle": "email_campaign_logs",
+    "spalte": "recipient_id",
+    "entscheidung": "loeschen"
   }
 ]

@@ -157,8 +157,26 @@ export const LOESCHKATALOG: readonly LoeschEintrag[] = [
     tabelle: 'account_deletion_tokens', spalte: 'user_id', entscheidung: 'loeschen',
     begruendung: 'Widerrufs-Token. Nach dem endgültigen Löschen gegenstandslos.',
   },
+  {
+    tabelle: 'marketing_consents', spalte: 'user_id', entscheidung: 'loeschen',
+    begruendung: 'Werbeeinwilligung. Mit dem Konto entfällt die Grundlage; es gibt keine Aufbewahrungspflicht für eine Einwilligung, aus der nie wieder gesendet werden darf. ON DELETE SET NULL steht am Fremdschlüssel, damit die Zeile die Löschung nicht blockiert — entfernt wird sie hier. ACHTUNG: die zugehörige Sperrlisten-Zeile bleibt ABSICHTLICH stehen, siehe email_suppression_list weiter unten.',
+  },
+  {
+    tabelle: 'email_campaign_logs', spalte: 'recipient_id', entscheidung: 'loeschen',
+    begruendung: 'Zustellspur einer Werbemail. Kein Aufbewahrungsgrund: sie belegt keine Leistung und keinen Geldfluss, sondern nur, dass Werbung zugestellt wurde. ON DELETE SET NULL steht am Fremdschlüssel; die Zeile wird hier entfernt, weil sie in `empfaenger` zusätzlich die Adresse im Klartext trägt — ein SET NULL auf recipient_id allein wäre keine Löschung, sondern nur das Abnehmen des Etiketts.',
+  },
 
   // ── Bleibt bewusst stehen ────────────────────────────────────────
+  //
+  // SONDERFALL email_suppression_list: die Tabelle steht ABSICHTLICH
+  // NICHT in diesem Katalog — weder als 'loeschen' noch als
+  // 'aufbewahren'. Sie hängt nicht an user_id, sondern an der ADRESSE,
+  // und genau darin liegt ihr Zweck: wer der Werbung widerspricht und
+  // später sein Konto löscht, darf nicht dadurch wieder anschreibbar
+  // werden, dass der Widerspruch mit dem Konto verschwand. Art. 21
+  // Abs. 3 DSGVO verlangt, dem Widerspruch DAUERHAFT zu entsprechen —
+  // und das geht nur, wenn die Adresse gespeichert bleibt. Ein Eintrag
+  // in diesen Katalog wäre deshalb ein Fehler, kein vergessener Eintrag.
   {
     tabelle: 'clients', spalte: 'user_id', entscheidung: 'aufbewahren',
     begruendung: '§ 630f Abs. 3 BGB: Pflegedokumentation ist 10 Jahre aufzubewahren. Der Kontobezug fällt über ON DELETE SET NULL weg.',
@@ -202,6 +220,18 @@ export const LOESCHKATALOG: readonly LoeschEintrag[] = [
   {
     tabelle: 'mis_auth_log', spalte: 'user_id', entscheidung: 'aufbewahren',
     begruendung: 'Art. 32 DSGVO: An- und Abmeldungen als Sicherheitsnachweis. SET NULL seit Migration 20260804.',
+  },
+  {
+    tabelle: 'security_audit_log', spalte: 'user_id', entscheidung: 'aufbewahren',
+    begruendung: 'Art. 32 DSGVO: die Sicherheitsspur (Anmeldungen, Geräte, Rechteänderungen). SET NULL ist am Fremdschlüssel gesetzt, und der Unveränderlichkeits-Trigger lässt genau diesen einen UPDATE-Fall durch — sonst blockierte jeder Sicherheitseintrag die Kontolöschung. Der Adress-Schnappschuss in user_email bleibt stehen: ohne ihn wäre der Eintrag nach der Löschung ein Ereignis ohne jeden Bezug und als Nachweis wertlos. Aufbewahrung 24 Monate, siehe security_audit_log_aufraeumen().',
+  },
+  {
+    tabelle: 'security_known_devices', spalte: 'user_id', entscheidung: 'loeschen',
+    begruendung: 'Das Gerätegedächtnis ist kein Protokoll, sondern ein Vergleichsmaßstab für die Erkennung unbekannter Geräte. Ohne Konto hat es keinen Zweck. ON DELETE CASCADE ist gesetzt.',
+  },
+  {
+    tabelle: 'security_watchlist', spalte: 'user_id', entscheidung: 'loeschen',
+    begruendung: 'Die Überwachung eines Kontos endet mit dem Konto. ON DELETE CASCADE ist gesetzt.',
   },
   {
     tabelle: 'angehoerigen_audit_log', spalte: 'user_id', entscheidung: 'aufbewahren', blockiert: true,
