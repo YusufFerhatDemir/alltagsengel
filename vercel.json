@@ -44,6 +44,10 @@
     {
       "path": "/api/cron/perimeter-aufbewahrung",
       "schedule": "30 3 * * *"
+    },
+    {
+      "path": "/api/cron/aufbewahrung",
+      "schedule": "45 3 * * *"
     }
   ]
 }
