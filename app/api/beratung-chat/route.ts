@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { heuteBerlin } from '@/lib/utils/timezone';
 import { logger } from '@/lib/logger';
 import { withTracking } from '@/lib/monitoring/tracker'
+import { schuetzeAbsender } from '@/lib/kommunikation/absender-schutz'
 const log = logger.child('beratung-chat');
 
 // ═══════════════════════════════════════════════════════════
@@ -232,11 +233,22 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     // Kosten-Deckel: Ist der globale Tages-Cap erreicht, gar nicht erst
     // die bezahlten APIs anfragen — direkt der regelbasierte Fallback.
     const letzteFrage = messages[messages.length - 1].content
-    const content = (await dailyLlmCapReached())
+    const rohantwort = (await dailyLlmCapReached())
       ? fallbackAntwort(letzteFrage)
       : (await callGemini(messages)) ??
         (await callOpenAI(messages)) ??
         fallbackAntwort(letzteFrage)
+
+    // Hausregel: in Kundenrichtung nie ein persoenlicher Name. Der
+    // Systemprompt sagt das zwar, aber ein Systemprompt ist eine Bitte,
+    // kein Riegel — dieselbe Ueberlegung, aus der der WhatsApp-Bot den
+    // Filter seit jeher hat. Hier fehlte er.
+    const { sanitized: content, didReplace, replaced } = schuetzeAbsender(rohantwort)
+    if (didReplace) {
+      log.warn('Modellantwort enthielt einen persoenlichen Namen — ersetzt', {
+        namen: replaced.length,
+      })
+    }
 
     return NextResponse.json({ content })
   } catch (e) {
