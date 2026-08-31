@@ -40,6 +40,46 @@ interface SpurZeile {
   appVersion: string | null
   sessionReference: string | null
   metadata: Record<string, unknown> | null
+  alarm: Alarmzustand
+  ueberwacht: boolean
+}
+
+/** Ein Zustellversuch aus notification_delivery_log. */
+interface Zustellversuch {
+  status: string
+  empfaenger: string | null
+  provider: string | null
+  providerNachrichtId: string | null
+  versuche: number | null
+  letzterVersuch: string | null
+  zugestelltAm: string | null
+  gescheitertAm: string | null
+  fehlergrund: string | null
+}
+
+/** Siehe lib/security/alarmspur.ts — dort steht, warum „an den Provider
+ *  uebergeben" und „beim Empfaenger zugestellt" hier auseinandergehalten
+ *  werden. Diese Ansicht darf die beiden NIE gleich benennen. */
+interface Alarmzustand {
+  ausgeloest: boolean
+  nachweisId: string | null
+  nachweisZeit: string | null
+  meldeGrund: string | null
+  empfaengerAnzahl: number | null
+  zustellungen: Zustellversuch[]
+  ohneWiederholung: boolean
+}
+
+/** Antwort von /api/admin/security/zustellstatus — das Wort des Providers. */
+interface ProviderStatus {
+  providerId: string
+  erreichbar: boolean
+  status: string | null
+  empfaenger?: string[]
+  betreff?: string | null
+  erzeugtAm?: string | null
+  absender?: string | null
+  hinweis?: string
 }
 
 interface Katalog {
@@ -133,6 +173,9 @@ export default function SicherheitsspurSeite() {
   const [laedt, setLaedt] = useState(true)
   const [fehler, setFehler] = useState<string | null>(null)
   const [offen, setOffen] = useState<string | null>(null)
+  /** Providerstatus je Nachrichten-ID — auf Anforderung geholt, nie in
+   *  der Liste: 50 Zeilen waeren 50 fremde HTTP-Aufrufe. */
+  const [providerStatus, setProviderStatus] = useState<Record<string, ProviderStatus | 'laedt'>>({})
   const [exportLaeuft, setExportLaeuft] = useState(false)
 
   // ── Überwachungsliste (ACCOUNT_SECURITY_ALERTS) ──
@@ -224,6 +267,27 @@ export default function SicherheitsspurSeite() {
       setWlMeldung({ ton: 'danger', text: 'Die Änderung ist fehlgeschlagen.' })
     } finally {
       setWlLaeuft(false)
+    }
+  }
+
+  /**
+   * Holt den EXTERNEN Zustellnachweis fuer eine Provider-Nachrichten-ID.
+   * Der eigene Stand in der Liste sagt nur „uebergeben"; ob die Mail
+   * ankam, weiss allein der Provider.
+   */
+  async function providerStatusHolen(providerId: string) {
+    setProviderStatus(v => ({ ...v, [providerId]: 'laedt' }))
+    try {
+      const res = await fetch(
+        `/api/admin/security/zustellstatus?providerId=${encodeURIComponent(providerId)}`,
+      )
+      const json = (await res.json()) as ProviderStatus
+      setProviderStatus(v => ({ ...v, [providerId]: json }))
+    } catch {
+      setProviderStatus(v => ({
+        ...v,
+        [providerId]: { providerId, erreichbar: false, status: null, hinweis: 'Abruf fehlgeschlagen.' },
+      }))
     }
   }
 
@@ -491,12 +555,13 @@ export default function SicherheitsspurSeite() {
               <th style={kopf}>Zugang</th>
               <th style={kopf}>IP</th>
               <th style={kopf}>Gerät</th>
+              <th style={kopf}>Alarm &amp; Zustellung</th>
               <th style={kopf}> </th>
             </tr>
           </thead>
           <tbody>
             {(daten?.zeilen ?? []).length === 0 && !laedt && (
-              <EmptyRow colSpan={10}>Keine Einträge für diese Auswahl.</EmptyRow>
+              <EmptyRow colSpan={11}>Keine Einträge für diese Auswahl.</EmptyRow>
             )}
             {(daten?.zeilen ?? []).map(z => (
               <tr key={z.id}>
@@ -516,13 +581,28 @@ export default function SicherheitsspurSeite() {
                 </td>
                 <td style={zelle}>{z.kategorieBezeichnung}</td>
                 <td style={zelle}>
-                  <div>{z.userEmail ?? '—'}</div>
+                  <div>
+                    {z.ueberwacht && (
+                      <span
+                        title="Dieses Konto steht auf der aktiven Überwachungsliste"
+                        style={{
+                          display: 'inline-block', marginRight: 6, padding: '1px 6px',
+                          borderRadius: 4, fontSize: 10, fontWeight: 700, letterSpacing: 0.4,
+                          background: '#C0392B', color: '#fff',
+                        }}
+                      >
+                        ÜBERWACHT
+                      </span>
+                    )}
+                    {z.userEmail ?? '—'}
+                  </div>
                   {z.userName && <div style={{ fontSize: 11, color: '#888' }}>{z.userName}</div>}
                 </td>
                 <td style={zelle}>{z.organisationsName ?? (z.organizationId ? '—' : 'ohne Mandant')}</td>
                 <td style={zelle}>{z.plattform ?? '—'}</td>
                 <td style={{ ...zelle, fontFamily: 'monospace', fontSize: 12 }}>{z.ip ?? '—'}</td>
                 <td style={zelle}>{z.geraet ?? '—'}</td>
+                <td style={zelle}><AlarmZelle alarm={z.alarm} /></td>
                 <td style={zelle}>
                   <button
                     style={{ ...knopf, padding: '4px 10px', fontSize: 12 }}
@@ -536,7 +616,7 @@ export default function SicherheitsspurSeite() {
             ))}
             {(daten?.zeilen ?? []).map(z => offen === z.id ? (
               <tr key={`${z.id}-details`}>
-                <td colSpan={10} style={{ ...zelle, background: 'var(--coal2)' }}>
+                <td colSpan={11} style={{ ...zelle, background: 'var(--coal2)' }}>
                   <table style={{ borderCollapse: 'collapse' }}>
                     <tbody>
                       {[
@@ -555,6 +635,11 @@ export default function SicherheitsspurSeite() {
                       ))}
                     </tbody>
                   </table>
+                  <AlarmDetails
+                    alarm={z.alarm}
+                    status={providerStatus}
+                    holen={providerStatusHolen}
+                  />
                 </td>
               </tr>
             ) : null)}
@@ -576,6 +661,174 @@ export default function SicherheitsspurSeite() {
           </button>
         </div>
       )}
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Alarm und Zustellung
+// ═══════════════════════════════════════════════════════════════════════
+//
+// DIE EINE UNTERSCHEIDUNG, DIE DIESE BAUTEILE TRAGEN
+// „an den Provider übergeben" ist NICHT „beim Empfänger zugestellt".
+// Die eigenen Tabellen können nur das Erste belegen. Deshalb heißt hier
+// nichts „zugestellt", solange es nicht der Provider selbst gesagt hat —
+// und dessen Wort steht getrennt darunter, mit eigener Beschriftung.
+// Genau diese Verwechslung war der Grund, warum eine „erfolgreich
+// versendete" Sicherheitsmeldung nie im Postfach ankam und trotzdem
+// überall grün aussah.
+// ═══════════════════════════════════════════════════════════════════════
+
+/** Ampel für die Listenspalte. Kurz, aber nie beschönigend. */
+function AlarmZelle({ alarm }: { alarm: Alarmzustand }) {
+  if (!alarm.ausgeloest && alarm.zustellungen.length === 0) {
+    return <span style={{ fontSize: 12, color: '#777' }}>kein Alarm</span>
+  }
+
+  const gescheitert = alarm.zustellungen.filter(z => z.gescheitertAm)
+  const uebergeben = alarm.zustellungen.filter(z => z.zugestelltAm)
+
+  let farbe = '#C9963C'
+  let text = 'Alarm — Zustellung offen'
+  if (gescheitert.length > 0 && uebergeben.length === 0) {
+    farbe = '#C0392B'
+    text = 'Alarm — Zustellung GESCHEITERT'
+  } else if (uebergeben.length > 0) {
+    farbe = '#2D8F5E'
+    text = 'Alarm — an Provider übergeben'
+  } else if (alarm.ohneWiederholung) {
+    farbe = '#C9963C'
+    text = 'Alarm — ohne Zustellvorgang'
+  }
+
+  return (
+    <div>
+      <span style={{ fontSize: 12, color: farbe, fontWeight: 600 }}>{text}</span>
+      {alarm.zustellungen[0]?.empfaenger && (
+        <div style={{ fontSize: 11, color: '#888' }}>an {alarm.zustellungen[0].empfaenger}</div>
+      )}
+    </div>
+  )
+}
+
+const dZeile: React.CSSProperties = {
+  padding: '3px 14px 3px 0', color: '#888', fontSize: 12,
+  whiteSpace: 'nowrap', verticalAlign: 'top',
+}
+const dWert: React.CSSProperties = {
+  padding: '3px 0', fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all',
+}
+
+function AlarmDetails({
+  alarm, status, holen,
+}: {
+  alarm: Alarmzustand
+  status: Record<string, ProviderStatus | 'laedt'>
+  holen: (providerId: string) => void
+}) {
+  if (!alarm.ausgeloest && alarm.zustellungen.length === 0) {
+    return (
+      <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid #333', fontSize: 12, color: '#888' }}>
+        Zu diesem Ereignis wurde keine Sicherheitsmeldung ausgelöst. Gemeldet wird
+        nur für privilegierte oder ausdrücklich überwachte Konten.
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid #333' }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: '#ccc', marginBottom: 6 }}>
+        Alarmkette
+      </div>
+
+      <table style={{ borderCollapse: 'collapse' }}>
+        <tbody>
+          <tr>
+            <td style={dZeile}>Alarm ausgelöst</td>
+            <td style={dWert}>{alarm.ausgeloest ? 'ja' : 'nein'}</td>
+          </tr>
+          <tr>
+            <td style={dZeile}>Alarm-Nachweis-ID</td>
+            <td style={dWert}>{alarm.nachweisId ?? '—'}</td>
+          </tr>
+          <tr>
+            <td style={dZeile}>Zeitpunkt der Meldung</td>
+            <td style={dWert}>{alarm.nachweisZeit ? zeitpunkt(alarm.nachweisZeit) : '—'}</td>
+          </tr>
+          <tr>
+            <td style={dZeile}>Meldegrund</td>
+            <td style={dWert}>{alarm.meldeGrund ?? '—'}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      {alarm.ohneWiederholung && (
+        <div style={{ marginTop: 8, fontSize: 12, color: '#C9963C' }}>
+          Kein Zustellvorgang registriert. Es gab nur den Sofortversuch — der
+          Wiederholungslauf sieht diese Meldung nicht. Tritt auf, wenn das
+          Ereignis keiner Organisation zugeordnet ist.
+        </div>
+      )}
+
+      {alarm.zustellungen.map((v, i) => {
+        const pid = v.providerNachrichtId
+        const ext = pid ? status[pid] : undefined
+        return (
+          <div key={`${pid ?? 'ohne'}-${i}`} style={{ marginTop: 10, paddingLeft: 10, borderLeft: '2px solid #444' }}>
+            <table style={{ borderCollapse: 'collapse' }}>
+              <tbody>
+                <tr><td style={dZeile}>Mail-Empfänger</td><td style={dWert}>{v.empfaenger ?? '—'}</td></tr>
+                <tr><td style={dZeile}>Eigener Stand</td><td style={dWert}>{v.status}</td></tr>
+                <tr><td style={dZeile}>Provider</td><td style={dWert}>{v.provider ?? '—'}</td></tr>
+                <tr><td style={dZeile}>Provider-Nachrichten-ID</td><td style={dWert}>{pid ?? '— (fehlt: nichts nachprüfbar)'}</td></tr>
+                <tr><td style={dZeile}>Versuche</td><td style={dWert}>{v.versuche ?? '—'}</td></tr>
+                <tr><td style={dZeile}>Letzter Zustellversuch</td><td style={dWert}>{v.letzterVersuch ? zeitpunkt(v.letzterVersuch) : '—'}</td></tr>
+                <tr><td style={dZeile}>An Provider übergeben</td><td style={dWert}>{v.zugestelltAm ? zeitpunkt(v.zugestelltAm) : '—'}</td></tr>
+                <tr><td style={dZeile}>Gescheitert am</td><td style={dWert}>{v.gescheitertAm ? zeitpunkt(v.gescheitertAm) : '—'}</td></tr>
+                <tr><td style={dZeile}>Fehlergrund</td><td style={dWert}>{v.fehlergrund ?? '—'}</td></tr>
+              </tbody>
+            </table>
+
+            <div style={{ marginTop: 8 }}>
+              <button
+                style={{ ...knopf, padding: '4px 10px', fontSize: 12 }}
+                disabled={!pid || ext === 'laedt'}
+                onClick={() => pid && holen(pid)}
+              >
+                {ext === 'laedt' ? 'Frage den Provider …' : 'Zustellstatus beim Provider abrufen'}
+              </button>
+              <span style={{ marginLeft: 8, fontSize: 11, color: '#888' }}>
+                Der eigene Stand oben belegt nur die Übergabe. Ob die Mail ankam,
+                weiß allein der Provider.
+              </span>
+            </div>
+
+            {ext && ext !== 'laedt' && (
+              <div style={{ marginTop: 8, padding: '8px 10px', background: '#1b1b1b', borderRadius: 6 }}>
+                {ext.erreichbar ? (
+                  <table style={{ borderCollapse: 'collapse' }}>
+                    <tbody>
+                      <tr>
+                        <td style={dZeile}>Provider-Zustellstatus</td>
+                        <td style={{ ...dWert, fontWeight: 700, color: ext.status === 'delivered' ? '#2D8F5E' : ext.status === 'bounced' || ext.status === 'complained' ? '#C0392B' : '#C9963C' }}>
+                          {ext.status ?? 'unbekannt'}
+                        </td>
+                      </tr>
+                      <tr><td style={dZeile}>Empfänger laut Provider</td><td style={dWert}>{(ext.empfaenger ?? []).join(', ') || '—'}</td></tr>
+                      <tr><td style={dZeile}>Betreff</td><td style={dWert}>{ext.betreff ?? '—'}</td></tr>
+                      <tr><td style={dZeile}>Beim Provider erzeugt</td><td style={dWert}>{ext.erzeugtAm ? zeitpunkt(ext.erzeugtAm) : '—'}</td></tr>
+                    </tbody>
+                  </table>
+                ) : (
+                  <div style={{ fontSize: 12, color: '#C9963C' }}>
+                    Kein externer Zustellnachweis: {ext.hinweis ?? 'Provider nicht erreichbar.'}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }

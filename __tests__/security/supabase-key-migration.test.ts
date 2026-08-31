@@ -143,6 +143,11 @@ describe('Regressionsscan: keine direkten Legacy-Key-Lesezugriffe mehr', () => {
   //   Aufrufweg; apiHeaders() waere dort schlicht falsch, es baut
   //   Supabase-Header. Der Scan sucht nach dem Literal, nicht nach dem Ziel —
   //   deshalb braucht dieser Fall einen Eintrag statt einer Codeaenderung.
+  // • scripts/verify-alarmkette-live.mjs aus demselben Grund: Schritt 7 der
+  //   Kette fragt api.resend.com nach dem Zustellstatus einer Nachricht. Das
+  //   ist der EINZIGE externe Zustellnachweis — ohne diesen Aufruf misst das
+  //   Skript nur noch die eigenen Behauptungen. Supabase spricht es
+  //   ausschliesslich ueber apiHeaders() an.
   //
   // Alles andere bleibt gesperrt: ein Skript, das den Header baut, um damit
   // Daten zu holen, meldet mit den neuen Keys still „kein Zugriff".
@@ -150,6 +155,7 @@ describe('Regressionsscan: keine direkten Legacy-Key-Lesezugriffe mehr', () => {
     'scripts/lib/supabase-keys.mjs',
     'scripts/verify-publishable-key.mjs',
     'scripts/verify-resend.mjs',
+    'scripts/verify-alarmkette-live.mjs',
   ]
 
   it('scripts/*.mjs bauen PostgREST-Header nur ueber apiHeaders()', async () => {
