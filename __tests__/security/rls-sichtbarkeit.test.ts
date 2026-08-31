@@ -189,3 +189,72 @@ describe('werteAus — der eigentliche Befund', () => {
     expect(schluessel).toEqual([...schluessel].sort())
   })
 })
+
+/**
+ * Die Trennung der Ursachen (31.08.2026).
+ *
+ * Der Live-Lauf meldete 52 blinde Seite/Rolle-Paare als eine Liste. Darin
+ * standen zwei grundverschiedene Dinge nebeneinander: 48 Tabellen ohne
+ * jede `darf()`-Policy (eine echte Lücke — wer sie lesen darf, ist
+ * nirgends entschieden) und 10 Fälle, in denen die Policy sehr wohl da
+ * ist und die Rolle das verlangte Recht bewusst nicht hat (die
+ * Buchhaltung sieht laut ROLLEN_MATRIX absichtlich keine Personalakten).
+ *
+ * Eine Liste, in der echte Lücken zwischen gewollten Verweigerungen
+ * stehen, wird als Ganzes ignoriert. Diese Tests halten die Trennung
+ * fest.
+ */
+describe('Warum eine Rolle blind ist', () => {
+  it('ohne jede darf()-Policy ist es eine Lücke', () => {
+    // is_admin() wertet keine Berechtigung aus: für pdl/qm ist damit
+    // nirgends entschieden, ob sie lesen dürfen.
+    const policies: Policy[] = [{ tabelle: 'absences', name: 'p_admin', qual: NUR_ADMIN }]
+    const { befunde } = werteAus(new Map([['/admin/nachweise', ['absences']]]), policies)
+
+    expect(befunde.length).toBeGreaterThan(0)
+    for (const b of befunde) {
+      expect(b.einzeln[0].grund).toBe('policy_fehlt')
+      expect(b.einzeln[0].verlangteRechte).toEqual([])
+    }
+  })
+
+  it('mit darf()-Policy, aber ohne das Recht, ist es eine Entscheidung', () => {
+    // caregivers trägt darf('personal.lesen'); die Buchhaltung hat es
+    // nicht — das steht so in ROLLEN_MATRIX und ist gewollt.
+    const policies: Policy[] = [
+      { tabelle: 'caregivers', name: 'rk_caregivers_lesen', qual: ROLLENKONZEPT },
+    ]
+    const { befunde } = werteAus(new Map([['/admin/schedule', ['caregivers']]]), policies)
+
+    const buchhaltung = befunde.find(b => b.rolle === 'buchhaltung')
+    expect(buchhaltung, 'buchhaltung sollte auf caregivers blind sein').toBeDefined()
+    expect(buchhaltung!.einzeln[0].grund).toBe('recht_fehlt')
+    expect(buchhaltung!.einzeln[0].verlangteRechte).toContain('personal.lesen')
+  })
+
+  it('wer das Recht hat, taucht gar nicht erst auf', () => {
+    // Gegenprobe. Ohne sie wäre die Einteilung auch dann „richtig",
+    // wenn sie jede Rolle als blind meldete.
+    const policies: Policy[] = [
+      { tabelle: 'caregivers', name: 'rk_caregivers_lesen', qual: ROLLENKONZEPT },
+    ]
+    const { befunde } = werteAus(new Map([['/admin/schedule', ['caregivers']]]), policies)
+    expect(befunde.some(b => b.rolle === 'pdl')).toBe(false)
+    expect(befunde.some(b => b.rolle === 'qm')).toBe(false)
+  })
+
+  it('tabellen und einzeln beschreiben dieselbe Menge', () => {
+    // `tabellen` bleibt für die alte Ausgabe erhalten. Läuft es
+    // auseinander, meldet die eine Sicht etwas anderes als die andere.
+    const policies: Policy[] = [
+      { tabelle: 'absences', name: 'p_admin', qual: NUR_ADMIN },
+      { tabelle: 'caregivers', name: 'rk_caregivers_lesen', qual: ROLLENKONZEPT },
+    ]
+    const { befunde } = werteAus(
+      new Map([['/admin/schedule', ['absences', 'caregivers']]]), policies,
+    )
+    for (const b of befunde) {
+      expect(b.tabellen).toEqual(b.einzeln.map(e => e.tabelle))
+    }
+  })
+})
