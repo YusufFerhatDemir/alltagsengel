@@ -1,6 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // Mahnungs-PDF Generator — erzeugt kassenfähige Mahnschreiben
-// Nutzt DejaVuSans für korrekte Umlaute/türkische Zeichen
+// Nutzt DejaVuSans für korrekte Umlaute/türkische Zeichen — per
+// @font-face GELADEN, nicht nur im font-family-Namen genannt.
 // ═══════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -8,6 +9,7 @@ import { DUNNING_LABELS, DUNNING_FEES_CENTS, type DunningLevel } from '../core/d
 import { logBillingAction } from '../core/audit'
 import { berlinParts, datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 import { euroZuCent } from '@/lib/geld'
+import { dejaVuFontFaceCss, PDF_SCHRIFT_FAMILIE } from '@/lib/pdf/schrift-css'
 
 /**
  * Absender-Rückfall, falls die Organisation keine Anschrift gepflegt hat.
@@ -144,7 +146,8 @@ export function generateMahnungHtml(data: MahnungData): string {
 <meta charset="UTF-8">
 <style>
   @page { size: A4; margin: 20mm 25mm 25mm 25mm; }
-  body { font-family: 'DejaVu Sans', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #1a1a1a; }
+${dejaVuFontFaceCss()}
+  body { font-family: ${PDF_SCHRIFT_FAMILIE}; font-size: 11pt; line-height: 1.5; color: #1a1a1a; }
   .header { display: flex; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid #c8a84e; padding-bottom: 15px; }
   .header-left { font-weight: bold; font-size: 14pt; color: #1a365d; }
   .header-right { text-align: right; font-size: 9pt; color: #666; }

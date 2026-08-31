@@ -27,6 +27,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { getOrgIK } from '@/lib/config/org-config'
 import { ohneStornierte } from '@/lib/leistungsnachweis/status-sync'
+import { dejaVuFontFaceCss, PDF_SCHRIFT_FAMILIE } from '@/lib/pdf/schrift-css'
 
 // ── Leistungserbringer-Stammdaten (Pflichtfeld Kasse) ───────────
 // IK-Nummer wird in loadLeistungsnachweis() via getOrgIK() geladen.
@@ -420,9 +421,18 @@ export async function loadLeistungsnachweis(params: {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 2) Kassenkonformes A4-HTML (DejaVu Sans!)
+// 2) Kassenkonformes A4-HTML (DejaVu Sans — per @font-face GELADEN,
+//    nicht nur benannt; siehe lib/pdf/schrift-css.ts)
 // ═══════════════════════════════════════════════════════════════
-export function buildLeistungsnachweisHtml(data: LeistungsnachweisData): string {
+export function buildLeistungsnachweisHtml(
+  data: LeistungsnachweisData,
+  /**
+   * Herkunft fuer die Schrift-URLs. Leer lassen fuer das Druck-iframe;
+   * beim Download der HTML-Datei `window.location.origin` mitgeben,
+   * sonst sucht die gespeicherte Datei die Schrift im Dateisystem.
+   */
+  schriftBasisUrl = '',
+): string {
   const v = data.verordnung
   const k = data.klient
 
@@ -454,9 +464,10 @@ export function buildLeistungsnachweisHtml(data: LeistungsnachweisData): string 
 <title>Leistungsnachweis ${esc(k.name)} — ${esc(data.monat_label)}</title>
 <style>
   @page { size: A4; margin: 14mm; }
+${dejaVuFontFaceCss(schriftBasisUrl)}
   * { box-sizing: border-box; }
   body {
-    font-family: 'DejaVu Sans', 'DejaVu Sans Condensed', 'Helvetica Neue', Arial, sans-serif;
+    font-family: ${PDF_SCHRIFT_FAMILIE};
     color: ${COAL}; font-size: 10.5pt; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
   .kopf { display: flex; justify-content: space-between; align-items: flex-start; }
