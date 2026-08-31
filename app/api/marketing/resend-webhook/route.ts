@@ -39,6 +39,10 @@ import {
 } from '@/lib/marketing/zustellereignis'
 import { normalisiereAdresse, sperreAdresse, widerrufeEinwilligung } from '@/lib/marketing/einwilligung'
 import type { ZustellStatus } from '@/lib/marketing/typen'
+import {
+  verarbeiteTransaktionsRueckmeldung, istRueckmeldung,
+} from '@/lib/notifications/zustellrueckmeldung'
+import { erfasseSicherheitsereignis } from '@/lib/security'
 
 const log = logger.child('marketing:resend-webhook')
 
@@ -93,6 +97,13 @@ export const POST = withTracking(async function POST(request: Request) {
     ? new Date(nutzlast.created_at).toISOString()
     : new Date().toISOString()
 
+  // Der Bounce-Typ wird in BEIDEN Zweigen gebraucht (Kampagne wie
+  // Transaktionspost) und deshalb vor der Verzweigung gelesen.
+  const bounceRoh = (daten.bounce ?? {}) as Record<string, unknown>
+  const bounceTyp = typeof bounceRoh.type === 'string'
+    ? bounceRoh.type
+    : (typeof daten.bounce_type === 'string' ? daten.bounce_type : null)
+
   try {
     const admin = createAdminClient()
 
@@ -113,9 +124,67 @@ export const POST = withTracking(async function POST(request: Request) {
     }
 
     if (!eintrag) {
-      // Kein Treffer ist der Normalfall fuer Testversand und fuer
-      // Transaktionspost — beide laufen nicht ueber email_campaign_logs.
-      return erledigt('Kein Kampagneneintrag zu dieser Kennung — nichts zu tun.')
+      // ── Zweiter Anlauf: Transaktionspost ────────────────────────────
+      // Bis zum 31.08.2026 endete die Verarbeitung hier mit „nichts zu
+      // tun". Damit fiel JEDE Rueckmeldung zu Sicherheitsmeldungen,
+      // Rechnungen und Mahnungen ersatzlos weg — auch ein Hard Bounce
+      // auf eine Sicherheitsmeldung, also genau der Fall „die Warnung
+      // hat niemanden erreicht". Die Zustellzeile behielt `sent`, und
+      // `sent` heisst nur „dem Provider uebergeben".
+      //
+      // Der Schluessel dafuer liegt seit demselben Tag vor:
+      // notification_delivery_log.provider_message_id.
+      if (!istRueckmeldung(typ)) {
+        return erledigt(`Ereignisart ${typ} ist fuer Transaktionspost ohne Bedeutung.`)
+      }
+
+      const rueck = await verarbeiteTransaktionsRueckmeldung(
+        admin,
+        { providerNachrichtId: emailId, ereignis: typ, zeitpunkt, bounceTyp },
+        // ── Eskalation ────────────────────────────────────────────────
+        // Eine Sicherheitsmeldung, die nicht ankommt, ist selbst ein
+        // Sicherheitsvorfall — sie darf nicht nur als rote Zeile in
+        // einer Zustellspur enden, die niemand oeffnet.
+        //
+        // OHNE MAIL, und das ist Absicht: der Kanal, ueber den gemeldet
+        // wuerde, ist gerade der gescheiterte. Eine Meldung an dieselbe
+        // Adresse liefe in denselben Bounce, der die naechste Eskalation
+        // ausloeste — eine Schleife, die sich selbst befeuert. Das
+        // Ereignis steht in der Sicherheitsspur, ist dort rot markiert
+        // und geht zusaetzlich als Fehler ins Log.
+        async (bezug) => {
+          log.error('Sicherheitsmeldung nicht zugestellt', {
+            empfaenger: bezug.empfaenger, grund: bezug.grund,
+            bezugEreignis: bezug.ereignisId,
+          })
+          await erfasseSicherheitsereignis({
+            eventType: 'security_error',
+            userId: bezug.userId,
+            organizationId: bezug.organizationId,
+            severity: 'critical',
+            alsTest: 'SYNTHETIC_EVENT',
+            metadata: {
+              gegenstand: 'Sicherheitsmeldung nicht zugestellt',
+              grund: bezug.grund,
+              bezug_ereignis: bezug.ereignisId,
+              provider_nachricht: emailId,
+              // Die Adresse steht bewusst NICHT hier: sie steht bereits
+              // an der Zustellzeile, und die Sicherheitsspur wird lange
+              // aufbewahrt.
+            },
+          }, { ohneMeldung: true })
+        },
+      )
+
+      if (!rueck.gefunden) {
+        // Testversand und alles, was weder Kampagne noch Zustellvorgang
+        // ist. Bewusst 200 — sonst wiederholt Resend tagelang.
+        return erledigt('Weder Kampagnen- noch Transaktionseintrag zu dieser Kennung.')
+      }
+      return NextResponse.json({
+        ok: true, art: 'transaktion', vorgang: rueck.vorgangArt,
+        status: rueck.status, eskaliert: rueck.eskaliert, hinweis: rueck.hinweis,
+      }, { status: 200 })
     }
 
     const bestand: Bestand = {
@@ -149,11 +218,6 @@ export const POST = withTracking(async function POST(request: Request) {
     }
 
     // ── Sperrliste bei dauerhaftem Fehler oder Beschwerde ───────────────
-    const bounce = (daten.bounce ?? {}) as Record<string, unknown>
-    const bounceTyp = typeof bounce.type === 'string'
-      ? bounce.type
-      : (typeof daten.bounce_type === 'string' ? daten.bounce_type : null)
-
     const grund = sperrgrundFuer(typ, bounceTyp)
     if (grund) {
       const adresse = normalisiereAdresse(eintrag.empfaenger as string)
