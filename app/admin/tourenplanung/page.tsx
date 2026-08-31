@@ -532,6 +532,7 @@ function TourDetail({ tour, onClose, onPatchTour, onPatchStop, onVerschiebe, onE
   clients: Option[]
 }) {
   const [neuOpen, setNeuOpen] = useState(false)
+  const [optiOpen, setOptiOpen] = useState(false)
   const [neu, setNeu] = useState<NeuerStop>({ client_id: '', geplante_ankunft: '', geplantes_ende: '', service_type: SERVICE_TYPES[0] })
   const st = TOUR_STATUS[tour.status] ?? { label: tour.status, color: '#666' }
   const stops = [...tour.tour_stops].sort((a, b) => a.position - b.position)
@@ -583,11 +584,25 @@ function TourDetail({ tour, onClose, onPatchTour, onPatchStop, onVerschiebe, onE
             {tour.status === 'UNTERWEGS' && (
               <button style={btn} onClick={() => onPatchTour(tour.id, { status: 'ABGESCHLOSSEN' })}>Tour abschließen</button>
             )}
+            <button style={btn} onClick={() => setOptiOpen(v => !v)} aria-expanded={optiOpen}>
+              🧭 Reihenfolge prüfen…
+            </button>
             <button style={btn} onClick={onVertretung}>Vertretung…</button>
             <button style={{ ...btn, color: '#D04B3B' }} onClick={() => {
               if (confirm('Tour wirklich stornieren?')) onPatchTour(tour.id, { status: 'STORNIERT' })
             }}>Stornieren</button>
           </div>
+        )}
+
+        {optiOpen && (
+          <OptimierungsPanel
+            tour={tour}
+            onUebernehmen={async (reihenfolge) => {
+              const ok = await onPatchStop(tour.id, { reihenfolge })
+              if (ok) setOptiOpen(false)
+              return ok
+            }}
+          />
         )}
 
         {/* Stop-Liste */}
@@ -674,6 +689,172 @@ function TourDetail({ tour, onClose, onPatchTour, onPatchStop, onVerschiebe, onE
         )}
       </div>
     </DialogOverlay>
+  )
+}
+
+// ── Reihenfolge-Vorschlag ──────────────────────────────────────
+// Zeigt, was eine Umsortierung braechte — und uebernimmt sie erst auf
+// ausdrueckliche Bestaetigung. Der Schieberegler ist die Aussage der
+// Disposition, wie weit ein mit dem Klienten vereinbarter Termin
+// verschoben werden darf; er steht bewusst auf 0 und muss bewusst
+// hochgezogen werden.
+
+interface OptiAntwort {
+  moeglich: boolean
+  grund?: string
+  text?: string
+  betroffeneStops?: string[]
+  reihenfolge?: string[]
+  unveraendert?: boolean
+  vorher?: { fahrzeitMinuten: number; distanzKm: number }
+  nachher?: { fahrzeitMinuten: number; distanzKm: number }
+  ersparnisMinuten?: number
+  ersparnisKm?: number
+  verfahren?: string
+  freieStops?: number
+  verankert?: string[]
+  ankuenfte?: { stopId: string; position: number; ankunft: string; ende: string; fahrzeitMinuten: number | null; wartezeitMinuten: number }[]
+}
+
+function OptimierungsPanel({ tour, onUebernehmen }: {
+  tour: TourRow
+  onUebernehmen: (reihenfolge: string[]) => Promise<boolean>
+}) {
+  const [flexibel, setFlexibel] = useState(0)
+  const [laedt, setLaedt] = useState(false)
+  const [antwort, setAntwort] = useState<OptiAntwort | null>(null)
+  const [fehler, setFehler] = useState<string | null>(null)
+  const [uebernimmt, setUebernimmt] = useState(false)
+
+  useEffect(() => {
+    let abgebrochen = false
+    setLaedt(true)
+    setFehler(null)
+    fetch(`/api/tours/${tour.id}/optimierung?flexibel=${flexibel}`)
+      .then(async (r) => {
+        const d = await r.json()
+        if (abgebrochen) return
+        if (!r.ok) { setFehler(d.error || 'Vorschlag konnte nicht berechnet werden.'); setAntwort(null) }
+        else setAntwort(d as OptiAntwort)
+      })
+      .catch(() => { if (!abgebrochen) setFehler('Vorschlag konnte nicht berechnet werden.') })
+      .finally(() => { if (!abgebrochen) setLaedt(false) })
+    return () => { abgebrochen = true }
+  }, [tour.id, flexibel])
+
+  const nameZu = (stopId: string) => {
+    const stop = tour.tour_stops.find(s => s.id === stopId)
+    return stop ? (person(stop.clients) || `Stop ${stop.position}`) : stopId.slice(0, 8)
+  }
+
+  return (
+    <div style={{ border: '1px solid var(--line)', borderRadius: 8, padding: 12, marginBottom: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
+        <strong style={{ fontSize: 13 }}>Reihenfolge-Vorschlag</strong>
+        <label style={{ fontSize: 12, color: 'var(--ink4)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          Termin darf sich verschieben um
+          <select
+            value={flexibel}
+            onChange={e => setFlexibel(Number(e.target.value))}
+            style={{ padding: '3px 6px', fontSize: 12 }}
+            aria-label="Zulässige Terminverschiebung in Minuten"
+          >
+            {[0, 15, 30, 60, 120, 240].map(m => (
+              <option key={m} value={m}>{m === 0 ? 'gar nicht' : `± ${m} Min`}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      {laedt && <p style={{ fontSize: 12, color: 'var(--ink4)' }}>Wird berechnet…</p>}
+      {fehler && <Banner tone="danger">{fehler}</Banner>}
+
+      {!laedt && !fehler && antwort && !antwort.moeglich && (
+        <Banner tone="warn">
+          {antwort.text}
+          {(antwort.betroffeneStops?.length ?? 0) > 0 && (
+            <> Betroffen: {antwort.betroffeneStops!.map(nameZu).join(', ')}.</>
+          )}
+        </Banner>
+      )}
+
+      {!laedt && !fehler && antwort?.moeglich && (
+        <>
+          <p style={{ fontSize: 12, color: 'var(--ink4)', margin: '0 0 8px' }}>
+            Bisher {antwort.vorher?.fahrzeitMinuten} Min / {antwort.vorher?.distanzKm} km Fahrt
+            {' · '}{antwort.freieStops} von {tour.tour_stops.length} Stops verschiebbar
+            {(antwort.verankert?.length ?? 0) > 0 && (
+              <> · fest: {antwort.verankert!.map(nameZu).join(', ')}</>
+            )}
+          </p>
+
+          {antwort.unveraendert ? (
+            <Banner tone="success">
+              Die bestehende Reihenfolge ist bereits die günstigste
+              {flexibel === 0 ? ' — bei festen Terminen gibt es keine Alternative.' : '.'}
+            </Banner>
+          ) : (
+            <>
+              <Banner tone="info">
+                Spart {antwort.ersparnisMinuten} Min Fahrt und {antwort.ersparnisKm} km
+                {antwort.verfahren === 'HEURISTIK' && ' (Näherung — die Tour ist für die vollständige Suche zu groß)'}.
+              </Banner>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, margin: '8px 0' }}>
+                <thead>
+                  <tr style={{ color: 'var(--ink4)', textAlign: 'left' }}>
+                    <th style={{ padding: 4 }}>#</th>
+                    <th style={{ padding: 4 }}>Klient</th>
+                    <th style={{ padding: 4 }}>Neu</th>
+                    <th style={{ padding: 4 }}>Bisher</th>
+                    <th style={{ padding: 4 }}>Anfahrt</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(antwort.ankuenfte ?? []).map(a => {
+                    const stop = tour.tour_stops.find(s => s.id === a.stopId)
+                    const alt = stop ? `${zeit(stop.geplante_ankunft)}–${zeit(stop.geplantes_ende)}` : '–'
+                    const neu = `${a.ankunft}–${a.ende}`
+                    const geaendert = stop ? zeit(stop.geplante_ankunft) !== a.ankunft : false
+                    return (
+                      <tr key={a.stopId} style={{ borderTop: '1px solid var(--line)' }}>
+                        <td style={{ padding: 4 }}>{a.position}</td>
+                        <td style={{ padding: 4 }}>{nameZu(a.stopId)}</td>
+                        <td style={{ padding: 4, fontWeight: geaendert ? 700 : 400 }}>{neu}</td>
+                        <td style={{ padding: 4, color: 'var(--ink4)' }}>{alt}</td>
+                        <td style={{ padding: 4, color: 'var(--ink4)' }}>
+                          {a.fahrzeitMinuten === null ? '–' : `${a.fahrzeitMinuten} Min`}
+                          {a.wartezeitMinuten > 0 && ` (+${a.wartezeitMinuten} Min warten)`}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+              <button
+                style={btnPrimary}
+                disabled={uebernimmt}
+                onClick={async () => {
+                  if (!antwort.reihenfolge) return
+                  if (!confirm(
+                    'Reihenfolge übernehmen? Die Besuchszeiten der betroffenen Klienten ändern sich — '
+                    + 'die Klienten müssen darüber informiert werden.'
+                  )) return
+                  setUebernimmt(true)
+                  await onUebernehmen(antwort.reihenfolge)
+                  setUebernimmt(false)
+                }}
+              >
+                {uebernimmt ? 'Wird übernommen…' : 'Reihenfolge übernehmen'}
+              </button>
+              <p style={{ fontSize: 11, color: 'var(--ink4)', margin: '6px 0 0' }}>
+                Die Übernahme ändert nur die Reihenfolge. Die Uhrzeiten der Einsätze
+                bleiben, wie sie sind — sie werden je Stop einzeln angepasst.
+              </p>
+            </>
+          )}
+        </>
+      )}
+    </div>
   )
 }
 
