@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { logger } from '@/lib/logger'
 
 // Simple in-memory cache (2 min TTL)
 let flagCache: { flags: Record<string, FeatureFlag>; ts: number } | null = null
@@ -20,9 +21,22 @@ async function loadFlags(): Promise<Record<string, FeatureFlag>> {
   }
 
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('kf_feature_flags')
     .select('flag_name, enabled, rollout_percentage, rollout_strategy, allowed_users, effective_from, effective_to')
+
+  // Die Richtung stimmte schon vorher: ohne Flag ist `isFeatureEnabled`
+  // false, ein Ausfall schaltet also ab statt frei. Der Fehler lag im
+  // Zwischenspeicher — die leere Antwort einer gescheiterten Abfrage wurde
+  // wie ein gueltiges Ergebnis fuer zwei Minuten abgelegt. Aus einer
+  // einzelnen gestoerten Anfrage wurde damit ein zweiminuetiger Ausfall
+  // aller Funktionen hinter einem Flag. Ein Fehlschlag wird nicht gemerkt.
+  if (error) {
+    logger.child('feature-flags').warn('Flags nicht lesbar — keine Zwischenspeicherung, alle Flags gelten als aus', {
+      fehler: error.message,
+    })
+    return {}
+  }
 
   const flags: Record<string, FeatureFlag> = {}
   for (const f of data || []) {

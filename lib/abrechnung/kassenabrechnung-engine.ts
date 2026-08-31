@@ -241,7 +241,20 @@ export async function preFlightValidierung(
     invoiceQuery = invoiceQuery.eq('billing_type', 'kasse')
   }
 
-  const { data: rechnungen, count: rechnungCount } = await invoiceQuery
+  // ── Warum jede Negativ-Pruefung unten ihren Fehler mitnimmt ─────────
+  // Die Pruefpunkte dieses Pre-Flight zerfallen in zwei Arten. Die einen
+  // verlangen einen BELEG (`count > 0`, `!!wert`) — die sind bei einer
+  // gescheiterten Abfrage von selbst zu. Die anderen bestehen, wenn eine
+  // Liste LEER ist („keine unvollstaendigen Kunden", „keine unsignierten
+  // Nachweise", „kein bestehender Lauf"). Bei denen ist eine gescheiterte
+  // Abfrage nicht von einem sauberen Befund zu unterscheiden: `?? []`
+  // macht aus „konnte nicht nachsehen" ein „nichts gefunden" — und damit
+  // aus einem Pflicht-Tor ein offenes.
+  //
+  // Ein Tor, das aufgeht, wenn die Datenbank nicht antwortet, ist keins.
+  // Deshalb wird der Fehler jeder dieser Abfragen mitgenommen und der
+  // Pruefpunkt gilt als NICHT bestanden, mit dem Unterschied im Text.
+  const { data: rechnungen, count: rechnungCount, error: rechnungenFehler } = await invoiceQuery
 
   pruefpunkte.push({
     id: 'rechnungen',
@@ -256,17 +269,19 @@ export async function preFlightValidierung(
   pruefpunkte.push({
     id: 'festschreibung',
     label: 'Alle Rechnungen festgeschrieben',
-    bestanden: nichtFestgeschrieben.length === 0,
+    bestanden: !rechnungenFehler && nichtFestgeschrieben.length === 0,
     pflicht: true,
-    details: nichtFestgeschrieben.length === 0
-      ? 'Alle Rechnungen festgeschrieben'
-      : `${nichtFestgeschrieben.length} Rechnungen noch nicht festgeschrieben`,
+    details: rechnungenFehler
+      ? `Festschreibung NICHT PRUEFBAR — Rechnungen nicht lesbar: ${rechnungenFehler.message}`
+      : nichtFestgeschrieben.length === 0
+        ? 'Alle Rechnungen festgeschrieben'
+        : `${nichtFestgeschrieben.length} Rechnungen noch nicht festgeschrieben`,
   })
 
   // 8. Kunden-Versicherungsdaten vollständig
   if (rechnungen?.length) {
     const clientIds = [...new Set(rechnungen.map(r => r.client_id))]
-    const { data: clients } = await supabase
+    const { data: clients, error: clientsFehler } = await supabase
       .from('clients')
       .select('id, versichertennummer, geburtsdatum, first_name, last_name, care_level, pflegegrad')
       .in('id', clientIds)
@@ -275,14 +290,23 @@ export async function preFlightValidierung(
       !c.versichertennummer || !c.geburtsdatum || !c.last_name || !c.first_name,
     ) ?? []
 
+    // Auch eine leere Antwort ohne Fehler ist hier kein Beleg: zu jeder
+    // Rechnung MUSS ein Klient gehoeren. Kommen weniger Zeilen zurueck als
+    // Kennungen angefragt wurden, ist mindestens einer ungeprueft geblieben.
+    const clientsUnvollzaehlig = !clientsFehler && (clients?.length ?? 0) < clientIds.length
+
     pruefpunkte.push({
       id: 'kundendaten',
       label: 'Versicherungsdaten vollständig',
-      bestanden: unvollstaendig.length === 0,
+      bestanden: !clientsFehler && !clientsUnvollzaehlig && unvollstaendig.length === 0,
       pflicht: true,
-      details: unvollstaendig.length === 0
-        ? `${clientIds.length} Kunden geprüft — alle vollständig`
-        : `${unvollstaendig.length} Kunden mit fehlenden Daten: ${unvollstaendig.map(c => c.last_name || c.id).join(', ')}`,
+      details: clientsFehler
+        ? `Versicherungsdaten NICHT PRUEFBAR — Kundendaten nicht lesbar: ${clientsFehler.message}`
+        : clientsUnvollzaehlig
+          ? `Versicherungsdaten NICHT PRUEFBAR — nur ${clients?.length ?? 0} von ${clientIds.length} Kunden lesbar`
+          : unvollstaendig.length === 0
+            ? `${clientIds.length} Kunden geprüft — alle vollständig`
+            : `${unvollstaendig.length} Kunden mit fehlenden Daten: ${unvollstaendig.map(c => c.last_name || c.id).join(', ')}`,
     })
 
     // care_level ist die führende Spalte — siehe lib/clients/pflegegrad.ts.
@@ -290,11 +314,13 @@ export async function preFlightValidierung(
     pruefpunkte.push({
       id: 'pflegegrad',
       label: 'Pflegegrad vorhanden',
-      bestanden: ohnePflegegrad.length === 0,
+      bestanden: !clientsFehler && !clientsUnvollzaehlig && ohnePflegegrad.length === 0,
       pflicht: false,
-      details: ohnePflegegrad.length === 0
-        ? 'Alle Kunden haben einen Pflegegrad'
-        : `${ohnePflegegrad.length} Kunden ohne Pflegegrad`,
+      details: clientsFehler || clientsUnvollzaehlig
+        ? 'Pflegegrad NICHT PRUEFBAR — Kundendaten nicht vollständig lesbar'
+        : ohnePflegegrad.length === 0
+          ? 'Alle Kunden haben einen Pflegegrad'
+          : `${ohnePflegegrad.length} Kunden ohne Pflegegrad`,
     })
   }
 
@@ -304,7 +330,7 @@ export async function preFlightValidierung(
     const pfStart = `${periodMonth}-01`
     const pfLastDay = new Date(Number(periodMonth.slice(0, 4)), Number(periodMonth.slice(5, 7)), 0).getDate()
     const pfEnd = `${periodMonth}-${String(pfLastDay).padStart(2, '0')}`
-    const { count: unsignedCount } = await supabase
+    const { count: unsignedCount, error: unsignedFehler } = await supabase
       .from('service_records')
       .select('id', { count: 'exact', head: true })
       .eq('organization_id', params.organizationId)
@@ -312,19 +338,27 @@ export async function preFlightValidierung(
       .lte('date', pfEnd)
       .in('proof_status', ['ENTWURF', 'ABGESCHLOSSEN'])
 
+    // `count` ist bei einer gescheiterten Abfrage null. `(null ?? 0) === 0`
+    // meldete deshalb „Alle Leistungsnachweise signiert" — die Aussage, auf
+    // die sich die Lieferung an die Kasse stuetzt, aus einer Abfrage, die
+    // gar nicht gelaufen ist. Ein nicht ermittelter Zaehler ist keine Null.
+    const signaturenPruefbar = !unsignedFehler && unsignedCount !== null
+
     pruefpunkte.push({
       id: 'signaturen',
       label: 'Leistungsnachweise signiert',
-      bestanden: (unsignedCount ?? 0) === 0,
+      bestanden: signaturenPruefbar && unsignedCount === 0,
       pflicht: true,
-      details: (unsignedCount ?? 0) === 0
-        ? 'Alle Leistungsnachweise signiert'
-        : `${unsignedCount} Leistungsnachweise ohne Signatur`,
+      details: !signaturenPruefbar
+        ? `Signaturen NICHT PRUEFBAR — Leistungsnachweise nicht zählbar${unsignedFehler ? `: ${unsignedFehler.message}` : ''}`
+        : unsignedCount === 0
+          ? 'Alle Leistungsnachweise signiert'
+          : `${unsignedCount} Leistungsnachweise ohne Signatur`,
     })
   }
 
   // 10. Keine Doppelabrechnung
-  const { data: bestehendelaeufe } = await supabase
+  const { data: bestehendelaeufe, error: laeufeFehler } = await supabase
     .from('abrechnungslaeufe')
     .select('id, status, kostentraeger_ik')
     .eq('organization_id', params.organizationId)
@@ -337,14 +371,20 @@ export async function preFlightValidierung(
     ? bestehendelaeufe?.filter(l => l.kostentraeger_ik === params.kostentraegerIk) ?? []
     : bestehendelaeufe ?? []
 
+  // Der teuerste der Faelle: scheitert diese Abfrage, meldete der Punkt
+  // „Kein aktiver Erstlauf" — und derselbe Monat ging ein zweites Mal an
+  // dieselbe Kasse. Eine Doppelabrechnung laesst sich nicht zurueckholen,
+  // nur stornieren, und sie erreicht den Kostentraeger zuerst.
   pruefpunkte.push({
     id: 'doppelabrechnung',
     label: 'Keine Doppelabrechnung',
-    bestanden: doppelt.length === 0,
+    bestanden: !laeufeFehler && doppelt.length === 0,
     pflicht: true,
-    details: doppelt.length === 0
-      ? 'Kein aktiver Erstlauf für diesen Zeitraum'
-      : `${doppelt.length} bestehende(r) Lauf/Läufe gefunden — Erstabrechnung bereits vorhanden`,
+    details: laeufeFehler
+      ? `Doppelabrechnung NICHT PRUEFBAR — bestehende Läufe nicht lesbar: ${laeufeFehler.message}`
+      : doppelt.length === 0
+        ? 'Kein aktiver Erstlauf für diesen Zeitraum'
+        : `${doppelt.length} bestehende(r) Lauf/Läufe gefunden — Erstabrechnung bereits vorhanden`,
   })
 
   // 11. DAKOTA-Export freigeschaltet (Warnung, nicht Pflicht)

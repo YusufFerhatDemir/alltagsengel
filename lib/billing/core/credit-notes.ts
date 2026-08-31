@@ -328,12 +328,24 @@ export async function getRemainingCreditableCents(
   invoiceId: string,
   originalAmountCents: number
 ): Promise<number> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('invoice_corrections')
     .select('corrected_amount_cents')
     .eq('original_invoice_id', invoiceId)
     .eq('correction_type', 'gutschrift')
     .is('deleted_at', null);
+
+  // Der verworfene Fehler machte aus „ich weiss nicht, wieviel schon
+  // gutgeschrieben wurde" ein „es wurde noch nichts gutgeschrieben": die
+  // Funktion gab den VOLLEN Rechnungsbetrag als noch gutschreibbar zurueck.
+  // Der harte Deckel sitzt in createCreditNote und haelt — hier entstand
+  // aber die Zahl, die der Bearbeiter vor sich sieht, und die war zu hoch.
+  if (error) {
+    throw new Error(
+      `Bestehende Gutschriften zu Rechnung ${invoiceId} nicht lesbar: ${error.message}. `
+      + `Der gutschreibbare Restbetrag ist damit nicht ermittelbar.`
+    );
+  }
 
   const alreadyCredited = (data || []).reduce(
     (sum, c) => sum + (originalAmountCents - (c.corrected_amount_cents ?? originalAmountCents)),

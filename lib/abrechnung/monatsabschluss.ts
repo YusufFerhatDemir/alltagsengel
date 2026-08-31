@@ -281,13 +281,21 @@ export async function erstelleMonatsabschluss(
   }
 
   // ── 6) Preistabelle laden ──
-  const { data: preisRows } = await supabase
+  const { data: preisRows, error: preisFehler } = await supabase
     .from('leistungspreise')
     .select('leistungsart, preis_cent, gueltig_ab, gueltig_bis, tarif_status, verifizierungs_quelle')
     .eq('organization_id', organizationId)
     .eq('bundesland', bundesland)
   const preise: Leistungspreis[] = (preisRows || []) as Leistungspreis[]
-  if (preise.length === 0) {
+  // Kein Ersatzpreis in beiden Faellen — die Richtung war schon zu. Die
+  // Warnung sagte aber „keine Preise hinterlegt" und schickte damit
+  // jemanden nach /admin/leistungspreise, wo alles gepflegt dasteht.
+  if (preisFehler) {
+    warnungen.push({
+      schwere: 'warnung',
+      text: `Leistungspreise für „${bundesland}" konnten NICHT GELESEN werden (${preisFehler.message}) — kein Vorschau-Betrag ermittelbar. Das ist keine Aussage darüber, ob Preise hinterlegt sind.`,
+    })
+  } else if (preise.length === 0) {
     warnungen.push({
       schwere: 'warnung',
       text: `Keine Leistungspreise für Bundesland „${bundesland}" hinterlegt — es kann kein Vorschau-Betrag ermittelt werden. Es wird KEIN Ersatzpreis verwendet.`,

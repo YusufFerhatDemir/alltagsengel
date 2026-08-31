@@ -835,13 +835,24 @@ export async function holeAntworten(
     return { gestoppt: 'extern', grund: err.message, ergebnisse: [], importiertGesamt: 0 }
   }
 
-  const { data: stellen } = await supabase
+  const { data: stellen, error: stellenFehler } = await supabase
     .from('datenannahmestellen')
     .select('id, name, ik_nummer, sftp_host, sftp_port, sftp_user, sftp_verzeichnis, antwort_verzeichnis, sftp_key_url')
     .or(`organization_id.eq.${organizationId},organization_id.is.null`)
     .eq('aktiv', true)
     .not('sftp_host', 'is', null)
     .is('deleted_at', null)
+
+  // Ohne diesen Riegel lief die Schleife unten ueber nichts und der Abruf
+  // meldete `importiertGesamt: 0` — dieselbe Zahl wie an einem Tag, an dem
+  // die Kassen nichts geschickt haben. Quittungen und Fehlerprotokolle
+  // waeren liegengeblieben, ohne dass es irgendwo auffaellt.
+  if (stellenFehler) {
+    throw new Error(
+      `Datenannahmestellen nicht lesbar (${stellenFehler.message}) — Antwortabruf abgebrochen. `
+      + `Ein Abruf ohne Annahmestellen ist nicht dasselbe wie ein Abruf ohne Antworten.`
+    )
+  }
 
   const ergebnisse: AntwortAbrufErgebnis[] = []
   let importiertGesamt = 0

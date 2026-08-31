@@ -297,12 +297,19 @@ export async function pruefeUndVerarbeitePipeline(
 
   // 2. Auto-Freigabe (wenn aktiviert)
   if (optionen?.autoFreigabe) {
-    const { data: zuFreigeben } = await supabase
+    const { data: zuFreigeben, error: zuFreigebenFehler } = await supabase
       .from('abrechnungslaeufe')
       .select('id')
       .eq('organization_id', organizationId)
       .in('status', ['geprueft', 'bereit_zum_export'])
       .limit(20)
+
+    // Verworfen war dieser Fehler nicht von „nichts freizugeben" zu
+    // unterscheiden: der Lauf meldete Erfolg mit leerer Fehlerliste,
+    // waehrend die Auto-Freigabe gar nicht stattgefunden hatte.
+    if (zuFreigebenFehler) {
+      fehler.push(`Auto-Freigabe übersprungen — Läufe nicht lesbar: ${zuFreigebenFehler.message}`)
+    }
 
     for (const lauf of zuFreigeben ?? []) {
       try {
@@ -361,13 +368,20 @@ export async function pruefeUndVerarbeitePipeline(
   }
 
   // 3. Korrekturvorschlag für abgelehnte Läufe
-  const { data: abgelehnteRl } = await supabase
+  const { data: abgelehnteRl, error: abgelehnteFehler } = await supabase
     .from('dta_ruecklaeufer')
     .select('id, lauf_id')
     .eq('organization_id', organizationId)
     .in('status', ['abgelehnt', 'teilweise_abgelehnt'])
     .not('lauf_id', 'is', null)
     .limit(20)
+
+  // Dasselbe eine Stufe spaeter: ohne Riegel sah ein Tag, an dem die
+  // Ruecklaeufer nicht lesbar waren, aus wie ein Tag ohne Ablehnungen —
+  // und fuer jede abgelehnte Lieferung entstand kein Korrekturvorschlag.
+  if (abgelehnteFehler) {
+    fehler.push(`Korrekturvorschläge übersprungen — abgelehnte Rückläufer nicht lesbar: ${abgelehnteFehler.message}`)
+  }
 
   for (const rl of abgelehnteRl ?? []) {
     if (!rl.lauf_id) continue

@@ -164,13 +164,21 @@ export async function pruefeUeberfaelligeFristen(
 ): Promise<FristenUebersicht> {
   const heute = heuteBerlin()
 
-  const { data: fristen } = await supabase
+  const { data: fristen, error: fristenFehler } = await supabase
     .from('billing_fristen')
     .select('*')
     .eq('organization_id', organizationId)
     .in('status', ['offen', 'eskaliert'])
     .order('faellig_am', { ascending: true })
     .limit(200)
+
+  // Ohne diesen Riegel gab die Uebersicht bei jeder Stoerung lauter Nullen
+  // zurueck — und eine Oberflaeche, die „0 ueberfaellige Fristen" anzeigt,
+  // sagt etwas ueber die Fristen aus, das sie gar nicht wissen kann. Genau
+  // die Aussage, die niemand nachprueft, weil sie beruhigt.
+  if (fristenFehler) {
+    throw new Error(`Fristen nicht lesbar: ${fristenFehler.message}`)
+  }
 
   const eintraege: FristEintrag[] = (fristen ?? []).map(f => ({
     id: f.id,
@@ -221,13 +229,25 @@ export async function escaliereUeberfaellige(
   // eskaliert_am gehoert in die Spaltenliste: es ist die Grundlage der
   // Wiederholungssperre unten. Ohne die Spalte laesst sich nicht erkennen,
   // ob diese Frist heute schon eine Stufe bekommen hat.
-  const { data: ueberfaellige } = await supabase
+  const { data: ueberfaellige, error: ueberfaelligeFehler } = await supabase
     .from('billing_fristen')
     .select('id, aufgabe_id, ruecklaeufer_id, frist_typ, eskalationsstufe, faellig_am, eskaliert_am')
     .eq('organization_id', organizationId)
     .in('status', ['offen', 'eskaliert'])
     .lt('faellig_am', heute)
     .limit(100)
+
+  // Scheitert die Abfrage, lief die Schleife ueber nichts und der Lauf
+  // meldete `{ eskaliert: 0, fehler: [] }` — nicht von einem Tag ohne
+  // ueberfaellige Fristen zu unterscheiden. Die Eskalation unterblieb
+  // still, und still ist bei Fristen der teuerste Zustand.
+  if (ueberfaelligeFehler) {
+    return {
+      eskaliert: 0,
+      abgelaufen: 0,
+      fehler: [`Überfällige Fristen nicht lesbar — keine Eskalation durchgeführt: ${ueberfaelligeFehler.message}`],
+    }
+  }
 
   for (const frist of ueberfaellige ?? []) {
     try {

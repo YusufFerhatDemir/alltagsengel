@@ -227,6 +227,14 @@ describe('Mandantengrenze', () => {
       org: ORG_A, klient: KLIENT_A, nummer: 'RE-2026-9004', betragEuro: 100,
       correctionType: 'korrektur', correctionOf: fremdesOriginal,
     })
+    // Die Position gehoert zur Nachstellung: generateXRechnungXml verweigert
+    // seit dem Positions-Riegel eine ausgehende Datei ohne Positionen, und
+    // eine echte Korrekturrechnung hat welche. Ohne sie wuerde dieser Test
+    // an einer anderen Schranke scheitern als der, um die es ihm geht.
+    await legePosition({
+      invoiceId: korrektur, beschreibung: 'Korrektur Begleitung',
+      datum: '2026-07-01', minuten: 60, betragEuro: 100,
+    })
 
     const d = await loadInvoiceXRechnungData(admin, korrektur, ORG_A)
     expect(d.correctionOfNumber).toBeNull()

@@ -224,25 +224,39 @@ export async function credentialStatus(
   supabase: SupabaseClient,
   organizationId: string,
 ): Promise<CredentialStatus[]> {
-  // Zertifikate (Absender + Empfänger) in einem Zug.
-  const { data: zertifikate } = await supabase
+  // ── Warum diese drei Abfragen ihren Fehler mitnehmen ────────────────
+  // Diese Funktion beantwortet die Frage „welche Zugangsmittel fehlen?".
+  // Verworfene Fehler machten daraus lauter Fehlanzeigen: „kein
+  // Absenderzertifikat hinterlegt", „kein SSH-Key" — dieselben Saetze, die
+  // ein sauber gelesener leerer Bestand erzeugt. Die Seite haette also zum
+  // Handeln aufgefordert (Zertifikat beim ITSG Trust Center beantragen),
+  // obwohl die Zugangsmittel laengst da waren.
+  const { data: zertifikate, error: zertFehler } = await supabase
     .from('abrechnung_zertifikate')
     .select('ik_nummer, typ, fingerprint, gueltig_bis')
     .eq('organization_id', organizationId)
 
   // Datenannahmestellen, für die ein SSH-Key gebraucht wird.
-  const { data: stellen } = await supabase
+  const { data: stellen, error: stellenFehler } = await supabase
     .from('datenannahmestellen')
     .select('id, name, sftp_host, sftp_user, sftp_key_url, aktiv')
     .or(`organization_id.eq.${organizationId},organization_id.is.null`)
     .is('deleted_at', null)
 
-  const { data: rotationen } = await supabase
+  const { data: rotationen, error: rotationenFehler } = await supabase
     .from('abrechnung_credential_rotationen')
     .select('credential_id, created_at')
     .eq('organization_id', organizationId)
     .order('created_at', { ascending: false })
     .limit(200)
+
+  const leseFehler = zertFehler ?? stellenFehler ?? rotationenFehler
+  if (leseFehler) {
+    throw new Error(
+      `Zugangsmittel nicht lesbar: ${leseFehler.message}. `
+      + `Ein nicht lesbarer Bestand ist kein fehlender Bestand.`
+    )
+  }
 
   const letzteRotation = new Map<string, string>()
   for (const r of rotationen ?? []) {
