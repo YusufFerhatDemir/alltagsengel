@@ -56,6 +56,8 @@ import { berechneAenderung, sperrgrundFuer } from '../lib/marketing/zustellereig
 import { pruefeSvixSignatur } from '../lib/marketing/webhook-signatur.ts'
 import { SEGMENTE, filtereSegment } from '../lib/marketing/segmente.ts'
 import { ladeMarketingKontakte } from '../lib/marketing/empfaenger.ts'
+import { VORLAGEN } from '../lib/marketing/vorlagen.ts'
+import { ermittleEmpfaenger, pruefeVersandtore } from '../lib/marketing/versand.ts'
 
 const URL_BASIS = envWert('NEXT_PUBLIC_SUPABASE_URL')
 const SERVICE = secretKey()
@@ -234,6 +236,59 @@ try {
     Object.keys(gruende).length > 0 || gepruefte.some(g => g.versandfaehig),
     `versandfaehig ${gepruefte.filter(g => g.versandfaehig).length} von ${gepruefte.length}\n`
     + Object.entries(gruende).map(([g, n]) => `  ${n} × ${g}`).join('\n'))
+
+  // ── M15) Kampagnenfaehigkeit: die Empfaengermenge einer echten Kampagne ─
+  //
+  // Bis hierher wurde die Einwilligung EINER Adresse geprueft. Die Frage
+  // der Kampagne ist eine andere: WER steht am Ende auf der Liste. Der
+  // Weg dorthin ist derselbe, den `fuehreVersandAus` geht — nur ohne
+  // Versand: `ermittleEmpfaenger` laedt Kontakte, Segment, Einwilligungen
+  // und die bereits Angeschriebenen und gibt die Ausschluesse aufgeschluesselt
+  // zurueck.
+  const kampagne = {
+    id: '00000000-0000-4000-8000-00000000f00d',   // existiert nicht — genau darum
+    organization_id: ORG,
+    template_key: VORLAGEN[0].templateKey,
+    segment_key: SEGMENTE.find(sg => sg.consentTyp === VORLAGEN[0].consentTyp).key,
+  }
+  const kampagnenlage = await ermittleEmpfaenger(admin, kampagne, new Date())
+  const summeAusschluesse = Object.values(kampagnenlage.ausschluesse).reduce((n, x) => n + x, 0)
+  pruefe('M15', 'Die Empfaengerlage einer Kampagne geht auf: im Segment = versandfaehig + Ausschluesse',
+    kampagnenlage.imSegment.length === kampagnenlage.versandfaehig.length + summeAusschluesse,
+    `Vorlage ${kampagnenlage.vorlage.templateKey} (${kampagnenlage.vorlage.consentTyp}) auf Segment ${kampagnenlage.segment.key}\n`
+    + `im Segment ${kampagnenlage.imSegment.length} = versandfaehig ${kampagnenlage.versandfaehig.length} `
+    + `+ ausgeschlossen ${summeAusschluesse}\n`
+    + Object.entries(kampagnenlage.ausschluesse).filter(([, n]) => n > 0)
+        .map(([g, n]) => `  ${n} × ${g}`).join('\n'))
+
+  // ── M16) Die gesperrte Pruefadresse steht in KEINER Empfaengermenge ─────
+  //
+  // Der eigentliche Nachweis fuer „erneuter Versand blockiert". M7 hat
+  // gezeigt, dass die Adresse als gesperrt GILT; hier wird gemessen, dass
+  // der Versandweg sie deshalb auch wirklich auslaesst — die Sperre wirkt
+  // nur, wenn der Weg dorthin sie liest.
+  const inEmpfaengern = kampagnenlage.versandfaehig.some(k => k.email === PRUEFADRESSE)
+  const imSegmentDrin = kampagnenlage.imSegment.some(k => k.email === PRUEFADRESSE)
+  pruefe('M16', 'Die gesperrte Pruefadresse ist in keiner Empfaengermenge',
+    !inEmpfaengern,
+    `im Segment: ${imSegmentDrin} | versandfaehig: ${inEmpfaengern} (erwartet false)\n`
+    + (imSegmentDrin
+      ? 'Die Adresse steht im Segment und wurde von der Einwilligungspruefung aussortiert — genau so soll es sein.'
+      : 'Die Pruefadresse gehoert zu keinem Kontakt im Bestand; die Sperre wurde in M7/M8 unmittelbar geprueft.'))
+
+  // ── M17) Die Versandtore sind zu ────────────────────────────────────────
+  //
+  // Vier Tore, und schon eines genuegt. Geprueft wird die Kampagne mit
+  // ALLEN Feldern leer — also der Zustand, in dem eine frisch angelegte
+  // Kampagne ist. Sie darf unter keinen Umstaenden versandfaehig sein.
+  const tore = pruefeVersandtore(
+    { ...kampagne, status: 'entwurf', versendet_am: null,
+      freigegeben_am: null, freigegeben_fuer_anzahl: null },
+    kampagnenlage.versandfaehig.length)
+  pruefe('M17', 'Eine frisch angelegte Kampagne kommt an den Versandtoren nicht vorbei',
+    tore.erlaubt === false && tore.gruende.length >= 2,
+    `erlaubt=${tore.erlaubt} | ${tore.gruende.length} Grund/Gruende:\n`
+    + tore.gruende.map(g => `  · ${g}`).join('\n'))
 
 } finally {
   // ── Aufraeumen ──────────────────────────────────────────────────────────
