@@ -1,6 +1,6 @@
 # Security- und Audit-System
 
-Stand: 30.08.2026 · Modul: `lib/security/` · Tabelle: `public.security_audit_log`
+Stand: 01.09.2026 · Modul: `lib/security/` · Tabelle: `public.security_audit_log`
 
 Dieses Dokument ist die **Audit-Konfiguration**. Wer wissen will, was
 protokolliert wird, wer es lesen darf und wer darüber eine E-Mail bekommt,
@@ -110,6 +110,28 @@ Gerätegedächtnis ist kein Protokoll und verschwindet mit dem Konto.
 
 Ausdrücklich überwachte Konten. Jeder Eintrag trägt `grund` und
 `angelegt_von`. Ergänzt die privilegierten Konten, ersetzt sie nicht.
+
+**Befristet — 90 Tage, abgeleitet aus `created_at`.** Ein Eintrag, dessen
+Frist vorbei ist, wird von `ladeAktive()` gar nicht erst in die aktive Menge
+aufgenommen: die Überwachung endet von selbst, ohne dass jemand daran denken
+muss. Die Zeile bleibt sichtbar (als „abgelaufen") — sie still zu löschen
+wäre das Gegenteil von Transparenz.
+
+**Wiederanordnung.** Wer nach Ablauf fortsetzen will, ordnet neu an: das
+Einschalten setzt `created_at` (und `befristet_bis`) auf den Tag der
+Anordnung, verlangt die vollständige Begründung und wird als
+`watchlist_change` protokolliert. Eine **laufende** Maßnahme verlängert sich
+beim Bearbeiten dagegen **nicht** — sonst ließe sich eine Überwachung durch
+wiederholtes Speichern still fortsetzen. Regeln in
+`lib/security/befristung.ts`, Belege auf echtem Postgres in
+`__tests__/security/watchlist-befristung-pglite.test.ts`.
+
+**Migration 20261024000000** legt `befristet_bis`, `zweck`,
+`rechtsgrundlage` und `person_informiert_am` nach, dazu einen CHECK gegen
+aktive Einträge ohne Fristende. Sie ist am 01.09.2026 **nicht angewendet**
+(live geprüft). Der Code arbeitet mit beiden Schemaständen; `befristet_bis`
+darf das Ende nur vorziehen, nie hinausschieben. Stand jederzeit:
+`npm run verify:ueberwachung`.
 
 ---
 
@@ -237,7 +259,8 @@ zweiten Mechanismus und keine Sonderbehandlung einzelner Adressen im Code.
 | `ohne_sperrfrist` | `true` = keine 12-Stunden-Bremse, jede Anmeldung meldet |
 | `melde_email` | Zieladresse. **Leer = die Adresse des Kontos selbst.** Für eine Admin-Meldung hier die Verwaltungsadresse eintragen |
 | `email_kontrolle` | Die beim Einrichten angegebene Adresse — nur Gegenprobe |
-| `grund` | Pflicht. Ein Eintrag ohne Grund ist in einem halben Jahr nicht mehr erklärbar |
+| `grund` | Pflicht, mindestens 40 Zeichen, und er muss die vier Angaben `Zweck:`, `Rechtsgrundlage:`, `Zeitraum:`, `Transparenz:` auffindbar enthalten. Ein Fließtext über 40 Zeichen genügt **nicht** |
+| `befristet_bis` | Ende der Maßnahme (Migration 20261024000000, noch nicht angewendet). Darf früher liegen als die 90 Tage, nie später |
 
 **Überwachungssatz** (`UEBERWACHUNGS_EREIGNISSE`, Obermenge von
 `meldepflichtig`): zusätzlich `login_failed`, `logout`, `session_end`,
@@ -245,7 +268,13 @@ zweiten Mechanismus und keine Sonderbehandlung einzelner Adressen im Code.
 **nicht** enthalten: `security_notification_sent` — sonst löste jede Mail die
 nächste aus.
 
-**Einrichten** — zwei Wege, beide schreiben ein `watchlist_change`-Ereignis:
+**Einrichten** — zwei Wege. Beide fahren dieselben Regeln (Mindestlänge,
+die vier Pflichtangaben, Frist) und schreiben ein
+`watchlist_change`-Ereignis. Bis zum 01.09.2026 galt das nur für die
+Oberfläche: das Skript schrieb direkt per PostgREST, verlangte 5 statt 40
+Zeichen, fragte nicht nach den Pflichtangaben und hinterließ keine
+Protokollzeile — der eine Live-Eintrag ist genau so entstanden und hat
+deshalb keine Spur.
 
 1. Oberfläche: `/admin/security/audit-log` → „Überwachte Konten".
 2. Kommandozeile (Trockenlauf ohne `--ja`):
@@ -425,7 +454,7 @@ als `aufbewahren` (Art. 32 DSGVO), `security_known_devices.user_id` und
 `/admin/security/audit-log`
 
 Filter: E-Mail, Konto-ID, Zeitraum von/bis, Ereignistyp, Kategorie,
-Schweregrad, Plattform, IP. Sortierung nach Zeitpunkt, Ereignistyp,
+Schweregrad, Plattform, IP, Herkunft (echt / Test / nachgestellt). Sortierung nach Zeitpunkt, Ereignistyp,
 Schweregrad, Konto. Seiten zu 50 (max. 200). CSV-Export bis 10.000 Zeilen,
 Semikolon-getrennt mit BOM (deutsche Excel-Locale) und Formel-Entschärfung
 (`csvZelle`) — ein User-Agent ist ein Wert von außen und landet in einer
@@ -470,3 +499,6 @@ Anwendungspfad protokolliert weiterhin, nur das Sicherheitsnetz fehlt.
 | `__tests__/security/rollenkonzept-pglite.test.ts` | Gleichstand `rollen_matrix` (SQL) ↔ `ROLLEN_MATRIX` (TypeScript) |
 | `__tests__/security/rollenkonzept.test.ts` | Vorbehalte der Administration |
 | `__tests__/security/security-kontoalarm-pglite.test.ts` | Schalter-Spalten, Teilindex, `profiles`-Trigger (Vorher/Nachher, wer mitgeschrieben wird und wer nicht), Rollback |
+| `__tests__/security/watchlist-befristung-pglite.test.ts` | Was ein UPSERT mit `created_at` macht, der CHECK aus 20261024000000, Rollback — auf echtem Postgres |
+| `__tests__/security/watchlist-transparenz.test.ts` | Begründungs-Riegel, Wiederanordnung nach Ablauf, kein stilles Verlängern, Gleichstand Oberfläche ↔ Kommandozeile |
+| `npm run verify:ueberwachung` | Live: Frist, Pflichtangaben, Fristspalte, Protokollspur — rein lesend, U7 misst das nach |

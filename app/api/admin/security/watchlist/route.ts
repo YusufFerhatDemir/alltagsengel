@@ -73,11 +73,17 @@ export const POST = withTracking(async function POST(request: Request) {
       )
     }
 
+    const aktivGewuenscht = rumpf?.aktiv !== false
     const grund = typeof rumpf?.grund === 'string' ? rumpf.grund.trim() : ''
-    if (grund.length < 5) {
+    if (aktivGewuenscht && grund.length < 5) {
       // Ein Eintrag ohne Grund ist in einem halben Jahr nicht mehr
       // erklaerbar — und genau dann wird jemand fragen, warum dieses
-      // Konto ueberwacht wurde.
+      // Konto ueberwacht wurde. Die eigentliche Huerde (Mindestlaenge
+      // und die vier Pflichtangaben) sitzt in lib/security/watchlist.ts;
+      // das hier faengt nur den offensichtlich leeren Fall frueh ab.
+      //
+      // Beim ABSCHALTEN gilt sie NICHT: eine Schranke davor, eine
+      // Ueberwachung zu beenden, waere genau falsch herum.
       return NextResponse.json(
         { error: 'Bitte einen Grund angeben (mindestens 5 Zeichen).' },
         { status: 400 },
@@ -127,7 +133,7 @@ export const POST = withTracking(async function POST(request: Request) {
       )
     }
 
-    const aktiv = rumpf?.aktiv !== false
+    const aktiv = aktivGewuenscht
     const emailKontrolle = typeof rumpf?.emailKontrolle === 'string'
       ? rumpf.emailKontrolle.trim() || null
       : null
@@ -149,7 +155,15 @@ export const POST = withTracking(async function POST(request: Request) {
     })
 
     if (!ergebnis.ok) {
-      return NextResponse.json({ error: ergebnis.grund }, { status: 500 })
+      // Eine unvollstaendige Anordnung ist ein Eingabefehler, kein
+      // Serverfehler. Vorher ging beides als 500 hinaus — die Verwaltung
+      // sah „bei uns ist etwas kaputt", wo „bitte Rechtsgrundlage
+      // ergaenzen" gemeint war, und die Ueberwachung landete in der
+      // Fehlerauswertung des Betriebs.
+      return NextResponse.json(
+        { error: ergebnis.grund },
+        { status: ergebnis.art === 'eingabe' ? 400 : 500 },
+      )
     }
 
     await erfasseSicherheitsereignis({
@@ -164,6 +178,11 @@ export const POST = withTracking(async function POST(request: Request) {
           ? { aktiv: ergebnis.vorher.aktiv, grund: ergebnis.vorher.grund }
           : null,
         nachher: { aktiv, grund },
+        // Ohne die Frist im Protokoll liesse sich hinterher nicht
+        // belegen, BIS WANN angeordnet war — und genau danach fragt eine
+        // Pruefung bei einer personenbezogenen Sondermassnahme.
+        befristet_bis: aktiv ? ergebnis.befristung.laeuftAbAm : null,
+        frist_neu_gestartet: ergebnis.fristNeuGestartet,
         veranlasst_von: auth.ctx.userId,
         veranlasser_rolle: auth.ctx.rolle,
         adressen_abweichung: adressenAbweichung,
@@ -184,6 +203,12 @@ export const POST = withTracking(async function POST(request: Request) {
       // die Ueberwachung einrichtet, soll sofort sehen, wenn die
       // angegebene Adresse nicht die des Kontos ist.
       adressenAbweichung,
+      // Der WAHRE Zustand nach dem Schreiben. „aktiv" allein waere seit
+      // der Frist eine Falschauskunft: ein Eintrag kann eingeschaltet
+      // und trotzdem wirkungslos sein.
+      befristung: ergebnis.befristung,
+      fristNeuGestartet: ergebnis.fristNeuGestartet,
+      wirktJetzt: aktiv && !ergebnis.befristung.abgelaufen,
       hinweis: adressenAbweichung
         ? `Die angegebene Adresse (${emailKontrolle}) weicht von der Adresse des Kontos (${kontoEmail}) ab. Die Überwachung hängt an der Konto-Kennung, nicht an der Adresse — prüfen Sie, ob das richtige Konto gemeint war.`
         : null,
