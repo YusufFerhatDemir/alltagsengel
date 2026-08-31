@@ -1,0 +1,136 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<title>Migrationsstand — live gegen Production gemessen</title><style>
+:root{--bg:#0f1419;--karte:#171e26;--rand:#2b3745;--text:#e6edf3;--matt:#8b98a5;
+      --gruen:#3fb950;--rot:#f85149;--gelb:#d29922;--blau:#58a6ff}
+*{box-sizing:border-box}
+body{margin:0;padding:28px;background:var(--bg);color:var(--text);
+     font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+h1{font-size:20px;margin:0 0 4px;letter-spacing:.3px}
+.kopf{border-bottom:2px solid var(--rand);padding-bottom:14px;margin-bottom:22px}
+.kopf .meta{color:var(--matt);font-size:12px}
+h2{font-size:15px;margin:26px 0 10px;color:var(--blau);
+   border-left:3px solid var(--blau);padding-left:9px}
+table{border-collapse:collapse;width:100%;margin-bottom:8px;background:var(--karte);
+      border:1px solid var(--rand);border-radius:6px;overflow:hidden}
+th,td{text-align:left;padding:7px 11px;border-bottom:1px solid var(--rand);
+      vertical-align:top;font-size:12.5px;word-break:break-word}
+th{background:#1e2733;color:var(--matt);font-weight:600;white-space:nowrap;width:210px}
+tr:last-child td,tr:last-child th{border-bottom:none}
+td.wert{color:var(--text)}
+.null{color:var(--matt);font-style:italic}
+.gruen{color:var(--gruen);font-weight:600}
+.rot{color:var(--rot);font-weight:600}
+.gelb{color:var(--gelb);font-weight:600}
+.hinweis{background:#1d2430;border-left:3px solid var(--gelb);padding:11px 14px;
+         margin:14px 0;border-radius:0 6px 6px 0;font-size:12.5px;color:#cbd5e0}
+pre{background:var(--karte);border:1px solid var(--rand);border-radius:6px;
+    padding:14px;font-size:12px;line-height:1.45;white-space:pre-wrap;margin:0}
+.j{color:#a5d6ff;font-size:12px}
+.fuss{margin-top:24px;padding-top:12px;border-top:1px solid var(--rand);
+      color:var(--matt);font-size:11.5px}
+</style></head><body>
+<div class="kopf"><h1>Migrationsstand — live gegen Production gemessen</h1>
+<div class="meta">npm run check:migrationen  ·  Objektpraesenz statt Versionsliste</div></div>
+<div class="hinweis">Die Tabelle <b>supabase_migrations.schema_migrations</b>
+     ist fuer den Dienstschluessel <span class="rot">nicht lesbar</span>:
+     <code>?? HTTP 403: permission denied for schema supabase_migrations</code>. Der Stand wird deshalb ueber die
+     <b>Objektpraesenz</b> gemessen — fuer jede Migration wird geprueft, ob
+     die Funktion / der Index / die Policy live wirklich existiert. Das ist
+     das haertere Kriterium: es belegt Wirkung, nicht nur einen Eintrag.</div>
+     <h2>Ausgabe des Laufs</h2><pre>
+&gt; alltagsengel-next@1.0.0 check:migrationen
+&gt; node scripts/check-migrationen-live.mjs
+
+═══════════════════════════════════════════════════════════════════
+ MIGRATIONEN — steht sie live, oder nur im Repo?
+ 2026-08-31T11:58:31.163Z
+═══════════════════════════════════════════════════════════════════
+
+Geprueft werden 32 Migrationen ab 20261006000000.
+Alles davor gilt seit dem 27.08.2026 als angewendet (227+ Dateien).
+
+✅ 20261006000000_sepa_batch_items_kein_doppelter_einzug
+     eindeutiger Index uq_sepa_batch_items_invoice_offen — gefunden 1, erwartet 1
+✅ 20261007000000_pflege_risiko_dashboard_org_fence
+     org_fence-Policy auf den Risiko-Tabellen — gefunden 1, erwartet ≥1
+✅ 20261007000002_sis_abschluss_sperre_haertung
+     prevent_locked_sis_edit + prevent_locked_sis_child_edit — gefunden 2, erwartet 2
+❌ 20261008000000_vitalwerte_plausibilitaet_db_check
+     die vier Funktionen vitals_plausibel_* — gefunden 0, erwartet 4
+❌ 20261009000000_pflege_massnahmenplaene_ein_aktiver_plan
+     eindeutiger Index uq_pflege_massnahmenplaene_ein_aktiver_plan — gefunden 0, erwartet 1
+✅ 20261009000002_coach_freischaltung_bestellung_unique
+     Index idx_coach_freischaltungen_bestellung — gefunden 1, erwartet 1
+✅ 20261009000004_pflege_anamnese_abschluss_sperre_haertung
+     prevent_locked_anamnese_edit — gefunden 1, erwartet 1
+❌ 20261010000000_medikamente_abgesetzt_sperre_db
+     Trigger trg_locked_medikament auf medikamente — gefunden 0, erwartet 1
+❌ 20261010000002_wund_kindtabellen_sperre_db
+     die drei Trigger trg_locked_wound_* — gefunden 0, erwartet 3
+❌ 20261010000004_pflege_verlauf_backdating_sperre_db
+     Trigger trg_verlauf_periode_offen — gefunden 0, erwartet 1
+✅ 20261010000006_kim_audit_anhang_abgewiesen
+     kim_audit_log_aktion_check kennt 'anhang_abgewiesen' — gefunden 1, erwartet 1
+✅ 20261011000000_dienstplan_nachtdienst_doppelbelegung
+     Trigger trg_check_doppelbelegung — gefunden 1, erwartet 1
+✅ 20261011000001_medikament_eingaben_doppelgabe
+     eindeutiger Index uq_medikament_eingaben_gabe — gefunden 1, erwartet 1
+✅ 20261012000000_assignment_overlap_nachtdienst
+     check_assignment_overlap rechnet ueber Mitternacht (versatz * 1440) — gefunden 1, erwartet 1
+✅ 20261013000000_rechnung_stornierte_nachweise
+     create_invoice_draft_atomic schliesst Stornos aus — gefunden 1, erwartet 1
+✅ 20261013000002_budget_used_amount_statuswerte
+     rechne_budget_verbrauch_neu — gefunden 1, erwartet 1
+✅ 20261014000000_rollenmatrix_bonus_verwalten
+     rollen_matrix() kennt 'bonus.verwalten' — gefunden 1, erwartet 1
+✅ 20261015000000_angels_policy_haertung
+     angels: UPDATE nur auf den vier freigegebenen Spalten — gefunden 1, erwartet 1
+✅ 20261016000000_loeschkette_bookings_angel_fk
+     bookings-Fremdschluessel mit ON DELETE SET NULL — gefunden 2, erwartet ≥1
+✅ 20261017000000_abrechnungsintegritaet_leistungsnachweis
+     Trigger trg_a_unterschrift_beleg — gefunden 1, erwartet 1
+✅ 20261017000002_obergrenze_angebotstyp
+     angebotstyp_von_leistungsart — gefunden 1, erwartet 1
+✅ 20261018000000_rollenmatrix_sicherheit_lesen
+     rollen_matrix() kennt 'sicherheit.lesen' — gefunden 1, erwartet 1
+✅ 20261018000002_security_audit_log
+     log_security_event — gefunden 1, erwartet 1
+✅ 20261018000004_security_watchlist_kontoalarm
+     Trigger trg_security_audit_profil_aenderung — gefunden 1, erwartet 1
+✅ 20261019000000_marketing_crm
+     die sechs Marketing-Tabellen — gefunden 6, erwartet 6
+✅ 20261019000002_rollenmatrix_marketing_verwalten
+     rollen_matrix() kennt 'marketing.verwalten' — gefunden 1, erwartet 1
+✅ 20261019000004_audit_action_marketing
+     mis_audit_log_action_check kennt die Marketing-Aktionen — gefunden 1, erwartet 1
+✅ 20261020000000_standortfreigabe
+     location_sharing_settings + location_updates — gefunden 2, erwartet 2
+✅ 20261021000000_campaign_logs_provider_id
+     email_campaign_logs.provider_id — gefunden 1, erwartet 1
+❌ 20261021000002_secdef_trigger_revoke
+     keine SECURITY-DEFINER-Triggerfunktion mehr fuer anon ausfuehrbar — gefunden 6, erwartet 0
+❌ 20261021000004_is_internal_staff_ohne_buero
+     is_internal_staff() nennt 'buero' nicht mehr — gefunden 0, erwartet 1
+❌ 20261022000000_rk_lesepolicies_verwaltungsrollen
+     die 24 Lesepolicies rk_&lt;tabelle&gt;_lesen — gefunden 0, erwartet 24
+
+═══════════════════════════════════════════════════════════════════
+ 8 MIGRATION(EN) STEHEN NICHT LIVE:
+   20261008000000_vitalwerte_plausibilitaet_db_check
+   20261009000000_pflege_massnahmenplaene_ein_aktiver_plan
+   20261010000000_medikamente_abgesetzt_sperre_db
+   20261010000002_wund_kindtabellen_sperre_db
+   20261010000004_pflege_verlauf_backdating_sperre_db
+   20261021000002_secdef_trigger_revoke
+   20261021000004_is_internal_staff_ohne_buero
+   20261022000000_rk_lesepolicies_verwaltungsrollen
+
+ Anwenden im Supabase-SQL-Editor als `postgres`. Ueber den
+ Dienstschluessel scheitert jedes DDL am Eigentuemer (42501) —
+ geprueft am 31.08.2026 mit CREATE POLICY auf public.absences.
+═══════════════════════════════════════════════════════════════════
+</pre>
+<div class="fuss">Erhoben am 31.08.2026 gegen die Produktionsdatenbank
+(Projekt nnwyktkqibdjxgimjyuq) — nur lesend, ueber PostgREST mit dem
+Dienstschluessel. Zugangsdaten erscheinen in keinem Beleg.</div>
+</body></html>

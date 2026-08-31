@@ -1,0 +1,82 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<title>Admin-Sicherheitsansicht</title><style>
+:root{--bg:#0f1419;--karte:#171e26;--rand:#2b3745;--text:#e6edf3;--matt:#8b98a5;
+      --gruen:#3fb950;--rot:#f85149;--gelb:#d29922;--blau:#58a6ff}
+*{box-sizing:border-box}
+body{margin:0;padding:28px;background:var(--bg);color:var(--text);
+     font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+h1{font-size:20px;margin:0 0 4px;letter-spacing:.3px}
+.kopf{border-bottom:2px solid var(--rand);padding-bottom:14px;margin-bottom:22px}
+.kopf .meta{color:var(--matt);font-size:12px}
+h2{font-size:15px;margin:26px 0 10px;color:var(--blau);
+   border-left:3px solid var(--blau);padding-left:9px}
+table{border-collapse:collapse;width:100%;margin-bottom:8px;background:var(--karte);
+      border:1px solid var(--rand);border-radius:6px;overflow:hidden}
+th,td{text-align:left;padding:7px 11px;border-bottom:1px solid var(--rand);
+      vertical-align:top;font-size:12.5px;word-break:break-word}
+th{background:#1e2733;color:var(--matt);font-weight:600;white-space:nowrap;width:210px}
+tr:last-child td,tr:last-child th{border-bottom:none}
+td.wert{color:var(--text)}
+.null{color:var(--matt);font-style:italic}
+.gruen{color:var(--gruen);font-weight:600}
+.rot{color:var(--rot);font-weight:600}
+.gelb{color:var(--gelb);font-weight:600}
+.hinweis{background:#1d2430;border-left:3px solid var(--gelb);padding:11px 14px;
+         margin:14px 0;border-radius:0 6px 6px 0;font-size:12.5px;color:#cbd5e0}
+pre{background:var(--karte);border:1px solid var(--rand);border-radius:6px;
+    padding:14px;font-size:12px;line-height:1.45;white-space:pre-wrap;margin:0}
+.j{color:#a5d6ff;font-size:12px}
+.fuss{margin-top:24px;padding-top:12px;border-top:1px solid var(--rand);
+      color:var(--matt);font-size:11.5px}
+</style></head><body>
+<div class="kopf"><h1>/admin/security/audit-log — Live-Aufruf und Berechtigung</h1>
+<div class="meta">Aufruf mit echtem Browser (Chromium) gegen Production, ohne Anmeldung</div></div>
+
+<h2>Was beim Aufruf passiert</h2>
+<table><tr><th>308</th><td class="wert">https://www.alltagsengel.care/admin/security/audit-log</td></tr><tr><th>307</th><td class="wert">https://alltagsengel.care/admin/security/audit-log</td></tr><tr><th>200</th><td class="wert">https://alltagsengel.care/auth/login?next=%2Fadmin%2Fsecurity%2Faudit-log&amp;error=auth_required</td></tr></table>
+<table>
+  <tr><th>angefordert</th><td class="wert">https://www.alltagsengel.care/admin/security/audit-log</td></tr>
+  <tr><th>gelandet bei</th><td class="wert"><span class="gelb">https://alltagsengel.care/auth/login?next=%2Fadmin%2Fsecurity%2Faudit-log&amp;error=auth_required</span></td></tr>
+  <tr><th>Meldung auf der Seite</th><td class="wert"><span class="rot">Zugriff verweigert. Bitte melden Sie sich an.</span></td></tr>
+</table>
+<div class="hinweis">Die Ansicht ist <b>nicht anonym erreichbar</b>. Der Aufruf endet
+mit <code>error=auth_required</code> auf der Anmeldeseite. Es wurde
+<b>bewusst keine Anmeldung</b> durchgefuehrt — dieser Beleg entsteht ohne
+Eingabe von Zugangsdaten. Der Screenshot der abgewiesenen Seite liegt als
+<code>beleg-6_admin-ansicht-live.png</code> daneben.</div>
+
+<h2>Der Riegel im Code · app/api/admin/security/audit-log/route.ts</h2>
+<pre>// ═══════════════════════════════════════════════════════════════════════
+// GET /api/admin/security/audit-log
+// ═══════════════════════════════════════════════════════════════════════
+//
+// Die Sicherheitsspur fuer die Verwaltungsoberflaeche. Filter, Seiten,
+// Sortierung und — mit `format=csv` — der Export fuer eine Pruefung.
+//
+// BERECHTIGUNG: 'sicherheit.lesen'. Die haben nur admin und superadmin
+// (NUR_ADMINISTRATION in lib/auth/rollen.ts, gespiegelt in
+// public.rollen_matrix). Bewusst NICHT 'audit.lesen': das ist die
+// fachliche Revisionsspur, die pdl, qm und buchhaltung fuer ihre Arbeit
+// brauchen. Hier stehen IP-Adressen, Geraete und Anmeldeverhalten von
+// Kolleginnen und Kollegen.
+//
+// Der Zugriff auf die Spur ist selbst ein Ereignis: der CSV-Export
+// schreibt ein `data_export` in dieselbe Tabelle. Wer die
+// Sicherheitsspur exportiert, hinterlaesst eine Spur.
+// ═══════════════════════════════════════════════════════════════════════</pre>
+<pre>requireBerechtigung('sicherheit.lesen')</pre>
+
+<h2>Testlauf · __tests__/security/security-kontoalarm-pglite.test.ts</h2>
+<pre>RUN  v4.1.10 /Users/work/alltagsengel
+
+
+ Test Files  1 passed (1)
+      Tests  15 passed (15)
+   Start at  14:00:44
+   Duration  1.56s (transform 22ms, setup 0ms, import 45ms, tests 1.36s, environment 0ms)</pre>
+<div class="hinweis">15 von 15 Proben gruen. Die Suite faehrt gegen ein echtes
+Postgres (PGlite) und prueft die Alarmkette samt Watchlist-Regel — nicht
+gegen eine Attrappe.</div>
+
+<div class="fuss">Erhoben am 31.08.2026. Zugangsdaten erscheinen in keinem Beleg.</div>
+</body></html>

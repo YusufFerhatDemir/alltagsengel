@@ -1,0 +1,64 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<title>Zustellnachweis — notification_delivery_log und Provider-Antwort</title><style>
+:root{--bg:#0f1419;--karte:#171e26;--rand:#2b3745;--text:#e6edf3;--matt:#8b98a5;
+      --gruen:#3fb950;--rot:#f85149;--gelb:#d29922;--blau:#58a6ff}
+*{box-sizing:border-box}
+body{margin:0;padding:28px;background:var(--bg);color:var(--text);
+     font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+h1{font-size:20px;margin:0 0 4px;letter-spacing:.3px}
+.kopf{border-bottom:2px solid var(--rand);padding-bottom:14px;margin-bottom:22px}
+.kopf .meta{color:var(--matt);font-size:12px}
+h2{font-size:15px;margin:26px 0 10px;color:var(--blau);
+   border-left:3px solid var(--blau);padding-left:9px}
+table{border-collapse:collapse;width:100%;margin-bottom:8px;background:var(--karte);
+      border:1px solid var(--rand);border-radius:6px;overflow:hidden}
+th,td{text-align:left;padding:7px 11px;border-bottom:1px solid var(--rand);
+      vertical-align:top;font-size:12.5px;word-break:break-word}
+th{background:#1e2733;color:var(--matt);font-weight:600;white-space:nowrap;width:210px}
+tr:last-child td,tr:last-child th{border-bottom:none}
+td.wert{color:var(--text)}
+.null{color:var(--matt);font-style:italic}
+.gruen{color:var(--gruen);font-weight:600}
+.rot{color:var(--rot);font-weight:600}
+.gelb{color:var(--gelb);font-weight:600}
+.hinweis{background:#1d2430;border-left:3px solid var(--gelb);padding:11px 14px;
+         margin:14px 0;border-radius:0 6px 6px 0;font-size:12.5px;color:#cbd5e0}
+pre{background:var(--karte);border:1px solid var(--rand);border-radius:6px;
+    padding:14px;font-size:12px;line-height:1.45;white-space:pre-wrap;margin:0}
+.j{color:#a5d6ff;font-size:12px}
+.fuss{margin-top:24px;padding-top:12px;border-top:1px solid var(--rand);
+      color:var(--matt);font-size:11.5px}
+</style></head><body>
+<div class="kopf"><h1>Zustellnachweis — notification_delivery_log und Provider-Antwort</h1>
+<div class="meta">SELECT * FROM notification_delivery_log  ·  GET https://api.resend.com/emails/{id}</div></div>
+<h2>Zustellbeleg 921532dc-37e4-4d45-83d8-5e8bdca515f0</h2><table><tr><th>id</th><td class="wert">921532dc-37e4-4d45-83d8-5e8bdca515f0</td></tr><tr><th>organization_id</th><td class="wert">00000000-0000-4000-8000-000460629986</td></tr><tr><th>notification_id</th><td class="wert"><span class="null">NULL</span></td></tr><tr><th>channel</th><td class="wert">email</td></tr><tr><th>recipient</th><td class="wert">info@alltagsengel.care</td></tr><tr><th>status</th><td class="wert">sent</td></tr><tr><th>attempt_count</th><td class="wert">1</td></tr><tr><th>provider</th><td class="wert">resend</td></tr><tr><th>provider_message_id</th><td class="wert">13307e4c-46da-4eb3-8584-48679557738e</td></tr><tr><th>sanitized_error</th><td class="wert"><span class="null">NULL</span></td></tr><tr><th>correlation_id</th><td class="wert"><span class="null">NULL</span></td></tr><tr><th>queued_at</th><td class="wert"><span class="null">NULL</span></td></tr><tr><th>attempted_at</th><td class="wert">2026-08-31T11:44:41.612+00:00<br><span class="null">= 31.8.2026, 13:44:41 (Berlin)</span></td></tr><tr><th>delivered_at</th><td class="wert">2026-08-31T11:44:41.612+00:00<br><span class="null">= 31.8.2026, 13:44:41 (Berlin)</span></td></tr><tr><th>failed_at</th><td class="wert"><span class="null">NULL</span></td></tr><tr><th>created_at</th><td class="wert">2026-08-31T11:44:41.662996+00:00<br><span class="null">= 31.8.2026, 13:44:41 (Berlin)</span></td></tr><tr><th>vorgang_art</th><td class="wert">sicherheitsmeldung</td></tr><tr><th>vorgang_ref</th><td class="wert">cf56c43b-ed70-42c7-b8e5-686d4875761e</td></tr><tr><th>vorgang_empfaenger</th><td class="wert">5fa1df42-8eb5-416b-abb5-0c85a057e957</td></tr><tr><th>grund</th><td class="wert"><span class="null">NULL</span></td></tr></table><h2>Zustellbeleg ec789742-33c3-4940-a0e5-6b2c04e238be</h2><table><tr><th>id</th><td class="wert">ec789742-33c3-4940-a0e5-6b2c04e238be</td></tr><tr><th>organization_id</th><td class="wert">00000000-0000-4000-8000-000460629986</td></tr><tr><th>notification_id</th><td class="wert"><span class="null">NULL</span></td></tr><tr><th>channel</th><td class="wert">email</td></tr><tr><th>recipient</th><td class="wert">info@alltagsengel.care</td></tr><tr><th>status</th><td class="wert">sent</td></tr><tr><th>attempt_count</th><td class="wert">1</td></tr><tr><th>provider</th><td class="wert">resend</td></tr><tr><th>provider_message_id</th><td class="wert">02eebce1-f0ce-42c0-a862-de60c50de412</td></tr><tr><th>sanitized_error</th><td class="wert"><span class="null">NULL</span></td></tr><tr><th>correlation_id</th><td class="wert"><span class="null">NULL</span></td></tr><tr><th>queued_at</th><td class="wert"><span class="null">NULL</span></td></tr><tr><th>attempted_at</th><td class="wert">2026-08-31T04:01:15.646+00:00<br><span class="null">= 31.8.2026, 06:01:15 (Berlin)</span></td></tr><tr><th>delivered_at</th><td class="wert">2026-08-31T04:01:15.646+00:00<br><span class="null">= 31.8.2026, 06:01:15 (Berlin)</span></td></tr><tr><th>failed_at</th><td class="wert"><span class="null">NULL</span></td></tr><tr><th>created_at</th><td class="wert">2026-08-31T04:01:15.647401+00:00<br><span class="null">= 31.8.2026, 06:01:15 (Berlin)</span></td></tr><tr><th>vorgang_art</th><td class="wert">sicherheitsmeldung</td></tr><tr><th>vorgang_ref</th><td class="wert">9ec3e6dc-3b28-4119-b017-487cb55be7fe</td></tr><tr><th>vorgang_empfaenger</th><td class="wert">5fa1df42-8eb5-416b-abb5-0c85a057e957</td></tr><tr><th>grund</th><td class="wert"><span class="null">NULL</span></td></tr></table><h2>Provider-Antwort · 13307e4c-46da-4eb3-8584-48679557738e</h2>
+    <table>
+      <tr><th>Bezug</th><td class="wert">cf56c43b (Test-Alarm 13:44)</td></tr>
+      <tr><th>HTTP</th><td class="wert"><span class="gruen">200</span></td></tr>
+      <tr><th>last_event</th><td class="wert"><span class="gruen">delivered</span></td></tr>
+      <tr><th>Empfaenger</th><td class="wert">info@alltagsengel.care</td></tr>
+      <tr><th>Absender</th><td class="wert">Alltagsengel &lt;info@alltagsengel.care&gt;</td></tr>
+      <tr><th>Betreff</th><td class="wert">Sicherheitshinweis: Sicherheitskritische Aktion — Rukiye Karakaya</td></tr>
+      <tr><th>created_at</th><td class="wert">2026-08-31 11:44:41.698000+00</td></tr>
+    </table><h2>Provider-Antwort · 02eebce1-f0ce-42c0-a862-de60c50de412</h2>
+    <table>
+      <tr><th>Bezug</th><td class="wert">9ec3e6dc (Kettenlauf 06:01)</td></tr>
+      <tr><th>HTTP</th><td class="wert"><span class="gruen">200</span></td></tr>
+      <tr><th>last_event</th><td class="wert"><span class="gruen">delivered</span></td></tr>
+      <tr><th>Empfaenger</th><td class="wert">info@alltagsengel.care</td></tr>
+      <tr><th>Absender</th><td class="wert">Alltagsengel &lt;info@alltagsengel.care&gt;</td></tr>
+      <tr><th>Betreff</th><td class="wert">Sicherheitshinweis: Sicherheitskritische Aktion — Rukiye Karakaya</td></tr>
+      <tr><th>created_at</th><td class="wert">2026-08-31 04:01:15.657000+00</td></tr>
+    </table>
+     <div class="hinweis"><b>Der entscheidende Unterschied:</b> zum Ereignis
+     <b>8dfd95d7</b> (13:42 Berlin) existiert <span class="rot">kein
+     Zustellbeleg</span> — die Meldung ging raus, ohne eine Spur zu
+     hinterlassen. Zum Ereignis <b>cf56c43b</b> (13:44 Berlin), nach dem
+     P0-Fix, liegt ein vollstaendiger Beleg vor: Provider-ID
+     13307e4c…, Status <span class="gruen">sent</span>, beim Provider
+     <span class="gruen">delivered</span>. Das ist das Vorher/Nachher
+     derselben Alarmkette im Abstand von zwei Minuten.</div>
+<div class="fuss">Erhoben am 31.08.2026 gegen die Produktionsdatenbank
+(Projekt nnwyktkqibdjxgimjyuq) — nur lesend, ueber PostgREST mit dem
+Dienstschluessel. Zugangsdaten erscheinen in keinem Beleg.</div>
+</body></html>

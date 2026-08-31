@@ -1,0 +1,5 @@
+{
+  "name": "05_migrationen_letzte",
+  "ausdruck": "SELECT string_agg(version, ', ' ORDER BY version DESC) FROM (SELECT version FROM supabase_migrations.schema_migrations ORDER BY version DESC LIMIT 15) t",
+  "wert": "?? HTTP 403: permission denied for schema supabase_migrations"
+}

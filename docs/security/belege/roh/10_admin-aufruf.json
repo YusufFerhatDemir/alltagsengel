@@ -1,0 +1,20 @@
+{
+  "angefordert": "https://www.alltagsengel.care/admin/security/audit-log",
+  "endstand_url": "https://alltagsengel.care/auth/login?next=%2Fadmin%2Fsecurity%2Faudit-log&error=auth_required",
+  "endstand_status": 200,
+  "dokumentspur": [
+    {
+      "status": 308,
+      "url": "https://www.alltagsengel.care/admin/security/audit-log"
+    },
+    {
+      "status": 307,
+      "url": "https://alltagsengel.care/admin/security/audit-log"
+    },
+    {
+      "status": 200,
+      "url": "https://alltagsengel.care/auth/login?next=%2Fadmin%2Fsecurity%2Faudit-log&error=auth_required"
+    }
+  ],
+  "titel": "Alltagsengel Frankfurt — Begleitung, Pflegebox, Krankenfahrt"
+}
