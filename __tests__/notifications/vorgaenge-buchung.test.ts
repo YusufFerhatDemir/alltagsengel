@@ -31,7 +31,7 @@ const DATEN = {
 }
 
 describe('Register', () => {
-  it('kennt alle drei Buchungsereignisse auf den drei Kanaelen des Erstversands', () => {
+  it('kennt jedes Buchungsereignis auf den drei Kanaelen des Erstversands', () => {
     const eintraege = registrierteVorgaenge()
     for (const art of BUCHUNGS_ARTEN) {
       const e = eintraege.find(x => x.art === art)
@@ -89,6 +89,59 @@ describe('Nachrichtentexte', () => {
     // FCM hat keinen Aktionsknopf — die Aufforderung waere dort ins Leere gerichtet.
     expect(n.fcm.body).not.toContain('Jetzt anderen Engel finden')
     expect(n.push.actions[0].title).toBe('Anderen Engel finden')
+  })
+
+  // ── Storno (31.08.2026) ────────────────────────────────────────
+  // Der Storno-Weg war neu; diese Faelle halten fest, dass die Nachricht
+  // sich an die RICHTIGE Seite richtet.
+
+  it('Kunden-Storno: die Nachricht geht an den Engel und nennt den Kunden', () => {
+    const n = baueBuchungsNachricht('booking-storno-kunde', DATEN)
+    expect(n.inApp.title).toBe('Termin abgesagt')
+    expect(n.inApp.body).toContain('Maria S.')
+    expect(n.inApp.link).toBe('/engel/buchungen')
+    expect(n.email.anredeFallback).toBe('Engel')
+    // Der Engel soll wissen, dass fuer ihn nichts mehr zu tun ist.
+    expect(n.inApp.body).toContain('Einsatzliste')
+  })
+
+  it('Engel-Storno: die Nachricht geht an den Kunden und bietet den naechsten Schritt', () => {
+    const n = baueBuchungsNachricht('booking-storno-engel', DATEN)
+    expect(n.inApp.body).toContain('Fatima K.')
+    expect(n.inApp.link).toBe('/kunde/home')
+    expect(n.email.anredeFallback).toBe('Kunde')
+    expect(n.push.actions[0].title).toContain('Engel')
+  })
+
+  it('unterscheidet die beiden Storno-Richtungen wirklich', () => {
+    // Waeren es dieselben Texte, saehe eine der beiden Seiten eine
+    // Nachricht, die ueber sie selbst spricht.
+    const vomKunden = baueBuchungsNachricht('booking-storno-kunde', DATEN)
+    const vomEngel = baueBuchungsNachricht('booking-storno-engel', DATEN)
+    expect(vomKunden.inApp.body).not.toBe(vomEngel.inApp.body)
+    expect(vomKunden.inApp.link).not.toBe(vomEngel.inApp.link)
+  })
+
+  it('Storno faellt NICHT auf den Ablehnungstext zurueck', () => {
+    // Der Rueckfall am Ende von baueBuchungsNachricht liefert die Absage.
+    // Ohne eigenen Zweig haette der Storno stillschweigend „Anfrage
+    // abgelehnt" gemeldet — falsch und fuer beide Seiten verwirrend.
+    const absage = baueBuchungsNachricht('booking-absage', DATEN)
+    for (const art of ['booking-storno-kunde', 'booking-storno-engel'] as const) {
+      expect(baueBuchungsNachricht(art, DATEN).inApp.title).not.toBe(absage.inApp.title)
+    }
+  })
+
+  it('escapt den Storno-Grund im E-Mail-HTML', () => {
+    const n = baueBuchungsNachricht('booking-storno-engel', DATEN, '<script>alert(1)</script>')
+    expect(n.email.html).not.toContain('<script>')
+    expect(n.email.html).toContain('&lt;script&gt;')
+  })
+
+  it('kommt beim Storno ohne Grund aus', () => {
+    const ohne = baueBuchungsNachricht('booking-storno-kunde', DATEN, null)
+    expect(ohne.inApp.body).toBeTruthy()
+    expect(ohne.email.html).not.toContain('Begründung')
   })
 
   it('ist deterministisch — zweimal derselbe Text', () => {

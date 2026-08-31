@@ -514,6 +514,32 @@ export async function notifyCustomerBookingAccepted(
   await versendeBuchungsereignis(supabase, 'booking-zusage', customerId, data, null, zustellung)
 }
 
+/**
+ * Termin storniert → die jeweils ANDERE Seite benachrichtigen.
+ *
+ * `vonKunde` bestimmt die Textart, nicht den Empfaenger: hat der Kunde
+ * abgesagt, geht die Nachricht an den Engel und umgekehrt. Der Aufrufer
+ * uebergibt deshalb beides getrennt — sonst laesst sich eine
+ * Admin-Nachsteuerung (Absage im Namen einer Seite) nicht abbilden.
+ */
+export async function notifyBookingCancelled(
+  supabase: SupabaseClient,
+  empfaengerId: string,
+  data: BookingNotifyData,
+  vonKunde: boolean,
+  grund?: string | null,
+  zustellung?: ZustellKontext
+): Promise<void> {
+  await versendeBuchungsereignis(
+    supabase,
+    vonKunde ? 'booking-storno-kunde' : 'booking-storno-engel',
+    empfaengerId,
+    data,
+    grund ?? null,
+    zustellung,
+  )
+}
+
 /** Engel hat abgelehnt → Kunde benachrichtigen. */
 export async function notifyCustomerBookingDeclined(
   supabase: SupabaseClient,
