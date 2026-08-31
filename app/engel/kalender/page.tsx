@@ -5,6 +5,9 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { IconClock, IconUser } from '@/components/Icons'
 import type { Profile } from '@/lib/types'
+import { ladeListe, zeilenVon, LAEDT, istFehler } from '@/lib/ui/ladelage'
+import type { Ladelage } from '@/lib/ui/ladelage'
+import { Ladefehler } from '@/components/ListenZustand'
 
 const WEEKDAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
@@ -23,22 +26,31 @@ export default function EngelKalenderPage() {
   const [month, setMonth] = useState(today.getMonth())
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [bookings, setBookings] = useState<any[]>([])
+  // Ohne diese Lage sieht ein fehlgeschlagener Ladevorgang aus wie ein leerer
+  // Monat — der Kalender behauptet dann Einsatzfreiheit, die er nicht kennt.
+  const [lage, setLage] = useState<Ladelage<unknown>>(LAEDT)
+
+  const [neuLaden, setNeuLaden] = useState(0)
 
   useEffect(() => {
     async function load() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const { data } = await supabase
-        .from('bookings')
-        .select('*, profiles:customer_id(first_name, last_name)')
-        .eq('angel_id', user.id)
-        .in('status', ['accepted', 'completed'])
-        .order('date', { ascending: true })
-      setBookings(data || [])
+      const lage = await ladeListe<any>(
+        supabase
+          .from('bookings')
+          .select('*, profiles:customer_id(first_name, last_name)')
+          .eq('angel_id', user.id)
+          .in('status', ['accepted', 'completed'])
+          .order('date', { ascending: true }),
+        'engel:kalender',
+      )
+      setLage(lage)
+      setBookings(zeilenVon(lage))
     }
     load()
-  }, [])
+  }, [neuLaden])
 
   const daysInMonth = getDaysInMonth(year, month)
   const firstDay = getFirstDayOfMonth(year, month)
@@ -64,6 +76,8 @@ export default function EngelKalenderPage() {
       </div>
 
       <div className="kal-body">
+        <Ladefehler lage={lage} erneut={() => { setLage(LAEDT); setNeuLaden(n => n + 1) }} />
+
         <div className="kal-header">
           <button className="kal-nav" aria-label="Vorheriger Monat" onClick={prevMonth}>‹</button>
           <div className="kal-month">{MONTHS[month]} {year}</div>
@@ -100,7 +114,9 @@ export default function EngelKalenderPage() {
             <div className="kal-events-title">
               {new Date(selectedDate + 'T00:00:00').toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', weekday: 'long', day: 'numeric', month: 'long' })}
             </div>
-            {selectedBookings.length === 0 ? (
+            {istFehler(lage) ? (
+              <div className="kal-no-events">Einsätze unbekannt — nicht geladen</div>
+            ) : selectedBookings.length === 0 ? (
               <div className="kal-no-events">Keine Einsätze an diesem Tag</div>
             ) : (
               selectedBookings.map(b => {

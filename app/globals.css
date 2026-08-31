@@ -2592,3 +2592,36 @@ body:has(.admin-layout) {
 .portal-status--draft { background: rgba(255,255,255,.06); color: var(--ink4); }
 .portal-status--submitted { background: rgba(201,150,60,.12); color: var(--gold2); }
 .portal-status--billed { background: rgba(92,184,130,.08); color: var(--green); }
+
+/* ══════════════════════════════════════════════
+   LADEZUSTAND / LADEFEHLER (components/ListenZustand.tsx)
+   Skelett bildet die Form der Liste ab — ein zentrierter Spinner sagt nichts
+   darueber, was gleich erscheint, und laesst das Layout beim Eintreffen der
+   Daten springen.
+   ══════════════════════════════════════════════ */
+.ui-skelett-liste { display:flex; flex-direction:column; gap:10px; }
+.ui-skelett-zeile {
+  border-radius:12px;
+  background:linear-gradient(90deg, var(--coal3) 25%, var(--coal4) 50%, var(--coal3) 75%);
+  background-size:200% 100%;
+  animation:shimmer 1.4s ease-in-out infinite;
+}
+
+/* Schmale Fehlerleiste ueber einer Liste, die ihren eigenen Leerzustand behaelt. */
+.ui-ladefehler {
+  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  background:rgba(208,75,59,.1); border:1px solid rgba(208,75,59,.3);
+  border-radius:10px; padding:10px 14px; margin-bottom:12px;
+  font-size:13px; color:var(--red-w);
+}
+.ui-ladefehler-btn {
+  background:transparent; border:1.5px solid rgba(208,75,59,.45); color:var(--red-w);
+  border-radius:8px; padding:8px 14px; min-height:40px;
+  font-family:'Jost',sans-serif; font-size:13px; font-weight:600; cursor:pointer;
+}
+.ui-ladefehler-btn:hover { background:rgba(208,75,59,.14); }
+
+/* Bewegung nur, wenn der Nutzer sie nicht abgewaehlt hat (WCAG 2.3.3). */
+@media (prefers-reduced-motion: reduce) {
+  .ui-skelett-zeile, .ui-shimmer-line, .ui-shimmer-circle { animation:none; }
+}
