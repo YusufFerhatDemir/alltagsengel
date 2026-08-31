@@ -8,6 +8,8 @@
  * Falls doch (Halluzination): sanitisieren auf "das Alltagsengel-Team".
  */
 
+import { schuetzeAbsender } from '@/lib/kommunikation/absender-schutz'
+
 /**
  * Phrasen die signalisieren: der Bot weiß die Antwort nicht sicher.
  * Lower-cased Matching auf der KI-Antwort.
@@ -57,21 +59,14 @@ export function isLowConfidenceReply(reply: string): { lowConfidence: boolean; m
 }
 
 /**
- * Personen-Namen die NIE in Bot-Antworten auftauchen sollen.
- * Falls die KI halluziniert: ersetzen + Warning loggen.
- */
-const FORBIDDEN_NAMES = [
-  'Yusuf Ferhat Demir',
-  'Yusuf Ferhat',
-  'Yusuf Demir',
-  'Yusuf',
-  'Y. Cilcioglu',
-  'Cilcioglu',
-]
-
-/**
  * Falls die KI eigenständig einen Namen einbaut (z.B. "Yusuf meldet sich gleich"),
  * ersetze ihn defensiv durch "das Alltagsengel-Team".
+ *
+ * Liste und Logik liegen seit dem 31.08.2026 kanalneutral in
+ * lib/kommunikation/absender-schutz.ts — dieselbe Regel gilt fuer
+ * E-Mail, SMS und die beiden KI-Chats, die sie vorher nicht anwandten.
+ * Verhalten und Signatur hier sind unveraendert; diese Funktion bleibt
+ * der Einstieg des WhatsApp-Webhooks.
  *
  * Returns: { sanitized: string, didReplace: boolean, replaced: string[] }
  */
@@ -80,22 +75,7 @@ export function sanitizeNames(reply: string): {
   didReplace: boolean
   replaced: string[]
 } {
-  let out = reply
-  const replaced: string[] = []
-  for (const name of FORBIDDEN_NAMES) {
-    const re = new RegExp(`\\b${escapeRegExp(name)}\\b`, 'gi')
-    if (re.test(out)) {
-      replaced.push(name)
-      out = out.replace(re, 'das Alltagsengel-Team')
-    }
-  }
-  // Doppelung "das das Alltagsengel-Team" wieder reduzieren
-  out = out.replace(/das das Alltagsengel-Team/gi, 'das Alltagsengel-Team')
-  return { sanitized: out, didReplace: replaced.length > 0, replaced }
-}
-
-function escapeRegExp(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return schuetzeAbsender(reply)
 }
 
 /**
