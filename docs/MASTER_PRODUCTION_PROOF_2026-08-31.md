@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Commit** | `88101633` (`88101633 6920eea428f32f5e8803ebec3c230448`) |
+| **Commit** | `88101633` — Nachtrag `c31da31a` (Restblocker 4 geschlossen) |
 | **CI-Lauf** | GitHub Actions `33376373932` — **success**, beide Jobs grün |
 | **Tests** | vitest **9150** / 404 Dateien · node:test **2659** · Playwright-E2E **148** von 154 (6 übersprungen) |
 | **Build** | Production-Build grün, 610 statische Seiten |
@@ -49,7 +49,7 @@
 | `verify:abrechnung` | **10/10** | Abrechnungsdaten und ihre Riegel |
 | `verify:perimeter` | **7/8** | **offen: N2** — 6 SECDEF-Triggerfunktionen für `anon` ausführbar (= offene Migration 20261021000002) |
 | `audit:rls-rollen` | **4 Befunde** | 3× fehlende Lesepolicy (= die offene Migration), 1× `is_internal_staff()` nennt `buero` (= offene Migration) |
-| `lint:rls-sicht` | **51 Paare** | Obergrenze in CI auf 51 gesenkt (war 52) |
+| `lint:rls-sicht` | **50 Paare** | Obergrenze in CI auf 50 gesenkt (war 52) |
 | `verify:rls-lesepolicies` | **0/24 live** | Die neue Migration steht **nicht** — genau das misst dieser Lauf |
 | `check:migrationen` | **24 von 32 live** | 8 offen, jede mit Grund, Risiko, SQL und Verifikationsabfrage |
 
@@ -241,13 +241,22 @@ Wege stehen in `docs/UNTERSCHRIFT_ALTBESTAND_2026-08-31.md`.
 | `CRON_SECRET` | Nicht überprüfbar von hier: alle Cron-Routen antworten fail-closed mit 401, und ein 401 sieht bei „nicht gesetzt" genauso aus wie bei „kein Header". Nur ein ausgelöster Lauf beweist etwas. |
 | `AUFBEWAHRUNG_AKTIV` | Aufbewahrungslauf zählt nur — **so gewollt**, bis die Zahlen des Trockenlaufs angesehen wurden |
 
-### 4 · `/admin/abrechnung` sieht die Verordnungen nicht — **Funktionsergänzung**
+### 4 · `/admin/abrechnung` und die Verordnungen — **GESCHLOSSEN** (`c31da31a`)
 
-RLS kann keine Spalten ausblenden: `verordnungen` führt `diagnose` und
-steht deshalb unter `pflege.lesen`. Bis eine Route existiert, die nur die
-abrechnungsrelevanten Spalten herausgibt, bleibt der Verordnungsteil dieser
-Seite für die Buchhaltung leer — und sagt es jetzt. Sichere Richtung; kein
-Blocker.
+War: RLS kann keine Spalten ausblenden, `verordnungen` führt `diagnose` und
+steht unter `pflege.lesen` — der Verordnungsteil blieb für die Buchhaltung
+leer.
+
+Jetzt: `GET /api/billing/verordnungen` verlangt `abrechnung.lesen`, nimmt
+den Mandanten aus dem Kontext (nie aus der Anfrage) und gibt eine
+**Erlaubnisliste** von acht Spalten heraus
+(`lib/billing/verordnung-projektion.ts`). Erlaubnis- und nicht Sperrliste:
+eine künftige Spalte mit Befunden ist damit automatisch draußen statt
+versehentlich drin. Die Policy bleibt unverändert bei `pflege.lesen` — die
+Route ist ein zusätzlicher, engerer Weg, keine Lockerung.
+
+`lint:rls-sicht` steht dadurch bei **50** Paaren (CI-Obergrenze
+nachgezogen).
 
 ---
 
