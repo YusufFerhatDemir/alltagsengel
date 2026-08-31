@@ -21,6 +21,7 @@
     "lint:org-id": "tsx scripts/lint-org-id-inserts.ts",
     "lint:route-auth": "tsx scripts/lint-route-auth.ts",
     "lint:ladefehler": "tsx scripts/lint-ladefehler.ts",
+    "lint:client-bundle": "tsx scripts/lint-client-bundle.ts",
     "lint:rls-sicht": "tsx scripts/lint-rls-sichtbarkeit.ts",
     "verify:loeschkette": "node scripts/verify-loeschkette-live.mjs",
     "gen:org-default-tables": "node scripts/gen-org-default-tables.mjs",
