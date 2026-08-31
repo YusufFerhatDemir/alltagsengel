@@ -22,6 +22,37 @@ export default function EngelBuchungenPage() {
   const [error, setError] = useState('')
   const [respondingId, setRespondingId] = useState<string | null>(null)
   const [respondError, setRespondError] = useState('')
+  // Absagen war bis 31.08.2026 nicht moeglich: der DB-Trigger erlaubt dem
+  // Engel accepted -> cancelled, aufrufbar war der Uebergang nirgends. Wer
+  // krank wurde, konnte den Einsatz nicht zurueckgeben.
+  const [stornoFrage, setStornoFrage] = useState<string | null>(null)
+
+  async function stornieren(bookingId: string) {
+    if (respondingId) return
+    setRespondingId(bookingId)
+    setRespondError('')
+    try {
+      const res = await fetch('/api/bookings/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId }),
+      })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        // Der Server nennt den Grund im Klartext (Einsatz laeuft bereits,
+        // Nachweis haengt an einer Rechnung) — den zeigen wir unveraendert.
+        setRespondError(body?.error || 'Die Absage ist fehlgeschlagen.')
+        await load()
+        return
+      }
+      setStornoFrage(null)
+      setBookings(prev => prev.map(b => (b.id === bookingId ? { ...b, status: 'cancelled' } : b)))
+    } catch {
+      setRespondError('Netzwerkfehler — bitte erneut versuchen.')
+    } finally {
+      setRespondingId(null)
+    }
+  }
 
   async function respond(bookingId: string, action: 'accept' | 'decline') {
     if (respondingId) return
@@ -157,7 +188,7 @@ export default function EngelBuchungenPage() {
                         disabled={respondingId !== null}
                         onClick={e => { e.preventDefault(); e.stopPropagation(); respond(b.id, 'decline') }}
                         style={{
-                          flex: 1, padding: '9px 0', borderRadius: 10, cursor: 'pointer',
+                          flex: 1, padding: '12px 0', minHeight: 44, borderRadius: 10, cursor: 'pointer',
                           background: 'transparent', border: '1px solid rgba(0,0,0,.12)',
                           color: 'var(--ink3)', fontSize: 13, fontWeight: 600,
                           opacity: respondingId !== null ? .5 : 1,
@@ -167,12 +198,57 @@ export default function EngelBuchungenPage() {
                         disabled={respondingId !== null}
                         onClick={e => { e.preventDefault(); e.stopPropagation(); respond(b.id, 'accept') }}
                         style={{
-                          flex: 1, padding: '9px 0', borderRadius: 10, cursor: 'pointer', border: 'none',
+                          flex: 1, padding: '12px 0', minHeight: 44, borderRadius: 10, cursor: 'pointer', border: 'none',
                           background: 'linear-gradient(135deg,var(--gold),var(--gold2))',
                           color: 'var(--coal)', fontSize: 13, fontWeight: 600,
                           opacity: respondingId !== null ? .5 : 1,
                         }}
                       >{respondingId === b.id ? '...' : 'Annehmen'}</button>
+                    </div>
+                  )}
+                  {b.status === 'accepted' && (
+                    <div style={{ marginTop: 10 }}>
+                      {stornoFrage !== b.id ? (
+                        <button
+                          disabled={respondingId !== null}
+                          onClick={e => { e.preventDefault(); e.stopPropagation(); setRespondError(''); setStornoFrage(b.id) }}
+                          style={{
+                            width: '100%', padding: '12px 0', minHeight: 44, borderRadius: 10, cursor: 'pointer',
+                            background: 'transparent', border: '1px solid rgba(0,0,0,.12)',
+                            color: 'var(--ink3)', fontSize: 13, fontWeight: 600,
+                            opacity: respondingId !== null ? .5 : 1,
+                          }}
+                        >Einsatz absagen</button>
+                      ) : (
+                        <div
+                          onClick={e => { e.preventDefault(); e.stopPropagation() }}
+                          style={{ background: 'var(--coal2)', border: '1px solid var(--border)', borderRadius: 10, padding: 12 }}
+                        >
+                          <div style={{ fontSize: 13, color: 'var(--ink3)', marginBottom: 10, lineHeight: 1.45 }}>
+                            Der Kunde wird benachrichtigt und der Einsatz entfällt. Das lässt sich nicht rückgängig machen.
+                          </div>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button
+                              disabled={respondingId !== null}
+                              onClick={e => { e.preventDefault(); e.stopPropagation(); stornieren(b.id) }}
+                              style={{
+                                flex: 1, padding: '12px 0', minHeight: 44, borderRadius: 10, border: 'none',
+                                background: 'var(--red-w)', color: '#fff', fontSize: 13, fontWeight: 600,
+                                cursor: 'pointer', opacity: respondingId !== null ? .6 : 1,
+                              }}
+                            >{respondingId === b.id ? '...' : 'Ja, absagen'}</button>
+                            <button
+                              disabled={respondingId !== null}
+                              onClick={e => { e.preventDefault(); e.stopPropagation(); setStornoFrage(null) }}
+                              style={{
+                                flex: 1, padding: '12px 0', minHeight: 44, borderRadius: 10, cursor: 'pointer',
+                                background: 'transparent', border: '1px solid rgba(0,0,0,.12)',
+                                color: 'var(--ink3)', fontSize: 13, fontWeight: 600,
+                              }}
+                            >Zurück</button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
