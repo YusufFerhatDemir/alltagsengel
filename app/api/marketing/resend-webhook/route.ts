@@ -43,6 +43,9 @@ import {
   verarbeiteTransaktionsRueckmeldung, istRueckmeldung,
 } from '@/lib/notifications/zustellrueckmeldung'
 import { erfasseSicherheitsereignis } from '@/lib/security'
+import {
+  trackingLage, trackingLageTransaktion, ohneTrackingFelder, istTrackingEreignis,
+} from '@/lib/marketing/tracking'
 
 const log = logger.child('marketing:resend-webhook')
 
@@ -134,6 +137,15 @@ export const POST = withTracking(async function POST(request: Request) {
       //
       // Der Schluessel dafuer liegt seit demselben Tag vor:
       // notification_delivery_log.provider_message_id.
+      if (istTrackingEreignis(typ)) {
+        // Rechnungen, Mahnungen, Sicherheitsmeldungen werden NICHT auf
+        // Öffnungen und Klicks gemessen — ohne Schalter und ohne
+        // Ausnahme. Es gibt hier keine Einwilligung, auf die sich eine
+        // Verhaltensmessung stützen ließe, und die Mail erfüllt ihren
+        // Zweck auch ohne sie.
+        return erledigt(trackingLageTransaktion().grund)
+      }
+
       if (!istRueckmeldung(typ)) {
         return erledigt(`Ereignisart ${typ} ist fuer Transaktionspost ohne Bedeutung.`)
       }
@@ -197,7 +209,22 @@ export const POST = withTracking(async function POST(request: Request) {
       unsubscribed_at: (eintrag.unsubscribed_at as string | null) ?? null,
     }
 
-    const { felder, statusGehoben } = berechneAenderung(typ, bestand, zeitpunkt)
+    const { felder: roheFelder, statusGehoben } = berechneAenderung(typ, bestand, zeitpunkt)
+
+    // ── Öffnungs- und Klicktracking (Befund 31.08.2026) ──────────────
+    // Bis hierher wurden opened_at und clicked_at bedingungslos
+    // geschrieben. Eine individualisierte Öffnungsmessung ist eine
+    // Verhaltensbeobachtung und braucht eine eigene Einwilligung — die
+    // Einwilligung in den Newsletter deckt sie nicht mit ab.
+    // Fail-closed: ohne MARKETING_TRACKING_ERLAUBT=1 wird der Zeitpunkt
+    // verworfen. Die Zustellung selbst (gesendet, zugestellt,
+    // unzustellbar, Beschwerde) bleibt davon unberührt — das sind
+    // Tatsachen über die Mail, keine über die Person.
+    const lage = trackingLage()
+    const { felder, verworfen } = ohneTrackingFelder(roheFelder, lage)
+    if (verworfen.length > 0) {
+      log.info('Tracking-Zeitpunkt verworfen', { ereignis: typ, verworfen, grund: lage.grund })
+    }
 
     if (Object.keys(felder).length > 0) {
       // `.select()` ist der Wirkungsnachweis: PostgREST meldet keinen

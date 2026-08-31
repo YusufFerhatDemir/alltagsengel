@@ -81,7 +81,8 @@
     "security:testalarm": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/security-testalarm.mjs",
     "verify:bounce-kette": "node scripts/verify-bounce-kette.mjs",
     "verify:trigger-eingang": "node scripts/verify-trigger-eingang.mjs",
-    "verify:real-test": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/verify-real-test-trennung.mjs"
+    "verify:real-test": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/verify-real-test-trennung.mjs",
+    "verify:tracking": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/verify-tracking.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",
