@@ -24,9 +24,41 @@
  *
  * Ohne --ja laeuft das Skript als TROCKENLAUF: es zeigt, was es taete,
  * und schreibt nichts.
+ *
+ * ── BEFUND 01.09.2026: DER ZWEITE WEG KANNTE DIE REGELN NICHT ────────────
+ * Dieses Skript schrieb frueher direkt per PostgREST in die Tabelle und
+ * ging damit an allem vorbei, was in lib/security/watchlist.ts steht:
+ *
+ *   1. Es verlangte 5 Zeichen Grund statt 40 und fragte NICHT nach den vier
+ *      Pflichtangaben (Zweck, Rechtsgrundlage, Zeitraum, Transparenz). Der
+ *      Riegel der Oberflaeche war ueber die Kommandozeile umgehbar — und
+ *      der Bestandseintrag vom 30.08.2026 ist genau so entstanden.
+ *   2. Es schrieb KEIN `watchlist_change` in die Sicherheitsspur. Live gab
+ *      es deshalb zu der einen laufenden Ueberwachung keine einzige
+ *      Protokollzeile: wer sie wann angeordnet hat, stand nirgends ausser
+ *      in `angelegt_von` derselben Zeile, die er selbst geschrieben hat.
+ *      Die Dokumentation behauptete das Gegenteil („zwei Wege, beide
+ *      schreiben ein watchlist_change-Ereignis").
+ *   3. Es setzte weder `created_at` noch `befristet_bis`. Ein abgelaufener
+ *      Eintrag liess sich damit auch hier nicht wieder anordnen, und nach
+ *      dem Anwenden von 20261024000000 waere jedes Einschalten an dessen
+ *      CHECK gescheitert (23514).
+ *
+ * Jetzt gelten hier dieselben Regeln wie in der Oberflaeche. Sie kommen
+ * aus derselben Datei — nicht als Abschrift, die auseinanderlaufen kann.
  */
 
 import { apiHeaders, envWert, secretKey } from './lib/supabase-keys.mjs'
+import {
+  pruefeAngaben, neuesFristende, befristungFuer,
+  BEGRUENDUNG_VORLAGE, HOECHSTDAUER_TAGE,
+} from '../lib/security/befristung.ts'
+
+/** Dieselbe Mindestlaenge wie GRUND_MINDESTLAENGE in lib/security/watchlist.ts.
+ *  Die Datei ist `server-only` und hier nicht importierbar; die Zahl steht
+ *  deshalb doppelt — der Gleichstand wird in
+ *  __tests__/security/watchlist-transparenz.test.ts geprueft. */
+const GRUND_MINDESTLAENGE = 40
 
 const URL_BASIS = envWert('NEXT_PUBLIC_SUPABASE_URL')
 const SERVICE = secretKey()
@@ -137,27 +169,73 @@ if (abweichung) {
   console.log('  pruefen Sie, ob das richtige Konto gemeint ist.\n')
 }
 
-if (!ausschalten && (!grund || grund.trim().length < 5)) {
-  console.error('--grund fehlt (mindestens 5 Zeichen). Ein Eintrag ohne Grund ist')
-  console.error('in einem halben Jahr nicht mehr erklaerbar.')
-  process.exit(2)
+// ── Dieselben Huerden wie in der Oberflaeche ──────────────────────────
+// Nur beim EINSCHALTEN. Eine Schranke vor dem Abschalten waere genau
+// falsch herum: sie hielte eine laufende Ueberwachung am Leben.
+if (!ausschalten) {
+  if (!grund || grund.trim().length < GRUND_MINDESTLAENGE) {
+    console.error(`--grund fehlt oder ist zu knapp (mindestens ${GRUND_MINDESTLAENGE} Zeichen).`)
+    console.error('Die Ueberwachung eines einzelnen Kontos zeichnet Anmeldungen, Geraete')
+    console.error('und IP-Adressen einer namentlich bekannten Person auf. Sie braucht')
+    console.error('einen Grund, der aufgeschrieben ist, BEVOR sie laeuft.\n')
+    console.error('Vorlage:')
+    for (const z of BEGRUENDUNG_VORLAGE.split('\n')) console.error(`  ${z}`)
+    process.exit(2)
+  }
+  const angaben = pruefeAngaben(grund)
+  if (!angaben.ok) {
+    console.error(angaben.meldung + '\n')
+    console.error('Vorlage:')
+    for (const z of BEGRUENDUNG_VORLAGE.split('\n')) console.error(`  ${z}`)
+    process.exit(2)
+  }
 }
+
+// ── Bestand: laeuft die Massnahme schon? ──────────────────────────────
+// Davon haengt ab, ob die Frist neu startet. Bei einer LAUFENDEN
+// Massnahme bleibt sie stehen — sonst liesse sie sich durch wiederholtes
+// Aufrufen still verlaengern, und genau das soll die Frist verhindern.
+const bestandAntwort = await rest(`security_watchlist?select=*&user_id=eq.${userId}&limit=1`)
+const bestand = bestandAntwort.status === 200 ? (bestandAntwort.rumpf?.[0] ?? null) : null
+const JETZT = new Date()
+const laeuftBereits = !!bestand && bestand.aktiv === true
+  && !befristungFuer(bestand.created_at, JETZT, bestand.befristet_bis ?? null).abgelaufen
+const fristNeuGestartet = !ausschalten && !laeuftBereits
 
 const zeile = {
   user_id: userId,
   aktiv: !ausschalten,
-  grund: grund ?? 'Ueberwachung abgeschaltet',
+  grund: grund ?? bestand?.grund ?? 'Ueberwachung abgeschaltet',
   melde_email: meldeAn ?? null,
   email_kontrolle: email ?? null,
   alle_ereignisse: true,
   ohne_sperrfrist: true,
 }
 
+if (fristNeuGestartet) {
+  zeile.created_at = JETZT.toISOString()
+  zeile.befristet_bis = neuesFristende(JETZT)
+} else if (!ausschalten) {
+  zeile.befristet_bis = bestand?.befristet_bis
+    ?? befristungFuer(bestand?.created_at ?? JETZT.toISOString(), JETZT).laeuftAbAm
+}
+
+const frist = befristungFuer(
+  zeile.created_at ?? bestand?.created_at ?? JETZT.toISOString(),
+  JETZT,
+  zeile.befristet_bis ?? null,
+)
+
 console.log('── Was geschrieben wuerde ────────────────────────────')
 console.log(`  ACCOUNT_SECURITY_ALERTS: ${zeile.aktiv ? 'true' : 'false'}`)
 console.log(`  Meldung an:              ${zeile.melde_email ?? '(Adresse des Kontos)'}`)
 console.log(`  Voller Meldesatz:        ja`)
 console.log(`  Ohne Sperrfrist:         ja`)
+if (!ausschalten) {
+  console.log(`  Frist:                   ${frist.hinweis}`)
+  console.log(`  Frist startet neu:       ${fristNeuGestartet ? 'ja' : 'nein (Massnahme laeuft bereits)'}`)
+  console.log(`  Hoechstdauer:            ${HOECHSTDAUER_TAGE} Tage`)
+}
 console.log(`  Grund:                   ${zeile.grund}`)
 console.log('')
 
@@ -178,11 +256,23 @@ for (const [tabelle, spalte] of [['organization_members', 'user_id'], ['caregive
 zeile.organization_id = organizationId
 console.log(`  Organisation:            ${organizationId ?? '(keine gefunden)'}`)
 
-const schreib = await rest('security_watchlist?on_conflict=user_id', {
-  method: 'POST',
-  headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
-  body: JSON.stringify(zeile),
-})
+async function schreibVersuch(nutzlast) {
+  return rest('security_watchlist?on_conflict=user_id', {
+    method: 'POST',
+    headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
+    body: JSON.stringify(nutzlast),
+  })
+}
+
+// Dieselbe Staffel wie in lib/security/watchlist.ts: erst mit der
+// Fristspalte, dann ohne. 42703 heisst „Migration 20261024000000 fehlt",
+// nicht „Fehler".
+let schreib = await schreibVersuch(zeile)
+if (schreib.status >= 300 && schreib.rumpf?.code === '42703') {
+  const ohneFrist = { ...zeile }
+  delete ohneFrist.befristet_bis
+  schreib = await schreibVersuch(ohneFrist)
+}
 
 if (schreib.status >= 300) {
   console.error(`\nFEHLGESCHLAGEN (HTTP ${schreib.status}):`)
@@ -192,4 +282,47 @@ if (schreib.status >= 300) {
 }
 
 console.log('\n✓ Eintrag geschrieben.')
+
+// ── Die Aenderung ist selbst ein Ereignis ─────────────────────────────
+// Ohne diesen Schritt gaebe es zu einer angeordneten Ueberwachung keine
+// Protokollzeile — nachvollziehbar waere sie dann nur aus der Zeile, die
+// derjenige selbst geschrieben hat. Der erste Schritt eines Missbrauchs
+// waere, die Ueberwachung still stillzulegen; genau das soll hier
+// auffallen.
+const ereignis = await rest('rpc/log_security_event', {
+  method: 'POST',
+  body: JSON.stringify({
+    p_user_id: userId,
+    p_event_type: 'watchlist_change',
+    p_event_category: 'admin',
+    p_severity: 'critical',
+    p_organization_id: organizationId,
+    p_user_email: kontoEmail,
+    p_platform: 'server',
+    p_metadata: {
+      funktion: 'security_watchlist',
+      weg: 'kommandozeile',
+      vorher: bestand ? { aktiv: bestand.aktiv, grund: bestand.grund } : null,
+      nachher: { aktiv: zeile.aktiv, grund: zeile.grund },
+      befristet_bis: zeile.aktiv ? frist.laeuftAbAm : null,
+      frist_neu_gestartet: fristNeuGestartet,
+      adressen_abweichung: abweichung,
+      ergebnis: 'SUCCESS',
+    },
+  }),
+})
+
+if (ereignis.status >= 300) {
+  // Der Eintrag steht bereits. Ein fehlendes Protokoll ist ein Befund,
+  // kein Grund, den Vorgang als gescheitert auszugeben — aber es wird
+  // laut gesagt, statt still zu bleiben.
+  console.error(`\nWARNUNG: Der Eintrag steht, aber das Protokollereignis`)
+  console.error(`konnte NICHT geschrieben werden (HTTP ${ereignis.status}).`)
+  console.error(JSON.stringify(ereignis.rumpf, null, 2))
+  console.error('Diese Aenderung ist damit in der Sicherheitsspur nicht belegt.')
+} else {
+  console.log('  Protokolliert als watchlist_change (kritisch).')
+}
+
 console.log('  Gegenprobe: npm run security:watchlist -- --liste')
+console.log('  Nachweis:   npm run verify:ueberwachung')

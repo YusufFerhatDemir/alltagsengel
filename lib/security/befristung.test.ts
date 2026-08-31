@@ -13,7 +13,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  befristungFuer, istAbgelaufen, pruefeAngaben,
+  befristungFuer, istAbgelaufen, pruefeAngaben, neuesFristende,
   HOECHSTDAUER_TAGE, WARNUNG_AB_TAGEN, PFLICHTANGABEN, BEGRUENDUNG_VORLAGE,
 } from './befristung'
 
@@ -65,6 +65,69 @@ test('der Hinweis beschönigt einen abgelaufenen Eintrag nicht', () => {
   assert.match(b.hinweis, /abgelaufen/)
   assert.match(b.hinweis, /wirkt nicht mehr/)
   assert.ok(b.restTage < 0)
+})
+
+// ── Das angeordnete Fristende (Migration 20261024000000) ─────────────────
+//
+// Die Spalte `befristet_bis` darf das Ende nur VORZIEHEN. Koennte sie es
+// hinausschieben, waere die 90-Tage-Regel des Anwendungscodes durch einen
+// Wert in der Datenbank aushebelbar — und damit keine Regel mehr.
+
+test('ein früheres angeordnetes Ende gilt', () => {
+  const b = befristungFuer(vorTagen(0), HEUTE, new Date(HEUTE.getTime() + 10 * 86_400_000).toISOString())
+  assert.equal(b.restTage, 10)
+  assert.equal(b.abgelaufen, false)
+  assert.equal(b.quelle, 'angeordnet')
+})
+
+test('ein späteres angeordnetes Ende verlängert NICHT', () => {
+  const b = befristungFuer(vorTagen(0), HEUTE, new Date(HEUTE.getTime() + 900 * 86_400_000).toISOString())
+  assert.equal(b.restTage, HOECHSTDAUER_TAGE)
+  assert.equal(b.quelle, 'hoechstdauer')
+})
+
+test('ein bereits verstrichenes angeordnetes Ende lässt den Eintrag ablaufen', () => {
+  // Der Fall, für den die Spalte da ist: kürzer angeordnet als die
+  // Höchstdauer, und diese kürzere Frist ist vorbei.
+  const b = befristungFuer(vorTagen(20), HEUTE, vorTagen(3))
+  assert.equal(b.abgelaufen, true)
+  assert.equal(istAbgelaufen(vorTagen(20), HEUTE, vorTagen(3)), true)
+  // Ohne die Spalte liefe derselbe Eintrag weiter — das ist der
+  // Unterschied, den die Migration macht.
+  assert.equal(istAbgelaufen(vorTagen(20), HEUTE), false)
+})
+
+test('ein gesetztes, aber unlesbares Ende lässt den Eintrag ablaufen', () => {
+  // Dieselbe Richtung des fail-closed wie beim fehlenden Anlagedatum:
+  // im Zweifel endet die Beobachtung, sie läuft nicht weiter.
+  const b = befristungFuer(vorTagen(0), HEUTE, 'kein datum')
+  assert.equal(b.abgelaufen, true)
+  assert.equal(b.quelle, 'unbestimmbar')
+  assert.match(b.hinweis, /nicht lesbar/)
+})
+
+test('kein angeordnetes Ende ändert nichts am bisherigen Verhalten', () => {
+  for (const wert of [null, undefined, '']) {
+    const b = befristungFuer(vorTagen(10), HEUTE, wert)
+    assert.equal(b.restTage, HOECHSTDAUER_TAGE - 10, String(wert))
+    assert.equal(b.quelle, 'hoechstdauer')
+  }
+})
+
+// ── Die neue Anordnung ───────────────────────────────────────────────────
+
+test('neuesFristende liegt genau eine Höchstdauer in der Zukunft', () => {
+  const ende = neuesFristende(HEUTE)
+  assert.equal(Date.parse(ende) - HEUTE.getTime(), HOECHSTDAUER_TAGE * 86_400_000)
+})
+
+test('eine neue Anordnung ist danach nicht abgelaufen — sonst gäbe es keinen Rückweg', () => {
+  // Der Befund vom 01.09.2026: ein abgelaufener Eintrag ließ sich nicht
+  // wieder anordnen, weil die Frist an einem `created_at` hing, das beim
+  // Einschalten nie mitwanderte.
+  const b = befristungFuer(HEUTE.toISOString(), HEUTE, neuesFristende(HEUTE))
+  assert.equal(b.abgelaufen, false)
+  assert.equal(b.restTage, HOECHSTDAUER_TAGE)
 })
 
 // ── Die vier Pflichtangaben ──────────────────────────────────────────────

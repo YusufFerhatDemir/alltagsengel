@@ -29,7 +29,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { logger } from '@/lib/logger'
 
 import {
-  befristungFuer, istAbgelaufen, pruefeAngaben, HOECHSTDAUER_TAGE, type Befristung,
+  befristungFuer, istAbgelaufen, pruefeAngaben, neuesFristende,
+  HOECHSTDAUER_TAGE, type Befristung,
 } from './befristung'
 
 const log = logger.child('security-watchlist')
@@ -48,6 +49,11 @@ export interface WatchlistEintrag {
   grund: string
   angelegtVon: string | null
   createdAt: string
+  /**
+   * Ausdrueckliches Fristende (Migration 20261024000000). `null`, solange
+   * die Spalte fehlt — dann gilt allein die abgeleitete Hoechstdauer.
+   */
+  befristetBis: string | null
 }
 
 /** Rohform, wie sie aus PostgREST kommt. */
@@ -63,6 +69,7 @@ interface RohEintrag {
   grund: string
   angelegt_von: string | null
   created_at: string
+  befristet_bis?: string | null
 }
 
 /**
@@ -87,15 +94,39 @@ function ausRoh(r: RohEintrag): WatchlistEintrag {
     grund: r.grund,
     angelegtVon: r.angelegt_von,
     createdAt: r.created_at,
+    befristetBis: r.befristet_bis ?? null,
   }
 }
 
+// ── Drei Schemastaende, drei Spaltensaetze ──────────────────────────
+// Diese Tabelle ist zweimal gewachsen, und beide Migrationen brauchen
+// einen Menschen im SQL-Editor (DDL ist ueber den Dienstschluessel
+// gesperrt, 42501). Der Code muss deshalb mit JEDEM der drei Staende
+// arbeiten — auch mit dem, der gerade live ist.
+//
+// Gestaffelt wird von neu nach alt: faellt eine Stufe mit 42703 durch,
+// laeuft die naechste. Der frueher zweistufige Rueckfall sprang von der
+// obersten Stufe direkt auf den aeltesten Satz und verlor dabei
+// `alle_ereignisse`, `ohne_sperrfrist` und `email_kontrolle` — Angaben,
+// die live vorhanden sind.
+/** Mit 20261024000000 (Frist und Zweck). Live am 01.09.2026 NICHT vorhanden. */
+const SPALTEN_FRIST =
+  'id, user_id, organization_id, aktiv, alle_ereignisse, ohne_sperrfrist, ' +
+  'melde_email, email_kontrolle, grund, angelegt_von, created_at, befristet_bis'
+/** Mit 20261018000004 — der Stand, der live gilt. */
 const SPALTEN =
   'id, user_id, organization_id, aktiv, alle_ereignisse, ohne_sperrfrist, ' +
   'melde_email, email_kontrolle, grund, angelegt_von, created_at'
 /** Spaltensatz vor 20261018000004 — Rueckfallebene. */
 const SPALTEN_ALT =
   'id, user_id, organization_id, aktiv, melde_email, grund, angelegt_von, created_at'
+
+const STAFFEL = [SPALTEN_FRIST, SPALTEN, SPALTEN_ALT] as const
+
+/** 42703/PGRST204 = die Spalte gibt es (noch) nicht — eine Stufe tiefer. */
+function fehltSpalte(error: { code?: string } | null | undefined): boolean {
+  return error?.code === '42703' || error?.code === 'PGRST204'
+}
 
 // ─────────────────────────────────────────────────────────────────────
 // Zwischenspeicher
@@ -111,24 +142,21 @@ export function leereZwischenspeicher(): void {
 
 async function ladeAktive(admin: AdminClient): Promise<Map<string, WatchlistEintrag>> {
   const karte = new Map<string, WatchlistEintrag>()
-  let { data, error } = await admin
-    .from('security_watchlist')
-    .select(SPALTEN)
-    .eq('aktiv', true)
 
-  // 42703 = unbekannte Spalte: die Erweiterung 20261018000004 fehlt.
-  // Noch einmal mit dem alten Spaltensatz, statt die Ueberwachung
-  // wegen eines fehlenden Einrichtungsschritts komplett auszusetzen.
-  if (error && (error.code === '42703' || error.code === 'PGRST204')) {
-    const zweiter = await admin
+  // Die Staffel von neu nach alt. Faellt eine Stufe mit 42703 durch,
+  // fehlt die Migration dieser Stufe — dann die naechste, statt die
+  // Ueberwachung wegen eines fehlenden Einrichtungsschritts komplett
+  // auszusetzen.
+  let data: unknown = null
+  let error: { code?: string; message?: string } | null = null
+  for (const spalten of STAFFEL) {
+    const versuch = await admin
       .from('security_watchlist')
-      .select(SPALTEN_ALT)
+      .select(spalten)
       .eq('aktiv', true)
-    // Der zweite Spaltensatz ist eine andere Form; die Typen des Clients
-    // leiten sich vom Literal ab und passen deshalb nicht aufeinander.
-    // Die Auswertung laeuft ohnehin ueber ausRoh().
-    data = zweiter.data as unknown as typeof data
-    error = zweiter.error
+    data = versuch.data
+    error = versuch.error
+    if (!fehltSpalte(error)) break
   }
 
   if (error) {
@@ -151,7 +179,7 @@ async function ladeAktive(admin: AdminClient): Promise<Map<string, WatchlistEint
   const jetzt = new Date()
   let abgelaufen = 0
   for (const r of (data ?? []) as unknown as RohEintrag[]) {
-    if (istAbgelaufen(r.created_at, jetzt)) { abgelaufen += 1; continue }
+    if (istAbgelaufen(r.created_at, jetzt, r.befristet_bis)) { abgelaufen += 1; continue }
     karte.set(r.user_id, ausRoh(r))
   }
   if (abgelaufen > 0) {
@@ -227,20 +255,17 @@ export async function leseWatchlist(
   organizationId: string,
   heute: Date = new Date(),
 ): Promise<WatchlistZeile[]> {
-  let { data, error } = await admin
-    .from('security_watchlist')
-    .select(SPALTEN)
-    .or(`organization_id.eq.${organizationId},organization_id.is.null`)
-    .order('created_at', { ascending: false })
-
-  if (error && (error.code === '42703' || error.code === 'PGRST204')) {
-    const zweiter = await admin
+  let data: unknown = null
+  let error: { code?: string; message?: string } | null = null
+  for (const spalten of STAFFEL) {
+    const versuch = await admin
       .from('security_watchlist')
-      .select(SPALTEN_ALT)
+      .select(spalten)
       .or(`organization_id.eq.${organizationId},organization_id.is.null`)
       .order('created_at', { ascending: false })
-    data = zweiter.data as unknown as typeof data
-    error = zweiter.error
+    data = versuch.data
+    error = versuch.error
+    if (!fehltSpalte(error)) break
   }
   if (error) return []
 
@@ -266,7 +291,7 @@ export async function leseWatchlist(
   return eintraege.map(e => {
     const p = nach.get(e.userId)
     const kontoEmail = p?.email ?? null
-    const befristung = befristungFuer(e.createdAt, heute)
+    const befristung = befristungFuer(e.createdAt, heute, e.befristetBis)
     return {
       ...e,
       kontoEmail,
@@ -295,6 +320,11 @@ export interface WatchlistEingabe {
   alleEreignisse?: boolean
   ohneSperrfrist?: boolean
   angelegtVon: string
+  /**
+   * Bezugsdatum. Kommt von aussen, damit „die Frist startet neu" gegen
+   * ein festes Datum pruefbar ist — dieselbe Regel wie in befristung.ts.
+   */
+  heute?: Date
 }
 
 /**
@@ -333,8 +363,33 @@ export const TRANSPARENZ_HINWEIS =
   + 'ausgeschlossen.'
 
 export type SchreibErgebnis =
-  | { ok: true; eintragId: string; vorher: WatchlistEintrag | null }
-  | { ok: false; grund: string }
+  | {
+      ok: true
+      eintragId: string
+      vorher: WatchlistEintrag | null
+      /** Die Frist, die ab jetzt gilt. */
+      befristung: Befristung
+      /**
+       * true, wenn diese Anordnung die Frist NEU gestartet hat (neuer
+       * Eintrag, wieder eingeschaltet oder nach Ablauf erneut angeordnet).
+       * false beim blossen Bearbeiten einer laufenden Massnahme — dort
+       * bleibt die Frist stehen, sonst liesse sich eine Ueberwachung
+       * durch wiederholtes Speichern unbegrenzt verlaengern.
+       */
+      fristNeuGestartet: boolean
+    }
+  | {
+      ok: false
+      grund: string
+      /**
+       * `eingabe` = die Anordnung war unvollstaendig (Begruendung zu
+       * knapp, Pflichtangaben fehlen). Das ist KEIN Serverfehler, und die
+       * Route muss es als 400 beantworten: eine 400 sagt „bitte ergaenzen",
+       * eine 500 sagt „bei uns ist etwas kaputt" — und schickt die
+       * Verwaltung auf Fehlersuche am falschen Ort.
+       */
+      art: 'eingabe' | 'schreibfehler'
+    }
 
 /**
  * Legt einen Eintrag an oder aktualisiert ihn (ein Eintrag je Konto,
@@ -348,11 +403,14 @@ export async function setzeUeberwachung(
   admin: AdminClient,
   eingabe: WatchlistEingabe,
 ): Promise<SchreibErgebnis> {
+  const jetzt = eingabe.heute ?? new Date()
+
   // Fail-closed beim EINSCHALTEN. Ausschalten bleibt jederzeit ohne
   // Huerde moeglich — eine Schranke davor waere genau falsch herum.
   if (eingabe.aktiv && eingabe.grund.trim().length < GRUND_MINDESTLAENGE) {
     return {
       ok: false,
+      art: 'eingabe',
       grund: `Die Begründung ist zu knapp (mindestens ${GRUND_MINDESTLAENGE} Zeichen). `
         + TRANSPARENZ_HINWEIS,
     }
@@ -367,23 +425,61 @@ export async function setzeUeberwachung(
   // Vorlage vor, damit sie niemand auswendig kennen muss.
   if (eingabe.aktiv) {
     const angaben = pruefeAngaben(eingabe.grund)
-    if (!angaben.ok) return { ok: false, grund: angaben.meldung }
+    if (!angaben.ok) return { ok: false, art: 'eingabe', grund: angaben.meldung }
   }
 
   try {
-    const { data: bestand } = await admin
-      .from('security_watchlist')
-      .select(SPALTEN)
-      .eq('user_id', eingabe.userId)
-      .maybeSingle()
+    let bestand: unknown = null
+    for (const spalten of STAFFEL) {
+      const versuch = await admin
+        .from('security_watchlist')
+        .select(spalten)
+        .eq('user_id', eingabe.userId)
+        .maybeSingle()
+      bestand = versuch.data
+      if (!fehltSpalte(versuch.error)) break
+    }
 
-    const vorher = bestand ? ausRoh(bestand as unknown as RohEintrag) : null
+    const vorher = bestand ? ausRoh(bestand as RohEintrag) : null
+
+    // ── Wann die Frist neu startet (Befund 01.09.2026) ────────────────
+    // Vorher hing die Frist allein an `created_at`, und `created_at`
+    // wurde beim Upsert nie angefasst. Folge: ein abgelaufener Eintrag
+    // liess sich nicht wieder anordnen — „Einschalten" schrieb
+    // `aktiv = true`, die Frist war im selben Moment wieder vorbei, und
+    // die Oberflaeche meldete „Alarm ist aktiv". Eine Befristung ohne
+    // Rueckweg ist keine Frist, sondern ein Einwegventil.
+    //
+    // Neu startet die Frist genau dann, wenn eingeschaltet wird und die
+    // Massnahme NICHT ohnehin schon laeuft: bei einem neuen Eintrag,
+    // nach dem Abschalten und nach Ablauf. Laeuft sie bereits, bleibt
+    // `created_at` stehen — sonst liesse sich eine Ueberwachung durch
+    // wiederholtes Speichern still verlaengern, und genau das soll die
+    // Frist verhindern.
+    const laeuftBereits = !!vorher && vorher.aktiv
+      && !istAbgelaufen(vorher.createdAt, jetzt, vorher.befristetBis)
+    const fristNeuGestartet = eingabe.aktiv && !laeuftBereits
+
+    // Ausschalten ohne Begruendungstext ist zulaessig — die Huerde sitzt
+    // vor dem Einschalten, nicht davor, eine Massnahme zu beenden.
+    // `grund` ist aber NOT NULL, also wird der bestehende Text
+    // uebernommen. Gibt es gar keinen Eintrag, ist nichts abzuschalten;
+    // das ist eine Eingabefrage, kein Serverfehler.
+    if (!eingabe.aktiv && !eingabe.grund.trim()) {
+      if (!vorher) {
+        return {
+          ok: false,
+          art: 'eingabe',
+          grund: 'Zu diesem Konto gibt es keinen Überwachungseintrag, der abzuschalten wäre.',
+        }
+      }
+    }
 
     const zeile: Record<string, unknown> = {
       user_id: eingabe.userId,
       organization_id: eingabe.organizationId,
       aktiv: eingabe.aktiv,
-      grund: eingabe.grund,
+      grund: eingabe.grund.trim() || vorher?.grund || eingabe.grund,
       melde_email: eingabe.meldeEmail ?? null,
       email_kontrolle: eingabe.emailKontrolle ?? null,
       alle_ereignisse: eingabe.alleEreignisse ?? true,
@@ -391,37 +487,81 @@ export async function setzeUeberwachung(
       angelegt_von: eingabe.angelegtVon,
     }
 
-    let { data, error } = await admin
-      .from('security_watchlist')
-      .upsert(zeile, { onConflict: 'user_id' })
-      .select('id')
-      .single()
+    if (fristNeuGestartet) zeile.created_at = jetzt.toISOString()
 
-    if (error && (error.code === '42703' || error.code === 'PGRST204')) {
-      // Ohne 20261018000004: die drei Spalten weglassen. Der Eintrag
-      // wirkt dann mit dem Standardverhalten (voller Meldesatz, keine
-      // Sperrfrist) — siehe ausRoh().
-      delete zeile.alle_ereignisse
-      delete zeile.ohne_sperrfrist
-      delete zeile.email_kontrolle
-      const zweiter = await admin
+    // `befristet_bis` (Migration 20261024000000): dort steht ein CHECK,
+    // der einen AKTIVEN Eintrag ohne Frist gar nicht erst entstehen
+    // laesst. Wer die Spalte nicht mitschreibt, bekommt nach dem
+    // Anwenden der Migration bei JEDEM Einschalten einen 23514 — und der
+    // faellt nicht in den Spalten-Rueckfall, weil er kein 42703 ist.
+    // Der Wert ist derselbe, den der Anwendungscode ohnehin annimmt.
+    const startFuerFrist = fristNeuGestartet
+      ? jetzt.toISOString()
+      : (vorher?.createdAt ?? jetzt.toISOString())
+    if (eingabe.aktiv) {
+      zeile.befristet_bis = fristNeuGestartet
+        ? neuesFristende(jetzt)
+        : (vorher?.befristetBis ?? befristungFuer(startFuerFrist, jetzt).laeuftAbAm)
+    }
+
+    // Beim Schreiben dieselbe Staffel wie beim Lesen: erst mit allen
+    // Spalten, dann ohne die jeweils juengste Migration.
+    let data: { id?: unknown } | null = null
+    let error: { code?: string; message?: string } | null = null
+    // Jede Stufe bekommt eine EIGENE Nutzlast. Wuerde dasselbe Objekt
+    // weitergereicht und beschnitten, saehe man hinterher nicht mehr,
+    // was auf welcher Stufe tatsaechlich hinausging — weder im Test noch
+    // beim Nachlesen eines Fehlers.
+    for (const stufe of [0, 1, 2]) {
+      const nutzlast = { ...zeile }
+      if (stufe >= 1) delete nutzlast.befristet_bis
+      if (stufe >= 2) {
+        // Ohne 20261018000004: die drei Spalten weglassen. Der Eintrag
+        // wirkt dann mit dem Standardverhalten (voller Meldesatz, keine
+        // Sperrfrist) — siehe ausRoh().
+        delete nutzlast.alle_ereignisse
+        delete nutzlast.ohne_sperrfrist
+        delete nutzlast.email_kontrolle
+      }
+      const versuch = await admin
         .from('security_watchlist')
-        .upsert(zeile, { onConflict: 'user_id' })
+        .upsert(nutzlast, { onConflict: 'user_id' })
         .select('id')
         .single()
-      data = zweiter.data
-      error = zweiter.error
+      data = versuch.data
+      error = versuch.error
+      if (!fehltSpalte(error)) break
     }
 
     if (error) {
       log.error('Ueberwachungseintrag nicht geschrieben', { errorCode: error.code })
-      return { ok: false, grund: `Eintrag nicht geschrieben (${error.code ?? 'unbekannt'})` }
+      return {
+        ok: false,
+        art: 'schreibfehler',
+        grund: `Eintrag nicht geschrieben (${error.code ?? 'unbekannt'})`,
+      }
     }
 
     leereZwischenspeicher()
-    return { ok: true, eintragId: (data?.id as string) ?? '', vorher }
+
+    // Die Frist, die JETZT gilt — nicht die, die angeordnet werden
+    // sollte. Der Aufrufer meldet damit den wahren Zustand, statt
+    // „aktiv" zu behaupten.
+    const befristung = befristungFuer(
+      startFuerFrist,
+      jetzt,
+      eingabe.aktiv ? (zeile.befristet_bis as string | undefined) ?? null : vorher?.befristetBis ?? null,
+    )
+
+    return {
+      ok: true,
+      eintragId: (data?.id as string) ?? '',
+      vorher,
+      befristung,
+      fristNeuGestartet,
+    }
   } catch (err) {
     log.errorWithException('Ueberwachungseintrag fehlgeschlagen', err)
-    return { ok: false, grund: 'Unerwarteter Fehler' }
+    return { ok: false, art: 'schreibfehler', grund: 'Unerwarteter Fehler' }
   }
 }

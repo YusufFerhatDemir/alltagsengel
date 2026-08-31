@@ -55,7 +55,7 @@ export const HOECHSTDAUER_TAGE = 90
 export const WARNUNG_AB_TAGEN = 14
 
 export interface Befristung {
-  /** Ende der Frist, ISO. Aus `created_at` + HOECHSTDAUER_TAGE. */
+  /** Ende der Frist, ISO. Das FRUEHERE aus `befristet_bis` und `created_at` + HOECHSTDAUER_TAGE. */
   laeuftAbAm: string
   /** Verbleibende volle Tage. Negativ, wenn die Frist vorbei ist. */
   restTage: number
@@ -63,6 +63,13 @@ export interface Befristung {
   abgelaufen: boolean
   /** Frist laeuft, endet aber bald. */
   laeuftBaldAb: boolean
+  /**
+   * Woher das Ende stammt. `angeordnet` heisst: die Spalte `befristet_bis`
+   * ist gesetzt und liegt frueher als die Hoechstdauer — jemand hat also
+   * ausdruecklich kuerzer angeordnet. Die Oberflaeche soll das sagen
+   * koennen, sonst sieht eine verkuerzte Massnahme aus wie die Regel.
+   */
+  quelle: 'hoechstdauer' | 'angeordnet' | 'unbestimmbar'
   /** Ein Satz fuer die Oberflaeche. Nie beschoenigend. */
   hinweis: string
 }
@@ -76,24 +83,53 @@ const TAG_MS = 86_400_000
  * Funktion, die die Uhr liest, ist nicht pruefbar, und „laeuft in drei
  * Tagen ab" waere gegen die Systemzeit nicht testbar.
  */
-export function befristungFuer(createdAt: string | null | undefined, heute: Date): Befristung {
+export function befristungFuer(
+  createdAt: string | null | undefined,
+  heute: Date,
+  befristetBis?: string | null,
+): Befristung {
   const start = createdAt ? Date.parse(createdAt) : NaN
+
+  const unbestimmbar = (satz: string): Befristung => ({
+    laeuftAbAm: '',
+    restTage: 0,
+    abgelaufen: true,
+    laeuftBaldAb: false,
+    quelle: 'unbestimmbar',
+    hinweis: satz,
+  })
 
   if (!Number.isFinite(start)) {
     // Kein brauchbares Anlagedatum. Siehe Kopf: hier laeuft der Eintrag
     // ab, statt unbefristet weiterzulaufen.
-    return {
-      laeuftAbAm: '',
-      restTage: 0,
-      abgelaufen: true,
-      laeuftBaldAb: false,
-      hinweis:
-        'Ohne belegtes Anlagedatum lässt sich keine Frist bestimmen — die Überwachung '
-        + 'gilt als abgelaufen und muss ausdrücklich neu angeordnet werden.',
-    }
+    return unbestimmbar(
+      'Ohne belegtes Anlagedatum lässt sich keine Frist bestimmen — die Überwachung '
+      + 'gilt als abgelaufen und muss ausdrücklich neu angeordnet werden.',
+    )
   }
 
-  const ende = start + HOECHSTDAUER_TAGE * TAG_MS
+  // ── `befristet_bis` (Migration 20261024000000) ──────────────────────
+  // Die Spalte darf das Ende nur VORZIEHEN, nie hinausschieben. Sonst
+  // koennte ein Eintrag in der Datenbank die 90-Tage-Regel des
+  // Anwendungscodes aushebeln — und die Frist waere wieder verhandelbar.
+  //
+  // Ein GESETZTER, aber unlesbarer Wert laesst den Eintrag ablaufen.
+  // Dieselbe Richtung wie oben: im Zweifel endet die Beobachtung.
+  const hoechstEnde = start + HOECHSTDAUER_TAGE * TAG_MS
+  let ende = hoechstEnde
+  let quelle: Befristung['quelle'] = 'hoechstdauer'
+
+  if (befristetBis !== null && befristetBis !== undefined && befristetBis !== '') {
+    const angeordnet = Date.parse(befristetBis)
+    if (!Number.isFinite(angeordnet)) {
+      return unbestimmbar(
+        'Das angeordnete Fristende ist nicht lesbar — die Überwachung gilt als '
+        + 'abgelaufen und muss ausdrücklich neu angeordnet werden.',
+      )
+    }
+    if (angeordnet < ende) { ende = angeordnet; quelle = 'angeordnet' }
+  }
+
   const restTage = Math.floor((ende - heute.getTime()) / TAG_MS)
   const abgelaufen = heute.getTime() >= ende
   const laeuftBaldAb = !abgelaufen && restTage <= WARNUNG_AB_TAGEN
@@ -104,6 +140,7 @@ export function befristungFuer(createdAt: string | null | undefined, heute: Date
     restTage,
     abgelaufen,
     laeuftBaldAb,
+    quelle,
     hinweis: abgelaufen
       ? `Frist am ${laeuftAbAm.slice(0, 10)} abgelaufen — die Überwachung wirkt nicht mehr. `
         + 'Für eine Fortsetzung ist eine neue, begründete Anordnung nötig.'
@@ -115,8 +152,32 @@ export function befristungFuer(createdAt: string | null | undefined, heute: Date
 }
 
 /** Kurzform fuer die Entscheidungswege. */
-export function istAbgelaufen(createdAt: string | null | undefined, heute: Date): boolean {
-  return befristungFuer(createdAt, heute).abgelaufen
+export function istAbgelaufen(
+  createdAt: string | null | undefined,
+  heute: Date,
+  befristetBis?: string | null,
+): boolean {
+  return befristungFuer(createdAt, heute, befristetBis).abgelaufen
+}
+
+/**
+ * Das Fristende einer NEUEN Anordnung — heute plus Hoechstdauer.
+ *
+ * WARUM DAS EINE EIGENE FUNKTION IST
+ * Bis zum 01.09.2026 leitete sich die Frist ausschliesslich aus
+ * `created_at` ab. Das hatte eine Folge, die niemand beabsichtigt hatte:
+ * ein abgelaufener Eintrag liess sich nicht wieder anordnen. Das
+ * Einschalten schrieb `aktiv = true`, `created_at` blieb das alte Datum,
+ * der Eintrag war im selben Moment wieder abgelaufen — und die
+ * Oberflaeche meldete trotzdem „Alarm ist aktiv". Eine Frist, aus der es
+ * keinen Rueckweg gibt, ist keine Befristung, sondern ein Einwegventil.
+ *
+ * Der Rueckweg ist ausdruecklich: eine neue Anordnung braucht die volle
+ * Begruendung mit allen vier Pflichtangaben, wird als
+ * `watchlist_change` protokolliert und startet die Frist neu.
+ */
+export function neuesFristende(heute: Date): string {
+  return new Date(heute.getTime() + HOECHSTDAUER_TAGE * TAG_MS).toISOString()
 }
 
 // ───────────────────────────────────────────────────────────────────────────

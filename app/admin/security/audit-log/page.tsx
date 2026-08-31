@@ -132,6 +132,7 @@ interface WatchlistZeile {
     restTage: number
     abgelaufen: boolean
     laeuftBaldAb: boolean
+    quelle?: 'hoechstdauer' | 'angeordnet' | 'unbestimmbar'
     hinweis: string
   }
   /** Wirkt der Eintrag JETZT? `aktiv` allein reicht seit der Frist nicht. */
@@ -355,10 +356,24 @@ export default function SicherheitsspurSeite() {
         setWlMeldung({ ton: 'danger', text: json?.error ?? 'Die Änderung ist fehlgeschlagen.' })
         return
       }
+      // ── Die Meldung sagt, was WIRKLICH gilt (Befund 01.09.2026) ──────
+      // Vorher stand hier immer „Alarm für dieses Konto ist aktiv." — auch
+      // dann, wenn der Eintrag im selben Moment abgelaufen war und gar
+      // nichts meldete. Eine Erfolgsmeldung, die eine Wirkung behauptet,
+      // die nicht eintritt, ist schlimmer als eine Fehlermeldung.
+      const frist = json?.befristung as WatchlistZeile['befristung'] | undefined
       setWlMeldung(
         json?.adressenAbweichung
           ? { ton: 'warn', text: json.hinweis }
-          : { ton: 'info', text: aktiv ? 'Alarm für dieses Konto ist aktiv.' : 'Alarm für dieses Konto ist abgeschaltet.' },
+          : !aktiv
+            ? { ton: 'info', text: 'Alarm für dieses Konto ist abgeschaltet.' }
+            : json?.wirktJetzt === false
+              ? { ton: 'danger', text: `Der Eintrag wurde gespeichert, wirkt aber NICHT: ${frist?.hinweis ?? 'die Frist ist abgelaufen.'}` }
+              : {
+                  ton: 'info',
+                  text: `Alarm für dieses Konto ist aktiv. ${frist?.hinweis ?? ''}`
+                    + (json?.fristNeuGestartet ? ' Die Frist läuft ab heute neu.' : ''),
+                },
       )
       setWlFormular({ userId: '', grund: '', meldeEmail: '', emailKontrolle: '' })
       await ladeWatchlist()
@@ -504,6 +519,14 @@ export default function SicherheitsspurSeite() {
                       }}>
                         {w.befristung.hinweis}
                       </span>
+                      {/* Eine ausdrücklich kürzer angeordnete Frist sieht
+                          sonst aus wie die Regel — und wer sie verlängern
+                          wollte, merkte den Unterschied nicht. */}
+                      {w.befristung.quelle === 'angeordnet' && (
+                        <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>
+                          ausdrücklich so angeordnet (kürzer als die Höchstdauer)
+                        </div>
+                      )}
                     </td>
                     <td style={zelle}>
                       {/* „aktiv" allein wäre eine Falschauskunft, sobald die
@@ -522,7 +545,9 @@ export default function SicherheitsspurSeite() {
                         disabled={wlLaeuft}
                         onClick={() => watchlistSetzen(w.userId, !w.aktiv, w.grund, w.meldeEmail ?? '', w.emailKontrolle ?? '')}
                       >
-                        {w.aktiv ? 'Abschalten' : 'Einschalten'}
+                        {w.aktiv && !w.befristung.abgelaufen ? 'Abschalten'
+                          : w.aktiv ? 'Abschalten (abgelaufen)'
+                          : 'Erneut anordnen'}
                       </button>
                     </td>
                   </tr>
