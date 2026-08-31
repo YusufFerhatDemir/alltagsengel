@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { ladeListe, zeilenVon, istFehler, zusammenfassen } from '@/lib/ui/ladelage'
 import { requireUser } from '@/lib/supabase/require-session'
 import { PFLEGE_SCHWEREGRAD, formatDate, statusMeta } from '@/lib/admin/ops'
 
@@ -35,40 +36,66 @@ export default function EngelPflegedokuPage() {
         const supabase = createClient()
         // Alle folgenden Abfragen sind durch RLS auf die zugewiesenen Kunden
         // begrenzt (engel_pflege_*_select über aktive assignments).
+        // Vier Abfragen, deren Fehler bis 31.08.2026 alle verworfen wurden:
+        // gelesen wurde nur `.data`. Faellt eine aus, fehlen ihre Kunden in
+        // der Vereinigung unten — im schlimmsten Fall alle, und die Seite
+        // meldet „Keine Pflegedokumentation". Fuer eine Pflegeakte ist das
+        // die gefaehrlichste Falschaussage, die die Oberflaeche treffen
+        // kann. `zusammenfassen` laesst den Fehler gewinnen: eine
+        // unvollstaendige Akte darf nicht wie eine leere aussehen.
         const [risikenRes, diagnosenRes, plaeneRes, verlaufRes] = await Promise.all([
-          supabase.from('pflege_risiken').select('client_id, schweregrad, bezeichnung'),
-          supabase.from('pflege_diagnosen').select('client_id'),
-          supabase.from('pflege_massnahmenplaene').select('client_id, titel, status'),
-          supabase.from('pflege_verlauf').select('client_id, eintrag_datum').order('eintrag_datum', { ascending: false }),
+          ladeListe<{ client_id: string; schweregrad: string; bezeichnung: string }>(
+            supabase.from('pflege_risiken').select('client_id, schweregrad, bezeichnung'), 'pflegedoku:risiken'),
+          ladeListe<{ client_id: string }>(
+            supabase.from('pflege_diagnosen').select('client_id'), 'pflegedoku:diagnosen'),
+          ladeListe<{ client_id: string; titel: string; status: string }>(
+            supabase.from('pflege_massnahmenplaene').select('client_id, titel, status'), 'pflegedoku:plaene'),
+          ladeListe<{ client_id: string; eintrag_datum: string }>(
+            supabase.from('pflege_verlauf').select('client_id, eintrag_datum').order('eintrag_datum', { ascending: false }), 'pflegedoku:verlauf'),
         ])
 
+        if (zusammenfassen([risikenRes, diagnosenRes, plaeneRes, verlaufRes]) === 'fehler') {
+          setError('Die Pflegedokumentation konnte nicht vollständig geladen werden. Bitte laden Sie die Seite neu.')
+          return
+        }
+
+        const risiken_ = zeilenVon(risikenRes)
+        const diagnosen_ = zeilenVon(diagnosenRes)
+        const plaene_ = zeilenVon(plaeneRes)
+        const verlauf_ = zeilenVon(verlaufRes)
+
         const ids = new Set<string>()
-        for (const zeilen of [risikenRes.data, diagnosenRes.data, plaeneRes.data, verlaufRes.data]) {
-          for (const z of zeilen || []) ids.add((z as { client_id: string }).client_id)
+        for (const zeilen of [risiken_, diagnosen_, plaene_, verlauf_]) {
+          for (const z of zeilen) ids.add((z as { client_id: string }).client_id)
         }
         if (ids.size === 0) { setKunden([]); return }
 
-        const { data: clients } = await supabase
-          .from('clients')
-          .select('id, first_name, last_name')
-          .in('id', [...ids])
+        const klientenLage = await ladeListe<{ id: string; first_name: string | null; last_name: string | null }>(
+          supabase.from('clients').select('id, first_name, last_name').in('id', [...ids]),
+          'pflegedoku:clients',
+        )
+        if (istFehler(klientenLage)) {
+          setError('Die Kundennamen konnten nicht geladen werden. Bitte laden Sie die Seite neu.')
+          return
+        }
+        const clients = zeilenVon(klientenLage)
 
         const rang: Record<string, number> = { niedrig: 1, mittel: 2, hoch: 3, kritisch: 4 }
 
         setKunden([...ids].map(id => {
-          const c = (clients || []).find((x: { id: string }) => x.id === id) as { first_name?: string; last_name?: string } | undefined
-          const risiken = (risikenRes.data || []).filter((r: any) => r.client_id === id)
+          const c = clients.find((x: { id: string }) => x.id === id) as { first_name?: string; last_name?: string } | undefined
+          const risiken = risiken_.filter((r: any) => r.client_id === id)
           const hoechst = risiken.reduce<string | null>((acc, r: any) => (
             !acc || (rang[r.schweregrad] ?? 0) > (rang[acc] ?? 0) ? r.schweregrad : acc
           ), null)
-          const plan = (plaeneRes.data || []).find((p: any) => p.client_id === id && p.status === 'aktiv')
-          const verlauf = (verlaufRes.data || []).find((v: any) => v.client_id === id)
+          const plan = plaene_.find((p: any) => p.client_id === id && p.status === 'aktiv')
+          const verlauf = verlauf_.find((v: any) => v.client_id === id)
           return {
             client_id: id,
             name: c ? `${c.first_name ?? ''} ${c.last_name ?? ''}`.trim() : 'Kunde',
             risiken: risiken.length,
             kritischeRisiken: risiken.filter((r: any) => r.schweregrad === 'hoch' || r.schweregrad === 'kritisch').length,
-            diagnosen: (diagnosenRes.data || []).filter((d: any) => d.client_id === id).length,
+            diagnosen: diagnosen_.filter((d: any) => d.client_id === id).length,
             letzterVerlauf: verlauf?.eintrag_datum ?? null,
             planTitel: plan?.titel ?? null,
             hoechsterSchweregrad: hoechst,
@@ -114,8 +141,8 @@ export default function EngelPflegedokuPage() {
         ) : kunden.length === 0 ? (
           <div className="chat-empty" style={{ paddingTop: 60 }}>
             <div style={{ fontSize: 40, marginBottom: 10 }}>📋</div>
-            <div className="chat-empty-title">Keine Pflegedokumentation</div>
-            <div className="chat-empty-sub">Sobald du einem Kunden zugeordnet bist, erscheint hier seine Dokumentation.</div>
+            <div className="chat-empty-title">{error ? 'Dokumentation nicht geladen' : 'Keine Pflegedokumentation'}</div>
+            <div className="chat-empty-sub">{error ? 'Bitte laden Sie die Seite neu.' : 'Sobald du einem Kunden zugeordnet bist, erscheint hier seine Dokumentation.'}</div>
           </div>
         ) : (
           kunden.map(k => (
