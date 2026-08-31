@@ -216,15 +216,75 @@ try {
   // ── M12) Segmentierung gegen den echten Bestand ─────────────────────────
   const kontakte = await ladeMarketingKontakte(admin, ORG)
   const heute = new Date()
-  const zeilen = SEGMENTE.slice(0, 6).map((seg) => {
+  // ALLE Segmente, nicht die ersten sechs.
+  //
+  // Vorher stand hier SEGMENTE.slice(0, 6). Der Lauf zeigte damit
+  // ausschliesslich kunden_*-Segmente — die acht Engel-Segmente und die
+  // uebergreifenden kamen gar nicht vor. Wer die Ausgabe las, konnte
+  // daraus schliessen, es GAEBE keine Engel-Segmente oder sie seien leer.
+  // Beides war nicht gemessen. Eine Pruefung, die stillschweigend kuerzt,
+  // beantwortet eine andere Frage als die, die sie stellt.
+  //
+  // Nach Zielgruppe gruppiert, damit die Luecke sofort auffaellt, wenn
+  // eine ganze Gruppe auf 0 steht.
+  const lagelos = { eingewilligt: new Set(), widerrufen: new Set(), gesperrt: new Set() }
+  const nachGruppe = new Map()
+  for (const seg of SEGMENTE) {
     const drin = filtereSegment(kontakte, seg.key, heute)
-    const lagelos = { eingewilligt: new Set(), widerrufen: new Set(), gesperrt: new Set() }
     const versandfaehig = pruefeEmpfaenger(drin, lagelos).filter(e => e.versandfaehig).length
-    return `${seg.key.padEnd(36)} im Segment ${String(drin.length).padStart(3)}  versandfaehig ${versandfaehig}`
-  })
-  pruefe('M13', 'Segmentierung laeuft gegen den echten Bestand',
-    kontakte.length > 0,
-    `${kontakte.length} Kontakte geladen\n${zeilen.join('\n')}`)
+    const liste = nachGruppe.get(seg.zielgruppe) ?? []
+    liste.push(`  ${seg.key.padEnd(36)} im Segment ${String(drin.length).padStart(3)}`
+      + `  versandfaehig ${versandfaehig}`)
+    nachGruppe.set(seg.zielgruppe, liste)
+  }
+  const zeilen = []
+  const leereGruppen = []
+  for (const [gruppe, liste] of nachGruppe) {
+    const summe = liste.reduce((n, z) => n + Number(z.match(/im Segment\s+(\d+)/)?.[1] ?? 0), 0)
+    zeilen.push(`Zielgruppe ${gruppe} — ${liste.length} Segment(e), zusammen ${summe} Treffer`)
+    zeilen.push(...liste)
+    if (summe === 0) leereGruppen.push(gruppe)
+  }
+  if (leereGruppen.length > 0) {
+    zeilen.push('')
+    zeilen.push(`HINWEIS: keine Kontakte in Zielgruppe: ${leereGruppen.join(', ')}.`)
+    zeilen.push('Das ist kein Fehler dieses Laufs, aber es heisst: fuer diese Gruppe')
+    zeilen.push('ist derzeit KEINE Kampagne moeglich, egal wie sie gebaut waere.')
+  }
+  // Ein Segment auf 0 hat ZWEI moegliche Ursachen, und sie bedeuten
+  // Verschiedenes: „die Daten sagen nein" oder „es gibt keine Daten".
+  // engel_ohne_fuehrungszeugnis stand bei 17 von 17 — das liest sich wie
+  // ein Bestand ablaufender Zeugnisse, ist aber etwas anderes: fuer 20
+  // von 22 Engel-Konten existiert ueberhaupt keine Mitarbeiterakte, und
+  // der Kontaktlader setzt dann einsatzfreigabe=false und
+  // fuehrungszeugnisGueltigBis=null als VORGABE. Ohne diese Zeilen haelt
+  // man eine Datenluecke fuer einen Befund.
+  const zaehle = async (tabelle, verfeinern = (q) => q) => {
+    const { count } = await verfeinern(
+      admin.from(tabelle).select('id', { count: 'exact', head: true }),
+    )
+    return count ?? 0
+  }
+  const akten = await zaehle('caregivers')
+  const mitFreigabe = await zaehle('caregivers', (q) => q.is('einsatzfreigabe', true))
+  const mitZeugnis = await zaehle('caregivers', (q) => q.not('fuehrungszeugnis_gueltig_bis', 'is', null))
+  const engelKonten = await zaehle('profiles', (q) => q.eq('role', 'engel'))
+  zeilen.push('')
+  zeilen.push('Woher die Engel-Merkmale kommen (Mitarbeiterakte caregivers):')
+  zeilen.push(`  Engel-Konten (profiles.role=engel) : ${engelKonten}`)
+  zeilen.push(`  davon mit Mitarbeiterakte          : ${akten}`)
+  zeilen.push(`  mit Einsatzfreigabe                : ${mitFreigabe}`)
+  zeilen.push(`  mit hinterlegtem Fuehrungszeugnis  : ${mitZeugnis}`)
+  if (akten < engelKonten) {
+    zeilen.push('  ⇒ Fuer Konten ohne Akte greifen die VORGABEN des Kontaktladers')
+    zeilen.push('    (einsatzfreigabe=false, Fuehrungszeugnis=null). Die Segmente')
+    zeilen.push('    rechnen also richtig — die Merkmale sind schlicht nicht gepflegt.')
+  }
+
+  pruefe('M13', 'Segmentierung laeuft gegen den echten Bestand — ALLE Segmente',
+    kontakte.length > 0 && SEGMENTE.length > 0,
+    `${kontakte.length} Kontakte geladen, ${SEGMENTE.length} Segmente im Katalog\n`
+    + zeilen.join('\n'))
 
   // ── M14) Trockenlauf-Aussage: 0 versandfaehig ist eine ANTWORT ──────────
   const alleAdressen = kontakte.map(k => k.email).filter(Boolean)
