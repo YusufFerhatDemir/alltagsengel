@@ -24,6 +24,8 @@ import {
   BEZEICHNUNG_KATEGORIE, BEZEICHNUNG_SCHWEREGRAD,
   type Kategorie, type Schweregrad,
 } from './ereignisse'
+import { alarmZustaende, alarmKurzfassung, LEERER_ALARM, type Alarmzustand } from './alarmspur'
+import { ueberwachteKonten } from './watchlist'
 
 type AdminClient = ReturnType<typeof createAdminClient>
 
@@ -83,6 +85,14 @@ export interface SpurZeile {
   appVersion: string | null
   sessionReference: string | null
   metadata: Record<string, unknown> | null
+  /**
+   * Wurde zu DIESER Zeile gemeldet, und was sagt die Zustellspur?
+   * Siehe lib/security/alarmspur.ts — dort steht auch, warum
+   * „uebergeben" und „zugestellt" hier auseinandergehalten werden.
+   */
+  alarm: Alarmzustand
+  /** Steht das betroffene Konto auf der aktiven Ueberwachungsliste? */
+  ueberwacht: boolean
 }
 
 export interface SpurErgebnis {
@@ -179,6 +189,13 @@ async function anreichern(admin: AdminClient, roh: RohZeile[]): Promise<SpurZeil
   const userIds = [...new Set(roh.map(r => r.user_id).filter((v): v is string => !!v))]
   const orgIds = [...new Set(roh.map(r => r.organization_id).filter((v): v is string => !!v))]
 
+  // Alarm- und Zustellzustand fuer die ganze Seite in zwei Abfragen,
+  // die Ueberwachungsliste in einer dritten. Alle drei fail-soft: eine
+  // Sicherheitsansicht ohne Alarmspalte ist besser als keine Liste.
+  const alarme = await alarmZustaende(admin, roh.map(r => r.id))
+  let ueberwacht: ReadonlySet<string> = new Set()
+  try { ueberwacht = await ueberwachteKonten(admin) } catch { /* fail-soft */ }
+
   const namen = new Map<string, string>()
   if (userIds.length > 0) {
     const { data } = await admin
@@ -222,6 +239,8 @@ async function anreichern(admin: AdminClient, roh: RohZeile[]): Promise<SpurZeil
       appVersion: r.app_version,
       sessionReference: r.session_reference,
       metadata: r.metadata,
+      alarm: alarme.get(r.id) ?? LEERER_ALARM,
+      ueberwacht: !!r.user_id && ueberwacht.has(r.user_id),
     }
   })
 }
@@ -274,6 +293,13 @@ export async function exportiereSpur(admin: AdminClient, f: SpurFilter): Promise
     'Schweregrad', 'Konto-ID', 'E-Mail', 'Name', 'Organisation',
     'IP-Adresse', 'Plattform', 'Gerät', 'User-Agent', 'App-Version',
     'Sitzungsbezug', 'Zusatzdaten',
+    // Die Alarmkette. Ohne sie beantwortet der Export die Frage nicht,
+    // die eine Pruefung als erstes stellt: ist jemand informiert worden,
+    // und ist die Nachricht angekommen?
+    'Überwachtes Konto', 'Alarm ausgelöst', 'Alarm-Nachweis-ID', 'Meldegrund',
+    'Mail-Empfänger', 'Zustellstatus', 'Provider', 'Provider-Nachrichten-ID',
+    'Versuche', 'Letzter Versuch', 'Übergeben am', 'Gescheitert am', 'Fehlergrund',
+    'Alarm-Kurzfassung',
   ]
 
   const koerper = zeilen.map(z => csvZeile([
@@ -281,6 +307,19 @@ export async function exportiereSpur(admin: AdminClient, f: SpurFilter): Promise
     z.severityBezeichnung, z.userId, z.userEmail, z.userName, z.organisationsName,
     z.ip, z.plattform, z.geraet, z.userAgent, z.appVersion,
     z.sessionReference, z.metadata ? JSON.stringify(z.metadata) : '',
+    z.ueberwacht ? 'ja' : 'nein',
+    z.alarm.ausgeloest ? 'ja' : 'nein',
+    z.alarm.nachweisId, z.alarm.meldeGrund,
+    z.alarm.zustellungen.map(v => v.empfaenger ?? '').join(' | '),
+    z.alarm.zustellungen.map(v => v.status).join(' | '),
+    z.alarm.zustellungen.map(v => v.provider ?? '').join(' | '),
+    z.alarm.zustellungen.map(v => v.providerNachrichtId ?? '').join(' | '),
+    z.alarm.zustellungen.map(v => String(v.versuche ?? '')).join(' | '),
+    z.alarm.zustellungen.map(v => v.letzterVersuch ?? '').join(' | '),
+    z.alarm.zustellungen.map(v => v.zugestelltAm ?? '').join(' | '),
+    z.alarm.zustellungen.map(v => v.gescheitertAm ?? '').join(' | '),
+    z.alarm.zustellungen.map(v => v.fehlergrund ?? '').join(' | '),
+    alarmKurzfassung(z.alarm),
   ]))
 
   // BOM, sonst zeigt Excel Umlaute als Kraut an.
