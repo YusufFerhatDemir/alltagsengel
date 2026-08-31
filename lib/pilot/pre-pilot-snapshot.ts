@@ -204,11 +204,11 @@ export const DOKUMENTIERTE_SICHERHEITSLAGE = {
  * Verifikationsskripte unter `scripts/verify-*.mjs`.
  */
 export const JUENGSTE_MIGRATIONEN = [
-  '20261019000001_rollback_marketing_crm.sql',
-  '20261019000002_rollenmatrix_marketing_verwalten.sql',
   '20261019000003_rollback_rollenmatrix_marketing_verwalten.sql',
   '20261019000004_audit_action_marketing.sql',
   '20261019000005_rollback_audit_action_marketing.sql',
+  '20261020000000_standortfreigabe.sql',
+  '20261020000001_rollback_standortfreigabe.sql',
   // HINWEIS (Track 13): die Perimeter-Migrationen stehen hier NICHT,
   // obwohl sie die zuletzt hinzugekommenen sind. Sie tragen seit dem
   // 28.08.2026 einen ECHTEN Zeitstempel (20260828180000/…0001, Regel aus

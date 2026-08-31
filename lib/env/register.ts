@@ -462,6 +462,29 @@ export const ENV_REGISTER: readonly EnvEintrag[] = [
     beschreibung: 'Signaturgeheimnis des Stripe-Webhooks (/api/stripe/webhook).',
   },
   {
+    name: 'RESEND_WEBHOOK_SECRET',
+    geltung: 'server',
+    notwendigkeit: 'optional',
+    wann: 'produktion',
+    geheim: true,
+    beschreibung:
+      'Svix-Signaturgeheimnis der Resend-Webhooks (/api/marketing/resend-webhook), Form '
+      + '`whsec_…`. Ohne diesen Wert antwortet die Route mit 503 und verarbeitet NICHTS — '
+      + 'fail-closed, weil ein gefälschtes `email.bounced` eine fremde Adresse dauerhaft '
+      + 'sperren würde. Fehlt er, bleiben Zustellstand, Bounces und Beschwerden ungezählt.',
+  },
+  {
+    name: 'MARKETING_OPTIN_SECRET',
+    geltung: 'server',
+    notwendigkeit: 'optional',
+    wann: 'produktion',
+    geheim: true,
+    beschreibung:
+      'Signaturschlüssel der Doppel-Opt-in-Bestätigungslinks. Fehlt er, wird einer aus dem '
+      + 'Dienstschlüssel ABGELEITET (lib/marketing/doppel-opt-in.ts) — ein Wechsel des '
+      + 'Dienstschlüssels macht dann alle offenen Bestätigungslinks ungültig.',
+  },
+  {
     name: 'STRIPE_PRICE_STARTER',
     geltung: 'server',
     notwendigkeit: 'optional',

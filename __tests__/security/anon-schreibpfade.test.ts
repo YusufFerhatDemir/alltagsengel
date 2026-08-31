@@ -170,6 +170,11 @@ describe('Gegenprobe: keine neue Route ohne Guard oder Limit', () => {
         /x-service-key/.test(src) ||
         /stripe\.webhooks|constructEvent/.test(src) ||
         /x-hub-signature|verifyMetaSignature/.test(src) ||
+        // Svix-Signatur der Resend-Webhooks (lib/marketing/webhook-signatur.ts).
+        // Dieselbe Klasse wie Stripe und Meta: der Rumpf ist signiert, und die
+        // Route weist ohne gueltige Signatur mit 401 ab. Fail-closed auch ohne
+        // gesetztes Geheimnis — dann 503 statt Verarbeitung.
+        /svix-signature|pruefeSvixSignatur/.test(src) ||
         // rateLimit( und rateLimitPersistent( — letzteres zaehlt in der
         // Datenbank und ist damit instanzuebergreifend wirksam. Beide
         // gelten hier als Limit; welche Route welchen nutzt, prueft die
