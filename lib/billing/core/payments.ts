@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { KEINE_ZUORDNUNG_STATUS, alsPostgrestListe } from '../status-vokabular'
 import { logBillingAction } from './audit'
 import { isTerminalStatus, isValidInvoiceStatus, type InvoiceStatus } from './status-machine'
 
@@ -170,7 +171,11 @@ async function autoMatchPayment(
     .from('invoices')
     .select('id, invoice_number, invoice_number_formatted, total_amount, paid_amount, client_id, insurance_name, client:clients(first_name, last_name)')
     .eq('organization_id', organizationId)
-    .not('status', 'in', '("bezahlt","storniert","akzeptiert")')
+    // Gemeinsame Liste — sie kennt beide Vokabulare der Spalte. Vorher
+    // stand hier nur die deutsche Haelfte: eine stornierte Rechnung im
+    // englischen Wortlaut (`cancelled`) wurde als Ziel einer eingehenden
+    // Zahlung angeboten und automatisch zugeordnet.
+    .not('status', 'in', alsPostgrestListe(KEINE_ZUORDNUNG_STATUS))
     .is('deleted_at', null)
 
   if (!openInvoices || openInvoices.length === 0) {

@@ -13,6 +13,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { KEINE_ZUORDNUNG_STATUS, alsPostgrestListe } from '../status-vokabular'
 import type { CamtBuchung } from '../camt/camt-parser';
 import { createPayment, allocatePayment, type PaymentMethod } from '../core/payments';
 import { logBillingAction } from '../core/audit';
@@ -198,7 +199,10 @@ export async function bewerteBuchung(
     .from('invoices')
     .select('id, invoice_number, invoice_number_formatted, total_amount, paid_amount, client_id, client:clients(first_name, last_name)')
     .eq('organization_id', organizationId)
-    .not('status', 'in', '("bezahlt","storniert","akzeptiert")')
+    // Gemeinsame Liste (lib/billing/status-vokabular.ts) — beide
+    // Vokabulare der Spalte. Die halbe Liste hier hiess: eine stornierte
+    // Rechnung als `cancelled` blieb Zuordnungskandidat.
+    .not('status', 'in', alsPostgrestListe(KEINE_ZUORDNUNG_STATUS))
     .is('deleted_at', null) as { data: OpenInvoice[] | null };
 
   if (!openInvoices || openInvoices.length === 0) {

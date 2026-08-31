@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { KEINE_ZUORDNUNG_STATUS, alsPostgrestListe } from '@/lib/billing/status-vokabular'
 import { parseBetragZuCent } from '@/lib/admin/betrag'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -49,7 +50,8 @@ export default function ZuordnungPage() {
       const { data: invs } = await supabase
         .from('invoices')
         .select('id, invoice_number, invoice_number_formatted, total_amount, paid_amount, status, period_start, client:clients(first_name, last_name)')
-        .not('status', 'in', '("bezahlt","storniert","akzeptiert")')
+        // Gemeinsame Liste — beide Vokabulare von invoices.status.
+        .not('status', 'in', alsPostgrestListe(KEINE_ZUORDNUNG_STATUS))
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(100)

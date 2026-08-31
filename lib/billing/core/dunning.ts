@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { NICHT_MAHNFAEHIGE_STATUS } from '../status-vokabular'
 import { logBillingAction } from './audit'
 import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 import { logger } from '@/lib/logger';
@@ -448,17 +449,13 @@ export async function getDunningOverview(
  *
  * Alles andere (inkl. Alt-Status wie 'sent') ist mahnfaehig.
  */
-const NICHT_MAHNFAEHIG: ReadonlySet<string> = new Set([
-  'entwurf',
-  'geprueft',
-  'korrektur_erforderlich',
-  'storniert',
-  'bezahlt',
-  'akzeptiert',
-  'abgeschrieben',
-  'strittig',
-  'abgelehnt',
-])
+/**
+ * Dieselbe Quelle wie GESPERRTE_STATUS im Mahntor: die gemeinsame Liste
+ * aus lib/billing/status-vokabular.ts. Sie kennt beide Vokabulare der
+ * Spalte `invoices.status` — die halbe Liste, die hier frueher stand,
+ * haette einen Entwurf (`draft`) in den Mahnlauf gelassen.
+ */
+const NICHT_MAHNFAEHIG: ReadonlySet<string> = new Set(NICHT_MAHNFAEHIGE_STATUS)
 
 export interface DunningRunEscalation {
   invoiceId: string
