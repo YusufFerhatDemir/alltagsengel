@@ -36,11 +36,17 @@ zugeschlagen haben:
   `…_aktion_check`, nicht `…_action_check`. Eine LIKE-Probe meldete
   „fehlt", wo nichts fehlte.
 
-## Ergebnis: 9 offen, 24 stehen
+## Ergebnis: 10 offen, 24 stehen
 
-> **Fortschreibung 31.08.2026 (nachmittags):** eine neunte ist hinzugekommen —
-> `20261023000000_signaturhash_beim_einfuegen`, Befund U11. Sie steht als
-> Nummer 9 unten. An den acht vorherigen hat sich nichts geändert.
+> **Fortschreibung 31.08.2026 (nachmittags):** zwei sind hinzugekommen,
+> beide aus **derselben Frage** — *feuert der Riegel auch beim EINFÜGEN?*
+> `20261023000000_signaturhash_beim_einfuegen` (Befund U11) und
+> `20261023000002_rechnung_eingangsstatus` (Befund R1). Sie stehen als
+> Nummer 9 und 10 unten. An den acht vorherigen hat sich nichts geändert.
+>
+> Die Frage lohnt sich, weil `pg_proc` sie nie beantwortet: der
+> Funktionsrumpf sieht in beiden Fällen vollständig aus. Erst
+> `pg_get_triggerdef` zeigt, worauf er verdrahtet ist.
 
 **Nicht 4.** Die Annahme „4 offene Migrationen" trifft nicht zu; die
 Messung findet acht, davon sieben aus dem Bestand und eine neue aus dem
@@ -132,6 +138,19 @@ heutigen P0-Block.
 | **VORAB BEWIESEN** | `__tests__/migrations/signaturhash-beim-einfuegen-pglite.test.ts` — 10 Prüfungen gegen echtes PostgreSQL (PGlite), mit der **wortgleichen** Funktion aus der Migrationsdatei und einer Gegenprobe gegen die heutige Live-Verdrahtung. |
 | **VERIFIKATION** | `npm run verify:unterschrift` → **U11 muss von OFFEN auf OK springen**. Zusätzlich `npm run check:migrationen`. |
 
+### 10 · `20261023000002_rechnung_eingangsstatus` *(neu, 31.08.2026)*
+
+| | |
+|---|---|
+| **GRUND** | Auf `invoices` stehen drei Riegel — Statusmaschine (`validate_invoice_status_transition`), Kassen-Freischaltung (`enforce_kassenrechnung_freigeschaltet`), Unveränderlichkeit (`prevent_finalized_invoice_mutation`) — und **alle drei sind `BEFORE UPDATE`**. Keiner beschreibt, in welchem Status eine Rechnung entstehen darf. |
+| **BEFUND** | Live nachgemessen (angelegt, gemessen, sofort gelöscht): `INSERT … status='bezahlt'`, `'freigegeben'` und `'uebermittelt'` gingen **alle drei durch**. Wer den Anfangszustand frei wählt, braucht keinen einzigen Übergang. |
+| **RISIKO** | **P1.** Zwei Folgen. (a) Eine Rechnung steht auf `bezahlt`, ohne die Statusmaschine je durchlaufen zu haben. (b) Schwerer: eine **Kassenrechnung erreicht `uebermittelt`, ohne dass das Bundesland je freigeschaltet war** — das Gate kann sie danach auch nicht mehr sehen, weil der Status sich nicht mehr ändert. Beim Schreiben der Prüfung kam ein zweiter Fall dazu: `invoices.status` ist **nullable**, und ein CHECK ist bei NULL erfüllt — eine Rechnung ohne Status fällt aus *jedem* Statusfilter heraus (keine Entwurfsliste, keine offenen Posten, kein Mahnlauf) und ist damit unsichtbar und trotzdem da. Beides weist der Riegel ab. |
+| **WEG HINEIN** | Nur mit dem Dienstschlüssel — im Anwendungscode gibt es **keinen** direkten `invoices`-INSERT, alles läuft über `create_invoice_draft_atomic` (schreibt `'entwurf'`). Betroffen sind also Importe, Nacherfassungen, Migrationen und jeder künftige Service-Role-Weg. Das Prüfskript `verify-opos-mahnwesen-kette.mjs` **war selbst so einer** und ist mitgeändert. |
+| **WIRKUNG AUF DEN BESTAND** | Keine. Trigger wirken nur nach vorn; die drei Bestandszeilen (`sent`, `disputed`, `paid`) bleiben unberührt. |
+| **EXAKTER SQL** | `supabase/migrations/20261023000002_rechnung_eingangsstatus.sql` · Rollback: `…20261023000003_rollback_…sql` (zugleich der vorgesehene Weg für eine einmalige Altrechnungs-Übernahme: Rollback → importieren → Riegel wieder setzen) |
+| **VORAB BEWIESEN** | `__tests__/migrations/rechnung-eingangsstatus-pglite.test.ts` — 8 Prüfungen gegen echtes PostgreSQL, mit der wortgleichen Funktion aus der Migration, dem echten `invoices_status_check` (beide Vokabulare) und einer Gegenprobe ohne Trigger. |
+| **VERIFIKATION** | `npm run verify:opos-mahnwesen` → **M17 muss von OFFEN auf OK springen**; die übrigen 17 müssen grün bleiben. |
+
 ---
 
 ## Warum ich sie nicht selbst anwenden kann
@@ -156,12 +175,12 @@ Und es gibt keinen zweiten Weg in dieser Umgebung:
 | `supabase db push` | im Projekt ausdrücklich verboten (Zukunfts-Zeitstempel) |
 | `public._run_sql` | Lese-Orakel, rollt immer zurück, kein DDL |
 
-**Die neun Dateien brauchen den Supabase-SQL-Editor als `postgres`.**
+**Die zehn Dateien brauchen den Supabase-SQL-Editor als `postgres`.**
 
-Reihenfolge ist unkritisch — keine der neun hängt von einer anderen ab.
+Reihenfolge ist unkritisch — keine der zehn hängt von einer anderen ab.
 Empfehlung: 3, 4, 5 zuerst (die drei Unveränderlichkeits-Trigger der
 Pflegeakte, höchstes fachliches Risiko), dann 8 (schaltet drei Rollen
-funktionsfähig), dann 1, 2, 7, 6, 9.
+funktionsfähig), dann **10** (P1, Geldweg), dann 1, 2, 7, 6, 9.
 
 Nach jeder Anwendung: `npm run check:migrationen` — der Lauf sagt
 selbst, welche noch offen sind.

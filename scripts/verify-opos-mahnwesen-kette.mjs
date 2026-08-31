@@ -262,13 +262,28 @@ BEGIN
   -- damit billing_number_sequences unberuehrt bleibt. Auch das rollt
   -- zurueck, aber eine Sequenz, die man gar nicht erst anfasst, kann auch
   -- keine Luecke bekommen.
+  --
+  -- ANGELEGT WIRD ALS ENTWURF, NICHT DIREKT ALS 'uebermittelt'.
+  -- Bis zum 31.08.2026 stand hier der Zielstatus unmittelbar im INSERT.
+  -- Das ging — und genau das war der Befund R1: alle drei Riegel auf
+  -- invoices sind BEFORE UPDATE, eine direkt im Endstatus angelegte
+  -- Rechnung sieht keiner von ihnen. Migration 20261023000002 schliesst
+  -- das; dieses Skript geht seitdem den Weg, den auch der Betrieb geht.
+  -- Nebenwirkung, die uns gelegen kommt: der Lauf belegt jetzt zugleich,
+  -- dass der Weg bis 'uebermittelt' ueberhaupt begehbar ist.
   INSERT INTO public.invoices (
     organization_id, client_id, invoice_number, status,
     total_amount, paid_amount, period_start, period_end, due_date)
-  VALUES ('${ORG}', v_klient, v_kennung, 'uebermittelt',
+  VALUES ('${ORG}', v_klient, v_kennung, 'entwurf',
           100.00, 0, CURRENT_DATE - 75, CURRENT_DATE - 60, CURRENT_DATE - 45)
   RETURNING id INTO v_rechnung;
-  v_bericht := v_bericht || 'B1|Pruefrechnung ' || v_kennung || ' angelegt, 100,00 EUR, 45 Tage ueberfaellig' || chr(10);
+
+  UPDATE public.invoices SET status = 'geprueft'     WHERE id = v_rechnung;
+  UPDATE public.invoices SET status = 'freigegeben'  WHERE id = v_rechnung;
+  UPDATE public.invoices SET status = 'uebermittelt' WHERE id = v_rechnung;
+
+  v_bericht := v_bericht || 'B1|Pruefrechnung ' || v_kennung || ' angelegt als Entwurf und ueber '
+            || 'geprueft/freigegeben nach uebermittelt gefuehrt, 100,00 EUR, 45 Tage ueberfaellig' || chr(10);
 
   -- B2) Mahneintrag
   INSERT INTO public.dunning_entries (
@@ -357,6 +372,25 @@ BEGIN
   v_bericht := v_bericht || 'B10|ueber quittiert nach bezahlt, offen danach: '
             || v_bezahlt || ' EUR' || chr(10);
 
+  -- B11) Der Eingang der Statusmaschine (Befund R1 vom 31.08.2026)
+  --
+  -- B9 zeigt, dass sich der Weg nicht ABKUERZEN laesst. Diese Pruefung
+  -- stellt die andere Frage: laesst er sich UEBERSPRINGEN? Alle drei
+  -- Riegel auf invoices sind BEFORE UPDATE — eine Rechnung, die gleich
+  -- im Endstatus angelegt wird, sieht keiner von ihnen. Gemessen wird
+  -- die Datenbank, nicht der Anwendungscode: der INSERT laeuft mit dem
+  -- Dienstschluessel direkt auf die Tabelle.
+  BEGIN
+    INSERT INTO public.invoices (
+      organization_id, client_id, invoice_number, status,
+      total_amount, period_start, period_end)
+    VALUES ('${ORG}', v_klient, v_kennung || '-EIN', 'bezahlt',
+            50.00, CURRENT_DATE - 30, CURRENT_DATE - 1);
+    v_bericht := v_bericht || 'B11|DURCHGELASSEN — Rechnung direkt als bezahlt angelegt' || chr(10);
+  EXCEPTION WHEN OTHERS THEN
+    v_bericht := v_bericht || 'B11|Eingang abgewiesen: ' || SQLERRM || chr(10);
+  END;
+
   RAISE EXCEPTION 'KETTE:%', v_bericht;
 END $kette$;`)
 
@@ -382,6 +416,16 @@ END $kette$;`)
       holen('B9').startsWith('Abkuerzung abgewiesen'), holen('B9'))
     pruefe('M16', 'Ueber den vorgesehenen Weg ist die Rechnung danach ausgeglichen',
       /offen danach: 0/.test(holen('B10')), holen('B10'))
+    pruefe('M17', 'Eine Rechnung laesst sich nicht direkt in einem Endstatus anlegen',
+      holen('B11').startsWith('Eingang abgewiesen'),
+      `${holen('B11')}\n`
+      + (holen('B11').startsWith('Eingang abgewiesen')
+          ? 'Der Eingangsriegel steht — jeder weitere Status ist damit zwingend ein\n'
+            + 'UPDATE, und dort greifen Statusmaschine und Kassen-Freischaltungs-Gate.'
+          : 'OFFEN: Migration 20261023000002_rechnung_eingangsstatus.sql ist nicht\n'
+            + 'angewendet. Solange sie fehlt, umgeht ein INSERT die Statusmaschine UND\n'
+            + 'das Kassen-Freischaltungs-Gate — eine Kassenrechnung kann uebermittelt\n'
+            + 'sein, ohne dass das Bundesland je freigeschaltet war.'))
   }
 
   // ── M15) Und es ist wirklich nichts stehen geblieben ───────────────────

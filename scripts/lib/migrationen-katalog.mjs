@@ -193,4 +193,11 @@ export const KATALOG = [
            WHERE tgrelid='public.service_records'::regclass
              AND tgname='trg_compute_signature_hash'
              AND pg_get_triggerdef(oid) LIKE '%BEFORE INSERT OR UPDATE%'` },
+  { datei: '20261023000002_rechnung_eingangsstatus',
+    was: 'trg_a_invoice_eingangsstatus auf invoices (BEFORE INSERT)',
+    soll: 1,
+    sql: `SELECT count(*) FROM pg_trigger
+           WHERE tgrelid='public.invoices'::regclass
+             AND tgname='trg_a_invoice_eingangsstatus'
+             AND NOT tgisinternal` },
 ]
