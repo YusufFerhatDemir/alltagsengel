@@ -87,7 +87,12 @@ function LeistungsnachweisInner() {
 
   const herunterladen = useCallback(() => {
     if (!html || !data) return
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+    // Die heruntergeladene Datei wird spaeter von der Platte geoeffnet.
+    // Ein wurzelrelativer Schriftpfad zeigte dort ins Dateisystem — die
+    // Datei muss die Herkunft mitbringen, sonst faellt sie beim Oeffnen
+    // doch wieder auf Arial zurueck.
+    const htmlZumSpeichern = buildLeistungsnachweisHtml(data, window.location.origin)
+    const blob = new Blob([htmlZumSpeichern], { type: 'text/html;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
