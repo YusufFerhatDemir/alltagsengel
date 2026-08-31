@@ -63,17 +63,23 @@ async function legeRechnung(opts: {
   erstelltVorTagen?: number
   dunningLevel?: string
   geloescht?: boolean
+  /** false = synthetisch (nie festgeschrieben) → gehört nicht in OPOS. */
+  festgeschrieben?: boolean
 }): Promise<string> {
   zaehler++
   const id = `f0000000-0000-4000-8000-${String(zaehler).padStart(12, '0')}`
   const faellig = opts.faelligVorTagen === null ? null : vorTagen(opts.faelligVorTagen ?? 10)
+  // Eine freigegebene Rechnung ist festgeschrieben — freezeInvoice setzt Status
+  // und frozen_at gemeinsam. Default daher gesetzt; festgeschrieben:false erzeugt
+  // eine synthetische Zeile (Demo-/Testbestand), die OPOS ausschließen muss.
+  const frozenAt = opts.festgeschrieben === false ? null : `${vorTagen(opts.erstelltVorTagen ?? 20)}T09:05:00Z`
   await db.query(
     `INSERT INTO public.invoices
        (id, organization_id, client_id, invoice_number, invoice_number_formatted,
         period_start, period_end, total_amount, paid_amount, status,
-        due_date, created_at, dunning_level, deleted_at)
+        due_date, created_at, dunning_level, deleted_at, frozen_at)
      VALUES ($1, $2, $3, $4, $4, '2026-07-01', '2026-07-31', $5, $6, $7,
-             $8, $9, $10, $11)`,
+             $8, $9, $10, $11, $12)`,
     [
       id, opts.org, opts.klient, opts.nummer,
       opts.betragEuro, opts.bezahltEuro ?? 0, opts.status ?? 'freigegeben',
@@ -81,6 +87,7 @@ async function legeRechnung(opts: {
       `${vorTagen(opts.erstelltVorTagen ?? 20)}T09:00:00Z`,
       opts.dunningLevel ?? 'offen',
       opts.geloescht ? new Date().toISOString() : null,
+      frozenAt,
     ] as never[],
   )
   return id
@@ -189,29 +196,44 @@ describe('Was in die Liste gehoert — und was nicht', () => {
   })
 
   /**
-   * FESTGEHALTEN, NICHT GEAENDERT.
+   * GEAENDERT am 31.08.2026 — die Ueberschaetzung ist geschlossen.
    *
-   * Der Ausschluss nennt nur die Endstatus. Ein ENTWURF ist damit Teil der
-   * Offene-Posten-Liste und der Altersstruktur — obwohl er weder
-   * festgeschrieben noch versandt ist und damit fachlich keine Forderung
-   * darstellt. Wer die Altersstruktur als Forderungsbestand liest,
-   * ueberschaetzt ihn um die Summe aller Entwuerfe.
-   *
-   * Der Mahnlauf ist davon NICHT betroffen: er waehlt selbst
-   * (lib/billing/core/dunning.ts) und faehrt nicht ueber diese Liste. Die
-   * Frage, ob Entwuerfe hier sichtbar bleiben sollen, ist deshalb eine
-   * fachliche Entscheidung und keine, die dieser Test einseitig trifft —
-   * er haelt nur fest, was heute gilt, damit eine Aenderung auffaellt.
+   * Frueher nannte der Ausschluss nur die Endstatus, und ein ENTWURF (nie
+   * festgeschrieben) stand deshalb mit in der Offene-Posten-Liste: wer die
+   * Altersstruktur als Forderungsbestand las, ueberschaetzte ihn um die Summe
+   * aller Entwuerfe. Seit `getOposListe` zusaetzlich `frozen_at IS NOT NULL`
+   * verlangt, faellt jede nicht festgeschriebene Zeile heraus — ein Entwurf
+   * hat kein frozen_at und ist damit korrekt keine Forderung mehr. Dieselbe
+   * Sperre traegt das Mahnwesen (Gate-Punkt 11) und der SEPA-Einzug.
    */
-  it('nimmt Entwuerfe heute MIT in die Liste auf (Ist-Zustand)', async () => {
+  it('nimmt einen Entwurf (nicht festgeschrieben) NICHT in die Liste auf', async () => {
     await legeRechnung({
       org: ORG_A, klient: KLIENT_A, nummer: 'RE-OPOS-ENTWURF',
-      betragEuro: 100, status: 'entwurf',
+      betragEuro: 100, status: 'entwurf', festgeschrieben: false,
+    })
+
+    const { offenePosten, gesamtOffen, gesamtAnzahl } = await getOposListe(admin, ORG_A)
+    expect(offenePosten).toHaveLength(0)
+    expect(gesamtOffen).toBe(0)
+    expect(gesamtAnzahl).toBe(0)
+  })
+
+  it('laesst synthetische Rechnungen ohne frozen_at aussen vor (Demo-/Testbestand)', async () => {
+    // Der reale Produktionsbestand: Versand-Status, aber nie festgeschrieben —
+    // RE-2026-0001..0003, Kunde AE-TEST-0001. Sie sind keine echte Forderung.
+    await legeRechnung({
+      org: ORG_A, klient: KLIENT_A, nummer: 'RE-OPOS-SYNTH',
+      betragEuro: 187, status: 'sent', festgeschrieben: false,
+    })
+    // Gegenprobe: dieselbe Rechnung festgeschrieben IST eine Forderung.
+    await legeRechnung({
+      org: ORG_A, klient: KLIENT_A, nummer: 'RE-OPOS-ECHT',
+      betragEuro: 50, status: 'sent',
     })
 
     const { offenePosten, gesamtOffen } = await getOposListe(admin, ORG_A)
-    expect(offenePosten.map(p => p.invoiceNumber)).toEqual(['RE-OPOS-ENTWURF'])
-    expect(gesamtOffen).toBe(10000)
+    expect(offenePosten.map(p => p.invoiceNumber)).toEqual(['RE-OPOS-ECHT'])
+    expect(gesamtOffen).toBe(5000)
   })
 
   it('zeigt keine Rechnung eines anderen Mandanten', async () => {
