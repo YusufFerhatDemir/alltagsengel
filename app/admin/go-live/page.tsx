@@ -32,7 +32,13 @@ export default async function GoLivePage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login?redirectTo=/admin/go-live')
 
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  const { data: profile, error: rollenFehler } = await supabase
+    .from('profiles').select('role').eq('id', user.id).maybeSingle()
+  // Fail-closed bleibt fail-closed — aber mit dem richtigen Grund. Vorher
+  // wurde der Fehler verworfen und jede Stoerung als „Sie sind kein
+  // Administrator" gemeldet; wer das liest, sucht bei der Berechtigung und
+  // nicht bei der Verbindung.
+  if (rollenFehler) redirect('/auth/login?error=rolle_nicht_pruefbar')
   if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
     redirect('/auth/login?error=admin_required')
   }

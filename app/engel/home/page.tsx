@@ -37,7 +37,19 @@ export default function EngelHomePage() {
       const supabase = createClient()
 
       const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
-      const { data: a } = await supabase.from('angels').select('*').eq('id', user.id).maybeSingle()
+      const { data: a, error: engelFehler } = await supabase.from('angels').select('*').eq('id', user.id).maybeSingle()
+
+      // Ein FEHLER beim Nachsehen ist kein fehlender Engel-Datensatz. Bis
+      // 31.08.2026 verwarf diese Abfrage ihren Fehler; `a` war dann null und
+      // ein laengst registrierter Engel wurde bei jeder Stoerung — RLS,
+      // Netz, Schema — auf die Registrierungsseite geworfen, als gaebe es
+      // ihn nicht.
+      if (engelFehler) {
+        log.errorWithException('Engel-Datensatz konnte nicht geladen werden', engelFehler)
+        setError('Fehler beim Laden der Daten. Bitte versuche es später erneut.')
+        setLoading(false)
+        return
+      }
 
       // If no angel profile exists, redirect to registration
       if (!a) {
