@@ -247,29 +247,56 @@ export async function erteileEinwilligung(
     }
   }
 
+  // ── WARUM HIER KEIN UPSERT STEHT (Befund 31.08.2026) ─────────────────
+  //
+  // Hier stand `.upsert(…, { onConflict: 'organization_id,email,consent_type',
+  // ignoreDuplicates: true })`. Das konnte NIE funktionieren: der Index, den
+  // es treffen sollte, ist PARTIELL —
+  //
+  //     CREATE UNIQUE INDEX marketing_consents_offen_je_adresse
+  //       ON marketing_consents (organization_id, email, consent_type)
+  //       WHERE revoked_at IS NULL;
+  //
+  // und Postgres waehlt einen partiellen Index fuer ON CONFLICT nur, wenn
+  // die Anweisung dieselbe WHERE-Bedingung mitbringt. PostgREST kann das
+  // ueber `onConflict` nicht ausdruecken. Jeder Aufruf endete deshalb mit
+  //
+  //     „there is no unique or exclusion constraint matching the
+  //      ON CONFLICT specification"
+  //
+  // — also: es liess sich UEBERHAUPT KEINE Einwilligung eintragen, weder
+  // ueber den Doppel-Opt-in-Weg noch von Hand in der Verwaltung. Aufgefallen
+  // ist es erst beim Lauf gegen die echte Datenbank; ein Test gegen einen
+  // nachgebildeten Supabase-Client nimmt jedes Upsert widerspruchslos an.
+  //
+  // Jetzt: schlichtes INSERT. Steht bereits eine OFFENE Einwilligung, faengt
+  // der partielle Index das mit 23505 ab — und das ist kein Fehler, sondern
+  // genau die Bedeutung, die `ignoreDuplicates` haben sollte: es ist schon
+  // eingewilligt. Der Index bleibt damit die einzige Instanz, die ueber
+  // Doppelte entscheidet; eine Vorab-Abfrage waere ein Wettlauf.
   const { data, error } = await supabase
     .from('marketing_consents')
-    .upsert(
-      {
-        organization_id: eingabe.organizationId,
-        user_id: eingabe.userId ?? null,
-        email,
-        consent_type: eingabe.consentTyp,
-        source: eingabe.quelle,
-        ip_address: eingabe.ipAdresse ?? null,
-        text_version: eingabe.textVersion ?? 'v1',
-        notiz: eingabe.notiz ?? null,
-        granted_at: new Date().toISOString(),
-        revoked_at: null,
-      },
-      { onConflict: 'organization_id,email,consent_type', ignoreDuplicates: true },
-    )
+    .insert({
+      organization_id: eingabe.organizationId,
+      user_id: eingabe.userId ?? null,
+      email,
+      consent_type: eingabe.consentTyp,
+      source: eingabe.quelle,
+      ip_address: eingabe.ipAdresse ?? null,
+      text_version: eingabe.textVersion ?? 'v1',
+      notiz: eingabe.notiz ?? null,
+      granted_at: new Date().toISOString(),
+      revoked_at: null,
+    })
     .select('id')
     .maybeSingle()
 
-  if (error) return { ok: false, grund: error.message }
-  // Kein Treffer heisst: die Einwilligung stand schon offen (ignoreDuplicates).
-  // Das ist Erfolg, kein Fehler — aber ohne neue id.
+  if (error) {
+    // 23505 = unique_violation: es steht bereits eine offene Einwilligung
+    // dieser Art fuer diese Adresse. Erfolg, nur ohne neue Kennung.
+    if ((error as { code?: string }).code === '23505') return { ok: true, id: '' }
+    return { ok: false, grund: error.message }
+  }
   return { ok: true, id: (data?.id as string) ?? '' }
 }
 

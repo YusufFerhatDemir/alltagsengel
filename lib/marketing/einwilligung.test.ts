@@ -9,6 +9,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  erteileEinwilligung,
   istPlausibleAdresse, ladeEinwilligungsLage, normalisiereAdresse, pruefeEmpfaenger,
   type EinwilligungsLage,
 } from './einwilligung'
@@ -214,4 +215,72 @@ test('ein gewöhnliches Konto bleibt versandfähig', () => {
     lage({ eingewilligt: new Set(['a@example.com']) }),
   )
   assert.equal(e.versandfaehig, true)
+})
+
+// ── erteileEinwilligung: der ON-CONFLICT-Befund (31.08.2026) ──────────────
+//
+// Der Aufruf endete zuvor IMMER mit „there is no unique or exclusion
+// constraint matching the ON CONFLICT specification": das Upsert zielte auf
+// marketing_consents_offen_je_adresse, und der Index ist PARTIELL
+// (WHERE revoked_at IS NULL). Postgres waehlt einen partiellen Index für
+// ON CONFLICT nur mit derselben WHERE-Bedingung, die PostgREST nicht
+// mitgeben kann. Folge: es liess sich überhaupt keine Einwilligung
+// eintragen — weder über das Doppel-Opt-in noch von Hand.
+//
+// Diese Tests prüfen den Ersatz: schlichtes INSERT, und 23505 gilt als
+// Erfolg (es steht bereits eine offene Einwilligung).
+
+/** Ein Doppelgänger, der protokolliert, WELCHE Operation aufgerufen wurde. */
+function fakeClient(insertAntwort: { data?: unknown; error?: unknown }) {
+  const aufrufe: string[] = []
+  const client = {
+    from() {
+      return {
+        select() { return this },
+        eq() { return this },
+        maybeSingle: async () => ({ data: null, error: null }),
+        insert() {
+          aufrufe.push('insert')
+          return {
+            select: () => ({ maybeSingle: async () => insertAntwort }),
+          }
+        },
+        upsert() {
+          aufrufe.push('upsert')
+          return { select: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }
+        },
+      }
+    },
+  }
+  return { client, aufrufe }
+}
+
+test('erteileEinwilligung nutzt INSERT, kein Upsert auf den partiellen Index', async () => {
+  const { client, aufrufe } = fakeClient({ data: { id: 'neu-1' }, error: null })
+  const e = await erteileEinwilligung(client as never, {
+    organizationId: 'org', email: 'a@example.com', consentTyp: 'newsletter',
+    quelle: 'doppel_opt_in',
+  })
+  assert.equal(e.ok, true)
+  assert.ok(aufrufe.includes('insert'), 'kein INSERT abgesetzt')
+  assert.ok(!aufrufe.includes('upsert'), 'es wird wieder geupsertet — der Index ist partiell')
+})
+
+test('eine bereits offene Einwilligung (23505) gilt als Erfolg', async () => {
+  const { client } = fakeClient({ data: null, error: { code: '23505', message: 'duplicate key' } })
+  const e = await erteileEinwilligung(client as never, {
+    organizationId: 'org', email: 'a@example.com', consentTyp: 'newsletter',
+    quelle: 'doppel_opt_in',
+  })
+  assert.equal(e.ok, true, 'ein Doppel ist kein Fehler — es ist schon eingewilligt')
+})
+
+test('ein anderer Datenbankfehler bleibt ein Fehler', async () => {
+  // Gegenprobe: ohne sie schluckte die 23505-Behandlung womöglich alles.
+  const { client } = fakeClient({ data: null, error: { code: '23502', message: 'null value' } })
+  const e = await erteileEinwilligung(client as never, {
+    organizationId: 'org', email: 'a@example.com', consentTyp: 'newsletter',
+    quelle: 'doppel_opt_in',
+  })
+  assert.equal(e.ok, false)
 })

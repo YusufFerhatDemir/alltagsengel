@@ -542,7 +542,11 @@ if (ANON) {
   let lecks = 0
   for (const t of TABELLEN) {
     const res = await fetch(`${URL_BASIS}/rest/v1/${t}?select=*&limit=1`, {
-      headers: { apikey: ANON, Authorization: `Bearer ${ANON}` },
+      // apiHeaders() statt eines rohen Bearer-Headers: die neuen
+      // Supabase-Schluessel (sb_publishable_…) sind keine JWTs, und die API
+      // antwortet darauf mit „Invalid JWT". Ein Regressionsscan haelt das
+      // im ganzen Repo fest.
+      headers: apiHeaders(ANON),
     })
     const rumpf = await res.text()
     let zeilen = 0
