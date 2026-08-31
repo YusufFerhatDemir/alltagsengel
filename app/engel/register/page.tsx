@@ -8,6 +8,7 @@ import Icon3D from '@/components/Icon3D'
 import { IconHandshake, IconMedical, IconBag, IconHome as IconHouse, IconCoffee, IconTarget, IconCheck } from '@/components/Icons'
 import { trackRegistration } from '@/lib/tracking'
 import { logger } from '@/lib/logger'
+import { klickbar } from '@/lib/a11y'
 const log = logger.child('engel:register')
 
 const serviceOptions: { icon: ReactNode; label: string }[] = [
@@ -165,9 +166,18 @@ export default function EngelRegisterPage() {
           <div className="form-card-h">Angebotene Leistungen</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {serviceOptions.map(s => (
-              <label key={s.label} className={`ereg-tag${services.includes(s.label) ? ' on' : ''}`} onClick={() => toggleService(s.label)}>
+              // Kein <label>: die Kachel gehoert zu keinem Formularfeld, sie ist
+              // selbst der Schalter. Als <label> ohne Bezug war sie weder per
+              // Tabulator erreichbar noch als an/aus vorlesbar (WCAG 2.1.1,
+              // 4.1.2). klickbar(..., 'switch') liefert Rolle, Fokus-Stop,
+              // Tastenausloesung und aria-checked in einem.
+              <span
+                key={s.label}
+                className={`ereg-tag${services.includes(s.label) ? ' on' : ''}`}
+                {...klickbar(() => toggleService(s.label), { rolle: 'switch', aktiv: services.includes(s.label) })}
+              >
                 {s.icon} {s.label}
-              </label>
+              </span>
             ))}
           </div>
         </div>
