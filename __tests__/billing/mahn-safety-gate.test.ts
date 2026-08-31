@@ -21,6 +21,7 @@ import {
   type MahnGateErgebnis,
 } from '@/lib/billing/dunning/mahn-safety-gate'
 import { DUNNING_DAYS } from '@/lib/billing/core/dunning'
+import { NICHT_MAHNFAEHIGE_STATUS } from '@/lib/billing/status-vokabular'
 import { heuteBerlin } from '@/lib/utils/timezone'
 import { erstelleFakeSupabase, hatFilter, type FakeAufruf } from '../helpers/supabase-fake'
 
@@ -207,11 +208,40 @@ describe('3. Status', () => {
   it('die Sperrliste deckt sich mit NICHT_MAHNFAEHIG im Mahnlauf', async () => {
     const quelle = await import('node:fs').then(fs =>
       fs.readFileSync('lib/billing/core/dunning.ts', 'utf-8'))
-    const block = quelle.slice(
-      quelle.indexOf('const NICHT_MAHNFAEHIG'),
-      quelle.indexOf('export interface DunningRunEscalation'))
-    for (const status of GESPERRTE_STATUS) {
-      expect(block, `${status} fehlt in NICHT_MAHNFAEHIG`).toContain(`'${status}'`)
+    // FRUEHER: der Test las den Quelltext von dunning.ts und suchte nach
+    // Zeichenketten. Das hielt zwei Listen zusammen — und uebersah die
+    // drei weiteren Stellen, die dieselbe Frage anders beantworteten
+    // (OPOS-Liste, Zahlungszuordnung, Matching). Seit dem 31.08.2026 gibt
+    // es nur noch eine Liste; geprueft wird Mengengleichheit, nicht
+    // Textvorkommen.
+    expect([...GESPERRTE_STATUS].sort()).toEqual([...NICHT_MAHNFAEHIGE_STATUS].sort())
+    expect(quelle, 'dunning.ts fuehrt wieder eine eigene Liste')
+      .toContain('NICHT_MAHNFAEHIGE_STATUS')
+  })
+
+  // ── BEFUND 31.08.2026 ────────────────────────────────────────────────
+  //
+  // `invoices_status_check` laesst live ZWEI Vokabulare zu: ein deutsches
+  // und ein aelteres englisches. Der Bestand nutzt beide — die drei
+  // Rechnungen in der Produktionsdatenbank stehen auf `sent`, `disputed`
+  // und `paid`. Die Sperrliste kannte nur das deutsche, Pruefpunkt 3
+  // meldete deshalb woertlich „Status ,paid' ist mahnfaehig".
+  //
+  // Aufgefallen war es nicht, weil andere Punkte einsprangen. Offen blieb
+  // der Fall daneben: eine Rechnung auf `draft` mit offenem Betrag und
+  // ueberschrittener Faelligkeit haette alle zehn Punkte passiert.
+  it('kennt beide Vokabulare der Spalte invoices.status', () => {
+    for (const status of ['draft', 'paid', 'cancelled', 'rejected', 'disputed']) {
+      expect(GESPERRTE_STATUS.has(status), `${status} fehlt — ein Entwurf waere mahnbar`).toBe(true)
+    }
+  })
+
+  it('haelt die mahnfaehigen Status frei — eine Sperre, die alles sperrt, ist keine', () => {
+    // `sent`/`uebermittelt` ist der Normalfall einer offenen Forderung,
+    // `partial`/`teilweise_bezahlt` ebenso: der Rest steht offen und
+    // gehoert gemahnt.
+    for (const status of ['sent', 'uebermittelt', 'partial', 'teilweise_bezahlt', 'freigegeben']) {
+      expect(GESPERRTE_STATUS.has(status), `${status} duerfte nicht gesperrt sein`).toBe(false)
     }
   })
 })

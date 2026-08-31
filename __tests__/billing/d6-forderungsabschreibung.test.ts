@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { RECHNUNG_ERLEDIGT } from '@/lib/billing/status-vokabular'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
@@ -73,9 +74,29 @@ describe('D6: Status-Machine — abgeschrieben', () => {
 describe('D6: OPOS-Ausschluss', () => {
   const oposSrc = read('lib/billing/opos/opos-manager.ts')
 
+  // Der Test las frueher den Quelltext nach der Zeichenkette
+  // `"abgeschrieben"` ab. Seit dem 31.08.2026 steht die Liste in
+  // lib/billing/status-vokabular.ts (eine Quelle statt fuenf halber), und
+  // die Zeichenkette stand nicht mehr in dieser Datei — obwohl die Regel
+  // unveraendert galt. Geprueft wird deshalb die LISTE, und getrennt
+  // davon, dass die Abfrage sie auch benutzt.
   it('schließt abgeschriebene Rechnungen aus OPOS aus', () => {
-    expect(oposSrc).toContain('"abgeschrieben"')
-    expect(oposSrc).toContain('.not(\'status\', \'in\'')
+    expect(RECHNUNG_ERLEDIGT).toContain('abgeschrieben')
+    expect(oposSrc).toContain('.not(\'status\', \'in\', alsPostgrestListe(RECHNUNG_ERLEDIGT))')
+  })
+
+  it('kennt auch das englische Vokabular derselben Spalte', () => {
+    // `invoices_status_check` laesst beide zu; eine stornierte Rechnung
+    // als `cancelled` behielt ihren Betrag und stand weiter in den
+    // offenen Posten.
+    expect(RECHNUNG_ERLEDIGT).toContain('cancelled')
+    expect(RECHNUNG_ERLEDIGT).toContain('paid')
+  })
+
+  it('laesst offene Forderungen in der Liste — eine Sperre, die alles sperrt, ist keine', () => {
+    for (const status of ['sent', 'uebermittelt', 'partial', 'teilweise_bezahlt']) {
+      expect(RECHNUNG_ERLEDIGT).not.toContain(status)
+    }
   })
 })
 

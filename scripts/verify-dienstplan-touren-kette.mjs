@@ -48,7 +48,7 @@ for (const datei of ['.env.local', '.env']) {
 }
 
 import { createClient } from '@supabase/supabase-js'
-import { envWert, secretKey } from './lib/supabase-keys.mjs'
+import { apiHeaders, envWert, secretKey } from './lib/supabase-keys.mjs'
 import { createSchicht, createEintrag, listEintraege } from '../lib/personal/dienstplan.ts'
 import {
   pruefeCaregiverVerfuegbarkeit, findeVertretungsKandidaten, abwesenheitBlockiert,
@@ -84,7 +84,9 @@ const fehlertext = err => (err instanceof Error ? err.message : String(err))
 async function orakel(sql) {
   const res = await fetch(`${URL_BASIS}/rest/v1/rpc/_run_sql`, {
     method: 'POST',
-    headers: { apikey: SERVICE, Authorization: `Bearer ${SERVICE}`, 'Content-Type': 'application/json' },
+    // apiHeaders und nicht von Hand: die neuen publishable/secret-Schluessel
+    // sind keine JWTs und werden als `Bearer` mit „Invalid JWT" abgewiesen.
+    headers: apiHeaders(SERVICE, { 'Content-Type': 'application/json' }),
     body: JSON.stringify({ p: sql }),
   })
   const text = await res.text()

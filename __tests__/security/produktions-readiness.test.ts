@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { RECHNUNG_ERLEDIGT } from '@/lib/billing/status-vokabular'
 import { safeErrorResponse, safeDbError } from '@/lib/utils/api-error'
 import * as fs from 'fs'
 import * as path from 'path'
@@ -68,14 +69,24 @@ describe('Produktions-Readiness: Multi-Tenancy Org-Fence', () => {
 })
 
 describe('Produktions-Readiness: OPOS-Filter', () => {
+  // Der Test suchte frueher die vier Werte als Zeichenketten im Quelltext
+  // des OPOS-Managers. Seit dem 31.08.2026 stehen sie in der gemeinsamen
+  // Liste lib/billing/status-vokabular.ts — eine Quelle statt fuenf
+  // halber. Der Quelltext-Griff schlug fehl, obwohl die Regel unveraendert
+  // galt; geprueft wird jetzt die Liste und ihre Verwendung.
   it('OPOS schließt bezahlt auf DB-Ebene aus', () => {
     const src = fs.readFileSync(
       path.join(process.cwd(), 'lib/billing/opos/opos-manager.ts'), 'utf-8'
     )
-    expect(src).toContain('"bezahlt"')
-    expect(src).toContain('"storniert"')
-    expect(src).toContain('"akzeptiert"')
-    expect(src).toContain('"abgeschrieben"')
+    for (const status of ['bezahlt', 'storniert', 'akzeptiert', 'abgeschrieben']) {
+      expect(RECHNUNG_ERLEDIGT).toContain(status)
+    }
+    // Beide Vokabulare derselben Spalte — eine stornierte Rechnung als
+    // `cancelled` behaelt ihren Betrag und stand sonst weiter in der Liste.
+    for (const status of ['paid', 'cancelled']) {
+      expect(RECHNUNG_ERLEDIGT).toContain(status)
+    }
+    expect(src).toContain('alsPostgrestListe(RECHNUNG_ERLEDIGT)')
   })
 })
 

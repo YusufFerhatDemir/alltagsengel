@@ -36,6 +36,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { NICHT_MAHNFAEHIGE_STATUS } from '../status-vokabular'
 import { euroZuCent, centZuEuro } from '@/lib/geld'
 import { heuteBerlin } from '@/lib/utils/timezone'
 import { MAHNBREMSE_STATUS } from '@/lib/billing/core/differenzen'
@@ -109,15 +110,38 @@ const KATALOG: { nummer: number; sperre: MahnSperre; titel: string }[] = [
 /**
  * Status, in denen NICHT gemahnt werden darf.
  *
- * Deckungsgleich mit NICHT_MAHNFAEHIG in lib/billing/core/dunning.ts —
- * bewusst hier gespiegelt und per Test gegen die Quelle geprüft, damit die
- * beiden Listen nicht auseinanderlaufen.
+ * Seit dem 31.08.2026 KEINE eigene Liste mehr, sondern die gemeinsame aus
+ * lib/billing/status-vokabular.ts. Vorher stand dieselbe Aufzaehlung hier
+ * und in lib/billing/core/dunning.ts, gehalten von einem Test, der den
+ * Quelltext der anderen Datei durchsuchte — das hielt die beiden
+ * zusammen, aber nicht mit den drei weiteren Stellen, die dieselbe Frage
+ * anders beantworteten.
+ *
+ * ── BEFUND 31.08.2026: DIE LISTE WAR HALB ─────────────────────────────
+ *
+ * `invoices_status_check` laesst live ZWEI Vokabulare zu — ein deutsches
+ * (entwurf, geprueft, freigegeben, uebermittelt, quittiert, bezahlt,
+ * storniert, strittig, …) und ein aelteres englisches (draft, sent, paid,
+ * partial, rejected, disputed). Beide kommen im Bestand vor: die drei
+ * Rechnungen in der Produktionsdatenbank stehen auf `sent`, `disputed`
+ * und `paid`.
+ *
+ * Diese Liste kannte nur die deutsche Haelfte. Pruefpunkt 3 meldete
+ * deshalb woertlich „Status ‚paid' ist mahnfaehig" und „Status
+ * ‚disputed' ist mahnfaehig" — der Punkt hat live NIE etwas gesperrt.
+ *
+ * Aufgefallen ist es nicht, weil andere Punkte einsprangen: die bezahlte
+ * Rechnung fiel ueber Punkt 4 (nichts offen), die bestrittene ueber
+ * Punkt 7 (Beanstandung erfasst). Der gefaehrliche Fall lag daneben und
+ * war offen: eine Rechnung auf `draft` oder `rejected` mit offenem Betrag
+ * und ueberschrittener Faelligkeit haette alle zehn Punkte passiert. Ein
+ * ENTWURF waere gemahnt worden.
+ *
+ * Deshalb stehen jetzt beide Vokabulare hier. `partial` /
+ * `teilweise_bezahlt` fehlen mit Absicht: eine Teilzahlung ist mahnfaehig,
+ * der Rest steht ja offen.
  */
-export const GESPERRTE_STATUS: ReadonlySet<string> = new Set([
-  'entwurf', 'geprueft', 'korrektur_erforderlich',
-  'storniert', 'bezahlt', 'akzeptiert', 'abgeschrieben',
-  'strittig', 'abgelehnt',
-])
+export const GESPERRTE_STATUS: ReadonlySet<string> = new Set(NICHT_MAHNFAEHIGE_STATUS)
 
 /** Warteschlangen-Status, die einen weiteren Versand derselben Stufe verbieten. */
 const QUEUE_OFFEN: ReadonlySet<string> = new Set(['wartend', 'fehlgeschlagen'])

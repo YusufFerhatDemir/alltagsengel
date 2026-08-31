@@ -7,6 +7,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { RECHNUNG_ERLEDIGT, alsPostgrestListe } from '../status-vokabular';
 import { heuteBerlin } from '@/lib/utils/timezone';
 import { euroZuCent } from '@/lib/geld'
 
@@ -102,7 +103,12 @@ export async function getOposListe(
     .select('id, invoice_number, invoice_number_formatted, total_amount, paid_amount, status, dunning_level, created_at, due_date, client_id, client:clients(first_name, last_name)')
     .eq('organization_id', organizationId)
     .is('deleted_at', null)
-    .not('status', 'in', '("storniert","akzeptiert","abgeschrieben","bezahlt")');
+    // Die Liste steht in lib/billing/status-vokabular.ts, weil `invoices.status`
+    // live ZWEI Vokabulare fuehrt und vier Stellen je eine eigene, halbe
+    // Liste hatten. Eine stornierte Rechnung im englischen Wortlaut
+    // (`cancelled`) behaelt ihren Betrag und stand deshalb weiter in den
+    // offenen Posten — die ausgewiesene Forderung war zu hoch.
+    .not('status', 'in', alsPostgrestListe(RECHNUNG_ERLEDIGT));
 
   if (filter.clientId) {
     query = query.eq('client_id', filter.clientId);
