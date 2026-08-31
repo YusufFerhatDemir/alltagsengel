@@ -79,8 +79,28 @@ const HOECHSTENS = grenzeArg !== -1 ? Number(process.argv[grenzeArg + 1]) : null
 const FELD = '<<|>>'
 const SATZ = '<<||>>'
 
+/**
+ * Zugangsdaten: erst die Prozessumgebung, dann `.env.local`.
+ *
+ * Die Reihenfolge ist wichtig geworden, seit dieser Lint in der CI laeuft
+ * (31.08.2026). Dort gibt es KEINE `.env.local` — die alte Fassung las die
+ * Datei unbedingt und waere mit ENOENT abgestuerzt, also mit einem roten
+ * Lauf, der nichts ueber RLS aussagt.
+ *
+ * Fehlt die Datei, ist das deshalb kein Fehler, sondern der Normalfall auf
+ * einem Bauknecht. Fehlen dagegen BEIDE Quellen, sagt main() das laut und
+ * endet — es tut NICHT so, als haette es geprueft.
+ */
 function envWert(name: string): string | undefined {
-  const zeilen = readFileSync(join(WURZEL, '.env.local'), 'utf8').split('\n')
+  const ausProzess = process.env[name]
+  if (ausProzess && ausProzess.trim()) return ausProzess.trim()
+
+  let zeilen: string[]
+  try {
+    zeilen = readFileSync(join(WURZEL, '.env.local'), 'utf8').split('\n')
+  } catch {
+    return undefined
+  }
   for (const z of zeilen) {
     const i = z.indexOf('=')
     if (i > 0 && z.slice(0, i).trim() === name) return z.slice(i + 1).trim()
@@ -94,8 +114,15 @@ function envWert(name: string): string | undefined {
  */
 async function orakel(sql: string): Promise<string> {
   const basis = envWert('NEXT_PUBLIC_SUPABASE_URL')
-  const key = envWert('SUPABASE_SERVICE_ROLE_KEY')
-  if (!basis || !key) throw new Error('NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY fehlen in .env.local')
+  // Beide Schreibweisen: die CI reicht SUPABASE_SECRET_KEY durch und setzt
+  // SUPABASE_SERVICE_ROLE_KEY bewusst leer (siehe ci.yml).
+  const key = envWert('SUPABASE_SERVICE_ROLE_KEY') ?? envWert('SUPABASE_SECRET_KEY')
+  if (!basis || !key) {
+    throw new Error(
+      'NEXT_PUBLIC_SUPABASE_URL und SUPABASE_SERVICE_ROLE_KEY/SUPABASE_SECRET_KEY fehlen '
+      + '— weder in der Prozessumgebung noch in .env.local.',
+    )
+  }
 
   const res = await fetch(`${basis}/rest/v1/rpc/_run_sql`, {
     method: 'POST',
@@ -176,6 +203,19 @@ function seitenMitDirektzugriff(): Map<string, string[]> {
 }
 
 async function main() {
+  // Ohne Zugang wird NICHT geprueft — und das muss dranstehen. Ein Lauf,
+  // der mangels Schluessel 0 Befunde meldet, saehe aus wie ein sauberes
+  // Ergebnis (Befund „CRON_SECRET: gruener Lauf kein Beweis").
+  const basis = envWert('NEXT_PUBLIC_SUPABASE_URL')
+  const key = envWert('SUPABASE_SERVICE_ROLE_KEY') ?? envWert('SUPABASE_SECRET_KEY')
+  if (!basis || !key) {
+    console.log('── RLS-Sichtbarkeit ────────────────────────────────────────')
+    console.log('⏭  UEBERSPRUNGEN: NEXT_PUBLIC_SUPABASE_URL und/oder')
+    console.log('   SUPABASE_SERVICE_ROLE_KEY / SUPABASE_SECRET_KEY fehlen.')
+    console.log('   Es wurde NICHTS geprueft — dieser Lauf ist kein Nachweis.')
+    process.exit(0)
+  }
+
   const seiten = seitenMitDirektzugriff()
   const tabellen = [...new Set([...seiten.values()].flat())]
 
@@ -206,17 +246,53 @@ async function main() {
     process.exit(0)
   }
 
-  console.log(`❌ ${befunde.length} Seite/Rolle-Paare sehen unter RLS NICHTS:`)
+  // Getrennt ausgeben. Eine fehlende Policy ist ein Fehler; ein fehlendes
+  // Recht ist meistens eine Entscheidung. In einer gemeinsamen Liste geht
+  // das eine im anderen unter.
+  const luecken = befunde
+    .map(b => ({ ...b, einzeln: b.einzeln.filter(e => e.grund === 'policy_fehlt') }))
+    .filter(b => b.einzeln.length > 0)
+  const gewollt = befunde
+    .map(b => ({ ...b, einzeln: b.einzeln.filter(e => e.grund === 'recht_fehlt') }))
+    .filter(b => b.einzeln.length > 0)
+
+  console.log(`❌ ${befunde.length} Seite/Rolle-Paare sehen unter RLS NICHTS.`)
   console.log()
-  for (const b of befunde) {
-    console.log(`   ${b.seite}  ·  Rolle "${b.rolle}"`)
-    console.log(`      blind auf: ${b.tabellen.join(', ')}`)
+
+  if (luecken.length > 0) {
+    console.log(`── A) ${luecken.length} × POLICY FEHLT — echte Luecke ────────────────────`)
+    console.log('   Die Tabelle traegt keine Policy, die eine Berechtigung auswertet.')
+    console.log('   Wer sie lesen darf, ist damit nirgends entschieden.')
+    console.log()
+    for (const b of luecken) {
+      console.log(`   ${b.seite}  ·  Rolle "${b.rolle}"`)
+      console.log(`      ${b.einzeln.map(e => e.tabelle).join(', ')}`)
+    }
+    console.log()
+    console.log("   Abhilfe: rk_<tabelle>_lesen mit  darf('bereich.lesen')")
+    console.log('            AND organization_id = current_org_id()')
+    console.log()
   }
-  console.log()
-  console.log('   Bedeutung: die Seite ist für diese Rolle freigegeben, liefert ihr aber eine')
-  console.log('   LEERE Ansicht statt einer Fehlermeldung. Zwei Wege heraus — die Seite über')
-  console.log('   eine API-Route lesen lassen (Dienstschlüssel hinter einem Guard), oder der')
-  console.log("   Tabelle eine rk_-Policy mit darf('…') geben.")
+
+  if (gewollt.length > 0) {
+    console.log(`── B) ${gewollt.length} × RECHT FEHLT — Entscheidung aus ROLLEN_MATRIX ────`)
+    console.log('   Die Tabelle traegt sehr wohl Policies; diese Rolle hat das verlangte')
+    console.log('   Recht nur nicht. Meistens ist das gewollt (die Buchhaltung sieht')
+    console.log('   bewusst keine Personalakten). Der Fehler liegt dann NICHT bei der')
+    console.log('   Policy, sondern daran, dass die Seite dieser Rolle angeboten wird')
+    console.log('   und leer bleibt, statt zu sagen, dass sie nichts sehen darf.')
+    console.log()
+    for (const b of gewollt) {
+      console.log(`   ${b.seite}  ·  Rolle "${b.rolle}"`)
+      for (const e of b.einzeln) {
+        console.log(`      ${e.tabelle}  —  verlangt: ${e.verlangteRechte.join(' oder ')}`)
+      }
+    }
+    console.log()
+    console.log('   Abhilfe: entweder das Recht in ROLLEN_MATRIX ergaenzen (bewusste')
+    console.log('            Entscheidung), oder die Seite fuer diese Rolle sperren bzw.')
+    console.log('            einen Hinweis statt einer leeren Tabelle zeigen.')
+  }
 
   if (HOECHSTENS !== null && Number.isFinite(HOECHSTENS)) {
     if (befunde.length > HOECHSTENS) {

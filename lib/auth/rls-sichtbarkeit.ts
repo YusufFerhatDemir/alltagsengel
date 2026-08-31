@@ -103,11 +103,56 @@ export function rollenDerSeite(route: string): Rolle[] {
   )
 }
 
+/**
+ * WARUM eine Rolle auf eine Tabelle blind ist. Die Unterscheidung ist der
+ * Unterschied zwischen einem Fehler und einer Absicht:
+ *
+ *   'policy_fehlt'   Die Tabelle traegt ueberhaupt keine Policy, die eine
+ *                    Berechtigung auswertet (kein `darf('…')`). Wer sie
+ *                    lesen darf, ist damit nirgends entschieden — das ist
+ *                    eine LUECKE. Abhilfe: rk_<tabelle>_lesen nach dem
+ *                    Muster `darf('bereich.lesen') AND organization_id =
+ *                    current_org_id()`.
+ *
+ *   'recht_fehlt'    Die Tabelle traegt sehr wohl `darf('…')`-Policies —
+ *                    diese Rolle hat das verlangte Recht nur nicht. Das
+ *                    ist eine ENTSCHEIDUNG aus ROLLEN_MATRIX und meistens
+ *                    eine gewollte (die Buchhaltung sieht bewusst keine
+ *                    Personalakten). Der Fehler liegt dann nicht bei der
+ *                    Policy, sondern daran, dass die SEITE dieser Rolle
+ *                    ueberhaupt angeboten wird und leer bleibt, statt zu
+ *                    sagen, dass sie nichts sehen darf.
+ *
+ * Ohne diese Trennung sieht beides gleich aus, und eine Liste, in der
+ * echte Luecken zwischen gewollten Verweigerungen stehen, wird als Ganzes
+ * ignoriert.
+ */
+export type BlindGrund = 'policy_fehlt' | 'recht_fehlt'
+
+export interface BlindeTabelle {
+  tabelle: string
+  grund: BlindGrund
+  /** Bei 'recht_fehlt': die Rechte, die die Policies dieser Tabelle verlangen. */
+  verlangteRechte: string[]
+}
+
 export interface Befund {
   seite: string
   rolle: Rolle
   /** Tabellen, auf die diese Rolle auf dieser Seite blind ist. */
   tabellen: string[]
+  /** Dieselben Tabellen, aber mit Begruendung. */
+  einzeln: BlindeTabelle[]
+}
+
+/** Welche Rechte verlangen die Policies dieser Tabelle? */
+export function rechteDerTabelle(policies: Policy[], tabelle: string): string[] {
+  const rechte = new Set<string>()
+  for (const p of policies) {
+    if (p.tabelle !== tabelle) continue
+    for (const treffer of p.qual.matchAll(/darf\('([^']+)'/g)) rechte.add(treffer[1])
+  }
+  return [...rechte].sort()
 }
 
 export interface Auswertung {
@@ -134,17 +179,30 @@ export function werteAus(seiten: Map<string, string[]>, policies: Policy[]): Aus
   for (const [seite, tabellen] of seiten) {
     for (const rolle of rollenDerSeite(seite)) {
       if (IS_ADMIN_ROLLEN.includes(rolle)) continue
-      const blind = tabellen.filter(t => {
+      const einzeln: BlindeTabelle[] = []
+      for (const t of tabellen) {
         if (!policies.some(p => p.tabelle === t)) {
           // Ohne jede Policy ist die Aussage eine andere: dann sieht auch
           // die Administration nichts, und die Ursache liegt woanders.
           ohnePolicy.add(`${seite} → ${t}`)
-          return false
+          continue
         }
         if (!proTabelle.has(t)) proTabelle.set(t, rollenDerTabelle(policies, t))
-        return !proTabelle.get(t)!.has(rolle)
-      })
-      if (blind.length > 0) befunde.push({ seite, rolle, tabellen: blind })
+        if (proTabelle.get(t)!.has(rolle)) continue
+
+        const verlangteRechte = rechteDerTabelle(policies, t)
+        einzeln.push({
+          tabelle: t,
+          // Verlangt die Tabelle ueberhaupt ein Recht? Wenn ja, ist das
+          // Fehlen dieses Rechts bei der Rolle eine Entscheidung aus
+          // ROLLEN_MATRIX und keine fehlende Policy.
+          grund: verlangteRechte.length > 0 ? 'recht_fehlt' : 'policy_fehlt',
+          verlangteRechte,
+        })
+      }
+      if (einzeln.length > 0) {
+        befunde.push({ seite, rolle, tabellen: einzeln.map(e => e.tabelle), einzeln })
+      }
     }
   }
 
