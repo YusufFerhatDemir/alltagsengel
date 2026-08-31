@@ -190,6 +190,38 @@ export async function organisationFuerKonto(
       .maybeSingle()
     if (klient?.organization_id) return klient.organization_id as string
 
+    // VIERTE QUELLE — die Ueberwachungsliste.
+    //
+    // BEFUND 31.08.2026, live gemessen: ein Konto mit der Rolle `engel`
+    // steht in KEINER der drei Tabellen oben. Engel liegen in `angels`,
+    // und die Tabelle hat weder user_id noch organization_id. Fuer die
+    // groesste Nutzergruppe des Systems lieferte diese Funktion damit
+    // immer null — und das ist nicht folgenlos:
+    // meldeSicherheitsereignis() haengt den Zustellkontext NUR an, wenn
+    // eine Organisation feststeht. Ohne sie ging jede Sicherheitsmeldung
+    // als Einmalversuch raus: keine Zeile in notification_delivery_log,
+    // keine Provider-Nachrichten-ID im eigenen Bestand, keine
+    // Wiederholung. Ein Fehlschlag waere endgueltig und unsichtbar
+    // gewesen. Gemessen an der Testmeldung 8dfd95d7: die Mail kam an —
+    // aber belegen liess sich das nur bei Resend selbst, nirgends hier.
+    //
+    // WARUM DAS KEINE STILLE ZUORDNUNG IST
+    // Der Kopf dieser Funktion sagt „fail-closed: keine stille Zuordnung
+    // zur Stamm-Organisation" — und dabei bleibt es. Ein Eintrag in
+    // security_watchlist ist keine Vermutung, sondern eine ausdrueckliche
+    // Festlegung eines Menschen: dieses Konto gehoert zu diesem
+    // Mandanten und wird dort ueberwacht. Sie wird nur gelesen, wenn sie
+    // AKTIV ist; eine abgeschaltete Ueberwachung entscheidet nichts.
+    const { data: ueberwachung } = await admin
+      .from('security_watchlist')
+      .select('organization_id')
+      .eq('user_id', userId)
+      .eq('aktiv', true)
+      .not('organization_id', 'is', null)
+      .limit(1)
+      .maybeSingle()
+    if (ueberwachung?.organization_id) return ueberwachung.organization_id as string
+
     return null
   } catch {
     return null

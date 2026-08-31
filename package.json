@@ -77,7 +77,8 @@
     "verify:rls-lesepolicies": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/verify-rls-lesepolicies.mjs",
     "aufbewahrung:bericht": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/aufbewahrung-trockenlauf-bericht.mjs",
     "verify:rls-matrix": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/verify-rls-matrix-vollstaendig.mjs",
-    "gen:migrationen-checkliste": "node scripts/gen-migrationen-checkliste.mjs"
+    "gen:migrationen-checkliste": "node scripts/gen-migrationen-checkliste.mjs",
+    "security:testalarm": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/security-testalarm.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",
