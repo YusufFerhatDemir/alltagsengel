@@ -21,6 +21,15 @@
  *  2. `updateKontaktperson` baute den Patch aus bekannten Feldern und
  *     schrieb ihn auch dann, wenn kein einziges dabei war — leeres
  *     UPDATE, Erfolgsantwort, Protokolleintrag „bearbeitet" über nichts.
+ *
+ * NACHTRAG (01.09.2026): `POST` fragt seit dem Security-Review (29f7b07)
+ * über `clientGehoertZuOrg`, ob die `clientId` aus dem Rumpf überhaupt zum
+ * Mandanten des Aufrufers gehört — geschrieben wird mit dem
+ * Dienstschlüssel, RLS greift dort nicht. Der Doppelgänger beantwortete
+ * `clients` nicht und lieferte damit „Klient unbekannt": die beiden
+ * Anlege-Tests liefen ab da gegen 404. Der Fake kennt den Klienten jetzt,
+ * und der Zaun selbst ist mit eigenen Fällen belegt — sonst wäre der
+ * grüne Lauf wieder nur die Abwesenheit der Frage.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { erstelleFakeSupabase, hatFilter, hatOrgFence, type FakeSupabase } from '../helpers/supabase-fake'
@@ -33,6 +42,8 @@ let fake: FakeSupabase
 let darfSchreiben = true
 /** Was das UPDATE zurückgibt — null heißt „keine Zeile getroffen". */
 let getroffen: Record<string, unknown> | null
+/** Was `clients` auf die Mandantenfrage zurückgibt — null heißt „fremd oder unbekannt". */
+let klientImMandanten: Record<string, unknown> | null
 
 vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: vi.fn(() => fake.client),
@@ -62,8 +73,10 @@ const schreibvorgang = () => fake.auf('akten_kontaktpersonen').find(a => a.opera
 beforeEach(() => {
   darfSchreiben = true
   getroffen = { id: KP, organization_id: ORG, vorname: 'Anna', nachname: 'Muster' }
+  klientImMandanten = { id: CLIENT }
   fake = erstelleFakeSupabase((a) => {
     if (a.tabelle === 'akten_kontaktpersonen') return { data: getroffen }
+    if (a.tabelle === 'clients') return { data: klientImMandanten }
     return { data: null, error: null }
   })
 })
@@ -91,6 +104,34 @@ describe('Anlegen', () => {
     ) as never)
     const nutzlast = fake.ersterAuf('akten_kontaktpersonen', 'insert')?.payload as Record<string, unknown>
     expect(nutzlast.organization_id).toBe(ORG)
+  })
+
+  it('prüft die clientId aus dem Rumpf gegen den Mandanten — mit Fence, nicht nur auf Existenz', async () => {
+    await POST(anfrage(
+      { clientId: CLIENT, rolle: 'betreuer', vorname: 'A', nachname: 'B' }, 'POST', '',
+    ) as never)
+    const zaun = fake.ersterAuf('clients', 'select')
+    expect(zaun).toBeDefined()
+    expect(hatFilter(zaun, 'eq', 'id', CLIENT)).toBe(true)
+    expect(hatOrgFence(zaun, ORG)).toBe(true)
+  })
+
+  it('weist einen fremden Klienten mit 404 ab und legt nichts an', async () => {
+    klientImMandanten = null
+    const res = await POST(anfrage(
+      { clientId: CLIENT, rolle: 'betreuer', vorname: 'A', nachname: 'B' }, 'POST', '',
+    ) as never)
+    expect(res.status).toBe(404)
+    expect(fake.ersterAuf('akten_kontaktpersonen', 'insert')).toBeUndefined()
+  })
+
+  it('fragt den Zaun vor dem Schreiben, nicht danach', async () => {
+    await POST(anfrage(
+      { clientId: CLIENT, rolle: 'betreuer', vorname: 'A', nachname: 'B' }, 'POST', '',
+    ) as never)
+    const zaun = fake.ersterAuf('clients', 'select')!
+    const schreiben = fake.ersterAuf('akten_kontaktpersonen', 'insert')!
+    expect(zaun.gesamtNr).toBeLessThan(schreiben.gesamtNr)
   })
 })
 
