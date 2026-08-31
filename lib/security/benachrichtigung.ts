@@ -50,6 +50,10 @@ import {
   regelFuer, ueberwachungspflichtig,
   BEZEICHNUNG_SCHWEREGRAD, type Schweregrad,
 } from './ereignisse'
+import {
+  provenienzAus, betreffZusatz, istEchteNutzeraktivitaet,
+  BEZEICHNUNG_PROVENIENZ,
+} from './herkunft'
 import { ueberwachungFuer, type WatchlistEintrag } from './watchlist'
 
 const log = logger.child('security-meldung')
@@ -304,11 +308,31 @@ export function baueMeldung(
   const funktion = funktionAus(k)
   const { vorher, nachher } = wertPaar(k)
 
+  // ── Herkunft ────────────────────────────────────────────────────
+  // Sie steht im BETREFF, nicht nur im Text. Am 31.08.2026 stand der
+  // Testcharakter eines Ereignisses ausschliesslich im Fliesstext eines
+  // Metadatenfeldes — die Mail hiess „Sicherheitshinweis:
+  // Sicherheitskritische Aktion", und daraus wurde geschlossen, das
+  // Konto sei angemeldet gewesen. Es gab an dem Tag keine Anmeldung.
+  // Wer im Postfach nur die Betreffzeile sieht, muss das erkennen.
+  //
+  // Eine Bestandszeile ohne Provenienz ergibt null und damit
+  // „[HERKUNFT UNBELEGT]" — fail-closed. Nicht belegt ist nicht echt.
+  const provenienz = provenienzAus(k.metadata ?? null)
+  const echt = istEchteNutzeraktivitaet(provenienz)
+
   const betreff = `Sicherheitshinweis: ${regel.bezeichnung}`
     + (k.benutzerName ? ` — ${k.benutzerName}` : '')
     + (ergebnis === 'FAILED' ? ' (FEHLGESCHLAGEN)' : '')
+    + betreffZusatz(provenienz)
+
+  const herkunftText = provenienz
+    ? `${provenienz} — ${BEZEICHNUNG_PROVENIENZ[provenienz]}`
+    : 'UNBELEGT — diese Zeile stammt aus der Zeit vor der Herkunftskennzeichnung '
+      + '(vor dem 31.08.2026). Sie gilt deshalb NICHT als belegte Nutzeraktivität.'
 
   const zeilen = [
+    zeile('Herkunft', herkunftText),
     zeile('Benutzername', k.benutzerName),
     zeile('Benutzerkonto', k.userEmail),
     zeile('Benutzer-ID', k.userId),
@@ -334,6 +358,19 @@ export function baueMeldung(
     zeile('Organisation', organisationsName ?? k.organizationId),
     zeile('Sitzungsbezug', k.sessionReference),
     zeile('Audit-Event-ID', k.ereignisId),
+    '<tr><td colspan="2" style="padding:8px 0 2px;border-top:1px solid #eee"></td></tr>',
+    // ── Zustellung dieser Nachricht ────────────────────────────────
+    // Die Provider-Nachrichten-ID DIESER Mail kann nicht in ihr stehen:
+    // sie entsteht erst bei der Uebergabe an den Provider, also
+    // nachdem der Inhalt feststeht. Was hier steht, ist der
+    // Nachschlageschluessel — mit ihm sind Provider-ID und
+    // Zustellstatus in der Sicherheitsansicht auffindbar. Alles andere
+    // waere eine Angabe, die zum Zeitpunkt des Schreibens noch gar
+    // nicht existiert.
+    zeile('Zustellbezug', k.ereignisId),
+    zeile('Provider-ID und Zustellstatus',
+      'im Verwaltungsbereich unter Sicherheit → Sicherheitsspur, '
+      + 'Spalte „Alarm & Zustellung" zu diesem Ereignis'),
   ].filter(Boolean).join('')
 
   const html = `<!DOCTYPE html><html lang="de"><body style="margin:0;padding:24px;background:#f5f5f5;font-family:-apple-system,Segoe UI,Roboto,sans-serif">
@@ -343,9 +380,15 @@ export function baueMeldung(
     </div>
     <div style="padding:20px">
       <p style="margin:0 0 16px;font-size:14px;color:#333;line-height:1.5">
-        an einem überwachten Alltagsengel-Konto wurde ein sicherheitsrelevantes
-        Ereignis aufgezeichnet. War das nicht erwartbar, sperren Sie das Konto
-        und setzen Sie das Passwort zurück.
+        ${echt
+          ? 'an einem überwachten Alltagsengel-Konto wurde ein sicherheitsrelevantes '
+            + 'Ereignis aufgezeichnet. War das nicht erwartbar, sperren Sie das Konto '
+            + 'und setzen Sie das Passwort zurück.'
+          : '<b>Dies belegt KEINE Aktivität des Kontoinhabers.</b> Die Zeile ist '
+            + 'nachgestellt oder maschinell erzeugt — siehe Herkunft in der ersten '
+            + 'Tabellenzeile. Es hat weder eine Anmeldung noch ein Vorfall '
+            + 'stattgefunden. Diese Nachricht belegt allein, dass die Meldekette '
+            + 'funktioniert.'}
       </p>
       <table style="width:100%;border-collapse:collapse">${zeilen}</table>
       <p style="margin:16px 0 0;font-size:12px;color:#888;line-height:1.5">
@@ -364,10 +407,17 @@ export function baueMeldung(
   const zeileT = (b: string, w: string | null | undefined) =>
     (w ? `${(b + ':').padEnd(22)}${w}\n` : '')
   const text =
-    `Sicherheitshinweis: ${regel.bezeichnung} (${BEZEICHNUNG_SCHWEREGRAD[k.severity]}, ${ergebnis})\n\n`
-    + 'an einem überwachten Alltagsengel-Konto wurde ein sicherheitsrelevantes\n'
-    + 'Ereignis aufgezeichnet. War das nicht erwartbar, sperren Sie das Konto\n'
-    + 'und setzen Sie das Passwort zurück.\n\n'
+    `Sicherheitshinweis: ${regel.bezeichnung} (${BEZEICHNUNG_SCHWEREGRAD[k.severity]}, ${ergebnis})`
+    + `${betreffZusatz(provenienz)}\n\n`
+    + (echt
+      ? 'an einem überwachten Alltagsengel-Konto wurde ein sicherheitsrelevantes\n'
+        + 'Ereignis aufgezeichnet. War das nicht erwartbar, sperren Sie das Konto\n'
+        + 'und setzen Sie das Passwort zurück.\n\n'
+      : 'DIES BELEGT KEINE AKTIVITÄT DES KONTOINHABERS. Die Zeile ist nachgestellt\n'
+        + 'oder maschinell erzeugt (siehe Herkunft). Es hat weder eine Anmeldung noch\n'
+        + 'ein Vorfall stattgefunden. Die Nachricht belegt allein, dass die Meldekette\n'
+        + 'funktioniert.\n\n')
+    + zeileT('Herkunft', herkunftText)
     + zeileT('Benutzername', k.benutzerName ?? null)
     + zeileT('Benutzerkonto', k.userEmail)
     + zeileT('Benutzer-ID', k.userId)
@@ -389,6 +439,9 @@ export function baueMeldung(
     + zeileT('Organisation', organisationsName ?? k.organizationId)
     + zeileT('Sitzungsbezug', k.sessionReference ?? null)
     + zeileT('Audit-Event-ID', k.ereignisId)
+    + zeileT('Zustellbezug', k.ereignisId)
+    + 'Provider-ID und Zustellstatus dieser Nachricht stehen im Verwaltungsbereich\n'
+    + 'unter Sicherheit → Sicherheitsspur, Spalte "Alarm & Zustellung".\n'
     + '\nHerzliche Grüße\nIhr Team von Alltagsengel\n'
 
   return { betreff, html, text }

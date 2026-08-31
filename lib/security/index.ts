@@ -22,6 +22,7 @@ import { logSecurityEvent, type SicherheitsEreignis } from './audit'
 import { meldeSicherheitsereignis } from './benachrichtigung'
 import { geraeteMerkmale, ipAus } from './geraet'
 import { regelFuer, hoechsterSchweregrad, istSchweregrad, type Schweregrad } from './ereignisse'
+import type { Provenienz } from './herkunft'
 
 const log = logger.child('security')
 
@@ -111,6 +112,8 @@ export async function pruefeAnmeldeserie(
 
 export interface ErfassungsErgebnis {
   ereignisId: string | null
+  /** Die abgeleitete Herkunft — echt oder nachgestellt. */
+  provenienz: Provenienz | null
   geschrieben: boolean
   gemeldet: boolean
   meldeGrund: string
@@ -152,6 +155,7 @@ export async function erfasseSicherheitsereignis(
   if (optionen.ohneMeldung) {
     return {
       ereignisId: ergebnis.id,
+      provenienz: ergebnis.provenienz ?? null,
       geschrieben: ergebnis.ok,
       gemeldet: false,
       meldeGrund: 'Meldung durch Aufrufer unterdrueckt',
@@ -182,11 +186,17 @@ export async function erfasseSicherheitsereignis(
     metadata: {
       ...(ereignis.metadata ?? {}),
       ...(ergebnis.geraeteHash ? { geraet_hash: ergebnis.geraeteHash } : {}),
+      // Die ABGELEITETE Provenienz, nicht die des Aufrufers. Ohne sie
+      // stuende in der Mail „HERKUNFT UNBELEGT", obwohl die Zeile in der
+      // Datenbank sehr wohl eine traegt — die Meldung muss dasselbe
+      // sagen wie die Spur.
+      ...(ergebnis.provenienz ? { provenienz: ergebnis.provenienz } : {}),
     },
   })
 
   return {
     ereignisId: ergebnis.id,
+    provenienz: ergebnis.provenienz ?? null,
     geschrieben: ergebnis.ok,
     gemeldet: gemeldet.gesendet,
     meldeGrund: gemeldet.grund,
@@ -271,7 +281,14 @@ export async function erfasseAnmeldung(opts: {
           ? merkmale.deviceInfo.betriebssystem : null,
         sessionReference: opts.sessionReference ?? null,
         zeitpunkt: new Date(),
-        metadata: haupt.geraeteHash ? { geraet_hash: haupt.geraeteHash } : {},
+        metadata: {
+          ...(haupt.geraeteHash ? { geraet_hash: haupt.geraeteHash } : {}),
+          // Eine Anmeldung, die diesen Weg geht, kam aus einem echten
+          // Aufruf — sonst gaebe es keine Geraetemerkmale. Die
+          // Provenienz stammt trotzdem aus dem Schreibvorgang und nicht
+          // aus dieser Annahme.
+          ...(haupt.provenienz ? { provenienz: haupt.provenienz } : {}),
+        },
       })
     }
   }

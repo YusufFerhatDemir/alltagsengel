@@ -34,6 +34,7 @@ import {
   type Schweregrad,
 } from './ereignisse'
 import { geraeteMerkmale, geraeteHash, ipAus, type Plattform } from './geraet'
+import { leiteProvenienzAb, PROVENIENZ_SCHLUESSEL, type Provenienz } from './herkunft'
 
 const log = logger.child('security-audit')
 
@@ -117,6 +118,16 @@ export interface SicherheitsEreignis {
    *  niedrigerer wird ignoriert (siehe hoechsterSchweregrad). */
   severity?: Schweregrad | null
   metadata?: Record<string, unknown>
+  /**
+   * Kennzeichnet dieses Ereignis ausdruecklich als NICHT-echt
+   * ('TEST_ALERT', 'ADMIN_TEST', 'SYNTHETIC_EVENT').
+   *
+   * Kann nur HERABSTUFEN. Ein echter Wert wird hier verworfen — eine
+   * echte Anmeldung entsteht ausschliesslich daraus, dass ein Mensch
+   * einen HTTP-Aufruf gemacht hat, nie aus einer Behauptung des
+   * Aufrufers. Siehe lib/security/herkunft.ts.
+   */
+  alsTest?: Provenienz | null
   /** Aufruf, aus dem IP, User-Agent, Plattform und App-Version kommen. */
   request?: Request | Headers | Record<string, string | undefined> | null
   /** Undurchsichtige Sitzungskennung. NIE ein Session-Token. */
@@ -141,6 +152,12 @@ export interface EreignisErgebnis {
   organizationId?: string | null
   /** Die tatsaechlich geschriebene Adresse (ggf. nachgeschlagen). */
   userEmail?: string | null
+  /**
+   * Die ABGELEITETE Provenienz — echt oder nachgestellt. Steht so auch in
+   * `metadata.provenienz` der geschriebenen Zeile und gehoert in jede
+   * Meldung, die daraus entsteht.
+   */
+  provenienz?: Provenienz
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -381,6 +398,24 @@ export async function logSecurityEvent(ereignis: SicherheitsEreignis): Promise<E
       ...(ereignis.metadata ?? {}),
     }
 
+    // ── Provenienz ──────────────────────────────────────────────────
+    // ABGELEITET, nicht uebernommen. Ein Aufrufer kann sie nicht setzen:
+    // `metadata.provenienz` aus der Eingabe wird ueberschrieben, und die
+    // Testerklaerung kann nur herabstufen.
+    //
+    // „Echter Aufruf" heisst: es liegt ein Request/Headers-Objekt vor,
+    // das einen User-Agent traegt. Ein Skript, ein Cron-Lauf oder ein
+    // Nachzuegler hat das nicht — die schreiben ohne `request`. Das ist
+    // die Grenze zwischen „ein Mensch hat gehandelt" und „eine Maschine
+    // hat nachgetragen", und sie ergibt sich aus dem SCHREIBWEG statt
+    // aus einer Angabe, die man auch danebensetzen kann.
+    const ausEchtemAufruf = !!ereignis.request && !!merkmale.userAgent
+    const provenienz = leiteProvenienzAb(ereignis.eventType, {
+      ausEchtemAufruf,
+      alsTestErklaert: ereignis.alsTest ?? null,
+    })
+    metadata[PROVENIENZ_SCHLUESSEL] = provenienz
+
     if (ereignis.geraetePruefung && ereignis.userId) {
       const { neu, hash } = await geraetPruefen(
         admin, ereignis.userId, merkmale.plattform, merkmale.userAgent, merkmale.bezeichnung,
@@ -424,7 +459,7 @@ export async function logSecurityEvent(ereignis: SicherheitsEreignis): Promise<E
         log.warn('Sicherheitsspur nicht eingerichtet — Migration 20261018000002 fehlt', {
           eventType: ereignis.eventType,
         })
-        return { ok: false, id: null, neuesGeraet, geraeteHash: kennung, organizationId, userEmail: email }
+        return { ok: false, id: null, neuesGeraet, geraeteHash: kennung, organizationId, userEmail: email, provenienz }
       }
       // AUTH-002: kein rohes Fehlerobjekt ins Protokoll.
       log.error('SICHERHEITSSPUR-LUECKE — Eintrag nicht geschrieben', {
@@ -435,10 +470,10 @@ export async function logSecurityEvent(ereignis: SicherheitsEreignis): Promise<E
         // Typfehler und im Protokoll ohnehin dasselbe wie „nicht gesetzt".
         userId: ereignis.userId ?? undefined,
       })
-      return { ok: false, id: null, neuesGeraet, geraeteHash: kennung, organizationId, userEmail: email }
+      return { ok: false, id: null, neuesGeraet, geraeteHash: kennung, organizationId, userEmail: email, provenienz }
     }
 
-    return { ok: true, id: (data?.id as string) ?? null, neuesGeraet, geraeteHash: kennung, organizationId, userEmail: email }
+    return { ok: true, id: (data?.id as string) ?? null, neuesGeraet, geraeteHash: kennung, organizationId, userEmail: email, provenienz }
   } catch (err) {
     log.errorWithException('SICHERHEITSSPUR-LUECKE — unerwarteter Fehler', err, {
       eventType: ereignis.eventType,

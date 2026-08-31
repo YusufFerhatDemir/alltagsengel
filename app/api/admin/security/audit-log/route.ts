@@ -78,6 +78,12 @@ function filterAus(url: URL, organizationId: string): SpurFilter {
     severity: istSchweregrad(grad) ? grad : null,
     plattform: (PLATTFORMEN as readonly string[]).includes(plattform ?? '') ? plattform : null,
     ip: p.get('ip')?.trim() || null,
+    // Nur die beiden bekannten Werte, sonst kein Filter. Ein unbrauchbarer
+    // Wert wird VERWORFEN, nicht geraten — dieselbe Regel wie beim Datum:
+    // eine plausible, aber falsche Liste ist in einer Sicherheitsansicht
+    // schlimmer als gar kein Filter.
+    herkunft: p.get('herkunft') === 'echt' ? 'echt'
+      : p.get('herkunft') === 'nicht_echt' ? 'nicht_echt' : null,
     seite: ganzzahl(p.get('seite'), 1),
     seitengroesse: ganzzahl(p.get('seitengroesse'), SEITENGROESSE_STANDARD),
     sortierFeld: (SORTIERFELDER as readonly string[]).includes(sortierFeld ?? '')

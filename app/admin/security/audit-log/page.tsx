@@ -42,6 +42,9 @@ interface SpurZeile {
   metadata: Record<string, unknown> | null
   alarm: Alarmzustand
   ueberwacht: boolean
+  provenienz: string | null
+  provenienzBezeichnung: string
+  echteNutzeraktivitaet: boolean
 }
 
 /** Ein Zustellversuch aus notification_delivery_log. */
@@ -121,6 +124,8 @@ interface Filter {
   userId: string
   von: string
   bis: string
+  /** '' | 'echt' | 'nicht_echt' — siehe HerkunftZelle. */
+  herkunft: string
   eventType: string
   kategorie: string
   severity: string
@@ -130,7 +135,7 @@ interface Filter {
 
 const LEERER_FILTER: Filter = {
   suche: '', userId: '', von: '', bis: '',
-  eventType: '', kategorie: '', severity: '', plattform: '', ip: '',
+  eventType: '', kategorie: '', severity: '', plattform: '', ip: '', herkunft: '',
 }
 
 const FARBE: Record<string, string> = {
@@ -508,6 +513,12 @@ export default function SicherheitsspurSeite() {
             <option key={p} value={p}>{p}</option>
           ))}
         </select>
+        <select style={eingabe} value={filter.herkunft}
+          onChange={e => setzeFilter('herkunft', e.target.value)} aria-label="Herkunft">
+          <option value="">Jede Herkunft</option>
+          <option value="echt">Nur echte Nutzeraktivität</option>
+          <option value="nicht_echt">Nur nachgestellt / unbelegt</option>
+        </select>
         <input
           style={eingabe} type="text" placeholder="IP-Adresse"
           value={filter.ip} onChange={e => setzeFilter('ip', e.target.value)}
@@ -547,6 +558,7 @@ export default function SicherheitsspurSeite() {
               <th style={{ ...kopf, cursor: 'pointer' }} onClick={() => sortiereNach('event_type')}>
                 Ereignis{pfeil('event_type')}
               </th>
+              <th style={kopf}>Herkunft</th>
               <th style={kopf}>Kategorie</th>
               <th style={{ ...kopf, cursor: 'pointer' }} onClick={() => sortiereNach('user_email')}>
                 Konto{pfeil('user_email')}
@@ -561,7 +573,7 @@ export default function SicherheitsspurSeite() {
           </thead>
           <tbody>
             {(daten?.zeilen ?? []).length === 0 && !laedt && (
-              <EmptyRow colSpan={11}>Keine Einträge für diese Auswahl.</EmptyRow>
+              <EmptyRow colSpan={12}>Keine Einträge für diese Auswahl.</EmptyRow>
             )}
             {(daten?.zeilen ?? []).map(z => (
               <tr key={z.id}>
@@ -579,6 +591,7 @@ export default function SicherheitsspurSeite() {
                   <div>{z.eventBezeichnung}</div>
                   <div style={{ fontSize: 11, color: '#888' }}>{z.eventType}</div>
                 </td>
+                <td style={zelle}><HerkunftZelle zeile={z} /></td>
                 <td style={zelle}>{z.kategorieBezeichnung}</td>
                 <td style={zelle}>
                   <div>
@@ -616,10 +629,11 @@ export default function SicherheitsspurSeite() {
             ))}
             {(daten?.zeilen ?? []).map(z => offen === z.id ? (
               <tr key={`${z.id}-details`}>
-                <td colSpan={11} style={{ ...zelle, background: 'var(--coal2)' }}>
+                <td colSpan={12} style={{ ...zelle, background: 'var(--coal2)' }}>
                   <table style={{ borderCollapse: 'collapse' }}>
                     <tbody>
                       {[
+                        ['Herkunft', `${z.provenienz ?? 'UNBELEGT'} — ${z.provenienzBezeichnung}`],
                         ['Ereignis-ID', z.id],
                         ['Konto-ID', z.userId],
                         ['Organisation-ID', z.organizationId],
@@ -829,6 +843,43 @@ function AlarmDetails({
           </div>
         )
       })}
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Herkunft
+// ═══════════════════════════════════════════════════════════════════════
+//
+// Am 31.08.2026 stand ein Funktionstest als „Sicherheitskritische Aktion"
+// in der Spur. Dass es ein Test war, stand nur im Fliesstext eines
+// Metadatenfeldes — und wurde folgerichtig für echte Kontoaktivität
+// gehalten. Diese Zelle ist die Antwort darauf: die Herkunft steht in
+// jeder Zeile, farblich getrennt, ohne dass jemand Details aufklappen
+// muss. Fail-closed — eine Zeile ohne belegte Herkunft ist NICHT grün.
+// ═══════════════════════════════════════════════════════════════════════
+function HerkunftZelle({ zeile }: { zeile: SpurZeile }) {
+  const p = zeile.provenienz
+  const echt = zeile.echteNutzeraktivitaet
+
+  const farbe = echt ? '#2D8F5E' : p === null ? '#888' : '#C9963C'
+  const kurz = p ?? 'UNBELEGT'
+
+  return (
+    <div title={zeile.provenienzBezeichnung}>
+      <span style={{
+        display: 'inline-block', padding: '1px 6px', borderRadius: 4,
+        fontSize: 10, fontWeight: 700, letterSpacing: 0.3,
+        fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+        border: `1px solid ${farbe}`, color: farbe,
+      }}>
+        {kurz}
+      </span>
+      {!echt && (
+        <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>
+          keine belegte Nutzeraktivität
+        </div>
+      )}
     </div>
   )
 }

@@ -156,6 +156,12 @@ describe('Regressionsscan: keine direkten Legacy-Key-Lesezugriffe mehr', () => {
     'scripts/verify-publishable-key.mjs',
     'scripts/verify-resend.mjs',
     'scripts/verify-alarmkette-live.mjs',
+    // Ebenfalls reine Resend-Aufrufe. security-testalarm.mjs verfolgt den
+    // ausgeloesten Alarm bis zum last_event des Providers; belege-resend.mjs
+    // holt denselben Stand fuer bereits versendete Nachrichten. Beide
+    // sprechen Supabase ausschliesslich ueber apiHeaders() an.
+    'scripts/security-testalarm.mjs',
+    'scripts/belege-resend.mjs',
   ]
 
   it('scripts/*.mjs bauen PostgREST-Header nur ueber apiHeaders()', async () => {
