@@ -127,6 +127,16 @@ jobs:
         # Aussagen; nur die erste rechtfertigt eine Weiterleitung.
         run: npm run lint:ladefehler
 
+      - name: Lint — Browser-Bundle
+        # Track A (31.08.2026). Was in einer Client-Komponente landet, laedt
+        # jeder Besucher — und das entscheidet die IMPORTKETTE, nicht die
+        # Datei. Zwei Regeln, die bisher nur als Kommentar existierten:
+        # `server-only` bleibt am Server (wirft sonst erst zur Laufzeit im
+        # Browser), und lib/plz-coords.data.ts (176 KB) gehoert nicht ins
+        # Bundle. Beide waren bei Einfuehrung erfuellt — die Pruefung haelt
+        # sie, sie findet nichts Neues.
+        run: npm run lint:client-bundle
+
       - name: Schema-Drift-Check (warn-only — blockiert nicht)
         # Findet Code, der Spalten anspricht, die es live nicht gibt.
         # PostgREST lehnt so eine Abfrage komplett ab (42703); im Code sieht
