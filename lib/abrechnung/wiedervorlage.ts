@@ -282,10 +282,17 @@ export async function wiedervorlageUebersicht(
   supabase: SupabaseClient,
   organizationId: string,
 ): Promise<QueueUebersicht> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('dta_wiedervorlage')
     .select('status, kategorie, betrag_offen_cent, faellig_am')
     .eq('organization_id', organizationId)
+
+  // Gleiche Regel wie in der Dead-Letter-Uebersicht: eine Wiedervorlage-
+  // liste, die bei Stoerung lauter Nullen meldet, sagt „nichts offen" —
+  // eine Aussage ueber die Vorgaenge, die sie gar nicht gelesen hat.
+  if (error) {
+    throw new Error(`Wiedervorlagen nicht lesbar: ${error.message}`)
+  }
 
   const heute = new Date().toISOString().slice(0, 10)
   const proStatus = {

@@ -397,10 +397,26 @@ export async function allocatePayment(
       // bestehende Zeile bereits ab, war der Rechnungs-Update erfolgreich
       // und darf nicht ein zweites Mal laufen — sonst zaehlte dieselbe
       // Zahlung zweimal auf die Rechnung.
-      const { data: alleZeilen } = await supabase
+      const { data: alleZeilen, error: zeilenFehler } = await supabase
         .from('payment_allocations')
         .select('amount_cents')
         .eq('invoice_id', alloc.invoiceId)
+
+      // Der verworfene Fehler kippte diesen Vergleich in die falsche
+      // Richtung: ohne Zeilen ist die Summe 0, und `paid_amount >= 0` gilt
+      // immer. `bereitsVerbucht` wurde damit bei JEDER Stoerung wahr, die
+      // Fortschreibung der Rechnung unterblieb — die Zuordnungszeile stand,
+      // die Rechnung blieb offen und lief in den Mahnlauf, obwohl bezahlt.
+      //
+      // Diese Frage laesst sich nicht schaetzen. Ohne Antwort wird sie
+      // gestellt, nicht beantwortet.
+      if (zeilenFehler) {
+        throw new Error(
+          `Zuordnungszeilen zu Rechnung ${alloc.invoiceId} nicht lesbar (${zeilenFehler.message}). `
+          + `Ob der abgebrochene Lauf die Rechnung bereits fortgeschrieben hat, ist damit `
+          + `nicht feststellbar — der Vorgang wird abgebrochen statt geraten.`
+        )
+      }
 
       const summeZuordnungen = (alleZeilen ?? []).reduce(
         (s: number, z: { amount_cents: number | null }) => s + (z.amount_cents || 0), 0)

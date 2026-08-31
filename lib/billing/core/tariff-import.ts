@@ -157,19 +157,41 @@ export async function importTariffs(
   }
 
   // 2. Katalog-Validierung (leistungsart, rechtsgrundlage, tarifquelle)
-  const { data: leistungsarten } = await supabase
+  //
+  // Die Richtung war hier schon richtig — ein leerer Katalog weist jede
+  // Zeile ab, nicht durch. Falsch war die BEGRUENDUNG: der Import meldete
+  // „Unbekannte Leistungsart: X" fuer jede einzelne Zeile, obwohl der
+  // Katalog nur nicht lesbar war. Wer das liest, sucht den Fehler in seiner
+  // Datei statt in der Verbindung.
+  const { data: leistungsarten, error: laFehler } = await supabase
     .from('billing_leistungsarten')
     .select('code');
-  const validLeistungsarten = new Set((leistungsarten || []).map((l: any) => l.code));
 
-  const { data: rechtsgrundlagen } = await supabase
+  const { data: rechtsgrundlagen, error: rgFehler } = await supabase
     .from('billing_rechtsgrundlagen')
     .select('code');
-  const validRechtsgrundlagen = new Set((rechtsgrundlagen || []).map((r: any) => r.code));
 
-  const { data: tarifquellen } = await supabase
+  const { data: tarifquellen, error: tqFehler } = await supabase
     .from('billing_tarifquellen')
     .select('code');
+
+  const katalogFehler = laFehler ?? rgFehler ?? tqFehler;
+  if (katalogFehler) {
+    return {
+      imported: 0,
+      skipped: rows.length,
+      errors: [{
+        row: 0,
+        field: 'katalog',
+        message: `Prüfkataloge nicht lesbar (${katalogFehler.message}) — kein Import durchgeführt. `
+          + `Die Zeilen wurden NICHT geprüft und sind nicht als fehlerhaft zu verstehen.`,
+      }],
+      warnungen: [],
+    };
+  }
+
+  const validLeistungsarten = new Set((leistungsarten || []).map((l: any) => l.code));
+  const validRechtsgrundlagen = new Set((rechtsgrundlagen || []).map((r: any) => r.code));
   const validTarifquellen = new Set((tarifquellen || []).map((t: any) => t.code));
 
   for (let i = 0; i < rows.length; i++) {

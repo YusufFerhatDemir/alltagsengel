@@ -168,10 +168,17 @@ async function resolveEmpfaenger(
       return verantwortlichId ? [verantwortlichId] : []
     }
     case 'alle': {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('organization_members')
         .select('user_id')
         .eq('organization_id', params.organizationId)
+      // Verworfen wurde aus „Empfaenger nicht ermittelbar" eine leere
+      // Empfaengerliste — das Ereignis galt als zugestellt und erreichte
+      // niemanden. Ein Betriebsereignis, das still verschwindet, ist
+      // schlimmer als eins, das laut scheitert.
+      if (error) {
+        throw new Error(`Empfänger der Organisation nicht ermittelbar: ${error.message}`)
+      }
       return (data ?? []).map((m: any) => m.user_id)
     }
     default:

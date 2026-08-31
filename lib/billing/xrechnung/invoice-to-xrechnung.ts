@@ -103,12 +103,27 @@ export async function loadInvoiceXRechnungData(
 
   const ikNummer = await getOrgIK(supabase, orgId).catch(() => null)
 
-  const { data: items } = await supabase
+  // Der Fehler dieser Abfrage wurde verworfen und `items` zu `[]` — eine
+  // gescheiterte Abfrage war damit nicht von einer Rechnung ohne Positionen
+  // zu unterscheiden.
+  //
+  // Der LADER laesst eine positionslose Rechnung bewusst durch: das ist ein
+  // zulaessiger Zustand, den Aufrufer verschieden bewerten (Anzeige,
+  // Vorschau, Pruefung). Verweigert wird erst die AUSGEHENDE DATEI, unten in
+  // generateXRechnungXml/generateZugferdXml — dort geht sie an einen
+  // Kostentraeger, und dort ist sie keine Stoerung, sondern eine Rechnung
+  // ueber nichts. Nicht lesbar bleibt hier trotzdem ein Abbruch: eine leere
+  // Liste behaupten, die nie gelesen wurde, darf der Lader nicht.
+  const { data: items, error: itemsErr } = await supabase
     .from('invoice_items')
     .select('id, description, date, duration_minutes, amount, budget_type, tariff_preis_cent')
     .eq('invoice_id', invoiceId)
     .order('date')
-  const invoiceItems = (items || []) as ItemRow[]
+
+  if (itemsErr) {
+    throw new Error(`Rechnungspositionen nicht lesbar: ${itemsErr.message}`)
+  }
+  const invoiceItems = (items ?? []) as ItemRow[]
 
   let correctionOfNumber: string | null = null
   if (inv.correction_of) {
@@ -190,12 +205,32 @@ export async function loadInvoiceXRechnungData(
   }
 }
 
+/**
+ * Eine ausgehende Rechnungsdatei ohne eine einzige Position ist kein
+ * Sonderfall, sondern ein Widerspruch: der Kopf traegt einen Betrag, und
+ * nichts im Dokument begruendet ihn. Der Empfaenger ist ein Kostentraeger;
+ * dort ist das nicht als Stoerung erkennbar.
+ *
+ * Der Riegel sitzt hier und nicht in loadInvoiceXRechnungData, weil der
+ * Lader auch Anzeige- und Pruefwege bedient, fuer die eine noch leere
+ * Rechnung ein zulaessiger Zustand ist.
+ */
+function pruefePositionen(data: XRechnungData, invoiceId: string): void {
+  if (data.lineItems.length === 0) {
+    throw new Error(
+      `Rechnung ${invoiceId} hat keine Positionen — eine Rechnungsdatei ohne `
+      + `Positionen darf nicht an einen Kostentraeger gehen.`
+    )
+  }
+}
+
 export async function generateXRechnungXml(
   supabase: SupabaseClient,
   invoiceId: string,
   orgId: string,
 ): Promise<string> {
   const data = await loadInvoiceXRechnungData(supabase, invoiceId, orgId)
+  pruefePositionen(data, invoiceId)
   return generateCiiXml(data, 'xrechnung')
 }
 
@@ -205,5 +240,6 @@ export async function generateZugferdXml(
   orgId: string,
 ): Promise<string> {
   const data = await loadInvoiceXRechnungData(supabase, invoiceId, orgId)
+  pruefePositionen(data, invoiceId)
   return generateCiiXml(data, 'zugferd')
 }

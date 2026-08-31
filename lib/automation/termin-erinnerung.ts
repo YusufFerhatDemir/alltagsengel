@@ -128,21 +128,32 @@ export async function erinnereAnKommendeTermine(
   const nameJeClient = new Map<string, string>()
 
   if (clientIds.length > 0) {
-    const { data: klienten } = await supabase
+    // Beide Empfaengerabfragen tragen ihren Fehler jetzt in `fehler`. Vorher
+    // war ein Ausfall hier nicht von „dieser Klient hat keine hinterlegten
+    // Empfaenger" zu unterscheiden: der Lauf meldete `erinnert: 0` neben
+    // `ohneEmpfaenger: n` und galt als sauber durchgelaufen — waehrend
+    // schlicht niemand seine Terminerinnerung bekommen hatte.
+    const { data: klienten, error: klientenFehler } = await supabase
       .from('clients')
       .select('id, user_id, first_name, last_name')
       .in('id', clientIds)
+    if (klientenFehler) {
+      ergebnis.fehler.push(`Klientendaten nicht lesbar — Kunden ohne Erinnerung: ${klientenFehler.message}`)
+    }
     for (const k of klienten ?? []) {
       nameJeClient.set(k.id, [k.first_name, k.last_name].filter(Boolean).join(' ').trim())
       if (k.user_id) empfaengerJeClient.set(k.id, [{ userId: k.user_id, art: 'kunde' }])
     }
 
-    const { data: zugaenge } = await supabase
+    const { data: zugaenge, error: zugaengeFehler } = await supabase
       .from('angehoerigen_zugaenge')
       .select('client_id, user_id')
       .eq('organization_id', organizationId)
       .eq('status', 'aktiv')
       .in('client_id', clientIds)
+    if (zugaengeFehler) {
+      ergebnis.fehler.push(`Angehörigen-Zugänge nicht lesbar — Angehörige ohne Erinnerung: ${zugaengeFehler.message}`)
+    }
     for (const z of zugaenge ?? []) {
       const liste = empfaengerJeClient.get(z.client_id) ?? []
       if (!liste.some(e => e.userId === z.user_id)) {

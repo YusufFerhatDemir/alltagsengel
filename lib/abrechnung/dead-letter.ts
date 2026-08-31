@@ -268,10 +268,17 @@ export async function deadLetterUebersicht(
   supabase: SupabaseClient,
   organizationId: string,
 ): Promise<DeadLetterUebersicht> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('dta_dead_letter')
     .select('status, kanal, created_at')
     .eq('organization_id', organizationId)
+
+  // Eine Fehlerqueue, die bei Stoerung „0 offen" meldet, ist genau dann
+  // stumm, wenn man sie braucht. „Nichts liegengeblieben" und „ich konnte
+  // nicht nachsehen" duerfen hier nicht dieselbe Zahl ergeben.
+  if (error) {
+    throw new Error(`Dead-Letter-Einträge nicht lesbar: ${error.message}`)
+  }
 
   const proStatus: Record<DeadLetterStatus, number> = {
     offen: 0, in_analyse: 0, wiedervorgelegt: 0, erledigt: 0, verworfen: 0,

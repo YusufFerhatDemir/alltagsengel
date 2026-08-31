@@ -30,23 +30,46 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     // wuerde die Benachrichtigung an die Admins ALLER Mandanten gehen.
     const orgId = await getActiveOrgIdOrDefault()
 
-    // org_fence: nur Admins der eigenen Organisation benachrichtigen
-    let adminQuery = supabase
+    // ── org_fence, fail-closed ─────────────────────────────────────────
+    // Der Zaun war bedingt: `.in('id', memberIdList)` wurde NUR angehaengt,
+    // wenn die Mitgliederliste nicht leer war. Beide Wege, auf denen sie
+    // leer bleibt — ein Fehler der Abfrage (RLS, Netz, Schema-Drift) und
+    // eine Organisation ohne Mitglieder — liessen die Abfrage damit OHNE
+    // Zaun laufen: die Meldung ueber den frisch registrierten Nutzer
+    // (Name, E-Mail, Telefon, Rolle) ging an die Admins JEDES Mandanten.
+    // Genau der Fall, den der Kommentar darueber ausschliessen wollte.
+    //
+    // Ein Zaun, der bei Stoerung aufgeht, ist keiner. Ohne belegte
+    // Empfaengerliste geht die Meldung an niemanden.
+    if (!orgId) {
+      log.error('Keine Organisation aufloesbar — Registrierungsmeldung nicht versendet')
+      return NextResponse.json({ success: true, sent: 0, grund: 'keine_organisation' })
+    }
+
+    const { data: members, error: membersError } = await supabase
+      .from('organization_members')
+      .select('user_id')
+      .eq('organization_id', orgId)
+
+    if (membersError) {
+      log.errorWithException(
+        'Mitgliederliste nicht lesbar — Registrierungsmeldung nicht versendet',
+        new Error(membersError.message),
+      )
+      return NextResponse.json({ success: true, sent: 0, grund: 'mitglieder_nicht_lesbar' })
+    }
+
+    const memberIdList = (members ?? []).map(m => m.user_id)
+    if (memberIdList.length === 0) {
+      log.warn('Organisation ohne Mitglieder — Registrierungsmeldung nicht versendet', { orgId })
+      return NextResponse.json({ success: true, sent: 0, grund: 'keine_mitglieder' })
+    }
+
+    const { data: admins } = await supabase
       .from('profiles')
       .select('id, email, first_name')
       .in('role', ['admin', 'superadmin'])
-
-    if (orgId) {
-      const { data: members } = await supabase
-        .from('organization_members')
-        .select('user_id')
-        .eq('organization_id', orgId)
-      const memberIdList = (members || []).map(m => m.user_id)
-      if (memberIdList.length > 0) {
-        adminQuery = adminQuery.in('id', memberIdList)
-      }
-    }
-    const { data: admins } = await adminQuery
+      .in('id', memberIdList)
 
     if (!admins || admins.length === 0) return NextResponse.json({ success: true, sent: 0 })
 
