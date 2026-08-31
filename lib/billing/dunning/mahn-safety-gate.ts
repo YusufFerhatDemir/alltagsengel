@@ -95,7 +95,20 @@ export interface MahnGateErgebnis {
   tageUeberfaellig: number
 }
 
-const KATALOG: { nummer: number; sperre: MahnSperre; titel: string }[] = [
+/**
+ * Die Pruefpunkte des Tors — EXPORTIERT, damit Pruefwerkzeuge ihre Anzahl
+ * nicht abschreiben muessen.
+ *
+ * Der Grund steht in der Geschichte dieser Liste: mit Punkt 11
+ * (festgeschrieben, Commit ccf5bb75) wuchs sie von zehn auf elf, und
+ * scripts/verify-opos-mahnwesen-kette.mjs pruefte weiter gegen die fest
+ * eingetragene Zahl 10. Der Lauf meldete daraufhin bei JEDER Rechnung
+ * „unvollstaendige Begruendung" — obwohl das Tor vollstaendiger geworden
+ * war als vorher. Eine Pruefung, die nach einer Verbesserung dauerhaft
+ * rot steht, wird nach kurzer Zeit nicht mehr gelesen; dann verdeckt sie
+ * genau die echten Befunde, fuer die sie da ist.
+ */
+export const MAHN_PRUEFPUNKTE: readonly { nummer: number; sperre: MahnSperre; titel: string }[] = [
   { nummer: 1, sperre: 'rechnung', titel: 'Rechnung vorhanden und eigener Mandant' },
   { nummer: 2, sperre: 'geloescht', titel: 'Rechnung nicht gelöscht' },
   { nummer: 3, sperre: 'status', titel: 'Status ist mahnfähig' },
@@ -108,6 +121,9 @@ const KATALOG: { nummer: number; sperre: MahnSperre; titel: string }[] = [
   { nummer: 10, sperre: 'doppelmahnung', titel: 'Keine gleiche Mahnung in der Warteschlange' },
   { nummer: 11, sperre: 'festgeschrieben', titel: 'Rechnung ist festgeschrieben (frozen_at)' },
 ]
+
+/** Interner Kurzname — der Rest der Datei nutzt ihn unveraendert weiter. */
+const KATALOG = MAHN_PRUEFPUNKTE
 
 /**
  * Status, in denen NICHT gemahnt werden darf.
