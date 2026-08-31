@@ -340,6 +340,54 @@ try {
   pruefe('U9', 'Die Pruefnachweise haengen ausschliesslich am eigenen Mandanten',
     fremdOk, fremdText)
 
+  // ── U11) Der Weg, den bisher NIEMAND geprueft hat: INSERT ──────────────
+  //
+  // Alle Pruefungen bis hierher gehen ueber ein UPDATE — so schreibt die
+  // Route. `trg_compute_signature_hash` ist aber ausdruecklich
+  // BEFORE UPDATE und NICHT BEFORE INSERT:
+  //
+  //   CREATE TRIGGER trg_compute_signature_hash BEFORE UPDATE ON service_records
+  //
+  // Eine Zeile, die GLEICH als unterschrieben eingefuegt wird, laeuft
+  // deshalb an ihm vorbei. `trg_a_unterschrift_beleg` greift hier (BEFORE
+  // INSERT OR UPDATE) und verlangt einen Beleg — es entsteht also keine
+  // beleglose Zeile. Die Frage ist eine andere: bekommt die Zeile den
+  // Siegel-Hash und die Sperre, oder ist sie unterschrieben UND weiterhin
+  // frei aenderbar?
+  //
+  // Der Fall ist nicht theoretisch: eine Nacherfassung, ein Import aus
+  // einem Vorsystem und jede Migration schreiben per INSERT.
+  const idInsert = await anlegen('2019-04-05', {
+    proof_status: 'UNTERSCHRIEBEN',
+    client_signed_at: new Date('2019-04-05T08:30:00.000Z').toISOString(),
+    client_signature: 'data:image/png;base64,PRUEFUNTERSCHRIFT',
+  })
+  const perInsert = await lies(idInsert)
+  pruefe('U11', 'Auch der INSERT-Weg erzeugt Hash UND Sperre',
+    !!perInsert.signature_hash && perInsert.is_locked === true,
+    `signature_hash=${perInsert.signature_hash ? perInsert.signature_hash.slice(0, 24) + '…' : 'NULL'}`
+    + ` | is_locked=${perInsert.is_locked} | proof_status=${perInsert.proof_status}`
+    + ` | status=${perInsert.status}\n`
+    + (perInsert.signature_hash && perInsert.is_locked === true
+        ? 'Der Trigger greift auch beim Einfuegen.'
+        : 'OFFEN: die Zeile gilt als unterschrieben, traegt aber kein Siegel und ist\n'
+          + 'nicht gesperrt — sie laesst sich danach im Betrag aendern, ohne dass es\n'
+          + 'auffaellt. Ursache: trg_compute_signature_hash ist BEFORE UPDATE.'))
+
+  // U12 misst die FOLGE von U11 — und zwar nur dann, wenn die Sperre fehlt.
+  if (perInsert.is_locked !== true) {
+    const { error: aendFehler } = await admin.from('service_records')
+      .update({ amount: 999 }).eq('id', idInsert)
+    const geaendert = await lies(idInsert)
+    pruefe('U12', 'Ein unterschriebener Nachweis laesst sich im Betrag nicht mehr aendern',
+      !!aendFehler || geaendert.amount === 25,
+      aendFehler
+        ? `abgewiesen: ${String(aendFehler.message).slice(0, 160)}`
+        : `DURCHGELASSEN — Betrag steht jetzt auf ${geaendert.amount} (unterschrieben mit 25).\n`
+          + 'Der Nachweis gilt als unterschrieben und wurde nach der Unterschrift\n'
+          + 'im Betrag veraendert. Genau das soll der Manipulationsschutz verhindern.')
+  }
+
   // ── U10) Und der Altbestand? ───────────────────────────────────────────
   //
   // Kein Schreibvorgang, eine Feststellung: was von den 30 Bestandszeilen

@@ -183,4 +183,14 @@ export const KATALOG = [
               'dta_dakota_auftraege','einsatz_absagen','kostentraeger_kontakte','monthly_closings',
               'ocr_results','partner_visits','payment_allocations','payment_status','review_errors',
               'state_settings','substitution_requests','verordnung_leistungen','verordnungen')` },
+  { datei: '20261023000000_signaturhash_beim_einfuegen',
+    // Gemessen wird die VERDRAHTUNG, nicht der Funktionsrumpf: der Befund
+    // U11 war, dass der Trigger nur bei UPDATE feuert. Ein Blick in
+    // pg_proc haette ihn nie gezeigt.
+    was: 'trg_compute_signature_hash feuert auch BEFORE INSERT',
+    soll: 1,
+    sql: `SELECT count(*) FROM pg_trigger
+           WHERE tgrelid='public.service_records'::regclass
+             AND tgname='trg_compute_signature_hash'
+             AND pg_get_triggerdef(oid) LIKE '%BEFORE INSERT OR UPDATE%'` },
 ]
