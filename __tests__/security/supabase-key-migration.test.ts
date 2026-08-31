@@ -162,6 +162,9 @@ describe('Regressionsscan: keine direkten Legacy-Key-Lesezugriffe mehr', () => {
     // sprechen Supabase ausschliesslich ueber apiHeaders() an.
     'scripts/security-testalarm.mjs',
     'scripts/belege-resend.mjs',
+    // Prueft, ob bei Resend ueberhaupt ein Webhook eingetragen ist —
+    // ohne diesen Aufruf misst der Lauf nichts.
+    'scripts/verify-bounce-kette.mjs',
   ]
 
   it('scripts/*.mjs bauen PostgREST-Header nur ueber apiHeaders()', async () => {
