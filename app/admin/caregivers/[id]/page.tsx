@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { isValidUUID } from '@/lib/safe-query'
 import {
-  euro, formatDate, fullName, statusMeta, daysUntil,
+  euro, formatDate, statusMeta, daysUntil,
   CAREGIVER_STATUS, QUALIFICATION_STATUS, DOCUMENT_TYPE, REQUIRED_DOCUMENTS,
   BONUS_TYPE, REWARD_TYPE, QUALIFICATION_LEVEL,
 } from '@/lib/admin/ops'

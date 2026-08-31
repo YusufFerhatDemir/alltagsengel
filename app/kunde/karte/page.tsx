@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { CUSTOMER_HOURLY_RATE } from '@/lib/pricing/b2c-constants'
-import { IconPin, IconWingsGold, IconStarFilled, IconNav } from '@/components/Icons'
+import { IconStarFilled } from '@/components/Icons'
 import Icon3D from '@/components/Icon3D'
 import { logger } from '@/lib/logger'
 const log = logger.child('kunde:karte')

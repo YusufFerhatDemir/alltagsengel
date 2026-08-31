@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { use, useEffect, useMemo, useState } from 'react'
 import { Banner, StatusBadge } from '@/components/admin/OpsUI'
 import {
-  AuswahlFeld, FeldRaster, Karte, SchalterFeld, Tabs, TextBereich, TextFeld,
+  FeldRaster, Karte, SchalterFeld, Tabs, TextBereich, TextFeld,
   pflegeMiniBtn, pflegePrimaryBtn, pflegeSecondaryBtn,
 } from '@/components/admin/PflegeUI'
 import VitalChart from '@/components/admin/VitalChart'

@@ -312,7 +312,11 @@ body {
   border-top:1px solid rgba(201,150,60,.06);
   display:flex; padding:10px 0 28px; z-index:100;
 }
-.bnav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:2px 0; text-decoration:none; }
+.bnav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:2px 0; text-decoration:none;
+  /* Der Sucheintrag ist ein <button> (Tastaturbedienung), die uebrigen sind <a>.
+     Die Resets sind fuer <a> wirkungslos und halten beide optisch identisch. */
+  background:none; border:none; font:inherit; }
+.bnav-item:focus-visible { outline:2px solid var(--gold); outline-offset:-2px; border-radius:8px; }
 .bnav-item .bnav-ic  { font-size:21px; color:var(--ink4); line-height:1; }
 .bnav-item .bnav-lbl { font-size:10px; font-weight:600; color:var(--ink4); }
 .bnav-item.on .bnav-ic  { color:var(--gold); }

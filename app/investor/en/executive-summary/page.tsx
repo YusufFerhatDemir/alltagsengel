@@ -1,6 +1,6 @@
 'use client';
 
-import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, StatBox, TableRow, Badge, C, GoldSep, SectionLabel, Icons } from '../../docs/shared';
+import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, StatBox, GoldSep, SectionLabel, Icons } from '../../docs/shared';
 
 export default function ExecutiveSummaryPage() {
   return (

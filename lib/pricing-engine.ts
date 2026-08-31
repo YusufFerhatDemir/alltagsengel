@@ -5,7 +5,7 @@ import type {
   PricingTier,
   PricingSurcharge,
   PricingConfig,
-  PricingRegion,
+  
   PricingRequest,
   PricingRequestExtended,
   PricingBreakdown,

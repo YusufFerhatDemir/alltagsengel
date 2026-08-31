@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { Banner, StatusBadge } from '@/components/admin/OpsUI'
+import { Banner } from '@/components/admin/OpsUI'
 import Link from 'next/link'
 
 interface Dashboard {

@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import {
-  statusMeta, formatDate, timeAgo,
+  statusMeta, timeAgo,
   NACHRICHTEN_KATEGORIE, NACHRICHTEN_PRIORITAET,
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'

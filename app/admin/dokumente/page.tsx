@@ -3,7 +3,7 @@
 // Dokumentenübersicht — zentrale Sicht auf akten_dokumente
 // ═══════════════════════════════════════════════════════════════
 import Link from 'next/link'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AKTEN_DOKUMENT_TYP, AKTEN_KATEGORIE, AKTEN_SICHTBARKEIT, AKTEN_STATUS, formatDate, statusMeta } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import AktenUpload from '@/components/admin/AktenUpload'

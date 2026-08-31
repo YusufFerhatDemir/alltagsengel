@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react'
 import { BRAND } from '@/lib/mis/constants'
-import { SectionHeader, Card, Badge } from '@/components/mis/MisComponents'
+import { SectionHeader, Card } from '@/components/mis/MisComponents'
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
 

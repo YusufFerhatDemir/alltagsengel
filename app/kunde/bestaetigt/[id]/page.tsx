@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { isValidUUID, logError } from '@/lib/safe-query'
 import { NotFoundState, ErrorState, LoadingState } from '@/components/UIStates'
-import { IconCheck, IconWingsGold, IconChat, IconShield, IconCalendar, IconClock, IconHome as IconHouse, IconCard, IconMoney, IconPhone } from '@/components/Icons'
+import { IconCheck, IconChat, IconShield, IconCalendar, IconClock, IconHome as IconHouse, IconCard, IconMoney, IconPhone } from '@/components/Icons'
 import Icon3D from '@/components/Icon3D'
 
 export default function BestaetigtPage() {

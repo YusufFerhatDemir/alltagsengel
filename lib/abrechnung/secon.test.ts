@@ -4,7 +4,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert'
 import forge from 'node-forge'
-import { verschluesseln, entschluesseln, verifySignatur, ladeIdentitaet, ikAusZertifikat } from './secon'
+import { verschluesseln, entschluesseln, ladeIdentitaet, ikAusZertifikat } from './secon'
 
 function erzeugeTestIdentitaet(ik: string, passwort: string): { p12: Buffer; certPem: string } {
   const keys = forge.pki.rsa.generateKeyPair(2048)

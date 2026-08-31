@@ -15,7 +15,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { KEINE_ZUORDNUNG_STATUS, alsPostgrestListe } from '../status-vokabular'
 import type { CamtBuchung } from '../camt/camt-parser';
-import { createPayment, allocatePayment, type PaymentMethod } from '../core/payments';
+import { allocatePayment, type PaymentMethod } from '../core/payments';
 import { logBillingAction } from '../core/audit';
 import { euroZuCent } from '@/lib/geld'
 

@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   euro, formatDate, fullName, statusMeta, INVOICE_STATUS,
 } from '@/lib/admin/ops'
-import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { StatusBadge, SearchInput, EmptyRow } from '@/components/admin/OpsUI'
 import Link from 'next/link'
 import { klickbareZeile } from '@/lib/a11y'
 import { logger } from '@/lib/logger'

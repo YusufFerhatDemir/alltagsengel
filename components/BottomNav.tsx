@@ -103,10 +103,19 @@ export default function BottomNav({ role }: { role: 'kunde' | 'engel' | 'fahrer'
           : item.key !== 'suche' && pathname.startsWith(item.href)
         if (item.key === 'suche') {
           return (
-            <a key={item.label} href="#" className="bnav-item" onClick={handleSearchClick} aria-label="Engel suchen">
+            // Kein <a href="#">: der Eintrag navigiert nicht, er scrollt zur
+            // Suche auf derselben Seite. Als <button> ist er per Enter UND
+            // Leertaste bedienbar und wird korrekt als Schaltfläche vorgelesen.
+            <button
+              key={item.label}
+              type="button"
+              className="bnav-item"
+              onClick={handleSearchClick}
+              aria-label="Engel suchen"
+            >
               <div className="bnav-ic">{item.icon}</div>
               <div className="bnav-lbl">{item.label}</div>
-            </a>
+            </button>
           )
         }
         return (

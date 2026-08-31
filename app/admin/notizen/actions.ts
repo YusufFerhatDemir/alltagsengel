@@ -20,7 +20,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent, logAuditEventOrWarn } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 import { NOTE_AUTHOR_ROLE, NOTE_CATEGORY } from '@/lib/admin/ops'
 
 // Erlaubte Werte NICHT abschreiben, sondern aus den geteilten Maps ableiten —

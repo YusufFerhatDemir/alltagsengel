@@ -6,7 +6,7 @@
 // escapeHtml(): XSS-Schutz für User-Input in E-Mail-HTML.
 // ═══════════════════════════════════════════════════════════════
 
-import { test, describe, beforeEach } from 'node:test'
+import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
 
 import { rateLimit, escapeHtml } from '../rate-limit'

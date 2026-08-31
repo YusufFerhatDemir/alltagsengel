@@ -8,7 +8,7 @@ import {
   ARBEITSZEIT_STATUS, ARBEITSZEIT_QUELLE, ABSENCE_TYPE, ABSENCE_STATUS,
   MONATSNAMEN,
 } from '@/lib/admin/ops'
-import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { StatusBadge, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger'
 import DialogOverlay from '@/components/DialogOverlay'
 const log = logger.child('admin:personal')

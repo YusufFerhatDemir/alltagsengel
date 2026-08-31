@@ -2,7 +2,7 @@
 import './analytics.css'
 import { useEffect, useState } from 'react'
 import { loadAnalyticsData } from './actions'
-import { IconUser, IconClock, IconTarget, IconChart } from '@/components/Icons'
+import { IconUser } from '@/components/Icons'
 import { logger } from '@/lib/logger'
 const log = logger.child('analytics')
 

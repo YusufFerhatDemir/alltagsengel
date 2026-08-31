@@ -4,7 +4,7 @@ import {
   statusMeta, timeAgo,
   BENACHRICHTIGUNG_TYP, BENACHRICHTIGUNG_KATEGORIE,
 } from '@/lib/admin/ops'
-import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { StatusBadge, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger'
 import { klickbareZeile } from '@/lib/a11y'
 const log = logger.child('admin:benachrichtigungen')

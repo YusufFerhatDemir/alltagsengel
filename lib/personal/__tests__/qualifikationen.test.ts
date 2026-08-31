@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { createQualifikation, listQualifikationen, updateQualifikation, deleteQualifikation } from '../qualifikationen'
+import { createQualifikation, updateQualifikation } from '../qualifikationen'
 
 function mockInsertClient(data: Record<string, unknown>) {
   return {

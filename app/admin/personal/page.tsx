@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import {
   statusMeta, fullName, VERTRAGSSTATUS, QUALIFICATION_LEVEL,
 } from '@/lib/admin/ops'

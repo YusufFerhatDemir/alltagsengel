@@ -1,7 +1,7 @@
 'use client';
 
-import { useParams, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
+import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { logger } from '@/lib/logger';
 const log = logger.child('notfall');

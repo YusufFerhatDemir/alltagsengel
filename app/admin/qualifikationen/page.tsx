@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 
 interface AblaufWarnung {
   qualifikation_id: string

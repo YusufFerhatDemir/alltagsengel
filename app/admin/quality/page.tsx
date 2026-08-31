@@ -2,7 +2,7 @@
 import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  formatDate, statusMeta, daysUntil, stars,
+  formatDate, daysUntil, stars,
   CALL_TYPE, CALL_SEQUENCE,
 } from '@/lib/admin/ops'
 import { StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'

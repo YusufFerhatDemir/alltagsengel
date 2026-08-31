@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { BRAND, FINANCIAL_PROJECTIONS, UNIT_ECONOMICS, MARKET_DATA } from '@/lib/mis/constants'
+import { BRAND, FINANCIAL_PROJECTIONS, UNIT_ECONOMICS } from '@/lib/mis/constants'
 import { useMis } from '@/lib/mis/MisContext'
 import { useRouter } from 'next/navigation'
 import { KpiCard, SectionHeader, Card, MiniBarChart, ProgressBar, ActivityItem, StatRow, MisButton, Badge, DataTable } from '@/components/mis/MisComponents'

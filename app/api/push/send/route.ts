@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { sendPushToUser, type PushPayload } from '@/lib/push'
 import { withTracking } from '@/lib/monitoring/tracker'
 

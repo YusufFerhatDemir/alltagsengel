@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/mis/constants'
-import { SectionHeader, Card, KpiCard, DataTable, Tabs, MisButton, Badge, RiskBadge, ProgressBar, StatRow, EmptyState, Modal } from '@/components/mis/MisComponents'
+import { SectionHeader, Card, KpiCard, DataTable, Tabs, MisButton, Badge, RiskBadge, EmptyState, Modal } from '@/components/mis/MisComponents'
 import { useMis } from '@/lib/mis/MisContext'
 import type { QualityProcess, QualityAudit, CAPA } from '@/lib/mis/types'
 import { createQualityAudit, createCapa } from './actions'

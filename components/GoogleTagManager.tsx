@@ -95,6 +95,10 @@ export default function GoogleTagManager() {
       {/* GTM Noscript Fallback */}
       <noscript>
         <iframe
+          // title ist Pflicht (WCAG 4.1.2): ohne sie liest ein Screenreader
+          // nur "Frame" vor. Der Frame ist zwar unsichtbar, wird aber im
+          // noscript-Fall Teil des Baums.
+          title="Google Tag Manager"
           src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
           height="0"
           width="0"

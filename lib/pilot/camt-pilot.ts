@@ -69,7 +69,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   camtPreflight,
-  kuerzeIban,
+  
   type BuchungEinordnung,
   type CamtPreflightErgebnis,
   type Feldpruefung,
