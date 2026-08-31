@@ -190,3 +190,64 @@ describe('alarmKurzfassung', () => {
     expect(alarmKurzfassung(a)).not.toMatch(/GESCHEITERT/)
   })
 })
+
+// ═══════════════════════════════════════════════════════════════════════
+// Mandantenaufloesung — die Quelle, an der die Kette real gerissen ist
+// ═══════════════════════════════════════════════════════════════════════
+//
+// BEFUND 31.08.2026 (live): ein Konto mit der Rolle `engel` steht weder in
+// organization_members noch in caregivers noch in clients. Engel liegen in
+// `angels` — eine Tabelle ohne user_id und ohne organization_id. Fuer die
+// groesste Nutzergruppe lieferte organisationFuerKonto() deshalb immer
+// null, und ohne Organisation haengt meldeSicherheitsereignis() KEINEN
+// Zustellkontext an: kein Eintrag in notification_delivery_log, keine
+// Provider-Nachrichten-ID im eigenen Bestand, keine Wiederholung.
+// Die Testmeldung 8dfd95d7 kam an — belegbar war das aber nur bei Resend.
+import { organisationFuerKonto } from '@/lib/security/audit'
+
+const KONTO = '5fa1df42-8eb5-416b-abb5-0c85a057e957'
+const ORG = '00000000-0000-4000-8000-000460629986'
+
+type AuditClient = Parameters<typeof organisationFuerKonto>[0]
+
+function konten(treffer: Record<string, unknown | null>) {
+  const aufrufe: FakeAufruf[] = []
+  const f = erstelleFakeSupabase((a) => {
+    aufrufe.push(a)
+    return { data: (treffer[a.tabelle] ?? null) as unknown }
+  })
+  return { client: f.client as unknown as AuditClient, aufrufe: f.aufrufe }
+}
+
+describe('organisationFuerKonto', () => {
+  it('ein engel-Konto ohne Mitgliedschaft faellt auf die aktive Ueberwachungsliste zurueck', async () => {
+    const { client } = konten({ security_watchlist: { organization_id: ORG } })
+    expect(await organisationFuerKonto(client, KONTO)).toBe(ORG)
+  })
+
+  it('die Ueberwachungsliste wird nur AKTIV und nur mit Mandant gelesen', async () => {
+    // Eine abgeschaltete Ueberwachung entscheidet nichts — sonst waere die
+    // Liste ein dauerhaftes Zuordnungsregister statt einer Massnahme.
+    const { client, aufrufe } = konten({ security_watchlist: { organization_id: ORG } })
+    await organisationFuerKonto(client, KONTO)
+
+    const wl = aufrufe.find(a => a.tabelle === 'security_watchlist')
+    expect(hatFilter(wl, 'eq', 'user_id', KONTO)).toBe(true)
+    expect(hatFilter(wl, 'eq', 'aktiv', true)).toBe(true)
+    expect(hatFilter(wl, 'not', 'organization_id')).toBe(true)
+  })
+
+  it('die Mitgliedschaft bleibt die erste Quelle — die Liste wird dann gar nicht gefragt', async () => {
+    const { client, aufrufe } = konten({
+      organization_members: { organization_id: 'aaaaaaaa-1111-4111-8111-111111111111' },
+      security_watchlist: { organization_id: ORG },
+    })
+    expect(await organisationFuerKonto(client, KONTO)).toBe('aaaaaaaa-1111-4111-8111-111111111111')
+    expect(aufrufe.some(a => a.tabelle === 'security_watchlist')).toBe(false)
+  })
+
+  it('ohne jede Quelle bleibt es fail-closed bei null — keine Stamm-Organisation geraten', async () => {
+    const { client } = konten({})
+    expect(await organisationFuerKonto(client, KONTO)).toBeNull()
+  })
+})

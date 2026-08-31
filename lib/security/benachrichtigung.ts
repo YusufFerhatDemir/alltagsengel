@@ -490,6 +490,23 @@ export async function meldeSicherheitsereignis(k: MeldeKontext): Promise<MeldeEr
 
     if (gesendet.length === 0) return nichts('Versand fehlgeschlagen')
 
+    // Ohne Organisation gibt es keinen Zustellvorgang — und damit weder
+    // eine Provider-Nachrichten-ID im eigenen Bestand noch eine
+    // Wiederholung. Das ist keine Randnotiz: die Meldung ist dann ein
+    // Einmalversuch, dessen Erfolg sich nur beim Provider nachschlagen
+    // laesst. Es MUSS auffallen, sonst sieht der Fall wie ein normaler
+    // Versand aus. Sichtbar an drei Stellen: hier im Log, als
+    // `ohneWiederholung` in der Sicherheitsansicht
+    // (lib/security/alarmspur.ts) und im CSV-Export.
+    if (!k.organizationId) {
+      log.warn('Sicherheitsmeldung ohne Zustellvorgang — kein Beleg, keine Wiederholung', {
+        eventType: k.eventType,
+        ereignisId: k.ereignisId,
+        userId: k.userId,
+        empfaenger: gesendet.length,
+      })
+    }
+
     // Der Versand bekommt eine EIGENE Zeile statt eines Vermerks an der
     // ausloesenden. Zwei Gruende: die Tabelle ist unveraenderlich (der
     // Trigger in der Migration laesst kein UPDATE zu), und die Meldung
