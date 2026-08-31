@@ -92,6 +92,18 @@ const AUSNAHMEN = new Set([
   'app/api/dipa/nachweise/route.ts:coach_nutzungsereignisse.organization_id',
   'lib/ops/nachrichten.ts:ops_posteingang.organization_id',
 
+  // ECHT und ABSICHTLICH: `assignments.booking_id` kommt mit Migration
+  // 20261025000000 und wird von Hand im SQL-Editor angewendet. Zwischen
+  // Deploy und Anwenden fehlt die Spalte — und genau darauf ist der Code
+  // vorbereitet: die Storno-Route faengt 42703/PGRST204 ab und faellt auf
+  // den alten Notiz-Bezug zurueck (lib/bookings/assignment-bezug.ts,
+  // __tests__/bookings/assignment-bezug.test.ts).
+  //
+  // Diese Zeile ist deshalb BEFRISTET. Ist die Migration angewendet
+  // (`npm run check:migrationen` meldet 20261025000000 als live), gehoert
+  // sie geloescht — sonst deckt sie spaeter einen echten Tippfehler zu.
+  'app/api/bookings/cancel/route.ts:assignments.booking_id',
+
   // ── Phase 7 (26.08.2026) — alle acht nachgeprueft, alle falsch zugeordnet ──
   //
   // Zwei Ursachen, beide dieselbe Grenze des Zuordners: er nimmt die Tabelle
