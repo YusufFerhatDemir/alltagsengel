@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { erfasseSicherheitsereignis } from '@/lib/security'
+import { istRolle, wirksameRolle } from '@/lib/auth/rollen'
+import { startseiteNachAnmeldung } from '@/lib/auth/startseite'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -75,23 +77,55 @@ export async function GET(request: Request) {
           })
         }
 
-        // Redirect based on role
-        const { data: profile } = await supabase
+        // ── Weiterleitung nach Rolle ────────────────────────────────
+        // Bis 31.08.2026 stand hier eine eigene, kuerzere Kette: sie kannte
+        // nur 'admin' und 'engel', las allein `profiles` und schickte alle
+        // uebrigen Rollen nach /kunde/home. superadmin, pdl, qm,
+        // buchhaltung, fahrer und angehoerige landeten damit ueber den
+        // Bestaetigungs- oder Magic-Link in der Kunden-App — fuer fahrer
+        // und angehoerige in einem Bereich, den sie gar nicht betreten
+        // duerfen, sodass der Proxy sie sofort wieder herauswarf.
+        //
+        // Rollenquelle jetzt wie in der Anmeldeseite und im Proxy: BEIDE
+        // nicht selbst beschreibbaren Quellen, bei Widerspruch die engere.
+        const { data: profile, error: profilFehler } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
-          .single()
+          .maybeSingle()
 
-        if (profile?.role === 'admin') return NextResponse.redirect(`${origin}/admin/home`)
-        if (profile?.role === 'engel') {
-          // Check if angel profile exists — if not, redirect to registration
-          const { data: angel } = await supabase
+        // Ein Fehler beim Rollenabruf ist KEINE Rolle. Vorher fiel er als
+        // `profile === undefined` durch bis nach /kunde/home — eine
+        // Pflegedienstleitung landete bei einer Netzstoerung in der
+        // Kunden-App. Lieber zurueck zur Anmeldung als in den falschen
+        // Bereich.
+        if (profilFehler) {
+          return NextResponse.redirect(`${origin}/auth/login?error=rolle_nicht_pruefbar`)
+        }
+
+        const role = wirksameRolle(
+          (user.app_metadata?.role as string) || '',
+          (profile?.role as string) || '',
+        )
+
+        if (role === 'engel') {
+          // Ohne Engel-Datensatz geht es in die Registrierung. Ein FEHLER
+          // beim Nachsehen ist aber kein fehlender Datensatz: bis
+          // 31.08.2026 verwarf diese Abfrage ihren Fehler, und ein laengst
+          // registrierter Engel wurde bei jeder Stoerung erneut in die
+          // Registrierung geschickt.
+          const { data: angel, error: engelFehler } = await supabase
             .from('angels')
             .select('id')
             .eq('id', user.id)
-            .single()
+            .maybeSingle()
+          if (engelFehler) return NextResponse.redirect(`${origin}/auth/login?error=rolle_nicht_pruefbar`)
           if (!angel) return NextResponse.redirect(`${origin}/engel/register`)
           return NextResponse.redirect(`${origin}/engel/home`)
+        }
+
+        if (istRolle(role) && role !== 'kunde') {
+          return NextResponse.redirect(`${origin}${startseiteNachAnmeldung(role)}`)
         }
         return NextResponse.redirect(`${origin}/kunde/home`)
       }

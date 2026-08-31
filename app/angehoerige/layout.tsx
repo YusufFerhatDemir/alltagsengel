@@ -20,7 +20,7 @@ const navItems = [
 // ═══════════════════════════════════════════════════════════════
 function useAngehAuth() {
   const router = useRouter()
-  const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading')
+  const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'unauthenticated' | 'ladefehler'>('loading')
 
   const checkAuth = useCallback(async () => {
     const supabase = createClient()
@@ -48,11 +48,21 @@ function useAngehAuth() {
     }
 
     // Rolle pruefen: angehoerige, admin oder superadmin
-    const { data: profile } = await supabase
+    const { data: profile, error: rollenFehler } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
+
+    // Eine gestoerte Rollenabfrage ist keine falsche Rolle. Bis 31.08.2026
+    // wurde der Fehler verworfen: `profile` war null, der Zweig unten griff,
+    // und ein Angehoeriger wurde nach /admin geschickt — in einen Bereich,
+    // den er nicht betreten darf und aus dem ihn der Proxy sofort wieder
+    // herauswarf. Zwei Weiterleitungen als Antwort auf eine Netzstoerung.
+    if (rollenFehler) {
+      setAuthState('ladefehler')
+      return
+    }
 
     const erlaubteRollen = ['angehoerige', 'admin', 'superadmin']
     if (!profile || !erlaubteRollen.includes(profile.role)) {
@@ -98,6 +108,33 @@ export default function AngehoerigenLayout({ children }: { children: React.React
 
   if (authState === 'unauthenticated') {
     return null
+  }
+
+  if (authState === 'ladefehler') {
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        minHeight: '100vh', background: 'var(--bg, #F7F2EA)',
+        flexDirection: 'column', gap: 12, padding: 32, textAlign: 'center',
+      }} role="alert">
+        <div style={{ fontSize: 16, fontWeight: 600 }}>Zugang konnte nicht geprüft werden</div>
+        <div style={{ fontSize: 14, opacity: 0.7, maxWidth: 320 }}>
+          Das ist kein Zugriffsproblem — die Prüfung selbst ist fehlgeschlagen.
+          Bitte versuchen Sie es erneut.
+        </div>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          style={{
+            marginTop: 4, padding: '12px 24px', minHeight: 44, borderRadius: 10,
+            border: 'none', background: 'var(--gold2, #C9963C)', color: '#fff',
+            fontSize: 14, fontWeight: 600, cursor: 'pointer',
+          }}
+        >
+          Erneut versuchen
+        </button>
+      </div>
+    )
   }
 
   return (

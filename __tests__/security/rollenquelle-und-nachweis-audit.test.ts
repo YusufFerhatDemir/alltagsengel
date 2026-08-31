@@ -20,6 +20,8 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
+import { ANMELDE_STARTSEITE } from '@/lib/auth/startseite'
+import { ROLLEN } from '@/lib/auth/rollen'
 
 const WURZEL = path.resolve(__dirname, '../..')
 
@@ -54,8 +56,29 @@ describe('Bereich 13: Login liest keine manipulierbare Rollenquelle', () => {
   })
 
   it('die Rolle angehoerige fuehrt ins Angehoerigenportal', () => {
-    expect(quelle).toMatch(/role === 'angehoerige'/)
-    expect(quelle).toMatch(/'\/angehoerige'/)
+    // Bis 31.08.2026 stand hier eine ausgeschriebene if-Kette und dieser
+    // Test suchte nach `role === 'angehoerige'`. Die Kette kannte pdl, qm
+    // und buchhaltung nicht — sie fielen in den Kunden-Zweig. Die Zuordnung
+    // liegt jetzt in lib/auth/startseite.ts; geprueft wird deshalb die
+    // Zusage selbst statt der Schreibweise, unter der sie mal stand.
+    const abschnitt = quelle.slice(quelle.indexOf('async function nachAnmeldung'))
+    expect(abschnitt).toMatch(/startseiteNachAnmeldung\(role\)/)
+    expect(ANMELDE_STARTSEITE.angehoerige).toBe('/angehoerige')
+  })
+
+  it('leitet ueber die gemeinsame Karte, nicht ueber eine eigene Kette', () => {
+    // Die eigene Kette war der Grund, warum drei Rollen fehlten. Kommt sie
+    // zurueck, faellt dieser Test.
+    const abschnitt = quelle.slice(quelle.indexOf('async function nachAnmeldung'))
+    expect(abschnitt).not.toMatch(/role === 'fahrer'/)
+    expect(abschnitt).not.toMatch(/role === 'engel'/)
+  })
+
+  it('kennt jede Rolle des Rollenkatalogs', () => {
+    // Der eigentliche Befund in einem Satz: keine Rolle darf durchfallen.
+    for (const rolle of ROLLEN) {
+      expect(ANMELDE_STARTSEITE[rolle], `Anmeldeziel fehlt fuer ${rolle}`).toBeTruthy()
+    }
   })
 })
 

@@ -8,7 +8,8 @@ import Icon3D from '@/components/Icon3D'
 import { flushPendingProfile } from '@/lib/pending-profile'
 import { codeAbfrageNoetig, type MfaNiveau } from '@/lib/coach/mfa'
 import { logger } from '@/lib/logger'
-import { wirksameRolle } from '@/lib/auth/rollen'
+import { istRolle, wirksameRolle } from '@/lib/auth/rollen'
+import { startseiteNachAnmeldung } from '@/lib/auth/startseite'
 import { KONTO_GELOESCHT_CODE, KONTO_GELOESCHT_TEXT } from '@/lib/auth/konto-status'
 const log = logger.child('login')
 
@@ -26,6 +27,10 @@ function LoginForm() {
   // sonst steht dort „Zugriff verweigert" und die Person sucht den Fehler
   // bei sich, statt den Widerrufslink in ihrer E-Mail zu finden.
   const kontoGeloescht = searchParams.get('error') === KONTO_GELOESCHT_CODE
+  // Die Rollenpruefung ist fehlgeschlagen — NICHT: die Rolle reicht nicht.
+  // Ohne eigenen Hinweis landet die Person auf einem stummen Anmeldeformular
+  // und haelt die Stoerung fuer eine Abweisung.
+  const rolleNichtPruefbar = searchParams.get('error') === 'rolle_nicht_pruefbar'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -261,14 +266,15 @@ function LoginForm() {
     // Nur relative Pfade erlaubt (kein Open-Redirect via https://evil.com)
     if (redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//')) {
       window.location.href = redirectTo
-    } else if (role === 'admin' || role === 'superadmin') {
-      window.location.href = '/mis'
-    } else if (role === 'engel') {
-      window.location.href = '/engel/home'
-    } else if (role === 'fahrer') {
-      window.location.href = '/fahrer/home'
-    } else if (role === 'angehoerige') {
-      window.location.href = '/angehoerige'
+    } else if (istRolle(role) && role !== 'kunde') {
+      // Ein Ziel je Rolle, aus lib/auth/startseite.ts. Bis 31.08.2026 stand
+      // die Kette hier ausgeschrieben und kannte pdl/qm/buchhaltung nicht —
+      // die drei fielen in den Kunden-Zweig, wurden dort erst noch gegen
+      // angehoerigen_zugaenge geprueft, nach /kunde/home geschickt und vom
+      // Proxy sofort nach /admin/home zurueckgeworfen.
+      window.location.href = startseiteNachAnmeldung(role)
+      // Unbekannte oder leere Rollen fallen bewusst in den Zweig unten —
+      // dort entscheidet erst der Angehoerigen-Zugang ueber das Ziel.
     } else {
       // Prüfe ob der User einen aktiven Angehörigen-Zugang hat
       const { data: zugaenge } = await supabase
@@ -420,6 +426,11 @@ function LoginForm() {
         {kontoGeloescht && (
           <div style={{ background: 'rgba(208, 75, 59, 0.15)', border: '1px solid rgba(208, 75, 59, 0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 12, fontSize: 13, color: '#ef9a9a', textAlign: 'center' }}>
             {KONTO_GELOESCHT_TEXT}
+          </div>
+        )}
+        {rolleNichtPruefbar && (
+          <div style={{ background: 'rgba(208, 75, 59, 0.15)', border: '1px solid rgba(208, 75, 59, 0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 12, fontSize: 13, color: '#ef9a9a', textAlign: 'center' }} role="alert">
+            Ihre Berechtigung konnte gerade nicht geprüft werden. Das liegt nicht an Ihrem Konto — bitte melden Sie sich erneut an.
           </div>
         )}
         {authError && (

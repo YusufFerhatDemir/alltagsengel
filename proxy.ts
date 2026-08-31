@@ -4,6 +4,7 @@ import { getStorageKeyFromEnv } from '@/lib/supabase/storage-key'
 import { supabasePublishableKey, supabaseUrl } from '@/lib/supabase/keys'
 import { handleRateLimit } from '@/lib/middleware/rate-limit'
 import { darfPfad } from '@/lib/auth/bereiche'
+import { BEREICHS_STARTSEITE } from '@/lib/auth/startseite'
 import { wirksameRolle } from '@/lib/auth/rollen'
 import { istZurLoeschungVorgemerkt, KONTO_GELOESCHT_CODE } from '@/lib/auth/konto-status'
 import { logger } from '@/lib/logger'
@@ -71,19 +72,11 @@ const ROLE_ACCESS: Record<string, string[]> = {
 }
 
 // ═══ Startseite pro Rolle (für Redirect bei falschem Bereich) ═══
-const ROLE_HOME: Record<string, string> = {
-  admin:      '/admin/home',
-  superadmin: '/admin/home',
-  // /admin/home verlangt 'berichte.lesen' — das hat jede Fachrolle.
-  // Damit kann der Rueckverweis unten keine Schleife bilden.
-  pdl:         '/admin/home',
-  qm:          '/admin/home',
-  buchhaltung: '/admin/home',
-  kunde:      '/kunde/home',
-  engel:      '/engel/home',
-  fahrer:     '/fahrer/home',
-  angehoerige: '/angehoerige',
-}
+// Die Zuordnung stand bis 31.08.2026 hier UND in der Anmeldeseite UND in
+// app/auth/callback — mit sechs abweichenden Zeilen. Sie steht jetzt in
+// lib/auth/startseite.ts; /admin/home verlangt 'berichte.lesen', das hat
+// jede Fachrolle, damit kann der Rueckverweis unten keine Schleife bilden.
+const ROLE_HOME: Record<string, string> = BEREICHS_STARTSEITE
 
 // ═══ Geschützte Pfad-Präfixe ═══
 const PROTECTED_PREFIXES = ['/admin', '/kunde', '/engel', '/fahrer', '/mis', '/angehoerige']

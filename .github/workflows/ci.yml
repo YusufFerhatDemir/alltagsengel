@@ -115,6 +115,18 @@ jobs:
         # Beide Regeln laufen rein statisch und brauchen keinen DB-Zugang.
         run: npm run lint:route-auth
 
+      - name: Lint — Weiterleitung auf verworfenen Ladefehler
+        # Track A (31.08.2026). `const { data: x } = await supabase…` verwirft
+        # den Fehler. Faellt die Abfrage aus, ist `x` null — und eine daran
+        # haengende Weiterleitung feuert, als gaebe es den Datensatz nicht.
+        # Gefunden waren fuenf Stellen: ein registrierter Engel landete bei
+        # jeder Stoerung wieder in der Registrierung, ein Angehoeriger in
+        # /admin, eine Pflegedienstleitung in der Kunden-App.
+        #
+        # „Kein Datensatz" und „nicht nachsehen koennen" sind verschiedene
+        # Aussagen; nur die erste rechtfertigt eine Weiterleitung.
+        run: npm run lint:ladefehler
+
       - name: Schema-Drift-Check (warn-only — blockiert nicht)
         # Findet Code, der Spalten anspricht, die es live nicht gibt.
         # PostgREST lehnt so eine Abfrage komplett ab (42703); im Code sieht

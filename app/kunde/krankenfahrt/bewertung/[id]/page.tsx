@@ -44,12 +44,22 @@ export default function BewertungPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/auth/login'); return }
 
-    const { data: rideData } = await supabase
+    const { data: rideData, error: fahrtFehler } = await supabase
       .from('krankenfahrten')
       .select('*, krankenfahrt_providers(company_name)')
       .eq('id', rideId)
       .eq('customer_id', user.id)
-      .single()
+      .maybeSingle()
+
+    // Eine gestoerte Abfrage ist keine fehlende Fahrt. Bis 31.08.2026 wurde
+    // der Fehler verworfen, `rideData` war null und der Kunde landete
+    // wortlos wieder auf der Startseite — mit dem Eindruck, seine Fahrt sei
+    // verschwunden.
+    if (fahrtFehler) {
+      setError('Die Fahrt konnte nicht geladen werden. Bitte versuchen Sie es erneut.')
+      setLoading(false)
+      return
+    }
 
     if (!rideData) { router.push('/kunde/home'); return }
     setRide(rideData)
@@ -93,6 +103,20 @@ export default function BewertungPage() {
   if (loading) return (
     <div className="phone"><div className="screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
       <div style={{ color: '#DBA84A' }}>Laden...</div>
+    </div></div>
+  )
+
+  // Ladefehler braucht einen eigenen Ausgang: ohne ihn rendert die Seite
+  // unten das Formular mit `ride === null` und der Kunde sieht eine leere
+  // Bewertungsmaske statt der Ursache.
+  if (error && !ride) return (
+    <div className="phone"><div className="screen" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', gap: '16px', padding: '40px' }} role="alert">
+      <div style={{ fontSize: '15px', fontWeight: 600, color: '#F5F0E8', textAlign: 'center' }}>Fahrt konnte nicht geladen werden</div>
+      <div style={{ fontSize: '13px', color: 'rgba(245,240,232,0.5)', textAlign: 'center' }}>{error}</div>
+      <button onClick={() => { setError(''); setLoading(true); loadRide() }} style={{
+        padding: '12px 24px', minHeight: '44px', borderRadius: '12px', border: 'none',
+        background: '#DBA84A', color: '#1A1612', fontSize: '14px', fontWeight: 600, cursor: 'pointer',
+      }}>Erneut versuchen</button>
     </div></div>
   )
 
