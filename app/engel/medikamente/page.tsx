@@ -10,6 +10,7 @@ import { Suspense, useCallback, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { ladeListe, ladeZeile, zeilenVon, zeileVon, istFehler } from '@/lib/ui/ladelage'
 import { requireUser } from '@/lib/supabase/require-session'
 import { IconPill, IconClock, IconCheck } from '@/components/Icons'
 import { KATEGORIEN } from '@/lib/medikamente/types'
@@ -88,13 +89,36 @@ function MedikamentePage() {
       if (!user) return
       try {
         const supabase = createClient()
-        const { data: cg } = await supabase.from('caregivers').select('id').eq('user_id', user.id).single()
+        // Beide Abfragen verwarfen bis 31.08.2026 ihren Fehler. Faellt eine
+        // aus, ist die Kundenliste leer — und die Seite meldet „Keine Kunden
+        // zugeordnet". Der Engel kommt dann an KEINE Medikamentenliste und
+        // liest das als Aussage ueber seine Zuordnung, nicht als Stoerung.
+        const cgLage = await ladeZeile<{ id: string }>(
+          supabase.from('caregivers').select('id').eq('user_id', user.id).single(),
+          'engel:medikamente:caregiver',
+        )
+        if (istFehler(cgLage)) {
+          setError('Ihre Zuordnung konnte nicht geladen werden. Bitte versuchen Sie es erneut.')
+          setLoadingKunden(false)
+          return
+        }
+        const cg = zeileVon(cgLage)
         if (!cg) { setLoadingKunden(false); return }
 
-        const { data: zuordnungen } = await supabase
-          .from('assignments')
-          .select('client_id, client:clients(first_name, last_name)')
-          .eq('caregiver_id', cg.id)
+        type Klientbezug = { first_name: string | null; last_name: string | null }
+        const zuordnungsLage = await ladeListe<{ client_id: string | null; client: Klientbezug | Klientbezug[] | null }>(
+          supabase
+            .from('assignments')
+            .select('client_id, client:clients(first_name, last_name)')
+            .eq('caregiver_id', cg.id),
+          'engel:medikamente:zuordnungen',
+        )
+        if (istFehler(zuordnungsLage)) {
+          setError('Ihre Kundenliste konnte nicht geladen werden. Bitte versuchen Sie es erneut.')
+          setLoadingKunden(false)
+          return
+        }
+        const zuordnungen = zeilenVon(zuordnungsLage)
 
         const map = new Map<string, string>()
         for (const z of (zuordnungen || [])) {
@@ -213,8 +237,10 @@ function MedikamentePage() {
         ) : kunden.length === 0 ? (
           <div className="chat-empty" style={{ paddingTop: 60 }}>
             <div style={{ fontSize: 40, marginBottom: 10 }}><IconPill size={36} /></div>
-            <div className="chat-empty-title">Keine Kunden zugeordnet</div>
-            <div className="chat-empty-sub">Sobald dir ein Kunde zugeordnet ist, kannst du hier die Medikamentengabe dokumentieren.</div>
+            {/* Bei einem Ladefehler steht die Meldung oben; dann darf hier
+                nicht „keine Zuordnung" behauptet werden. */}
+            <div className="chat-empty-title">{error ? 'Kundenliste nicht geladen' : 'Keine Kunden zugeordnet'}</div>
+            <div className="chat-empty-sub">{error ? 'Bitte laden Sie die Seite neu.' : 'Sobald dir ein Kunde zugeordnet ist, kannst du hier die Medikamentengabe dokumentieren.'}</div>
           </div>
         ) : (
           <>
