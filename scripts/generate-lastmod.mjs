@@ -50,8 +50,33 @@ function gitDate(file) {
 }
 
 if (!existsSync(join(ROOT, '.git'))) {
-  // Vercel-Build (Tarball ohne Git-Historie): eingecheckte Daten behalten.
+  // Build ohne Git-Historie: eingecheckte Daten behalten.
   console.log('[lastmod] kein .git gefunden — behalte eingecheckte lastmod.json')
+  process.exit(0)
+}
+
+// ── Flacher Klon ist SCHLIMMER als gar kein .git ──────────────────────────
+// Vercel klont mit begrenzter Tiefe (Standard: die letzten 10 Commits). Fuer
+// jede Datei, die in diesem Fenster nicht angefasst wurde, hat git keinen
+// echten "zuletzt geaendert"-Commit mehr — es liefert den Grenz-Commit des
+// flachen Klons. Ergebnis, live am 31.08.2026 gemessen: 137 von 138
+// Sitemap-URLs trugen denselben lastmod, und der wanderte bei jedem Deploy
+// weiter. Genau das Signal, das diese Datei verhindern soll, nur ueber git
+// statt ueber die Datei-mtime.
+//
+// Die Pruefung muss VOR dem Schreiben stehen: sonst ueberschreibt der
+// Vercel-Build die gute eingecheckte JSON mit 98x demselben Datum.
+let flach = false
+try {
+  flach = execSync('git rev-parse --is-shallow-repository', {
+    cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'],
+  }).trim() === 'true'
+} catch {
+  // Aeltere git-Versionen kennen das Flag nicht — dann entscheidet die Datei.
+  flach = existsSync(join(ROOT, '.git', 'shallow'))
+}
+if (flach) {
+  console.log('[lastmod] flacher Klon — behalte eingecheckte lastmod.json (git-Daten waeren der Grenz-Commit)')
   process.exit(0)
 }
 
