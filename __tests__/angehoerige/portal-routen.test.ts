@@ -547,3 +547,72 @@ describe('Zugriffsprotokoll — fail-closed', () => {
     expect(bestand.angehoerigen_audit_log).toHaveLength(0)
   })
 })
+
+// ═══════════════════════════════════════════════════════════════════
+describe('Ein Abfrageausfall ist keine Auskunft über den Angehörigen', () => {
+  // Nachtrag 01.09.2026 (lint:leerzustand --bericht): in allen fünf Routen
+  // war die Klienten-Abfrage die einzige ohne Fehlerprüfung, im Dashboard
+  // zusätzlich beide Zählungen und die Leistungsliste. Fielen sie aus,
+  // stand die Seite trotzdem und behauptete: Klient „Unbekannt", 0 kommende
+  // Termine, 0 ungelesene Nachrichten, keine Leistungen. Ein Angehöriger
+  // liest das als Aussage über seinen Angehörigen.
+  const nurAuf = (tabelle: string) => (a: Aufruf) =>
+    a.tabelle === tabelle && a.op === 'select' ? { message: 'Verbindung unterbrochen', code: '08006' } : null
+
+  it('Dashboard: nicht lesbare Klienten sind kein „Unbekannt"', async () => {
+    rueste([zugang(K1, ['termine', 'leistungen'])], standardBestand(), { fehler: nurAuf('clients') })
+    const res = await DASHBOARD()
+    expect(res.status).toBe(500)
+    expect(JSON.stringify(await res.json())).not.toContain('Unbekannt')
+  })
+
+  it('Dashboard: eine nicht ermittelte Terminzahl ist keine Null', async () => {
+    rueste([zugang(K1, ['termine'])], standardBestand(), { fehler: nurAuf('assignments') })
+    expect((await DASHBOARD()).status).toBe(500)
+  })
+
+  it('Dashboard: nicht lesbare Nachrichten sind keine gelesenen Nachrichten', async () => {
+    rueste([zugang(K1, ['nachrichten'])], standardBestand(), { fehler: nurAuf('angehoerigen_nachrichten') })
+    expect((await DASHBOARD()).status).toBe(500)
+  })
+
+  it('Dashboard: nicht lesbare Leistungen sind keine fehlenden Leistungen', async () => {
+    rueste([zugang(K1, ['leistungen'])], standardBestand(), { fehler: nurAuf('service_records') })
+    expect((await DASHBOARD()).status).toBe(500)
+  })
+
+  it('Termine, Dokumente, Berichte: ohne Klientennamen kommt keine Liste heraus', async () => {
+    // Der Platzhalter „Klient" auf JEDER Zeile ist bei mehreren
+    // freigegebenen Klienten keine Anzeige, sondern eine Verwechslung.
+    for (const [name, route] of [
+      ['Termine', TERMINE],
+      ['Dokumente', DOKUMENTE],
+      ['Berichte', BERICHTE],
+    ] as const) {
+      rueste([zugang(K1, ['termine', 'dokumente', 'leistungen'])], standardBestand(), { fehler: nurAuf('clients') })
+      const res = await route()
+      expect(res.status, name).toBe(500)
+      expect(JSON.stringify(await res.json()), name).not.toContain('Klient"')
+    }
+  })
+
+  it('Nachrichten: ohne Klientennamen kommt keine Liste heraus', async () => {
+    rueste([zugang(K1, ['nachrichten'])], standardBestand(), { fehler: nurAuf('clients') })
+    expect((await NACHRICHTEN()).status).toBe(500)
+  })
+
+  it('Gegenprobe: ohne Ausfall liefern alle fünf Routen weiterhin 200', async () => {
+    // Ohne diese Probe wäre die Härtung nicht von „blockiert immer"
+    // unterscheidbar.
+    for (const [name, route] of [
+      ['Dashboard', DASHBOARD],
+      ['Termine', TERMINE],
+      ['Dokumente', DOKUMENTE],
+      ['Berichte', BERICHTE],
+      ['Nachrichten', NACHRICHTEN],
+    ] as const) {
+      rueste([zugang(K1, ['termine', 'dokumente', 'leistungen', 'nachrichten', 'pflegeberichte'])])
+      expect((await route()).status, name).toBe(200)
+    }
+  })
+})

@@ -96,7 +96,51 @@ export interface Befund {
   ausschnitt: string
 }
 
-export function pruefeQuelle(quelle: string, datei: string): Befund[] {
+/**
+ * Blendet Kommentare aus — laengentreu, damit Zeilennummern und Ausschnitte
+ * weiter auf den Originaltext zeigen.
+ *
+ * Ohne das zaehlte die Regel ihre eigene Dokumentation mit: `ladelage.ts`
+ * erklaert im Kopfkommentar genau die Form, die sie verhindern soll, und
+ * stand deshalb als Treffer im Bericht. Ein Beispiel in einem Kommentar ist
+ * kein ausgefuehrter Code, und eine Zahl, die Erklaertexte mitzaehlt, ist
+ * keine Zahl ueber die App.
+ *
+ * String-Literale bleiben stehen: sonst wuerde ein `'https://…'` als
+ * Zeilenkommentar gelesen und verdeckte echten Code dahinter.
+ */
+export function ohneKommentare(quelle: string): string {
+  let aus = ''
+  let i = 0
+  type Lage = 'code' | 'zeile' | 'block' | "'" | '"' | '`'
+  let lage: Lage = 'code'
+  while (i < quelle.length) {
+    const z = quelle[i]
+    const zwei = quelle.slice(i, i + 2)
+    if (lage === 'code') {
+      if (zwei === '//') { lage = 'zeile'; aus += '  '; i += 2; continue }
+      if (zwei === '/*') { lage = 'block'; aus += '  '; i += 2; continue }
+      if (z === "'" || z === '"' || z === '`') { lage = z; aus += z; i++; continue }
+      aus += z; i++; continue
+    }
+    if (lage === 'zeile') {
+      if (z === '\n') { lage = 'code'; aus += z; i++; continue }
+      aus += ' '; i++; continue
+    }
+    if (lage === 'block') {
+      if (zwei === '*/') { lage = 'code'; aus += '  '; i += 2; continue }
+      aus += z === '\n' ? '\n' : ' '; i++; continue
+    }
+    // In einem String-Literal: Escapes ueberspringen, sonst bis zum Ende.
+    if (z === '\\') { aus += quelle.slice(i, i + 2); i += 2; continue }
+    if (z === lage) lage = 'code'
+    aus += z; i++
+  }
+  return aus
+}
+
+export function pruefeQuelle(rohQuelle: string, datei: string): Befund[] {
+  const quelle = ohneKommentare(rohQuelle)
   const befunde: Befund[] = []
   NUR_DATA.lastIndex = 0
   let m: RegExpExecArray | null
@@ -122,7 +166,8 @@ export function pruefeQuelle(quelle: string, datei: string): Befund[] {
       zeile: quelle.slice(0, m.index).split('\n').length,
       variable,
       art: leerliste ? 'leerliste' : 'zustand',
-      ausschnitt: fenster
+      ausschnitt: rohQuelle
+        .slice(hinter, hinter + FENSTER)
         .slice(Math.max(0, treffer.index - 20), treffer.index + 90)
         .split('\n').map(z => z.trim()).filter(Boolean).slice(0, 2).join(' ').slice(0, 110),
     })

@@ -25,7 +25,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from 'next/server'
-import { safeApiError } from '@/lib/api/error-sanitizer'
+import { apiErrorResponse, safeApiError } from '@/lib/api/error-sanitizer'
 import { stripe } from '@/lib/stripe/client'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireCoachUser } from '@/lib/coach/api-auth'
@@ -57,7 +57,12 @@ export const GET = withTracking(async function GET() {
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 
-  const bestellung = await massgeblicheBestellung(auth.supabase, auth.coachUser.id)
+  let bestellung: Awaited<ReturnType<typeof massgeblicheBestellung>>
+  try {
+    bestellung = await massgeblicheBestellung(auth.supabase, auth.coachUser.id)
+  } catch (err) {
+    return apiErrorResponse(err)
+  }
 
   // Tarife für die Anzeige — ohne Stripe-IDs, die gehen den Client nichts an.
   const tarife = alleTarife().map(t => ({
@@ -122,7 +127,15 @@ export const POST = withTracking(async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>
   const aktion = String(body.aktion ?? '')
 
-  const bestellung = await massgeblicheBestellung(auth.supabase, auth.coachUser.id)
+  // Getrennt vom `try` unten: ein Ausfall dieser Abfrage darf nicht als
+  // „keine Bestellung" durchgehen, sonst wäre eine Kündigung an einem
+  // Netzfehler gescheitert und hätte wie ein fehlender Vertrag ausgesehen.
+  let bestellung: Awaited<ReturnType<typeof massgeblicheBestellung>>
+  try {
+    bestellung = await massgeblicheBestellung(auth.supabase, auth.coachUser.id)
+  } catch (err) {
+    return apiErrorResponse(err)
+  }
   if (!bestellung) {
     return NextResponse.json({ error: 'Es liegt keine Bestellung vor.' }, { status: 404 })
   }

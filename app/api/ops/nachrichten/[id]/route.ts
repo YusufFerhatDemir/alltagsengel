@@ -21,12 +21,17 @@ export const GET = withTracking(async function GET(
     })
     if (!data) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 })
 
-    const { data: rawReplies } = await supabase
+    // Ein verworfener Fehler zeigte den Vorgang ohne Antworten — und ein
+    // Thread ohne sichtbare Antworten liest sich wie ein unbeantworteter.
+    const { data: rawReplies, error: repliesFehler } = await supabase
       .from('ops_nachrichten')
       .select('id, inhalt, absender_id, created_at, profiles:absender_id(first_name, last_name)')
       .eq('organization_id', auth.organizationId)
       .eq('eltern_id', id)
       .order('created_at', { ascending: true })
+    if (repliesFehler) {
+      throw new Error(`Antworten konnten nicht geladen werden: ${repliesFehler.message}`)
+    }
     const replies = (rawReplies ?? []).map((r: any) => ({
       id: r.id,
       inhalt: r.inhalt,

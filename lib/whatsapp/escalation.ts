@@ -66,6 +66,14 @@ export async function sendEscalationEmail(params: {
   reason: string
   kind?: EscalationKind
   conversation: Array<{ direction: 'inbound' | 'outbound'; body: string; created_at: string }>
+  /**
+   * Der Verlauf konnte nicht (vollstaendig) geladen werden.
+   *
+   * Ohne dieses Kennzeichen sieht eine leere Konversation genauso aus wie ein
+   * Erstkontakt — und wer die Mail liest, antwortet dem Kunden dann ohne zu
+   * wissen, dass es einen Vorlauf gibt.
+   */
+  historieUnvollstaendig?: boolean
 }): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
@@ -87,6 +95,9 @@ export async function sendEscalationEmail(params: {
     '',
     'Konversation (chronologisch):',
     '─────────────────────────────',
+    ...(params.historieUnvollstaendig
+      ? ['⚠ Der bisherige Verlauf war nicht abrufbar — diese Liste ist NICHT vollständig.']
+      : []),
     ...params.conversation.map(
       (m) =>
         `[${new Date(m.created_at).toLocaleString('de-DE')}] ${m.direction === 'inbound' ? 'KUNDE' : 'BOT  '}: ${m.body}`
@@ -132,6 +143,8 @@ export async function sendDraftNotificationEmail(params: {
   customerMessage: string
   botDraft: string
   conversation: Array<{ direction: 'inbound' | 'outbound'; body: string; created_at: string }>
+  /** Siehe `sendEscalationEmail`: leerer Verlauf ≠ kein Verlauf. */
+  historieUnvollstaendig?: boolean
 }): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
@@ -155,6 +168,9 @@ export async function sendDraftNotificationEmail(params: {
     '',
     'Konversation (chronologisch):',
     '─────────────────────────────',
+    ...(params.historieUnvollstaendig
+      ? ['⚠ Der bisherige Verlauf war nicht abrufbar — diese Liste ist NICHT vollständig.']
+      : []),
     ...params.conversation.map(
       (m) =>
         `[${new Date(m.created_at).toLocaleString('de-DE')}] ${m.direction === 'inbound' ? 'KUNDE' : 'BOT  '}: ${m.body}`

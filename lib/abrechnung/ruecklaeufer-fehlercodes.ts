@@ -231,12 +231,20 @@ export async function klassifiziereFehlercode(
   if (!code) return klassifiziereHeuristisch(fehlerCode, fehlerText)
 
   // Spezifisch (eigene Org + passende Quelle) vor allgemein.
-  const { data: rohTreffer } = await supabase
+  const { data: rohTreffer, error: katalogFehler } = await supabase
     .from('dta_fehlercode_katalog')
     .select('id, kategorie, beschreibung, massnahme, korrigierbar, spec_quelle, organization_id, quelle_ik')
     .eq('kassen_code', code)
     .or(`organization_id.eq.${organizationId},organization_id.is.null`)
     .is('deleted_at', null)
+
+  // Ein verworfener Fehler wurde hier zum stillen Rueckfall auf die
+  // Heuristik: der Katalogeintrag existiert, war nur nicht abrufbar, und die
+  // geratene Kategorie landete anschliessend als Tatsache in
+  // dta_wiedervorlage. Ein Rueckstand ist besser als ein falscher Eintrag.
+  if (katalogFehler) {
+    throw new Error(`Fehlercode-Katalog nicht abrufbar: ${katalogFehler.message}`)
+  }
 
   // Verfahrensfilter nur, wenn der Aufrufer ein Verfahren nennt. Ohne Angabe
   // bleibt das Verhalten unverändert (§ 105-Pfad, seit jeher so im Einsatz).

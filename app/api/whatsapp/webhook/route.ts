@@ -230,12 +230,15 @@ async function processIncomingMessage(
   //    Beide Fälle: Mail an info@alltagsengel.care mit voller Konversation.
   const esc = shouldEscalate(msg.body)
   if (esc.escalate) {
-    const { data: history } = await supabase
+    const { data: history, error: historyFehler } = await supabase
       .from('whatsapp_conversations')
       .select('direction, body, created_at')
       .eq('wa_phone', msg.from)
       .order('created_at', { ascending: true })
       .limit(50)
+    if (historyFehler) {
+      log.warnWithException('Eskalation: Verlauf nicht abrufbar', historyFehler, { waPhone: msg.from })
+    }
     await sendEscalationEmail({
       fromPhone: msg.from,
       reason: esc.reason || 'unknown',
@@ -245,6 +248,7 @@ async function processIncomingMessage(
         body: string
         created_at: string
       }>,
+      historieUnvollstaendig: Boolean(historyFehler),
     })
     const reply = escalationReplyFor(esc.kind)
     const tag = esc.kind === 'medical' ? 'escalation-medical' : 'escalation'
@@ -253,12 +257,35 @@ async function processIncomingMessage(
   }
 
   // 5. Konversations-Historie für KI laden (letzte 10 Nachrichten)
-  const { data: history } = await supabase
+  const { data: history, error: historyFehler } = await supabase
     .from('whatsapp_conversations')
     .select('direction, body')
     .eq('wa_phone', msg.from)
     .order('created_at', { ascending: true })
     .limit(20)
+
+  // Ein verworfener Fehler machte aus dem Ausfall einen leeren Verlauf — und
+  // ein leerer Verlauf ist fuer die KI ein Erstkontakt. Der Bot haette einen
+  // laufenden Vorgang beantwortet, als kenne er ihn nicht. Statt blind zu
+  // antworten geht der Fall an einen Menschen.
+  if (historyFehler) {
+    log.warnWithException('Verlauf nicht abrufbar — an Team übergeben', historyFehler, {
+      waPhone: msg.from,
+    })
+    await sendEscalationEmail({
+      fromPhone: msg.from,
+      reason: 'historie_nicht_abrufbar',
+      kind: 'general',
+      conversation: [],
+      historieUnvollstaendig: true,
+    })
+    await replyAndLog(
+      supabase, msg.from, escalationReplyFor('general'),
+      'escalation', false, 'historie_nicht_abrufbar', msg.id,
+    )
+    return
+  }
+
   const waMessages: WaMessage[] = (history || []).map((h) => ({
     role: h.direction === 'inbound' ? 'user' : 'assistant',
     content: h.body,
@@ -281,12 +308,17 @@ async function processIncomingMessage(
   const confidence = isLowConfidenceReply(cleanReply)
   if (confidence.lowConfidence) {
     // Konversations-Historie für Draft-Mail
-    const { data: fullHistory } = await supabase
+    const { data: fullHistory, error: fullHistoryFehler } = await supabase
       .from('whatsapp_conversations')
       .select('direction, body, created_at')
       .eq('wa_phone', msg.from)
       .order('created_at', { ascending: true })
       .limit(50)
+    if (fullHistoryFehler) {
+      log.warnWithException('Entwurfsmail: Verlauf nicht abrufbar', fullHistoryFehler, {
+        waPhone: msg.from,
+      })
+    }
 
     // Draft als outbound mit escalation_reason='draft_pending' speichern.
     // body = Holding-Message (was Kunde sieht).
@@ -327,6 +359,7 @@ async function processIncomingMessage(
         body: string
         created_at: string
       }>,
+      historieUnvollstaendig: Boolean(fullHistoryFehler),
     })
     return
   }

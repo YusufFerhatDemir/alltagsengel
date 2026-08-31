@@ -235,10 +235,11 @@ export async function erstelleMonatsabschluss(
 
   // ── Klienten-Namen für Reports ──
   const clientIds = Array.from(new Set(vos.map(v => v.client_id)))
-  const { data: clients } = await supabase
+  const { data: clients, error: clientsFehler } = await supabase
     .from('clients')
     .select('id, first_name, last_name')
     .in('id', clientIds)
+  if (clientsFehler) throw new Error(`Klienten konnten nicht geladen werden: ${clientsFehler.message}`)
   const clientName = new Map<string, string>(
     (clients || []).map(c => [c.id, `${c.first_name || ''} ${c.last_name || ''}`.trim()])
   )
@@ -271,11 +272,17 @@ export async function erstelleMonatsabschluss(
     // In Batches, um URL-Längen-Limits zu vermeiden
     for (let i = 0; i < recordIds.length; i += 200) {
       const batch = recordIds.slice(i, i + 200)
-      const { data: sigs } = await supabase
+      const { data: sigs, error: sigsFehler } = await supabase
         .from('service_signatures')
         .select('service_record_id')
         .eq('signer_role', 'client')
         .in('service_record_id', batch)
+      // Ein verworfener Fehler machte aus jedem Ausfall die Aussage „nicht
+      // unterschrieben" — der Abschluss meldete dann Einsaetze als
+      // nachzuholen, deren Unterschrift laengst vorliegt.
+      if (sigsFehler) {
+        throw new Error(`Unterschriften konnten nicht geladen werden: ${sigsFehler.message}`)
+      }
       for (const s of sigs || []) signedRecordIds.add(s.service_record_id)
     }
   }

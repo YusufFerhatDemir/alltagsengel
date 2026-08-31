@@ -39,6 +39,13 @@ interface ClientZeile {
   status: string | null
 }
 
+/**
+ * Eine Meldung fuer alle vier Abfragen dieser Startseite: der Angehoerige
+ * kann an keiner davon etwas anderes tun als es spaeter erneut zu versuchen.
+ */
+const PORTAL_LADEFEHLER =
+  'Die Übersicht konnte gerade nicht geladen werden. Bitte in Kürze erneut versuchen.'
+
 export const GET = withTracking(async function GET() {
   const auth = await requirePortalAccess()
   if (!auth.ok) return auth.response
@@ -56,11 +63,21 @@ export const GET = withTracking(async function GET() {
   const idsBerichte = erlaubteClientIds(ctx.zugaenge, 'pflegeberichte')
   const idsPflegegrad = new Set([...idsLeistungen, ...idsBerichte])
 
-  const { data: clients } = await supabase
+  // Keine der vier Abfragen dieser Startseite prüfte ihren Fehler. Fielen
+  // sie aus, blieb die Seite trotzdem stehen und behauptete: Klient
+  // „Unbekannt", 0 kommende Termine, 0 ungelesene Nachrichten, keine
+  // Leistungen. Ein Angehöriger liest das als Auskunft über seinen
+  // Angehörigen. „Nichts da" und „nicht nachsehen können" sind hier
+  // besonders verschiedene Aussagen, deshalb bricht die Route ab.
+  const { data: clients, error: clientsFehler } = await supabase
     .from('clients')
     .select('id, first_name, last_name, care_level, pflegegrad, status')
     .eq('organization_id', ctx.organizationId)
     .in('id', alleClientIds)
+
+  if (clientsFehler) {
+    return NextResponse.json({ error: PORTAL_LADEFEHLER }, { status: 500 })
+  }
 
   // Kommende Termine zählen — Quelle sind die Einsätze (assignments).
   // NICHT `bookings`: dort zeigt `customer_id` per Fremdschlüssel auf
@@ -69,13 +86,16 @@ export const GET = withTracking(async function GET() {
   const heute = new Date().toISOString().split('T')[0]
   let termineKommend = 0
   if (idsTermine.length > 0) {
-    const { count } = await supabase
+    const { count, error: termineFehler } = await supabase
       .from('assignments')
       .select('id', { count: 'exact', head: true })
       .eq('organization_id', ctx.organizationId)
       .in('client_id', idsTermine)
       .gte('assignment_date', heute)
       .in('status', [...OFFENE_TERMIN_STATUS])
+    if (termineFehler) {
+      return NextResponse.json({ error: PORTAL_LADEFEHLER }, { status: 500 })
+    }
     termineKommend = count ?? 0
   }
 
@@ -83,13 +103,16 @@ export const GET = withTracking(async function GET() {
   const zugangIdsNachrichten = zugaengeMitBereich(ctx.zugaenge, 'nachrichten').map(z => z.id)
   let nachrichtenUngelesen = 0
   if (zugangIdsNachrichten.length > 0) {
-    const { count } = await supabase
+    const { count, error: nachrichtenFehler } = await supabase
       .from('angehoerigen_nachrichten')
       .select('id', { count: 'exact', head: true })
       .eq('organization_id', ctx.organizationId)
       .in('zugang_id', zugangIdsNachrichten)
       .eq('absender_typ', 'pflegedienst')
       .eq('status', 'gesendet')
+    if (nachrichtenFehler) {
+      return NextResponse.json({ error: PORTAL_LADEFEHLER }, { status: 500 })
+    }
     nachrichtenUngelesen = count ?? 0
   }
 
@@ -99,13 +122,16 @@ export const GET = withTracking(async function GET() {
   // wäre dem Angehörigen sonst als erbrachte Leistung angezeigt worden.
   let letzteLeistungen: unknown[] = []
   if (idsLeistungen.length > 0) {
-    const { data } = await supabase
+    const { data, error: leistungenFehler } = await supabase
       .from('service_records')
       .select('id, client_id, date, service_type, duration_minutes, status, proof_status, billing_status')
       .eq('organization_id', ctx.organizationId)
       .in('client_id', idsLeistungen)
       .order('date', { ascending: false })
       .limit(20)
+    if (leistungenFehler) {
+      return NextResponse.json({ error: PORTAL_LADEFEHLER }, { status: 500 })
+    }
     letzteLeistungen = ohneStornierte(data ?? [])
       .slice(0, 5)
       .map(({ proof_status: _p, billing_status: _b, ...rest }) => rest)

@@ -312,10 +312,18 @@ export async function loadLeistungsnachweis(params: {
   const recordIds = rows.map(r => r.id)
   let sigsByRecord = new Map<string, Set<string>>()
   if (recordIds.length > 0) {
-    const { data: sigs } = await supabase
+    // Ein verworfener Fehler waere hier keine leere Menge, sondern ein
+    // leeres Blatt: jeder Einsatz erschiene ohne Handzeichen, und genau
+    // dieses Blatt geht als Nachweis an die Pflegekasse. „Keine
+    // Unterschrift erfasst" und „Unterschriften nicht abrufbar" sind zwei
+    // verschiedene Aussagen; nur die erste darf das PDF treffen.
+    const { data: sigs, error: sigsFehler } = await supabase
       .from('service_signatures')
       .select('service_record_id, signer_role')
       .in('service_record_id', recordIds)
+    if (sigsFehler) {
+      throw new Error(`Unterschriften konnten nicht geladen werden: ${sigsFehler.message}`)
+    }
     sigsByRecord = new Map()
     for (const s of sigs || []) {
       const set = sigsByRecord.get(s.service_record_id) || new Set<string>()

@@ -144,7 +144,7 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     const supabase = createAdminClient()
     // MITTEL-2: Besuchshistorie nur aus der eigenen Organisation.
     const organizationId = await getActiveOrgIdOrDefault()
-    const { data: recentVisits } = await supabase
+    const { data: recentVisits, error: besucheFehler } = await supabase
       .from('visitor_locations')
       .select('page_path, created_at')
       .eq('organization_id', organizationId)
@@ -152,11 +152,17 @@ export const POST = withTracking(async function POST(req: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(10)
 
-    const visitHistory = (recentVisits || [])
-      .map(v => `• ${new Date(v.created_at).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })} → ${safeField(v.page_path, 200)}`)
-      .join('\n')
+    // Ein verworfener Fehler stand in der Mail als „1. Besuch" — also als
+    // Aussage ueber den Besucher statt ueber die Abfrage. Der Hinweis ist
+    // intern, deshalb wird er weiterhin verschickt, sagt aber, was er nicht
+    // weiss.
+    const visitHistory = besucheFehler
+      ? '• Besuchshistorie war nicht abrufbar — die Zählung unten ist unvollständig.'
+      : (recentVisits || [])
+          .map(v => `• ${new Date(v.created_at).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })} → ${safeField(v.page_path, 200)}`)
+          .join('\n')
 
-    const totalVisits = recentVisits?.length || 0
+    const totalVisits = besucheFehler ? 'unbekannt' : (recentVisits?.length || 0)
 
     // ═══ Alle client-gelieferten Felder für E-Mail-HTML escapen (Anti-Injection) ═══
     const sCity = safeField(city || 'Unbekannt')
