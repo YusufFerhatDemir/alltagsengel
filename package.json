@@ -66,6 +66,7 @@
     "verify:marketing": "node scripts/verify-marketing.mjs",
     "verify:security-kette": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/verify-security-kette.mjs",
     "verify:standort": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/verify-standort-kette.mjs",
+    "verify:marketing-kette": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/verify-marketing-kette.mjs",
     "audit:rls-rollen": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/audit-rls-rollen.mjs"
   },
   "dependencies": {
