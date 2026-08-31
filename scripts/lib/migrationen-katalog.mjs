@@ -200,4 +200,13 @@ export const KATALOG = [
            WHERE tgrelid='public.invoices'::regclass
              AND tgname='trg_a_invoice_eingangsstatus'
              AND NOT tgisinternal` },
+  { datei: '20261023000004_eingangsriegel_lauf_und_vpkzp',
+    // Zwei Objekte, ein Befund: beide Riegel deckten das Einfuegen nicht ab.
+    was: 'Lauf-Eingangsriegel UND vpkzp-Riegel auch beim Einfuegen',
+    soll: 2,
+    sql: `SELECT count(*) FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid
+           WHERE NOT t.tgisinternal AND (
+                 (c.relname='abrechnungslaeufe' AND t.tgname='trg_a_lauf_eingangsstatus')
+              OR (c.relname='client_vpkzp_usage' AND t.tgname='trg_vpkzp_usage_abgeleitet'
+                  AND pg_get_triggerdef(t.oid) LIKE '%BEFORE INSERT OR UPDATE%'))` },
 ]
