@@ -1,0 +1,131 @@
+
+╔══════════════════════════════════════════════════════════════════════╗
+║  ALARMKETTE — live gemessen, nur lesend                              ║
+╚══════════════════════════════════════════════════════════════════════╝
+Ziel   : nnwyktkqibdjxgimjyuq.supabase.co
+Resend : Schluessel vorhanden
+Suche  : Karakaya
+
+────────────────────────────────────────────────────────────────────────
+1 · KONTO
+────────────────────────────────────────────────────────────────────────
+  Rukiye Karakaya
+    id      : 5fa1df42-8eb5-416b-abb5-0c85a057e957
+    E-Mail  : rukiyekarakaya@web.de
+    Rolle   : engel
+    angelegt: 28.08.2026, 08:58:56 (Berlin)
+
+────────────────────────────────────────────────────────────────────────
+2 · EREIGNISSE in security_audit_log
+────────────────────────────────────────────────────────────────────────
+  31.08.2026, 13:44:41 (Berlin)  security_notification_sent  [info]  unbekannt
+      Audit-ID: 690105a9-c35b-4417-a1ca-68dc8aa048ae
+      Metadaten: {"melde_grund":"Konto ueberwacht (voller Meldesatz)","bezug_ereignis":"cf56c43b-ed70-42c7-b8e5-686d4875761e","bezug_event_type":"security_action","empfaenger_anzahl":1}
+  31.08.2026, 13:44:40 (Berlin)  security_action  [warning]  unbekannt
+      Audit-ID: cf56c43b-ed70-42c7-b8e5-686d4875761e
+      Metadaten: {"hinweis":"KEINE Anmeldung und KEIN Vorfall. Diese Zeile belegt einen Funktionstest der Meldekette.","pruefung":"Alarmkette Ereignis -> Regel -> Alarm -> Mail -> Zustellstatus beim Provider","ausgelo
+  31.08.2026, 13:42:20 (Berlin)  security_notification_sent  [info]  unbekannt
+      Audit-ID: aaf91dfc-51e3-450d-9164-ba043c62ec05
+      Metadaten: {"melde_grund":"Konto ueberwacht (voller Meldesatz)","bezug_ereignis":"8dfd95d7-f64a-43bc-98c6-0f6b5471fef1","bezug_event_type":"security_action","empfaenger_anzahl":1}
+  31.08.2026, 13:42:19 (Berlin)  security_action  [warning]  unbekannt
+      Audit-ID: 8dfd95d7-f64a-43bc-98c6-0f6b5471fef1
+      Metadaten: {"hinweis":"KEINE Anmeldung und KEIN Vorfall. Diese Zeile belegt einen Funktionstest der Meldekette.","pruefung":"Alarmkette Ereignis -> Regel -> Alarm -> Mail -> Zustellstatus beim Provider","ausgelo
+  31.08.2026, 06:01:15 (Berlin)  security_notification_sent  [info]  unbekannt
+      Audit-ID: 17ec5445-b778-4bbe-bac8-a8e76a1c7e12
+      Metadaten: {"melde_grund":"Konto ueberwacht (voller Meldesatz)","bezug_ereignis":"9ec3e6dc-3b28-4119-b017-487cb55be7fe","bezug_event_type":"security_action","empfaenger_anzahl":1}
+  31.08.2026, 06:01:14 (Berlin)  security_action  [warning]  unbekannt
+      Audit-ID: 9ec3e6dc-3b28-4119-b017-487cb55be7fe
+      Metadaten: {"hinweis":"KEINE Anmeldung und kein Vorfall — dieser Eintrag belegt einen Funktionstest.","pruefung":"Kettenpruefung Ereignis->Spur->Regel->Alarm->Mail->Zustellstatus","ausgeloest_von":"scripts/verif
+  30.08.2026, 19:32:47 (Berlin)  watchlist_aktiviert  [info]  —
+      Audit-ID: c4bf453b-5c2a-498f-908e-669678ac70e0
+      Metadaten: {"durch":"system","aktion":"Watchlist-Eintrag aktiviert"}
+
+────────────────────────────────────────────────────────────────────────
+3 · MELDEENTSCHEIDUNG — Ueberwachungsliste und Rolle
+────────────────────────────────────────────────────────────────────────
+  user_id        : 5fa1df42-8eb5-416b-abb5-0c85a057e957
+  aktiv          : true
+  melde_email    : info@alltagsengel.care
+  alle_ereignisse: true
+  ohne_sperrfrist: true
+  grund          : Kontoueberwachung auf Anweisung der Geschaeftsfuehrung (30.08.2026). Alle sicherheitsrelevanten Ereignisse melden.
+  angelegt       : 30.08.2026, 19:32:06 (Berlin)
+
+────────────────────────────────────────────────────────────────────────
+4 · VERSANDNACHWEIS — security_notification_sent
+────────────────────────────────────────────────────────────────────────
+  31.08.2026, 13:44:41 (Berlin)  Nachweis-ID 690105a9-c35b-4417-a1ca-68dc8aa048ae
+      Empfaengerkonto: rukiyekarakaya@web.de
+      bezug          : security_action / cf56c43b-ed70-42c7-b8e5-686d4875761e
+      Grund          : Konto ueberwacht (voller Meldesatz)
+      Empfaengerzahl : 1
+  31.08.2026, 13:42:20 (Berlin)  Nachweis-ID aaf91dfc-51e3-450d-9164-ba043c62ec05
+      Empfaengerkonto: rukiyekarakaya@web.de
+      bezug          : security_action / 8dfd95d7-f64a-43bc-98c6-0f6b5471fef1
+      Grund          : Konto ueberwacht (voller Meldesatz)
+      Empfaengerzahl : 1
+  31.08.2026, 06:01:15 (Berlin)  Nachweis-ID 17ec5445-b778-4bbe-bac8-a8e76a1c7e12
+      Empfaengerkonto: rukiyekarakaya@web.de
+      bezug          : security_action / 9ec3e6dc-3b28-4119-b017-487cb55be7fe
+      Grund          : Konto ueberwacht (voller Meldesatz)
+      Empfaengerzahl : 1
+
+────────────────────────────────────────────────────────────────────────
+5+6 · ZUSTELLSPUR — notification_delivery_log (vorgang_art=sicherheitsmeldung)
+────────────────────────────────────────────────────────────────────────
+  31.08.2026, 13:44:41 (Berlin)  sent  →  info@alltagsengel.care
+      Kanal/Provider : email / resend
+      Provider-ID    : 13307e4c-46da-4eb3-8584-48679557738e
+      Versuche       : 1
+      versucht       : 31.08.2026, 13:44:41 (Berlin)
+      zugestellt     : 31.08.2026, 13:44:41 (Berlin)
+      gescheitert    : —
+      Fehlergrund    : —
+      Vorgangsbezug  : cf56c43b-ed70-42c7-b8e5-686d4875761e
+  31.08.2026, 06:01:15 (Berlin)  sent  →  info@alltagsengel.care
+      Kanal/Provider : email / resend
+      Provider-ID    : 02eebce1-f0ce-42c0-a862-de60c50de412
+      Versuche       : 1
+      versucht       : 31.08.2026, 06:01:15 (Berlin)
+      zugestellt     : 31.08.2026, 06:01:15 (Berlin)
+      gescheitert    : —
+      Fehlergrund    : —
+      Vorgangsbezug  : 9ec3e6dc-3b28-4119-b017-487cb55be7fe
+
+────────────────────────────────────────────────────────────────────────
+7 · EXTERNER NACHWEIS — Resend selbst gefragt
+────────────────────────────────────────────────────────────────────────
+  13307e4c-46da-4eb3-8584-48679557738e
+      an          : info@alltagsengel.care
+      Betreff     : Sicherheitshinweis: Sicherheitskritische Aktion — Rukiye Karakaya
+      last_event  : delivered   ← Zustellstatus des Providers
+      created_at  : 2026-08-31 11:44:41.698000+00
+  02eebce1-f0ce-42c0-a862-de60c50de412
+      an          : info@alltagsengel.care
+      Betreff     : Sicherheitshinweis: Sicherheitskritische Aktion — Rukiye Karakaya
+      last_event  : delivered   ← Zustellstatus des Providers
+      created_at  : 2026-08-31 04:01:15.657000+00
+
+────────────────────────────────────────────────────────────────────────
+AUSWERTUNG — wo die Kette haelt und wo sie reisst
+────────────────────────────────────────────────────────────────────────
+  A · Gab es etwas zu melden?
+      Anmeldungen/App-Starts aufgezeichnet : 0
+      → KEINE. Zu diesem Konto ist seit Beginn der Aufzeichnung
+        keine Anmeldung protokolliert. Es gab also nichts, worueber
+        eine Anmeldemeldung haette verschickt werden koennen.
+
+  B · Funktioniert der Meldeweg?
+        JA   Versandnachweis geschrieben
+        JA   Zustellvorgang registriert
+        JA   Provider-Nachrichten-ID im eigenen Bestand
+        JA   an den Provider uebergeben
+
+      Der Weg traegt bis zur Uebergabe an den Provider.
+
+  C · Was der Provider sagt — der einzige echte Zustellnachweis
+      steht oben unter 7. Ohne ihn ist keine Zustellung belegt,
+      egal wie gruen A und B aussehen.
+
+  Ereignisse mit Meldung: 3 von 7 gezeigten
+

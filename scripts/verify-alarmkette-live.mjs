@@ -199,20 +199,54 @@ kopf('7 · EXTERNER NACHWEIS — Resend selbst gefragt')
 }
 
 // ── Auswertung ─────────────────────────────────────────────────────────
-kopf('AUSWERTUNG — wo genau die Kette reisst')
-const anmeldungen = ereignisse.filter(e => /login|app_start|sign_in|anmeld/i.test(e.event_type))
-const schritte = [
-  ['1 Konto gefunden', konten.length > 0],
-  ['2 Ereignis aufgezeichnet', anmeldungen.length > 0],
-  ['4 Versandnachweis geschrieben', nachweise.length > 0],
-  ['5 Zustellvorgang registriert', spuren.length > 0],
-  ['6 Provider-ID vorhanden', spuren.some(s => s.provider_message_id)],
-  ['7 Provider meldet Zustellung', spuren.some(s => s.delivered_at)],
-]
-for (const [name, ok] of schritte) console.log(`  ${ok ? '  JA ' : ' NEIN'}  ${name}`)
-const erster = schritte.find(([, ok]) => !ok)
+kopf('AUSWERTUNG — wo die Kette haelt und wo sie reisst')
+const anmeldungen = ereignisse.filter(e => /^(login_success|app_start|session_start)$/.test(e.event_type))
+const gemeldeteEreignisse = new Set(nachweise.map(n => n.metadata?.bezug_ereignis).filter(Boolean))
+
+// ZWEI GETRENNTE FRAGEN. Sie zu vermischen ist genau der Fehler, der einen
+// funktionierenden Meldeweg wie einen kaputten aussehen laesst — und
+// umgekehrt.
+//
+//   A: Gab es ueberhaupt etwas zu melden?  (Bestand der Spur)
+//   B: Funktioniert der Meldeweg?          (Nachweis -> Spur -> Provider)
+//
+// Ein Konto ohne Anmeldung seit Beginn der Ueberwachung beantwortet A mit
+// nein — daraus folgt NICHTS ueber B.
+console.log('  A · Gab es etwas zu melden?')
+console.log(`      Anmeldungen/App-Starts aufgezeichnet : ${anmeldungen.length}`)
+if (anmeldungen.length === 0) {
+  console.log('      → KEINE. Zu diesem Konto ist seit Beginn der Aufzeichnung')
+  console.log('        keine Anmeldung protokolliert. Es gab also nichts, worueber')
+  console.log('        eine Anmeldemeldung haette verschickt werden koennen.')
+}
+
 console.log('')
-console.log(erster
-  ? `  ERSTER RISS: ${erster[0]} — alles danach kann gar nicht stattgefunden haben.`
-  : '  Kette vollstaendig — bis zum externen Zustellnachweis.')
+console.log('  B · Funktioniert der Meldeweg?')
+const schritte = [
+  ['Versandnachweis geschrieben', nachweise.length > 0],
+  ['Zustellvorgang registriert', spuren.length > 0],
+  ['Provider-Nachrichten-ID im eigenen Bestand', spuren.some(s => s.provider_message_id)],
+  ['an den Provider uebergeben', spuren.some(s => s.delivered_at)],
+]
+for (const [name, ok] of schritte) console.log(`      ${ok ? '  JA ' : ' NEIN'}  ${name}`)
+const riss = schritte.find(([, ok]) => !ok)
+console.log('')
+if (nachweise.length === 0 && spuren.length === 0) {
+  console.log('      Zu diesem Konto wurde noch nie gemeldet — der Weg ist damit')
+  console.log('      hier nicht gemessen, weder als tragfaehig noch als kaputt.')
+} else if (riss) {
+  console.log(`      ERSTER RISS: ${riss[0]}.`)
+} else {
+  console.log('      Der Weg traegt bis zur Uebergabe an den Provider.')
+}
+
+// Der letzte Schritt steht bewusst NICHT in der Liste oben: er ist der
+// einzige, den nicht wir beantworten. Alles darueber ist unsere eigene
+// Behauptung.
+console.log('')
+console.log('  C · Was der Provider sagt — der einzige echte Zustellnachweis')
+console.log('      steht oben unter 7. Ohne ihn ist keine Zustellung belegt,')
+console.log('      egal wie gruen A und B aussehen.')
+console.log('')
+console.log(`  Ereignisse mit Meldung: ${gemeldeteEreignisse.size} von ${ereignisse.length} gezeigten`)
 console.log('')
