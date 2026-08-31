@@ -21,11 +21,17 @@ import { withTracking } from '@/lib/monitoring/tracker'
 //   1. Idempotenz  — bereits erfolgreich synchronisierte
 //      idempotency_keys werden übersprungen statt erneut ausgeführt
 //      (sync_audit_log als Nachweis).
-//   2. Konflikt-Erkennung — bei 'update'-Aktionen mit einem
-//      `payload.basis_updated_at`-Snapshot wird der aktuelle Server-
+//   2. Konflikt-Erkennung — bei 'update'-Aktionen wird der
+//      `payload.basis_updated_at`-Snapshot mit dem aktuellen Server-
 //      Stand (updated_at der Ziel-Tabelle) verglichen; weicht er ab,
 //      greift die Konfliktstrategie (last_write_wins/server_wins/
 //      manuell — Body-Feld `konflikt_strategie`, Default last_write_wins).
+//      FEHLT der Snapshot bei einem 'update', gilt das ebenfalls als
+//      Konflikt: eine Offline-Aenderung ohne benannten Ausgangszustand
+//      darf eine womoeglich neuere Serverfassung nicht ueberschreiben.
+//      Die Queue (lib/offline/types.ts) laesst so ein Update gar nicht
+//      erst entstehen — dieser Riegel faengt Clients ab, die an ihr
+//      vorbei schreiben.
 //   3. Ausführung — die fachliche Logik wird NICHT dupliziert: der
 //      Sync-Server ruft die bestehenden Modul-Endpunkte
 //      (app/api/pflege/**, app/api/vitals/**, app/api/medikamente/**,
@@ -151,7 +157,11 @@ export const POST = withTracking(async function POST(request: Request) {
           const serverUpdatedAt = (aktuelleZeile as Record<string, unknown> | null)?.[registryEintrag.updatedAtSpalte] as string | undefined
           const basisUpdatedAt = vollstaendig.payload.basis_updated_at as string | undefined
 
-          if (hatKonflikt({ serverUpdatedAt: serverUpdatedAt ?? null, basisUpdatedAt })) {
+          if (hatKonflikt({
+            serverUpdatedAt: serverUpdatedAt ?? null,
+            basisUpdatedAt,
+            aktion: vollstaendig.aktion,
+          })) {
             const entscheidung = entscheideKonflikt(konfliktStrategie)
 
             const konfliktRow = await schreibeSyncKonflikt(admin, {

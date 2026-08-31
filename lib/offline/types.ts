@@ -26,6 +26,30 @@ export const OFFLINE_ENTITY_TYPEN: OfflineEntityTyp[] = [
   'pflege_massnahme', 'pflege_massnahmenplan', 'pflege_risiko',
 ]
 
+/**
+ * Feldname des Basis-Snapshots im Payload. Der Server liest ihn in
+ * app/api/sync/route.ts und vergleicht ihn mit dem aktuellen
+ * `updated_at` der Zieltabelle — der Name muss auf beiden Seiten
+ * derselbe sein, deshalb steht er hier als Konstante und nicht als
+ * Zeichenkette an zwei Stellen.
+ */
+export const BASIS_SNAPSHOT_FELD = 'basis_updated_at'
+
+/**
+ * Baut den Payload einer Offline-Aenderung samt Basis-Snapshot.
+ *
+ * `serverUpdatedAt` ist der `updated_at`-Wert des Datensatzes, wie er
+ * beim Oeffnen des Formulars vom Server kam. Ihn hier durchzureichen ist
+ * der einzige Weg, wie der Server spaeter merkt, dass die Bearbeitung auf
+ * einem ueberholten Stand aufsetzt.
+ */
+export function mitBasisSnapshot(
+  payload: Record<string, unknown>,
+  serverUpdatedAt: string,
+): Record<string, unknown> {
+  return { ...payload, [BASIS_SNAPSHOT_FELD]: serverUpdatedAt }
+}
+
 export type KonfliktStrategie = 'last_write_wins' | 'server_wins' | 'manuell'
 
 export type KonfliktStatus = 'offen' | 'aufgeloest' | 'verworfen'
@@ -134,5 +158,32 @@ export function validiereQueueItem(item: Partial<OfflineQueueItem>): void {
   }
   if (!item.organization_id || typeof item.organization_id !== 'string') {
     throw new Error('Organization-ID ist ein Pflichtfeld.')
+  }
+
+  // ── Basis-Snapshot bei 'update' ────────────────────────────────────
+  // Ohne diesen Zeitstempel kann der Server nicht erkennen, ob sich der
+  // Datensatz seit dem Offline-Bearbeiten weiterbewegt hat. Genau das
+  // ist der Regelfall einer Offline-Queue: die Aenderung entstand vor
+  // Stunden, in der Zwischenzeit hat die PDL korrigiert. Fehlt der
+  // Snapshot, ueberschreibt die alte lokale Fassung die neuere
+  // Serverfassung stillschweigend — und weder die Konfliktstrategie
+  // noch die Konfliktansicht bekommen davon etwas mit.
+  //
+  // Deshalb hier hart: kein Snapshot, kein Update in die Queue.
+  if (item.aktion === 'update') {
+    const basis = (item.payload as Record<string, unknown> | undefined)?.[BASIS_SNAPSHOT_FELD]
+    if (typeof basis !== 'string' || basis.trim() === '') {
+      throw new Error(
+        `Eine 'update'-Aenderung braucht ${BASIS_SNAPSHOT_FELD} im Payload `
+        + `(den updated_at-Stand, auf dem die Bearbeitung aufsetzt). `
+        + `Ohne ihn kann der Server einen Konflikt nicht erkennen und die `
+        + `Aenderung ueberschreibt neuere Serverdaten unbemerkt.`,
+      )
+    }
+    if (Number.isNaN(new Date(basis).getTime())) {
+      throw new Error(
+        `${BASIS_SNAPSHOT_FELD} ist kein lesbarer Zeitstempel: ${JSON.stringify(basis)}.`,
+      )
+    }
   }
 }

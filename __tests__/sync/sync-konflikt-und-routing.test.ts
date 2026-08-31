@@ -54,9 +54,33 @@ describe('hatKonflikt', () => {
     expect(hatKonflikt({ serverUpdatedAt: T2, basisUpdatedAt: T1 })).toBe(true)
   })
 
-  it('meldet keinen Konflikt ohne Basis-Snapshot — das ist der create-Fall', () => {
+  // KORRIGIERT: der frueher hier stehende Fall behauptete, ein fehlender
+  // Basis-Snapshot sei „der create-Fall" und damit harmlos. Das stimmte
+  // nicht — der einzige Aufrufer (app/api/sync/route.ts) ruft
+  // hatKonflikt() ausschliesslich fuer 'update' auf. Ein Update ohne
+  // Snapshot gewann dort kommentarlos und ueberschrieb neuere
+  // Serverdaten; die Konfliktstrategie sah davon nie etwas.
+  it('meldet einen Konflikt, wenn ein update gar keinen Ausgangszustand nennt', () => {
+    expect(hatKonflikt({ serverUpdatedAt: T2, basisUpdatedAt: null, aktion: 'update' })).toBe(true)
+    expect(hatKonflikt({ serverUpdatedAt: T2, basisUpdatedAt: undefined, aktion: 'update' })).toBe(true)
+    // Auch dann, wenn der Server selbst keinen Stand hat.
+    expect(hatKonflikt({ serverUpdatedAt: null, basisUpdatedAt: null, aktion: 'update' })).toBe(true)
+  })
+
+  it('laesst create und delete ohne Basis-Snapshot durch', () => {
+    expect(hatKonflikt({ serverUpdatedAt: T2, basisUpdatedAt: null, aktion: 'create' })).toBe(false)
+    expect(hatKonflikt({ serverUpdatedAt: T2, basisUpdatedAt: null, aktion: 'delete' })).toBe(false)
+  })
+
+  it('bleibt ohne Angabe der Aktion beim alten, milderen Verhalten', () => {
+    // Ein Aufrufer, der die Aktion nicht kennt, soll nicht ploetzlich
+    // ueberall Konflikte melden.
     expect(hatKonflikt({ serverUpdatedAt: T2, basisUpdatedAt: null })).toBe(false)
     expect(hatKonflikt({ serverUpdatedAt: T2, basisUpdatedAt: undefined })).toBe(false)
+  })
+
+  it('ein update MIT gueltigem Snapshot auf aktuellem Stand bleibt konfliktfrei', () => {
+    expect(hatKonflikt({ serverUpdatedAt: T1, basisUpdatedAt: T1, aktion: 'update' })).toBe(false)
   })
 
   // ── fail-closed ──────────────────────────────────────────────────

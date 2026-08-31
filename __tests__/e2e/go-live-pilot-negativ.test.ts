@@ -776,12 +776,40 @@ describe('Negativ 19: PDF — kein stiller Helvetica-Fallback bei fehlenden Font
     expect(quelle).toMatch(/import\s*\{\s*rgb\s*\}\s*from\s*'pdf-lib'/)
   })
 
-  it('lib/abrechnung/leistungsnachweis-pdf.ts (HTML→PDF-Pfad) hat weiterhin "Helvetica Neue" im CSS-Font-Stack — abweichend von der Policy', () => {
-    // Kein Bug-Fix hier — dieser Test haelt den abweichenden IST-Zustand
-    // fest, damit er nicht unbemerkt als "einheitlich" durchgeht.
-    const quelle = fs.readFileSync(path.join(process.cwd(), 'lib/abrechnung/leistungsnachweis-pdf.ts'), 'utf-8')
+  it('der HTML→PDF-Pfad LAEDT DejaVu und behaelt den Ersatz-Stack nur als letzte Rettung', async () => {
+    // Vorgeschichte: dieser Test hielt fest, dass der HTML-Pfad
+    // „Helvetica Neue" im font-family-Stack fuehrt — als bewusst
+    // dokumentierte Abweichung von der DejaVu-Only-Policy der
+    // pdf-lib-Pfade. Er prueft jetzt das Erzeugnis statt des
+    // Quelltextes, und zwar aus zwei Gruenden:
+    //
+    //  1. Die Abweichung war groesser als hier festgehalten: der Stack
+    //     NANNTE DejaVu nur, ohne sie zu laden. Auf jedem Rechner ohne
+    //     installiertes DejaVu (macOS, Windows — also allen) griff
+    //     still der Ersatz. Der Test bestaetigte damit einen Zustand,
+    //     der schlimmer war als sein eigener Kommentar.
+    //  2. Der Stack lebt inzwischen in lib/pdf/schrift-css.ts, weil ihn
+    //     zwei Vorlagen teilen. Eine Quelltextsuche in EINER Datei
+    //     wuerde diese Auslagerung als Regression melden.
+    //
+    // Die Abweichung bleibt bestehen und bleibt festgehalten — der
+    // Ersatz-Stack ist Absicht: schlaegt das Laden der TTF fehl, ist
+    // ein lesbares Dokument besser als keines.
+    const { buildLeistungsnachweisHtml } = await import('@/lib/abrechnung/leistungsnachweis-pdf')
+    const { PDF_SCHRIFT_FAMILIE } = await import('@/lib/pdf/schrift-css')
+
+    expect(PDF_SCHRIFT_FAMILIE).toMatch(/Helvetica Neue/)
+    expect(PDF_SCHRIFT_FAMILIE).toMatch(/^'DejaVu Sans'/)
+
+    const quelle = fs.readFileSync(path.join(process.cwd(), 'lib/pdf/schrift-css.ts'), 'utf-8')
     expect(quelle).toContain('DejaVu Sans')
     expect(quelle).toMatch(/Helvetica Neue/)
+
+    // Und das Entscheidende: die Schrift wird tatsaechlich geladen.
+    expect(typeof buildLeistungsnachweisHtml).toBe('function')
+    expect(quelle).toContain('@font-face')
+    expect(quelle).toContain('/fonts/DejaVuSans.ttf')
+    expect(quelle).toContain('/fonts/DejaVuSans-Bold.ttf')
   })
 })
 
