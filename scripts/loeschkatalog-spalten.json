@@ -165,5 +165,15 @@
     "tabelle": "email_campaign_logs",
     "spalte": "recipient_id",
     "entscheidung": "loeschen"
+  },
+  {
+    "tabelle": "location_sharing_settings",
+    "spalte": "user_id",
+    "entscheidung": "loeschen"
+  },
+  {
+    "tabelle": "location_updates",
+    "spalte": "user_id",
+    "entscheidung": "loeschen"
   }
 ]

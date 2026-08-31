@@ -197,7 +197,7 @@ export async function leseStandort(
   const { data, error } = await q
   if (error) throw error
 
-  const punkte = ((data ?? []) as Record<string, unknown>[]).map(punktAus)
+  const punkte = ((data ?? []) as unknown as Record<string, unknown>[]).map(punktAus)
 
   // ── Freigaben des Mandanten ──────────────────────────────────────
   let fq = admin
@@ -210,7 +210,7 @@ export async function leseStandort(
   if (fehlerFreigaben) throw fehlerFreigaben
 
   const lage = new Map<string, KontoLage>()
-  for (const f of (freigaben ?? []) as Record<string, unknown>[]) {
+  for (const f of (freigaben ?? []) as unknown as Record<string, unknown>[]) {
     const userId = String(f.user_id)
     const modus = f.mode
     lage.set(userId, {
@@ -254,7 +254,7 @@ export async function leseStandort(
       .select('id, first_name, last_name, email, role')
       .in('id', kennungen)
 
-    for (const p of (profile ?? []) as Record<string, unknown>[]) {
+    for (const p of (profile ?? []) as unknown as Record<string, unknown>[]) {
       const eintrag = lage.get(String(p.id))
       if (!eintrag) continue
       const name = [p.first_name, p.last_name].filter(Boolean).join(' ').trim()

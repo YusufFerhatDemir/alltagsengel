@@ -344,7 +344,8 @@ const PRUEFUNGEN = [
          from public.security_audit_log
         where event_type = 'security_notification_sent'
           and created_at > now() - interval '24 hours'
-        group by 1 order by count(*) desc`,
+        group by coalesce(metadata->>'bezug_event_type','—')
+        order by count(*) desc`,
     ),
   },
 ]

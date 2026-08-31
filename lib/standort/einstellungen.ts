@@ -109,7 +109,7 @@ export async function leseEinstellung(
     .maybeSingle()
 
   if (error) throw error
-  return data ? ausZeile(data as Record<string, unknown>) : vorgabe(userId)
+  return data ? ausZeile(data as unknown as Record<string, unknown>) : vorgabe(userId)
 }
 
 export interface SetzeEingabe {
@@ -198,7 +198,7 @@ export async function setzeEinstellung(
 
   if (error) throw error
 
-  const einstellung = ausZeile(data as Record<string, unknown>)
+  const einstellung = ausZeile(data as unknown as Record<string, unknown>)
 
   // Fail-soft wie ueberall in der Sicherheitsspur: eine fehlende
   // Protokollzeile darf den Widerruf nicht scheitern lassen.
