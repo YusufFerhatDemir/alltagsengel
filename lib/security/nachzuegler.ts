@@ -35,6 +35,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { logger } from '@/lib/logger'
 import { meldeSicherheitsereignis, MELDE_NACHWEIS, SICHERHEITSMELDUNG_ART } from './benachrichtigung'
 import { istSchweregrad, type Schweregrad } from './ereignisse'
+import { provenienzFuerZeile, kennzeichen } from './herkunft'
 
 const log = logger.child('security-nachzuegler')
 
@@ -248,7 +249,21 @@ export async function sendeOffeneSicherheitsmeldungen(
         plattform: z.platform,
         geraet: [browser, os].filter(Boolean).join(' auf ') || null,
         zeitpunkt: new Date(z.created_at),
-        metadata: z.metadata ?? {},
+        metadata: {
+          ...(z.metadata ?? {}),
+          // Die Zeilen des Auth-Triggers tragen KEINE Provenienz: der
+          // Trigger laeuft in SQL, die Ableitung sitzt im
+          // Anwendungscode, und die Tabelle ist unveraenderlich — sie
+          // liesse sich auch nicht nachtragen. Ohne diese Herleitung
+          // stuende in der Mail „[HERKUNFT UNBELEGT]", obwohl es sich um
+          // die authentischste Anmeldequelle ueberhaupt handelt: der
+          // Trigger feuert ausschliesslich bei einer tatsaechlichen
+          // Aenderung von auth.users.last_sign_in_at.
+          ...(() => {
+            const p = provenienzFuerZeile(z.metadata, z.device_info, z.event_type)
+            return p ? kennzeichen(p) : {}
+          })(),
+        },
         appVersion: z.app_version,
         browser,
         betriebssystem: os,

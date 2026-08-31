@@ -22,7 +22,7 @@ import { logSecurityEvent, type SicherheitsEreignis } from './audit'
 import { meldeSicherheitsereignis } from './benachrichtigung'
 import { geraeteMerkmale, ipAus } from './geraet'
 import { regelFuer, hoechsterSchweregrad, istSchweregrad, type Schweregrad } from './ereignisse'
-import type { Provenienz } from './herkunft'
+import { kennzeichen, type Provenienz } from './herkunft'
 
 const log = logger.child('security')
 
@@ -190,7 +190,7 @@ export async function erfasseSicherheitsereignis(
       // stuende in der Mail „HERKUNFT UNBELEGT", obwohl die Zeile in der
       // Datenbank sehr wohl eine traegt — die Meldung muss dasselbe
       // sagen wie die Spur.
-      ...(ergebnis.provenienz ? { provenienz: ergebnis.provenienz } : {}),
+      ...(ergebnis.provenienz ? kennzeichen(ergebnis.provenienz) : {}),
     },
   })
 
@@ -287,7 +287,7 @@ export async function erfasseAnmeldung(opts: {
           // Aufruf — sonst gaebe es keine Geraetemerkmale. Die
           // Provenienz stammt trotzdem aus dem Schreibvorgang und nicht
           // aus dieser Annahme.
-          ...(haupt.provenienz ? { provenienz: haupt.provenienz } : {}),
+          ...(haupt.provenienz ? kennzeichen(haupt.provenienz) : {}),
         },
       })
     }

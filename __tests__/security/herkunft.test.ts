@@ -237,3 +237,101 @@ describe('istProvenienz', () => {
     }
   })
 })
+
+// ═══════════════════════════════════════════════════════════════════════
+// Ausdrueckliche Testkennzeichnung: is_test und source
+// ═══════════════════════════════════════════════════════════════════════
+import {
+  istTest, quelleFuer, kennzeichen, provenienzFuerZeile,
+  IST_TEST_SCHLUESSEL, QUELLE_SCHLUESSEL, QUELLEN, AUTH_TRIGGER_QUELLE,
+} from '@/lib/security/herkunft'
+
+describe('is_test und source — drei Angaben, eine Quelle', () => {
+  it('nur die beiden ausdruecklichen Testwerte sind ein Test', () => {
+    expect(istTest('TEST_ALERT')).toBe(true)
+    expect(istTest('ADMIN_TEST')).toBe(true)
+    expect(istTest('SYNTHETIC_EVENT')).toBe(false)
+    for (const p of ECHTE_PROVENIENZEN) expect(istTest(p)).toBe(false)
+  })
+
+  it('eine unbelegte Zeile ist WEDER echt NOCH Test', () => {
+    // Beide Behauptungen waeren erfunden. Ueber eine Zeile ohne
+    // Kennzeichnung ist schlicht nichts bekannt.
+    expect(istTest(null)).toBe(false)
+    expect(istEchteNutzeraktivitaet(null)).toBe(false)
+    expect(quelleFuer(null)).toBeNull()
+  })
+
+  it('source ordnet jede Provenienz genau einer der drei Quellen zu', () => {
+    expect(quelleFuer('REAL_USER_LOGIN')).toBe('real_user')
+    expect(quelleFuer('APP_START')).toBe('real_user')
+    expect(quelleFuer('SESSION_REFRESH')).toBe('real_user')
+    expect(quelleFuer('TEST_ALERT')).toBe('synthetic_test')
+    expect(quelleFuer('ADMIN_TEST')).toBe('synthetic_test')
+    expect(quelleFuer('SYNTHETIC_EVENT')).toBe('system')
+    for (const p of PROVENIENZEN) {
+      expect(QUELLEN).toContain(quelleFuer(p))
+    }
+  })
+
+  it('kennzeichen() setzt alle drei gemeinsam — sie koennen nicht auseinanderlaufen', () => {
+    for (const p of PROVENIENZEN) {
+      const k = kennzeichen(p)
+      expect(k[PROVENIENZ_SCHLUESSEL]).toBe(p)
+      expect(k[IST_TEST_SCHLUESSEL]).toBe(istTest(p))
+      expect(k[QUELLE_SCHLUESSEL]).toBe(quelleFuer(p))
+      // Die eine Aussage, auf die es ankommt: nie beides zugleich.
+      expect(k[IST_TEST_SCHLUESSEL] && istEchteNutzeraktivitaet(p)).toBe(false)
+    }
+  })
+
+  it('ein Testereignis wird NIE als echte Nutzeraktivitaet ausgegeben', () => {
+    for (const p of PROVENIENZEN) {
+      if (istTest(p)) {
+        expect(istEchteNutzeraktivitaet(p)).toBe(false)
+        expect(quelleFuer(p)).toBe('synthetic_test')
+      }
+    }
+  })
+})
+
+describe('provenienzFuerZeile — die Zeilen des Auth-Triggers', () => {
+  const TRIGGER = { mac_address: 'not_available', quelle: AUTH_TRIGGER_QUELLE }
+
+  it('eine Trigger-Anmeldung gilt als echte Anmeldung', () => {
+    // Der Trigger feuert ausschliesslich, wenn sich
+    // auth.users.last_sign_in_at auf einen neuen, nicht leeren Wert
+    // aendert. Er kann gar nicht anders entstehen als durch eine
+    // tatsaechliche Anmeldung — das ist die authentischste Quelle, die
+    // es dafuer gibt.
+    expect(provenienzFuerZeile({ herkunft: 'auth.users.last_sign_in_at' }, TRIGGER, 'login_success'))
+      .toBe('REAL_USER_LOGIN')
+  })
+
+  it('ein Trigger-Ereignis, das KEINE Anmeldung ist, bleibt synthetisch', () => {
+    expect(provenienzFuerZeile({}, TRIGGER, 'role_change')).toBe('SYNTHETIC_EVENT')
+    expect(provenienzFuerZeile({}, TRIGGER, 'profile_change')).toBe('SYNTHETIC_EVENT')
+  })
+
+  it('eine geschriebene Provenienz hat IMMER Vorrang vor der Herleitung', () => {
+    expect(provenienzFuerZeile(
+      { provenienz: 'TEST_ALERT' }, TRIGGER, 'login_success',
+    )).toBe('TEST_ALERT')
+  })
+
+  it('ohne Trigger-Kennung und ohne Provenienz bleibt es unbelegt', () => {
+    expect(provenienzFuerZeile({}, { quelle: 'irgendwas' }, 'login_success')).toBeNull()
+    expect(provenienzFuerZeile({}, null, 'login_success')).toBeNull()
+    expect(provenienzFuerZeile(null, null, 'login_success')).toBeNull()
+  })
+
+  it('leitet KEINE Geraete- oder Standortdaten her', () => {
+    // Fehlende Werte bleiben NULL. Geschaetzte Geraetedaten waeren
+    // erfundene Daten ueber eine Person.
+    const p = provenienzFuerZeile({}, TRIGGER, 'login_success')
+    expect(p).toBe('REAL_USER_LOGIN')
+    // Die Funktion gibt ausschliesslich die Provenienz zurueck — sie
+    // kann gar nichts anderes erfinden.
+    expect(typeof p).toBe('string')
+  })
+})
