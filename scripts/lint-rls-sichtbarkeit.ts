@@ -190,8 +190,18 @@ function seitenMitDirektzugriff(): Map<string, string[]> {
       const pfad = join(verzeichnis, eintrag)
       if (statSync(pfad).isDirectory()) { lauf(pfad); continue }
       if (eintrag !== 'page.tsx') continue
-      const inhalt = readFileSync(pfad, 'utf8')
-      if (!inhalt.includes('@/lib/supabase/client')) continue
+      const roh = readFileSync(pfad, 'utf8')
+      if (!roh.includes('@/lib/supabase/client')) continue
+      // FEHLBEFUND 31.08.2026: `supabase.storage.from('documents')` sieht
+      // im Quelltext aus wie ein Tabellenzugriff und ist keiner — das ist
+      // der SPEICHER-Eimer. /admin/sepa laedt darueber die SEPA-XML
+      // herunter und wurde deshalb als „liest die Tabelle documents"
+      // gefuehrt. Die Meldung war falsch, und eine rk_-Policy auf
+      // `documents` haette der Buchhaltung die Fuehrungszeugnisse der
+      // Mitarbeitenden geoeffnet, die dort live liegen. Der Speicherpfad
+      // faellt deshalb VOR der Tabellensuche weg; RLS auf Storage ist eine
+      // andere Frage (storage.objects) und gehoert nicht in diese Pruefung.
+      const inhalt = roh.replace(/\.storage\s*\.from\('[a-z_0-9-]+'\)/g, '.storage.BUCKET')
       const tabellen = [...new Set([...inhalt.matchAll(/\.from\('([a-z_0-9]+)'\)/g)].map(m => m[1]))]
       if (tabellen.length === 0) continue
       const route = pfad.slice(WURZEL.length).replace(/^\/?app/, '').replace(/\/page\.tsx$/, '')

@@ -68,11 +68,18 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
 
   // Klienten und Stammdaten
   '/admin/clients':                   { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
-  '/admin/kundenakte':                { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
+  // `verordnungen` steht unter `pflege.lesen` (die Tabelle fuehrt eine
+  // Spalte `diagnose`). Die Buchhaltung darf die Kundenakte betreten,
+  // sieht dort aber die Verordnungen nicht — und soll das lesen, statt
+  // eine leere Liste zu deuten.
+  '/admin/kundenakte':                { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben', zusatzRechte: ['pflege.lesen'] },
   '/admin/budgets':                   { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
   '/admin/vertraege':                 { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
   '/admin/dokumente':                 { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
-  '/admin/notizen':                   { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
+  // `care_notes` haengt ueber verlauf_id/massnahme_id am Pflegeprozess
+  // und steht deshalb unter `pflege.lesen` — die Buchhaltung sieht die
+  // Notizen bewusst nicht.
+  '/admin/notizen':                   { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben', zusatzRechte: ['pflege.lesen'] },
   '/admin/nachrichten':               { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
   '/admin/aerzte':                    { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
   '/admin/partners':                  { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
@@ -81,7 +88,11 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
 
   // Personal
   '/admin/personal':                  { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
-  '/admin/caregivers':                { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
+  // Die Mitarbeiterakte zeigt auch `caregiver_bonuses`. Boni sind
+  // Verguetung und stehen unter `bonus.verwalten` (NUR_ADMINISTRATION,
+  // siehe '/admin/bonuses'); pdl und qm sehen den Bonusblock deshalb
+  // nicht.
+  '/admin/caregivers':                { lesen: 'personal.lesen', schreiben: 'personal.schreiben', zusatzRechte: ['bonus.verwalten'] },
   '/admin/mitarbeiterakte':           { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
   '/admin/qualifikationen':           { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
   // BEFUND 29.08.2026 — eine Namenskollision hat hier die falsche
@@ -169,7 +180,14 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   '/admin/forderungen':               { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
   '/admin/zahlungseingaenge':         { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
   '/admin/zahlungskontrolle':         { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
-  '/admin/abrechnung':                { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
+  // Die Seite liest `verordnungen`, um Genehmigungsstand und
+  // Kostentraeger zu zeigen — die Tabelle fuehrt aber auch `diagnose`
+  // und steht deshalb unter `pflege.lesen`. RLS kann keine Spalten
+  // ausblenden: entweder die ganze Zeile oder keine. Bis dafuer eine
+  // Route da ist, die nur die abrechnungsrelevanten Spalten
+  // herausgibt, bleibt der Verordnungsteil fuer die Buchhaltung leer —
+  // und sagt es jetzt.
+  '/admin/abrechnung':                { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben', zusatzRechte: ['pflege.lesen'] },
   '/admin/abrechnungsfehler':         { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
   '/admin/kassenabrechnung':          { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
   '/admin/vpkzp':                     { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
