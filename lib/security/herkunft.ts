@@ -137,6 +137,19 @@ const ECHT_MOEGLICH: Record<string, Provenienz> = {
   session_refresh: 'SESSION_REFRESH',
 }
 
+/**
+ * Dieselben Ereignistypen als Liste — fuer Abfragen, die dieselbe Frage
+ * in der DATENBANK stellen muessen.
+ *
+ * Warum das eine eigene Ausfuhr braucht: die Provenienz einer
+ * Trigger-Zeile wird beim LESEN hergeleitet und steht nicht in der
+ * Zeile. Ein Filter, der nur `metadata->>provenienz` prueft, findet
+ * diese Zeilen also nicht — und zeigte dann in der Ansicht „echt", waere
+ * aber unter „nur echte Nutzeraktivitaet" nicht dabei. Ein Filter, der
+ * etwas anderes sagt als die Liste, ist schlimmer als kein Filter.
+ */
+export const ECHT_MOEGLICHE_EREIGNISSE: readonly string[] = Object.keys(ECHT_MOEGLICH)
+
 export function istProvenienz(wert: unknown): wert is Provenienz {
   return typeof wert === 'string' && (PROVENIENZEN as readonly string[]).includes(wert)
 }
@@ -292,6 +305,51 @@ export function leiteProvenienzAb(eventType: string, lage: ProvenienzLage): Prov
  * schon im Postfach als solche erkennbar sein — sonst wiederholt sich
  * der 06:01-Fall im naechsten Postfach.
  */
+/**
+ * PostgREST-Ausdruck fuer den Herkunftsfilter.
+ *
+ * Beide Zweige muessen die Menge VOLLSTAENDIG teilen — jede Zeile faellt
+ * in genau einen. Der Lauf gegen die Produktion ist der Massstab:
+ * echt + nicht_echt muss die Gesamtzahl ergeben.
+ *
+ * ── WARUM HIER NICHTS NEGIERT WIRD ─────────────────────────────────────
+ * Der erste Anlauf schrieb `not.and(quelle.eq.db_trigger, …)`. Gemessen
+ * fielen daraufhin VIER Zeilen durch beide Zweige: die
+ * login_success-Zeilen der Anmelderoute von vor der Kennzeichnung. Sie
+ * haben keine Provenienz UND kein `device_info.quelle`. In SQL ergibt
+ * `NULL = 'db_trigger'` weder wahr noch falsch, sondern NULL — und
+ * `NOT NULL` ist wieder NULL, also nicht wahr. Die Zeile faellt aus dem
+ * Filter, ohne dass irgendwo ein Fehler entsteht.
+ *
+ * Deshalb wird `nicht_echt` POSITIV aufgezaehlt statt negiert. Jeder der
+ * vier Faelle nennt seine Bedingung selbst, und `is.null` trifft auch
+ * eine Zeile, deren device_info gar kein `quelle` enthaelt.
+ */
+export function herkunftFilterAusdruck(art: 'echt' | 'nicht_echt'): string {
+  const echt = ECHTE_PROVENIENZEN.join(',')
+  const nichtEcht = PROVENIENZEN.filter(p => !ECHTE_PROVENIENZEN.includes(p)).join(',')
+  const anmeldungen = ECHT_MOEGLICHE_EREIGNISSE.join(',')
+  const quelle = 'device_info->>quelle'
+  const prov = 'metadata->>provenienz'
+
+  if (art === 'echt') {
+    return `${prov}.in.(${echt}),`
+      + `and(${quelle}.eq.${AUTH_TRIGGER_QUELLE},event_type.in.(${anmeldungen}))`
+  }
+
+  return [
+    // 1) ausdruecklich nicht echt
+    `${prov}.in.(${nichtEcht})`,
+    // 2) keine Provenienz und kein Quellvermerk
+    `and(${prov}.is.null,${quelle}.is.null)`,
+    // 3) keine Provenienz, Quellvermerk aber nicht der Auth-Trigger
+    `and(${prov}.is.null,${quelle}.neq.${AUTH_TRIGGER_QUELLE})`,
+    // 4) Trigger-Zeile, die keine Anmeldung ist
+    `and(${prov}.is.null,${quelle}.eq.${AUTH_TRIGGER_QUELLE},`
+      + `event_type.not.in.(${anmeldungen}))`,
+  ].join(',')
+}
+
 export function betreffZusatz(p: Provenienz | null): string {
   if (p === 'TEST_ALERT') return ' [TESTALARM]'
   if (p === 'ADMIN_TEST') return ' [VERWALTUNGSTEST]'
