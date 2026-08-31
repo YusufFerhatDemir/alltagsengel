@@ -56,6 +56,9 @@ const RECHNUNG_OK = {
   // 20 Tage überfällig → über der 14-Tage-Frist der Zahlungserinnerung.
   due_date: vorTagen(20),
   deleted_at: null,
+  // Eine mahnfähige Rechnung ist festgeschrieben (Punkt 11). Ohne frozen_at
+  // ist sie synthetisch und wird gesperrt.
+  frozen_at: vorTagen(21),
   organization_id: ORG,
 }
 
@@ -126,10 +129,10 @@ describe('Grundlage', () => {
     expect(ergebnis.naechsteStufe).toBe('erinnerung')
   })
 
-  it('liefert alle zehn Punkte', async () => {
+  it('liefert alle elf Punkte', async () => {
     const { ergebnis } = await gate()
-    expect(ergebnis.punkte).toHaveLength(10)
-    expect(ergebnis.punkte.map(p => p.nummer)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    expect(ergebnis.punkte).toHaveLength(11)
+    expect(ergebnis.punkte.map(p => p.nummer)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
   })
 
   it('schreibt nichts', async () => {
@@ -243,6 +246,29 @@ describe('3. Status', () => {
     for (const status of ['sent', 'uebermittelt', 'partial', 'teilweise_bezahlt', 'freigegeben']) {
       expect(GESPERRTE_STATUS.has(status), `${status} duerfte nicht gesperrt sein`).toBe(false)
     }
+  })
+})
+
+describe('11. Festgeschrieben (frozen_at)', () => {
+  // Der reale Bestand: RE-2026-0001..0003, Kunde AE-TEST-0001, alle mit
+  // Versand-Status aber frozen_at NULL, sent_at vor created_at. Sie liefen
+  // frueher durch alle zehn Punkte und waeren mahnbar gewesen.
+  it('sperrt eine Rechnung ohne frozen_at (synthetisch), auch bei Versand-Status', async () => {
+    const { ergebnis } = await gate({
+      rechnung: { ...RECHNUNG_OK, status: 'sent', frozen_at: null },
+    })
+    expect(punkt(ergebnis, 'festgeschrieben').stand).toBe('gesperrt')
+    expect(ergebnis.status).toBe('GESPERRT')
+    expect(ergebnis.darfMahnen).toBe(false)
+    expect(ergebnis.sperren.some(s => s.includes('festgeschrieben'))).toBe(true)
+  })
+
+  it('laesst eine festgeschriebene Rechnung passieren', async () => {
+    const { ergebnis } = await gate({
+      rechnung: { ...RECHNUNG_OK, frozen_at: vorTagen(19) },
+    })
+    expect(punkt(ergebnis, 'festgeschrieben').stand).toBe('frei')
+    expect(ergebnis.darfMahnen).toBe(true)
   })
 })
 

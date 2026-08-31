@@ -51,6 +51,7 @@ export type MahnSperre =
   | 'rechnung'
   | 'geloescht'
   | 'status'
+  | 'festgeschrieben'
   | 'offener_betrag'
   | 'faelligkeit'
   | 'gutschrift'
@@ -105,6 +106,7 @@ const KATALOG: { nummer: number; sperre: MahnSperre; titel: string }[] = [
   { nummer: 8, sperre: 'manuelle_sperre', titel: 'Keine manuelle Sperre' },
   { nummer: 9, sperre: 'stufenabstand', titel: 'Abstand zur nächsten Stufe erreicht' },
   { nummer: 10, sperre: 'doppelmahnung', titel: 'Keine gleiche Mahnung in der Warteschlange' },
+  { nummer: 11, sperre: 'festgeschrieben', titel: 'Rechnung ist festgeschrieben (frozen_at)' },
 ]
 
 /**
@@ -194,7 +196,7 @@ export async function pruefeMahnbarkeit(
   // ═══ 1 ═══
   const { data: invRoh, error: invErr } = await admin
     .from('invoices')
-    .select('id, invoice_number, invoice_number_formatted, status, total_amount, paid_amount, due_date, deleted_at, organization_id')
+    .select('id, invoice_number, invoice_number_formatted, status, total_amount, paid_amount, due_date, deleted_at, frozen_at, organization_id')
     .eq('id', invoiceId)
     .eq('organization_id', organizationId)
     .maybeSingle()
@@ -220,6 +222,7 @@ export async function pruefeMahnbarkeit(
     paid_amount: number | null
     due_date: string | null
     deleted_at: string | null
+    frozen_at: string | null
     organization_id: string
   }
   const nummer = inv.invoice_number_formatted || inv.invoice_number || null
@@ -244,6 +247,30 @@ export async function pruefeMahnbarkeit(
     s.setze('status', 'gesperrt', grund)
   } else {
     s.setze('status', 'frei', `Status „${inv.status}" ist mahnfähig.`)
+  }
+
+  // ═══ 11 — Festgeschrieben (frozen_at) ═══
+  //
+  // Eine Mahnung setzt eine RECHTSWIRKSAM AUSGESTELLTE Rechnung voraus.
+  // Eine Rechnung wird im echten Lebenslauf beim Freigeben festgeschrieben
+  // (`freezeInvoice` setzt Status → 'freigegeben' und `frozen_at`), und der
+  // Versand verweigert jede Rechnung ohne `frozen_at`
+  // (rechnung-versand.ts: „Rechnung ist nicht festgeschrieben").
+  //
+  // Eine Zeile, die einen Versand-Status behauptet, aber nie festgeschrieben
+  // wurde, kann diesen Weg nicht gegangen sein — sie ist synthetisch
+  // (Demo-/Testbestand). Genau so entstanden die drei Rechnungen im
+  // Produktionsbestand (RE-2026-0001..0003, Kunde AE-TEST-0001, alle
+  // `frozen_at` NULL, `sent_at` VOR `created_at`). Sie liefen bisher durch
+  // alle zehn Punkte und wären mahnbar gewesen. Der Versandweg und der
+  // SEPA-Einzug prüfen `frozen_at` bereits; das Mahnwesen war die letzte
+  // Lücke. Fail-closed: keine Festschreibung, keine Mahnung.
+  if (!inv.frozen_at) {
+    s.setze('festgeschrieben', 'gesperrt',
+      'Die Rechnung wurde nie festgeschrieben (frozen_at ist leer). Ohne Festschreibung wurde sie ' +
+      'nie rechtswirksam ausgestellt und kann nicht gemahnt werden — eine solche Zeile ist synthetisch.')
+  } else {
+    s.setze('festgeschrieben', 'frei', `Festgeschrieben am ${inv.frozen_at}.`)
   }
 
   // ═══ 4 — Teilzahlung ═══

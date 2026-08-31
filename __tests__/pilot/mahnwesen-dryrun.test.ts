@@ -52,6 +52,8 @@ interface Lage {
   status?: string
   total?: number
   bezahlt?: number
+  /** frozen_at der Rechnung. undefined = festgeschrieben, null = synthetisch. */
+  frozenAt?: string | null
   /** Tage Verzug. Negativ = noch nicht fällig. */
   verzugstage?: number | null
   dunningLevel?: string
@@ -91,6 +93,9 @@ function db(lage: Lage) {
               paid_amount: lage.bezahlt ?? 0,
               due_date: faellig,
               deleted_at: null,
+              // Festgeschrieben (Gate-Punkt 11): eine reale, versendete
+              // Rechnung hat frozen_at. Per lage.frozenAt=null testbar.
+              frozen_at: lage.frozenAt === undefined ? '2026-01-01T00:00:00Z' : lage.frozenAt,
               organization_id: ORG,
             },
           }
@@ -465,7 +470,7 @@ describe('ermittleZustaende', () => {
 describe('Gleiche Bewertung wie der scharfe Lauf', () => {
   it('das vollständige Gate-Ergebnis liegt dem Posten bei', async () => {
     const { posten } = await lauf({ verzugstage: 30 })
-    expect(posten.gate.punkte).toHaveLength(10)
+    expect(posten.gate.punkte).toHaveLength(11)
     expect(posten.gate.invoiceId).toBe(RECHNUNG)
   })
 
