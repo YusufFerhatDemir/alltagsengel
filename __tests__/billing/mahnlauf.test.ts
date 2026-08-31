@@ -138,6 +138,9 @@ function invoice(over: Partial<Row> = {}): Row {
     paid_amount: 0,
     due_date: '2026-07-01', // 43 Tage vor dem fixierten "heute"
     deleted_at: null,
+    // Festgeschrieben: der Vorfilter des Mahnlaufs lässt nur Rechnungen mit
+    // frozen_at durch (synthetische Zeilen ohne frozen_at bleiben draußen).
+    frozen_at: '2026-06-01T00:00:00Z',
     dunning_level: 'offen',
     ...over,
   }
@@ -185,6 +188,14 @@ describe('runDunningRun — Vorfilter', () => {
     const r = await runDunningRun(makeDb(store), ORG, ACTOR)
     expect(r.geprueft).toBe(1)
     expect(r.eskaliert).toHaveLength(1)
+  })
+
+  it('ueberspringt synthetische Rechnungen ohne frozen_at (Demo-/Testbestand)', async () => {
+    // Der reale Produktionsbestand: Versand-Status, aber nie festgeschrieben.
+    const store = emptyStore([invoice({ status: 'sent', frozen_at: null })])
+    const r = await runDunningRun(makeDb(store), ORG, ACTOR)
+    expect(r.geprueft).toBe(0)
+    expect(r.eskaliert).toHaveLength(0)
   })
 
   it('ueberspringt vollstaendig ausgeglichene Rechnungen', async () => {

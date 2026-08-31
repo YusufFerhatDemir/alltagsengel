@@ -157,6 +157,10 @@ async function ueberfaelligeRechnung(
       period_end: vorTagen(tageUeberfaellig + 15),
       due_date: vorTagen(tageUeberfaellig),
       status: 'freigegeben',
+      // Eine freigegebene Rechnung ist festgeschrieben — freezeInvoice setzt
+      // Status und frozen_at gemeinsam. Der Mahnlauf-Vorfilter verlangt
+      // frozen_at (synthetische Zeilen ohne Festschreibung bleiben draußen).
+      frozen_at: vorTagen(tageUeberfaellig + 15),
       total_amount: 210,
       paid_amount: 0,
       dunning_level: 'offen',

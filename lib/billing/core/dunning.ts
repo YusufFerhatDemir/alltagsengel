@@ -522,6 +522,12 @@ export async function runDunningRun(
     .select('id, invoice_number, invoice_number_formatted, status, total_amount, paid_amount, due_date')
     .eq('organization_id', organizationId)
     .is('deleted_at', null)
+    // Nur festgeschriebene Rechnungen sind rechtswirksam ausgestellt und
+    // damit mahnfähig. Eine Zeile ohne frozen_at ist synthetisch (Demo-/
+    // Testbestand) und darf nie in einen Mahnlauf geraten — dieselbe Sperre,
+    // die das Mahn-Safety-Gate als Punkt 11 fail-closed durchsetzt. Hier als
+    // billiger Vorfilter, damit ein Massenlauf sie gar nicht erst prüft.
+    .not('frozen_at', 'is', null)
     .not('due_date', 'is', null)
     .lt('due_date', heute)
     .order('due_date', { ascending: true })
