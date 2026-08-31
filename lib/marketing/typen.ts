@@ -180,6 +180,38 @@ export interface MarketingKontakt {
   einsatzfreigabe: boolean
   /** caregivers.fuehrungszeugnis_gueltig_bis, ISO-Datum. */
   fuehrungszeugnisGueltigBis: string | null
+
+  /**
+   * caregivers.vertragsstatus — 'aktiv' | 'gekuendigt' | 'ausgeschieden' |
+   * 'ruhend' (Vokabular in lib/personal/types.ts).
+   *
+   * WARUM DAS INS MARKETING GEHOERT
+   * Bis zum 31.08.2026 las der Verteiler `caregivers` OHNE jede Bedingung
+   * auf den Beschaeftigungsstand. Wer das Unternehmen verlassen hatte,
+   * stand am naechsten Tag weiter in JEDEM Engel-Segment: 'engel_alle',
+   * 'engel_verfuegbar', 'engel_ohne_fuehrungszeugnis'. Die Einwilligung
+   * bleibt beim Austritt bestehen — sie wurde ja nicht widerrufen — und
+   * fing den Fall deshalb NICHT ab. Eine ausgeschiedene Person haette
+   * Dienstplan- und Einsatzwerbung ihres frueheren Arbeitgebers bekommen.
+   *
+   * Die Regel ist dieselbe wie bei der Einsatzfreigabe
+   * (lib/personal/einsatzfreigabe.ts): alles ausser 'aktiv' ist kein
+   * laufendes Beschaeftigungsverhaeltnis. null heisst „nicht gepflegt"
+   * und wird NICHT als Austritt gewertet — sonst faellt der gesamte
+   * Bestand ohne gepflegten Vertragsstatus aus dem Verteiler.
+   */
+  vertragsstatus: string | null
+  /**
+   * caregivers.austrittsdatum, ISO-Datum. Gesetzt und erreicht heisst:
+   * das Beschaeftigungsverhaeltnis ist beendet.
+   *
+   * Steht als DATUM hier und nicht als fertiges Ja/Nein, weil die
+   * Segmentregeln ihr Bezugsdatum von aussen bekommen — nur so liefern
+   * Trockenlauf und Versand desselben Zeitpunkts dasselbe Ergebnis.
+   * Ein in der ZUKUNFT liegendes Austrittsdatum ist eine gekuendigte,
+   * aber laufende Beschaeftigung; die Person bleibt bis dahin erreichbar.
+   */
+  ausgetretenAm: string | null
 }
 
 /**

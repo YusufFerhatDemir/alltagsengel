@@ -59,6 +59,8 @@ function leererKontakt(): MarketingKontakt {
     qualifiziert: false,
     einsatzfreigabe: false,
     fuehrungszeugnisGueltigBis: null,
+    vertragsstatus: null,
+    ausgetretenAm: null,
   }
 }
 
@@ -203,7 +205,7 @@ export async function ladeMarketingKontakte(
   // ── 4) Mitarbeiterakten (caregivers) — traegt organization_id ────────
   const { data: caregivers, error: cgFehler } = await supabase
     .from('caregivers')
-    .select('user_id, email, first_name, last_name, zip_code, bundesland, einsatzfreigabe, fuehrungszeugnis_gueltig_bis, status, created_at')
+    .select('user_id, email, first_name, last_name, zip_code, bundesland, einsatzfreigabe, fuehrungszeugnis_gueltig_bis, status, vertragsstatus, austrittsdatum, created_at')
     .eq('organization_id', organizationId)
   if (cgFehler) throw new Error(`Mitarbeiterakten nicht lesbar: ${cgFehler.message}`)
 
@@ -217,6 +219,12 @@ export async function ladeMarketingKontakte(
       vorhanden.fuehrungszeugnisGueltigBis = (c.fuehrungszeugnis_gueltig_bis as string | null) ?? null
       vorhanden.plz = vorhanden.plz ?? ((c.zip_code as string | null) ?? null)
       vorhanden.bundesland = vorhanden.bundesland ?? ((c.bundesland as string | null) ?? null)
+      // Der Beschaeftigungsstand kommt AUSSCHLIESSLICH aus der Akte — das
+      // Konto (profiles) kennt ihn nicht. Er muss deshalb auch auf dem
+      // zusammengefuehrten Kontakt landen, sonst faellt genau der Fall
+      // durch, der hier gemeint ist: ausgeschiedene Person MIT Konto.
+      vorhanden.vertragsstatus = (c.vertragsstatus as string | null) ?? null
+      vorhanden.ausgetretenAm = (c.austrittsdatum as string | null) ?? null
       continue
     }
     aufnehmen({
@@ -232,6 +240,8 @@ export async function ladeMarketingKontakte(
       letzteAktivitaet: (c.created_at as string | null) ?? null,
       einsatzfreigabe: c.einsatzfreigabe === true,
       fuehrungszeugnisGueltigBis: (c.fuehrungszeugnis_gueltig_bis as string | null) ?? null,
+      vertragsstatus: (c.vertragsstatus as string | null) ?? null,
+      ausgetretenAm: (c.austrittsdatum as string | null) ?? null,
     })
   }
 

@@ -101,6 +101,44 @@ function echterKontakt(k: MarketingKontakt): boolean {
   return Boolean(k.email) && !k.istTestkonto && !k.istGeloescht
 }
 
+/**
+ * Ist das Beschaeftigungsverhaeltnis beendet?
+ *
+ * Zwei Merkmale, ODER-verknuepft, beide aus `caregivers`:
+ *
+ *  1. `vertragsstatus` steht auf etwas anderem als 'aktiv'
+ *     ('gekuendigt' | 'ausgeschieden' | 'ruhend'). Dieselbe Regel wendet
+ *     `lib/personal/einsatzfreigabe.ts` fuer die Einsatzfreigabe an — wer
+ *     nicht mehr eingesetzt werden darf, bekommt auch keine Einsatzpost.
+ *  2. `austrittsdatum` ist gesetzt und ERREICHT. Ein Datum in der Zukunft
+ *     ist eine laufende Kuendigungsfrist; bis dahin ist die Person
+ *     regulaer beschaeftigt und erreichbar.
+ *
+ * `null` in beiden Feldern heisst „nicht gepflegt", NICHT „ausgeschieden".
+ * Andersherum fiele jeder Bestand ohne gepflegten Vertragsstatus
+ * schlagartig aus dem Verteiler — ein stiller Totalausfall, der wie ein
+ * leeres Segment aussieht.
+ */
+export function istAusgeschieden(k: MarketingKontakt, heute: Date): boolean {
+  if (k.vertragsstatus != null && k.vertragsstatus !== 'aktiv') return true
+  if (!k.ausgetretenAm) return false
+  const tage = tageSeit(k.ausgetretenAm, heute)
+  return tage !== null && tage >= 0
+}
+
+/**
+ * Grundbedingung fuer jedes ENGEL-Segment.
+ *
+ * Der Zusatz gegenueber `echterKontakt` ist der Beschaeftigungsstand. Er
+ * steht hier und nicht in `echterKontakt`, weil er nur fuer Engel-Post
+ * gilt: eine ausgeschiedene Mitarbeiterin, die zugleich Kundin ist, darf
+ * den Kunden-Newsletter weiterhin bekommen — sie hat ihn als Kundin
+ * bestellt, nicht als Mitarbeiterin.
+ */
+function aktiverEngel(k: MarketingKontakt, heute: Date): boolean {
+  return echterKontakt(k) && k.rolle === 'engel' && !istAusgeschieden(k, heute)
+}
+
 const inaktivSeit = (tage: number) => (k: MarketingKontakt, heute: Date): boolean => {
   const t = tageSeit(k.letzteAktivitaet, heute)
   // Nie aktiv gewesen zaehlt als inaktiv — sonst faellt genau die Gruppe
@@ -208,7 +246,7 @@ export const SEGMENTE: readonly Segment[] = [
     beschreibung: 'Jedes Engel-Konto mit E-Mail-Adresse, ohne Testkonten.',
     zielgruppe: 'engel',
     consentTyp: 'engel_einsaetze',
-    passt: (k) => echterKontakt(k) && k.rolle === 'engel',
+    passt: (k, heute) => aktiverEngel(k, heute),
   },
   {
     key: 'engel_profil_unvollstaendig',
@@ -216,9 +254,8 @@ export const SEGMENTE: readonly Segment[] = [
     beschreibung: 'Engel ohne abgeschlossene Registrierung oder ohne hinterlegte Verfügbarkeit.',
     zielgruppe: 'engel',
     consentTyp: 'engel_einsaetze',
-    passt: (k) =>
-      echterKontakt(k) &&
-      k.rolle === 'engel' &&
+    passt: (k, heute) =>
+      aktiverEngel(k, heute) &&
       (!k.registrierungVollstaendig || k.verfuegbarkeitsFenster === 0),
   },
   {
@@ -228,7 +265,7 @@ export const SEGMENTE: readonly Segment[] = [
     zielgruppe: 'engel',
     consentTyp: 'engel_einsaetze',
     passt: (k, heute) => {
-      if (!echterKontakt(k) || k.rolle !== 'engel') return false
+      if (!aktiverEngel(k, heute)) return false
       if (!k.fuehrungszeugnisGueltigBis) return true
       const restTage = -(tageSeit(k.fuehrungszeugnisGueltigBis, heute) ?? 0)
       return restTage <= 60
@@ -240,8 +277,8 @@ export const SEGMENTE: readonly Segment[] = [
     beschreibung: 'Engel mit Einsatzfreigabe und mindestens einem hinterlegten Zeitfenster.',
     zielgruppe: 'engel',
     consentTyp: 'engel_einsaetze',
-    passt: (k) =>
-      echterKontakt(k) && k.rolle === 'engel' && k.einsatzfreigabe && k.verfuegbarkeitsFenster > 0,
+    passt: (k, heute) =>
+      aktiverEngel(k, heute) && k.einsatzfreigabe && k.verfuegbarkeitsFenster > 0,
   },
   {
     key: 'engel_qualifiziert',
@@ -249,7 +286,7 @@ export const SEGMENTE: readonly Segment[] = [
     beschreibung: 'Engel mit hinterlegter Qualifikation bzw. Zertifizierung.',
     zielgruppe: 'engel',
     consentTyp: 'engel_einsaetze',
-    passt: (k) => echterKontakt(k) && k.rolle === 'engel' && k.qualifiziert,
+    passt: (k, heute) => aktiverEngel(k, heute) && k.qualifiziert,
   },
   {
     key: 'engel_ohne_einsatz',
@@ -257,7 +294,7 @@ export const SEGMENTE: readonly Segment[] = [
     beschreibung: 'Engel-Konten ohne einen einzigen Einsatz.',
     zielgruppe: 'engel',
     consentTyp: 'engel_einsaetze',
-    passt: (k) => echterKontakt(k) && k.rolle === 'engel' && k.anzahlBuchungen === 0,
+    passt: (k, heute) => aktiverEngel(k, heute) && k.anzahlBuchungen === 0,
   },
   {
     key: 'engel_inaktiv_60t',
@@ -266,7 +303,7 @@ export const SEGMENTE: readonly Segment[] = [
     zielgruppe: 'engel',
     consentTyp: 'engel_einsaetze',
     passt: (k, heute) =>
-      echterKontakt(k) && k.rolle === 'engel' && k.anzahlBuchungen > 0 && inaktivSeit(60)(k, heute),
+      aktiverEngel(k, heute) && k.anzahlBuchungen > 0 && inaktivSeit(60)(k, heute),
   },
   {
     key: 'engel_neu_30t',
@@ -275,7 +312,7 @@ export const SEGMENTE: readonly Segment[] = [
     zielgruppe: 'engel',
     consentTyp: 'engel_einsaetze',
     passt: (k, heute) => {
-      if (!echterKontakt(k) || k.rolle !== 'engel') return false
+      if (!aktiverEngel(k, heute)) return false
       const t = tageSeit(k.registriertAm, heute)
       return t !== null && t <= 30
     },

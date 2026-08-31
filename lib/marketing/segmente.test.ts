@@ -10,7 +10,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   SEGMENTE, engagementScore, engagementStufe, filtereRegion, filtereSegment,
-  istSegmentKey, segmentAus, tageSeit,
+  istAusgeschieden, istSegmentKey, segmentAus, tageSeit,
 } from './segmente'
 import type { MarketingKontakt } from './typen'
 
@@ -24,7 +24,7 @@ function kontakt(ueber: Partial<MarketingKontakt> = {}): MarketingKontakt {
     registrierungVollstaendig: true, registriertAm: vorTagen(10),
     letzteAktivitaet: vorTagen(10), letzteBuchung: null, anzahlBuchungen: 0,
     verfuegbarkeitsFenster: 0, qualifiziert: false, einsatzfreigabe: false,
-    fuehrungszeugnisGueltigBis: null,
+    fuehrungszeugnisGueltigBis: null, vertragsstatus: null, ausgetretenAm: null,
     ...ueber,
   }
 }
@@ -50,6 +50,92 @@ test('KEIN Segment nimmt einen Kontakt ohne Adresse auf', () => {
   for (const s of SEGMENTE) {
     assert.equal(s.passt(ohne, HEUTE), false, `Segment ${s.key} nimmt einen Kontakt ohne Adresse auf`)
   }
+})
+
+// ── Beschäftigungsstand: ausgeschiedene Mitarbeitende ─────────────────────
+//
+// Der Befund vom 31.08.2026: `ladeMarketingKontakte` las `caregivers` ohne
+// jede Bedingung auf den Beschäftigungsstand. Wer das Unternehmen verlassen
+// hatte, stand am nächsten Tag weiter in JEDEM Engel-Segment. Die
+// Einwilligung fing das nicht ab — sie wurde beim Austritt ja nicht
+// widerrufen.
+
+const ENGEL_SEGMENTE = SEGMENTE.filter((s) => s.zielgruppe === 'engel')
+
+test('acht Engel-Segmente sind es, und alle prüfen den Beschäftigungsstand', () => {
+  // Die Zahl steht hier, damit ein NEU hinzugefügtes Engel-Segment diesen
+  // Test rot macht und nicht still an der Prüfung vorbeiläuft.
+  assert.equal(ENGEL_SEGMENTE.length, 8)
+})
+
+test('KEIN Engel-Segment nimmt eine ausgeschiedene Person auf', () => {
+  // Bewusst mit ALLEN Merkmalen ausgestattet, die ein Segment sonst
+  // aufnehmen würde: freigegeben, qualifiziert, mit Fenstern, mit
+  // Einsätzen, frisch registriert. Bleibt trotzdem draußen.
+  const weg = kontakt({
+    rolle: 'engel', vertragsstatus: 'ausgeschieden',
+    einsatzfreigabe: true, verfuegbarkeitsFenster: 3, qualifiziert: true,
+    anzahlBuchungen: 5, letzteAktivitaet: vorTagen(200), registriertAm: vorTagen(5),
+    fuehrungszeugnisGueltigBis: vorTagen(-400),
+  })
+  for (const s of ENGEL_SEGMENTE) {
+    assert.equal(s.passt(weg, HEUTE), false, `Segment ${s.key} nimmt eine ausgeschiedene Person auf`)
+  }
+})
+
+test('Gegenprobe: dieselbe Person mit aktivem Vertrag wird von Engel-Segmenten aufgenommen', () => {
+  // Ohne diese Gegenprobe bewiese der Test oben nichts — er wäre auch dann
+  // grün, wenn die Segmente NIEMANDEN mehr aufnähmen.
+  const da = kontakt({
+    rolle: 'engel', vertragsstatus: 'aktiv',
+    einsatzfreigabe: true, verfuegbarkeitsFenster: 3, qualifiziert: true,
+    anzahlBuchungen: 5, letzteAktivitaet: vorTagen(200), registriertAm: vorTagen(5),
+    fuehrungszeugnisGueltigBis: vorTagen(-400),
+  })
+  const treffer = ENGEL_SEGMENTE.filter((s) => s.passt(da, HEUTE)).map((s) => s.key)
+  assert.deepEqual(treffer.sort(), [
+    'engel_alle', 'engel_inaktiv_60t', 'engel_neu_30t', 'engel_qualifiziert', 'engel_verfuegbar',
+  ])
+})
+
+test('jeder Vertragsstatus außer aktiv gilt als ausgeschieden', () => {
+  for (const st of ['gekuendigt', 'ausgeschieden', 'ruhend']) {
+    assert.equal(istAusgeschieden(kontakt({ vertragsstatus: st }), HEUTE), true, st)
+  }
+  assert.equal(istAusgeschieden(kontakt({ vertragsstatus: 'aktiv' }), HEUTE), false)
+})
+
+test('ein ungepflegter Vertragsstatus ist KEIN Austritt', () => {
+  // Fail-open ist hier richtig: andersherum fiele jeder Bestand ohne
+  // gepflegten Vertragsstatus schlagartig aus dem Verteiler — ein stiller
+  // Totalausfall, der wie ein leeres Segment aussieht.
+  assert.equal(istAusgeschieden(kontakt({ vertragsstatus: null, ausgetretenAm: null }), HEUTE), false)
+  assert.equal(SEGMENTE.find((s) => s.key === 'engel_alle')!
+    .passt(kontakt({ rolle: 'engel', vertragsstatus: null }), HEUTE), true)
+})
+
+test('ein Austrittsdatum in der Zukunft ist eine laufende Kündigungsfrist', () => {
+  // Gekündigt, aber noch beschäftigt: der Dienstplan der nächsten Wochen
+  // geht diese Person weiterhin etwas an.
+  assert.equal(istAusgeschieden(kontakt({ ausgetretenAm: vorTagen(-30) }), HEUTE), false)
+  assert.equal(istAusgeschieden(kontakt({ ausgetretenAm: vorTagen(1) }), HEUTE), true)
+})
+
+test('das Austrittsdatum greift am Tag des Austritts', () => {
+  const heuteIso = HEUTE.toISOString().slice(0, 10)
+  assert.equal(istAusgeschieden(kontakt({ ausgetretenAm: heuteIso }), HEUTE), true)
+})
+
+test('Austritt sperrt NUR die Engel-Post, nicht den Kunden-Newsletter', () => {
+  // Eine ausgeschiedene Mitarbeiterin, die zugleich Kundin ist, hat den
+  // Newsletter als Kundin bestellt — nicht als Mitarbeiterin.
+  const exMitarbeiterinAlsKundin = kontakt({
+    rolle: 'kunde', vertragsstatus: 'ausgeschieden', ausgetretenAm: vorTagen(10),
+  })
+  assert.equal(
+    SEGMENTE.find((s) => s.key === 'kunden_alle')!.passt(exMitarbeiterinAlsKundin, HEUTE),
+    true,
+  )
 })
 
 // ── Katalog ───────────────────────────────────────────────────────────────

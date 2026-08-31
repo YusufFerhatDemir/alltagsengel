@@ -294,6 +294,8 @@ export function beispielKontakt(): MarketingKontakt {
     qualifiziert: false,
     einsatzfreigabe: false,
     fuehrungszeugnisGueltigBis: null,
+    vertragsstatus: null,
+    ausgetretenAm: null,
   }
 }
 
