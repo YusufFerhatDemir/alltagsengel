@@ -27,6 +27,25 @@ import { generateAuftragsdatei, auftragsdateiName } from '@/lib/abrechnung/auftr
 import { LEISTUNGSART_SCHLUESSEL, findeDatenannahmestelle } from '@/lib/abrechnung/schluesselverzeichnis'
 import { speichereLauf, setzeLaufStatusAction } from './actions'
 
+/**
+ * Verordnungen ueber die Abrechnungs-Route holen statt ueber den
+ * Browser-Client.
+ *
+ * Fail-closed: schlaegt der Aufruf fehl, bleibt die Liste leer — dieselbe
+ * Ansicht wie vorher, nur ohne stille Falschaussage. Ein leeres Ergebnis
+ * heisst hier „keine Verordnungsdaten", nicht „keine Verordnungen".
+ */
+async function verordnungenFuerAbrechnung(): Promise<unknown[]> {
+  try {
+    const res = await fetch('/api/billing/verordnungen', { cache: 'no-store' })
+    if (!res.ok) return []
+    const daten = await res.json()
+    return Array.isArray(daten) ? daten : []
+  } catch {
+    return []
+  }
+}
+
 // ── Typen ───────────────────────────────────────────────────────
 interface ClientRow {
   id: string
@@ -190,16 +209,23 @@ export default function AbrechnungPage() {
       supabase.from('service_records')
         .select('id, client_id, verordnung_id, date, start_time, duration_minutes, service_type, amount, status, caregiver_initials')
         .gte('date', von).lte('date', bis),
-      supabase.from('verordnungen')
-        .select('id, client_id, genehmigung_status, genehmigung_aktenzeichen, kostentraeger_name, kostentraeger_ik_nummer, gueltig_von, gueltig_bis')
-        .is('deleted_at', null),
+      // Verordnungen NICHT ueber den Browser-Client: die Tabelle fuehrt
+      // eine Spalte `diagnose` und steht deshalb unter `pflege.lesen`,
+      // das die Buchhaltung ausdruecklich nicht hat. RLS kann keine
+      // Spalten ausblenden — entweder die ganze Zeile oder keine —, und
+      // die Seite blieb an dieser Stelle leer.
+      //
+      // /api/billing/verordnungen verlangt `abrechnung.lesen` und gibt
+      // eine ausdrueckliche Spaltenliste heraus (lib/billing/
+      // verordnung-projektion.ts). Die Diagnose verlaesst den Server nicht.
+      verordnungenFuerAbrechnung(),
       supabase.from('clients')
         .select('id, first_name, last_name, versichertennummer, geburtsdatum, date_of_birth, pflegegrad, care_level, pflegekasse_name, pflegekasse_ik, address, zip_code, city'),
       supabase.from('abrechnungslaeufe').select('*').eq('abrechnungsmonat', monat).order('erstellt_am', { ascending: false }),
     ])
 
     const records = (recRes.data || []) as RecordRow[]
-    const verordnungen = (verRes.data || []) as VerordnungRow[]
+    const verordnungen = verRes as VerordnungRow[]
     const clients = (cliRes.data || []) as ClientRow[]
     setLaeufe((laufRes.data || []) as LaufRow[])
 
