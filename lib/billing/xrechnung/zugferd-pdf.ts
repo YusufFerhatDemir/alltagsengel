@@ -1,6 +1,6 @@
-import { PDFDocument, PDFName, PDFString, PDFArray, PDFDict, PDFHexString, PDFStream } from 'pdf-lib'
+import { PDFDocument, PDFName, PDFString, PDFDict, PDFHexString } from 'pdf-lib'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { generateZugferdXml, loadInvoiceXRechnungData } from './invoice-to-xrechnung'
+import { loadInvoiceXRechnungData } from './invoice-to-xrechnung'
 import { generateCiiXml } from './cii-generator'
 
 const ZUGFERD_XML_FILENAME = 'factur-x.xml'

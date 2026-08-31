@@ -34,7 +34,7 @@ import {
   validateTransition,
   isCorrectionTransitionAllowed,
   validateCorrectionTransition,
-  INVOICE_STATUS_LABELS,
+  
 } from '../billing/core/status-machine'
 
 // ── tarif-verifizierung ──

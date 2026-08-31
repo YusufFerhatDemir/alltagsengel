@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
-import { statusMeta, formatDate, ABSENCE_STATUS, ABSENCE_TYPE, MONATSNAMEN } from '@/lib/admin/ops'
+import { statusMeta, formatDate, ABSENCE_TYPE } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger'
 const log = logger.child('admin:urlaub')

@@ -14,7 +14,7 @@ import {
   normalizePlz,
   resolvePlz,
   bundeslandFuerPlz,
-  bundeslandCodeFuerPlz,
+  
   eindeutigesBundeslandFuerPlz,
   normalizeBundesland,
   isHessenPlz,

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
-  euro, formatDate, statusMeta, summarizeBudget, CLIENT_STATUS, type BudgetSummary,
+  statusMeta, summarizeBudget, CLIENT_STATUS, type BudgetSummary,
 } from '@/lib/admin/ops'
 import { AmpelDot, BudgetBar, StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { useBundeslandFilter } from '@/components/admin/BundeslandContext'

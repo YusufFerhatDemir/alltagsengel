@@ -1,6 +1,6 @@
 'use client';
 
-import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, Badge, C, GoldSep, SectionLabel, Icons } from '../../docs/shared';
+import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, GoldSep, SectionLabel, Icons } from '../../docs/shared';
 
 export default function GoToMarketPage() {
   return (

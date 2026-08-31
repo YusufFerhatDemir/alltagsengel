@@ -3,7 +3,7 @@
 import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { IconMoney, IconDocument } from '@/components/Icons'
+import { IconMoney } from '@/components/Icons'
 
 import { euroZuCent } from '@/lib/geld'
 // ═══════════════════════════════════════════════════════════════

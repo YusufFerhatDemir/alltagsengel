@@ -3,7 +3,7 @@ import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
-  formatDate, formatTime, fullName, statusMeta, daysUntil,
+  formatDate, formatTime, fullName, statusMeta, 
   ABSENCE_TYPE, SUBSTITUTION_STATUS, ESCALATION_LEVELS, WEEKDAYS, normalizeWeekday,
 } from '@/lib/admin/ops'
 import { escalateRequest, markRequestFailed, toggleClientNotified, assignSubstitute, reportAbsence, createSubstitutionRequest } from './actions'

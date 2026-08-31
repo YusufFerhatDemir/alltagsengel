@@ -1,6 +1,6 @@
 import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { heuteBerlin, datumBerlin, berlinParts } from '@/lib/utils/timezone'
+import { heuteBerlin } from '@/lib/utils/timezone'
 import {
   ENTLASTUNG_JAEHRLICH_EUR,
   VP_KZP_KOMBINIERT_EUR,

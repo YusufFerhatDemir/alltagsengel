@@ -4,7 +4,7 @@ import { KEINE_ZUORDNUNG_STATUS, alsPostgrestListe } from '@/lib/billing/status-
 import { parseBetragZuCent } from '@/lib/admin/betrag'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { euro, formatDate, fullName } from '@/lib/admin/ops'
+import { euro, fullName } from '@/lib/admin/ops'
 import { Banner } from '@/components/admin/OpsUI'
 import Link from 'next/link'
 

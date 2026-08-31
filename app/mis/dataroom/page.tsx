@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/mis/constants'
-import { SectionHeader, Card, DataTable, MisButton, Badge, EmptyState, StatRow, KpiCard } from '@/components/mis/MisComponents'
+import { SectionHeader, Card, DataTable, MisButton, Badge, EmptyState, KpiCard } from '@/components/mis/MisComponents'
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
 import { logger } from '@/lib/logger'

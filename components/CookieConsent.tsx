@@ -73,6 +73,24 @@ export default function CookieConsent() {
     }
   }
 
+  // Hover- UND Fokus-Zustand teilen sich denselben Stil. Als benannte
+  // Handler, damit onMouseOver/onFocus garantiert dasselbe tun.
+  type KnopfEvent = { currentTarget: HTMLButtonElement }
+  const hellerRand = (e: KnopfEvent) => {
+    e.currentTarget.style.borderColor = 'rgba(201,150,60,0.5)'
+    e.currentTarget.style.color = '#F7F2EA'
+  }
+  const normalerRand = (e: KnopfEvent) => {
+    e.currentTarget.style.borderColor = 'rgba(201,150,60,0.3)'
+    e.currentTarget.style.color = 'rgba(247,242,234,0.7)'
+  }
+  const hellerVerlauf = (e: KnopfEvent) => {
+    e.currentTarget.style.background = 'linear-gradient(135deg, #D4A54A 0%, #C9963C 100%)'
+  }
+  const normalerVerlauf = (e: KnopfEvent) => {
+    e.currentTarget.style.background = 'linear-gradient(135deg, #C9963C 0%, #B8862F 100%)'
+  }
+
   if (!visible) return null
 
   return (
@@ -178,14 +196,13 @@ export default function CookieConsent() {
                 transition: 'all 0.2s',
                 whiteSpace: 'nowrap',
               }}
-              onMouseOver={e => {
-                e.currentTarget.style.borderColor = 'rgba(201,150,60,0.5)'
-                e.currentTarget.style.color = '#F7F2EA'
-              }}
-              onMouseOut={e => {
-                e.currentTarget.style.borderColor = 'rgba(201,150,60,0.3)'
-                e.currentTarget.style.color = 'rgba(247,242,234,0.7)'
-              }}
+              // onFocus/onBlur spiegeln den Hover-Zustand: ohne sie bekommt
+              // ein Tastatur-Nutzer im Banner keinerlei sichtbare Rückmeldung,
+              // welcher der beiden Knöpfe gerade dran ist (WCAG 2.4.7).
+              onMouseOver={hellerRand}
+              onFocus={hellerRand}
+              onMouseOut={normalerRand}
+              onBlur={normalerRand}
             >
               Nur Notwendige
             </button>
@@ -205,12 +222,10 @@ export default function CookieConsent() {
                 whiteSpace: 'nowrap',
                 boxShadow: '0 2px 8px rgba(201,150,60,0.3)',
               }}
-              onMouseOver={e => {
-                e.currentTarget.style.background = 'linear-gradient(135deg, #D4A54A 0%, #C9963C 100%)'
-              }}
-              onMouseOut={e => {
-                e.currentTarget.style.background = 'linear-gradient(135deg, #C9963C 0%, #B8862F 100%)'
-              }}
+              onMouseOver={hellerVerlauf}
+              onFocus={hellerVerlauf}
+              onMouseOut={normalerVerlauf}
+              onBlur={normalerVerlauf}
             >
               Alle akzeptieren
             </button>

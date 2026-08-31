@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/mis/constants'
 import {
-  SectionHeader, Tabs, KpiCard, Card, DataTable, MisButton, Badge, Modal, EmptyState,
+  SectionHeader, Tabs, KpiCard, Card, DataTable, MisButton, Badge, Modal, 
 } from '@/components/mis/MisComponents'
 import { updateKrankenfahrt, updateKrankenfahrtProvider } from './actions'
 import { logger } from '@/lib/logger'

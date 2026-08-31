@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { submitHygieneboxOrderAction } from './actions'
-import { IconBox, IconShield, IconCheck, IconInfo, IconGloves, IconDroplet } from '@/components/Icons'
+import { IconBox, IconShield, IconCheck, IconInfo } from '@/components/Icons'
 import { logger } from '@/lib/logger'
 const log = logger.child('kunde:hygienebox')
 

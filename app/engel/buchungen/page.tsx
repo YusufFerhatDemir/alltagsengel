@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { IconCalendar, IconClock, IconUser, IconCheck, IconMoney } from '@/components/Icons'
+import { IconCalendar, IconClock, IconUser, IconMoney } from '@/components/Icons'
 import type { Profile } from '@/lib/types'
 import { logger } from '@/lib/logger'
 const log = logger.child('engel:buchungen')

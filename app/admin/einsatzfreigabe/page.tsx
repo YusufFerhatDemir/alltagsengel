@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { statusMeta, fullName, VERTRAGSSTATUS, WARNSTUFE } from '@/lib/admin/ops'
+import { statusMeta, fullName, VERTRAGSSTATUS } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger'
 const log = logger.child('admin:einsatzfreigabe')

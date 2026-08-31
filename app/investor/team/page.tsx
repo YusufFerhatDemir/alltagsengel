@@ -1,7 +1,7 @@
 'use client';
 
 import { Icons } from '../docs/shared';
-import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, StatBox, TableRow, Badge, C, GoldSep, SectionLabel } from '../docs/shared';
+import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, StatBox, Badge, GoldSep, SectionLabel } from '../docs/shared';
 
 export default function TeamPage() {
   return (

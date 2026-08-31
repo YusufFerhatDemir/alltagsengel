@@ -2,7 +2,7 @@
 import { datumBerlin } from '@/lib/utils/timezone';
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { IconCalendar, IconClock, IconWings } from '@/components/Icons'
+import { IconClock, IconWings } from '@/components/Icons'
 import type { Angel } from '@/lib/types'
 import { ladeListe, zeilenVon, LAEDT, istFehler } from '@/lib/ui/ladelage'
 import type { Ladelage } from '@/lib/ui/ladelage'

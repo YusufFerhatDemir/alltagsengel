@@ -3,7 +3,7 @@ import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { formatDate, formatTime, fullName, WEEKDAYS, BUNDESLAND_LABELS } from '@/lib/admin/ops'
-import { StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
+import { StatusBadge, Banner } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger';
 import DialogOverlay from '@/components/DialogOverlay'
 import { klickbar } from '@/lib/a11y'

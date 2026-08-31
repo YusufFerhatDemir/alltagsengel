@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { IconCalendar, IconClock, IconWings, IconCheck, IconMoney, IconTruck } from '@/components/Icons'
+import { IconCalendar, IconClock, IconWings, IconMoney, IconTruck } from '@/components/Icons'
 import type { Angel } from '@/lib/types'
 
 const statusLabels: Record<string, { label: string; color: string }> = {

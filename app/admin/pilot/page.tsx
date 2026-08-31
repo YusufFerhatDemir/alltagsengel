@@ -21,7 +21,7 @@ import type {
   PilotPhase,
   PilotPhasenUebersicht,
   VorgangStatus,
-  VersandSperreDetail,
+  
 } from '@/lib/pilot/pilot-phasen'
 import type { BusinessInputBericht, BusinessInputStand } from '@/lib/pilot/business-inputs'
 import type { PilotKandidatUebersicht, KandidatZustand } from '@/lib/pilot/pilot-kandidat'

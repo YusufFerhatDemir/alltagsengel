@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { rolleDarf } from '@/lib/auth/guard'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { datumBerlin } from '@/lib/utils/timezone';

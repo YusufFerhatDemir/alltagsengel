@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { IconChat, IconUser, IconWings } from '@/components/Icons'
+import { IconChat, IconWings } from '@/components/Icons'
 import type { Angel } from '@/lib/types'
 import { one } from '@/lib/supabase/join'
 

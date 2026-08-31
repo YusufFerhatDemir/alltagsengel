@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   formatDate, formatTime, fullName, euro,
-  summarizeBudget, AMPEL_META, type Ampel, type BudgetSummary,
+  summarizeBudget, AMPEL_META, type Ampel,
 } from '@/lib/admin/ops'
 import { StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger';

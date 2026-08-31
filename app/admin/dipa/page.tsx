@@ -15,7 +15,7 @@ import {
   Tabs, pflegeMiniBtn, pflegePrimaryBtn,
 } from '@/components/admin/PflegeUI'
 import {
-  ANFORDERUNGSKATALOG, KATEGORIE_LABELS, STAND_LABELS,
+  KATEGORIE_LABELS, STAND_LABELS,
   katalogFortschritt, katalogNachKategorie,
 } from '@/lib/coach/anforderungskatalog'
 import { antragsreife, formatiereBlocker } from '@/lib/coach/dipa-compliance'

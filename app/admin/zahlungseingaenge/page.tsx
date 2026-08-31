@@ -2,7 +2,6 @@
 
 import { heuteBerlin } from '@/lib/utils/timezone';
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { IconMoney, IconDocument, IconChart, IconTarget } from '@/components/Icons'
 import { klickbar } from '@/lib/a11y'
 import { DIFFERENCE_STATUS } from '@/lib/admin/ops'

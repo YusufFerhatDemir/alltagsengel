@@ -1,8 +1,6 @@
 'use client'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { Banner } from '@/components/admin/OpsUI'
-
 export default function DtaPage() {
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)

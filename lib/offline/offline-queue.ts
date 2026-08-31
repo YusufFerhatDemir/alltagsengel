@@ -4,9 +4,9 @@ import type {
   SyncAuditLogEintrag,
   SyncZustand,
   OfflineConfig,
-  OfflineEntityTyp,
+  
   SyncStatus,
-  KonfliktStrategie,
+  
 } from './types'
 import { DEFAULT_OFFLINE_CONFIG, validiereQueueItem } from './types'
 import { OfflineStore } from './offline-store'

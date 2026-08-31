@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
-import { formatDate, statusMeta, ARBEITSZEIT_STATUS, MONATSNAMEN } from '@/lib/admin/ops'
+import { formatDate, MONATSNAMEN } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import type { PersonalZeitkorrektur } from '@/lib/personal/types'
 import { logger } from '@/lib/logger'
