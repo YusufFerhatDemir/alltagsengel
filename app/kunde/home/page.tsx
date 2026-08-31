@@ -57,6 +57,14 @@ export default function KundeHomePage() {
   const [error, setError] = useState('')
   const userLocation = useUserLocation()
 
+  // Auswahl einer Service-Kachel — Maus und Tastatur teilen sich denselben Weg.
+  function waehleKategorie(key: string) {
+    if (key === 'all') { setActiveCategory('all'); return }
+    if (key === 'krankenfahrdienst') { router.push('/kunde/krankenfahrt'); return }
+    if (key === 'hygienebox') { router.push('/kunde/hygienebox'); return }
+    router.push(`/kunde/buchen-service?service=${key}`)
+  }
+
   // Freischaltungsstatus des Bundeslands. Das §45b-Banner unten verspricht
   // die Abrechnung ueber die Pflegekasse — in einem Land ohne Anerkennung
   // waere das eine Zusage, die wir nicht halten koennen.
@@ -202,15 +210,28 @@ export default function KundeHomePage() {
         </div>
 
         <div className="cat-list" role="tablist" aria-label="Service-Kategorien">
-          {categories.map(cat => (
+          {categories.map((cat, i) => (
             <div
               key={cat.key}
               className={`cat-item${activeCategory === cat.key ? ' on' : ''}`}
-              onClick={() => {
-                if (cat.key === 'all') { setActiveCategory('all'); return }
-                if (cat.key === 'krankenfahrdienst') { router.push('/kunde/krankenfahrt'); return }
-                if (cat.key === 'hygienebox') { router.push('/kunde/hygienebox'); return }
-                router.push(`/kunde/buchen-service?service=${cat.key}`)
+              onClick={() => waehleKategorie(cat.key)}
+              // Der wandernde tabIndex unten stand schon da, die Tastenbedienung
+              // dazu fehlte: die aktive Kachel liess sich anspringen, aber Enter
+              // tat nichts und die Pfeiltasten kamen nicht zur naechsten
+              // (WCAG 2.1.1). Enter/Leertaste loesen aus, Pfeile wandern —
+              // das ist die erwartete Bedienung einer tablist.
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  waehleKategorie(cat.key)
+                  return
+                }
+                if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return
+                e.preventDefault()
+                const schritt = e.key === 'ArrowRight' ? 1 : -1
+                const ziel = (i + schritt + categories.length) % categories.length
+                const geschwister = e.currentTarget.parentElement?.children
+                ;(geschwister?.[ziel] as HTMLElement | undefined)?.focus()
               }}
               role="tab"
               aria-selected={activeCategory === cat.key}
