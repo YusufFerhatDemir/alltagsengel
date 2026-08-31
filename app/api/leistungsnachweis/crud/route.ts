@@ -130,12 +130,17 @@ export const GET = withTracking(async function GET(req: NextRequest) {
       .single()
     if (error) return safeDbError(error, 404)
 
-    const { data: auditLog } = await supabase
+    // Ein leerer Aenderungsverlauf ist eine Aussage: „an diesem Nachweis
+    // wurde nichts geaendert". Ein verworfener Fehler machte daraus
+    // dieselbe Anzeige, obwohl der Verlauf nur nicht abrufbar war — und
+    // genau dieser Verlauf ist der Beleg bei einer Pruefung.
+    const { data: auditLog, error: auditFehler } = await supabase
       .from('service_record_audit_log')
       .select('*')
       .eq('record_id', id)
       .order('created_at', { ascending: false })
       .limit(50)
+    if (auditFehler) return safeDbError(auditFehler, 500)
 
     return NextResponse.json({ ...data, audit_log: auditLog || [] })
   }

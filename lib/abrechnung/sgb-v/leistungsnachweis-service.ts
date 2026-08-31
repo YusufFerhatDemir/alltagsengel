@@ -179,10 +179,18 @@ export async function pruefeVollstaendigkeit(
   if (!leistungen || leistungen.length === 0) return []
 
   const verordnungIds = [...new Set(leistungen.map(l => l.verordnung_id).filter(Boolean))]
-  const { data: verordnungen } = await supabase
+  const { data: verordnungen, error: verordnungenFehler } = await supabase
     .from('verordnungen')
     .select('id, client_id, verordnung_type, genehmigung_status, gueltig_von, gueltig_bis, genehmigung_bis, verordnung_nummer, genehmigung_aktenzeichen, kostentraeger_ik_nummer, kostentraeger_name')
     .in('id', verordnungIds.length > 0 ? verordnungIds : ['00000000-0000-0000-0000-000000000000'])
+
+  // Ohne diese Pruefung wird jeder Abfrageausfall zur leeren Zuordnung — und
+  // damit traegt jede Leistung das Problem 'keine_verordnung'. Die Liste
+  // saehe aus wie ein Datenproblem im Bestand, obwohl nur die Abfrage
+  // gescheitert ist.
+  if (verordnungenFehler) {
+    throw new Error(`Verordnungen konnten nicht geladen werden: ${verordnungenFehler.message}`)
+  }
 
   const vById = new Map((verordnungen || []).map((v: HkpVerordnung) => [v.id, v]))
 

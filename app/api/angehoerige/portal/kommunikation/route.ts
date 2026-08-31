@@ -51,11 +51,17 @@ export const GET = withTracking(async function GET() {
 
   const namen = new Map<string, string>()
   if (clientIds.length > 0) {
-    const { data: clients } = await supabase
+    // Ohne Fehlerpruefung trug bei einem Ausfall jede Nachricht den
+    // Platzhalter „Klient" — bei mehreren freigegebenen Klienten ist das
+    // keine Anzeige, sondern eine Verwechslungsgefahr.
+    const { data: clients, error: clientsFehler } = await supabase
       .from('clients')
       .select('id, first_name, last_name')
       .eq('organization_id', ctx.organizationId)
       .in('id', clientIds)
+    if (clientsFehler) {
+      return NextResponse.json({ error: 'Klientennamen konnten nicht geladen werden.' }, { status: 500 })
+    }
     for (const c of (clients ?? []) as Array<{ id: string; first_name: string | null; last_name: string | null }>) {
       namen.set(c.id, [c.first_name, c.last_name].filter(Boolean).join(' ') || 'Klient')
     }

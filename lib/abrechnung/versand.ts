@@ -154,17 +154,30 @@ async function zaehleVersuch(
  * Teilübermittlung ist kein Erfolg: solange auch nur eine Datei fehlt, ist die
  * Lieferung an die Kasse unvollständig und der Lauf darf nicht als übermittelt
  * gelten — sonst erscheint eine halbe Abrechnung als ganze.
+ *
+ * Scheitert die Abfrage selbst, ist der Stand des Laufs UNBEKANNT — und
+ * unbekannt ist nicht dasselbe wie unvollständig. Ein verworfener Fehler
+ * machte hier aus jedem Abfrageausfall die Aussage „es fehlen noch Aufträge"
+ * und stempelte einen möglicherweise vollständig übermittelten Lauf auf
+ * 'uebermittlung_laeuft' zurück. Deshalb wird in diesem Fall gar nichts
+ * geschrieben.
+ *
+ * Exportiert allein, damit dieser dritte Zustand pruefbar ist: er entsteht
+ * nur bei einem Abfragefehler und ist ueber die Gesamtpipeline (Zertifikat,
+ * Annahmestelle, SFTP) nicht erreichbar.
  */
-async function aktualisiereLaufStatus(
+export async function aktualisiereLaufStatus(
   supabase: SupabaseClient,
   laufId: string,
   organizationId: string,
-): Promise<'uebermittelt' | 'unvollstaendig'> {
-  const { data: auftraege } = await supabase
+): Promise<'uebermittelt' | 'unvollstaendig' | 'unbekannt'> {
+  const { data: auftraege, error: auftraegeFehler } = await supabase
     .from('dta_dakota_auftraege')
     .select('id, status')
     .eq('lauf_id', laufId)
     .eq('organization_id', organizationId)
+
+  if (auftraegeFehler) return 'unbekannt'
 
   const alle = auftraege ?? []
   const offen = alle.filter(a => a.status !== 'uebermittelt' && a.status !== 'quittiert')
@@ -632,7 +645,7 @@ export async function versendeDakotaAuftrag(
     })
   }
 
-  let laufErgebnis: 'uebermittelt' | 'unvollstaendig' | null = null
+  let laufErgebnis: 'uebermittelt' | 'unvollstaendig' | 'unbekannt' | null = null
   if (ergebnis.erfolg && basis.laufId) {
     laufErgebnis = await aktualisiereLaufStatus(supabase, basis.laufId, organizationId)
   }
@@ -697,7 +710,9 @@ export async function versendeDakotaAuftrag(
     naechsterSchritt: ergebnis.erfolg
       ? laufErgebnis === 'uebermittelt'
         ? 'Auf Quittung/Rückmeldung der Kasse warten (Antwortabruf)'
-        : 'Verbleibende Aufträge dieses Laufs übertragen'
+        : laufErgebnis === 'unbekannt'
+          ? 'Datei ist übertragen, der Stand des Laufs war nicht abrufbar — Lauf erneut öffnen und Status prüfen'
+          : 'Verbleibende Aufträge dieses Laufs übertragen'
       : deadLetterId
         ? 'Liegt in der Fehlerqueue (Admin → Kassenabrechnung → Betrieb) — Ursache prüfen und wiedervorlegen'
         : 'Protokoll prüfen, Ursache beheben, erneut versenden',

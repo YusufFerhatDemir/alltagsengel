@@ -28,6 +28,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { heuteBerlin } from '@/lib/utils/timezone'
 import type { CoachBestellung } from './types'
@@ -170,11 +171,22 @@ export async function massgeblicheBestellung(
   supabase: SupabaseClient,
   coachUserId: string
 ): Promise<CoachBestellung | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('coach_bestellungen')
     .select('*')
     .eq('coach_user_id', coachUserId)
     .order('bestellt_am', { ascending: false })
+
+  // Ein verworfener Fehler wurde hier zu `null` — und `null` heisst an jeder
+  // Aufrufstelle „es liegt keine Bestellung vor". Der Kunde sah dann kein Abo,
+  // keine Rechnungen und keinen Zugang, und Widerruf wie Kuendigung liefen ins
+  // 404. Nicht nachsehen koennen ist keine Auskunft ueber den Vertrag.
+  if (error) {
+    throw new UserFacingError(
+      'Der Vertragsstand konnte gerade nicht geladen werden. Bitte in Kürze erneut versuchen.',
+      503,
+    )
+  }
 
   const zeilen = (data ?? []) as CoachBestellung[]
   if (zeilen.length === 0) return null

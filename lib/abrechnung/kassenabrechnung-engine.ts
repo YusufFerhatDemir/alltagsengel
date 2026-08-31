@@ -755,27 +755,46 @@ export async function exportiereLauf(
 
   const invoiceIds = laufRechnungen.map(lr => lr.invoice_id)
 
-  const { data: invoices } = await supabase
+  // Jede dieser Abfragen speist die EDIFACT-Datei, die die Forderung bei der
+  // Pflegekasse anmeldet. Ein verworfener Fehler wird hier zu einer leeren
+  // Liste — und eine leere Liste ist an dieser Stelle keine Aussage ueber die
+  // Daten, sondern nur ueber die Abfrage: fallen die Klienten aus, entstehen
+  // null Faelle; fallen die Leistungen aus, geht eine Rechnung ohne Positionen
+  // raus; faellt die Verordnung aus, traegt der Fall den falschen
+  // Kostentraeger. Deshalb bricht der Export ab, statt eine halbe Datei zu
+  // erzeugen.
+  const { data: invoices, error: invoicesFehler } = await supabase
     .from('invoices')
     .select('id, client_id, invoice_number_formatted, total_amount, period_start, period_end')
     .in('id', invoiceIds)
 
+  if (invoicesFehler) {
+    throw new Error(`Rechnungsdaten konnten nicht geladen werden: ${invoicesFehler.message}`)
+  }
   if (!invoices?.length) throw new Error('Rechnungsdaten nicht gefunden')
 
   const clientIds = [...new Set(invoices.map(i => i.client_id))]
-  const { data: clients } = await supabase
+  const { data: clients, error: clientsFehler } = await supabase
     .from('clients')
     .select('id, first_name, last_name, versichertennummer, geburtsdatum, care_level, pflegegrad, pflegekasse_ik, address, city, zip_code')
     .in('id', clientIds)
 
+  if (clientsFehler) {
+    throw new Error(`Klientendaten konnten nicht geladen werden: ${clientsFehler.message}`)
+  }
+
   const clientMap = new Map(clients?.map(c => [c.id, c]) ?? [])
 
   // Kostentraeger-Daten aus Verordnungen laden (clients hat kein kostentraeger_ik)
-  const { data: verordnungen } = await supabase
+  const { data: verordnungen, error: verordnungenFehler } = await supabase
     .from('verordnungen')
     .select('id, client_id, kostentraeger_ik_nummer, kostentraeger_name')
     .in('client_id', clientIds)
     .eq('genehmigung_status', 'genehmigt')
+
+  if (verordnungenFehler) {
+    throw new Error(`Verordnungen konnten nicht geladen werden: ${verordnungenFehler.message}`)
+  }
 
   const kostentraegerByClient = new Map<string, { ik: string; name: string }>()
   for (const v of verordnungen ?? []) {
@@ -790,11 +809,16 @@ export async function exportiereLauf(
   // Kostentraeger-Daten auch aus Rechnungen als Fallback
   for (const inv of invoices) {
     if (!kostentraegerByClient.has(inv.client_id)) {
-      const { data: invDetail } = await supabase
+      const { data: invDetail, error: invDetailFehler } = await supabase
         .from('invoices')
         .select('kostentraeger_ik, kostentraeger_name')
         .eq('id', inv.id)
         .single()
+      if (invDetailFehler) {
+        throw new Error(
+          `Kostentraeger der Rechnung ${inv.invoice_number_formatted ?? inv.id} konnte nicht geladen werden: ${invDetailFehler.message}`,
+        )
+      }
       if (invDetail?.kostentraeger_ik) {
         kostentraegerByClient.set(inv.client_id, {
           ik: invDetail.kostentraeger_ik,
@@ -813,13 +837,17 @@ export async function exportiereLauf(
     0,
   ).getDate()
   const expEnd = `${exportPeriodMonth}-${String(expLastDay).padStart(2, '0')}`
-  const { data: alleRecords } = await supabase
+  const { data: alleRecords, error: recordsFehler } = await supabase
     .from('service_records')
     .select('id, client_id, date, service_type, duration_minutes, amount, caregiver_id, proof_status, billing_status, caregiver:caregivers(first_name, last_name)')
     .in('client_id', clientIds)
     .gte('date', expStart)
     .lte('date', expEnd)
     .in('status', ['complete', 'signed', 'invoiced'])
+
+  if (recordsFehler) {
+    throw new Error(`Leistungen konnten nicht geladen werden: ${recordsFehler.message}`)
+  }
 
   // STORNIERTE Nachweise raus. 'STORNIERT' hat kein Gegenstueck im
   // status-Werteset (lib/leistungsnachweis/status-sync.ts) — der Widerruf
