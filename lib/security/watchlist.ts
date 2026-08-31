@@ -258,6 +258,41 @@ export interface WatchlistEingabe {
   angelegtVon: string
 }
 
+/**
+ * Mindestlaenge der Begruendung beim EINSCHALTEN einer Ueberwachung.
+ *
+ * WARUM DAS EIN RIEGEL UND KEINE BITTE IST
+ * Die Ueberwachung eines einzelnen Beschaeftigtenkontos protokolliert
+ * jede Anmeldung, jedes Geraet und jede IP einer namentlich bekannten
+ * Person. Sie ist damit keine Systemeinstellung, sondern eine Massnahme
+ * gegen einen Menschen — und die braucht einen Grund, der aufgeschrieben
+ * ist, bevor sie laeuft, nicht danach.
+ *
+ * Der bestehende Eintrag vom 30.08.2026 lautet „Kontoueberwachung auf
+ * Anweisung der Geschaeftsfuehrung". Das benennt WER es angeordnet hat,
+ * aber nicht WARUM, auf welcher Grundlage, wie lange und ob die
+ * betroffene Person davon weiss. Genau diese vier Angaben verlangt der
+ * Hinweistext in der Oberflaeche.
+ *
+ * 40 Zeichen sind keine inhaltliche Pruefung — die kann Code nicht
+ * leisten. Sie schliessen nur das aus, was sicher zu wenig ist
+ * („Test", „siehe Mail", ein Leerzeichen). Was drinsteht, verantwortet
+ * die Person, die einschaltet; ihr Name steht in `angelegt_von`.
+ */
+export const GRUND_MINDESTLAENGE = 40
+
+/**
+ * Wortlaut fuer Oberflaeche und Fehlermeldung. Eine Stelle, damit die
+ * Anforderung ueberall gleich lautet.
+ */
+export const TRANSPARENZ_HINWEIS =
+  'Die Überwachung eines einzelnen Kontos zeichnet Anmeldungen, Geräte und '
+  + 'IP-Adressen einer namentlich bekannten Person auf. Sie ist nur zulässig, '
+  + 'wenn sie offen erfolgt. Bitte im Grund festhalten: (1) der konkrete Anlass, '
+  + '(2) die Rechtsgrundlage, (3) der vorgesehene Zeitraum und (4) ob und wann '
+  + 'die betroffene Person informiert wurde. Eine verdeckte Dauerüberwachung ist '
+  + 'ausgeschlossen.'
+
 export type SchreibErgebnis =
   | { ok: true; eintragId: string; vorher: WatchlistEintrag | null }
   | { ok: false; grund: string }
@@ -274,6 +309,16 @@ export async function setzeUeberwachung(
   admin: AdminClient,
   eingabe: WatchlistEingabe,
 ): Promise<SchreibErgebnis> {
+  // Fail-closed beim EINSCHALTEN. Ausschalten bleibt jederzeit ohne
+  // Huerde moeglich — eine Schranke davor waere genau falsch herum.
+  if (eingabe.aktiv && eingabe.grund.trim().length < GRUND_MINDESTLAENGE) {
+    return {
+      ok: false,
+      grund: `Die Begründung ist zu knapp (mindestens ${GRUND_MINDESTLAENGE} Zeichen). `
+        + TRANSPARENZ_HINWEIS,
+    }
+  }
+
   try {
     const { data: bestand } = await admin
       .from('security_watchlist')

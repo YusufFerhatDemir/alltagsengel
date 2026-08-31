@@ -26,8 +26,9 @@ import {
 } from './ereignisse'
 import { alarmZustaende, alarmKurzfassung, LEERER_ALARM, type Alarmzustand } from './alarmspur'
 import {
-  provenienzAus, istEchteNutzeraktivitaet, BEZEICHNUNG_PROVENIENZ,
-  ECHTE_PROVENIENZEN, type Provenienz,
+  provenienzFuerZeile, istEchteNutzeraktivitaet, istTest, quelleFuer,
+  BEZEICHNUNG_PROVENIENZ, ECHTE_PROVENIENZEN,
+  type Provenienz, type Quelle,
 } from './herkunft'
 import { ueberwachteKonten } from './watchlist'
 
@@ -113,6 +114,14 @@ export interface SpurZeile {
   provenienzBezeichnung: string
   /** Fail-closed: nur die drei belegten Echt-Provenienzen ergeben true. */
   echteNutzeraktivitaet: boolean
+  /**
+   * Ausdrueckliches Testereignis. Fail-closed in die ANDERE Richtung:
+   * nur TEST_ALERT und ADMIN_TEST ergeben true. Eine unbelegte Zeile ist
+   * weder echt noch Test — ueber sie ist nichts bekannt.
+   */
+  istTest: boolean
+  /** Grobe Einordnung: real_user | synthetic_test | system | null. */
+  quelle: Quelle | null
 }
 
 export interface SpurErgebnis {
@@ -273,12 +282,22 @@ async function anreichern(admin: AdminClient, roh: RohZeile[]): Promise<SpurZeil
       metadata: r.metadata,
       alarm: alarme.get(r.id) ?? LEERER_ALARM,
       ueberwacht: !!r.user_id && ueberwacht.has(r.user_id),
-      provenienz: provenienzAus(r.metadata),
-      provenienzBezeichnung: (() => {
-        const p = provenienzAus(r.metadata)
-        return p ? BEZEICHNUNG_PROVENIENZ[p] : 'Herkunft unbelegt (Zeile vor dem 31.08.2026)'
+      ...(() => {
+        // Einmal herleiten, viermal verwenden. `provenienzFuerZeile`
+        // erkennt auch die Zeilen des Auth-Triggers als echte
+        // Anmeldung — der feuert ausschliesslich bei einer
+        // tatsaechlichen Aenderung von auth.users.last_sign_in_at.
+        const p = provenienzFuerZeile(r.metadata, r.device_info, r.event_type)
+        return {
+          provenienz: p,
+          provenienzBezeichnung: p
+            ? BEZEICHNUNG_PROVENIENZ[p]
+            : 'Herkunft unbelegt (Zeile vor dem 31.08.2026)',
+          echteNutzeraktivitaet: istEchteNutzeraktivitaet(p),
+          istTest: istTest(p),
+          quelle: quelleFuer(p),
+        }
       })(),
-      echteNutzeraktivitaet: istEchteNutzeraktivitaet(provenienzAus(r.metadata)),
     }
   })
 }
@@ -330,7 +349,7 @@ export async function exportiereSpur(admin: AdminClient, f: SpurFilter): Promise
     // Herkunft steht VORNE, nicht am Ende: wer die Datei oeffnet, soll
     // nicht erst nach rechts scrollen muessen, um zu sehen, welche
     // Zeilen ueberhaupt echtes Nutzerverhalten belegen.
-    'Herkunft', 'Echte Nutzeraktivität',
+    'Herkunft', 'Echte Nutzeraktivität', 'Testereignis', 'Quelle',
     'Ereignis-ID', 'Zeitpunkt (UTC)', 'Ereignis', 'Ereignistyp', 'Kategorie',
     'Schweregrad', 'Konto-ID', 'E-Mail', 'Name', 'Organisation',
     'IP-Adresse', 'Plattform', 'Gerät', 'User-Agent', 'App-Version',
@@ -346,6 +365,7 @@ export async function exportiereSpur(admin: AdminClient, f: SpurFilter): Promise
 
   const koerper = zeilen.map(z => csvZeile([
     z.provenienz ?? 'UNBELEGT', z.echteNutzeraktivitaet ? 'ja' : 'nein',
+    z.istTest ? 'ja' : 'nein', z.quelle ?? 'unbekannt',
     z.id, z.createdAt, z.eventBezeichnung, z.eventType, z.kategorieBezeichnung,
     z.severityBezeichnung, z.userId, z.userEmail, z.userName, z.organisationsName,
     z.ip, z.plattform, z.geraet, z.userAgent, z.appVersion,

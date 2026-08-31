@@ -34,7 +34,7 @@ import {
   type Schweregrad,
 } from './ereignisse'
 import { geraeteMerkmale, geraeteHash, ipAus, type Plattform } from './geraet'
-import { leiteProvenienzAb, PROVENIENZ_SCHLUESSEL, type Provenienz } from './herkunft'
+import { leiteProvenienzAb, kennzeichen, type Provenienz } from './herkunft'
 
 const log = logger.child('security-audit')
 
@@ -414,7 +414,12 @@ export async function logSecurityEvent(ereignis: SicherheitsEreignis): Promise<E
       ausEchtemAufruf,
       alsTestErklaert: ereignis.alsTest ?? null,
     })
-    metadata[PROVENIENZ_SCHLUESSEL] = provenienz
+    // Drei Schluessel aus EINER Quelle: provenienz (genau), is_test
+    // (die eine Frage, die im Ernstfall zaehlt) und source (grob, fuer
+    // Auswertungen). Sie werden gemeinsam gesetzt und koennen deshalb
+    // nicht auseinanderlaufen. Ein vom Aufrufer mitgegebener Wert wird
+    // dabei UEBERSCHRIEBEN — die Kennzeichnung ist nicht verhandelbar.
+    Object.assign(metadata, kennzeichen(provenienz))
 
     if (ereignis.geraetePruefung && ereignis.userId) {
       const { neu, hash } = await geraetPruefen(

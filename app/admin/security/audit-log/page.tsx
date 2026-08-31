@@ -45,6 +45,8 @@ interface SpurZeile {
   provenienz: string | null
   provenienzBezeichnung: string
   echteNutzeraktivitaet: boolean
+  istTest: boolean
+  quelle: string | null
 }
 
 /** Ein Zustellversuch aus notification_delivery_log. */
@@ -137,6 +139,21 @@ const LEERER_FILTER: Filter = {
   suche: '', userId: '', von: '', bis: '',
   eventType: '', kategorie: '', severity: '', plattform: '', ip: '', herkunft: '',
 }
+
+/**
+ * Gespiegelt aus lib/security/watchlist.ts. Die Datei ist `server-only`
+ * und laesst sich hier nicht importieren; der Riegel selbst sitzt dort
+ * und gilt unabhaengig von dieser Oberflaeche — das hier ist die
+ * freundliche Fassung davon, nicht die Sicherung.
+ */
+const GRUND_MINDESTLAENGE = 40
+const TRANSPARENZ_HINWEIS =
+  'Die Überwachung eines einzelnen Kontos zeichnet Anmeldungen, Geräte und '
+  + 'IP-Adressen einer namentlich bekannten Person auf. Sie ist nur zulässig, '
+  + 'wenn sie offen erfolgt. Bitte im Grund festhalten: (1) der konkrete Anlass, '
+  + '(2) die Rechtsgrundlage, (3) der vorgesehene Zeitraum und (4) ob und wann '
+  + 'die betroffene Person informiert wurde. Eine verdeckte Dauerüberwachung ist '
+  + 'ausgeschlossen.'
 
 const FARBE: Record<string, string> = {
   info: '#2D8F5E', warning: '#C9963C', critical: '#C0392B',
@@ -419,6 +436,14 @@ export default function SicherheitsspurSeite() {
             </table>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'flex-start' }}>
+              <div style={{
+                flexBasis: '100%', padding: '10px 12px', marginBottom: 4,
+                border: '1px solid #C9963C', borderRadius: 8,
+                background: 'rgba(201,150,60,.08)', fontSize: 12.5,
+                color: 'var(--ink)', lineHeight: 1.5, maxWidth: 760,
+              }}>
+                <b>Offen, nicht verdeckt.</b> {TRANSPARENZ_HINWEIS}
+              </div>
               <input
                 style={{ ...eingabe, minWidth: 300, fontFamily: 'monospace' }}
                 placeholder="Konto-Kennung (UUID)"
@@ -440,16 +465,17 @@ export default function SicherheitsspurSeite() {
                 onChange={e => setWlFormular(f => ({ ...f, meldeEmail: e.target.value }))}
                 aria-label="Abweichende Meldeadresse"
               />
-              <input
-                style={{ ...eingabe, minWidth: 280 }}
-                placeholder="Grund (Pflicht)"
+              <textarea
+                style={{ ...eingabe, minWidth: 420, minHeight: 72, fontFamily: 'inherit' }}
+                placeholder="Grund (Pflicht): Anlass · Rechtsgrundlage · Zeitraum · wann die Person informiert wurde"
                 value={wlFormular.grund}
                 onChange={e => setWlFormular(f => ({ ...f, grund: e.target.value }))}
                 aria-label="Grund der Überwachung"
               />
               <button
                 style={knopf}
-                disabled={wlLaeuft || !wlFormular.userId || wlFormular.grund.trim().length < 5}
+                disabled={wlLaeuft || !wlFormular.userId
+                  || wlFormular.grund.trim().length < GRUND_MINDESTLAENGE}
                 onClick={() => watchlistSetzen(wlFormular.userId.trim(), true, wlFormular.grund.trim(), wlFormular.meldeEmail.trim(), wlFormular.emailKontrolle.trim())}
               >
                 {wlLaeuft ? 'Wird gespeichert …' : 'Alarm einschalten'}
@@ -634,6 +660,8 @@ export default function SicherheitsspurSeite() {
                     <tbody>
                       {[
                         ['Herkunft', `${z.provenienz ?? 'UNBELEGT'} — ${z.provenienzBezeichnung}`],
+                        ['Testereignis (is_test)', z.istTest ? 'ja' : 'nein'],
+                        ['Quelle (source)', z.quelle ?? 'unbekannt'],
                         ['Ereignis-ID', z.id],
                         ['Konto-ID', z.userId],
                         ['Organisation-ID', z.organizationId],
@@ -862,11 +890,24 @@ function HerkunftZelle({ zeile }: { zeile: SpurZeile }) {
   const p = zeile.provenienz
   const echt = zeile.echteNutzeraktivitaet
 
-  const farbe = echt ? '#2D8F5E' : p === null ? '#888' : '#C9963C'
+  const farbe = zeile.istTest ? '#C0392B' : echt ? '#2D8F5E' : p === null ? '#888' : '#C9963C'
   const kurz = p ?? 'UNBELEGT'
 
   return (
     <div title={zeile.provenienzBezeichnung}>
+      {/* Ein Testereignis bekommt einen EIGENEN, roten Merker vor der
+          Provenienz. Am 31.08.2026 wurde ein Testeintrag fuer eine echte
+          Anmeldung gehalten — die Kennzeichnung muss ohne Lesen des
+          Kleingedruckten ins Auge fallen. */}
+      {zeile.istTest && (
+        <span style={{
+          display: 'inline-block', marginRight: 5, padding: '1px 6px',
+          borderRadius: 4, fontSize: 10, fontWeight: 700, letterSpacing: 0.4,
+          background: '#C0392B', color: '#fff',
+        }}>
+          TEST
+        </span>
+      )}
       <span style={{
         display: 'inline-block', padding: '1px 6px', borderRadius: 4,
         fontSize: 10, fontWeight: 700, letterSpacing: 0.3,
@@ -875,11 +916,15 @@ function HerkunftZelle({ zeile }: { zeile: SpurZeile }) {
       }}>
         {kurz}
       </span>
-      {!echt && (
-        <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>
-          keine belegte Nutzeraktivität
-        </div>
-      )}
+      <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>
+        {zeile.istTest
+          ? 'Testereignis — kein Nutzerverhalten'
+          : echt
+            ? 'echte Nutzeraktivität'
+            : p === null
+              ? 'keine Angabe — gilt nicht als belegt'
+              : 'keine belegte Nutzeraktivität'}
+      </div>
     </div>
   )
 }

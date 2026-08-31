@@ -80,6 +80,34 @@ export type Provenienz = (typeof PROVENIENZEN)[number]
 export const PROVENIENZ_SCHLUESSEL = 'provenienz' as const
 
 /**
+ * Zwei ZUSAETZLICHE, gröbere Kennzeichen neben der Provenienz:
+ * `metadata.is_test` (boolean) und `metadata.source`.
+ *
+ * WARUM DREI ANGABEN FUER EINE SACHE
+ * Die Provenienz ist genau, aber sie hat sechs Werte — wer schnell
+ * filtern oder in einer Auswertung eine Spalte braucht, greift sonst zum
+ * Textvergleich. `is_test` beantwortet die eine Frage, die im Ernstfall
+ * zaehlt, mit ja oder nein.
+ *
+ * SIE KOENNEN NICHT AUSEINANDERLAUFEN, weil beide AUS der Provenienz
+ * abgeleitet werden und nirgends eigenstaendig gesetzt. Eine zweite,
+ * unabhaengig gepflegte Wahrheit waere hier das Gefaehrlichste — genau
+ * daran ist MIGRATION_LEDGER.md an fuenf Stellen falsch geworden.
+ */
+export const IST_TEST_SCHLUESSEL = 'is_test' as const
+export const QUELLE_SCHLUESSEL = 'source' as const
+
+/** Die groebere Einordnung hinter `metadata.source`. */
+export const QUELLEN = ['real_user', 'synthetic_test', 'system'] as const
+export type Quelle = (typeof QUELLEN)[number]
+
+/**
+ * Kennung, die der Trigger auf auth.users in `device_info.quelle`
+ * hinterlaesst (Migration 20261018000002).
+ */
+export const AUTH_TRIGGER_QUELLE = 'db_trigger' as const
+
+/**
  * Genau die drei, die echte Nutzeraktivitaet belegen. Diese Liste ist die
  * eigentliche Sicherheitsgrenze des Moduls — sie waechst nicht nebenbei.
  */
@@ -94,6 +122,19 @@ export const BEZEICHNUNG_PROVENIENZ: Record<Provenienz, string> = {
   TEST_ALERT: 'TESTALARM — kein Vorfall, kein Nutzerverhalten',
   ADMIN_TEST: 'VERWALTUNGSTEST — kein Vorfall, kein Nutzerverhalten',
   SYNTHETIC_EVENT: 'SYNTHETISCH — nachgetragen oder maschinell erzeugt',
+}
+
+/**
+ * Ereignistypen, die eine echte Anmeldung/Sitzung eines Menschen
+ * BESCHREIBEN. Nur bei ihnen kann ein echter HTTP-Aufruf ueberhaupt zu
+ * einer echten Provenienz fuehren; alles andere ist inhaltlich keine
+ * Anmeldung.
+ */
+const ECHT_MOEGLICH: Record<string, Provenienz> = {
+  login_success: 'REAL_USER_LOGIN',
+  app_start: 'APP_START',
+  session_start: 'SESSION_REFRESH',
+  session_refresh: 'SESSION_REFRESH',
 }
 
 export function istProvenienz(wert: unknown): wert is Provenienz {
@@ -123,24 +164,87 @@ export function provenienzAus(
 }
 
 /**
+ * Provenienz einer BESTEHENDEN Zeile, inklusive der Zeilen, die die
+ * Datenbank selbst geschrieben hat.
+ *
+ * WARUM EINE TRIGGER-ZEILE ALS ECHTE ANMELDUNG GILT
+ * Der Trigger public.security_audit_auth_anmeldung() feuert
+ * ausschliesslich, wenn sich `auth.users.last_sign_in_at` auf einen
+ * neuen, nicht leeren Wert aendert (Migration 20261018000002). Er kann
+ * also gar nicht anders entstehen als durch eine tatsaechliche
+ * Anmeldung — das ist die AUTHENTISCHSTE Quelle, die es dafuer gibt,
+ * authentischer als die Anwendungsroute, die man umgehen koennte.
+ *
+ * Das ist kein Aufweichen der Fail-closed-Regel, sondern ihre richtige
+ * Anwendung: hier LIEGT ein Beleg vor, er steht nur in `device_info`
+ * statt in `metadata`. Die Zeilen tragen keine Provenienz, weil der
+ * Trigger in SQL laeuft und die Ableitung im Anwendungscode sitzt; die
+ * Tabelle ist unveraenderlich, nachtragen ginge ohnehin nicht.
+ *
+ * Was NICHT hergeleitet wird: Geraet, Browser, IP. Die Trigger-Zeile hat
+ * sie nicht, und sie bleiben NULL. Geschaetzte Geraetedaten waeren
+ * erfundene Daten ueber eine Person.
+ */
+export function provenienzFuerZeile(
+  metadata: Record<string, unknown> | null | undefined,
+  deviceInfo: Record<string, unknown> | null | undefined,
+  eventType: string,
+): Provenienz | null {
+  const ausMetadaten = provenienzAus(metadata)
+  if (ausMetadaten) return ausMetadaten
+
+  if (deviceInfo?.quelle === AUTH_TRIGGER_QUELLE) {
+    const moeglich = ECHT_MOEGLICH[eventType]
+    if (moeglich) return moeglich
+    // Andere Trigger-Ereignisse (Profil-, Rollenaenderung) sind echt
+    // passiert, aber sie sind kein Anmeldeverhalten — dieselbe
+    // Unterscheidung wie in leiteProvenienzAb().
+    return 'SYNTHETIC_EVENT'
+  }
+
+  return null
+}
+
+/**
+ * Ist diese Zeile ein Test? Fail-closed in die ANDERE Richtung als
+ * `istEchteNutzeraktivitaet`: nur die beiden ausdruecklichen Testwerte
+ * ergeben true.
+ *
+ * Ein unbelegtes `null` ist also weder „echte Nutzeraktivitaet" noch
+ * „Test" — und das ist richtig so. Ueber eine Bestandszeile ohne
+ * Kennzeichnung ist schlicht nichts bekannt, und beide Behauptungen
+ * waeren erfunden.
+ */
+export function istTest(p: Provenienz | null): boolean {
+  return p === 'TEST_ALERT' || p === 'ADMIN_TEST'
+}
+
+/** Die groebere Einordnung. `null` ⇒ keine Aussage moeglich. */
+export function quelleFuer(p: Provenienz | null): Quelle | null {
+  if (p === null) return null
+  if (istTest(p)) return 'synthetic_test'
+  if (istEchteNutzeraktivitaet(p)) return 'real_user'
+  return 'system'
+}
+
+/**
+ * Die drei Kennzeichen als Metadaten-Block — EIN Aufruf, damit sie nie
+ * einzeln und damit nie widerspruechlich gesetzt werden.
+ */
+export function kennzeichen(p: Provenienz): Record<string, unknown> {
+  return {
+    [PROVENIENZ_SCHLUESSEL]: p,
+    [IST_TEST_SCHLUESSEL]: istTest(p),
+    [QUELLE_SCHLUESSEL]: quelleFuer(p),
+  }
+}
+
+/**
  * Ereignistypen, die ausdruecklich einen Test bezeichnen. Sie sind
  * IMMER nicht-echt, unabhaengig davon, wie sie geschrieben wurden — der
  * Ereignistyp selbst ist hier schon die Aussage.
  */
 export const TEST_EREIGNISSE: readonly string[] = ['test_alert', 'admin_test']
-
-/**
- * Ereignistypen, die eine echte Anmeldung/Sitzung eines Menschen
- * BESCHREIBEN. Nur bei ihnen kann ein echter HTTP-Aufruf ueberhaupt zu
- * einer echten Provenienz fuehren; alles andere ist inhaltlich keine
- * Anmeldung.
- */
-const ECHT_MOEGLICH: Record<string, Provenienz> = {
-  login_success: 'REAL_USER_LOGIN',
-  app_start: 'APP_START',
-  session_start: 'SESSION_REFRESH',
-  session_refresh: 'SESSION_REFRESH',
-}
 
 export interface ProvenienzLage {
   /** true, wenn ein echter HTTP-Aufruf eines Clients vorliegt. */
