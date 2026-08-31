@@ -14,6 +14,13 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+// Diese drei kommen ECHT aus dem Modul, nicht gespiegelt: befristung.ts ist
+// bewusst nicht `server-only`, weil die Oberflaeche dieselben Angaben
+// verlangen muss wie der Riegel. Gespiegelt wird nur, was in
+// lib/security/watchlist.ts steht — die Datei ist server-only.
+import {
+  PFLICHTANGABEN, BEGRUENDUNG_VORLAGE, HOECHSTDAUER_TAGE,
+} from '@/lib/security/befristung'
 import { Banner, EmptyRow } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger'
 
@@ -119,6 +126,16 @@ interface WatchlistZeile {
   grund: string
   createdAt: string
   adressenAbweichung: boolean
+  /** Frist des Eintrags — siehe lib/security/befristung.ts. */
+  befristung: {
+    laeuftAbAm: string
+    restTage: number
+    abgelaufen: boolean
+    laeuftBaldAb: boolean
+    hinweis: string
+  }
+  /** Wirkt der Eintrag JETZT? `aktiv` allein reicht seit der Frist nicht. */
+  wirktJetzt: boolean
 }
 
 interface Filter {
@@ -139,6 +156,58 @@ const LEERER_FILTER: Filter = {
   suche: '', userId: '', von: '', bis: '',
   eventType: '', kategorie: '', severity: '', plattform: '', ip: '', herkunft: '',
 }
+
+/**
+ * Die vier Fragen, die im Alltag zuerst gestellt werden.
+ *
+ * `setzt` ist der Filterstand, den der Knopf herstellt; `leert` raeumt
+ * beim Abwaehlen genau die Felder wieder ab, die er gesetzt hat — und
+ * NUR die. Ein Schnellfilter, der beim Abwaehlen den ganzen Filter
+ * zuruecksetzt, wirft die Sucheingabe und den Zeitraum mit weg.
+ *
+ * REAL und TEST sind KEIN Gegensatzpaar. „Real" ist belegte
+ * Nutzeraktivitaet, „Test" ist ein ausdruecklich gekennzeichnetes
+ * Testereignis — dazwischen liegen die Zeilen, ueber deren Herkunft
+ * nichts bekannt ist (Bestand vor dem 31.08.2026, siehe
+ * lib/security/herkunft.ts). Die gehoeren in keine der beiden Ansichten,
+ * und das ist richtig so.
+ */
+const SCHNELLFILTER: readonly {
+  schluessel: string
+  bezeichnung: string
+  erklaerung: string
+  setzt: Partial<Filter>
+  leert: Partial<Filter>
+}[] = [
+  {
+    schluessel: 'real',
+    bezeichnung: 'Real',
+    erklaerung: 'Nur belegte Nutzeraktivität: echte Anmeldung, App-Start, Sitzungserneuerung.',
+    setzt: { herkunft: 'echt' },
+    leert: { herkunft: '' },
+  },
+  {
+    schluessel: 'test',
+    bezeichnung: 'Test',
+    erklaerung: 'Nur ausdrücklich gekennzeichnete Testereignisse (Testalarm, Verwaltungstest).',
+    setzt: { herkunft: 'test' },
+    leert: { herkunft: '' },
+  },
+  {
+    schluessel: 'security',
+    bezeichnung: 'Security',
+    erklaerung: 'Sicherheitsvorgänge im engeren Sinn — Kategorie „security".',
+    setzt: { kategorie: 'security' },
+    leert: { kategorie: '' },
+  },
+  {
+    schluessel: 'login',
+    bezeichnung: 'Login',
+    erklaerung: 'An- und Abmeldungen — Kategorie „auth".',
+    setzt: { kategorie: 'auth' },
+    leert: { kategorie: '' },
+  },
+]
 
 /**
  * Gespiegelt aus lib/security/watchlist.ts. Die Datei ist `server-only`
@@ -218,6 +287,16 @@ export default function SicherheitsspurSeite() {
     if (filter.severity) p.set('severity', filter.severity)
     if (filter.plattform) p.set('plattform', filter.plattform)
     if (filter.ip) p.set('ip', filter.ip)
+    // ── Befund vom 31.08.2026 ────────────────────────────────────────
+    // Diese Zeile fehlte. Die Auswahl „Nur echte Nutzeraktivität" stand
+    // im Zustand, ging aber nie an die API — die Liste blieb unveraendert,
+    // ohne Fehlermeldung, und der CSV-Export ebenfalls (er baut auf
+    // derselben Abfrage auf). Ein Filter, der nichts tut, ist schlimmer
+    // als keiner: er behauptet eine Auswahl, die niemand vorgenommen hat.
+    // Der Regressionstest dazu steht in
+    // __tests__/security/admin-ansicht-filter.test.ts — er vergleicht die
+    // Felder von `Filter` mit den gesetzten Parametern.
+    if (filter.herkunft) p.set('herkunft', filter.herkunft)
     p.set('sortierFeld', sortierFeld)
     p.set('sortierRichtung', sortierRichtung)
     return p
@@ -395,12 +474,13 @@ export default function SicherheitsspurSeite() {
                   <th style={kopf}>Rolle</th>
                   <th style={kopf}>Meldung an</th>
                   <th style={kopf}>Grund</th>
+                  <th style={kopf}>Frist</th>
                   <th style={kopf}>Alarm</th>
                   <th style={kopf}> </th>
                 </tr>
               </thead>
               <tbody>
-                {wl.length === 0 && <EmptyRow colSpan={6}>Kein Konto ausdrücklich überwacht.</EmptyRow>}
+                {wl.length === 0 && <EmptyRow colSpan={7}>Kein Konto ausdrücklich überwacht.</EmptyRow>}
                 {wl.map(w => (
                   <tr key={w.id}>
                     <td style={zelle}>
@@ -415,10 +495,25 @@ export default function SicherheitsspurSeite() {
                     </td>
                     <td style={zelle}>{w.rolle ?? '—'}</td>
                     <td style={zelle}>{w.meldeEmail ?? w.kontoEmail ?? '—'}</td>
-                    <td style={{ ...zelle, maxWidth: 260 }}>{w.grund}</td>
+                    <td style={{ ...zelle, maxWidth: 260, whiteSpace: 'pre-wrap' }}>{w.grund}</td>
+                    <td style={{ ...zelle, maxWidth: 180 }}>
+                      <span style={{
+                        color: w.befristung.abgelaufen ? '#C0392B'
+                          : w.befristung.laeuftBaldAb ? '#C9963C' : '#888',
+                        fontSize: 12,
+                      }}>
+                        {w.befristung.hinweis}
+                      </span>
+                    </td>
                     <td style={zelle}>
-                      <span style={{ color: w.aktiv ? '#2D8F5E' : '#888' }}>
-                        {w.aktiv ? 'aktiv' : 'aus'}
+                      {/* „aktiv" allein wäre eine Falschauskunft, sobald die
+                          Frist abgelaufen ist: der Eintrag steht dann zwar
+                          auf aktiv, meldet aber nichts mehr. */}
+                      <span style={{
+                        color: w.wirktJetzt ? '#2D8F5E' : w.aktiv ? '#C0392B' : '#888',
+                        fontWeight: w.wirktJetzt ? 600 : 400,
+                      }}>
+                        {w.wirktJetzt ? 'aktiv' : w.aktiv ? 'abgelaufen' : 'aus'}
                       </span>
                     </td>
                     <td style={zelle}>
@@ -465,17 +560,50 @@ export default function SicherheitsspurSeite() {
                 onChange={e => setWlFormular(f => ({ ...f, meldeEmail: e.target.value }))}
                 aria-label="Abweichende Meldeadresse"
               />
-              <textarea
-                style={{ ...eingabe, minWidth: 420, minHeight: 72, fontFamily: 'inherit' }}
-                placeholder="Grund (Pflicht): Anlass · Rechtsgrundlage · Zeitraum · wann die Person informiert wurde"
-                value={wlFormular.grund}
-                onChange={e => setWlFormular(f => ({ ...f, grund: e.target.value }))}
-                aria-label="Grund der Überwachung"
-              />
+              <div style={{ flexBasis: '100%', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <textarea
+                  style={{ ...eingabe, minWidth: 420, flex: 1, minHeight: 108, fontFamily: 'inherit', lineHeight: 1.5 }}
+                  placeholder={BEGRUENDUNG_VORLAGE}
+                  value={wlFormular.grund}
+                  onChange={e => setWlFormular(f => ({ ...f, grund: e.target.value }))}
+                  aria-label="Grund der Überwachung"
+                />
+                <div style={{ fontSize: 11.5, color: '#888', maxWidth: 300, lineHeight: 1.5 }}>
+                  {/* Die Vorlage ist keine Formalie: ohne diese vier Angaben
+                      ist die Maßnahme im Streitfall nicht begründet. Der
+                      Riegel dafür sitzt serverseitig in
+                      lib/security/watchlist.ts (pruefeAngaben) — das hier
+                      ist die freundliche Fassung davon. */}
+                  <button
+                    type="button"
+                    style={{ ...knopf, padding: '4px 10px', fontSize: 12, marginBottom: 8 }}
+                    onClick={() => setWlFormular(f => ({
+                      ...f,
+                      grund: f.grund.trim() ? f.grund : BEGRUENDUNG_VORLAGE,
+                    }))}
+                  >
+                    Vorlage einfügen
+                  </button>
+                  {PFLICHTANGABEN.map(pa => {
+                    const da = wlFormular.grund.toLowerCase().includes(pa.marke.toLowerCase())
+                    return (
+                      <div key={pa.name} style={{ marginBottom: 4 }}>
+                        <span style={{ color: da ? '#2D8F5E' : '#C0392B' }}>{da ? '✓' : '○'}</span>
+                        {' '}<b>{pa.name}</b> — {pa.hilfe}
+                      </div>
+                    )
+                  })}
+                  <div style={{ marginTop: 8, color: '#C9963C' }}>
+                    Die Überwachung endet nach {HOECHSTDAUER_TAGE} Tagen von selbst.
+                    Für eine Fortsetzung ist eine neue, begründete Anordnung nötig.
+                  </div>
+                </div>
+              </div>
               <button
                 style={knopf}
                 disabled={wlLaeuft || !wlFormular.userId
-                  || wlFormular.grund.trim().length < GRUND_MINDESTLAENGE}
+                  || wlFormular.grund.trim().length < GRUND_MINDESTLAENGE
+                  || PFLICHTANGABEN.some(pa => !wlFormular.grund.toLowerCase().includes(pa.marke.toLowerCase()))}
                 onClick={() => watchlistSetzen(wlFormular.userId.trim(), true, wlFormular.grund.trim(), wlFormular.meldeEmail.trim(), wlFormular.emailKontrolle.trim())}
               >
                 {wlLaeuft ? 'Wird gespeichert …' : 'Alarm einschalten'}
@@ -483,6 +611,43 @@ export default function SicherheitsspurSeite() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* ── Schnellfilter ──
+          Vier Fragen, die im Alltag zuerst gestellt werden. Sie setzen
+          dieselben Filter, die auch einzeln unten stehen — die Knoepfe
+          sind eine Abkuerzung, keine zweite Logik. Deshalb zeigt der
+          aktive Zustand auch den WIRKLICHEN Filterstand an und nicht
+          eine eigene Merkvariable, die auseinanderlaufen koennte. */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+        {SCHNELLFILTER.map(sf => {
+          const aktiv = Object.entries(sf.setzt).every(
+            ([k, v]) => filter[k as keyof Filter] === v,
+          )
+          return (
+            <button
+              key={sf.schluessel}
+              type="button"
+              onClick={() => setFilter(f => (aktiv
+                ? { ...f, ...sf.leert }
+                : { ...f, ...sf.leert, ...sf.setzt }))}
+              aria-pressed={aktiv}
+              title={sf.erklaerung}
+              style={{
+                ...knopf,
+                background: aktiv ? 'var(--ink)' : 'var(--coal2)',
+                color: aktiv ? 'var(--coal)' : 'var(--ink3)',
+                fontWeight: aktiv ? 700 : 500,
+              }}
+            >
+              {sf.bezeichnung}
+            </button>
+          )
+        })}
+        <span style={{ fontSize: 11, color: '#777', alignSelf: 'center', maxWidth: 460 }}>
+          „Test" meint ausdrücklich gekennzeichnete Testereignisse — nicht dasselbe wie
+          „nicht echt", darin steckt auch Unbelegtes.
+        </span>
       </div>
 
       {/* ── Filter ── */}
@@ -543,6 +708,7 @@ export default function SicherheitsspurSeite() {
           onChange={e => setzeFilter('herkunft', e.target.value)} aria-label="Herkunft">
           <option value="">Jede Herkunft</option>
           <option value="echt">Nur echte Nutzeraktivität</option>
+          <option value="test">Nur Testereignisse</option>
           <option value="nicht_echt">Nur nachgestellt / unbelegt</option>
         </select>
         <input

@@ -325,12 +325,31 @@ export function leiteProvenienzAb(eventType: string, lage: ProvenienzLage): Prov
  * vier Faelle nennt seine Bedingung selbst, und `is.null` trifft auch
  * eine Zeile, deren device_info gar kein `quelle` enthaelt.
  */
-export function herkunftFilterAusdruck(art: 'echt' | 'nicht_echt'): string {
+/**
+ * Die drei Provenienzen, die ein AUSDRUECKLICHES Testereignis
+ * kennzeichnen — genau die, fuer die `istTest()` true liefert.
+ *
+ * Bewusst NICHT dasselbe wie „nicht echt": darin steckt auch
+ * SYNTHETIC_EVENT (maschinell, aber kein Test) und alles Unbelegte. Wer
+ * fragt „was war ein Test?", meint diese Liste — und bekaeme sonst
+ * Zeilen zu sehen, ueber die schlicht nichts bekannt ist.
+ */
+export const TEST_PROVENIENZEN: readonly Provenienz[] = ['TEST_ALERT', 'ADMIN_TEST']
+
+export function herkunftFilterAusdruck(art: 'echt' | 'nicht_echt' | 'test'): string {
   const echt = ECHTE_PROVENIENZEN.join(',')
   const nichtEcht = PROVENIENZEN.filter(p => !ECHTE_PROVENIENZEN.includes(p)).join(',')
   const anmeldungen = ECHT_MOEGLICHE_EREIGNISSE.join(',')
   const quelle = 'device_info->>quelle'
   const prov = 'metadata->>provenienz'
+
+  // Nur ausdrueckliche Testereignisse. Anders als die beiden anderen
+  // Zweige teilt dieser die Menge NICHT — er ist eine echte Teilmenge
+  // von 'nicht_echt'. Das ist Absicht und steht so auch in der
+  // Oberflaeche: „Test" ist eine Auswahl, kein Gegenstueck zu „Real".
+  if (art === 'test') {
+    return `${prov}.in.(${TEST_PROVENIENZEN.join(',')})`
+  }
 
   if (art === 'echt') {
     return `${prov}.in.(${echt}),`

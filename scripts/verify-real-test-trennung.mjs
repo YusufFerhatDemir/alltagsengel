@@ -226,6 +226,34 @@ pruefe('RT6', 'Der Datenbankfilter meint dieselben Zeilen wie die Anzeige',
   + 'Ein Filter, der etwas anderes sagt als die Liste, ist schlimmer als kein\n'
   + 'Filter: er erzeugt Vertrauen in eine Auswahl, die niemand geprueft hat.')
 
+// ── RT6b) Der Testfilter trifft genau die Testereignisse ──────────────
+//
+// „Test" ist KEIN Gegenstueck zu „Real": in `nicht_echt` stecken auch
+// SYNTHETIC_EVENT und alles Unbelegte. Der Schnellfilter „Test" der
+// Admin-Ansicht muss deshalb eine eigene, engere Menge treffen.
+const testLautAnzeige = new Set(
+  bestand
+    .filter(z => istTest(provenienzFuerZeile(z.metadata, z.deviceInfo, z.eventType)))
+    .map(z => z.id),
+)
+const testAntwort = await fetch(
+  `${URL_BASIS}/rest/v1/security_audit_log?select=id&or=(${encodeURIComponent(herkunftFilterAusdruck('test'))})&limit=1000`,
+  { headers: apiHeaders(SERVICE) },
+)
+const testLautFilter = new Set((await testAntwort.json()).map(z => z.id))
+const testNurAnzeige = [...testLautAnzeige].filter(id => !testLautFilter.has(id))
+const testNurFilter = [...testLautFilter].filter(id => !testLautAnzeige.has(id))
+
+pruefe('RT6b', 'Der Testfilter trifft genau die ausdruecklichen Testereignisse',
+  testNurAnzeige.length === 0 && testNurFilter.length === 0
+    && testLautFilter.size < echtLautFilter.size + testLautFilter.size + 1,
+  `Test laut Anzeige: ${testLautAnzeige.size} | laut Filter: ${testLautFilter.size}\n`
+  + `nur Anzeige: ${testNurAnzeige.length} | nur Filter: ${testNurFilter.length}\n`
+  + `Zum Vergleich: „echt" trifft ${echtLautFilter.size}, der Bestand hat ${bestand.length}.\n`
+  + 'Die Differenz sind Zeilen, ueber deren Herkunft nichts bekannt ist. Die\n'
+  + 'gehoeren weder unter „Real" noch unter „Test" — und stehen in keiner der\n'
+  + 'beiden Ansichten.')
+
 // ── RT7) Keine erfundenen Werte im Bestand ────────────────────────────
 const platzhalter = await wert(`(SELECT count(*) FROM public.security_audit_log
   WHERE lower(coalesce(user_agent,'')) IN ('unknown','unbekannt','n/a','-','none','null')

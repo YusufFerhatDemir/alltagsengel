@@ -209,4 +209,12 @@ export const KATALOG = [
                  (c.relname='abrechnungslaeufe' AND t.tgname='trg_a_lauf_eingangsstatus')
               OR (c.relname='client_vpkzp_usage' AND t.tgname='trg_vpkzp_usage_abgeleitet'
                   AND pg_get_triggerdef(t.oid) LIKE '%BEFORE INSERT OR UPDATE%'))` },
+  { datei: '20261024000000_watchlist_befristung',
+    was: 'security_watchlist: befristet_bis + CHECK „aktiv braucht Frist"',
+    soll: 2,
+    sql: `SELECT (SELECT count(*) FROM information_schema.columns
+                   WHERE table_schema='public' AND table_name='security_watchlist'
+                     AND column_name='befristet_bis')
+             + (SELECT count(*) FROM pg_constraint
+                   WHERE conname='security_watchlist_aktiv_braucht_frist')` },
 ]
