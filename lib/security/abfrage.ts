@@ -27,7 +27,7 @@ import {
 import { alarmZustaende, alarmKurzfassung, LEERER_ALARM, type Alarmzustand } from './alarmspur'
 import {
   provenienzFuerZeile, istEchteNutzeraktivitaet, istTest, quelleFuer,
-  BEZEICHNUNG_PROVENIENZ, ECHTE_PROVENIENZEN,
+  BEZEICHNUNG_PROVENIENZ, herkunftFilterAusdruck,
   type Provenienz, type Quelle,
 } from './herkunft'
 import { ueberwachteKonten } from './watchlist'
@@ -181,16 +181,17 @@ function abfrage(admin: AdminClient, f: SpurFilter, spalten: string, zaehlen: bo
   // ignoriert statt die ganze Seite zu zerlegen.
   if (f.ip && istIp(f.ip)) q = q.eq('ip_address', f.ip)
 
-  // Herkunft. Gefiltert wird auf metadata->>provenienz — PostgREST kann
-  // das, und eine eigene Spalte gibt es nicht (DDL ist gesperrt, siehe
-  // lib/security/herkunft.ts). `nicht_echt` ist bewusst KEINE
-  // Aufzaehlung der drei Nicht-Echt-Werte, sondern das Gegenteil der
-  // drei Echt-Werte: so faellt auch das Unbelegte hinein, und genau das
-  // soll es — nicht belegt ist nicht echt.
-  if (f.herkunft === 'echt') {
-    q = q.in('metadata->>provenienz', [...ECHTE_PROVENIENZEN])
-  } else if (f.herkunft === 'nicht_echt') {
-    q = q.not('metadata->>provenienz', 'in', `(${ECHTE_PROVENIENZEN.join(',')})`)
+  // Herkunft. Der Ausdruck kommt aus lib/security/herkunft.ts, damit
+  // Filter und Anzeige DIESELBE Frage stellen. Der erste Anlauf pruefte
+  // nur `metadata->>provenienz` und uebersah damit die Zeilen des
+  // Auth-Triggers: die Ansicht wies sie als echte Anmeldung aus, unter
+  // „nur echte Nutzeraktivitaet" waren sie aber nicht dabei. Ein Filter,
+  // der etwas anderes sagt als die Liste, ist schlimmer als kein Filter.
+  //
+  // Beide Werte sind hier vom Code gesetzt, kein Nutzertext — derselbe
+  // Unterschied wie beim Mandantenfilter oben.
+  if (f.herkunft === 'echt' || f.herkunft === 'nicht_echt') {
+    q = q.or(herkunftFilterAusdruck(f.herkunft))
   }
 
   return q

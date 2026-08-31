@@ -335,3 +335,53 @@ describe('provenienzFuerZeile — die Zeilen des Auth-Triggers', () => {
     expect(typeof p).toBe('string')
   })
 })
+
+// ═══════════════════════════════════════════════════════════════════════
+// Der Filter muss dasselbe sagen wie die Anzeige
+// ═══════════════════════════════════════════════════════════════════════
+import { herkunftFilterAusdruck, ECHT_MOEGLICHE_EREIGNISSE } from '@/lib/security/herkunft'
+
+describe('herkunftFilterAusdruck', () => {
+  it('der Echt-Zweig fasst die Trigger-Anmeldungen mit', () => {
+    // Sonst zeigte die Ansicht „echte Anmeldung", und unter „nur echte
+    // Nutzeraktivitaet" waere dieselbe Zeile nicht dabei. Ein Filter,
+    // der etwas anderes sagt als die Liste, ist schlimmer als keiner.
+    const a = herkunftFilterAusdruck('echt')
+    for (const p of ECHTE_PROVENIENZEN) expect(a).toContain(p)
+    expect(a).toContain('device_info->>quelle.eq.db_trigger')
+    for (const e of ECHT_MOEGLICHE_EREIGNISSE) expect(a).toContain(e)
+  })
+
+  it('der Nicht-Echt-Zweig NEGIERT nichts, sondern zaehlt auf', () => {
+    // Gemessen am 31.08.2026: mit `not.and(quelle.eq.…)` fielen VIER
+    // Zeilen durch beide Zweige — die login_success-Zeilen der
+    // Anmelderoute von vor der Kennzeichnung. Sie haben weder Provenienz
+    // noch device_info.quelle, und in SQL ist `NOT (NULL = 'x')` wieder
+    // NULL, also nicht wahr. Die Zeile faellt lautlos aus dem Filter.
+    const a = herkunftFilterAusdruck('nicht_echt')
+    expect(a).not.toContain('not.and(')
+    // Alle vier Faelle sind ausdruecklich genannt.
+    expect(a).toContain('device_info->>quelle.is.null')
+    expect(a).toContain('device_info->>quelle.neq.db_trigger')
+    expect(a).toContain('event_type.not.in.')
+    expect(a).toContain('metadata->>provenienz.is.null')
+  })
+
+  it('die Zweige teilen die sechs Provenienzen vollstaendig und ohne Ueberschneidung', () => {
+    const e = herkunftFilterAusdruck('echt')
+    const n = herkunftFilterAusdruck('nicht_echt')
+    for (const p of PROVENIENZEN) {
+      const imEchten = e.includes(p)
+      const imAnderen = n.includes(p)
+      expect(imEchten).toBe(istEchteNutzeraktivitaet(p))
+      expect(imAnderen).toBe(!istEchteNutzeraktivitaet(p))
+    }
+  })
+
+  it('nennt keine Werte, die nicht aus dem Vokabular stammen', () => {
+    const zusammen = herkunftFilterAusdruck('echt') + herkunftFilterAusdruck('nicht_echt')
+    for (const treffer of zusammen.match(/[A-Z][A-Z_]{4,}/g) ?? []) {
+      expect(PROVENIENZEN).toContain(treffer as never)
+    }
+  })
+})
