@@ -258,6 +258,14 @@ const navGroups = [
     ],
   },
   {
+    key: 'marketing',
+    title: 'Marketing / CRM',
+    items: [
+      { href: '/admin/marketing/campaigns', label: 'Kampagnen', icon: <IconChat size={18} /> },
+      { href: '/admin/marketing/kontakte', label: 'Einwilligungen & Sperrliste', icon: <IconShield size={18} /> },
+    ],
+  },
+  {
     key: 'auto',
     title: 'Automatisierung',
     items: [

@@ -1,9 +1,9 @@
 # RLS-Policy-Matrix
 
-> Auto-generiert von `scripts/rls-matrix.ts` am 2026-08-20T22:55:30.962Z.
+> Auto-generiert von `scripts/rls-matrix.ts` am 2026-08-31T03:17:45.795Z.
 > NICHT manuell bearbeiten — Aenderungen werden ueberschrieben.
 
-Status: 299 Tabellen, 894 Policies.
+Status: 325 Tabellen, 1016 Policies.
 
 ## ✅ Alle Tabellen haben RLS aktiviert
 
@@ -33,6 +33,8 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | abrechnungslaeufe | ✅ | admin_abrechnung | public | ALL | `is_admin()` | `` |
 | abrechnungslaeufe | ✅ | admin_abrechnungslaeufe | authenticated | ALL | `is_admin()` | `is_admin()` |
 | abrechnungslaeufe | ✅ | org_fence_abrechnungslaeufe | public | ALL | `((organization_id IS NULL) OR (organization_id = current_org_id()))` | `` |
+| abrechnungslaeufe | ✅ | rk_abrechnungslaeufe_lesen | public | SELECT | `(darf('abrechnung.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| abrechnungslaeufe | ✅ | rk_abrechnungslaeufe_schreiben | public | ALL | `(darf('abrechnung.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('abrechnung.schreiben'::text) AND (organization_id = current_org_id()))` |
 | absences | ✅ | absences_admin_all | public | ALL | `is_admin()` | `is_admin()` |
 | absences | ✅ | absences_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | absences | ✅ | absences_service_all | service_role | ALL | `true` | `true` |
@@ -109,12 +111,16 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | assignments | ✅ | assignments_engel_update | authenticated | UPDATE | `((caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids)) OR is_admin())` | `((caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids)) OR is_admin())` |
 | assignments | ✅ | assignments_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | assignments | ✅ | assignments_service_all | service_role | ALL | `true` | `true` |
+| assignments | ✅ | rk_assignments_lesen | public | SELECT | `(darf('einsatz.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| assignments | ✅ | rk_assignments_schreiben | public | ALL | `(darf('einsatz.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('einsatz.schreiben'::text) AND (organization_id = current_org_id()))` |
 | audit_logs | ✅ | audit_logs_admin_read | public | SELECT | `is_admin()` | `` |
 | audit_logs | ✅ | audit_logs_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | audit_logs | ✅ | audit_logs_service_all | service_role | ALL | `true` | `true` |
+| audit_logs | ✅ | rk_audit_logs_lesen | public | SELECT | `(darf('audit.lesen'::text) AND (organization_id = current_org_id()))` | `` |
 | billing_audit_trail | ✅ | billing_audit_trail_insert | authenticated | INSERT | `` | `is_admin()` |
 | billing_audit_trail | ✅ | billing_audit_trail_org_fence | authenticated | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | billing_audit_trail | ✅ | billing_audit_trail_select | authenticated | SELECT | `(is_admin() OR is_internal_staff())` | `` |
+| billing_audit_trail | ✅ | rk_billing_audit_trail_lesen | public | SELECT | `(darf('audit.lesen'::text) AND (organization_id = current_org_id()))` | `` |
 | billing_feiertage | ✅ | billing_feiertage_admin | authenticated | ALL | `is_admin()` | `is_admin()` |
 | billing_feiertage | ✅ | billing_feiertage_admin_write | authenticated | ALL | `is_admin()` | `is_admin()` |
 | billing_feiertage | ✅ | billing_feiertage_read | authenticated | SELECT | `true` | `` |
@@ -123,8 +129,9 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | billing_gesetzliche_obergrenzen | ✅ | obergrenzen_admin_write | authenticated | ALL | `is_admin()` | `is_admin()` |
 | billing_gesetzliche_obergrenzen | ✅ | obergrenzen_read | authenticated | SELECT | `true` | `` |
 | billing_landesregel_keys | ✅ | landesregel_keys_read | authenticated | SELECT | `true` | `` |
-| billing_landesregeln | ✅ | landesregeln_admin_write | authenticated | ALL | `is_admin()` | `is_admin()` |
+| billing_landesregeln | ✅ | landesregeln_admin_write | authenticated | ALL | `(is_admin() AND (organization_id = current_org_id()))` | `(is_admin() AND (organization_id = current_org_id()))` |
 | billing_landesregeln | ✅ | landesregeln_read | authenticated | SELECT | `((organization_id IS NULL) OR (organization_id = current_org_id()))` | `` |
+| billing_landesregeln | ✅ | org_fence_billing_landesregeln | authenticated | ALL | `((organization_id IS NULL) OR (organization_id = current_org_id()))` | `(organization_id = current_org_id())` |
 | billing_leistungsarten | ✅ | billing_leistungsarten_admin | authenticated | ALL | `is_admin()` | `is_admin()` |
 | billing_leistungsarten | ✅ | billing_leistungsarten_admin_write | authenticated | ALL | `is_admin()` | `is_admin()` |
 | billing_leistungsarten | ✅ | billing_leistungsarten_read | authenticated | SELECT | `true` | `` |
@@ -135,13 +142,19 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | billing_rechtsgrundlagen | ✅ | billing_rechtsgrundlagen_admin | authenticated | ALL | `is_admin()` | `is_admin()` |
 | billing_rechtsgrundlagen | ✅ | billing_rechtsgrundlagen_admin_write | authenticated | ALL | `is_admin()` | `is_admin()` |
 | billing_rechtsgrundlagen | ✅ | billing_rechtsgrundlagen_read | authenticated | SELECT | `true` | `` |
+| billing_tarif_belege | ✅ | org_fence_billing_tarif_belege | authenticated | ALL | `(organization_id = current_org_id())` | `` |
 | billing_tarif_belege | ✅ | tarif_belege_admin_read | public | SELECT | `(is_admin() AND (organization_id IN ( SELECT om.organization_id    FROM organization_members om   WHERE (om.user_id = auth.uid()))))` | `` |
 | billing_tariff_audit | ✅ | billing_tariff_audit_insert | authenticated | INSERT | `` | `(is_admin() AND (organization_id = current_org_id()))` |
 | billing_tariff_audit | ✅ | billing_tariff_audit_select | authenticated | SELECT | `((is_admin() OR is_internal_staff()) AND (organization_id = current_org_id()))` | `` |
+| billing_tariff_audit | ✅ | org_fence_billing_tariff_audit | authenticated | ALL | `(organization_id = current_org_id())` | `` |
+| billing_tariff_audit | ✅ | rk_billing_tariff_audit_lesen | public | SELECT | `(darf('audit.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| billing_tariffs | ✅ | billing_tariffs_anon_deny | anon | ALL | `false` | `false` |
 | billing_tariffs | ✅ | billing_tariffs_insert | authenticated | INSERT | `` | `is_admin()` |
 | billing_tariffs | ✅ | billing_tariffs_org_fence | authenticated | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | billing_tariffs | ✅ | billing_tariffs_select | authenticated | SELECT | `(is_admin() OR is_internal_staff())` | `` |
 | billing_tariffs | ✅ | billing_tariffs_update | authenticated | UPDATE | `is_admin()` | `is_admin()` |
+| billing_tariffs | ✅ | rk_billing_tariffs_lesen | public | SELECT | `(darf('tarife.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| billing_tariffs | ✅ | rk_billing_tariffs_schreiben | public | ALL | `(darf('tarife.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('tarife.schreiben'::text) AND (organization_id = current_org_id()))` |
 | billing_tarifquellen | ✅ | billing_tarifquellen_admin | authenticated | ALL | `is_admin()` | `is_admin()` |
 | billing_tarifquellen | ✅ | billing_tarifquellen_admin_write | authenticated | ALL | `is_admin()` | `is_admin()` |
 | billing_tarifquellen | ✅ | billing_tarifquellen_read | authenticated | SELECT | `true` | `` |
@@ -205,19 +218,28 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | caregivers | ✅ | caregivers_admin_all | public | ALL | `is_admin()` | `is_admin()` |
 | caregivers | ✅ | caregivers_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | caregivers | ✅ | caregivers_service_all | service_role | ALL | `true` | `true` |
+| caregivers | ✅ | rk_caregivers_lesen | public | SELECT | `(darf('personal.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| caregivers | ✅ | rk_caregivers_schreiben | public | ALL | `(darf('personal.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('personal.schreiben'::text) AND (organization_id = current_org_id()))` |
 | chat_messages | ✅ | chat_messages_insert_ride_participant | authenticated | INSERT | `` | `((sender_id = auth.uid()) AND (EXISTS ( SELECT 1    FROM krankenfahrten k   WHERE ((k.id = chat_messages.ride_id) AND ((k.customer_id = auth.uid()) OR (k.provider_id IN ( SELECT kp.id            FROM ` |
 | chat_messages | ✅ | chat_messages_select_ride_participant | authenticated | SELECT | `((NOT is_profile_soft_deleted(auth.uid())) AND (EXISTS ( SELECT 1    FROM krankenfahrten k   WHERE ((k.id = chat_messages.ride_id) AND ((k.customer_id = auth.uid()) OR (k.provider_id IN ( SELECT kp.id` | `` |
 | client_budgets | ✅ | client_budgets_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| client_budgets | ✅ | client_budgets_anon_deny | anon | ALL | `false` | `false` |
 | client_budgets | ✅ | client_budgets_client_read | public | SELECT | `(EXISTS ( SELECT 1    FROM clients cl   WHERE ((cl.user_id = auth.uid()) AND (cl.id = client_budgets.client_id))))` | `` |
 | client_budgets | ✅ | client_budgets_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | client_budgets | ✅ | client_budgets_service_all | service_role | ALL | `true` | `true` |
+| client_budgets | ✅ | rk_client_budgets_lesen | public | SELECT | `(darf('stammdaten.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| client_budgets | ✅ | rk_client_budgets_schreiben | public | ALL | `(darf('stammdaten.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('stammdaten.schreiben'::text) AND (organization_id = current_org_id()))` |
 | client_preferred_substitutes | ✅ | client_preferred_substitutes_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | client_preferred_substitutes | ✅ | preferred_subs_admin_all | public | ALL | `is_admin()` | `is_admin()` |
 | client_preferred_substitutes | ✅ | preferred_subs_service_all | service_role | ALL | `true` | `true` |
+| client_vpkzp_usage | ✅ | client_vpkzp_usage_admin | public | ALL | `is_admin()` | `` |
+| client_vpkzp_usage | ✅ | org_fence_client_vpkzp_usage | public | ALL | `(organization_id = current_org_id())` | `` |
 | clients | ✅ | clients_admin_all | public | ALL | `is_admin()` | `is_admin()` |
 | clients | ✅ | clients_caregiver_read | public | SELECT | `(EXISTS ( SELECT 1    FROM assignments a   WHERE ((a.caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids)) AND (a.client_id = clients.id) AND (a.status = ANY (ARRAY['active'::text,` | `` |
 | clients | ✅ | clients_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | clients | ✅ | clients_service_all | service_role | ALL | `true` | `true` |
+| clients | ✅ | rk_clients_lesen | public | SELECT | `(darf('stammdaten.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| clients | ✅ | rk_clients_schreiben | public | ALL | `(darf('stammdaten.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('stammdaten.schreiben'::text) AND (organization_id = current_org_id()))` |
 | coach_abrechnungswege | ✅ | admin_coach_abrechnungswege | authenticated | ALL | `is_admin()` | `is_admin()` |
 | coach_abrechnungswege | ✅ | org_fence_coach_abrechnungswege | authenticated | ALL | `(organization_id = current_org_id())` | `` |
 | coach_activities | ✅ | coach_activities_owner_all | authenticated | ALL | `(coach_user_id IN ( SELECT cu.id    FROM coach_users cu   WHERE (cu.user_id = auth.uid())))` | `(coach_user_id IN ( SELECT cu.id    FROM coach_users cu   WHERE (cu.user_id = auth.uid())))` |
@@ -267,6 +289,8 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | dienstplan_eintraege | ✅ | admin_dienstplan_eintraege | authenticated | ALL | `is_admin()` | `` |
 | dienstplan_eintraege | ✅ | engel_dienstplan_eintraege_select | authenticated | SELECT | `(caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids))` | `` |
 | dienstplan_eintraege | ✅ | org_fence_dienstplan_eintraege | authenticated | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
+| dienstplan_freigaben | ✅ | intern_dienstplan_freigaben | authenticated | ALL | `is_internal_staff()` | `is_internal_staff()` |
+| dienstplan_freigaben | ✅ | org_fence_dienstplan_freigaben | authenticated | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | dienstplan_schichten | ✅ | admin_dienstplan_schichten | authenticated | ALL | `is_admin()` | `` |
 | dienstplan_schichten | ✅ | engel_dienstplan_schichten_select | authenticated | SELECT | `(aktiv = true)` | `` |
 | dienstplan_schichten | ✅ | org_fence_dienstplan_schichten | authenticated | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
@@ -313,8 +337,18 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | dunning_email_queue | ✅ | org_fence_dunning_email_queue | public | ALL | `(organization_id = current_org_id())` | `` |
 | dunning_entries | ✅ | dunning_admin_all | authenticated | ALL | `is_admin()` | `` |
 | dunning_entries | ✅ | org_fence_dunning_entries | public | ALL | `(organization_id = current_org_id())` | `` |
+| dunning_entries | ✅ | rk_dunning_entries_lesen | public | SELECT | `(darf('abrechnung.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| dunning_entries | ✅ | rk_dunning_entries_schreiben | public | ALL | `(darf('abrechnung.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('abrechnung.schreiben'::text) AND (organization_id = current_org_id()))` |
 | einsatz_absagen | ✅ | admin_absagen | public | ALL | `is_admin()` | `is_admin()` |
 | einsatz_absagen | ✅ | einsatz_absagen_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
+| email_campaign_logs | ✅ | email_campaign_logs_admin | public | ALL | `is_admin()` | `` |
+| email_campaign_logs | ✅ | org_fence_email_campaign_logs | public | ALL | `(organization_id = current_org_id())` | `` |
+| email_campaigns | ✅ | email_campaigns_admin | public | ALL | `is_admin()` | `` |
+| email_campaigns | ✅ | org_fence_email_campaigns | public | ALL | `(organization_id = current_org_id())` | `` |
+| email_suppression_list | ✅ | email_suppression_list_admin | public | ALL | `is_admin()` | `` |
+| email_suppression_list | ✅ | org_fence_email_suppression_list | public | ALL | `(organization_id = current_org_id())` | `` |
+| email_templates | ✅ | email_templates_admin | public | ALL | `is_admin()` | `` |
+| email_templates | ✅ | org_fence_email_templates | public | ALL | `(organization_id = current_org_id())` | `` |
 | eul_erbringungen | ✅ | admin_eul_erbringungen | authenticated | ALL | `is_admin()` | `is_admin()` |
 | eul_erbringungen | ✅ | org_fence_eul_erbringungen | authenticated | ALL | `(organization_id = current_org_id())` | `` |
 | eul_qualifikationen | ✅ | admin_eul_qualifikationen | authenticated | ALL | `is_admin()` | `is_admin()` |
@@ -324,6 +358,8 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | fahrzeuge | ✅ | fahrzeuge_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | fcm_tokens | ✅ | Service role can read all fcm tokens | public | SELECT | `(auth.role() = 'service_role'::text)` | `` |
 | fcm_tokens | ✅ | Users can manage own fcm tokens | public | ALL | `(auth.uid() = user_id)` | `(auth.uid() = user_id)` |
+| fcm_tokens | ✅ | fcm_tokens_admin_lesen | public | SELECT | `is_admin()` | `` |
+| fcm_tokens | ✅ | fcm_tokens_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | fem_ueberwachungen | ✅ | admin_fem_ueberwachungen | public | ALL | `is_admin()` | `` |
 | fem_ueberwachungen | ✅ | engel_fem_ueberwachungen_insert | public | INSERT | `` | `((kontrolliert_von = auth.uid()) AND (EXISTS ( SELECT 1    FROM freiheitsentziehende_massnahmen m   WHERE ((m.id = fem_ueberwachungen.massnahme_id) AND engel_hat_aktiven_klienten(m.client_id)))))` |
 | fem_ueberwachungen | ✅ | engel_fem_ueberwachungen_select | public | SELECT | `(EXISTS ( SELECT 1    FROM freiheitsentziehende_massnahmen m   WHERE ((m.id = fem_ueberwachungen.massnahme_id) AND engel_hat_aktiven_klienten(m.client_id))))` | `` |
@@ -349,11 +385,16 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | invoice_disputes | ✅ | invoice_disputes_admin_all | public | ALL | `is_admin()` | `is_admin()` |
 | invoice_disputes | ✅ | invoice_disputes_org_fence | authenticated | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | invoice_disputes | ✅ | invoice_disputes_service_all | service_role | ALL | `true` | `true` |
+| invoice_email_log | ✅ | invoice_email_log_admin | public | ALL | `is_admin()` | `` |
+| invoice_email_log | ✅ | org_fence_invoice_email_log | public | ALL | `(organization_id = current_org_id())` | `` |
+| invoice_email_log | ✅ | rk_invoice_email_log_lesen | public | SELECT | `(darf('audit.lesen'::text) AND (organization_id = current_org_id()))` | `` |
 | invoice_items | ✅ | invoice_items_admin_all | public | ALL | `is_admin()` | `is_admin()` |
 | invoice_items | ✅ | invoice_items_anon_deny | anon | ALL | `false` | `false` |
 | invoice_items | ✅ | invoice_items_client_read | public | SELECT | `(EXISTS ( SELECT 1    FROM (invoices inv      JOIN clients cl ON ((cl.id = inv.client_id)))   WHERE ((inv.id = invoice_items.invoice_id) AND (cl.user_id = auth.uid()))))` | `` |
 | invoice_items | ✅ | invoice_items_org_fence | authenticated | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | invoice_items | ✅ | invoice_items_service_all | service_role | ALL | `true` | `true` |
+| invoice_items | ✅ | rk_invoice_items_lesen | public | SELECT | `(darf('abrechnung.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| invoice_items | ✅ | rk_invoice_items_schreiben | public | ALL | `(darf('abrechnung.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('abrechnung.schreiben'::text) AND (organization_id = current_org_id()))` |
 | invoice_line_snapshots | ✅ | invoice_line_snapshots_insert | authenticated | INSERT | `` | `is_admin()` |
 | invoice_line_snapshots | ✅ | invoice_line_snapshots_org_fence | authenticated | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | invoice_line_snapshots | ✅ | invoice_line_snapshots_select | authenticated | SELECT | `(is_admin() OR is_internal_staff())` | `` |
@@ -369,6 +410,8 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | invoices | ✅ | invoices_client_read | public | SELECT | `(EXISTS ( SELECT 1    FROM clients cl   WHERE ((cl.user_id = auth.uid()) AND (cl.id = invoices.client_id))))` | `` |
 | invoices | ✅ | invoices_org_fence | authenticated | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | invoices | ✅ | invoices_service_all | service_role | ALL | `true` | `true` |
+| invoices | ✅ | rk_invoices_lesen | public | SELECT | `(darf('abrechnung.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| invoices | ✅ | rk_invoices_schreiben | public | ALL | `(darf('abrechnung.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('abrechnung.schreiben'::text) AND (organization_id = current_org_id()))` |
 | kf_booking_reviews | ✅ | Admin manages booking reviews | public | ALL | `is_admin()` | `` |
 | kf_booking_reviews | ✅ | kf_booking_reviews_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | kf_feature_flags | ✅ | Admin manages feature flags | public | ALL | `is_admin()` | `` |
@@ -446,11 +489,21 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | lagerungsprotokolle | ✅ | engel_lagerungsprotokolle_select | public | SELECT | `engel_hat_aktiven_klienten(client_id)` | `` |
 | lagerungsprotokolle | ✅ | org_fence_lagerungsprotokolle | public | ALL | `(organization_id = current_org_id())` | `` |
 | lead_inquiries | ✅ | Admin full access lead_inquiries | authenticated | ALL | `is_admin()` | `is_admin()` |
-| lead_inquiries | ✅ | Anyone can submit lead inquiry | public | INSERT | `` | `true` |
 | lead_inquiries | ✅ | lead_inquiries_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | leistungspreise | ✅ | admin_leistungspreise | public | ALL | `is_admin()` | `is_admin()` |
+| leistungspreise | ✅ | leistungspreise_anon_deny | anon | ALL | `false` | `false` |
 | leistungspreise | ✅ | leistungspreise_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
+| leistungspreise | ✅ | rk_leistungspreise_lesen | public | SELECT | `(darf('tarife.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| leistungspreise | ✅ | rk_leistungspreise_schreiben | public | ALL | `(darf('tarife.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('tarife.schreiben'::text) AND (organization_id = current_org_id()))` |
+| location_sharing_settings | ✅ | standort_freigabe_lesen | authenticated | SELECT | `((user_id = auth.uid()) OR (ist_sicherheitsadmin() AND (organization_id = current_org_id())))` | `` |
+| location_sharing_settings | ✅ | standort_freigabe_selbst_abschalten | authenticated | UPDATE | `(user_id = auth.uid())` | `((user_id = auth.uid()) AND (mode = 'off'::text))` |
+| location_updates | ✅ | standort_punkte_lesen | authenticated | SELECT | `((user_id = auth.uid()) OR (ist_sicherheitsadmin() AND (organization_id = current_org_id())))` | `` |
+| location_updates | ✅ | standort_punkte_selbst_loeschen | authenticated | DELETE | `(user_id = auth.uid())` | `` |
 | login_rate_limits | ✅ | service_role only | service_role | ALL | `true` | `true` |
+| marketing_automations | ✅ | marketing_automations_admin | public | ALL | `is_admin()` | `` |
+| marketing_automations | ✅ | org_fence_marketing_automations | public | ALL | `(organization_id = current_org_id())` | `` |
+| marketing_consents | ✅ | marketing_consents_admin | public | ALL | `is_admin()` | `` |
+| marketing_consents | ✅ | org_fence_marketing_consents | public | ALL | `(organization_id = current_org_id())` | `` |
 | medikament_eingaben | ✅ | admin_med_eingaben_all | public | ALL | `is_admin()` | `` |
 | medikament_eingaben | ✅ | engel_med_eingaben_insert | public | INSERT | `` | `((gegeben_von = auth.uid()) AND (client_id IN ( SELECT a.client_id    FROM assignments a   WHERE ((a.caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids)) AND (a.status = ANY (ARRA` |
 | medikament_eingaben | ✅ | engel_med_eingaben_select | public | SELECT | `(client_id IN ( SELECT a.client_id    FROM assignments a   WHERE ((a.caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids)) AND (a.status = ANY (ARRAY['active'::text, 'GEPLANT'::tex` | `` |
@@ -458,12 +511,16 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | medikamente | ✅ | admin_medikamente_all | public | ALL | `is_admin()` | `` |
 | medikamente | ✅ | engel_medikamente_select | public | SELECT | `(client_id IN ( SELECT a.client_id    FROM assignments a   WHERE ((a.caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids)) AND (a.status = ANY (ARRAY['active'::text, 'GEPLANT'::tex` | `` |
 | medikamente | ✅ | org_fence_medikamente | public | ALL | `(organization_id = current_org_id())` | `` |
+| medikamente | ✅ | rk_medikamente_lesen | public | SELECT | `(darf('pflege.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| medikamente | ✅ | rk_medikamente_schreiben | public | ALL | `(darf('pflege.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('pflege.schreiben'::text) AND (organization_id = current_org_id()))` |
 | medikamentenplan | ✅ | Admins can view all medikamentenplan | public | SELECT | `is_admin()` | `` |
 | medikamentenplan | ✅ | Users can delete own medikamentenplan | public | DELETE | `(auth.uid() = user_id)` | `` |
 | medikamentenplan | ✅ | Users can insert own medikamentenplan | public | INSERT | `` | `(auth.uid() = user_id)` |
 | medikamentenplan | ✅ | Users can update own medikamentenplan | public | UPDATE | `(auth.uid() = user_id)` | `` |
 | medikamentenplan | ✅ | Users can view own medikamentenplan | public | SELECT | `(auth.uid() = user_id)` | `` |
 | medikamentenplan | ✅ | medikamentenplan_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
+| medikamentenplan | ✅ | rk_medikamentenplan_lesen | public | SELECT | `(darf('pflege.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| medikamentenplan | ✅ | rk_medikamentenplan_schreiben | public | ALL | `(darf('pflege.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('pflege.schreiben'::text) AND (organization_id = current_org_id()))` |
 | messages | ✅ | messages_admin_all | authenticated | ALL | `(is_admin() AND nutzer_in_aktiver_org(sender_id))` | `` |
 | messages | ✅ | messages_insert_booking_participant | authenticated | INSERT | `` | `((sender_id = auth.uid()) AND (EXISTS ( SELECT 1    FROM bookings b   WHERE ((b.id = messages.booking_id) AND (((b.customer_id = auth.uid()) AND (b.angel_id = messages.receiver_id)) OR ((b.angel_id = ` |
 | messages | ✅ | messages_select_sender_or_receiver | authenticated | SELECT | `(((auth.uid() = sender_id) OR (auth.uid() = receiver_id)) AND (NOT is_profile_soft_deleted(auth.uid())))` | `` |
@@ -610,6 +667,11 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | notfall_info | ✅ | Users can update own notfall_info | public | UPDATE | `(auth.uid() = user_id)` | `` |
 | notfall_info | ✅ | Users can view own notfall_info | public | SELECT | `(auth.uid() = user_id)` | `` |
 | notfall_info | ✅ | notfall_info_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
+| notification_delivery_log | ✅ | notification_delivery_log_admin | public | ALL | `is_admin()` | `` |
+| notification_delivery_log | ✅ | org_fence_notification_delivery_log | public | ALL | `(organization_id = current_org_id())` | `` |
+| notification_delivery_log | ✅ | rk_notification_delivery_log_lesen | public | SELECT | `(darf('audit.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| notification_preferences | ✅ | notification_preferences_eigene | public | ALL | `(user_id = auth.uid())` | `(user_id = auth.uid())` |
+| notification_preferences | ✅ | notification_preferences_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | notifications | ✅ | notifications_admin_all | authenticated | ALL | `(is_admin() AND nutzer_in_aktiver_org(user_id))` | `` |
 | notifications | ✅ | notifications_insert_blocked | authenticated | INSERT | `` | `false` |
 | notifications | ✅ | notifications_select_own | authenticated | SELECT | `((auth.uid() = user_id) AND (NOT is_profile_soft_deleted(auth.uid())))` | `` |
@@ -668,6 +730,7 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | ops_wiedervorlagen | ✅ | ops_wiedervorlagen_org_fence | public | ALL | `(organization_id = current_org_id())` | `` |
 | organization_members | ✅ | org_members_manage | public | ALL | `has_org_role(organization_id, ARRAY['owner'::text, 'admin'::text])` | `has_org_role(organization_id, ARRAY['owner'::text, 'admin'::text])` |
 | organization_members | ✅ | org_members_select | public | SELECT | `((user_id = auth.uid()) OR is_org_member(organization_id))` | `` |
+| organization_subscriptions | ✅ | org_fence_organization_subscriptions | authenticated | ALL | `(organization_id = current_org_id())` | `` |
 | organization_subscriptions | ✅ | org_subs_member_select | public | SELECT | `is_org_member(organization_id)` | `` |
 | organizations | ✅ | orgs_member_select | public | SELECT | `is_org_member(id)` | `` |
 | organizations | ✅ | orgs_owner_update | public | UPDATE | `has_org_role(id, ARRAY['owner'::text, 'admin'::text])` | `has_org_role(id, ARRAY['owner'::text, 'admin'::text])` |
@@ -687,6 +750,9 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | payment_status | ✅ | payment_status_staff_read | public | SELECT | `is_internal_staff()` | `` |
 | payments | ✅ | org_fence_payments | public | ALL | `(organization_id = current_org_id())` | `` |
 | payments | ✅ | payments_admin_all | authenticated | ALL | `is_admin()` | `` |
+| payments | ✅ | payments_anon_deny | anon | ALL | `false` | `false` |
+| payments | ✅ | rk_payments_lesen | public | SELECT | `(darf('abrechnung.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| payments | ✅ | rk_payments_schreiben | public | ALL | `(darf('abrechnung.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('abrechnung.schreiben'::text) AND (organization_id = current_org_id()))` |
 | personal_arbeitszeiten | ✅ | admin_personal_arbeitszeiten | authenticated | ALL | `is_admin()` | `` |
 | personal_arbeitszeiten | ✅ | engel_personal_arbeitszeiten_insert | authenticated | INSERT | `` | `(caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids))` |
 | personal_arbeitszeiten | ✅ | engel_personal_arbeitszeiten_select | authenticated | SELECT | `(caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids))` | `` |
@@ -709,9 +775,12 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | pflege_audit_log | ✅ | pflege_audit_log_admin_select | public | SELECT | `is_admin()` | `` |
 | pflege_audit_log | ✅ | pflege_audit_log_insert | public | INSERT | `` | `(organization_id = current_org_id())` |
 | pflege_audit_log | ✅ | pflege_audit_log_org_fence | public | ALL | `(organization_id = current_org_id())` | `` |
+| pflege_audit_log | ✅ | rk_pflege_audit_log_lesen | public | SELECT | `(darf('audit.lesen'::text) AND (organization_id = current_org_id()))` | `` |
 | pflege_aufnahmen | ✅ | admin_pflege_aufnahmen | authenticated | ALL | `is_admin()` | `` |
 | pflege_aufnahmen | ✅ | engel_pflege_aufnahmen_select | authenticated | SELECT | `((client_id IS NOT NULL) AND engel_hat_aktiven_klienten(client_id))` | `` |
 | pflege_aufnahmen | ✅ | org_fence_pflege_aufnahmen | public | ALL | `(organization_id = current_org_id())` | `` |
+| pflege_aufnahmen | ✅ | rk_pflege_aufnahmen_lesen | public | SELECT | `(darf('pflege.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| pflege_aufnahmen | ✅ | rk_pflege_aufnahmen_schreiben | public | ALL | `(darf('pflege.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('pflege.schreiben'::text) AND (organization_id = current_org_id()))` |
 | pflege_diagnosen | ✅ | admin_pflege_diagnosen | authenticated | ALL | `is_admin()` | `` |
 | pflege_diagnosen | ✅ | engel_pflege_diagnosen_select | authenticated | SELECT | `((betreuungsrelevant = true) AND (aktiv = true) AND (client_id IS NOT NULL) AND engel_hat_aktiven_klienten(client_id))` | `` |
 | pflege_diagnosen | ✅ | org_fence_pflege_diagnosen | public | ALL | `(organization_id = current_org_id())` | `` |
@@ -720,6 +789,9 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | pflege_massnahmen | ✅ | admin_pflege_massnahmen | authenticated | ALL | `is_admin()` | `` |
 | pflege_massnahmen | ✅ | engel_pflege_massnahmen_select | public | SELECT | `(plan_id IN ( SELECT mp.id    FROM (pflege_massnahmenplaene mp      JOIN assignments a ON ((a.client_id = mp.client_id)))   WHERE ((a.caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregive` | `` |
 | pflege_massnahmen | ✅ | org_fence_pflege_massnahmen | public | ALL | `(organization_id = current_org_id())` | `` |
+| pflege_massnahmen_evaluationen | ✅ | admin_pme | public | ALL | `is_admin()` | `` |
+| pflege_massnahmen_evaluationen | ✅ | engel_pme_select | public | SELECT | `(massnahme_id IN ( SELECT m.id    FROM (pflege_massnahmen m      JOIN pflege_massnahmenplaene p ON ((p.id = m.plan_id)))   WHERE ((p.status = ANY (ARRAY['aktiv'::text, 'abgelaufen'::text])) AND (p.cli` | `` |
+| pflege_massnahmen_evaluationen | ✅ | org_fence_pme | public | ALL | `(organization_id = current_org_id())` | `` |
 | pflege_massnahmenplaene | ✅ | admin_pflege_massnahmenplaene | authenticated | ALL | `is_admin()` | `` |
 | pflege_massnahmenplaene | ✅ | engel_pflege_massnahmenplaene_select | authenticated | SELECT | `((status = ANY (ARRAY['aktiv'::text, 'abgelaufen'::text])) AND (client_id IS NOT NULL) AND engel_hat_aktiven_klienten(client_id))` | `` |
 | pflege_massnahmenplaene | ✅ | kunde_pflege_massnahmenplaene_select | public | SELECT | `((status = 'aktiv'::text) AND (client_id IN ( SELECT c.id    FROM clients c   WHERE (c.user_id = auth.uid()))))` | `` |
@@ -732,9 +804,15 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | pflege_verlauf | ✅ | engel_pflege_verlauf_select | authenticated | SELECT | `((sichtbarkeit = ANY (ARRAY['engel'::text, 'alle'::text])) AND (client_id IS NOT NULL) AND engel_hat_aktiven_klienten(client_id))` | `` |
 | pflege_verlauf | ✅ | kunde_pflege_verlauf_select | public | SELECT | `((sichtbarkeit = ANY (ARRAY['kunde'::text, 'alle'::text])) AND (gesperrt = false) AND (client_id IN ( SELECT c.id    FROM clients c   WHERE (c.user_id = auth.uid()))))` | `` |
 | pflege_verlauf | ✅ | org_fence_pflege_verlauf | public | ALL | `(organization_id = current_org_id())` | `` |
+| pflege_verlauf | ✅ | rk_pflege_verlauf_lesen | public | SELECT | `(darf('pflege.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| pflege_verlauf | ✅ | rk_pflege_verlauf_schreiben | public | ALL | `(darf('pflege.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('pflege.schreiben'::text) AND (organization_id = current_org_id()))` |
 | pflegeueberleitungen | ✅ | admin_pflegeueberleitungen | public | ALL | `is_admin()` | `` |
 | pflegeueberleitungen | ✅ | engel_pflegeueberleitungen_select | public | SELECT | `engel_hat_aktiven_klienten(client_id)` | `` |
 | pflegeueberleitungen | ✅ | org_fence_pflegeueberleitungen | public | ALL | `(organization_id = current_org_id())` | `` |
+| pilot_send_gate | ✅ | org_fence_pilot_send_gate | public | ALL | `(organization_id = current_org_id())` | `` |
+| pilot_send_gate | ✅ | pilot_send_gate_admin | public | ALL | `is_admin()` | `` |
+| pilot_versand_sperre | ✅ | org_fence_pilot_versand_sperre | public | ALL | `(organization_id = current_org_id())` | `` |
+| pilot_versand_sperre | ✅ | pilot_versand_sperre_admin | public | ALL | `is_admin()` | `` |
 | plz_bundesland_regeln | ✅ | plz_regeln_read | anon, authenticated | SELECT | `true` | `` |
 | profiles | ✅ | Admin can delete profiles | public | DELETE | `(is_admin() AND nutzer_in_aktiver_org(id))` | `` |
 | profiles | ✅ | Admin can update all profiles | public | UPDATE | `((auth.uid() = id) OR (is_admin() AND nutzer_in_aktiver_org(id)))` | `` |
@@ -751,6 +829,10 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | push_subscriptions | ✅ | Users can manage own subscriptions | public | ALL | `(auth.uid() = user_id)` | `` |
 | qes_hooks | ✅ | admin_qes_hooks_all | public | ALL | `is_admin()` | `` |
 | qes_hooks | ✅ | org_fence_qes_hooks | public | ALL | `(organization_id = current_org_id())` | `` |
+| qm_pflegevisiten | ✅ | intern_qm_pflegevisiten | authenticated | ALL | `is_internal_staff()` | `is_internal_staff()` |
+| qm_pflegevisiten | ✅ | org_fence_qm_pflegevisiten | authenticated | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
+| qm_visite_befunde | ✅ | intern_qm_visite_befunde | authenticated | ALL | `is_internal_staff()` | `is_internal_staff()` |
+| qm_visite_befunde | ✅ | org_fence_qm_visite_befunde | authenticated | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | referrals | ✅ | Admins sehen alle Referrals | authenticated | SELECT | `(is_admin() AND nutzer_in_aktiver_org(referrer_id))` | `` |
 | referrals | ✅ | System kann Referrals erstellen | public | INSERT | `` | `(auth.uid() = referred_id)` |
 | referrals | ✅ | Users sehen eigene Referrals | public | SELECT | `((auth.uid() = referrer_id) OR (auth.uid() = referred_id))` | `` |
@@ -762,20 +844,34 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | reviews | ✅ | reviews_insert_eigene | authenticated | INSERT | `` | `(reviewer_id = auth.uid())` |
 | reviews | ✅ | reviews_select_beteiligte | authenticated | SELECT | `((reviewer_id = auth.uid()) OR (angel_id = auth.uid()) OR (is_admin() AND buchung_in_aktiver_org(booking_id)))` | `` |
 | reviews | ✅ | reviews_update_eigene | authenticated | UPDATE | `(reviewer_id = auth.uid())` | `(reviewer_id = auth.uid())` |
+| sammelrechnungslaeufe | ✅ | org_fence_sammelrechnungslaeufe | public | ALL | `(organization_id = current_org_id())` | `` |
+| sammelrechnungslaeufe | ✅ | rk_sammelrechnungslaeufe_lesen | public | SELECT | `(darf('abrechnung.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| sammelrechnungslauf_gruppen | ✅ | org_fence_sammelrechnungslauf_gruppen | public | ALL | `(organization_id = current_org_id())` | `` |
+| sammelrechnungslauf_gruppen | ✅ | rk_sammelrechnungslauf_gruppen_lesen | public | SELECT | `(darf('abrechnung.lesen'::text) AND (organization_id = current_org_id()))` | `` |
 | satisfaction_calls | ✅ | satisfaction_calls_admin_all | public | ALL | `is_admin()` | `is_admin()` |
 | satisfaction_calls | ✅ | satisfaction_calls_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | satisfaction_calls | ✅ | satisfaction_calls_service_all | service_role | ALL | `true` | `true` |
+| security_audit_log | ✅ | sicherheitsadmin_liest_security_audit_log | authenticated | SELECT | `(ist_sicherheitsadmin() AND ((organization_id = current_org_id()) OR (organization_id IS NULL)))` | `` |
+| security_known_devices | ✅ | sicherheitsadmin_liest_security_known_devices | authenticated | SELECT | `(ist_sicherheitsadmin() OR (user_id = auth.uid()))` | `` |
+| security_watchlist | ✅ | sicherheitsadmin_liest_security_watchlist | authenticated | SELECT | `ist_sicherheitsadmin()` | `` |
 | sepa_batch_items | ✅ | admin_crud_sepa_batch_items | authenticated | ALL | `is_admin()` | `` |
 | sepa_batch_items | ✅ | org_fence_sepa_batch_items | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | sepa_batches | ✅ | admin_crud_sepa_batches | authenticated | ALL | `is_admin()` | `` |
 | sepa_batches | ✅ | org_fence_sepa_batches | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
+| sepa_batches | ✅ | rk_sepa_batches_lesen | public | SELECT | `(darf('bankdaten.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| sepa_batches | ✅ | rk_sepa_batches_schreiben | public | ALL | `(darf('bankdaten.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('bankdaten.schreiben'::text) AND (organization_id = current_org_id()))` |
 | sepa_mandates | ✅ | admin_crud_sepa_mandates | authenticated | ALL | `is_admin()` | `` |
 | sepa_mandates | ✅ | org_fence_sepa_mandates | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
+| sepa_mandates | ✅ | rk_sepa_mandates_lesen | public | SELECT | `(darf('bankdaten.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| sepa_mandates | ✅ | rk_sepa_mandates_schreiben | public | ALL | `(darf('bankdaten.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('bankdaten.schreiben'::text) AND (organization_id = current_org_id()))` |
+| service_pricing | ✅ | rk_service_pricing_lesen | public | SELECT | `(darf('tarife.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| service_pricing | ✅ | rk_service_pricing_schreiben | public | ALL | `(darf('tarife.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('tarife.schreiben'::text) AND (organization_id = current_org_id()))` |
 | service_pricing | ✅ | service_pricing_admin_all | public | ALL | `is_admin()` | `is_admin()` |
 | service_pricing | ✅ | service_pricing_auth_read | authenticated | SELECT | `(is_active = true)` | `` |
 | service_pricing | ✅ | service_pricing_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | service_pricing | ✅ | service_pricing_service_all | service_role | ALL | `true` | `true` |
 | service_pricing | ✅ | service_pricing_staff_read | public | SELECT | `is_internal_staff()` | `` |
+| service_record_audit_log | ✅ | rk_service_record_audit_log_lesen | public | SELECT | `(darf('audit.lesen'::text) AND (organization_id = current_org_id()))` | `` |
 | service_record_audit_log | ✅ | service_record_audit_log_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | service_record_audit_log | ✅ | sr_audit_admin_read | authenticated | SELECT | `is_admin()` | `` |
 | service_record_audit_log | ✅ | sr_audit_insert | authenticated | INSERT | `` | `is_admin()` |
@@ -783,7 +879,10 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | service_record_items | ✅ | service_record_items_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | service_record_items | ✅ | service_record_items_service_all | service_role | ALL | `true` | `true` |
 | service_record_items | ✅ | service_record_items_staff_read | public | SELECT | `is_internal_staff()` | `` |
+| service_records | ✅ | rk_service_records_lesen | public | SELECT | `(darf('einsatz.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| service_records | ✅ | rk_service_records_schreiben | public | ALL | `(darf('einsatz.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('einsatz.schreiben'::text) AND (organization_id = current_org_id()))` |
 | service_records | ✅ | service_records_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| service_records | ✅ | service_records_anon_deny | anon | ALL | `false` | `false` |
 | service_records | ✅ | service_records_caregiver_insert | public | INSERT | `` | `((EXISTS ( SELECT 1    FROM caregivers c   WHERE ((c.user_id = auth.uid()) AND (c.id = service_records.caregiver_id)))) AND (status = 'draft'::text))` |
 | service_records | ✅ | service_records_caregiver_read | public | SELECT | `(caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids))` | `` |
 | service_records | ✅ | service_records_caregiver_update | public | UPDATE | `((caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids)) AND (status = ANY (ARRAY['draft'::text, 'incomplete'::text])))` | `` |
@@ -791,7 +890,6 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | service_records | ✅ | service_records_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | service_records | ✅ | service_records_service_all | service_role | ALL | `true` | `true` |
 | service_records | ✅ | sr_client_read | authenticated | SELECT | `(client_id IN ( SELECT clients.id    FROM clients   WHERE (clients.user_id = auth.uid())))` | `` |
-| service_records | ✅ | sr_engel_own | authenticated | ALL | `((caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids)) OR is_admin())` | `((caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids)) OR is_admin())` |
 | service_signatures | ✅ | service_signatures_admin_all | public | ALL | `is_admin()` | `is_admin()` |
 | service_signatures | ✅ | service_signatures_caregiver_read | public | SELECT | `(EXISTS ( SELECT 1    FROM service_records sr   WHERE ((sr.id = service_signatures.service_record_id) AND is_own_caregiver(sr.caregiver_id))))` | `` |
 | service_signatures | ✅ | service_signatures_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
@@ -819,13 +917,17 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | sis_assessments | ✅ | admin_sis_assessments | public | ALL | `is_admin()` | `is_admin()` |
 | sis_assessments | ✅ | engel_sis_assessments_select | public | SELECT | `engel_hat_aktiven_klienten(client_id)` | `` |
 | sis_assessments | ✅ | org_fence_sis_assessments | public | ALL | `(organization_id = current_org_id())` | `` |
+| sis_assessments | ✅ | rk_sis_assessments_lesen | public | SELECT | `(darf('pflege.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| sis_assessments | ✅ | rk_sis_assessments_schreiben | public | ALL | `(darf('pflege.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('pflege.schreiben'::text) AND (organization_id = current_org_id()))` |
 | sis_risikomatrix | ✅ | admin_sis_risikomatrix | public | ALL | `is_admin()` | `is_admin()` |
 | sis_risikomatrix | ✅ | engel_sis_risikomatrix_select | public | SELECT | `(EXISTS ( SELECT 1    FROM sis_assessments s   WHERE ((s.id = sis_risikomatrix.assessment_id) AND engel_hat_aktiven_klienten(s.client_id))))` | `` |
 | sis_risikomatrix | ✅ | org_fence_sis_risikomatrix | public | ALL | `(organization_id = current_org_id())` | `` |
 | sis_themenfelder | ✅ | admin_sis_themenfelder | public | ALL | `is_admin()` | `is_admin()` |
 | sis_themenfelder | ✅ | engel_sis_themenfelder_select | public | SELECT | `(EXISTS ( SELECT 1    FROM sis_assessments s   WHERE ((s.id = sis_themenfelder.assessment_id) AND engel_hat_aktiven_klienten(s.client_id))))` | `` |
 | sis_themenfelder | ✅ | org_fence_sis_themenfelder | public | ALL | `(organization_id = current_org_id())` | `` |
+| state_settings | ✅ | org_fence_state_settings | authenticated | ALL | `(organization_id = current_org_id())` | `` |
 | state_settings | ✅ | state_settings_admin_all | authenticated | ALL | `(is_admin() AND (organization_id = current_org_id()))` | `(is_admin() AND (organization_id = current_org_id()))` |
+| state_settings_audit | ✅ | org_fence_state_settings_audit | authenticated | ALL | `(organization_id = current_org_id())` | `` |
 | state_settings_audit | ✅ | state_audit_admin_read | authenticated | SELECT | `(is_admin() AND (organization_id = current_org_id()))` | `` |
 | state_waitlist | ✅ | state_waitlist_admin_delete | authenticated | DELETE | `(is_admin() AND (organization_id = current_org_id()))` | `` |
 | state_waitlist | ✅ | state_waitlist_admin_read | authenticated | SELECT | `((is_admin() AND (organization_id = current_org_id())) OR (user_id = auth.uid()))` | `` |
@@ -843,12 +945,16 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | sync_konflikte | ✅ | admin_sync_konflikte | authenticated | ALL | `is_admin()` | `is_admin()` |
 | sync_konflikte | ✅ | engel_own_sync_konflikte | authenticated | SELECT | `(user_id = auth.uid())` | `` |
 | sync_konflikte | ✅ | org_fence_sync_konflikte | authenticated | ALL | `(organization_id = current_org_id())` | `` |
+| tour_stops | ✅ | rk_tour_stops_lesen | public | SELECT | `(darf('einsatz.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| tour_stops | ✅ | rk_tour_stops_schreiben | public | ALL | `(darf('einsatz.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('einsatz.schreiben'::text) AND (organization_id = current_org_id()))` |
 | tour_stops | ✅ | tour_stops_admin_manage | authenticated | ALL | `is_admin()` | `is_admin()` |
 | tour_stops | ✅ | tour_stops_engel_read | authenticated | SELECT | `(tour_id IN ( SELECT t.id    FROM tours t   WHERE (t.caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids))))` | `` |
 | tour_stops | ✅ | tour_stops_engel_update | authenticated | UPDATE | `(tour_id IN ( SELECT t.id    FROM tours t   WHERE (t.caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids))))` | `(tour_id IN ( SELECT t.id    FROM tours t   WHERE (t.caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids))))` |
 | tour_stops | ✅ | tour_stops_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | tour_templates | ✅ | tour_templates_admin_manage | authenticated | ALL | `is_admin()` | `is_admin()` |
 | tour_templates | ✅ | tour_templates_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
+| tours | ✅ | rk_tours_lesen | public | SELECT | `(darf('einsatz.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| tours | ✅ | rk_tours_schreiben | public | ALL | `(darf('einsatz.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('einsatz.schreiben'::text) AND (organization_id = current_org_id()))` |
 | tours | ✅ | tours_admin_manage | authenticated | ALL | `is_admin()` | `is_admin()` |
 | tours | ✅ | tours_engel_read | authenticated | SELECT | `(caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids))` | `` |
 | tours | ✅ | tours_engel_update | authenticated | UPDATE | `(caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids))` | `(caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids))` |
@@ -885,8 +991,15 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | vital_signs | ✅ | engel_vital_signs_insert | public | INSERT | `` | `((measured_by = auth.uid()) AND (client_id IN ( SELECT a.client_id    FROM assignments a   WHERE ((a.caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids)) AND (a.status = ANY (ARRA` |
 | vital_signs | ✅ | engel_vital_signs_select | public | SELECT | `(client_id IN ( SELECT a.client_id    FROM assignments a   WHERE ((a.caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids)) AND (a.status = ANY (ARRAY['active'::text, 'GEPLANT'::tex` | `` |
 | vital_signs | ✅ | org_fence_vital_signs | public | ALL | `(organization_id = current_org_id())` | `` |
+| vital_signs | ✅ | rk_vital_signs_lesen | public | SELECT | `(darf('pflege.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| vital_signs | ✅ | rk_vital_signs_schreiben | public | ALL | `(darf('pflege.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('pflege.schreiben'::text) AND (organization_id = current_org_id()))` |
+| vpkzp_audit_log | ✅ | org_fence_vpkzp_audit_log | public | ALL | `(organization_id = current_org_id())` | `` |
+| vpkzp_audit_log | ✅ | vpkzp_audit_log_admin | public | ALL | `is_admin()` | `` |
+| vpkzp_buchungen | ✅ | org_fence_vpkzp_buchungen | public | ALL | `(organization_id = current_org_id())` | `` |
+| vpkzp_buchungen | ✅ | vpkzp_buchungen_admin | public | ALL | `is_admin()` | `` |
 | wf_aktionen | ✅ | wf_aktionen_admin_all | authenticated | ALL | `is_admin()` | `` |
 | wf_aktionen | ✅ | wf_aktionen_org_fence | public | ALL | `(organization_id = current_org_id())` | `` |
+| wf_audit_log | ✅ | rk_wf_audit_log_lesen | public | SELECT | `(darf('audit.lesen'::text) AND (organization_id = current_org_id()))` | `` |
 | wf_audit_log | ✅ | wf_audit_admin_all | authenticated | ALL | `is_admin()` | `` |
 | wf_audit_log | ✅ | wf_audit_org_fence | public | ALL | `(organization_id = current_org_id())` | `` |
 | wf_ausfuehrungen | ✅ | wf_ausfuehrungen_admin_all | authenticated | ALL | `is_admin()` | `` |
@@ -904,16 +1017,25 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | wound_assessments | ✅ | admin_wound_assessments | public | ALL | `is_admin()` | `` |
 | wound_assessments | ✅ | engel_wound_assessments_select | public | SELECT | `(EXISTS ( SELECT 1    FROM wounds w   WHERE ((w.id = wound_assessments.wound_id) AND engel_hat_aktiven_klienten(w.client_id))))` | `` |
 | wound_assessments | ✅ | org_fence_wound_assessments | public | ALL | `(organization_id = current_org_id())` | `` |
+| wound_assessments | ✅ | rk_wound_assessments_lesen | public | SELECT | `(darf('pflege.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| wound_assessments | ✅ | rk_wound_assessments_schreiben | public | ALL | `(darf('pflege.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('pflege.schreiben'::text) AND (organization_id = current_org_id()))` |
 | wound_photos | ✅ | admin_wound_photos | public | ALL | `is_admin()` | `` |
 | wound_photos | ✅ | engel_wound_photos_select | public | SELECT | `(EXISTS ( SELECT 1    FROM wounds w   WHERE ((w.id = wound_photos.wound_id) AND engel_hat_aktiven_klienten(w.client_id))))` | `` |
 | wound_photos | ✅ | org_fence_wound_photos | public | ALL | `(organization_id = current_org_id())` | `` |
 | wound_treatments | ✅ | admin_wound_treatments | public | ALL | `is_admin()` | `` |
 | wound_treatments | ✅ | engel_wound_treatments_select | public | SELECT | `(EXISTS ( SELECT 1    FROM wounds w   WHERE ((w.id = wound_treatments.wound_id) AND engel_hat_aktiven_klienten(w.client_id))))` | `` |
 | wound_treatments | ✅ | org_fence_wound_treatments | public | ALL | `(organization_id = current_org_id())` | `` |
+| wound_treatments | ✅ | rk_wound_treatments_lesen | public | SELECT | `(darf('pflege.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| wound_treatments | ✅ | rk_wound_treatments_schreiben | public | ALL | `(darf('pflege.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('pflege.schreiben'::text) AND (organization_id = current_org_id()))` |
 | wounds | ✅ | admin_wounds | public | ALL | `is_admin()` | `` |
 | wounds | ✅ | engel_wounds_select | public | SELECT | `engel_hat_aktiven_klienten(client_id)` | `` |
 | wounds | ✅ | org_fence_wounds | public | ALL | `(organization_id = current_org_id())` | `` |
+| wounds | ✅ | rk_wounds_lesen | public | SELECT | `(darf('pflege.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| wounds | ✅ | rk_wounds_schreiben | public | ALL | `(darf('pflege.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('pflege.schreiben'::text) AND (organization_id = current_org_id()))` |
 | zahlungseingaenge | ✅ | admin_crud_zahlungseingaenge | authenticated | ALL | `is_admin()` | `` |
 | zahlungseingaenge | ✅ | org_fence_zahlungseingaenge | public | ALL | `(organization_id = (current_setting('app.current_org_id'::text, true))::uuid)` | `` |
+| zahlungseingaenge | ✅ | rk_zahlungseingaenge_lesen | public | SELECT | `(darf('abrechnung.lesen'::text) AND (organization_id = current_org_id()))` | `` |
+| zahlungseingaenge | ✅ | rk_zahlungseingaenge_schreiben | public | ALL | `(darf('abrechnung.schreiben'::text) AND (organization_id = current_org_id()))` | `(darf('abrechnung.schreiben'::text) AND (organization_id = current_org_id()))` |
+| zustellung_retry_laeufe | ✅ | zustellung_retry_laeufe_admin | public | ALL | `is_admin()` | `` |
 | zuzahlungen | ✅ | admin_zuzahlungen | public | ALL | `is_admin()` | `` |
 | zuzahlungen | ✅ | org_fence_zuzahlungen | public | ALL | `(organization_id = current_org_id())` | `` |

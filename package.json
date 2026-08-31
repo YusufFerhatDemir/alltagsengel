@@ -63,7 +63,9 @@
     "verify:versand": "node scripts/verify-versandbereitschaft.mjs",
     "verify:security-audit": "node scripts/verify-security-audit-live.mjs",
     "security:watchlist": "node scripts/security-watchlist.mjs",
-    "verify:marketing": "node scripts/verify-marketing.mjs"
+    "verify:marketing": "node scripts/verify-marketing.mjs",
+    "verify:security-kette": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/verify-security-kette.mjs",
+    "verify:standort": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/verify-standort-kette.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",

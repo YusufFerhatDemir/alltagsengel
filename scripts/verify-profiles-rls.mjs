@@ -7,13 +7,14 @@
  *
  *   A) Keine 42P17-Rekursion mehr — profiles ist ueberhaupt lesbar.
  *   B) Kein anon-Leseleck — ein unangemeldeter Aufrufer bekommt 0 Zeilen.
- *   C) Datenbestand unveraendert — die Zeilenzahl stimmt mit der Baseline.
+ *   C) Gegenprobe: mit dem Dienstschluessel ist Bestand lesbar — sonst waeren
+ *      A und B nur gruen, weil gar nichts geht.
  *
  * Nur lesend. Es wird nichts geschrieben, nichts geloescht, kein DDL.
  *
  * Aufruf:
- *   node scripts/verify-profiles-rls.mjs            # Baseline 59 Profile
- *   node scripts/verify-profiles-rls.mjs --erwartet 61
+ *   node scripts/verify-profiles-rls.mjs            # C prueft nur „Bestand > 0"
+ *   node scripts/verify-profiles-rls.mjs --erwartet 61   # exakte Zahl verlangen
  *
  * Exit 0 = alle Pruefungen bestanden, Exit 1 = mindestens eine offen.
  * Vor dem Apply der Migration schlaegt (A) erwartungsgemaess fehl.
@@ -42,8 +43,10 @@ if (!URL_BASIS || !ANON || !SERVICE) {
   process.exit(1)
 }
 
+// Mit `--erwartet <n>` laesst sich eine GENAUE Zeilenzahl verlangen. Ohne
+// den Schalter wird nur auf „mehr als null" geprueft — siehe Pruefung C.
 const argErwartet = process.argv.indexOf('--erwartet')
-const ERWARTETE_ZEILEN = argErwartet !== -1 ? Number(process.argv[argErwartet + 1]) : 59
+const ERWARTETE_ZEILEN = argErwartet !== -1 ? Number(process.argv[argErwartet + 1]) : null
 
 async function hole(pfad, schluessel, extraHeader = {}) {
   const res = await fetch(`${URL_BASIS}/rest/v1/${pfad}`, {
@@ -90,13 +93,40 @@ if (anon.status === 500 && anon.json?.code === '42P17') {
 }
 
 // ── C) Datenbestand ─────────────────────────────────────────────
+//
+// WOGEGEN DIESE PRUEFUNG SCHUETZT
+// A und B sind gruen, wenn anon abgewiesen wird. Sie waeren aber AUCH
+// gruen, wenn die Tabelle fuer NIEMANDEN mehr lesbar waere — ein
+// kaputtes RLS, ein verlorener Grant, eine leere Datenbank. C ist die
+// Gegenprobe: mit dem Dienstschluessel MUSS Bestand sichtbar sein.
+//
+// WARUM KEINE FESTE ZAHL MEHR (31.08.2026)
+// Hier stand `anzahl === 59`. Die Zahl war der Bestand am Tag, an dem
+// das Skript entstand; mit jedem neuen Konto wurde sie falscher. Bei 65
+// Profilen meldete der Lauf FEHL und riet dazu, die Sicherheitsmigration
+// erneut einzuspielen — obwohl A und B belegten, dass sie wirkt. Eine
+// Pruefung, die wegen normalen Wachstums rot wird, wird abgeschaltet
+// oder ignoriert, und dann faellt der echte Befund auch nicht mehr auf
+// (vgl. Befund „Pruefung driftet vom Gegenstand weg").
+//
+// Gefragt wird jetzt das, was die Pruefung wirklich meint: kommt
+// ueberhaupt Bestand zurueck? Wer eine exakte Zahl festhalten will —
+// etwa vor und nach einem Loeschlauf —, gibt sie mit `--erwartet <n>`
+// ausdruecklich an.
 const zaehlung = await hole('profiles?select=id', SERVICE, { Prefer: 'count=exact' })
 const bereich = zaehlung.headers.get('content-range')
 const anzahl = bereich ? Number(bereich.split('/')[1]) : null
 if (anzahl === null) {
   pruefe('C_datenbestand', false, `Zeilenzahl nicht ermittelbar (HTTP ${zaehlung.status})`)
+} else if (ERWARTETE_ZEILEN !== null) {
+  pruefe('C_datenbestand', anzahl === ERWARTETE_ZEILEN,
+    `${anzahl} Profile (ausdruecklich erwartet: ${ERWARTETE_ZEILEN})`)
 } else {
-  pruefe('C_datenbestand', anzahl === ERWARTETE_ZEILEN, `${anzahl} Profile (erwartet ${ERWARTETE_ZEILEN})`)
+  pruefe('C_datenbestand', anzahl > 0,
+    anzahl > 0
+      ? `${anzahl} Profile mit dem Dienstschluessel lesbar — die Sperre trifft nur anon`
+      : 'KEIN Profil lesbar, auch nicht mit dem Dienstschluessel — A und B sind damit '
+        + 'wertlos: sie messen dann nur, dass gar nichts geht')
 }
 
 // ── Ergebnis ────────────────────────────────────────────────────
@@ -106,10 +136,15 @@ console.log(`\n${ergebnisse.length - offen.length}/${ergebnisse.length} bestande
 if (offen.length > 0) {
   console.log('Offen:')
   for (const e of offen) console.log(`  - ${e.id}: ${e.meldung}`)
-  console.log('\nApply-Weg (DDL ist ueber PostgREST nicht moeglich):')
-  console.log('  Supabase Dashboard → SQL Editor → Inhalt von')
-  console.log('  supabase/migrations/20260815010000_profiles_rls_rekursion_und_anon_leck.sql')
-  console.log('  einfuegen und ausfuehren. Danach dieses Skript erneut starten.\n')
+  // Der Apply-Hinweis gilt NUR fuer A und B — das sind die Pruefungen, die
+  // an der Migration haengen. Bei einem offenen C waere er irrefuehrend:
+  // dort geht es um den Datenbestand, nicht um Policies.
+  if (offen.some(e => e.id === 'A_keine_rekursion' || e.id === 'B_kein_anon_leck')) {
+    console.log('\nApply-Weg (DDL ist ueber PostgREST nicht moeglich):')
+    console.log('  Supabase Dashboard → SQL Editor → Inhalt von')
+    console.log('  supabase/migrations/20260815010000_profiles_rls_rekursion_und_anon_leck.sql')
+    console.log('  einfuegen und ausfuehren. Danach dieses Skript erneut starten.\n')
+  }
   process.exit(1)
 }
 

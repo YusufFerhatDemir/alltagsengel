@@ -20,7 +20,7 @@ const vorTagen = (n: number) => new Date(HEUTE.getTime() - n * 86_400_000).toISO
 function kontakt(ueber: Partial<MarketingKontakt> = {}): MarketingKontakt {
   return {
     userId: 'u1', email: 'a@example.com', anzeigename: 'A', rolle: 'kunde',
-    plz: '60311', bundesland: 'Hessen', istTestkonto: false, istGeloescht: false,
+    plz: '60311', bundesland: 'Hessen', istTestkonto: false, istGeloescht: false, istDipaNutzer: false,
     registrierungVollstaendig: true, registriertAm: vorTagen(10),
     letzteAktivitaet: vorTagen(10), letzteBuchung: null, anzahlBuchungen: 0,
     verfuegbarkeitsFenster: 0, qualifiziert: false, einsatzfreigabe: false,

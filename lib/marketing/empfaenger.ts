@@ -49,6 +49,7 @@ function leererKontakt(): MarketingKontakt {
     bundesland: null,
     istTestkonto: false,
     istGeloescht: false,
+    istDipaNutzer: false,
     registrierungVollstaendig: false,
     registriertAm: null,
     letzteAktivitaet: null,
@@ -273,7 +274,52 @@ export async function ladeMarketingKontakte(
     })
   }
 
-  return [...nachAdresse.values()]
+  // ── DiPA-Riegel, ganz am Schluss ─────────────────────────────────────
+  //
+  // WARUM ZUM SCHLUSS UND NICHT IN DER profiles-ABFRAGE
+  // Ein Coach-Nutzer kann ueber MEHRERE Quellen in die Liste kommen: als
+  // Kundenkonto, als Engel, als Newsletter-Abonnent mit derselben
+  // Adresse. Ein Filter in nur einer der Abfragen liesse die anderen
+  // Wege offen. Hier wird die fertige Liste markiert, und zwar sowohl
+  // ueber die Konto-Kennung als auch ueber die Adresse.
+  //
+  // FAIL-CLOSED: ist coach_users nicht lesbar, WIRFT die Funktion. Eine
+  // leere Menge hiesse „niemand nutzt den PflegeCoach" — und genau dann
+  // ginge Werbung an die Gruppe, die keine bekommen darf (DiPAV §6
+  // Abs. 4). Dieselbe Begruendung wie bei der Einwilligungslage.
+  const alle = [...nachAdresse.values()]
+  const { data: coachZeilen, error: coachFehler } = await supabase
+    .from('coach_users')
+    .select('user_id')
+
+  if (coachFehler) {
+    throw new Error(
+      'PflegeCoach-Nutzende nicht ermittelbar — Versand wird abgebrochen. '
+      + 'Ohne diese Liste liesse sich die Werbefreiheit der DiPA (DiPAV §6 Abs. 4) '
+      + `nicht einhalten: ${coachFehler.message}`,
+    )
+  }
+
+  const coachIds = new Set(
+    (coachZeilen ?? []).map((z) => String((z as { user_id: unknown }).user_id)).filter(Boolean),
+  )
+
+  if (coachIds.size > 0) {
+    // Adressen der Coach-Konten mitnehmen: eine Newsletter-Anmeldung
+    // traegt keine Konto-Kennung, wohl aber dieselbe Adresse.
+    const coachAdressen = new Set(
+      alle.filter((k) => k.userId && coachIds.has(k.userId))
+        .map((k) => normalisiereAdresse(k.email))
+        .filter(Boolean),
+    )
+    for (const k of alle) {
+      if ((k.userId && coachIds.has(k.userId)) || coachAdressen.has(normalisiereAdresse(k.email))) {
+        k.istDipaNutzer = true
+      }
+    }
+  }
+
+  return alle
 }
 
 /**

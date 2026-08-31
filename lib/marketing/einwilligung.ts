@@ -155,6 +155,10 @@ export async function ladeEinwilligungsLage(
  * erscheint als „Testkonto", weil das der Grund ist, der sich nicht
  * aendern laesst.
  *
+ * Ganz oben steht seit dem 31.08.2026 `dipa_nutzer`: die Werbefreiheit der
+ * DiPA ist die einzige Bedingung, die auch eine erteilte Einwilligung
+ * nicht aufhebt.
+ *
  * `bereitsErhalten` sind die Adressen, die zu dieser Kampagne schon einen
  * Eintrag in email_campaign_logs haben. Ohne diese Pruefung waere ein
  * abgebrochener und wieder aufgenommener Versand ein Doppelversand — der
@@ -174,6 +178,13 @@ export function pruefeEmpfaenger(
       grund,
     })
 
+    // ZUERST die DiPA. Der PflegeCoach muss werbefrei sein (DiPAV §6 Abs. 4),
+    // und die Zweckbindung aus §5 Abs. 5 schliesst Werbung ausdruecklich aus.
+    // Das ist der einzige Ausschlussgrund, den auch eine ausdrueckliche
+    // Einwilligung nicht aufhebt: die Werbefreiheit ist keine Frage des
+    // Willens der betroffenen Person, sondern eine Eigenschaft, die das
+    // Produkt fuer die Aufnahme erfuellen muss.
+    if (kontakt.istDipaNutzer) return nein('dipa_nutzer')
     if (kontakt.istTestkonto) return nein('testkonto')
     if (kontakt.istGeloescht) return nein('konto_geloescht')
     if (!adresse || !istPlausibleAdresse(adresse)) return nein('keine_adresse')

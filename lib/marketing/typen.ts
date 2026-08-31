@@ -145,6 +145,21 @@ export interface MarketingKontakt {
   istTestkonto: boolean
   /** Konto zur Löschung vorgemerkt (profiles.deleted_at). */
   istGeloescht: boolean
+  /**
+   * Nutzt dieses Konto den digitalen PflegeCoach (Eintrag in coach_users)?
+   *
+   * WARUM DAS EINE MARKETING-EIGENSCHAFT IST
+   * Der PflegeCoach ist die DiPA. DiPAV §6 Abs. 4: „Digitale
+   * Pflegeanwendungen müssen frei von Werbung sein." §5 Abs. 5 bindet die
+   * Datenverarbeitung an den Versorgungszweck und schließt Werbung
+   * ausdrücklich aus. Ein Coach-Nutzer, der zugleich ein Kundenkonto hat,
+   * darf deshalb NICHT über die Kundenliste beworben werden — das wäre
+   * genau das Cross-Selling mit den Daten, das AK-VS-01 verbietet.
+   *
+   * Die Eigenschaft steht hier und nicht in einer Segmentbedingung, weil
+   * sie für JEDES Segment gilt und keine Ausnahme kennt.
+   */
+  istDipaNutzer: boolean
 
   /** profiles.onboarding_completed bzw. das jeweilige Gegenstueck. */
   registrierungVollstaendig: boolean
@@ -190,6 +205,7 @@ export interface SegmentZaehlung {
  * gleich aus.
  */
 export const AUSSCHLUSS_GRUENDE = [
+  'dipa_nutzer',
   'keine_adresse',
   'keine_einwilligung',
   'einwilligung_widerrufen',
@@ -201,6 +217,7 @@ export const AUSSCHLUSS_GRUENDE = [
 export type AusschlussGrund = (typeof AUSSCHLUSS_GRUENDE)[number]
 
 export const AUSSCHLUSS_BEZEICHNUNG: Record<AusschlussGrund, string> = {
+  dipa_nutzer: 'Nutzt den PflegeCoach — die DiPA ist werbefrei (DiPAV §6 Abs. 4)',
   keine_adresse: 'Keine E-Mail-Adresse hinterlegt',
   keine_einwilligung: 'Keine Werbeeinwilligung erteilt',
   einwilligung_widerrufen: 'Einwilligung widerrufen',

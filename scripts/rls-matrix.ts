@@ -120,13 +120,42 @@ async function main(): Promise<void> {
   }
   const tables = (statusData ?? []) as RlsStatusRow[]
 
-  // 2) Alle Policies
-  const { data: polData, error: polErr } = await supabase.rpc('audit_rls_all_policies')
-  if (polErr) {
-    console.error('❌ audit_rls_all_policies fehlgeschlagen:', polErr.message)
-    process.exit(2)
+  // 2) Alle Policies — SEITENWEISE.
+  //
+  // WARUM NICHT IN EINEM ZUG (Befund 31.08.2026)
+  // PostgREST liefert hoechstens `max-rows` Zeilen je Antwort; auf dieser
+  // Instanz sind das 1000. Bei 1016 Policies fielen die letzten 16 hinten
+  // herunter — und weil `tablesWithoutPolicy` einfach zaehlt, was NICHT
+  // zurueckkam, meldete der Lauf `wounds`, `zahlungseingaenge`,
+  // `zustellung_retry_laeufe` und `zuzahlungen` als „ohne Policy". Alle
+  // vier haben Policies; sie sind nur alphabetisch die letzten.
+  //
+  // Das ist die gefaehrlichere Richtung von falsch: die Meldung sieht aus
+  // wie ein Sicherheitsbefund, ist aber keiner — und wer sie einmal als
+  // Rauschen abtut, uebersieht den Tag, an dem sie stimmt. Zugleich war
+  // die erzeugte RLS_MATRIX.md unvollstaendig, ohne das anzuzeigen.
+  //
+  // `.range()` holt jetzt in Bloecken, bis eine Seite nicht mehr voll ist.
+  const SEITE = 500
+  const policies: PolicyRow[] = []
+  for (let von = 0; ; von += SEITE) {
+    const { data: polData, error: polErr } = await supabase
+      .rpc('audit_rls_all_policies')
+      .range(von, von + SEITE - 1)
+    if (polErr) {
+      console.error('❌ audit_rls_all_policies fehlgeschlagen:', polErr.message)
+      process.exit(2)
+    }
+    const block = (polData ?? []) as PolicyRow[]
+    policies.push(...block)
+    if (block.length < SEITE) break
+    // Reissleine gegen eine Endlosschleife, falls `.range()` einmal
+    // ignoriert werden sollte: mehr Policies als das kann es nicht geben.
+    if (policies.length > 20000) {
+      console.error('❌ audit_rls_all_policies liefert unplausibel viele Zeilen — abgebrochen.')
+      process.exit(2)
+    }
   }
-  const policies = (polData ?? []) as PolicyRow[]
 
   // 3) Joinen + Matrix bauen (eine Zeile pro Policy, oder Platzhalter wenn keine)
   const rows: MatrixRow[] = []

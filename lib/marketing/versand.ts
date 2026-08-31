@@ -284,6 +284,7 @@ export function beispielKontakt(): MarketingKontakt {
     bundesland: 'Hessen',
     istTestkonto: true,
     istGeloescht: false,
+    istDipaNutzer: false,
     registrierungVollstaendig: true,
     registriertAm: null,
     letzteAktivitaet: null,

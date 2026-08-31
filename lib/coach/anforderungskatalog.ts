@@ -435,8 +435,22 @@ export const ANFORDERUNGSKATALOG: KatalogEintrag[] = [
     formulierung: 'Die Kernfunktion ist werbefrei; es findet kein Cross-Selling mit den Daten statt.',
     quelle: 'DiPAV §6 Abs. 4 ("Digitale Pflegeanwendungen müssen frei von Werbung sein."); §5 Abs. 5 (Zweckbindung, ausdrücklicher Werbeausschluss bei der Datenverarbeitung), Fassung 22.06.2026; zusätzlich audit/dipa/eul_konzept.md. Intern geprüft 14.08.2026.',
     anforderungstextGeprueft: true, stand: 'erfuellt',
-    nachweis: 'Tracker technisch abgeschaltet; E2E-Test prüft die tatsächlich geladenen Fremdhosts',
-    nachweisDateien: ['components/ClientSideProviders.tsx', 'e2e/pflegecoach.spec.ts', 'audit/dipa/eul_konzept.md'],
+    nachweis: 'Tracker technisch abgeschaltet; E2E-Test prüft die tatsächlich geladenen Fremdhosts. '
+      + 'ERGÄNZT 31.08.2026 — der bisherige Nachweis deckte nur die WERBEFREIHEIT DER OBERFLÄCHE ab '
+      + '(§6 Abs. 4) und sagte nichts zum Cross-Selling-Verbot aus §5 Abs. 5. Das fiel nicht auf, weil '
+      + 'es zum Zeitpunkt der Bewertung kein E-Mail-Marketing gab. Seit dem Marketing-/CRM-System '
+      + '(d3132095) gibt es eines, und seine Empfängerliste zog Kundenkonten ohne jede Rücksicht auf '
+      + 'eine PflegeCoach-Nutzung — ein Coach-Nutzer mit Kundenkonto wäre über die Kundenliste '
+      + 'bewerbbar gewesen. Live war noch nichts passiert (coach_users hatte 0 Zeilen), der Weg stand '
+      + 'aber offen. GESCHLOSSEN: MarketingKontakt trägt jetzt istDipaNutzer, lib/marketing/empfaenger.ts '
+      + 'lädt coach_users FAIL-CLOSED (unlesbar ⇒ Abbruch des Versands, nicht "niemand nutzt den Coach") '
+      + 'und markiert über Konto-Kennung UND Adresse, und pruefeEmpfaenger weist mit dem Grund '
+      + '"dipa_nutzer" ab — als einziger Ausschlussgrund noch VOR Testkonto und Sperrliste, und als '
+      + 'einziger, den auch eine ausdrücklich erteilte Einwilligung nicht aufhebt. Vier Regressionstests '
+      + 'in lib/marketing/einwilligung.test.ts, davon einer als Gegenprobe.',
+    nachweisDateien: ['components/ClientSideProviders.tsx', 'e2e/pflegecoach.spec.ts',
+      'audit/dipa/eul_konzept.md', 'lib/marketing/empfaenger.ts', 'lib/marketing/einwilligung.ts',
+      'lib/marketing/einwilligung.test.ts'],
     gapId: null, verantwortlich: 'technik',
   },
   {
