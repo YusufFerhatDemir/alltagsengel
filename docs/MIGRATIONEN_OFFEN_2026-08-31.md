@@ -36,13 +36,16 @@ zugeschlagen haben:
   `…_aktion_check`, nicht `…_action_check`. Eine LIKE-Probe meldete
   „fehlt", wo nichts fehlte.
 
-## Ergebnis: 10 offen, 24 stehen
+## Ergebnis: 11 offen, 24 stehen
 
 > **Fortschreibung 31.08.2026 (nachmittags):** zwei sind hinzugekommen,
 > beide aus **derselben Frage** — *feuert der Riegel auch beim EINFÜGEN?*
 > `20261023000000_signaturhash_beim_einfuegen` (Befund U11) und
-> `20261023000002_rechnung_eingangsstatus` (Befund R1). Sie stehen als
-> Nummer 9 und 10 unten. An den acht vorherigen hat sich nichts geändert.
+> `20261023000002_rechnung_eingangsstatus` (Befund R1) — und nach einem
+> Sweep über **alle** Trigger des Schemas eine dritte,
+> `20261023000004_eingangsriegel_lauf_und_vpkzp` (Befunde R2/R3). Sie
+> stehen als Nummer 9 bis 11 unten. An den acht vorherigen hat sich
+> nichts geändert.
 >
 > Die Frage lohnt sich, weil `pg_proc` sie nie beantwortet: der
 > Funktionsrumpf sieht in beiden Fällen vollständig aus. Erst
@@ -151,6 +154,20 @@ heutigen P0-Block.
 | **VORAB BEWIESEN** | `__tests__/migrations/rechnung-eingangsstatus-pglite.test.ts` — 8 Prüfungen gegen echtes PostgreSQL, mit der wortgleichen Funktion aus der Migration, dem echten `invoices_status_check` (beide Vokabulare) und einer Gegenprobe ohne Trigger. |
 | **VERIFIKATION** | `npm run verify:opos-mahnwesen` → **M17 muss von OFFEN auf OK springen**; die übrigen 17 müssen grün bleiben. |
 
+### 11 · `20261023000004_eingangsriegel_lauf_und_vpkzp` *(neu, 31.08.2026)*
+
+| | |
+|---|---|
+| **HERKUNFT** | Sweep über **alle** Trigger des Schemas: `pg_get_triggerdef(oid) LIKE '%BEFORE UPDATE%' AND NOT LIKE '%INSERT%'` → 90 Treffer. Der überwiegende Teil sind `set_updated_at`-Helfer und Audit-Unveränderlichkeit — dort ist UPDATE-only richtig. **Fünf** waren echte Fachriegel und wurden live geprobt (INSERT in einer Transaktion, die zurückrollt). |
+| **ERGEBNIS DER PROBE** | `billing_tariffs` (`tarif_status='verified'`) → **abgewiesen**, die Belegpflicht greift auch beim INSERT. `state_settings` (Kassenrechnung an) → **abgewiesen**, `chk_insurance_requires_anerkennung`; CHECKs gelten beim INSERT. `abrechnungslaeufe` (`status='uebermittelt'`) → **durchgelassen**. `client_vpkzp_usage` (Verbrauch vorbelegt) → **durchgelassen**. `bookings` (`status='completed'`) → durchgelassen, siehe unten. |
+| **BEFUND R2** | Ein Abrechnungslauf im Status `uebermittelt` behauptet eine Übermittlung nach § 105 SGB XI. Der Weg dorthin ist zwölf Stationen lang (validiert → freigegeben → exportiert → übertragen); ein INSERT überspringt alle. Übrig bleibt die Behauptung ohne Vorgang. |
+| **BEFUND R3** | `trg_vpkzp_usage_abgeleitet` sagt wörtlich, Verbrauchswerte würden „aus vpkzp_buchungen fortgeschrieben und nicht direkt gesetzt" — beim **Anlegen** ließen sie sich frei setzen (live mit 56/56 Tagen nachgewiesen). Beide Richtungen schaden: zu hoch lehnt Leistungen zu Unrecht ab (§ 39/§ 42 SGB XI, je 56 Tage), zu niedrig zeigt Budget, das es nicht gibt. |
+| **WIRKUNG AUF DEN BESTAND** | Keine. Trigger wirken nur nach vorn. `pg_trigger_depth() > 1` bleibt unangetastet — die Fortschreibung aus `vpkzp_buchungen` schreibt weiterhin. |
+| **NICHT ENTHALTEN** | `bookings`: eine nachträglich erfasste, bereits erfolgte Buchung ist ein plausibler Vorgang — anders als ein Lauf, der ohne Übertragung „übermittelt" ist. Ob die Nacherfassung erlaubt sein soll und in welchem Status, ist eine **fachliche Entscheidung** und keine, die eine Migration nebenbei trifft. Der Lauf misst den Fall und meldet ihn als Bericht (B5), nicht als Fehler. |
+| **EXAKTER SQL** | `supabase/migrations/20261023000004_eingangsriegel_lauf_und_vpkzp.sql` · Rollback: `…20261023000005_rollback_…sql` |
+| **VORAB BEWIESEN** | `__tests__/migrations/eingangsriegel-lauf-vpkzp-pglite.test.ts` — 10 Prüfungen gegen echtes PostgreSQL, jedes der vier Verbrauchsfelder einzeln, plus zwei Gegenproben (Anlage ohne Verbrauch muss gehen; UPDATE ohne Verbrauchsänderung muss gehen). |
+| **VERIFIKATION** | `npm run verify:trigger-eingang` → A3, A4, B2, B3 müssen von OFFEN auf OK springen. |
+
 ---
 
 ## Warum ich sie nicht selbst anwenden kann
@@ -175,12 +192,12 @@ Und es gibt keinen zweiten Weg in dieser Umgebung:
 | `supabase db push` | im Projekt ausdrücklich verboten (Zukunfts-Zeitstempel) |
 | `public._run_sql` | Lese-Orakel, rollt immer zurück, kein DDL |
 
-**Die zehn Dateien brauchen den Supabase-SQL-Editor als `postgres`.**
+**Die elf Dateien brauchen den Supabase-SQL-Editor als `postgres`.**
 
-Reihenfolge ist unkritisch — keine der zehn hängt von einer anderen ab.
+Reihenfolge ist unkritisch — keine der elf hängt von einer anderen ab.
 Empfehlung: 3, 4, 5 zuerst (die drei Unveränderlichkeits-Trigger der
 Pflegeakte, höchstes fachliches Risiko), dann 8 (schaltet drei Rollen
-funktionsfähig), dann **10** (P1, Geldweg), dann 1, 2, 7, 6, 9.
+funktionsfähig), dann **10 und 11** (P1, Geldwege), dann 1, 2, 7, 6, 9.
 
 Nach jeder Anwendung: `npm run check:migrationen` — der Lauf sagt
 selbst, welche noch offen sind.
