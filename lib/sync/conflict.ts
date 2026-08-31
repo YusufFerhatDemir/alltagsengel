@@ -9,26 +9,52 @@ import type { KonfliktStrategie } from '@/lib/offline/types'
 export interface KonfliktPruefung {
   serverUpdatedAt: string | null
   basisUpdatedAt: string | null | undefined
+  /**
+   * Welche Aenderung der Client schickt. Nur fuer 'update' ist ein
+   * fehlender Basis-Snapshot ein Konflikt — siehe hatKonflikt().
+   * Fehlt das Feld, gilt das alte, mildere Verhalten.
+   */
+  aktion?: 'create' | 'update' | 'delete'
 }
 
 /**
  * Ein Konflikt liegt vor, wenn der Client eine Änderung auf einem
  * Snapshot aufbaut (`basisUpdatedAt`), der Server-Datensatz sich aber
- * inzwischen weiterentwickelt hat. Ohne `basisUpdatedAt` (Client kennt
- * seinen Ausgangszustand nicht — z. B. reine 'create'-Aktion) kann kein
- * Konflikt erkannt werden; das Update wird dann unkonditioniert
- * angewendet (bestehendes Verhalten vor Block 20).
+ * inzwischen weiterentwickelt hat.
  *
- * Fail-closed in die andere Richtung: liegt ein `basisUpdatedAt` vor,
- * laesst sich der Server-Stand aber nicht ermitteln oder nicht als Datum
- * lesen, gilt das als Konflikt. Andernfalls entschiede ein fehlender
- * Zeitstempel zugunsten der lokalen Aenderung — und genau dann sind
- * Server-Daten still weg.
+ * Durchgehend fail-closed — jeder Fall, in dem sich der Ausgangszustand
+ * NICHT bestaetigen laesst, gilt als Konflikt:
+ *
+ *  · `basisUpdatedAt` fehlt und `aktion` ist 'update' — die Offline-
+ *    Aenderung nennt keinen Ausgangszustand, ist aber per Definition
+ *    alt. Sie darf nicht ungeprueft gewinnen.
+ *  · `basisUpdatedAt` liegt vor, der Server-Stand fehlt oder ist nicht
+ *    als Datum lesbar.
+ *  · beide lesbar, aber verschieden.
+ *
+ * Andernfalls entschiede ein fehlender Zeitstempel zugunsten der
+ * lokalen Aenderung — und genau dann sind Server-Daten still weg.
  */
-export function hatKonflikt({ serverUpdatedAt, basisUpdatedAt }: KonfliktPruefung): boolean {
-  // Kein Basis-Snapshot: der Client behauptet gar keinen Ausgangszustand
-  // (reine 'create'-Aktion). Es gibt nichts zu vergleichen.
-  if (!basisUpdatedAt) return false
+export function hatKonflikt({ serverUpdatedAt, basisUpdatedAt, aktion }: KonfliktPruefung): boolean {
+  // ── Kein Basis-Snapshot ───────────────────────────────────────────
+  // Bei einer 'update'-Aenderung ist das KEIN harmloser Fall, sondern
+  // der gefaehrlichste: eine Offline-Bearbeitung ist per Definition
+  // alt, und ohne Snapshot laesst sich nicht sagen, worauf sie
+  // aufsetzt. Bisher gewann sie hier kommentarlos und ueberschrieb
+  // eine womoeglich neuere Serverfassung — die Konfliktstrategie
+  // ('server_wins', 'manuell') und die Konfliktansicht sahen davon
+  // nie etwas.
+  //
+  // Die Gegenprobe, warum das kein theoretischer Fall war: der einzige
+  // Aufrufer (app/api/sync/route.ts) ruft hatKonflikt() ausschliesslich
+  // fuer 'update' auf. Der frueher hier genannte „create-Fall" konnte
+  // diese Zeile also gar nicht erreichen; was sie erreichte, war
+  // ausnahmslos ein Update ohne Snapshot.
+  //
+  // Ohne 'aktion' bleibt es beim alten, milderen Verhalten — ein
+  // Aufrufer, der die Aktion nicht kennt, soll nicht ploetzlich
+  // Konflikte melden.
+  if (!basisUpdatedAt) return aktion === 'update'
 
   // Ab hier behauptet der Client, auf einem bestimmten Stand aufzusetzen.
   // Laesst sich das NICHT bestaetigen, ist das ein Konflikt und kein
