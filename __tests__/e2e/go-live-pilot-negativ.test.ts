@@ -76,6 +76,10 @@ function seedRechnung(db: FakeBillingDb, overrides: Record<string, unknown> = {}
     payment_terms_days: 14,
     version: 1,
     deleted_at: null,
+    // Festgeschrieben: eine freigegebene Rechnung hat frozen_at (freezeInvoice
+    // setzt Status + frozen_at gemeinsam). getOposListe verlangt frozen_at,
+    // sonst gilt die Zeile als synthetisch und fällt aus den offenen Posten.
+    frozen_at: `${PERIOD}-15T10:05:00Z`,
     ...overrides,
   })
 }
