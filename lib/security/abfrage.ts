@@ -25,6 +25,10 @@ import {
   type Kategorie, type Schweregrad,
 } from './ereignisse'
 import { alarmZustaende, alarmKurzfassung, LEERER_ALARM, type Alarmzustand } from './alarmspur'
+import {
+  provenienzAus, istEchteNutzeraktivitaet, BEZEICHNUNG_PROVENIENZ,
+  ECHTE_PROVENIENZEN, type Provenienz,
+} from './herkunft'
 import { ueberwachteKonten } from './watchlist'
 
 type AdminClient = ReturnType<typeof createAdminClient>
@@ -58,6 +62,13 @@ export interface SpurFilter {
   severity?: Schweregrad | null
   plattform?: string | null
   ip?: string | null
+  /**
+   * Herkunftsfilter. 'echt' zeigt nur belegte Nutzeraktivitaet,
+   * 'nicht_echt' nur Nachgestelltes und Unbelegtes. Das ist die Frage,
+   * die am 31.08.2026 nicht stellbar war: „zeig mir, was WIRKLICH
+   * passiert ist".
+   */
+  herkunft?: 'echt' | 'nicht_echt' | null
   seite?: number
   seitengroesse?: number
   sortierFeld?: Sortierfeld
@@ -93,6 +104,15 @@ export interface SpurZeile {
   alarm: Alarmzustand
   /** Steht das betroffene Konto auf der aktiven Ueberwachungsliste? */
   ueberwacht: boolean
+  /**
+   * Herkunft der Zeile — echt oder nachgestellt. `null` bei Zeilen aus
+   * der Zeit vor der Kennzeichnung (vor dem 31.08.2026); ueber die ist
+   * nichts belegt, und sie gelten deshalb NICHT als echt.
+   */
+  provenienz: Provenienz | null
+  provenienzBezeichnung: string
+  /** Fail-closed: nur die drei belegten Echt-Provenienzen ergeben true. */
+  echteNutzeraktivitaet: boolean
 }
 
 export interface SpurErgebnis {
@@ -151,6 +171,18 @@ function abfrage(admin: AdminClient, f: SpurFilter, spalten: string, zaehlen: bo
   // laesst PostgREST mit 400 antworten — der Filter wird dann still
   // ignoriert statt die ganze Seite zu zerlegen.
   if (f.ip && istIp(f.ip)) q = q.eq('ip_address', f.ip)
+
+  // Herkunft. Gefiltert wird auf metadata->>provenienz — PostgREST kann
+  // das, und eine eigene Spalte gibt es nicht (DDL ist gesperrt, siehe
+  // lib/security/herkunft.ts). `nicht_echt` ist bewusst KEINE
+  // Aufzaehlung der drei Nicht-Echt-Werte, sondern das Gegenteil der
+  // drei Echt-Werte: so faellt auch das Unbelegte hinein, und genau das
+  // soll es — nicht belegt ist nicht echt.
+  if (f.herkunft === 'echt') {
+    q = q.in('metadata->>provenienz', [...ECHTE_PROVENIENZEN])
+  } else if (f.herkunft === 'nicht_echt') {
+    q = q.not('metadata->>provenienz', 'in', `(${ECHTE_PROVENIENZEN.join(',')})`)
+  }
 
   return q
 }
@@ -241,6 +273,12 @@ async function anreichern(admin: AdminClient, roh: RohZeile[]): Promise<SpurZeil
       metadata: r.metadata,
       alarm: alarme.get(r.id) ?? LEERER_ALARM,
       ueberwacht: !!r.user_id && ueberwacht.has(r.user_id),
+      provenienz: provenienzAus(r.metadata),
+      provenienzBezeichnung: (() => {
+        const p = provenienzAus(r.metadata)
+        return p ? BEZEICHNUNG_PROVENIENZ[p] : 'Herkunft unbelegt (Zeile vor dem 31.08.2026)'
+      })(),
+      echteNutzeraktivitaet: istEchteNutzeraktivitaet(provenienzAus(r.metadata)),
     }
   })
 }
@@ -289,6 +327,10 @@ export async function exportiereSpur(admin: AdminClient, f: SpurFilter): Promise
   const zeilen = await anreichern(admin, (data ?? []) as unknown as RohZeile[])
 
   const kopf = [
+    // Herkunft steht VORNE, nicht am Ende: wer die Datei oeffnet, soll
+    // nicht erst nach rechts scrollen muessen, um zu sehen, welche
+    // Zeilen ueberhaupt echtes Nutzerverhalten belegen.
+    'Herkunft', 'Echte Nutzeraktivität',
     'Ereignis-ID', 'Zeitpunkt (UTC)', 'Ereignis', 'Ereignistyp', 'Kategorie',
     'Schweregrad', 'Konto-ID', 'E-Mail', 'Name', 'Organisation',
     'IP-Adresse', 'Plattform', 'Gerät', 'User-Agent', 'App-Version',
@@ -303,6 +345,7 @@ export async function exportiereSpur(admin: AdminClient, f: SpurFilter): Promise
   ]
 
   const koerper = zeilen.map(z => csvZeile([
+    z.provenienz ?? 'UNBELEGT', z.echteNutzeraktivitaet ? 'ja' : 'nein',
     z.id, z.createdAt, z.eventBezeichnung, z.eventType, z.kategorieBezeichnung,
     z.severityBezeichnung, z.userId, z.userEmail, z.userName, z.organisationsName,
     z.ip, z.plattform, z.geraet, z.userAgent, z.appVersion,

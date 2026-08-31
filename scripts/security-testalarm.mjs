@@ -13,11 +13,15 @@
  *  1. KEINE ERFUNDENE ANMELDUNG. Es wird NIE 'login_success' geschrieben.
  *     Eine erfundene Anmeldung waere eine Falschaussage in genau dem
  *     Protokoll, das eine Falschaussage ausschliessen soll.
- *  2. WAHR, WAS DRINSTEHT. Geschrieben wird 'security_action' —
- *     „sicherheitskritische Aktion". Ein Kettentest IST eine
- *     administrative Sicherheitshandlung; die Zeile sagt die Wahrheit.
- *     Die Metadaten sagen zusaetzlich ausdruecklich, dass es ein Test war
- *     und dass KEINE Anmeldung und KEIN Vorfall dahintersteht.
+ *  2. EIGENER EREIGNISTYP. Geschrieben wird 'test_alert', nicht
+ *     'security_action'. Der erste Lauf am 31.08.2026 nahm noch
+ *     'security_action' — „sicherheitskritische Aktion" —, und genau
+ *     daraus wurde geschlossen, das Konto sei zu dieser Zeit angemeldet
+ *     gewesen. Es gab an dem Tag keine Anmeldung. Ein Test, der wie ein
+ *     Vorfall aussieht, ist ein Fehler im Werkzeug, nicht im Leser.
+ *     Zusaetzlich traegt die Zeile die Provenienz TEST_ALERT — eine
+ *     auswertbare Angabe, kein Fliesstext — und der Betreff der Mail
+ *     bekommt daraus ein sichtbares [TESTALARM].
  *  3. GENAU EINE ZEILE, NUR MIT --doit. Ohne die Bestaetigung laeuft ein
  *     Trockenlauf. Es geht eine echte Mail raus — an die Adresse, die in
  *     der Ueberwachungsliste steht, an niemanden sonst.
@@ -70,7 +74,8 @@ console.log('\n═══ TESTALARM ═══')
 console.log(`Konto        : ${profil ? `${profil.first_name ?? ''} ${profil.last_name ?? ''}`.trim() : 'UNBEKANNT'} <${profil?.email ?? '—'}> (${profil?.role ?? '—'})`)
 console.log(`Ueberwachung : ${wl ? `aktiv=${wl.aktiv}, alle_ereignisse=${wl.alle_ereignisse}, ohne_sperrfrist=${wl.ohne_sperrfrist}` : 'KEIN EINTRAG'}`)
 console.log(`Mail geht an : ${wl?.melde_email ?? profil?.email ?? '— keine Adresse bekannt'}`)
-console.log(`Ereignistyp  : security_action  (NICHT login_success — keine erfundene Anmeldung)`)
+console.log(`Ereignistyp  : test_alert  (NICHT login_success, NICHT security_action)`)
+console.log(`Provenienz   : TEST_ALERT  → Betreff traegt [TESTALARM]`)
 console.log(`Modus        : ${scharf ? 'SCHARF — eine unloeschbare Zeile + eine echte Mail' : 'Trockenlauf'}`)
 
 if (!wl?.aktiv && !['superadmin', 'admin', 'pdl', 'qm', 'buchhaltung'].includes(profil?.role)) {
@@ -84,8 +89,9 @@ if (!scharf) {
 // ── Ausloesen ueber die vorgesehene Funktion ────────────────────────────
 const stempel = new Date().toISOString()
 const ergebnis = await erfasseSicherheitsereignis({
-  eventType: 'security_action',
+  eventType: 'test_alert',
   userId,
+  alsTest: 'TEST_ALERT',
   metadata: {
     pruefung: 'Alarmkette Ereignis -> Regel -> Alarm -> Mail -> Zustellstatus beim Provider',
     hinweis: 'KEINE Anmeldung und KEIN Vorfall. Diese Zeile belegt einen Funktionstest der Meldekette.',

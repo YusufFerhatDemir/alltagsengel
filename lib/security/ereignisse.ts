@@ -284,6 +284,39 @@ export const EREIGNISSE: Readonly<Record<string, EreignisRegel>> = {
     kategorie: 'admin', schweregrad: 'warning', meldepflichtig: false,
     bezeichnung: 'Standortansicht geoeffnet',
   },
+
+  // ── Sitzung ────────────────────────────────────────────────────────
+  // Eine erneuerte Sitzung ist KEINE neue Anmeldung. Bisher fehlte der
+  // Typ, und eine Erneuerung waere entweder gar nicht oder faelschlich
+  // als `login_success` aufgezeichnet worden — also als ein
+  // Anmeldevorgang, den es nie gab.
+  session_refresh: {
+    kategorie: 'session', schweregrad: 'info', meldepflichtig: false,
+    bezeichnung: 'Sitzung erneuert',
+  },
+
+  // ── Tests ──────────────────────────────────────────────────────────
+  //
+  // WARUM EIGENE EREIGNISTYPEN UND NICHT NUR EIN VERMERK
+  // Am 31.08.2026 wurde ein Funktionstest als `security_action` in die
+  // Spur geschrieben — also als „sicherheitskritische Aktion". Dass es
+  // ein Test war, stand nur im Fliesstext eines Metadatenfeldes. Die
+  // Mail hiess „Sicherheitshinweis: Sicherheitskritische Aktion", und
+  // daraus wurde geschlossen, das Konto sei zu dieser Zeit angemeldet
+  // gewesen. Es gab an dem Tag ueberhaupt keine Anmeldung.
+  //
+  // Ein Test bekommt deshalb einen EIGENEN Ereignistyp. Er ist damit
+  // filterbar, in der Liste unterscheidbar, und die Bezeichnung sagt es
+  // schon im Betreff. `meldepflichtig: true` ist Absicht — ein
+  // Testalarm, der keine Mail ausloest, testet nichts.
+  test_alert: {
+    kategorie: 'admin', schweregrad: 'info', meldepflichtig: true,
+    bezeichnung: 'TESTALARM (kein Vorfall)',
+  },
+  admin_test: {
+    kategorie: 'admin', schweregrad: 'info', meldepflichtig: true,
+    bezeichnung: 'VERWALTUNGSTEST (kein Vorfall)',
+  },
 }
 
 export type Ereignistyp = keyof typeof EREIGNISSE
@@ -317,6 +350,7 @@ export const UEBERWACHUNGS_EREIGNISSE: readonly string[] = [
   'logout',
   'session_start',
   'session_end',
+  'session_refresh',
   'app_start',
   // Geraet
   'unknown_device',
@@ -335,6 +369,11 @@ export const UEBERWACHUNGS_EREIGNISSE: readonly string[] = [
   'role_change',
   'permission_change',
   'org_change',
+  // Tests — ausdruecklich mit im Satz: ein Testalarm, der bei einem
+  // ueberwachten Konto keine Mail ausloest, testet nicht die Kette,
+  // sondern nur sich selbst.
+  'test_alert',
+  'admin_test',
   // Sicherheit
   'security_action',
   'blocked_action',
