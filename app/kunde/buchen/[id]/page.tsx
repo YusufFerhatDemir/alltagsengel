@@ -82,10 +82,15 @@ export default function BuchenPage() {
       // Zeitfenster des Engels — Grundlage für die Verfügbarkeitsprüfung
       // unten. Fehler hier dürfen die Buchungsseite nicht blockieren:
       // ohne Zeitfenster greift der Fallback in lib/availability.
-      const { data: slotRows } = await supabase
+      const { data: slotRows, error: slotErr } = await supabase
         .from('angel_availability')
         .select('weekday, start_time, end_time')
         .eq('angel_id', angelId)
+      // Bewusst nicht blockierend (siehe oben) — aber nicht still: ohne
+      // diese Zeile ist ein Ausfall der Zeitfenster von „Engel hat keine
+      // hinterlegt" nicht zu unterscheiden, und der Fallback greift, ohne
+      // dass es jemand erfaehrt.
+      if (slotErr) logError('BuchenPage:loadSlots', slotErr.message)
       setSlots((slotRows || []) as Zeitfenster[])
       setPageStatus('ok')
     } catch (err) {

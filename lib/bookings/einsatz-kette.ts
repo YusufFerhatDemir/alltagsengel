@@ -49,6 +49,10 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { tarifLeistungsart, normalisiereLeistungsart, type TarifLeistungsart } from '@/lib/billing/leistungsarten'
 import { pruefeEinsatzfreigabe, pruefeClientFreigabe, pruefeBudget } from '@/lib/personal/einsatzfreigabe'
 import type { BudgetTyp } from '@/lib/config/budget-constants'
+import { einsatzNotizFuerBuchung, istSpalteFehltFehler } from '@/lib/bookings/assignment-bezug'
+import { logger } from '@/lib/logger'
+
+const log = logger.child('bookings:einsatz-kette')
 
 // ─── Fehlerklassen ─────────────────────────────────────────────────
 
@@ -380,16 +384,42 @@ export async function erzeugeEinsatzUndNachweis(
     status: 'GEPLANT',
     is_recurring: false,
     created_by: actorId,
-    notes: `Automatisch aus Buchung ${booking.id} erzeugt.`,
+    // Die Notiz bleibt — sie ist Rueckfall-Bezug, solange
+    // `assignments.booking_id` nicht ueberall angewendet ist, und
+    // ausserdem der Text, den die Einsatzliste lesbar anzeigt.
+    notes: einsatzNotizFuerBuchung(booking.id),
   }
   if (client.address) assignmentInsert.address = client.address
   if (client.zip_code) assignmentInsert.zip_code = client.zip_code
 
-  const { data: assignment, error: assignmentError } = await admin
+  // Der belastbare Bezug: eine Spalte, auf die kein Fachprozess schreibt
+  // (Migration 20261025000000). Die Migration wird von Hand angewendet —
+  // zwischen diesem Deploy und dem SQL-Editor liegt ein Fenster, in dem
+  // die Spalte fehlt. Deshalb wird der INSERT bei genau diesem Fehler
+  // OHNE die Spalte wiederholt, statt die Buchungsannahme scheitern zu
+  // lassen. Der Notiz-Bezug oben traegt den Fall solange.
+  const assignmentMitBezug = { ...assignmentInsert, booking_id: booking.id }
+
+  let { data: assignment, error: assignmentError } = await admin
     .from('assignments')
-    .insert(assignmentInsert)
+    .insert(assignmentMitBezug)
     .select('id')
     .single()
+
+  if (assignmentError && istSpalteFehltFehler(assignmentError)) {
+    log.warn(
+      'assignments.booking_id fehlt — Einsatz wird ohne Spaltenbezug angelegt. '
+      + 'Migration 20261025000000 ist noch nicht angewendet; der Bezug haengt '
+      + 'solange allein an der Notiz und ist dort ueberschreibbar.',
+    )
+    const ohne = await admin
+      .from('assignments')
+      .insert(assignmentInsert)
+      .select('id')
+      .single()
+    assignment = ohne.data
+    assignmentError = ohne.error
+  }
 
   if (assignmentError || !assignment) {
     const meldung = assignmentError?.message ?? 'unbekannt'

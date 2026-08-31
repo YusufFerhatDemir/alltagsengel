@@ -37,17 +37,23 @@ export default function ZuordnungPage() {
     async function load() {
       const supabase = createClient()
 
-      const { data: pay } = await supabase
+      // „Zahlung nicht gefunden." ist eine Aussage ueber den Bestand. Bei
+      // gestoerter Abfrage ist sie falsch — und der Eingang bliebe
+      // unzugeordnet liegen.
+      const { data: pay, error: payErr } = await supabase
         .from('payments')
         .select('*')
         .eq('id', paymentId)
-        .single()
+        .maybeSingle()
+      if (payErr) { setError('Die Zahlung konnte nicht geladen werden. Bitte laden Sie die Seite neu.'); setLoading(false); return }
       if (!pay) { setError('Zahlung nicht gefunden.'); setLoading(false); return }
       setPayment(pay)
 
       const unallocated = pay.amount_cents - (pay.allocated_cents || 0)
 
-      const { data: invs } = await supabase
+      // Eine leere Rechnungsliste heisst „nichts zuzuordnen". Bei gestoerter
+      // Abfrage stimmt das nicht, und der Zahlungseingang bliebe offen.
+      const { data: invs, error: invsErr } = await supabase
         .from('invoices')
         .select('id, invoice_number, invoice_number_formatted, total_amount, paid_amount, status, period_start, client:clients(first_name, last_name)')
         // Gemeinsame Liste — beide Vokabulare von invoices.status.
@@ -55,6 +61,8 @@ export default function ZuordnungPage() {
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(100)
+
+      if (invsErr) { setError('Die offenen Rechnungen konnten nicht geladen werden. Bitte laden Sie die Seite neu.'); setLoading(false); return }
 
       setInvoices((invs || []).map((i: any) => {
         const total = Number(i.total_amount || 0)

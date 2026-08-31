@@ -245,11 +245,29 @@ function LoginForm() {
     // herabgestuft worden war, weiter in den Verwaltungsbereich, aus dem
     // ihn der Proxy sofort wieder herauswarf. Fuer die Zugriffskontrolle
     // war das folgenlos, fuer die Person ein Sprung ins Leere.
-    const { data: profil } = await supabase
+    //
+    // BEFUND 31.08.2026: Der Fehler dieser Abfrage wurde verworfen. Der
+    // Anmelde-Callback hat denselben Fall am selben Tag geschlossen
+    // (`rolle_nicht_pruefbar`), diese Seite nicht. Ohne lesbares Profil ist
+    // `profilRolle` leer, und wirksameRolle() liefert '' — die Anmeldung
+    // schickt dann JEDE Rolle in den Kunden-Zweig. Der Proxy scheitert an
+    // derselben Abfrage, faellt fail-closed zurueck auf /auth/login, und
+    // die Person sitzt in einer Schleife, die ihr „auth_required"
+    // meldet — also einen Anmeldefehler, obwohl die Anmeldung geklappt hat.
+    //
+    // Die bindende Rollenquelle ist nicht lesbar, also wird nicht
+    // entschieden: Meldung statt Weiterleitung.
+    const { data: profil, error: profilFehler } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .maybeSingle()
+    if (profilFehler) {
+      log.error(`Rollenabfrage bei Anmeldung fehlgeschlagen: ${profilFehler.message}`)
+      setError('Ihre Anmeldung hat geklappt, aber Ihre Berechtigungen konnten nicht geladen werden. Bitte versuchen Sie es in einem Moment erneut.')
+      setLoading(false)
+      return
+    }
     const role = wirksameRolle(
       (user.app_metadata?.role as string) || '',
       (profil?.role as string) || '',
@@ -277,12 +295,21 @@ function LoginForm() {
       // dort entscheidet erst der Angehoerigen-Zugang ueber das Ziel.
     } else {
       // Prüfe ob der User einen aktiven Angehörigen-Zugang hat
-      const { data: zugaenge } = await supabase
+      // Auch hier gilt: „kein Zugang" und „nicht nachsehen koennen" sind
+      // verschiedene Aussagen. Nur die erste rechtfertigt /kunde/home.
+      const { data: zugaenge, error: zugangFehler } = await supabase
         .from('angehoerigen_zugaenge')
         .select('id')
         .eq('user_id', user.id)
         .eq('status', 'aktiv')
         .limit(1)
+
+      if (zugangFehler) {
+        log.error(`Angehoerigen-Zugang bei Anmeldung nicht pruefbar: ${zugangFehler.message}`)
+        setError('Ihre Anmeldung hat geklappt, aber Ihr Zugang konnte nicht geprüft werden. Bitte versuchen Sie es in einem Moment erneut.')
+        setLoading(false)
+        return
+      }
 
       if (zugaenge && zugaenge.length > 0) {
         window.location.href = '/angehoerige'

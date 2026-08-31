@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { IconDocument } from '@/components/Icons'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:mahnwesen')
 
 // ═══════════════════════════════════════════════════════════════
 // Mahnwesen — Übersicht, PDF-Generierung, E-Mail-Versand
@@ -79,6 +81,7 @@ interface DunningRunResult {
 export default function MahnwesenPage() {
   const [entries, setEntries] = useState<DunningEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [ladeFehler, setLadeFehler] = useState(false)
   const [generating, setGenerating] = useState<string | null>(null)
   const [preview, setPreview] = useState<{ html: string; email: { subject: string; body: string } } | null>(null)
   const [lauf, setLauf] = useState<DunningRunResult | null>(null)
@@ -134,11 +137,20 @@ export default function MahnwesenPage() {
   const loadData = useCallback(async () => {
     setLoading(true)
     const supabase = createClient()
-    const { data } = await supabase
+    // „Keine offenen Mahnungen." ueber einer gestoerten Abfrage heisst: der
+    // Mahnlauf wird uebersprungen und Forderungen verjaehren still.
+    const { data, error: entriesErr } = await supabase
       .from('dunning_entries')
       .select('*, invoice:invoices(invoice_number, invoice_number_formatted, client:clients(first_name, last_name))')
       .neq('dunning_level', 'bezahlt')
       .order('days_overdue', { ascending: false })
+    if (entriesErr) {
+      log.error(`Mahnliste laden fehlgeschlagen: ${entriesErr.message}`)
+      setLadeFehler(true)
+      setLoading(false)
+      return
+    }
+    setLadeFehler(false)
     setEntries((data || []) as DunningEntry[])
     setLoading(false)
   }, [])
@@ -392,8 +404,10 @@ export default function MahnwesenPage() {
               )
             })}
             {entries.length === 0 && (
-              <tr><td colSpan={8} style={{ ...tdStyle, textAlign: 'center', color: '#999' }}>
-                Keine offenen Mahnungen.
+              <tr><td colSpan={8} style={{ ...tdStyle, textAlign: 'center', color: ladeFehler ? '#c62828' : '#999' }}>
+                {ladeFehler
+                  ? 'Die Mahnliste konnte nicht geladen werden. Bitte laden Sie die Seite neu — dies ist KEINE Aussage über offene Forderungen.'
+                  : 'Keine offenen Mahnungen.'}
               </td></tr>
             )}
           </tbody>

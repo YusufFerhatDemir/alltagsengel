@@ -76,12 +76,17 @@ export default function UrlaubPage() {
 
       // Urlaubskonto (aktuelles Jahr)
       const currentYear = new Date().getFullYear()
-      const { data: kontoData } = await supabase
+      // Der Resturlaub ist eine Zahl, nach der jemand seinen Antrag stellt.
+      // Ihr Fehler wurde bis 31.08.2026 verworfen — dann stand das Konto
+      // einfach nicht da, als waere keines gefuehrt. Der Fehler gehoert in
+      // denselben Zweig wie die Abwesenheiten (throw → catch unten).
+      const { data: kontoData, error: kontoErr } = await supabase
         .from('personal_urlaubskonto')
         .select('anspruch_tage, genommen_tage, geplant_tage, uebertrag_vorjahr, resturlaub')
         .eq('caregiver_id', cgId)
         .eq('jahr', currentYear)
         .maybeSingle()
+      if (kontoErr) throw kontoErr
       setKonto(kontoData as Urlaubskonto | null)
 
       // Abwesenheiten

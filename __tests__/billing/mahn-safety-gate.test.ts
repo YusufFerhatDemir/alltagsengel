@@ -77,7 +77,10 @@ interface Lage {
   korrekturen?: { id: string; status: string }[]
   korrekturenFehler?: string
   beanstandungen?: { id: string }[]
+  beanstandungenFehler?: string
   differenzen?: { id: string }[]
+  differenzenFehler?: string
+  eintragFehler?: string
   queue?: { id: string; status: string }[]
   queueFehler?: string
 }
@@ -93,10 +96,15 @@ function db(lage: Lage = {}) {
           ? { error: { message: lage.korrekturenFehler } }
           : { data: lage.korrekturen ?? [] }
       case 'invoice_disputes':
-        return { data: lage.beanstandungen ?? [] }
+        return lage.beanstandungenFehler
+          ? { error: { message: lage.beanstandungenFehler } }
+          : { data: lage.beanstandungen ?? [] }
       case 'payment_differences':
-        return { data: lage.differenzen ?? [] }
+        return lage.differenzenFehler
+          ? { error: { message: lage.differenzenFehler } }
+          : { data: lage.differenzen ?? [] }
       case 'dunning_entries':
+        if (lage.eintragFehler) return { error: { message: lage.eintragFehler } }
         return { data: lage.eintrag === undefined ? EINTRAG_OK : lage.eintrag }
       case 'dunning_email_queue':
         return lage.queueFehler
@@ -474,5 +482,60 @@ describe('MahnungGesperrtError', () => {
     const fehler = new MahnungGesperrtError(ergebnis)
     expect(fehler.message).not.toBe('Mahnung blockiert: ')
     expect(fehler.message).toContain('noch nicht überschritten')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════
+// Wenn die Prüfung SELBST scheitert
+// ═══════════════════════════════════════════════════════════════════════
+//
+// BEFUND 31.08.2026: Punkt 6 (Gutschrift) behandelte seinen Abfragefehler
+// richtig und sperrte. Punkt 7 (Beanstandung/Widerspruch) und Punkt 8/9
+// (Mahneintrag) verwarfen ihren — im selben `pruefeMahnbarkeit`, wenige
+// Zeilen darunter. Bei einer Störung meldeten sie ausgerechnet
+// „Keine Beanstandung, kein offener Widerspruch." bzw. „Keine manuelle
+// Sperre gesetzt.", also FREI.
+//
+// Damit ging eine Mahnung an jemanden, der der Forderung ausdrücklich
+// widersprochen hat, oder auf eine Rechnung, die jemand von Hand gestoppt
+// hatte. Ein Tor, das bei eigener Störung öffnet, ist kein Tor.
+describe('Eine gestörte Prüfung sperrt, statt durchzulassen', () => {
+  it('sperrt, wenn Beanstandungen nicht abfragbar sind', async () => {
+    const { ergebnis } = await gate({ beanstandungenFehler: 'timeout' })
+    expect(punkt(ergebnis, 'beanstandung').stand).toBe('gesperrt')
+    expect(punkt(ergebnis, 'beanstandung').befund).toContain('nicht prüfbar')
+    expect(ergebnis.darfMahnen).toBe(false)
+  })
+
+  it('sperrt, wenn Widersprüche gegen eine Kürzung nicht abfragbar sind', async () => {
+    const { ergebnis } = await gate({ differenzenFehler: 'connection reset' })
+    expect(punkt(ergebnis, 'beanstandung').stand).toBe('gesperrt')
+    expect(ergebnis.darfMahnen).toBe(false)
+  })
+
+  it('sperrt, wenn der Mahnstand nicht lesbar ist', async () => {
+    // Sonst bliebe `block_dunning` ungesehen: eine von Hand gestoppte
+    // Mahnung liefe wieder an, und zwar mit der Meldung „Keine manuelle
+    // Sperre gesetzt."
+    const { ergebnis } = await gate({ eintragFehler: 'timeout' })
+    expect(punkt(ergebnis, 'manuelle_sperre').stand).toBe('gesperrt')
+    expect(punkt(ergebnis, 'manuelle_sperre').befund).toContain('nicht prüfbar')
+    expect(ergebnis.darfMahnen).toBe(false)
+  })
+
+  it('meldet KEINE Entwarnung, wenn die Abfrage ausgefallen ist', async () => {
+    // Der Kern des Befundes: der Befundtext darf nicht behaupten, es gebe
+    // nichts — die Prüfung konnte gar nicht nachsehen.
+    const { ergebnis } = await gate({ beanstandungenFehler: 'timeout' })
+    expect(punkt(ergebnis, 'beanstandung').befund)
+      .not.toContain('Keine Beanstandung')
+  })
+
+  it('lässt eine saubere Lage weiterhin durch', async () => {
+    // Gegenprobe: die Sperren oben dürfen nicht dauerhaft schließen.
+    const { ergebnis } = await gate()
+    expect(punkt(ergebnis, 'beanstandung').stand).toBe('frei')
+    expect(punkt(ergebnis, 'manuelle_sperre').stand).toBe('frei')
+    expect(ergebnis.darfMahnen).toBe(true)
   })
 })

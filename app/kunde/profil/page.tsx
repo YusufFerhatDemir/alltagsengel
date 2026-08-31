@@ -19,6 +19,7 @@ export default function KundeProfilPage() {
   const router = useRouter()
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [ladeFehler, setLadeFehler] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -65,7 +66,17 @@ export default function KundeProfilPage() {
 
       const supabase = createClient()
 
-      const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+      // Diese Seite zeigt Name, Ort und PLZ — und speichert sie auch. Ein
+      // verworfener Ladefehler liess sie leer stehen („...", „—"), und die
+      // PLZ-Eingabe haette den gespeicherten Wert ueberschrieben.
+      const { data: p, error: profilFehler } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
+      if (profilFehler) {
+        log.error(`Profil laden fehlgeschlagen: ${profilFehler.message}`)
+        setLadeFehler(true)
+        setLoading(false)
+        return
+      }
+      setLadeFehler(false)
       setProfile(p)
       setPlzInput(resolvePlz(p?.postal_code, p?.location) || '')
 
@@ -85,6 +96,19 @@ export default function KundeProfilPage() {
   const loc = profile?.location || '—'
 
   if (loading) return <div className="screen" id="mprofil"><div className="mp-header"><div className="mp-nav"><Link href="/kunde/home" className="mp-back">‹</Link><div className="mp-title">Mein Profil</div></div></div></div>
+
+  // Kein leeres Profil ueber ungelesenen Daten: „...", „—" und ein leeres
+  // PLZ-Feld sehen aus wie fehlende Angaben und werden auch so korrigiert.
+  if (ladeFehler) return (
+    <div className="screen" id="mprofil">
+      <div className="mp-header"><div className="mp-nav"><Link href="/kunde/home" className="mp-back">‹</Link><div className="mp-title">Mein Profil</div></div></div>
+      <div style={{ padding: '40px 24px', textAlign: 'center' }}>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
+        <div style={{ fontWeight: 600, fontSize: 17, marginBottom: 8 }}>Ihr Profil konnte nicht geladen werden</div>
+        <div style={{ fontSize: 13, opacity: 0.6, marginBottom: 20 }}>Bitte laden Sie die Seite neu. Ihre gespeicherten Angaben bestehen weiter.</div>
+      </div>
+    </div>
+  )
 
   return (
     <div className="screen" id="mprofil">

@@ -79,7 +79,12 @@ export default function LeistungsnachweisUploadPage() {
   useEffect(() => {
     async function load() {
       const supabase = createClient()
-      const { data } = await supabase.from('clients').select('id, first_name, last_name').order('last_name')
+      const { data, error: clientsErr } = await supabase.from('clients').select('id, first_name, last_name').order('last_name')
+      if (clientsErr) {
+        log.errorWithException('Klientenliste Ladefehler', clientsErr)
+        setError('Die Klientenliste konnte nicht geladen werden. Bitte laden Sie die Seite neu.')
+        return
+      }
       setClients((data || []).map((c: any) => ({ id: c.id, label: `${c.first_name} ${c.last_name}`.trim() })))
     }
     load()
@@ -91,12 +96,23 @@ export default function LeistungsnachweisUploadPage() {
     async function loadRecords() {
       setLoadingRecords(true)
       const supabase = createClient()
-      const { data } = await supabase
+      // Eine leere Nachweisliste heisst hier „nichts zuzuordnen". Bei
+      // gestoerter Abfrage ist das falsch — der Beleg waere unzugeordnet
+      // liegen geblieben.
+      const { data, error: recordsErr } = await supabase
         .from('service_records')
         .select('id, date, start_time, end_time, amount, status')
         .eq('client_id', clientId)
         .order('date', { ascending: false })
         .limit(50)
+      if (recordsErr) {
+        log.errorWithException('Nachweisliste Ladefehler', recordsErr)
+        setError('Die Nachweise dieses Klienten konnten nicht geladen werden. Bitte laden Sie die Seite neu.')
+        setRecords([])
+        setRecordId('')
+        setLoadingRecords(false)
+        return
+      }
       const recs = (data || []).map((r: any) => ({
         id: r.id,
         label: `${formatDate(r.date)} · ${r.status}`,
@@ -128,10 +144,14 @@ export default function LeistungsnachweisUploadPage() {
       const ids = rows.map(r => r.id)
       let errorCounts: Record<string, number> = {}
       if (ids.length > 0) {
-        const { data: errs } = await supabase
+        // Nur die Fehlerzaehler neben der Historie: bleibt die Abfrage aus,
+        // zeigt die Zeile 0 statt der echten Zahl — protokollieren statt
+        // verwerfen.
+        const { data: errs, error: errsErr } = await supabase
           .from('review_errors')
           .select('ocr_result_id')
           .in('ocr_result_id', ids)
+        if (errsErr) log.errorWithException('Fehlerzaehler Ladefehler', errsErr)
         errorCounts = (errs || []).reduce((acc: Record<string, number>, e: any) => {
           if (e.ocr_result_id) acc[e.ocr_result_id] = (acc[e.ocr_result_id] || 0) + 1
           return acc

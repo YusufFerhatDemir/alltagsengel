@@ -217,13 +217,18 @@ function LeistungsnachweisDigitalInner() {
       if (err) { setActionError(err.message); return }
       setDetailRecord(data as unknown as ServiceRecord)
 
-      const { data: log } = await supabase
+      // Die Revisionsspur eines Nachweises. Faellt sie aus, sah die Detail-
+      // ansicht aus, als gaebe es keine Aenderungshistorie — genau die
+      // Aussage, die eine Pruefung nicht auf einem verworfenen Fehler
+      // treffen darf.
+      const { data: auditRows, error: auditErr } = await supabase
         .from('service_record_audit_log')
         .select('*')
         .eq('record_id', id)
         .order('created_at', { ascending: false })
         .limit(50)
-      setAuditLog((log || []) as AuditEntry[])
+      if (auditErr) { setActionError('Die Änderungshistorie konnte nicht geladen werden.'); setAuditLog([]); return }
+      setAuditLog((auditRows || []) as AuditEntry[])
     } catch {
       setActionError('Fehler beim Laden der Details')
     } finally {

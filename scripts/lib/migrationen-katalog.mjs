@@ -217,4 +217,14 @@ export const KATALOG = [
                      AND column_name='befristet_bis')
              + (SELECT count(*) FROM pg_constraint
                    WHERE conname='security_watchlist_aktiv_braucht_frist')` },
+  { datei: '20261025000000_assignments_booking_id',
+    was: 'assignments.booking_id: Spalte + Fremdschluessel + Index',
+    soll: 3,
+    sql: `SELECT (SELECT count(*) FROM information_schema.columns
+                   WHERE table_schema='public' AND table_name='assignments'
+                     AND column_name='booking_id')
+             + (SELECT count(*) FROM pg_constraint
+                   WHERE conname='assignments_booking_id_fkey')
+             + (SELECT count(*) FROM pg_indexes
+                   WHERE indexname='idx_assignments_booking_id')` },
 ]

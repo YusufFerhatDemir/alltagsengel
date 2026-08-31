@@ -120,11 +120,15 @@ export default function ChatDetailPage() {
         if (ride) {
           const provider: any = ride.krankenfahrt_providers
           if (provider?.user_id) {
-            const { data: driverProfile } = await supabase
+            // Faellt diese Abfrage aus, greift unten der Firmenname als
+            // Anzeige — richtig so, aber nicht still: sonst ist „Fahrer hat
+            // kein Profil" von „Profil nicht lesbar" nicht zu unterscheiden.
+            const { data: driverProfile, error: driverErr } = await supabase
               .from('profiles')
               .select('first_name, last_name')
               .eq('id', provider.user_id)
               .maybeSingle()
+            if (driverErr) log.error(`Fahrerprofil laden fehlgeschlagen: ${driverErr.message}`)
             setPartnerName(driverProfile ? `${driverProfile.first_name || ''} ${driverProfile.last_name?.[0] || ''}.` : provider.company_name || 'Fahrer')
             setPartnerId(provider.user_id)
           } else {

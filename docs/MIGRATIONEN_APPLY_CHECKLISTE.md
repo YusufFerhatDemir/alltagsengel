@@ -18,14 +18,14 @@
 ohne Eigentümerrecht meldet **HTTP 204, also Erfolg — ohne jede Wirkung**.
 
 **2. Die Reihenfolge ist nach RISIKO geordnet, nicht nach Technik.**
-Geprüft: keine der acht Migrationen setzt eine andere der acht voraus. Sie sind
+Geprüft: keine der neun Migrationen setzt eine andere davon voraus. Sie sind
 technisch unabhängig. Die Ordnung folgt dem Schaden, den ein Abbruch in der Mitte
 hinterließe — zuerst die drei Unveränderlichkeits-Riegel der Pflegeakte.
 
 **3. Jeder Block ist in `BEGIN; … COMMIT;` geklammert.**
-Nur `20261008000000` bringt eine eigene Transaktion mit; die anderen sieben nicht.
+Nur `20261008000000` bringt eine eigene Transaktion mit; die anderen acht nicht.
 Ohne Klammer wäre ein Abbruch in der Mitte ein halb angewendeter Schritt. Kein
-`CREATE INDEX CONCURRENTLY` in den acht Dateien — die Klammer ist also überall
+`CREATE INDEX CONCURRENTLY` in den neun Dateien — die Klammer ist also überall
 zulässig (geprüft).
 
 ---
@@ -42,6 +42,7 @@ zulässig (geprüft).
 | 6 | `20261009000000_pflege_massnahmenplaene_ein_aktiver_plan` | MITTEL | eindeutiger Index uq_pflege_massnahmenplaene_ein_aktiver_plan |
 | 7 | `20261021000004_is_internal_staff_ohne_buero` | NIEDRIG heute — HOCH bei der naechsten CHECK-Erweiterung | is_internal_staff() nennt 'buero' nicht mehr |
 | 8 | `20261021000002_secdef_trigger_revoke` | NIEDRIG | keine SECURITY-DEFINER-Triggerfunktion mehr fuer anon ausfuehrbar (erwartet: 0) |
+| 9 | `20261025000000_assignments_booking_id` | MITTEL | Spalte assignments.booking_id + Fremdschluessel assignments_booking_id_fkey + Index idx_assignments_booking_id |
 
 Drei davon sind die Unveränderlichkeits- und Rückdatierungs-Riegel der Pflegeakte
 und stehen deshalb ganz vorn: **Medikamente** (Schritt 1), **Wunddokumentation**
@@ -75,9 +76,9 @@ Sobald der erste echte Pflegefall dokumentiert ist, ist beides nicht mehr wahr.
 
 **Zweck.** Sperrt ein Medikament mit status='abgesetzt' auch DATENBANKSEITIG gegen inhaltliche Aenderung. Bisher verweigerte das nur lib/medikamente/medikamente.ts — wer an dem Modul vorbeischreibt (PostgREST, Dienstschluessel, Import), konnte Name, Wirkstoff, Dosierung und Einnahmezeiten eines abgesetzten Medikaments unveraendert durchschreiben.
 
-**Risiko, solange sie fehlt: HOCH.** Solange sie fehlt, ist die Medikation eines abgesetzten Praeparats nachtraeglich aenderbar, ohne dass irgendetwas dagegenhaelt. Das ist der sicherheitskritischste der acht Punkte.
+**Risiko, solange sie fehlt: HOCH.** Solange sie fehlt, ist die Medikation eines abgesetzten Praeparats nachtraeglich aenderbar, ohne dass irgendetwas dagegenhaelt. Das ist der sicherheitskritischste Punkt dieser Liste.
 
-**Abhängigkeit.** Tabelle public.medikamente (20260806…). Keine der anderen sieben.
+**Abhängigkeit.** Tabelle public.medikamente (20260806…). Keine der anderen aus dieser Liste.
 
 **Erwartet danach.** Funktion prevent_locked_medikament_edit() + Trigger trg_locked_medikament auf medikamente
 
@@ -179,7 +180,7 @@ SELECT count(*) FROM pg_trigger WHERE tgname='trg_locked_medikament';
 
 **Risiko, solange sie fehlt: HOCH.** Eine abgeschlossene Wunddokumentation ist nachtraeglich erweiterbar. Bei einer Pflegeakte ist genau das der Punkt, an dem Dokumentation ihren Beweiswert verliert.
 
-**Abhängigkeit.** Tabellen wounds, wound_assessments, wound_treatments, wound_photos. Keine der anderen sieben.
+**Abhängigkeit.** Tabellen wounds, wound_assessments, wound_treatments, wound_photos. Keine der anderen aus dieser Liste.
 
 **Erwartet danach.** Funktion prevent_wound_child_edit_when_healed() + die drei Trigger trg_locked_wound_assessment, trg_locked_wound_treatment, trg_locked_wound_photo
 
@@ -276,7 +277,7 @@ SELECT count(*) FROM pg_trigger WHERE tgname IN ('trg_locked_wound_assessment','
 
 **Risiko, solange sie fehlt: HOCH.** Rueckdatierung in einen abgeschlossenen Monat. Betrifft unmittelbar die Beweiskraft der Pflegedokumentation gegenueber Kostentraeger und Pruefinstanz.
 
-**Abhängigkeit.** Tabellen pflege_verlauf und pflege_doku_perioden. Keine der anderen sieben.
+**Abhängigkeit.** Tabellen pflege_verlauf und pflege_doku_perioden. Keine der anderen aus dieser Liste.
 
 **Erwartet danach.** Funktion prevent_backdated_verlauf_insert() + Trigger trg_verlauf_periode_offen
 
@@ -366,9 +367,9 @@ SELECT count(*) FROM pg_trigger WHERE tgname='trg_verlauf_periode_offen';
 
 **Zweck.** 24 Lesepolicies rk_<tabelle>_lesen, je FOR SELECT TO authenticated mit darf('<recht>') AND organization_id = current_org_id(). Ohne sie liefern 48 Seite/Rolle-Paare den Rollen pdl, qm und buchhaltung null Zeilen — nicht wegen einer Sperre, sondern weil keine Policy dort eine Berechtigung auswertet.
 
-**Risiko, solange sie fehlt: MITTEL (Funktion, nicht Sicherheit).** Kein Sicherheitsrisiko — die Wirkung ist zu STRENG, nicht zu locker. Aber drei Rollen sehen live leere Seiten, wo sie arbeiten sollen. Das ist der groesste Funktionsblocker der acht.
+**Risiko, solange sie fehlt: MITTEL (Funktion, nicht Sicherheit).** Kein Sicherheitsrisiko — die Wirkung ist zu STRENG, nicht zu locker. Aber drei Rollen sehen live leere Seiten, wo sie arbeiten sollen. Das ist der groesste Funktionsblocker dieser Liste.
 
-**Abhängigkeit.** rollen_matrix() muss die verwendeten Rechte kennen (bonus.verwalten, sicherheit.lesen, marketing.verwalten — alle drei stehen live) sowie darf() und current_org_id(). Keine der anderen sieben.
+**Abhängigkeit.** rollen_matrix() muss die verwendeten Rechte kennen (bonus.verwalten, sicherheit.lesen, marketing.verwalten — alle drei stehen live) sowie darf() und current_org_id(). Keine der anderen aus dieser Liste.
 
 **Erwartet danach.** die 24 Policies rk_<tabelle>_lesen
 
@@ -703,11 +704,11 @@ SELECT count(*) FROM pg_policies WHERE schemaname='public'
 
 **Risiko, solange sie fehlt: MITTEL.** Datenqualitaet, nicht Sicherheit. Die Plausibilitaetsgrenzen leben sonst nur in TypeScript.
 
-**Abhängigkeit.** 20260818010100_vitalwerte.sql (steht live). Keine der anderen sieben.
+**Abhängigkeit.** 20260818010100_vitalwerte.sql (steht live). Keine der anderen aus dieser Liste.
 
 **Erwartet danach.** die vier Funktionen vitals_plausibel_*
 
-**Rollback-Risiko.** GERING, aber die EINZIGE der acht mit einem Bestandsvorbehalt: die CHECKs werden NOT VALID angelegt und danach validiert. Ein Bestandsverstoss bricht die Migration NICHT ab, sondern meldet sich als WARNING — kein stiller Durchlauf, aber auch kein Abbruch. Wenn eine WARNING erscheint, bitte den Text mitschicken: dann stehen unplausible Werte im Bestand, und die sind fachlich zu klaeren.
+**Rollback-Risiko.** GERING, aber die EINZIGE dieser Liste mit einem Bestandsvorbehalt: die CHECKs werden NOT VALID angelegt und danach validiert. Ein Bestandsverstoss bricht die Migration NICHT ab, sondern meldet sich als WARNING — kein stiller Durchlauf, aber auch kein Abbruch. Wenn eine WARNING erscheint, bitte den Text mitschicken: dann stehen unplausible Werte im Bestand, und die sind fachlich zu klaeren.
 
 Rollback-Datei: `supabase/migrations/20261008000001_rollback_vitalwerte_plausibilitaet_db_check.sql`
 
@@ -927,7 +928,7 @@ SELECT count(*) FROM pg_proc WHERE proname LIKE 'vitals_plausibel%';
 
 **Risiko, solange sie fehlt: MITTEL.** Welcher Plan der gueltige Versorgungsplan ist, wird uneindeutig.
 
-**Abhängigkeit.** Tabelle pflege_massnahmenplaene. Keine der anderen sieben.
+**Abhängigkeit.** Tabelle pflege_massnahmenplaene. Keine der anderen aus dieser Liste.
 
 **Erwartet danach.** eindeutiger Index uq_pflege_massnahmenplaene_ein_aktiver_plan
 
@@ -1017,7 +1018,7 @@ SELECT count(*) FROM pg_indexes WHERE indexname='uq_pflege_massnahmenplaene_ein_
 
 **Risiko, solange sie fehlt: NIEDRIG heute — HOCH bei der naechsten CHECK-Erweiterung.** Eine gestellte Falle: wer den CHECK eines Tages um eine Bueroverwaltung erweitert, gibt dieser Rolle in DERSELBEN Minute Zugriff auf alles hinter is_internal_staff() — unter anderem die Verordnungen — und zwar ohne einen einzigen Eintrag in ROLLEN_MATRIX. Der Fehler entstuende an einer Stelle und wirkte an einer ganz anderen, Monate spaeter.
 
-**Abhängigkeit.** Funktion is_internal_staff(). Keine der anderen sieben.
+**Abhängigkeit.** Funktion is_internal_staff(). Keine der anderen aus dieser Liste.
 
 **Erwartet danach.** is_internal_staff() nennt 'buero' nicht mehr
 
@@ -1147,7 +1148,7 @@ SELECT count(*) FROM pg_proc WHERE proname='is_internal_staff'
 
 **Risiko, solange sie fehlt: NIEDRIG.** Ehrlich: nicht schlimm. Alle sechs geben trigger zurueck und nehmen keine Argumente. PostgREST stellt solche Funktionen gar nicht als RPC bereit, und Postgres verweigert den Direktaufruf ohnehin. Ueber die oeffentliche Schnittstelle war hier nichts aufrufbar. Der Wert liegt in der Tiefenstaffelung — der Schutz haengt sonst allein an einer Eigenschaft von PostgREST, die niemand uns zugesagt hat.
 
-**Abhängigkeit.** Die sechs genannten Funktionen muessen existieren. Keine der anderen sieben.
+**Abhängigkeit.** Die sechs genannten Funktionen muessen existieren. Keine der anderen aus dieser Liste.
 
 **Erwartet danach.** keine SECURITY-DEFINER-Triggerfunktion mehr fuer anon ausfuehrbar (erwartet: 0)
 
@@ -1280,12 +1281,187 @@ SELECT count(*) FROM pg_proc p WHERE p.prosecdef
 
 ---
 
+## Schritt 9 · `20261025000000_assignments_booking_id`
+
+**Zweck.** Gibt `assignments` eine Spalte `booking_id` samt Fremdschluessel (ON DELETE SET NULL) und Index, und traegt den Bestand aus den vorhandenen Notizen nach. Bis dahin ist der einzige Bezug zwischen einer Buchung und dem daraus erzeugten Einsatz die Notiz „Automatisch aus Buchung <uuid> erzeugt." — freier Text, den die Einsatzliste bearbeiten darf.
+
+**Risiko, solange sie fehlt: MITTEL.** Kein Sicherheitsrisiko. Aber wer die Notiz eines Einsatzes ergaenzt, kappt damit den einzigen Bezug zur Buchung. Die Storno-Route findet den Einsatz dann nicht mehr und verweigert fail-closed (409, Hinweis auf den Support) — der Kunde kann seinen Termin nicht mehr selbst absagen. Solange die Spalte fehlt, haengt das an einem Textfeld.
+
+**Abhängigkeit.** Tabellen public.assignments und public.bookings. Keine der anderen aus dieser Liste.
+
+**Erwartet danach.** Spalte assignments.booking_id + Fremdschluessel assignments_booking_id_fkey + Index idx_assignments_booking_id
+
+**Rollback-Risiko.** GERING fuer den Betrieb, mit einem Datenvorbehalt: der Anwendungscode arbeitet MIT und OHNE die Spalte (lib/bookings/assignment-bezug.ts faellt auf den Notiz-Weg zurueck), ein Rollback bricht also nichts. Der Backfill ist danach aber weg; ein erneutes Anwenden baut ihn nur soweit wieder auf, wie die Notizen unveraendert geblieben sind.
+
+Rollback-Datei: `supabase/migrations/20261025000001_rollback_assignments_booking_id.sql`
+
+### 9a · Anwenden
+
+```sql
+-- Diese Datei bringt BEGIN/COMMIT selbst mit — nicht zusätzlich klammern.
+-- ═══════════════════════════════════════════════════════════════════
+-- assignments.booking_id — der Einsatz weiss, aus welcher Buchung er kam
+-- ═══════════════════════════════════════════════════════════════════
+--
+-- BEFUND (31.08.2026, Storno-Kette /api/bookings/cancel)
+-- Beim Annehmen einer Buchung erzeugt lib/bookings/einsatz-kette.ts einen
+-- `assignment` und darauf einen `service_record`. Zurueck zur Buchung
+-- fuehrte danach NICHTS ausser einer Notiz in freiem Text:
+--
+--     notes = 'Automatisch aus Buchung <uuid> erzeugt.'
+--
+-- Der Storno muss diesen Einsatz finden — sonst bleibt er auf der
+-- Einsatzliste stehen und der Engel faehrt zu einem abgesagten Termin.
+-- Er sucht deshalb heute mit `notes LIKE '%Buchung <uuid>%'`.
+--
+-- Falsch-TREFFER sind dabei ausgeschlossen (die Notiz traegt die UUID).
+-- Falsch-NEGATIVE nicht: `notes` ist ein Feld, das die Einsatzliste
+-- bearbeiten darf. Wer die Notiz ergaenzt oder ersetzt — „Kunde bittet um
+-- Anruf vorher" —, kappt damit den einzigen Bezug zwischen Einsatz und
+-- Buchung, ohne es zu merken. Ein Bezug, den die Fachanwendung
+-- ueberschreiben kann, ist kein Bezug.
+--
+-- Die Route faengt den Fall heute mit einem Riegel ab (angenommene
+-- Buchung ohne auffindbaren Einsatz → 409 und Hinweis auf den Support).
+-- Das ist die richtige Antwort auf einen fehlenden Bezug, aber keine
+-- Loesung dafuer, dass es ihn nicht gibt.
+--
+-- ── WAS DIESE MIGRATION TUT ──────────────────────────────────────
+--   1. Spalte `booking_id uuid` auf `assignments`
+--   2. Fremdschluessel auf `bookings(id)` mit ON DELETE SET NULL —
+--      dieselbe Linie wie 20261016000000: der Einsatz bleibt als Beleg
+--      (§ 147 AO) bestehen, der Bezug faellt weg.
+--   3. Backfill aus den vorhandenen Notizen. Nur dort, wo die Notiz
+--      exakt dem erzeugten Muster entspricht UND die Buchung wirklich
+--      existiert — sonst schluege der Fremdschluessel fehl.
+--   4. Index fuer die Suche „welcher Einsatz gehoert zu dieser Buchung".
+--
+-- ── WAS SIE BEWUSST NICHT TUT ────────────────────────────────────
+-- Kein NOT NULL. Einsaetze entstehen auch OHNE Buchung — aus der
+-- Dienstplanung, aus wiederkehrenden Touren, aus der Anlage von Hand.
+-- Fuer die ist NULL die richtige Antwort und kein Mangel.
+--
+-- Kein UNIQUE. Ob eine Buchung jemals mehr als einen Einsatz erzeugen
+-- darf (Folgetermin, Nachholtermin), ist eine fachliche Frage und hier
+-- nicht zu entscheiden. Ein UNIQUE waere leicht nachzureichen, aber nur
+-- schwer zurueckzunehmen, sobald Daten dagegenstehen.
+--
+-- Keine Aenderung an RLS. Eine zusaetzliche Spalte erweitert keine
+-- Sichtbarkeit; die Policies auf `assignments` bleiben unberuehrt.
+--
+-- ── ABWAERTSKOMPATIBEL ───────────────────────────────────────────
+-- Der Anwendungscode arbeitet MIT und OHNE diese Spalte
+-- (lib/bookings/assignment-bezug.ts): er schreibt sie, wenn es sie gibt,
+-- und faellt sonst auf den Notiz-Weg zurueck. Diese Migration darf also
+-- vor dem Code stehen oder nach ihm — nur nicht dazwischen fehlen und
+-- gleichzeitig erwartet werden.
+--
+-- Rollback: 20261025000001_rollback_assignments_booking_id.sql
+-- ═══════════════════════════════════════════════════════════════════
+
+BEGIN;
+
+-- ── 1) Spalte ─────────────────────────────────────────────────────
+ALTER TABLE public.assignments
+  ADD COLUMN IF NOT EXISTS booking_id uuid;
+
+COMMENT ON COLUMN public.assignments.booking_id IS
+  'Buchung, aus der dieser Einsatz entstanden ist (lib/bookings/einsatz-kette.ts). '
+  'NULL bei Einsaetzen aus Dienstplanung, Tour oder Handanlage. Ersetzt den '
+  'frueheren Bezug ueber notes LIKE ''%Buchung <uuid>%'', der von der '
+  'Einsatzliste ueberschreibbar war.';
+
+-- ── 2) Fremdschluessel ────────────────────────────────────────────
+-- ON DELETE SET NULL, nicht CASCADE: eine geloeschte Buchung darf den
+-- Einsatz nicht mitnehmen — er ist Beleg fuer erbrachte Leistung.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'assignments_booking_id_fkey'
+  ) THEN
+    ALTER TABLE public.assignments
+      ADD CONSTRAINT assignments_booking_id_fkey
+      FOREIGN KEY (booking_id) REFERENCES public.bookings(id) ON DELETE SET NULL;
+  END IF;
+END $$;
+
+-- ── 3) Backfill aus den Notizen ───────────────────────────────────
+-- Nur exakt das Muster, das einsatz-kette.ts schreibt, und nur, wenn die
+-- Buchung noch existiert. Beides zusammen: kein Fremdschluessel-Fehler
+-- und keine geratene Zuordnung.
+UPDATE public.assignments a
+   SET booking_id = sub.gefundene_id
+  FROM (
+    SELECT
+      x.id,
+      (substring(x.notes FROM 'Automatisch aus Buchung ([0-9a-fA-F-]{36}) erzeugt\.'))::uuid
+        AS gefundene_id
+    FROM public.assignments x
+    WHERE x.booking_id IS NULL
+      AND x.notes ~ 'Automatisch aus Buchung [0-9a-fA-F-]{36} erzeugt\.'
+  ) sub
+ WHERE a.id = sub.id
+   AND sub.gefundene_id IS NOT NULL
+   AND EXISTS (SELECT 1 FROM public.bookings b WHERE b.id = sub.gefundene_id);
+
+-- ── 4) Index ──────────────────────────────────────────────────────
+-- Die Storno-Route fragt „welcher Einsatz gehoert zu dieser Buchung" —
+-- ohne Index ein Seq-Scan ueber alle Einsaetze. Partiell, weil die grosse
+-- Mehrheit der Einsaetze (Dienstplan, Touren) gar keine Buchung hat.
+CREATE INDEX IF NOT EXISTS idx_assignments_booking_id
+  ON public.assignments (booking_id)
+  WHERE booking_id IS NOT NULL;
+
+COMMIT;
+
+-- ── Verifikation ──────────────────────────────────────────────────
+-- Erwartet 3: Spalte + Fremdschluessel + Index.
+--
+--   SELECT
+--     (SELECT count(*) FROM information_schema.columns
+--       WHERE table_schema='public' AND table_name='assignments'
+--         AND column_name='booking_id')
+--   + (SELECT count(*) FROM pg_constraint
+--       WHERE conname='assignments_booking_id_fkey')
+--   + (SELECT count(*) FROM pg_indexes
+--       WHERE indexname='idx_assignments_booking_id');
+--
+-- Wie viele Altbestaende der Backfill erreicht hat:
+--
+--   SELECT count(*) FILTER (WHERE booking_id IS NOT NULL) AS mit_bezug,
+--          count(*) FILTER (WHERE booking_id IS NULL
+--            AND notes ~ 'Automatisch aus Buchung') AS notiz_ohne_bezug
+--     FROM public.assignments;
+--
+-- `notiz_ohne_bezug` > 0 heisst: die Notiz nennt eine Buchung, die es
+-- nicht mehr gibt. Das ist kein Fehler der Migration, sondern der Beleg
+-- dafuer, dass der Notiz-Weg allein nie verlaesslich war.
+```
+
+### 9b · Verifikation — beweist, dass es live steht
+
+Erwartet: **3** genau — geprüft wird 
+assignments.booking_id: Spalte + Fremdschluessel + Index.
+
+```sql
+SELECT (SELECT count(*) FROM information_schema.columns
+                   WHERE table_schema='public' AND table_name='assignments'
+                     AND column_name='booking_id')
+             + (SELECT count(*) FROM pg_constraint
+                   WHERE conname='assignments_booking_id_fkey')
+             + (SELECT count(*) FROM pg_indexes
+                   WHERE indexname='idx_assignments_booking_id');
+```
+
+---
+
 ## Zum Schluss
 
-Nach dem letzten Schritt beweist **ein** Lauf, dass alle acht stehen:
+Nach dem letzten Schritt beweist **ein** Lauf, dass alle neun stehen:
 
 ```
-npm run check:migrationen     → erwartet: 32 von 32 live, kein ❌
+npm run check:migrationen     → erwartet: 37 von 37 live, kein ❌
 npm run verify:rls-matrix     → erwartet: 0 harte Befunde UND 0 mittlere
 ```
 

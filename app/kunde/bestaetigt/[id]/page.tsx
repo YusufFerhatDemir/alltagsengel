@@ -14,6 +14,21 @@ export default function BestaetigtPage() {
   const [booking, setBooking] = useState<any>(null)
   const [pageStatus, setPageStatus] = useState<'loading' | 'ok' | 'not_found' | 'error'>('loading')
   const [error, setError] = useState('')
+  // BEFUND 31.08.2026: Der Storno-Weg wurde am selben Tag gebaut
+  // (/api/bookings/cancel) und in /kunde/warten angeschlossen — also dort,
+  // wo eine Anfrage noch OFFEN ist. Sobald der Engel angenommen hatte,
+  // fuehrte die Buchungsliste hierher, und hier gab es Chat, Anrufen,
+  // Bewerten und Home, aber keinen Storno.
+  //
+  // Genau dieser Uebergang ist der, auf den es ankommt: der Uebergangs-
+  // Trigger `enforce_booking_status_transition` gestattet dem Kunden
+  // ausdruecklich accepted → cancelled, die Route setzt die ganze Kette
+  // um (Nachweis → Einsatz → Buchung) — und der Kunde, dessen Termin
+  // morgen ansteht, kam nicht daran. Er konnte eine ANFRAGE zuruecknehmen,
+  // aber keinen bestaetigten TERMIN absagen.
+  const [storniere, setStorniere] = useState(false)
+  const [stornoFehler, setStornoFehler] = useState('')
+  const [stornoFrage, setStornoFrage] = useState(false)
 
   const loadBooking = async () => {
     setError('')
@@ -51,6 +66,32 @@ export default function BestaetigtPage() {
   useEffect(() => {
     loadBooking()
   }, [id])
+
+  async function stornieren() {
+    setStorniere(true)
+    setStornoFehler('')
+    try {
+      const res = await fetch('/api/bookings/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId: id }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        // Der Server nennt den Grund im Klartext (Einsatz laeuft schon,
+        // Nachweis haengt an einer Rechnung) — den zeigen wir, statt ihn
+        // durch ein allgemeines „Fehler" zu ersetzen.
+        setStornoFehler(json?.error || 'Die Stornierung ist fehlgeschlagen.')
+        return
+      }
+      setStornoFrage(false)
+      await loadBooking()
+    } catch {
+      setStornoFehler('Keine Verbindung. Bitte versuchen Sie es erneut.')
+    } finally {
+      setStorniere(false)
+    }
+  }
 
   if (pageStatus === 'loading') return <div className="screen"><LoadingState /></div>
   if (pageStatus === 'not_found') return <NotFoundState title="Buchung nicht gefunden" subtitle="Diese Buchung existiert nicht oder wurde bereits storniert." homeHref="/kunde/home" />
@@ -119,6 +160,57 @@ export default function BestaetigtPage() {
           <Link href={`/kunde/bewertung/${booking.id}`}><button className="action-btn">⭐ Bewerten</button></Link>
           <Link href="/kunde/home"><button className="action-btn primary"><IconHouse size={15} /> Home</button></Link>
         </div>
+
+        {/* Stornieren — nur solange die Buchung ueberhaupt stornierbar ist.
+            Welche Zustaende das sind, entscheidet die Route (und vor ihr der
+            DB-Trigger); hier steht nur, wann der Knopf ueberhaupt einen Sinn
+            ergibt. Ein bereits stornierter oder abgeschlossener Termin
+            zeigt ihn nicht. */}
+        {['pending', 'accepted'].includes(booking.status) && (
+          <div style={{ padding: '0 20px 24px' }}>
+            {stornoFehler && (
+              <div role="alert" style={{ background: 'rgba(208,75,59,.1)', border: '1px solid rgba(208,75,59,.3)', borderRadius: 10, padding: '10px 14px', marginBottom: 10, fontSize: 13, color: 'var(--red-w)' }}>
+                {stornoFehler}
+              </div>
+            )}
+            {!stornoFrage ? (
+              <button
+                type="button"
+                onClick={() => { setStornoFehler(''); setStornoFrage(true) }}
+                style={{ width: '100%', minHeight: 44, padding: '12px 20px', borderRadius: 10, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--ink3)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: "'Jost',sans-serif" }}
+              >
+                Termin stornieren
+              </button>
+            ) : (
+              <div style={{ background: 'var(--coal2)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)', marginBottom: 6 }}>
+                  Termin wirklich stornieren?
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--ink4)', marginBottom: 14, lineHeight: 1.5 }}>
+                  {angelName} wird benachrichtigt und der Einsatz wird abgesagt. Das lässt sich nicht rückgängig machen.
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button
+                    type="button"
+                    onClick={stornieren}
+                    disabled={storniere}
+                    style={{ flex: 1, minHeight: 44, padding: '12px 16px', borderRadius: 10, border: 'none', background: 'var(--red-w)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: storniere ? 'wait' : 'pointer', opacity: storniere ? 0.7 : 1, fontFamily: "'Jost',sans-serif" }}
+                  >
+                    {storniere ? 'Wird storniert …' : 'Ja, stornieren'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStornoFrage(false)}
+                    disabled={storniere}
+                    style={{ flex: 1, minHeight: 44, padding: '12px 16px', borderRadius: 10, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--ink3)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: "'Jost',sans-serif" }}
+                  >
+                    Abbrechen
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -131,7 +131,10 @@ export function assertBuchungStornierbar(lage: StornoLage, rolle: StornoRolle): 
  * anfaellt, steht im Vertrag, nicht im Code.
  */
 export function pruefeFrist(_terminIso: string, _jetzt: Date = new Date()): void {
-  // BUSINESS_INPUT: Frist und Gebuehr sind vertraglich zu klaeren.
+  // BUSINESS_INPUT_REQUIRED — S1 (Frist) und S2 (Ausfallgebuehr) im
+  // Register lib/pilot/business-inputs.ts. Dort steht auch, was ohne die
+  // Antwort trotzdem laeuft; hier steht nur, wo die Antwort einmal
+  // hingehoert.
 }
 
 /** Darf diese Rolle diese Buchung ueberhaupt anfassen? */

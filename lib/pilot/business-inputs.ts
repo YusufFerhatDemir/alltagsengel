@@ -39,7 +39,7 @@ import { getDatevConfig, isDatevConfigComplete } from '@/lib/billing/datev/datev
 // Typen
 // ---------------------------------------------------------------------------
 
-export type EingabeBereich = 'datev' | 'chairmatch'
+export type EingabeBereich = 'datev' | 'chairmatch' | 'storno'
 
 export type EingabeSchwere =
   /** Ohne diese Angabe bricht der betroffene Vorgang ab. */
@@ -230,9 +230,60 @@ export const CHAIRMATCH_EINGABEN: readonly BusinessInput[] = [
   },
 ] as const
 
+/**
+ * Stornierung — Frist und Ausfallgebühr.
+ *
+ * Aufgenommen mit dem Storno-Weg (/api/bookings/cancel). Die Frage steht
+ * in den AGB und im Kundenvertrag; die Antwort kommt aus der
+ * Geschäftsführung. Die TECHNISCHE Funktion ist vollständig: die
+ * Kette Nachweis → Einsatz → Buchung wird fail-closed storniert, beide
+ * Seiten werden benachrichtigt, der Vorgang steht im Protokoll.
+ *
+ * Was fehlt, ist eine REGEL — und die darf kein Code sich ausdenken.
+ * `pruefeFrist()` in lib/bookings/storno.ts ist die dafür vorgesehene
+ * Stelle und lässt heute jede Frist durch. Das ist Absicht: eine
+ * erfundene 24-Stunden-Regel wäre schlimmer als keine, weil sie wie eine
+ * vereinbarte aussähe — gegenüber Kundschaft UND gegenüber dem Engel, dem
+ * die Ausfallzeit sonst ersatzlos verfällt.
+ */
+export const STORNO_EINGABEN: readonly BusinessInput[] = [
+  {
+    id: 'S1',
+    bereich: 'storno',
+    frage:
+      'Bis wann vor dem Termin darf kostenfrei storniert werden — und gilt die Frist für '
+      + 'Kundschaft und Engel gleich?',
+    quelle: 'Geschäftsführung',
+    schwere: 'entscheidung',
+    wirkungOffen:
+      'pruefeFrist() lässt jede Frist durch: eine Buchung ist bis unmittelbar vor dem Termin '
+      + 'stornierbar, solange der Einsatz noch nicht begonnen hat. Der DB-Trigger und die '
+      + 'Statusprüfung greifen unverändert — es fehlt allein die zeitliche Grenze.',
+    blockiertNicht:
+      'Die Stornokette selbst läuft vollständig: Leistungsnachweis und Einsatz werden mit '
+      + 'storniert, der Nachweis fällt aus Rechnungslauf und Budget heraus (RPC v10 und der '
+      + 'used_amount-Trigger schließen STORNIERT aus), beide Seiten werden benachrichtigt.',
+  },
+  {
+    id: 'S2',
+    bereich: 'storno',
+    frage:
+      'Fällt bei einer Stornierung innerhalb der Frist eine Ausfallgebühr an — und in welcher Höhe?',
+    quelle: 'Geschäftsführung',
+    schwere: 'entscheidung',
+    wirkungOffen:
+      'Es wird keine Gebühr berechnet. Eine Stornierung erzeugt keine Forderung, also auch '
+      + 'keinen offenen Posten — das Mahnwesen sieht sie nie.',
+    blockiertNicht:
+      'Rechnungserstellung, Festschreibung, Versand und Mahnwesen sind unberührt: eine '
+      + 'stornierte Buchung erreicht den Rechnungsweg gar nicht erst.',
+  },
+]
+
 export const ALLE_EINGABEN: readonly BusinessInput[] = [
   ...DATEV_EINGABEN,
   ...CHAIRMATCH_EINGABEN,
+  ...STORNO_EINGABEN,
 ]
 
 // ---------------------------------------------------------------------------
@@ -348,9 +399,24 @@ export async function ermittleBusinessInputs(
     })
   }
 
+  // S1/S2 stehen dauerhaft auf „offen", solange keine Vertragsregel
+  // vorliegt. „gesetzt" gäbe es hier erst, wenn pruefeFrist() eine Frist
+  // durchsetzt — und das ist genau der Punkt, an dem jemand diese Zeile
+  // mitändern muss.
+  for (const e of STORNO_EINGABEN) {
+    eingaben.push({
+      ...e,
+      stand: 'offen',
+      befund:
+        'Keine Frist und keine Ausfallgebühr im Code. pruefeFrist() in lib/bookings/storno.ts '
+        + 'lässt jede Frist durch — bewusst, weil eine erfundene Regel wie eine vereinbarte aussähe.',
+    })
+  }
+
   const jeBereich: Record<EingabeBereich, { offen: number; gesetzt: number; nichtPruefbar: number }> = {
     datev: { offen: 0, gesetzt: 0, nichtPruefbar: 0 },
     chairmatch: { offen: 0, gesetzt: 0, nichtPruefbar: 0 },
+    storno: { offen: 0, gesetzt: 0, nichtPruefbar: 0 },
   }
   for (const e of eingaben) {
     const z = jeBereich[e.bereich]
@@ -400,7 +466,11 @@ export function businessInputsBerichtText(b: BusinessInputBericht): string {
   z.push('LÄUFT NICHT, SOLANGE D1/D2 FEHLEN:')
   for (const x of b.laeuftNicht) z.push(`  ✖ ${x}`)
 
-  for (const bereich of ['datev', 'chairmatch'] as EingabeBereich[]) {
+  // Die Liste der Bereiche stand hier ausgeschrieben — ein neuer Bereich
+  // waere im Bericht stillschweigend fehlend gewesen, obwohl er im
+  // Register steht. Jetzt kommt sie aus den Eintraegen selbst.
+  const bereiche = [...new Set(b.eingaben.map(e => e.bereich))] as EingabeBereich[]
+  for (const bereich of bereiche) {
     const gruppe = b.eingaben.filter(e => e.bereich === bereich)
     if (gruppe.length === 0) continue
     z.push('')

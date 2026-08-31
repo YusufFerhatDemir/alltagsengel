@@ -49,6 +49,10 @@ function BuchenServiceInner() {
   const [angels, setAngels] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  // Die Anschrift aus dem Profil geht als Notiz in die Buchung — der Engel
+  // erfaehrt daraus, wohin er faehrt. Ein verworfener Ladefehler haette eine
+  // Buchung OHNE Adresse erzeugt, ohne dass es jemand bemerkt.
+  const [profilFehler, setProfilFehler] = useState(false)
   const [selectedAngel, setSelectedAngel] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
   // false = Kunde hat keine PLZ hinterlegt → Standort-Filter nicht möglich
@@ -70,7 +74,16 @@ function BuchenServiceInner() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+        // Das Profil liefert Adresse und PLZ fuer die Buchung. Ein
+        // verworfener Fehler laesst beides leer und die Buchung startet
+        // ohne Anschrift — deshalb wird er hier zumindest sichtbar.
+        const { data: p, error: profilFehler } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
+        if (profilFehler) {
+          log.error(`Profil laden fehlgeschlagen: ${profilFehler.message}`)
+          setProfilFehler(true)
+          return
+        }
+        setProfilFehler(false)
         setProfile(p)
       }
     }
@@ -132,6 +145,10 @@ function BuchenServiceInner() {
 
   const handleBook = async () => {
     if (!selectedAngel) return
+    if (profilFehler) {
+      alert('Ihre Profildaten konnten nicht geladen werden. Bitte laden Sie die Seite neu — sonst geht die Buchung ohne Ihre Anschrift raus.')
+      return
+    }
     setSubmitting(true)
 
     const notes = [
@@ -619,7 +636,7 @@ function BuchenServiceInner() {
 
             <button
               onClick={handleBook}
-              disabled={submitting}
+              disabled={submitting || profilFehler}
               style={{
                 width: '100%', padding: '16px', borderRadius: 14,
                 background: 'var(--gold)', color: '#fff',
@@ -627,7 +644,7 @@ function BuchenServiceInner() {
                 opacity: submitting ? 0.6 : 1,
               }}
             >
-              {submitting ? 'Wird gebucht...' : 'Jetzt buchen'}
+              {submitting ? 'Wird gebucht...' : profilFehler ? 'Profil nicht geladen — bitte neu laden' : 'Jetzt buchen'}
             </button>
           </>
         )}

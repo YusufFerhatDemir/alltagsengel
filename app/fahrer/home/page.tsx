@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
+import { ladeZeile, zeileVon, istFehler, LADEFEHLER_TEXT } from '@/lib/ui/ladelage'
 import Icon3D from '@/components/Icon3D'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { useTrackVisit } from '@/hooks/useTrackVisit'
@@ -37,6 +38,10 @@ export default function FahrerHomePage() {
   const [todayRides, setTodayRides] = useState<Ride[]>([])
   const [activeRide, setActiveRide] = useState<Ride | null>(null)
   const [loading, setLoading] = useState(true)
+  // Ohne diesen Zustand wird jede gestoerte Abfrage zum leeren Arbeitstag:
+  // 0 EUR, 0 Fahrten, „Keine Fahrten fuer heute". Der Fahrer liest das als
+  // Aussage ueber seinen Tag und faehrt nicht los.
+  const [ladeFehler, setLadeFehler] = useState<string | null>(null)
   const [actionInProgress, setActionInProgress] = useState<string | null>(null)
   const userLocation = useUserLocation()
 
@@ -51,10 +56,32 @@ export default function FahrerHomePage() {
     const supabase = createClient()
     setUser(user)
 
-    const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+    setLadeFehler(null)
+
+    const profilLage = await ladeZeile<any>(
+      supabase.from('profiles').select('*').eq('id', user.id).single(),
+      'fahrer:home:profil',
+    )
+    if (istFehler(profilLage)) {
+      setLadeFehler(LADEFEHLER_TEXT)
+      setLoading(false)
+      return
+    }
+    const profileData = zeileVon(profilLage)
     if (profileData) setProfile(profileData)
 
-    const { data: providerData } = await supabase.from('krankenfahrt_providers').select('*').eq('user_id', user.id).single()
+    // „Kein Fahrdienst-Eintrag" und „Eintrag nicht lesbar" sind verschiedene
+    // Aussagen: die erste rechtfertigt den leeren Bildschirm, die zweite nicht.
+    const providerLage = await ladeZeile<any>(
+      supabase.from('krankenfahrt_providers').select('*').eq('user_id', user.id).single(),
+      'fahrer:home:provider',
+    )
+    if (istFehler(providerLage)) {
+      setLadeFehler(LADEFEHLER_TEXT)
+      setLoading(false)
+      return
+    }
+    const providerData = zeileVon(providerLage)
     if (!providerData) {
       setLoading(false)
       return
@@ -67,6 +94,16 @@ export default function FahrerHomePage() {
       supabase.from('krankenfahrten').select('id, total_amount, datum', { count: 'exact' }).eq('provider_id', providerData.id).eq('status', 'completed'),
       supabase.from('krankenfahrten').select('*').order('datum', { ascending: true }).order('uhrzeit', { ascending: true }),
     ])
+
+    // Drei parallele Abfragen, drei verworfene Fehler: faellt die Fahrtenliste
+    // aus, blieben Umsatz, Fahrtenzahl und beide Listen einfach leer stehen.
+    const teilFehler = [reviewsRes.error, completedRes.error, allRidesRes.error].filter(Boolean)
+    if (teilFehler.length > 0) {
+      log.error('Fahrer-Home: Abfrage fehlgeschlagen', { msg: teilFehler[0]?.message })
+      setLadeFehler(LADEFEHLER_TEXT)
+      setLoading(false)
+      return
+    }
 
     const reviews = reviewsRes.data || []
     const completed = completedRes.data || []
@@ -160,6 +197,25 @@ export default function FahrerHomePage() {
   }
 
   const name = profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : 'Fahrer'
+
+  // Ein Ladefehler bekommt einen eigenen Bildschirm. Ihn hinter der normalen
+  // Ansicht zu verstecken hiesse, „0 EUR" und „keine Fahrten" stehen zu
+  // lassen — Zahlen, die die Seite gar nicht ermitteln konnte.
+  if (ladeFehler) {
+    return (
+      <div className="screen" style={{ backgroundColor: '#1A1612', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 }}>
+        <div style={{ fontSize: 40 }}>⚠️</div>
+        <div style={{ color: '#F5F0E8', fontSize: 16, fontWeight: 700, textAlign: 'center' }}>Ihre Fahrten konnten nicht geladen werden</div>
+        <div style={{ color: 'rgba(245,240,232,0.6)', fontSize: 14, textAlign: 'center' }}>{ladeFehler}</div>
+        <button
+          onClick={() => { setLoading(true); loadData() }}
+          style={{ background: '#C9963C', color: '#1A1612', border: 'none', padding: '10px 24px', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+        >
+          Erneut versuchen
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="screen" style={{ backgroundColor: '#1A1612' }}>

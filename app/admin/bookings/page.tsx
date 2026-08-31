@@ -53,9 +53,13 @@ export default function AdminBookingsPage() {
         }
 
         // Load all profiles for name resolution
-        const { data: profiles } = await supabase
+        // Nur die Namensaufloesung: faellt sie aus, stehen in der Liste
+        // leere Namen statt „Buchung fehlt". Kein Abbruch, aber auch kein
+        // stilles Verwerfen.
+        const { data: profiles, error: profilesErr } = await supabase
           .from('profiles')
           .select('id, first_name, last_name')
+        if (profilesErr) log.error(`Namensaufloesung fehlgeschlagen: ${profilesErr.message}`)
 
         const profileMap = new Map<string, string>()
         ;(profiles || []).forEach((p: any) => {

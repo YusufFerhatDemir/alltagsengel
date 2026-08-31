@@ -43,6 +43,14 @@ export default function EngelPflegedokuKundePage({ params }: { params: Promise<{
           supabase.from('pflege_verlauf').select('*').eq('client_id', clientId).order('eintrag_datum', { ascending: false }).limit(50),
         ])
 
+        // Fuenf parallele Abfragen, fuenf verworfene Fehler: faellt eine aus,
+        // meldet die Seite „Keine Risiken hinterlegt" bzw. „Keine
+        // betreuungsrelevanten Diagnosen freigegeben". Beides sind Aussagen
+        // ueber die Pflegesituation eines Menschen, die der Engel im Einsatz
+        // liest. Der Fehler gewinnt deshalb ueber den Leerzustand.
+        const teilFehler = [kundeRes.error, dRes.error, rRes.error, pRes.error, vRes.error].find(Boolean)
+        if (teilFehler) throw teilFehler
+
         if (kundeRes.data) setName(`${kundeRes.data.first_name ?? ''} ${kundeRes.data.last_name ?? ''}`.trim() || 'Kunde')
         setDiagnosen((dRes.data || []) as PflegeDiagnose[])
         setRisiken((rRes.data || []) as PflegeRisiko[])
@@ -51,11 +59,12 @@ export default function EngelPflegedokuKundePage({ params }: { params: Promise<{
         const aktiverPlan = (pRes.data || null) as PflegeMassnahmenplan | null
         setPlan(aktiverPlan)
         if (aktiverPlan) {
-          const { data: ms } = await supabase
+          const { data: ms, error: msErr } = await supabase
             .from('pflege_massnahmen')
             .select('*')
             .eq('plan_id', aktiverPlan.id)
             .order('sortierung', { ascending: true })
+          if (msErr) throw msErr
           setMassnahmen((ms || []) as PflegeMassnahme[])
         }
       } catch (err: any) {

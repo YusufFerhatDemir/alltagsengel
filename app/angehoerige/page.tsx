@@ -5,9 +5,12 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
-import { IconCalendar, IconChat, IconClipboard, IconDocument, IconUser, IconHeart, IconShield } from '@/components/Icons'
+import { IconCalendar, IconChat, IconClipboard, IconDocument, IconUser, IconHeart, IconShield, IconLogout } from '@/components/Icons'
+import { protokolliereAbmeldung } from '@/app/auth/login/actions'
 import type { AngehoerigenZugang, FreigabeBereich } from '@/lib/angehoerige/types'
 import { ROLLEN_LABEL, BEREICH_LABEL } from '@/lib/angehoerige/types'
+import { logger } from '@/lib/logger'
+const log = logger.child('angehoerige:portal')
 
 interface ZugangMitClient extends AngehoerigenZugang {
   client_name: string
@@ -30,6 +33,29 @@ export default function AngehoerigenPortalPage() {
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [abmelden, setAbmelden] = useState(false)
+
+  // BEFUND 31.08.2026: Das Angehoerigenportal hatte als EINZIGER der sechs
+  // Bereiche keine Abmeldung — kein Profil, kein Menue, nichts. Wer sich
+  // hier anmeldete, blieb angemeldet. Auf dem geteilten Tablet einer
+  // Familie heisst das: die naechste Person sieht die Pflegeakte eines
+  // Angehoerigen, ohne je ein Passwort eingegeben zu haben.
+  //
+  // Reihenfolge wie im Verwaltungsbereich: erst die Sicherheitsspur
+  // schreiben, dann die Sitzung beenden — danach ist serverseitig nicht
+  // mehr feststellbar, wer sich abgemeldet hat.
+  async function handleAbmelden() {
+    if (abmelden) return
+    setAbmelden(true)
+    try { await protokolliereAbmeldung() } catch { /* Spur ist kein Grund, die Abmeldung zu verhindern */ }
+    try {
+      await createClient().auth.signOut()
+    } catch (err) {
+      log.errorWithException('Abmeldung fehlgeschlagen', err)
+    }
+    router.push('/auth/login')
+    router.refresh()
+  }
 
   async function load() {
     setError('')
@@ -39,7 +65,10 @@ export default function AngehoerigenPortalPage() {
       if (!user) return
 
       const supabase = createClient()
-      const { data: p } = await supabase.from('profiles').select('first_name, last_name').eq('id', user.id).maybeSingle()
+      // Nur die Begruessung. Der Fehler bricht das Portal nicht ab — die
+      // Portaldaten kommen aus der Route darunter —, wird aber protokolliert.
+      const { data: p, error: profilFehler } = await supabase.from('profiles').select('first_name, last_name').eq('id', user.id).maybeSingle()
+      if (profilFehler) log.error(`Profilname laden fehlgeschlagen: ${profilFehler.message}`)
       setProfile(p)
 
       const res = await fetch('/api/angehoerige/portal')
@@ -102,12 +131,32 @@ export default function AngehoerigenPortalPage() {
               Hallo, {firstName}
             </div>
           </div>
-          <div style={{
-            width: 40, height: 40, borderRadius: 20,
-            background: 'linear-gradient(135deg, var(--gold), var(--gold2))',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <IconUser size={20} color="var(--coal)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button
+              type="button"
+              onClick={handleAbmelden}
+              disabled={abmelden}
+              aria-label="Abmelden"
+              title="Abmelden"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                minHeight: 44, padding: '0 14px', borderRadius: 12,
+                background: 'transparent', border: '1px solid var(--border, rgba(0,0,0,0.12))',
+                color: 'var(--ink4)', fontSize: 13, fontWeight: 600,
+                cursor: abmelden ? 'wait' : 'pointer', fontFamily: 'inherit',
+                opacity: abmelden ? 0.6 : 1,
+              }}
+            >
+              <IconLogout size={16} />
+              {abmelden ? 'Wird abgemeldet…' : 'Abmelden'}
+            </button>
+            <div style={{
+              width: 40, height: 40, borderRadius: 20,
+              background: 'linear-gradient(135deg, var(--gold), var(--gold2))',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <IconUser size={20} color="var(--coal)" />
+            </div>
           </div>
         </div>
       </div>

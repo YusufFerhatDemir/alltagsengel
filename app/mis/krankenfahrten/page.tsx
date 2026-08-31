@@ -73,17 +73,23 @@ export default function KrankenfahrtenAdminPage() {
       const supabase = createClient()
 
       // Load rides with customer profile join
-      const { data: ridesData } = await supabase
+      const { data: ridesData, error: ridesErr } = await supabase
         .from('krankenfahrten')
         .select('*, customer:profiles!krankenfahrten_customer_id_fkey(first_name, last_name, email, phone)')
         .order('created_at', { ascending: false })
         .limit(200)
 
       // Load providers with profile join
-      const { data: providersData } = await supabase
+      const { data: providersData, error: providersErr } = await supabase
         .from('krankenfahrt_providers')
         .select('*, profile:profiles!krankenfahrt_providers_user_id_fkey(first_name, last_name, email, phone)')
         .order('created_at', { ascending: false })
+
+      // Aus diesen beiden Listen werden unten Umsatz und Fahrtenzahlen
+      // gerechnet. Ein verworfener Fehler haette eine Kennzahlenseite voller
+      // Nullen ergeben — als Aussage ueber das Geschaeft, nicht als Stoerung.
+      const teilFehler = ridesErr ?? providersErr
+      if (teilFehler) throw teilFehler
 
       const r = (ridesData || []) as Ride[]
       const p = (providersData || []) as Provider[]

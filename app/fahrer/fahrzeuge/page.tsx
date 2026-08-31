@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { ladeListe, ladeZeile, zeilenVon, zeileVon, istFehler, LADEFEHLER_TEXT } from '@/lib/ui/ladelage'
 import { addVehicle as addVehicleAction, toggleVehicleActive as toggleVehicleActiveAction } from './actions'
 import { logger } from '@/lib/logger'
 const log = logger.child('fahrer:fahrzeuge')
@@ -11,6 +12,11 @@ export default function FahrzeugeManagementPage() {
   const [vehicles, setVehicles] = useState<any[]>([])
   const [provider, setProvider] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  // „Keine Fahrzeuge vorhanden" ist eine Aussage ueber den Fuhrpark. Ohne
+  // diesen Zustand traf die Seite sie auch dann, wenn sie gar nicht
+  // nachsehen konnte — der Fahrer haette ein eingetragenes Fahrzeug erneut
+  // angelegt.
+  const [ladeFehler, setLadeFehler] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
 
@@ -41,23 +47,39 @@ export default function FahrzeugeManagementPage() {
         }
 
         // Get provider ID for current user
-        const { data: providerData } = await supabase
-          .from('krankenfahrt_providers')
-          .select('*')
-          .eq('user_id', user.id)
-          .single()
+        const providerLage = await ladeZeile<any>(
+          supabase
+            .from('krankenfahrt_providers')
+            .select('*')
+            .eq('user_id', user.id)
+            .single(),
+          'fahrer:fahrzeuge:provider',
+        )
+        if (istFehler(providerLage)) {
+          setLadeFehler(LADEFEHLER_TEXT)
+          setLoading(false)
+          return
+        }
+        const providerData = zeileVon(providerLage)
 
         if (providerData) {
           setProvider(providerData)
 
           // Load vehicles for this provider
-          const { data: vehiclesData } = await supabase
-            .from('fahrzeuge')
-            .select('*')
-            .eq('provider_id', providerData.id)
-            .order('created_at', { ascending: false })
-
-          setVehicles(vehiclesData || [])
+          const fahrzeugLage = await ladeListe<any>(
+            supabase
+              .from('fahrzeuge')
+              .select('*')
+              .eq('provider_id', providerData.id)
+              .order('created_at', { ascending: false }),
+            'fahrer:fahrzeuge:liste',
+          )
+          if (istFehler(fahrzeugLage)) {
+            setLadeFehler(LADEFEHLER_TEXT)
+            setLoading(false)
+            return
+          }
+          setVehicles(zeilenVon(fahrzeugLage))
         }
       } catch (err) {
         log.errorWithException('Load error', err)
@@ -385,8 +407,11 @@ export default function FahrzeugeManagementPage() {
               }}
             >
               <div style={{ fontSize: '14px', marginBottom: '16px' }}>
-                Keine Fahrzeuge vorhanden
+                {ladeFehler ? 'Fahrzeuge konnten nicht geladen werden' : 'Keine Fahrzeuge vorhanden'}
               </div>
+              {ladeFehler && (
+                <div style={{ fontSize: '13px', color: '#a89976' }}>{ladeFehler}</div>
+              )}
             </div>
           )}
 

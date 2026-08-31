@@ -65,19 +65,31 @@ export default function OnboardingFlow() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { setLoading(false); return }
 
-      const { data: profile } = await supabase
+      // `onboarding_completed` entscheidet, ob dieser Ablauf ueberhaupt
+      // erscheint. Bei verworfenem Fehler ist `profile` null — und der
+      // Onboarding-Dialog haette sich einem laengst eingerichteten Konto
+      // erneut in den Weg gestellt. Fail-closed: im Zweifel NICHT anzeigen.
+      const { data: profile, error: profilErr } = await supabase
         .from('profiles')
         .select('onboarding_completed, role, postal_code')
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
+      if (profilErr) {
+        log.error(`Onboarding-Status nicht lesbar: ${profilErr.message}`)
+        setLoading(false)
+        return
+      }
 
       // Pflegegrad aus care_recipients laden (falls bereits vorhanden)
-      const { data: cr } = await supabase
+      const { data: cr, error: crErr } = await supabase
         .from('care_recipients')
         .select('pflegegrad')
         .eq('profile_id', user.id)
         .limit(1)
         .maybeSingle()
+      // Nur die Vorbelegung des Pflegegrads — nicht blockierend, aber auch
+      // nicht still.
+      if (crErr) log.error(`Pflegegrad-Vorbelegung fehlgeschlagen: ${crErr.message}`)
 
       if (cr?.pflegegrad) {
         setExistingPflegegrad(String(cr.pflegegrad))

@@ -7,6 +7,8 @@ import { registerAsEngel } from './actions'
 import Icon3D from '@/components/Icon3D'
 import { IconHandshake, IconMedical, IconBag, IconHome as IconHouse, IconCoffee, IconTarget, IconCheck } from '@/components/Icons'
 import { trackRegistration } from '@/lib/tracking'
+import { logger } from '@/lib/logger'
+const log = logger.child('engel:register')
 
 const serviceOptions: { icon: ReactNode; label: string }[] = [
   { icon: <IconHandshake size={16} />, label: 'Begleitung' },
@@ -42,7 +44,12 @@ export default function EngelRegisterPage() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const { data } = await supabase.from('profiles').select('first_name, last_name, email').eq('id', user.id).single()
+        // Reine Vorbelegung des Formulars: bleibt sie leer, tippt die Person
+        // ihre Angaben selbst ein — kein Datenverlust. Der Fehler wird
+        // trotzdem nicht verworfen, sonst bleibt eine gestoerte Abfrage
+        // unbemerkt.
+        const { data, error: profilFehler } = await supabase.from('profiles').select('first_name, last_name, email').eq('id', user.id).maybeSingle()
+        if (profilFehler) log.error(`Profil-Vorbelegung fehlgeschlagen: ${profilFehler.message}`)
         if (data) {
           setFirstName(data.first_name || '')
           setLastName(data.last_name || '')

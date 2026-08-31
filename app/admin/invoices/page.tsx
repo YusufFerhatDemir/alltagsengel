@@ -1,4 +1,5 @@
 'use client'
+import { logger } from '@/lib/logger'
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import DialogOverlay from '@/components/DialogOverlay'
@@ -9,6 +10,8 @@ import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/O
 import {
   advanceInvoiceSimple, recordInvoicePayment, recordInvoiceDispute, decideInvoiceKuerzung,
 } from './actions'
+
+const log = logger.child('admin:invoices')
 
 interface InvoiceRow {
   id: string
@@ -263,13 +266,19 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void; onCre
   const [records, setRecords] = useState<OpenRecord[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [loadingRecords, setLoadingRecords] = useState(false)
+  const [recordsFehler, setRecordsFehler] = useState(false)
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
       const supabase = createClient()
-      const { data } = await supabase.from('clients').select('id, first_name, last_name, insurance_name, insurance_number').order('last_name')
+      const { data, error: clientsErr } = await supabase.from('clients').select('id, first_name, last_name, insurance_name, insurance_number').order('last_name')
+      if (clientsErr) {
+        log.error(`Klientenliste laden fehlgeschlagen: ${clientsErr.message}`)
+        setErr('Die Klientenliste konnte nicht geladen werden. Bitte laden Sie die Seite neu.')
+        return
+      }
       setClients((data || []).map((c: any) => ({ id: c.id, label: `${c.first_name} ${c.last_name}`.trim(), insurance_name: c.insurance_name, insurance_number: c.insurance_number })))
     }
     load()
@@ -281,10 +290,22 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void; onCre
       setLoadingRecords(true)
       const supabase = createClient()
       // Nur abgeschlossene/unterschriebene, noch nicht abgerechnete Nachweise
-      const { data } = await supabase.from('service_records')
+      // „Keine offenen Nachweise fuer diesen Klienten." ueber einer gestoerten
+      // Abfrage heisst: erbrachte Leistungen werden nicht abgerechnet. Der
+      // Leerzustand darf hier nur nach einer erfolgreichen Abfrage stehen.
+      const { data, error: recordsErr } = await supabase.from('service_records')
         .select('id, date, service_type, duration_minutes, amount, budget_type')
         .eq('client_id', clientId).in('status', ['complete', 'signed'])
         .order('date', { ascending: true })
+      if (recordsErr) {
+        log.error(`Offene Nachweise laden fehlgeschlagen: ${recordsErr.message}`)
+        setRecordsFehler(true)
+        setRecords([])
+        setSelected(new Set())
+        setLoadingRecords(false)
+        return
+      }
+      setRecordsFehler(false)
       const recs = (data || []) as OpenRecord[]
       setRecords(recs)
       setSelected(new Set(recs.map(r => r.id)))
@@ -357,7 +378,9 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void; onCre
 
         {clientId && (
           loadingRecords ? <p style={{ fontSize: 13 }}>Nachweise werden geladen…</p> : (
-            records.length === 0 ? (
+            recordsFehler ? (
+              <Banner tone="danger">Die offenen Nachweise konnten nicht geladen werden. Bitte laden Sie die Seite neu — dies ist KEINE Aussage darüber, ob abrechenbare Leistungen vorliegen.</Banner>
+            ) : records.length === 0 ? (
               <Banner tone="info">Keine offenen Nachweise für diesen Klienten.</Banner>
             ) : (
               <div style={{ maxHeight: 260, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 10, marginBottom: 12 }}>

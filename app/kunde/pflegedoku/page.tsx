@@ -33,16 +33,23 @@ export default function KundePflegedokuPage() {
           supabase.from('pflege_verlauf').select('*').order('eintrag_datum', { ascending: false }).limit(50),
         ])
 
+        // Drei verworfene Fehler: faellt eine Abfrage aus, meldet die Seite
+        // „keine Dokumentation" — ueber die Pflege eines Menschen, der
+        // dokumentiert wird. Der Fehler gewinnt ueber den Leerzustand.
+        const teilFehler = [planRes.error, verlaufRes.error].find(Boolean)
+        if (teilFehler) throw teilFehler
+
         const aktiverPlan = (planRes.data || null) as PflegeMassnahmenplan | null
         setPlan(aktiverPlan)
         setVerlauf((verlaufRes.data || []) as PflegeVerlaufEintrag[])
 
         if (aktiverPlan) {
-          const { data: ms } = await supabase
+          const { data: ms, error: msErr } = await supabase
             .from('pflege_massnahmen')
             .select('*')
             .eq('plan_id', aktiverPlan.id)
             .order('sortierung', { ascending: true })
+          if (msErr) throw msErr
           setMassnahmen((ms || []) as PflegeMassnahme[])
         }
       } catch (err: any) {

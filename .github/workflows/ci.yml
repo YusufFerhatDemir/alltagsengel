@@ -127,6 +127,20 @@ jobs:
         # Aussagen; nur die erste rechtfertigt eine Weiterleitung.
         run: npm run lint:ladefehler
 
+      - name: Lint — Leerzustand aus verworfenem Ladefehler
+        # Die Schwesterregel zur vorigen, fuer den anderen Ausgang desselben
+        # Fehlers: `const { data } = await supabase…` verwirft den Fehler,
+        # `setListe(data || [])` macht daraus eine leere Liste, und das UI
+        # schreibt „Keine Einsaetze". Ein Engel liest das als Aussage ueber
+        # seinen Tag und faehrt nicht los.
+        #
+        # Vollscan am 31.08.2026: 55 Stellen in der Oberflaeche, darunter
+        # der Rechnungsbestand, die offenen Mahnungen und die abrechenbaren
+        # Leistungsnachweise. „Nichts da" und „nicht nachsehen koennen"
+        # sind verschiedene Aussagen; nur die erste darf ein Leerzustand
+        # behaupten.
+        run: npm run lint:leerzustand
+
       - name: Lint — Browser-Bundle
         # Track A (31.08.2026). Was in einer Client-Komponente landet, laedt
         # jeder Besucher — und das entscheidet die IMPORTKETTE, nicht die

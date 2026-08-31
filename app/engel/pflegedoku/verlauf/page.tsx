@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
+import { ladeListe, ladeZeile, zeilenVon, zeileVon, istFehler } from '@/lib/ui/ladelage'
 import { PFLEGE_VERLAUF_KATEGORIE, PFLEGE_VERLAUF_TYP } from '@/lib/admin/ops'
 import { one } from '@/lib/supabase/join'
 
@@ -41,13 +42,35 @@ function VerlaufFormular() {
       if (!user) return
       try {
         const supabase = createClient()
-        const { data: cg } = await supabase.from('caregivers').select('id').eq('user_id', user.id).single()
+        // Beide Abfragen verwarfen bis 31.08.2026 ihren Fehler. Faellt eine
+        // aus, ist die Kundenliste leer — und der Engel kann den
+        // Verlaufseintrag nicht schreiben, ohne zu erfahren warum.
+        const cgLage = await ladeZeile<{ id: string }>(
+          supabase.from('caregivers').select('id').eq('user_id', user.id).single(),
+          'engel:verlauf:caregiver',
+        )
+        if (istFehler(cgLage)) {
+          setError('Ihre Zuordnung konnte nicht geladen werden. Bitte versuchen Sie es erneut.')
+          setLoading(false)
+          return
+        }
+        const cg = zeileVon(cgLage)
         if (!cg) { setLoading(false); return }
 
-        const { data: zuordnungen } = await supabase
-          .from('assignments')
-          .select('client_id, client:clients(first_name, last_name)')
-          .eq('caregiver_id', cg.id)
+        type Klientbezug = { first_name: string | null; last_name: string | null }
+        const zuordnungsLage = await ladeListe<{ client_id: string | null; client: Klientbezug | Klientbezug[] | null }>(
+          supabase
+            .from('assignments')
+            .select('client_id, client:clients(first_name, last_name)')
+            .eq('caregiver_id', cg.id),
+          'engel:verlauf:zuordnungen',
+        )
+        if (istFehler(zuordnungsLage)) {
+          setError('Ihre Kundenliste konnte nicht geladen werden. Bitte versuchen Sie es erneut.')
+          setLoading(false)
+          return
+        }
+        const zuordnungen = zeilenVon(zuordnungsLage)
 
         const map = new Map<string, string>()
         for (const z of (zuordnungen || [])) {
