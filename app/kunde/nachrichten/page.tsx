@@ -71,9 +71,20 @@ export default function KundeNachrichtenPage() {
         // client_id ermitteln: die clients-Tabelle selbst ist für Kunden nicht
         // lesbar (RLS), aber die eigenen Budget-/Leistungs-/Rechnungszeilen
         // enthalten die client_id.
+        //
+        // Die drei Tabellen liefen nacheinander: drei Umlaeufe zum Server,
+        // bevor die Seite ueberhaupt anfangen konnte, den Verlauf zu laden —
+        // und der haeufigste Fall (nur `invoices` antwortet) war der
+        // langsamste. Sie beantworten dieselbe Frage unabhaengig
+        // voneinander, laufen also zusammen. Die Rangfolge bleibt: das
+        // Ergebnis wird in der urspruenglichen Reihenfolge ausgewertet,
+        // nicht in der, in der die Antworten eintreffen.
+        const TABELLEN = ['client_budgets', 'service_records', 'invoices'] as const
+        const antworten = await Promise.all(
+          TABELLEN.map(t => supabase.from(t).select('client_id').limit(1)),
+        )
         let cid: string | null = null
-        for (const table of ['client_budgets', 'service_records', 'invoices'] as const) {
-          const { data } = await supabase.from(table).select('client_id').limit(1)
+        for (const { data } of antworten) {
           if (data && data[0]?.client_id) { cid = data[0].client_id; break }
         }
         if (cancelled) return

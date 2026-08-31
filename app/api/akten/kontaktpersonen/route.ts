@@ -4,6 +4,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAktenAdmin } from '@/lib/akten/api-auth'
 import { createKontaktperson, listKontaktpersonen } from '@/lib/akten/kontaktpersonen'
+import { clientGehoertZuOrg } from '@/lib/clients/organization-guard'
 import { withTracking } from '@/lib/monitoring/tracker'
 
 export const GET = withTracking(async function GET(request: Request) {
@@ -36,6 +37,25 @@ export const POST = withTracking(async function POST(request: Request) {
     }
 
     const admin = createAdminClient()
+
+    // Mandantenschutz fuer die clientId aus dem Rumpf.
+    //
+    // Die beiden Schwesterwege des Moduls stellen diese Frage seit Track 10
+    // (`assertZuordnungInOrg` in dokumente/ und vertraege/); dieser hier war
+    // uebersehen worden. Geschrieben wird mit dem Dienstschluessel, RLS
+    // greift also nicht, und `client_id` ist ein einfacher Fremdschluessel:
+    // die Bedingung sagt „diese Zeile existiert", nicht „sie gehoert zu
+    // dieser Organisation". `organization_id` kommt aus dem Auth-Kontext,
+    // ein Lesen ueber die Grenze entsteht dadurch nicht — was entsteht, ist
+    // eine Kontaktperson, die an einem fremden Klienten haengt und in
+    // keiner Akte mehr auftaucht.
+    if (!(await clientGehoertZuOrg(admin, body.clientId, organizationId))) {
+      return NextResponse.json(
+        { error: 'Klient nicht gefunden oder gehört nicht zur Organisation.' },
+        { status: 404 },
+      )
+    }
+
     const kontaktperson = await createKontaktperson(admin, {
       organizationId,
       clientId: body.clientId,
