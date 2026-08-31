@@ -146,9 +146,13 @@ jobs:
         # leer, ohne zu sagen warum. Genau so entstand die QM/PDL-Luecke.
         #
         # WARUM MIT OBERGRENZE STATT --strict
-        # Am 31.08.2026 standen 51 solcher Paare offen (52 minus den einen
-        # Fehlbefund /admin/sepa → documents: das war der SPEICHER-Eimer,
-        # nicht die Tabelle). Jedes zu schliessen
+        # Am 31.08.2026 standen 50 solcher Paare offen. Von den urspruenglich
+        # 52 fiel eines als Fehlbefund weg (/admin/sepa → documents war der
+        # SPEICHER-Eimer, nicht die Tabelle) und eines wurde geschlossen:
+        # /admin/abrechnung liest die Verordnungen jetzt ueber
+        # /api/billing/verordnungen, das nur die abrechnungsrelevanten
+        # Spalten herausgibt — RLS kann keine Spalten ausblenden, eine Route
+        # schon. Jedes weitere zu schliessen
         # heisst, je Tabelle zu entscheiden, welche Rolle sie sehen darf —
         # eine Sicherheitsentscheidung, keine Sammelaktion. Ein harter
         # Blocker waere binnen einer Woche mit `|| true` entschaerft worden,
@@ -165,7 +169,7 @@ jobs:
           SUPABASE_SECRET_KEY: ${{ secrets.SCHEMA_DRIFT_SUPABASE_SECRET_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ''
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ''
-        run: npm run lint:rls-sicht -- --hoechstens 51
+        run: npm run lint:rls-sicht -- --hoechstens 50
 
       - name: Production build
         env:

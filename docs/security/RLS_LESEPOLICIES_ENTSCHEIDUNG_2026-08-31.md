@@ -112,7 +112,7 @@ blendet Speicherpfade jetzt vor der Tabellensuche aus
 (`scripts/lint-rls-sichtbarkeit.ts`); RLS auf Storage ist eine andere Frage
 (`storage.objects`) und gehört nicht in diese Prüfung.
 
-## Offener Punkt — kein Blocker
+## Nachtrag — der offene Punkt ist geschlossen (`c31da31a`)
 
 `/admin/abrechnung` liest `verordnungen`, um Genehmigungsstand,
 Aktenzeichen, Kostenträger und Gültigkeit zu zeigen — alles
@@ -120,10 +120,22 @@ abrechnungsrelevant und alles harmlos. In derselben Zeile steht aber
 `diagnose`. **RLS kann keine Spalten ausblenden**: entweder die ganze Zeile
 oder keine.
 
-Bis dafür eine Route existiert, die nur die abrechnungsrelevanten Spalten
-herausgibt, bleibt der Verordnungsteil dieser Seite für die Buchhaltung
-leer — und sagt es. Das ist die sichere Richtung; der Umbau ist eine
-Funktionsergänzung, keine Sicherheitslücke.
+Die Route gibt es jetzt: `GET /api/billing/verordnungen` verlangt
+`abrechnung.lesen`, nimmt die Organisation aus dem Kontext und gibt genau
+acht Spalten heraus — Genehmigungsstand, Aktenzeichen, Kostenträger samt
+IK, Gültigkeit. `diagnose`, `leistung_beschreibung`, `arzt_name` und die
+Dokumentverweise verlassen den Server nicht.
+
+Die Liste ist eine **Erlaubnisliste** (`lib/billing/verordnung-projektion.ts`).
+Eine Sperrliste („alles außer `diagnose`") wäre bequemer und wäre falsch:
+die nächste Spalte auf dieser Tabelle wäre damit automatisch drin, und
+niemand hätte eine Entscheidung getroffen.
+
+**Die Policy bleibt bei `pflege.lesen`.** Über den Browser-Client sieht die
+Buchhaltung `verordnungen` weiterhin nicht; die Route ist der eine,
+benannte Weg mit der engeren Antwort. Ein Test hält beides zusammen —
+darunter einer, der prüft, dass die alte Browser-Abfrage auf der Seite
+wirklich verschwunden ist.
 
 ## Nachweis
 
