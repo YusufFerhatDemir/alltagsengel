@@ -165,6 +165,10 @@ describe('Regressionsscan: keine direkten Legacy-Key-Lesezugriffe mehr', () => {
     // Prueft, ob bei Resend ueberhaupt ein Webhook eingetragen ist —
     // ohne diesen Aufruf misst der Lauf nichts.
     'scripts/verify-bounce-kette.mjs',
+    // Liest die Domain-Einstellung open_tracking/click_tracking bei
+    // Resend. Auch das ist die RESEND-API, nicht PostgREST: sie verlangt
+    // den Bearer-Header, und apiHeaders() waere hier schlicht falsch.
+    'scripts/verify-tracking.mjs',
   ]
 
   it('scripts/*.mjs bauen PostgREST-Header nur ueber apiHeaders()', async () => {
