@@ -149,10 +149,16 @@ function bezeichne(rec: BelegFelder): string {
  * Wirft UserFacingError(422), wenn ein Nachweis ohne Unterschriftsbeleg in
  * die Abrechnung laufen wuerde.
  *
- * Aufzurufen VOR der Rechnungserstellung. Die DB-Sperre
- * (`create_invoice_draft_atomic`) prueft dieselbe Frage, akzeptiert dabei
- * aber den blossen `proof_status` — bis Migration 20261017000000 angewendet
- * ist, ist diese Pruefung hier die einzige, die den Beleg verlangt.
+ * Aufzurufen VOR der Rechnungserstellung.
+ *
+ * NACHTRAG 31.08.2026: Migration 20261017000000 IST angewendet — der
+ * Trigger `trg_a_unterschrift_beleg` weist einen Wechsel auf
+ * 'UNTERSCHRIEBEN'/'ABGERECHNET' ohne Beleg heute in der Datenbank ab,
+ * mit dem Dienstschluessel und an jeder Route vorbei (gemessen:
+ * `npm run verify:unterschrift`, Station U4). Diese Pruefung hier ist
+ * damit nicht mehr die einzige, sondern die erste von zweien — sie
+ * antwortet frueher und mit einer verstaendlichen Meldung, die Datenbank
+ * antwortet unumgehbar.
  */
 export function assertNachweiseBelegt(nachweise: readonly BelegFelder[]): void {
   const luecken = nachweise.filter(belegLuecke)
