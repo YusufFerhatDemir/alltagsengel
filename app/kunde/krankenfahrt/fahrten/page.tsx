@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { logger } from '@/lib/logger'
+const log = logger.child('kunde:fahrten')
 
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
   pending: { label: 'Ausstehend', color: '#DBA84A', bg: 'rgba(201,150,60,0.15)' },
@@ -17,6 +19,7 @@ export default function KundeFahrtenPage() {
   const [rides, setRides] = useState<any[]>([])
   const [reviews, setReviews] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
+  const [ladeFehler, setLadeFehler] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -26,20 +29,34 @@ export default function KundeFahrtenPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/auth/login'); return }
 
-    const { data: ridesData } = await supabase
+    // „Noch keine Fahrten" ist eine Aussage ueber die Buchungshistorie. Ohne
+    // die Fehlerpruefung traf die Seite sie auch bei gestoerter Abfrage — und
+    // eine Kundin haette ihre bereits gebuchte Fahrt ein zweites Mal bestellt.
+    const { data: ridesData, error: ridesError } = await supabase
       .from('krankenfahrten')
       .select('*, krankenfahrt_providers(company_name)')
       .eq('customer_id', user.id)
       .order('datum', { ascending: false })
 
+    if (ridesError) {
+      log.error(`Fahrten laden fehlgeschlagen: ${ridesError.message}`)
+      setLadeFehler(true)
+      setLoading(false)
+      return
+    }
+    setLadeFehler(false)
     setRides(ridesData || [])
 
     // Check which rides have been reviewed
-    const { data: reviewsData } = await supabase
+    // Nur eine Anzeige-Ergaenzung (Knopf „Bewerten"): faellt sie aus, fehlt
+    // hoechstens ein Haken — deshalb hier kein Abbruch, aber auch kein
+    // stilles Verwerfen.
+    const { data: reviewsData, error: reviewsError } = await supabase
       .from('krankenfahrt_reviews')
       .select('krankenfahrt_id')
       .eq('customer_id', user.id)
 
+    if (reviewsError) log.error(`Bewertungsstatus laden fehlgeschlagen: ${reviewsError.message}`)
     if (reviewsData) {
       setReviews(new Set(reviewsData.map(r => r.krankenfahrt_id)))
     }
@@ -63,6 +80,18 @@ export default function KundeFahrtenPage() {
         <div style={{ padding: '0 20px' }}>
           {loading ? (
             <div style={{ textAlign: 'center', padding: '40px', color: 'rgba(245,240,232,0.4)' }}>Laden...</div>
+          ) : ladeFehler ? (
+            <div style={{ textAlign: 'center', padding: '48px 20px' }}>
+              <div style={{ fontSize: '48px', marginBottom: '12px' }}>⚠️</div>
+              <div style={{ fontWeight: '600', fontSize: 17, color: 'rgba(245,240,232,0.7)', marginBottom: '8px' }}>Fahrten konnten nicht geladen werden</div>
+              <div style={{ fontSize: '13px', color: 'rgba(245,240,232,0.4)', lineHeight: 1.6, marginBottom: 20 }}>
+                Bitte laden Sie die Seite neu. Ihre gebuchten Fahrten bestehen weiter.
+              </div>
+              <button onClick={() => { setLoading(true); loadData() }} style={{
+                background: 'rgba(201,150,60,0.15)', border: '1px solid rgba(201,150,60,0.3)',
+                color: '#C9963C', borderRadius: 12, padding: '10px 24px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+              }}>Erneut versuchen</button>
+            </div>
           ) : rides.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '48px 20px' }}>
               <div style={{ fontSize: '48px', marginBottom: '12px' }}>🚗</div>

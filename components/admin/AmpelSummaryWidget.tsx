@@ -54,11 +54,15 @@ export default function AmpelSummaryWidget({ year, month, refreshKey }: {
         const reviewErrorsByRecord = new Map<string, { severity: string }[]>()
         const recordIds = (recordsRes.data || []).map((r: any) => r.id)
         if (recordIds.length > 0) {
-          const { data: errs } = await supabase
+          // Die offenen Pruefefehler faerben die Ampel gelb und rot. Ihr
+          // Verlust liess das Widget gruen melden, obwohl niemand nachgesehen
+          // hat — der Leerzustand ist hier eine Entwarnung.
+          const { data: errs, error: errsErr } = await supabase
             .from('review_errors')
             .select('service_record_id, severity, resolved')
             .in('service_record_id', recordIds)
             .eq('resolved', false)
+          if (errsErr) throw errsErr
           for (const e of errs || []) {
             const arr = reviewErrorsByRecord.get(e.service_record_id) || []
             arr.push({ severity: e.severity })

@@ -65,11 +65,15 @@ export default function BewertungPage() {
       setAngel({ ...angelData, profile: prof })
 
       // Check if already reviewed
-      const { data: existing } = await supabase
+      // Der Fehler darf hier nicht verworfen werden: `existing` bleibt sonst
+      // null, das Formular oeffnet leer, und die Kundin gibt eine zweite
+      // Bewertung zu einer bereits bewerteten Buchung ab.
+      const { data: existing, error: existingErr } = await supabase
         .from('angel_reviews')
         .select('id, rating, punctuality, friendliness, reliability, comment')
         .eq('booking_id', bookingId)
         .maybeSingle()
+      if (existingErr) throw existingErr
 
       if (existing) {
         setAlreadyRated(true)

@@ -1,4 +1,5 @@
 'use client'
+import { logger } from '@/lib/logger'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -12,6 +13,8 @@ import {
   changeOwnPassword,
 } from './actions'
 
+const log = logger.child('admin:settings')
+
 export default function AdminSettings() {
   const router = useRouter()
   const [currentUser, setCurrentUser] = useState<any>(null)
@@ -19,6 +22,7 @@ export default function AdminSettings() {
   const [admins, setAdmins] = useState<any[]>([])
   const [allUsers, setAllUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [ladeFehler, setLadeFehler] = useState(false)
   const [mfaFaktoren, setMfaFaktoren] = useState<MfaFaktor[]>([])
   const [mfaGeladen, setMfaGeladen] = useState(false)
 
@@ -57,23 +61,47 @@ export default function AdminSettings() {
     setCurrentUser(user)
 
     if (user) {
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+      // Die eigene Rolle steuert, welche Schaltflaechen diese Seite anbietet.
+      // Ein verworfener Fehler machte daraus stillschweigend „keine Rolle".
+      const { data: profile, error: profilErr } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+      if (profilErr) {
+        log.error(`Eigene Rolle laden fehlgeschlagen: ${profilErr.message}`)
+        setLadeFehler(true)
+        setLoading(false)
+        return
+      }
       setCurrentRole(profile?.role || '')
     }
 
     // Alle Admins laden
-    const { data: adminProfiles } = await supabase
+    // Eine leere Administratorenliste ueber einer gestoerten Abfrage sieht
+    // aus, als gaebe es keine Administration — genau die Grundlage, auf der
+    // jemand eine zweite anlegt.
+    const { data: adminProfiles, error: adminsErr } = await supabase
       .from('profiles')
       .select('id, first_name, last_name, email, role')
       .in('role', ['admin', 'superadmin'])
       .order('role', { ascending: false })
+    if (adminsErr) {
+      log.error(`Administratorenliste laden fehlgeschlagen: ${adminsErr.message}`)
+      setLadeFehler(true)
+      setLoading(false)
+      return
+    }
     setAdmins(adminProfiles || [])
 
     // Alle User laden (für Admin-Vergabe)
-    const { data: users } = await supabase
+    const { data: users, error: usersErr } = await supabase
       .from('profiles')
       .select('id, first_name, last_name, email, role')
       .order('created_at', { ascending: false })
+    if (usersErr) {
+      log.error(`Benutzerliste laden fehlgeschlagen: ${usersErr.message}`)
+      setLadeFehler(true)
+      setLoading(false)
+      return
+    }
+    setLadeFehler(false)
     setAllUsers(users || [])
 
     // Demo-Zugang Status + Ablaufzeit laden
@@ -236,6 +264,18 @@ export default function AdminSettings() {
   }
 
   if (loading) return <div style={{ padding: 40, color: 'var(--ink)' }}>Laden...</div>
+
+  // Keine Rechteverwaltung ueber ungelesenen Daten: eine leere Admin-Liste
+  // und eine leere eigene Rolle laden dazu ein, Rechte neu zu vergeben.
+  if (ladeFehler) return (
+    <div style={{ padding: 40, color: 'var(--ink)' }}>
+      <h2 style={{ marginBottom: 8 }}>Einstellungen konnten nicht geladen werden</h2>
+      <p style={{ opacity: 0.7, marginBottom: 16 }}>
+        Bitte laden Sie die Seite neu. Die angezeigten Listen wären unvollständig — das ist KEINE Aussage über vorhandene Konten oder Rollen.
+      </p>
+      <button onClick={() => { setLadeFehler(false); loadData() }} className="btn-confirm">Erneut versuchen</button>
+    </div>
+  )
 
   const isSuperadmin = currentRole === 'superadmin'
   const nonAdminUsers = allUsers.filter(u => !['admin', 'superadmin'].includes(u.role))

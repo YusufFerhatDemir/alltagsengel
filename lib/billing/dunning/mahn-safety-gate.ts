@@ -346,13 +346,22 @@ export async function pruefeMahnbarkeit(
   }
 
   // ═══ 7 — Beanstandung / Widerspruch ═══
-  const { data: beanstandungen } = await admin
+  //
+  // BEFUND 31.08.2026: Beide Abfragen verwarfen ihren Fehler. Faellt eine
+  // aus, ist das Ergebnis null, die Anzahl 0 — und dieses Tor meldet
+  // „Keine Beanstandung, kein offener Widerspruch." Eine Mahnung geht dann
+  // an jemanden, der der Forderung ausdruecklich WIDERSPROCHEN hat.
+  //
+  // Das ist genau der Fall, den Pruefung 6 drei Zeilen weiter oben richtig
+  // behandelt: `korrErr` fuehrt dort zu 'gesperrt', nicht zu 'frei'. Ein
+  // Tor, das bei eigener Stoerung oeffnet, ist kein Tor. Fail-closed.
+  const { data: beanstandungen, error: beanstErr } = await admin
     .from('invoice_disputes')
     .select('id')
     .eq('invoice_id', invoiceId)
     .eq('status', 'open')
 
-  const { data: differenzen } = await admin
+  const { data: differenzen, error: diffErr } = await admin
     .from('payment_differences')
     .select('id')
     .eq('invoice_id', invoiceId)
@@ -360,7 +369,10 @@ export async function pruefeMahnbarkeit(
 
   const beanstandungenAnzahl = (beanstandungen ?? []).length
   const differenzenAnzahl = (differenzen ?? []).length
-  if (beanstandungenAnzahl + differenzenAnzahl > 0) {
+  if (beanstErr || diffErr) {
+    s.setze('beanstandung', 'gesperrt',
+      `Beanstandungen nicht prüfbar: ${(beanstErr ?? diffErr)!.message}`)
+  } else if (beanstandungenAnzahl + differenzenAnzahl > 0) {
     s.setze('beanstandung', 'gesperrt',
       [
         beanstandungenAnzahl > 0 ? `${beanstandungenAnzahl} offene Beanstandung(en)` : null,
@@ -371,7 +383,13 @@ export async function pruefeMahnbarkeit(
   }
 
   // ═══ 8/9 — Mahneintrag ═══
-  const { data: eintragRoh } = await admin
+  //
+  // Derselbe Befund: ohne Fehlerpruefung ist `eintrag` bei einer Stoerung
+  // null. Dann bleibt `block_dunning` ungesehen, und die Meldung lautet
+  // ausgerechnet „Keine manuelle Sperre gesetzt." — eine von Hand
+  // gestoppte Mahnung liefe wieder an. Ausserdem faellt `aktuelleStufe`
+  // auf 'offen' zurueck, die Mahnkette begaenne von vorn.
+  const { data: eintragRoh, error: eintragErr } = await admin
     .from('dunning_entries')
     .select('id, dunning_level, block_dunning, block_reason, next_dunning_at')
     .eq('invoice_id', invoiceId)
@@ -388,7 +406,10 @@ export async function pruefeMahnbarkeit(
 
   const aktuelleStufe = (eintrag?.dunning_level as DunningLevel) ?? 'offen'
 
-  if (eintrag?.block_dunning) {
+  if (eintragErr) {
+    s.setze('manuelle_sperre', 'gesperrt',
+      `Mahnstand nicht prüfbar: ${eintragErr.message}`)
+  } else if (eintrag?.block_dunning) {
     s.setze('manuelle_sperre', 'gesperrt',
       `Manuell gesperrt: ${eintrag.block_reason || 'kein Grund hinterlegt'}.`)
   } else {

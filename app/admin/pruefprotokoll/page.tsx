@@ -71,7 +71,12 @@ export default function AdminPruefprotokollPage() {
 
   const loadClientOptions = useCallback(async () => {
     const supabase = createClient()
-    const { data } = await supabase.from('clients').select('id, first_name, last_name').order('last_name')
+    const { data, error: clientsErr } = await supabase.from('clients').select('id, first_name, last_name').order('last_name')
+    if (clientsErr) {
+      log.error(`Klientenliste laden fehlgeschlagen: ${clientsErr.message}`)
+      setMappeError('Die Klientenliste konnte nicht geladen werden. Bitte laden Sie die Seite neu.')
+      return
+    }
     setClientOptions((data || []).map((c: any) => ({ id: c.id, name: fullName(c) })))
   }, [])
 

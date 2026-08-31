@@ -62,18 +62,28 @@ function useAdminAuth() {
     // Rueckfall". Sonst zeigte die Navigation nach einer Herabstufung in
     // der Datenbank weiter die alten Bereiche an, deren Schnittstellen
     // laengst 403 antworten — siehe wirksameRolle().
-    const ermitteln = async (): Promise<string> => {
+    //
+    // Die Abfrage verwarf bis 31.08.2026 ihren Fehler. Fail-closed war das
+    // richtig — die Meldung nicht: der Nutzer landete auf
+    // `?error=admin_required`, also „Sie sind keine Administration", obwohl
+    // die Pruefung selbst gescheitert war. Eine Pflegedienstleitung liest
+    // daraus, ihre Rechte seien entzogen worden. Deshalb ein eigener Grund.
+    const ermitteln = async (): Promise<{ rolle: string; ladefehler: boolean }> => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return ''
-      const { data: profile } = await supabase
+      if (!user) return { rolle: '', ladefehler: false }
+      const { data: profile, error: rollenFehler } = await supabase
         .from('profiles').select('role').eq('id', user.id).maybeSingle()
-      return wirksameRolle(extractRole(user), profile?.role ?? '')
+      if (rollenFehler) return { rolle: '', ladefehler: true }
+      return { rolle: wirksameRolle(extractRole(user), profile?.role ?? ''), ladefehler: false }
     }
 
     const { data: { session } } = await supabase.auth.getSession()
     if (session) {
-      if (uebernehmen(await ermitteln())) return
-      router.replace('/auth/login?error=admin_required')
+      const ergebnis = await ermitteln()
+      if (uebernehmen(ergebnis.rolle)) return
+      router.replace(ergebnis.ladefehler
+        ? '/auth/login?error=rolle_nicht_pruefbar'
+        : '/auth/login?error=admin_required')
       return
     }
 
@@ -84,8 +94,11 @@ function useAdminAuth() {
       const { data: { session: retrySession } } = await supabase.auth.getSession()
       if (retrySession) {
         clearInterval(retryInterval)
-        if (uebernehmen(await ermitteln())) return
-        router.replace('/auth/login?error=admin_required')
+        const ergebnis = await ermitteln()
+        if (uebernehmen(ergebnis.rolle)) return
+        router.replace(ergebnis.ladefehler
+          ? '/auth/login?error=rolle_nicht_pruefbar'
+          : '/auth/login?error=admin_required')
         return
       }
       if (attempts >= maxAttempts) {

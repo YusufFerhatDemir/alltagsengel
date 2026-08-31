@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { ladeZeile, zeileVon, istFehler, LADEFEHLER_TEXT } from '@/lib/ui/ladelage'
 import { saveFahrerProfile } from './actions'
 import { logger } from '@/lib/logger'
 const log = logger.child('fahrer:profil')
@@ -12,6 +13,11 @@ export default function FahrerProfilPage() {
   const [profile, setProfile] = useState<any>(null)
   const [provider, setProvider] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  // Diese Seite ist ein FORMULAR ueber gespeicherten Daten. Ein verworfener
+  // Ladefehler laesst die Felder leer — und „Speichern" schreibt die Leere
+  // dann in die Datenbank zurueck. Der Leerzustand ist hier kein
+  // Anzeigefehler, sondern ein Datenverlust.
+  const [ladeFehler, setLadeFehler] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState('')
 
@@ -30,13 +36,23 @@ export default function FahrerProfilPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/auth/login'); return }
 
-    const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+    const profilLage = await ladeZeile<any>(
+      supabase.from('profiles').select('*').eq('id', user.id).single(),
+      'fahrer:profil:profil',
+    )
+    if (istFehler(profilLage)) { setLadeFehler(LADEFEHLER_TEXT); setLoading(false); return }
+    const profileData = zeileVon(profilLage)
     if (profileData) {
       setProfile(profileData)
       setPhone(profileData.phone || '')
     }
 
-    const { data: providerData } = await supabase.from('krankenfahrt_providers').select('*').eq('user_id', user.id).single()
+    const providerLage = await ladeZeile<any>(
+      supabase.from('krankenfahrt_providers').select('*').eq('user_id', user.id).single(),
+      'fahrer:profil:provider',
+    )
+    if (istFehler(providerLage)) { setLadeFehler(LADEFEHLER_TEXT); setLoading(false); return }
+    const providerData = zeileVon(providerLage)
     if (providerData) {
       setProvider(providerData)
       setCompanyName(providerData.company_name || '')
@@ -82,6 +98,17 @@ export default function FahrerProfilPage() {
   if (loading) return (
     <div className="phone"><div className="screen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
       <div style={{ color: '#DBA84A' }}>Laden...</div>
+    </div></div>
+  )
+
+  // Kein leeres Formular ueber ungelesenen Daten anbieten: sonst speichert
+  // der naechste Klick Leerfelder ueber die vorhandenen Angaben.
+  if (ladeFehler) return (
+    <div className="phone"><div className="screen" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', gap: 16, padding: 24 }}>
+      <div style={{ fontSize: 40 }}>⚠️</div>
+      <div style={{ color: '#F5F0E8', fontWeight: 700, textAlign: 'center' }}>Ihr Profil konnte nicht geladen werden</div>
+      <div style={{ color: 'rgba(245,240,232,0.6)', fontSize: 14, textAlign: 'center' }}>{ladeFehler}</div>
+      <button onClick={() => { setLadeFehler(null); setLoading(true); loadData() }} style={{ background: '#C9963C', color: '#1A1612', border: 'none', padding: '10px 24px', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>Erneut versuchen</button>
     </div></div>
   )
 

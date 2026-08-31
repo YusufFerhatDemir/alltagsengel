@@ -8,6 +8,8 @@ import {
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import Link from 'next/link'
 import { klickbareZeile } from '@/lib/a11y'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:rechnungen')
 
 interface InvoiceRow {
   id: string
@@ -48,18 +50,30 @@ const PAID_STATUSES = new Set(['paid', 'bezahlt', 'akzeptiert'])
 export default function RechnungenPage() {
   const [invoices, setInvoices] = useState<InvoiceRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [ladeFehler, setLadeFehler] = useState(false)
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
 
   useEffect(() => {
     async function load() {
       const supabase = createClient()
-      const { data } = await supabase
+      // „Noch keine Rechnungen" ist eine Aussage ueber den Rechnungsbestand.
+      // Ohne Fehlerpruefung traf die Seite sie auch bei gestoerter Abfrage —
+      // und die Buchhaltung haette bereits gestellte Rechnungen erneut
+      // erzeugt.
+      const { data, error: ladeFehlerRes } = await supabase
         .from('invoices')
         .select('id, invoice_number, invoice_number_formatted, client_id, insurance_name, period_start, period_end, total_amount, paid_amount, status, billing_type, due_date, dunning_level, client:clients(first_name, last_name)')
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(500)
+      if (ladeFehlerRes) {
+        log.error(`Rechnungsliste laden fehlgeschlagen: ${ladeFehlerRes.message}`)
+        setLadeFehler(true)
+        setLoading(false)
+        return
+      }
+      setLadeFehler(false)
       setInvoices((data || []).map((i: any) => ({
         id: i.id,
         invoice_number: i.invoice_number_formatted || i.invoice_number,
@@ -136,7 +150,9 @@ export default function RechnungenPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {ladeFehler ? (
+                <EmptyRow colSpan={8}>Die Rechnungen konnten nicht geladen werden. Bitte laden Sie die Seite neu — dies ist KEINE Aussage über den Rechnungsbestand.</EmptyRow>
+              ) : filtered.length === 0 ? (
                 <EmptyRow colSpan={8}>{search || filter !== 'all' ? 'Keine Treffer' : 'Noch keine Rechnungen'}</EmptyRow>
               ) : filtered.map(i => {
                 const sm = statusMeta(INVOICE_STATUS, i.status)

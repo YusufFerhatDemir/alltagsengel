@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types'
 import DialogOverlay from '@/components/DialogOverlay'
 import { ROLLEN, ROLLEN_BEZEICHNUNG, type Rolle } from '@/lib/auth/rollen'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:users')
 
 /**
  * Rollen, die hier vergeben werden koennen. 'superadmin' fehlt bewusst:
@@ -28,14 +30,24 @@ export default function AdminUsersPage() {
   const [sendNotification, setSendNotification] = useState(true)
   const [rollenWechsel, setRollenWechsel] = useState<string | null>(null)
   const [rollenMeldung, setRollenMeldung] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [ladeFehler, setLadeFehler] = useState(false)
 
   useEffect(() => {
     async function loadUsers() {
       const supabase = createClient()
-      const { data } = await supabase
+      // „0 Benutzer registriert" ueber einer gestoerten Abfrage ist eine
+      // Aussage ueber den Kontenbestand, die die Seite nicht treffen kann.
+      const { data, error: profilesErr } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false })
+      if (profilesErr) {
+        log.errorWithException('Benutzerliste Ladefehler', profilesErr)
+        setLadeFehler(true)
+        setLoading(false)
+        return
+      }
+      setLadeFehler(false)
       setProfiles(data || [])
       setLoading(false)
     }
@@ -102,7 +114,7 @@ export default function AdminUsersPage() {
       <div className="admin-page-header">
         <div>
           <h1>Benutzer</h1>
-          <p className="admin-subtitle">{profiles.length} Benutzer registriert</p>
+          <p className="admin-subtitle">{ladeFehler ? 'Benutzerliste konnte nicht geladen werden — bitte Seite neu laden' : `${profiles.length} Benutzer registriert`}</p>
         </div>
       </div>
 

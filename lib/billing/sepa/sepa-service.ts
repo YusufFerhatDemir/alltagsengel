@@ -203,7 +203,7 @@ export async function createSepaBatch(
   const glaeubigerId = pruefeGlaeubigerIdOderWerfe(org.sepa_creditor_id)
 
   // Rechnungen mit Client + Mandat laden
-  const { data: invoices } = await supabase
+  const { data: invoices, error: invoicesErr } = await supabase
     .from('invoices')
     .select('id, invoice_number, invoice_number_formatted, total_amount, paid_amount, client_id, status, frozen_at, deleted_at')
     .in('id', invoiceIds)
@@ -213,6 +213,12 @@ export async function createSepaBatch(
     // vom Konto des Kunden holen.
     .is('deleted_at', null)
 
+  // Ein Abfragefehler ist keine leere Ergebnismenge: „Keine gültigen
+  // Rechnungen gefunden." waere hier eine Aussage ueber den Bestand, die
+  // die Funktion gar nicht treffen kann.
+  if (invoicesErr) {
+    throw new Error(`Die Rechnungen konnten nicht geladen werden — es wird nichts eingezogen. (${invoicesErr.message})`)
+  }
   if (!invoices || invoices.length === 0) throw new Error('Keine gültigen Rechnungen gefunden.')
 
   // Für jeden Client das aktive Mandat laden.
@@ -223,7 +229,7 @@ export async function createSepaBatch(
   // abgebucht wird. Das ist keine Kleinigkeit — es ist die Frage, wessen
   // IBAN belastet wird.
   const clientIds = [...new Set(invoices.map(i => i.client_id))]
-  const { data: mandates } = await supabase
+  const { data: mandates, error: mandatesErr } = await supabase
     .from('sepa_mandates')
     .select('*')
     .eq('organization_id', organizationId)
@@ -231,6 +237,14 @@ export async function createSepaBatch(
     .in('client_id', clientIds)
     .order('created_at', { ascending: false })
 
+
+  // Ohne lesbare Mandate faende die Schleife unten kein einziges — der
+  // Lauf haette dann „kein Mandat" gemeldet, wo in Wahrheit die Abfrage
+  // ausgefallen ist. Eine Einzugsermaechtigung ist nichts, was man aus
+  // einem verworfenen Fehler ableiten darf.
+  if (mandatesErr) {
+    throw new Error(`Die SEPA-Mandate konnten nicht geladen werden — es wird nichts eingezogen. (${mandatesErr.message})`)
+  }
 
   const mandateByClient = new Map<string, any>()
   for (const m of mandates || []) {
@@ -245,12 +259,24 @@ export async function createSepaBatch(
   // 'ruecklastschrift' und 'fehlerhaft' zählen bewusst NICHT — dort ist der
   // Posten erledigt, die Forderung lebt weiter und darf erneut eingezogen
   // werden.
-  const { data: laufendePosten } = await supabase
+  const { data: laufendePosten, error: laufendeErr } = await supabase
     .from('sepa_batch_items')
     .select('invoice_id, status')
     .eq('organization_id', organizationId)
     .in('invoice_id', invoiceIds)
     .in('status', ['offen', 'eingezogen'])
+
+  // BEFUND 31.08.2026: Der Fehler dieser Abfrage wurde verworfen — und mit
+  // ihm die Sperre, die der Kommentar darueber beschreibt. Faellt sie aus,
+  // ist `bereitsImEinzug` leer, und JEDE uebergebene Rechnung wird erneut
+  // eingezogen. Aus einer Netzstoerung entsteht dann genau die zweite,
+  // unberechtigte Abbuchung, die diese Sperre verhindern soll.
+  if (laufendeErr) {
+    throw new Error(
+      'Es konnte nicht geprüft werden, welche Rechnungen bereits im Einzug sind — '
+      + `es wird nichts eingezogen, um eine doppelte Abbuchung auszuschließen. (${laufendeErr.message})`
+    )
+  }
 
   const bereitsImEinzug = new Set<string>((laufendePosten || []).map(p => p.invoice_id))
 
@@ -418,12 +444,29 @@ export async function createSepaBatch(
    * pain.008-Datei ist mit allen Posten erzeugt, Summe und Anzahl stehen
    * schon im Batch. Ein Lauf, dem eine Position fehlt, waere in sich falsch.
    */
-  const { data: nachPosten } = await supabase
+  const { data: nachPosten, error: nachPostenErr } = await supabase
     .from('sepa_batch_items')
     .select('id, invoice_id, batch_id, created_at')
     .eq('organization_id', organizationId)
     .in('invoice_id', items.map(i => i.invoiceId))
     .in('status', ['offen', 'eingezogen'])
+
+  // Diese Nachpruefung IST die einzige Grenze gegen den doppelten Einzug
+  // (der Eindeutigkeits-Index fehlt, siehe oben). Ihr Fehler wurde
+  // verworfen: `nachPosten` war dann null, die Schleife fand nie eine
+  // Konkurrenz, `verloren` blieb leer — und der Lauf zog ein, ohne dass
+  // die Pruefung ueberhaupt stattgefunden hatte. Ein nicht durchfuehrbarer
+  // Nachweis wird deshalb wie ein verlorener behandelt: ganzer Lauf
+  // zurueck, nichts eingezogen.
+  if (nachPostenErr) {
+    await supabase.from('sepa_batch_items').delete().eq('batch_id', batch.id)
+    await supabase.from('sepa_batches').delete().eq('id', batch.id)
+    throw new Error(
+      'Es konnte nicht nachgeprüft werden, ob dieselben Rechnungen zeitgleich in einen anderen '
+      + 'Sammelauftrag gelangt sind. Dieser Lauf wurde vollständig zurückgenommen — es wurde '
+      + `nichts eingezogen. Bitte erneut starten. (${nachPostenErr.message})`
+    )
+  }
 
   const verloren: string[] = []
   for (const i of items) {

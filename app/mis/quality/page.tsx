@@ -61,7 +61,11 @@ export default function QualityPage() {
       setAuditOpen(false)
       setAuditForm({ audit_number: '', audit_type: 'internal', auditor_name: '', scheduled_date: '', notes: '' })
       const supabase = createClient()
-      const { data } = await supabase.from('mis_quality_audits').select('*').order('scheduled_date', { ascending: false })
+      // Nachladen nach erfolgreichem Anlegen. Ein verworfener Fehler haette
+      // die Liste geleert — direkt nach dem Speichern sieht das aus, als
+      // waere der Eintrag verloren gegangen. Bestand bleibt stehen.
+      const { data, error: reloadErr } = await supabase.from('mis_quality_audits').select('*').order('scheduled_date', { ascending: false })
+      if (reloadErr) { setLoadError('Das Audit wurde gespeichert, die Liste konnte aber nicht neu geladen werden. Bitte laden Sie die Seite neu.'); return }
       setAudits(data as QualityAudit[] || [])
     } catch { alert('Speichern fehlgeschlagen') }
   }
@@ -80,7 +84,8 @@ export default function QualityPage() {
       setCapaOpen(false)
       setCapaForm({ capa_number: '', type: 'corrective', title: '', description: '', priority: 'medium', due_date: '' })
       const supabase = createClient()
-      const { data } = await supabase.from('mis_capa').select('*').order('created_at', { ascending: false })
+      const { data, error: reloadErr } = await supabase.from('mis_capa').select('*').order('created_at', { ascending: false })
+      if (reloadErr) { setLoadError('Die Maßnahme wurde gespeichert, die Liste konnte aber nicht neu geladen werden. Bitte laden Sie die Seite neu.'); return }
       setCapas(data as CAPA[] || [])
     } catch { alert('Speichern fehlgeschlagen') }
   }

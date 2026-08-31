@@ -69,10 +69,13 @@ function MonatsabschlussInner() {
         const recordIds = (recordsRes.data || []).map((r: any) => r.id)
         const errorsByRecord = new Map<string, { severity: string; resolved: boolean }[]>()
         if (recordIds.length > 0) {
-          const { data: errs } = await supabase
+          const { data: errs, error: errsErr } = await supabase
             .from('review_errors')
             .select('service_record_id, severity, resolved')
             .in('service_record_id', recordIds)
+          // Die Pruefefehler entscheiden ueber die Ampel des Monatsabschlusses.
+          // Ihr Verlust faerbt den Monat gruen, obwohl niemand nachgesehen hat.
+          if (errsErr) throw errsErr
           for (const e of errs || []) {
             const arr = errorsByRecord.get(e.service_record_id) || []
             arr.push({ severity: e.severity, resolved: e.resolved })

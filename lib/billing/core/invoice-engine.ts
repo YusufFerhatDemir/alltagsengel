@@ -1455,12 +1455,23 @@ export async function createCreditNote(
 
   const originalAmountCents = euroZuCent(original.total_amount);
 
-  const { data: existingCredits } = await supabase
+  // BEFUND 31.08.2026: Der Fehler dieser Abfrage wurde verworfen. Sie
+  // ermittelt, wie viel von dieser Rechnung BEREITS gutgeschrieben ist.
+  // Faellt sie aus, ist `existingCredits` null, `alreadyCreditedCents` 0 —
+  // und der Deckel unten laesst den vollen Rechnungsbetrag ein ZWEITES Mal
+  // durch. Aus einer Stoerung waere eine doppelte Gutschrift geworden.
+  const { data: existingCredits, error: existingCreditsErr } = await supabase
     .from('invoice_corrections')
     .select('corrected_amount_cents')
     .eq('original_invoice_id', invoiceId)
     .eq('correction_type', 'gutschrift')
     .is('deleted_at', null);
+  if (existingCreditsErr) {
+    throw new Error(
+      'Bereits erteilte Gutschriften konnten nicht geprueft werden — es wird keine weitere erstellt. '
+      + `Bitte erneut versuchen. (${existingCreditsErr.message})`
+    );
+  }
   const alreadyCreditedCents = (existingCredits || []).reduce(
     (sum, c) => sum + (originalAmountCents - (c.corrected_amount_cents ?? originalAmountCents)),
     0
@@ -1531,7 +1542,7 @@ export async function createCreditNote(
 
   // CAS-Guard: nach Insert pruefen, ob Gesamtgutschriften den Originalbetrag
   // nicht uebersteigen (Schutz gegen parallele Gutschrift-Race-Condition)
-  const { data: allCreditsAfterInsert } = await supabase
+  const { data: allCreditsAfterInsert, error: allCreditsErr } = await supabase
     .from('invoice_corrections')
     .select('corrected_amount_cents')
     .eq('original_invoice_id', invoiceId)
@@ -1543,11 +1554,19 @@ export async function createCreditNote(
     0
   );
 
-  if (totalCreditedAfter > originalAmountCents) {
+  // Dieser Nachlauf IST der Schutz gegen den parallelen Zweitzugriff. Sein
+  // Fehler wurde verworfen — dann ergab die Summe 0, der Riegel unten griff
+  // nie, und genau das Rennen, das er abfangen soll, waere durchgelaufen.
+  // Ein nicht durchfuehrbarer Nachweis wird wie ein fehlgeschlagener
+  // behandelt: die eben angelegte Gutschrift wird zurueckgenommen.
+  if (allCreditsErr || totalCreditedAfter > originalAmountCents) {
     await supabase.from('invoice_corrections').delete().eq('id', correction.id);
     await supabase.from('invoices').delete().eq('id', creditInvoice.id);
     throw new Error(
-      'Gutschrift abgelehnt: Paralleler Zugriff hat den verfuegbaren Betrag ueberschritten — bitte erneut versuchen.'
+      allCreditsErr
+        ? 'Gutschrift abgelehnt: Die Gesamtsumme der Gutschriften konnte nicht nachgeprueft werden — '
+          + `die Gutschrift wurde zurueckgenommen. Bitte erneut versuchen. (${allCreditsErr.message})`
+        : 'Gutschrift abgelehnt: Paralleler Zugriff hat den verfuegbaren Betrag ueberschritten — bitte erneut versuchen.'
     );
   }
 

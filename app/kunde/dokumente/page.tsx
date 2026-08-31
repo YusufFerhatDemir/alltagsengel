@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
+import { ladeListe, zeilenVon, istFehler } from '@/lib/ui/ladelage'
 import { uploadDocument, deleteDocument, MAX_FILE_SIZE_MB, checkDocumentsTableExists } from '@/lib/upload-document'
 import { IconDocument, IconCheck, IconClock, IconInfo, IconTrash } from '@/components/Icons'
 import { AKTEN_DOKUMENT_TYP, formatDate, statusMeta } from '@/lib/admin/ops'
@@ -34,6 +35,11 @@ export default function KundeDokumentePage() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [aktenDokumente, setAktenDokumente] = useState<AktenDokument[]>([])
   const [aktenLoading, setAktenLoading] = useState(true)
+  // Beide Listen verwarfen bis 31.08.2026 ihren Abfragefehler und meldeten
+  // dann „Keine Dokumente" — auch dann, wenn der Pflegevertrag laengst in
+  // der Akte liegt und nur gerade nicht lesbar war.
+  const [dokFehler, setDokFehler] = useState(false)
+  const [aktenFehler, setAktenFehler] = useState(false)
 
   useEffect(() => {
     loadDocs()
@@ -45,11 +51,16 @@ export default function KundeDokumentePage() {
       const supabase = createClient()
       // RLS liefert nur für den Kunden freigegebene, eigene Dokumente
       // (kunde_akten_dokumente_select: sichtbarkeit in ('kunde','alle')).
-      const { data } = await supabase
-        .from('akten_dokumente')
-        .select('*')
-        .order('created_at', { ascending: false })
-      setAktenDokumente((data || []) as AktenDokument[])
+      const lage = await ladeListe<AktenDokument>(
+        supabase
+          .from('akten_dokumente')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        'kunde:dokumente:akte',
+      )
+      if (istFehler(lage)) { setAktenFehler(true); return }
+      setAktenFehler(false)
+      setAktenDokumente(zeilenVon(lage))
     } finally {
       setAktenLoading(false)
     }
@@ -74,12 +85,17 @@ export default function KundeDokumentePage() {
     }
 
     const supabase = createClient()
-    const { data } = await supabase
-      .from('documents')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('uploaded_at', { ascending: false })
-    setDocuments(data || [])
+    const lage = await ladeListe<any>(
+      supabase
+        .from('documents')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('uploaded_at', { ascending: false }),
+      'kunde:dokumente:eigene',
+    )
+    if (istFehler(lage)) { setDokFehler(true); setLoading(false); return }
+    setDokFehler(false)
+    setDocuments(zeilenVon(lage))
     setLoading(false)
   }
 
@@ -254,6 +270,12 @@ export default function KundeDokumentePage() {
         <div className="section-label" style={{ marginTop: 24 }}>Meine Dokumente</div>
         {loading ? (
           <div className="chat-empty">Laden...</div>
+        ) : dokFehler ? (
+          <div className="chat-empty">
+            <div className="chat-empty-icon"><IconDocument size={40} /></div>
+            <div className="chat-empty-title">Dokumente nicht geladen</div>
+            <div className="chat-empty-sub">Bitte laden Sie die Seite neu. Ihre hochgeladenen Dokumente sind nicht verloren.</div>
+          </div>
         ) : documents.length === 0 ? (
           <div className="chat-empty">
             <div className="chat-empty-icon"><IconDocument size={40} /></div>
@@ -304,6 +326,10 @@ export default function KundeDokumentePage() {
         <div className="section-label" style={{ marginTop: 24 }}>Meine Akte</div>
         {aktenLoading ? (
           <div className="chat-empty">Laden...</div>
+        ) : aktenFehler ? (
+          <div className="chat-empty">
+            <div className="chat-empty-sub">Ihre Akte konnte nicht geladen werden. Bitte laden Sie die Seite neu.</div>
+          </div>
         ) : aktenDokumente.length === 0 ? (
           <div className="chat-empty">
             <div className="chat-empty-sub">Noch keine Dokumente in Ihrer Akte hinterlegt.</div>

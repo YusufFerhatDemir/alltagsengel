@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { CUSTOMER_HOURLY_RATE } from '@/lib/pricing/b2c-constants'
 import { IconPin, IconWingsGold, IconStarFilled, IconNav } from '@/components/Icons'
 import Icon3D from '@/components/Icon3D'
+import { logger } from '@/lib/logger'
+const log = logger.child('kunde:karte')
 
 export default function KarteSeite() {
   const router = useRouter()
@@ -21,7 +23,10 @@ export default function KarteSeite() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+      // Das Profil setzt den Kartenmittelpunkt. Faellt es aus, bleibt die
+      // Karte auf dem Standardausschnitt — sichtbar machen statt verwerfen.
+      const { data: p, error: profilFehler } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
+      if (profilFehler) log.error(`Kartenprofil laden fehlgeschlagen: ${profilFehler.message}`)
       setProfile(p)
       // Engel über /api/engel/match laden: wie die RPC ohne PII, zusätzlich
       // serverseitig nach PLZ-Nähe zum Kunden gefiltert.

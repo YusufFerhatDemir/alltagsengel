@@ -351,11 +351,14 @@ export default function AdminVerordnungenPage() {
     // ein Fehler hier darf die Seite nicht blockieren.
     try {
       const supabase = createClient()
-      const { data } = await supabase
+      const { data, error: aerzteErr } = await supabase
         .from('aerzte_praxen')
         .select('id, anrede, titel, vorname, nachname, praxis_name')
         .eq('aktiv', true)
         .order('nachname')
+      // Bewusst nicht blockierend (siehe oben) — aber nicht still: sonst
+      // sieht eine ausgefallene Abfrage aus wie „keine Aerzte hinterlegt".
+      if (aerzteErr) log.errorWithException('Aerzte-Stammdaten Ladefehler', aerzteErr)
       setAerzteStammdaten((data || []).map((a: any) => ({
         id: a.id,
         name: [a.anrede, a.titel, a.vorname, a.nachname].filter(Boolean).join(' '),

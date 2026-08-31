@@ -98,10 +98,20 @@ export default function RechnungserstellungPage() {
       // Bereits abgerechnete Nachweise ausschließen (invoice_items-Verknüpfung)
       let billedIds = new Set<string>()
       if (recordIds.length > 0) {
-        const { data: billedItems } = await supabase
+        // WICHTIG: Diese Abfrage sagt, was BEREITS abgerechnet ist. Ihr
+        // Fehler wurde bis 31.08.2026 verworfen — dann blieb `billedIds`
+        // leer und JEDER Nachweis galt als unabgerechnet. Das Ergebnis
+        // waere keine leere Liste gewesen, sondern eine zweite Rechnung
+        // ueber dieselben Leistungen. Fail-closed: lieber gar keine Liste.
+        const { data: billedItems, error: billedErr } = await supabase
           .from('invoice_items')
           .select('service_record_id')
           .in('service_record_id', recordIds)
+        if (billedErr) {
+          setError('Die bereits abgerechneten Nachweise konnten nicht geprüft werden. Es wird nichts zur Abrechnung vorgeschlagen, um eine Doppelabrechnung auszuschließen. Bitte laden Sie die Seite neu.')
+          setLoading(false)
+          return
+        }
         billedIds = new Set((billedItems || []).map((i: any) => i.service_record_id))
       }
 

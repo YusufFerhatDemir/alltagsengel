@@ -15,6 +15,7 @@ import {
   rolleAusBuchung,
   type StornoRolle,
 } from '@/lib/bookings/storno'
+import { findeEinsatzZuBuchung } from '@/lib/bookings/assignment-bezug'
 
 const log = logger.child('api:bookings:cancel')
 
@@ -123,34 +124,42 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     const admin = createAdminClient()
 
     // ── 1) Lage der Kette ──────────────────────────────────────────
-    // `assignments` fuehrt KEINE booking_id-Spalte (Baseline-Schema). Der
-    // einzige Bezug, den lib/bookings/einsatz-kette.ts hinterlaesst, ist
-    // die Notiz „Automatisch aus Buchung <id> erzeugt." — also freier
-    // Text, den die Einsatzliste bearbeiten kann.
+    // Fuehrend ist `assignments.booking_id` (Migration 20261025000000) —
+    // eine Spalte, auf die kein Fachprozess schreibt. Fehlt sie noch
+    // (die Migration wird von Hand im SQL-Editor angewendet), faellt
+    // findeEinsatzZuBuchung auf den alten Notiz-Bezug zurueck:
+    // „Automatisch aus Buchung <id> erzeugt."
     //
-    // Falsch-Treffer sind ausgeschlossen (die Notiz traegt die UUID),
-    // Falsch-NEGATIVE nicht: wurde die Notiz ueberschrieben, findet diese
-    // Abfrage den Einsatz nicht mehr. Deshalb steht unten ein Riegel statt
-    // eines stillen Weiter — ein Storno, der den Einsatz stehen laesst,
-    // schickt den Engel zu einem abgesagten Termin.
-    //
-    // Die dauerhafte Loesung ist eine `assignments.booking_id`-Spalte; die
-    // braucht eine Migration und ist hier bewusst nicht improvisiert.
-    const { data: einsaetze, error: einsatzFehler } = await admin
-      .from('assignments')
-      .select('id, status')
-      .eq('organization_id', orgId)
-      .like('notes', `%Buchung ${booking.id}%`)
+    // Der Notiz-Weg hat Falsch-NEGATIVE — `notes` darf die Einsatzliste
+    // bearbeiten, und wer die Notiz ergaenzt, kappt den Bezug. Genau
+    // deshalb steht unten ein Riegel statt eines stillen Weiter: ein
+    // Storno, der den Einsatz stehen laesst, schickt den Engel zu einem
+    // abgesagten Termin.
+    // Beide Abfragen werden HIER gebaut — voll typisiert am echten Client —
+    // und als Funktionen hereingereicht. Der Rueckfall laeuft nur, wenn die
+    // Spalte fehlt; im Regelfall kostet er nichts.
+    const suche = await findeEinsatzZuBuchung({
+      ueberSpalte: () => admin
+        .from('assignments')
+        .select('id, status')
+        .eq('organization_id', orgId)
+        .eq('booking_id', booking.id),
+      ueberNotiz: () => admin
+        .from('assignments')
+        .select('id, status')
+        .eq('organization_id', orgId)
+        .like('notes', `%Buchung ${booking.id}%`),
+    })
 
-    if (einsatzFehler) {
-      log.error('Einsatz zur Buchung nicht ladbar', { code: einsatzFehler.code, msg: einsatzFehler.message })
+    if (!suche.ok) {
+      log.error('Einsatz zur Buchung nicht ladbar', { code: suche.fehler.code, msg: suche.fehler.message })
       return NextResponse.json(
         { error: 'Der zugehörige Einsatz konnte nicht geprüft werden. Bitte erneut versuchen.' },
         { status: 503 },
       )
     }
 
-    const einsatz = einsaetze?.[0] ?? null
+    const einsatz = suche.einsatz
 
     // Eine ANGENOMMENE Buchung hat einen Einsatz — es sei denn, ein Admin
     // hat sie per force_override ohne Kette angenommen. Fehlt er hier,
@@ -277,6 +286,9 @@ export const POST = withTracking(async function POST(req: NextRequest) {
         assignment_id: einsatz?.id ?? null,
         service_record_id: nachweis?.id ?? null,
         einsatz_fehlte: booking.status === 'accepted' && !einsatz,
+        // Solange hier `false` steht, haengt der Bezug allein an der
+        // Notiz — die Migration 20261025000000 ist dann nicht angewendet.
+        bezug_ueber_spalte: suche.ueberSpalte,
         grund,
       },
       request: req,

@@ -21,7 +21,7 @@
  *
  * ── DIE REIHENFOLGE IST NACH RISIKO GEORDNET, NICHT NACH TECHNIK ──────
  *
- * Geprueft: keine der acht Migrationen setzt eine andere der acht voraus.
+ * Geprueft: keine der Migrationen setzt eine andere voraus.
  * Sie sind technisch unabhaengig und koennten in jeder Reihenfolge laufen.
  * Die hier festgelegte Ordnung folgt deshalb dem Schaden, den ein Abbruch
  * in der Mitte hinterliesse: zuerst die drei Unveraenderlichkeits-Riegel
@@ -38,6 +38,16 @@ const MIGRATIONEN = 'supabase/migrations'
 const ZIEL = 'docs/MIGRATIONEN_APPLY_CHECKLISTE.md'
 
 /**
+ * Zahlwort fuer die Anzahl der Schritte.
+ *
+ * Stand bis 31.08.2026 als „acht" ausgeschrieben im Fliesstext — an vier
+ * Stellen. Der neunte Schritt haette daraus vier falsche Saetze gemacht,
+ * und zwar in genau der Datei, die vor abgeschriebenen Listen warnt.
+ */
+const ZAHLWORT = ['null', 'eine', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben', 'acht', 'neun', 'zehn', 'elf', 'zwölf']
+function zahl(n) { return ZAHLWORT[n] ?? String(n) }
+
+/**
  * Die Reihenfolge samt Begruendung. Das ist der Teil, den kein Werkzeug
  * ableiten kann — Risiko ist eine fachliche Einschaetzung.
  */
@@ -52,9 +62,9 @@ const SCHRITTE = [
     risiko: 'HOCH',
     risikoText:
       'Solange sie fehlt, ist die Medikation eines abgesetzten Praeparats nachtraeglich aenderbar, '
-      + 'ohne dass irgendetwas dagegenhaelt. Das ist der sicherheitskritischste der acht Punkte.',
+      + 'ohne dass irgendetwas dagegenhaelt. Das ist der sicherheitskritischste Punkt dieser Liste.',
     unveraenderlichkeit: 'MEDIKAMENTE',
-    abhaengigkeit: 'Tabelle public.medikamente (20260806…). Keine der anderen sieben.',
+    abhaengigkeit: 'Tabelle public.medikamente (20260806…). Keine der anderen aus dieser Liste.',
     erwartet: 'Funktion prevent_locked_medikament_edit() + Trigger trg_locked_medikament auf medikamente',
     rollbackRisiko:
       'GERING. Der Trigger schreibt nichts und aendert keine Zeile; ein DROP TRIGGER stellt den '
@@ -73,7 +83,7 @@ const SCHRITTE = [
       + 'genau das der Punkt, an dem Dokumentation ihren Beweiswert verliert.',
     unveraenderlichkeit: 'WUNDDOKUMENTATION',
     abhaengigkeit:
-      'Tabellen wounds, wound_assessments, wound_treatments, wound_photos. Keine der anderen sieben.',
+      'Tabellen wounds, wound_assessments, wound_treatments, wound_photos. Keine der anderen aus dieser Liste.',
     erwartet:
       'Funktion prevent_wound_child_edit_when_healed() + die drei Trigger trg_locked_wound_assessment, '
       + 'trg_locked_wound_treatment, trg_locked_wound_photo',
@@ -92,7 +102,7 @@ const SCHRITTE = [
       + 'Pflegedokumentation gegenueber Kostentraeger und Pruefinstanz.',
     unveraenderlichkeit: 'RUECKDATIERUNGS-SCHUTZ',
     abhaengigkeit:
-      'Tabellen pflege_verlauf und pflege_doku_perioden. Keine der anderen sieben.',
+      'Tabellen pflege_verlauf und pflege_doku_perioden. Keine der anderen aus dieser Liste.',
     erwartet: 'Funktion prevent_backdated_verlauf_insert() + Trigger trg_verlauf_periode_offen',
     rollbackRisiko:
       'GERING, mit einer Einschraenkung im WIRKUNGSUMFANG (nicht im Rollback): der Trigger laeuft als '
@@ -111,11 +121,11 @@ const SCHRITTE = [
     risiko: 'MITTEL (Funktion, nicht Sicherheit)',
     risikoText:
       'Kein Sicherheitsrisiko — die Wirkung ist zu STRENG, nicht zu locker. Aber drei Rollen sehen '
-      + 'live leere Seiten, wo sie arbeiten sollen. Das ist der groesste Funktionsblocker der acht.',
+      + 'live leere Seiten, wo sie arbeiten sollen. Das ist der groesste Funktionsblocker dieser Liste.',
     abhaengigkeit:
       'rollen_matrix() muss die verwendeten Rechte kennen (bonus.verwalten, sicherheit.lesen, '
       + 'marketing.verwalten — alle drei stehen live) sowie darf() und current_org_id(). '
-      + 'Keine der anderen sieben.',
+      + 'Keine der anderen aus dieser Liste.',
     erwartet: 'die 24 Policies rk_<tabelle>_lesen',
     rollbackRisiko:
       'GERING. Nur Policies, keine Datenaenderung. Ein DROP POLICY nimmt Sicht weg, gibt aber nie '
@@ -131,10 +141,10 @@ const SCHRITTE = [
     risiko: 'MITTEL',
     risikoText:
       'Datenqualitaet, nicht Sicherheit. Die Plausibilitaetsgrenzen leben sonst nur in TypeScript.',
-    abhaengigkeit: '20260818010100_vitalwerte.sql (steht live). Keine der anderen sieben.',
+    abhaengigkeit: '20260818010100_vitalwerte.sql (steht live). Keine der anderen aus dieser Liste.',
     erwartet: 'die vier Funktionen vitals_plausibel_*',
     rollbackRisiko:
-      'GERING, aber die EINZIGE der acht mit einem Bestandsvorbehalt: die CHECKs werden NOT VALID '
+      'GERING, aber die EINZIGE dieser Liste mit einem Bestandsvorbehalt: die CHECKs werden NOT VALID '
       + 'angelegt und danach validiert. Ein Bestandsverstoss bricht die Migration NICHT ab, sondern '
       + 'meldet sich als WARNING — kein stiller Durchlauf, aber auch kein Abbruch. Wenn eine WARNING '
       + 'erscheint, bitte den Text mitschicken: dann stehen unplausible Werte im Bestand, und die '
@@ -150,7 +160,7 @@ const SCHRITTE = [
     risiko: 'MITTEL',
     risikoText:
       'Welcher Plan der gueltige Versorgungsplan ist, wird uneindeutig.',
-    abhaengigkeit: 'Tabelle pflege_massnahmenplaene. Keine der anderen sieben.',
+    abhaengigkeit: 'Tabelle pflege_massnahmenplaene. Keine der anderen aus dieser Liste.',
     erwartet: 'eindeutiger Index uq_pflege_massnahmenplaene_ein_aktiver_plan',
     vorpruefung: {
       text:
@@ -179,7 +189,7 @@ const SCHRITTE = [
       + 'Rolle in DERSELBEN Minute Zugriff auf alles hinter is_internal_staff() — unter anderem die '
       + 'Verordnungen — und zwar ohne einen einzigen Eintrag in ROLLEN_MATRIX. Der Fehler entstuende '
       + 'an einer Stelle und wirkte an einer ganz anderen, Monate spaeter.',
-    abhaengigkeit: 'Funktion is_internal_staff(). Keine der anderen sieben.',
+    abhaengigkeit: 'Funktion is_internal_staff(). Keine der anderen aus dieser Liste.',
     erwartet: "is_internal_staff() nennt 'buero' nicht mehr",
     rollbackRisiko:
       'GERING. CREATE OR REPLACE FUNCTION auf eine Funktion ohne Zustand. Der Rollback setzt den '
@@ -198,12 +208,34 @@ const SCHRITTE = [
       + 'ohnehin. Ueber die oeffentliche Schnittstelle war hier nichts aufrufbar. Der Wert liegt in '
       + 'der Tiefenstaffelung — der Schutz haengt sonst allein an einer Eigenschaft von PostgREST, '
       + 'die niemand uns zugesagt hat.',
-    abhaengigkeit: 'Die sechs genannten Funktionen muessen existieren. Keine der anderen sieben.',
+    abhaengigkeit: 'Die sechs genannten Funktionen muessen existieren. Keine der anderen aus dieser Liste.',
     erwartet: 'keine SECURITY-DEFINER-Triggerfunktion mehr fuer anon ausfuehrbar (erwartet: 0)',
     rollbackRisiko:
       'GERING. Reine Rechteaenderung, keine Datenaenderung. ACHTUNG: ein REVOKE wirkt nur, wenn er '
       + 'als Eigentuemer laeuft — ueber den Dienstschluessel meldet Supabase HTTP 204 OHNE Wirkung. '
       + 'Genau deshalb muss dieser Schritt im SQL-Editor als postgres laufen.',
+  },
+  {
+    datei: '20261025000000_assignments_booking_id',
+    zweck:
+      'Gibt `assignments` eine Spalte `booking_id` samt Fremdschluessel (ON DELETE SET NULL) und '
+      + 'Index, und traegt den Bestand aus den vorhandenen Notizen nach. Bis dahin ist der einzige '
+      + 'Bezug zwischen einer Buchung und dem daraus erzeugten Einsatz die Notiz '
+      + '„Automatisch aus Buchung <uuid> erzeugt." — freier Text, den die Einsatzliste bearbeiten darf.',
+    risiko: 'MITTEL',
+    risikoText:
+      'Kein Sicherheitsrisiko. Aber wer die Notiz eines Einsatzes ergaenzt, kappt damit den einzigen '
+      + 'Bezug zur Buchung. Die Storno-Route findet den Einsatz dann nicht mehr und verweigert '
+      + 'fail-closed (409, Hinweis auf den Support) — der Kunde kann seinen Termin nicht mehr selbst '
+      + 'absagen. Solange die Spalte fehlt, haengt das an einem Textfeld.',
+    abhaengigkeit:
+      'Tabellen public.assignments und public.bookings. Keine der anderen aus dieser Liste.',
+    erwartet: 'Spalte assignments.booking_id + Fremdschluessel assignments_booking_id_fkey + Index idx_assignments_booking_id',
+    rollbackRisiko:
+      'GERING fuer den Betrieb, mit einem Datenvorbehalt: der Anwendungscode arbeitet MIT und OHNE '
+      + 'die Spalte (lib/bookings/assignment-bezug.ts faellt auf den Notiz-Weg zurueck), ein Rollback '
+      + 'bricht also nichts. Der Backfill ist danach aber weg; ein erneutes Anwenden baut ihn nur '
+      + 'soweit wieder auf, wie die Notizen unveraendert geblieben sind.',
   },
 ]
 
@@ -234,14 +266,14 @@ z('`must be owner of table …`). Bei Schritt 8 ist das besonders tückisch: ein
 z('ohne Eigentümerrecht meldet **HTTP 204, also Erfolg — ohne jede Wirkung**.')
 z()
 z('**2. Die Reihenfolge ist nach RISIKO geordnet, nicht nach Technik.**')
-z('Geprüft: keine der acht Migrationen setzt eine andere der acht voraus. Sie sind')
+z(`Geprüft: keine der ${zahl(SCHRITTE.length)} Migrationen setzt eine andere davon voraus. Sie sind`)
 z('technisch unabhängig. Die Ordnung folgt dem Schaden, den ein Abbruch in der Mitte')
 z('hinterließe — zuerst die drei Unveränderlichkeits-Riegel der Pflegeakte.')
 z()
 z('**3. Jeder Block ist in `BEGIN; … COMMIT;` geklammert.**')
-z('Nur `20261008000000` bringt eine eigene Transaktion mit; die anderen sieben nicht.')
+z(`Nur \`20261008000000\` bringt eine eigene Transaktion mit; die anderen ${zahl(SCHRITTE.length - 1)} nicht.`)
 z('Ohne Klammer wäre ein Abbruch in der Mitte ein halb angewendeter Schritt. Kein')
-z('`CREATE INDEX CONCURRENTLY` in den acht Dateien — die Klammer ist also überall')
+z(`\`CREATE INDEX CONCURRENTLY\` in den ${zahl(SCHRITTE.length)} Dateien — die Klammer ist also überall`)
 z('zulässig (geprüft).')
 z()
 z('---')
@@ -359,10 +391,12 @@ for (const [i, s] of SCHRITTE.entries()) {
 
 z('## Zum Schluss')
 z()
-z('Nach dem letzten Schritt beweist **ein** Lauf, dass alle acht stehen:')
+z(`Nach dem letzten Schritt beweist **ein** Lauf, dass alle ${zahl(SCHRITTE.length)} stehen:`)
 z()
 z('```')
-z('npm run check:migrationen     → erwartet: 32 von 32 live, kein ❌')
+// Die Zahl kommt aus dem Katalog selbst — abgeschrieben stimmte sie beim
+// naechsten Eintrag nicht mehr.
+z(`npm run check:migrationen     → erwartet: ${KATALOG.length} von ${KATALOG.length} live, kein ❌`)
 z('npm run verify:rls-matrix     → erwartet: 0 harte Befunde UND 0 mittlere')
 z('```')
 z()

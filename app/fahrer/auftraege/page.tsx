@@ -48,11 +48,21 @@ export default function AuftraegePage() {
         }
 
         // Get provider_id from krankenfahrt_providers
-        const { data: provider } = await supabase
+        // Der Fehler dieser Abfrage wurde bis 31.08.2026 verworfen. Faellt sie
+        // aus, ist `provider` null — und die Seite behauptet „Sie sind nicht
+        // als Fahrer registriert". Das ist eine Aussage ueber die Zulassung
+        // des Fahrers, die sie auf dieser Grundlage nicht treffen kann.
+        const { data: provider, error: providerError } = await supabase
           .from('krankenfahrt_providers')
           .select('id')
           .eq('user_id', user.id)
-          .single()
+          .maybeSingle()
+
+        if (providerError) {
+          setError('Ihre Fahrerdaten konnten nicht geladen werden. Bitte versuchen Sie es erneut.')
+          setLoading(false)
+          return
+        }
 
         if (provider) {
           setProviderId(provider.id)
@@ -293,7 +303,7 @@ export default function AuftraegePage() {
             }}>
               Laden...
             </div>
-          ) : filteredRides.length === 0 ? (
+          ) : error ? null : filteredRides.length === 0 ? (
             <div style={{
               textAlign: 'center',
               padding: '32px 16px',

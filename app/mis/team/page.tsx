@@ -157,7 +157,11 @@ export default function TeamPage() {
       setTaskForm({ title: '', module: 'Team', priority: 'medium', description: '', due_date: '' })
       // reload tasks
       const supabase = createClient()
-      const { data } = await supabase.from('mis_tasks').select('*').order('created_at', { ascending: false }).limit(20)
+      // Nachladen nach erfolgreichem Anlegen — der verworfene Fehler haette
+      // die Aufgabenliste geleert und die gerade angelegte Aufgabe
+      // verschwinden lassen. Bestand bleibt stehen.
+      const { data, error: reloadErr } = await supabase.from('mis_tasks').select('*').order('created_at', { ascending: false }).limit(20)
+      if (reloadErr) { alert('Die Aufgabe wurde gespeichert, die Liste konnte aber nicht neu geladen werden. Bitte laden Sie die Seite neu.'); return }
       setTasks(data || [])
     } catch { alert('Speichern fehlgeschlagen') }
   }
@@ -190,7 +194,8 @@ export default function TeamPage() {
       setEditUser(null)
       // reload users
       const supabase = createClient()
-      const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false })
+      const { data, error: reloadErr } = await supabase.from('profiles').select('*').order('created_at', { ascending: false })
+      if (reloadErr) { alert('Die Änderung wurde gespeichert, die Benutzerliste konnte aber nicht neu geladen werden. Bitte laden Sie die Seite neu.'); return }
       setUsers(data || [])
     } catch { alert('Speichern fehlgeschlagen') }
   }

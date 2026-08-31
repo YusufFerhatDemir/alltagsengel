@@ -178,23 +178,36 @@ export async function checkDunningBlocks(
     blocks.push({ invoiceId, reason: 'Rechnung ist strittig — keine Mahnung' })
   }
 
-  const { data: disputes } = await supabase
+  // BEFUND 31.08.2026: Diese drei Abfragen verwarfen ihre Fehler. Sie
+  // sind SPERREN — sie stehen hier, um eine Mahnung zu VERHINDERN. Faellt
+  // eine aus, ist ihr Ergebnis null, `blocks` bleibt leer, und die Mahnung
+  // geht raus: an jemanden, der der Forderung widersprochen hat, oder auf
+  // einen Betrag, der wegen einer offenen Gutschrift gar nicht feststeht.
+  //
+  // Eine Pruefung, die bei eigener Stoerung durchlaesst, ist keine
+  // Pruefung. Ein Fehler wird deshalb selbst zur Sperre — lieber eine
+  // Mahnung zu spaet als eine unberechtigte.
+  const { data: disputes, error: disputesErr } = await supabase
     .from('invoice_disputes')
     .select('id, status')
     .eq('invoice_id', invoiceId)
     .eq('status', 'open')
 
-  if (disputes && disputes.length > 0) {
+  if (disputesErr) {
+    blocks.push({ invoiceId, reason: `Beanstandungen nicht prüfbar: ${disputesErr.message}` })
+  } else if (disputes && disputes.length > 0) {
     blocks.push({ invoiceId, reason: `${disputes.length} offene Beanstandung(en)` })
   }
 
-  const { data: differences } = await supabase
+  const { data: differences, error: differencesErr } = await supabase
     .from('payment_differences')
     .select('id, widerspruch_status')
     .eq('invoice_id', invoiceId)
     .in('widerspruch_status', [...MAHNBREMSE_STATUS])
 
-  if (differences && differences.length > 0) {
+  if (differencesErr) {
+    blocks.push({ invoiceId, reason: `Widersprüche nicht prüfbar: ${differencesErr.message}` })
+  } else if (differences && differences.length > 0) {
     blocks.push({ invoiceId, reason: 'Offener Widerspruch gegen Kürzung' })
   }
 
@@ -206,14 +219,16 @@ export async function checkDunningBlocks(
   // damit fuer immer als Blocker stehen, und die zugehoerige Rechnung wurde
   // NIE wieder gemahnt. Fachlich fail-closed und deshalb ohne Geldschaden,
   // aber eine berechtigte Forderung lief still aus dem Mahnwesen heraus.
-  const { data: corrections } = await supabase
+  const { data: corrections, error: correctionsErr } = await supabase
     .from('invoice_corrections')
     .select('id, status')
     .eq('original_invoice_id', invoiceId)
     .in('status', ['entwurf', 'freigegeben'])
     .is('deleted_at', null)
 
-  if (corrections && corrections.length > 0) {
+  if (correctionsErr) {
+    blocks.push({ invoiceId, reason: `Gutschriften nicht prüfbar: ${correctionsErr.message}` })
+  } else if (corrections && corrections.length > 0) {
     blocks.push({ invoiceId, reason: 'Offene Gutschrift/Korrektur' })
   }
 

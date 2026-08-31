@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { submitHygieneboxOrderAction } from './actions'
 import { IconBox, IconShield, IconCheck, IconInfo, IconGloves, IconDroplet } from '@/components/Icons'
+import { logger } from '@/lib/logger'
+const log = logger.child('kunde:hygienebox')
 
 interface Product {
   id: string
@@ -50,11 +52,15 @@ export default function HygieneboBoxPage() {
       setUserId(user.id)
 
       // Load profile for delivery address
-      const { data: profile } = await supabase
+      // Reine Vorbelegung: das Adressfeld ist Pflichteingabe und wird unten
+      // geprueft — bleibt es leer, tippt die Kundin selbst. Der Fehler wird
+      // trotzdem nicht verworfen.
+      const { data: profile, error: profilFehler } = await supabase
         .from('profiles')
         .select('location')
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
+      if (profilFehler) log.error(`Adressvorbelegung fehlgeschlagen: ${profilFehler.message}`)
       
       if (profile?.location) {
         setDeliveryAddress(profile.location)

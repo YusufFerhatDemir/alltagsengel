@@ -444,7 +444,12 @@ function KrankmeldungDialog({ onClose, onSaved }: { onClose: () => void; onSaved
   useEffect(() => {
     async function loadCaregivers() {
       const supabase = createClient()
-      const { data } = await supabase.from('caregivers').select('id, first_name, last_name, status').eq('status', 'active')
+      const { data, error: cgErr } = await supabase.from('caregivers').select('id, first_name, last_name, status').eq('status', 'active')
+      if (cgErr) {
+        log.error(`Mitarbeiterliste laden fehlgeschlagen: ${cgErr.message}`)
+        setErr('Die Mitarbeiterliste konnte nicht geladen werden. Bitte laden Sie die Seite neu.')
+        return
+      }
       setCaregivers((data || []).map((c: any) => ({ id: c.id, name: fullName(c) })))
     }
     loadCaregivers()

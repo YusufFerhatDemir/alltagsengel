@@ -195,7 +195,7 @@ export async function bewerteBuchung(
   const betragCent = Math.abs(buchung.betragCent);
 
   // Lade alle offenen Rechnungen der Organisation
-  const { data: openInvoices } = await supabase
+  const { data: openInvoices, error: openInvoicesErr } = await supabase
     .from('invoices')
     .select('id, invoice_number, invoice_number_formatted, total_amount, paid_amount, client_id, client:clients(first_name, last_name)')
     .eq('organization_id', organizationId)
@@ -203,7 +203,19 @@ export async function bewerteBuchung(
     // Vokabulare der Spalte. Die halbe Liste hier hiess: eine stornierte
     // Rechnung als `cancelled` blieb Zuordnungskandidat.
     .not('status', 'in', alsPostgrestListe(KEINE_ZUORDNUNG_STATUS))
-    .is('deleted_at', null) as { data: OpenInvoice[] | null };
+    .is('deleted_at', null) as { data: OpenInvoice[] | null; error: { message?: string } | null };
+
+  // Der Ausgang bleibt derselbe (Klaerfall, also Handarbeit) — aber der
+  // GRUND muss stimmen. „Keine offenen Rechnungen gefunden" ueber einer
+  // gestoerten Abfrage schickt die Buchhaltung auf die falsche Suche: sie
+  // prueft den Rechnungsbestand statt die Stoerung.
+  if (openInvoicesErr) {
+    return {
+      kandidaten: [],
+      klaerfallGrund: `Offene Rechnungen nicht abfragbar: ${openInvoicesErr.message ?? 'unbekannter Fehler'}`,
+      geprueft: 0,
+    };
+  }
 
   if (!openInvoices || openInvoices.length === 0) {
     return { kandidaten: [], klaerfallGrund: 'Keine offenen Rechnungen gefunden', geprueft: 0 };

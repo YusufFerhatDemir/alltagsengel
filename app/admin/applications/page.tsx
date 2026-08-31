@@ -197,7 +197,14 @@ function CreateAppModal({ onClose, onCreated }: { onClose: () => void; onCreated
   useEffect(() => {
     async function load() {
       const supabase = createClient()
-      const { data } = await supabase.from('caregivers').select('id, first_name, last_name').order('last_name')
+      // Eine leere Auswahlliste sieht aus wie „es gibt keine Mitarbeitenden".
+      // Bei gestoerter Abfrage ist sie genau das nicht.
+      const { data, error: cgErr } = await supabase.from('caregivers').select('id, first_name, last_name').order('last_name')
+      if (cgErr) {
+        log.error(`Mitarbeiterliste laden fehlgeschlagen: ${cgErr.message}`)
+        setErr('Die Mitarbeiterliste konnte nicht geladen werden. Bitte laden Sie die Seite neu.')
+        return
+      }
       setCaregivers((data || []).map((c: any) => ({ id: c.id, label: `${c.first_name} ${c.last_name}`.trim() })))
     }
     load()

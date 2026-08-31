@@ -26,6 +26,7 @@ import {
   ALLE_EINGABEN,
   DATEV_EINGABEN,
   CHAIRMATCH_EINGABEN,
+  STORNO_EINGABEN,
   LAEUFT_UNABHAENGIG,
   LAEUFT_NICHT_OHNE_D1_D2,
   RECHNUNGSPILOT_ABHAENGIGKEITEN,
@@ -154,10 +155,14 @@ describe('Keine erfundenen Werte', () => {
 // ═══════════════════════════════════════════════════════════════════════
 
 describe('Register', () => {
-  it('deckt D1–D6 und C1–C5 ab', () => {
+  it('deckt D1–D6, C1–C5 und S1–S2 ab', () => {
     expect(DATEV_EINGABEN.map(e => e.id)).toEqual(['D1', 'D2', 'D3', 'D4', 'D5', 'D6'])
     expect(CHAIRMATCH_EINGABEN.map(e => e.id)).toEqual(['C1', 'C2', 'C3', 'C4', 'C5'])
-    expect(ALLE_EINGABEN).toHaveLength(11)
+    // S1/S2 kamen mit dem Storno-Weg dazu: Frist und Ausfallgebuehr sind
+    // Vertragsfragen, keine technischen. Sie stehen hier, damit sie nicht
+    // als Kommentar in lib/bookings/storno.ts verschwinden.
+    expect(STORNO_EINGABEN.map(e => e.id)).toEqual(['S1', 'S2'])
+    expect(ALLE_EINGABEN).toHaveLength(13)
   })
 
   it('bleibt mit der Liste des DATEV-Validators im Gleichschritt', () => {
