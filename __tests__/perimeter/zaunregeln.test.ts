@@ -162,10 +162,26 @@ describe('B6 — die Anmeldung ist kein Bestands-Orakel mehr', () => {
     expect(quelle).not.toContain("'exists'")
   })
 
-  it('der Abmeldelink der Willkommensmail traegt ein Token', () => {
+  it('es gibt gar keine Willkommensmail mehr — die Anmeldung fragt zuerst nach', () => {
+    // Bis zum 31.08.2026 trug diese Route sofort ein und schickte eine
+    // Willkommensmail (einfaches Opt-in), waehrend die fertige
+    // Doppel-Opt-in-Kette daneben lag und keinen Aufrufer hatte. Seitdem
+    // loest sie nur noch die Bestaetigungsmail aus; eingetragen wird erst
+    // nach dem Klick im Postfach.
     const quelle = kommentarfrei(lies('app/api/newsletter/route.ts'))
+    expect(quelle).toContain('sendeBestaetigungsmail')
+    expect(quelle).not.toContain('Willkommen beim Alltagsengel Newsletter')
+    expect(quelle).not.toContain(".from('newsletter_subscribers')")
+  })
+
+  it('der Abmeldelink der Werbepost traegt weiterhin ein Token', () => {
+    // Die Regel ist mit dem Abmeldelink umgezogen: er steht jetzt nur noch
+    // an der Kampagnenpost. Die Bestaetigungsmail traegt bewusst keinen —
+    // ohne Bestaetigung entsteht nichts, wovon man sich abmelden koennte.
+    const quelle = kommentarfrei(lies('lib/marketing/versand.ts'))
     expect(quelle).toContain('abmeldeLink(')
-    // Der frueher hier stehende tokenlose Link darf nicht zurueckkommen.
+    // Der frueher an der Willkommensmail stehende tokenlose Link darf
+    // nirgends zurueckkommen.
     expect(quelle).not.toMatch(/unsubscribe\?email=\$\{/)
   })
 })

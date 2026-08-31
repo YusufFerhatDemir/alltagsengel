@@ -40,16 +40,14 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getClientIp } from '@/lib/rate-limit'
 import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
-import { sendRawEmail } from '@/lib/notifications'
 import { DEFAULT_ORG_ID } from '@/lib/organizations/types'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { normalisiereAdresse, istPlausibleAdresse } from '@/lib/marketing/einwilligung'
-import {
-  bestaetigungsLink, istConsentTyp, GUELTIGKEIT_TAGE,
-} from '@/lib/marketing/doppel-opt-in'
-import { CONSENT_BEZEICHNUNG, type ConsentTyp } from '@/lib/marketing/typen'
+import { istConsentTyp } from '@/lib/marketing/doppel-opt-in'
+import { sendeBestaetigungsmail } from '@/lib/marketing/anmeldung'
+import { type ConsentTyp } from '@/lib/marketing/typen'
 
 const log = logger.child('marketing:anmeldung')
 
@@ -108,77 +106,28 @@ export const POST = withTracking(async function POST(request: Request) {
       return NextResponse.json(ANTWORT)
     }
 
-    const admin = createAdminClient()
-
-    // ── Sperrliste ──────────────────────────────────────────────────────
-    // Fail-closed: eine unlesbare Sperrliste ist kein Freibrief. Ohne diese
-    // Pruefung ginge eine Einladung zum Wiedereinwilligen an jemanden, der
-    // ausdruecklich widersprochen hat.
-    const { data: sperre, error: sperrFehler } = await admin
-      .from('email_suppression_list')
-      .select('id')
-      .eq('organization_id', DEFAULT_ORG_ID)
-      .eq('email', email)
-      .maybeSingle()
-
-    if (sperrFehler) {
-      log.errorWithException('Sperrliste nicht lesbar — keine Bestätigungsmail', new Error(sperrFehler.message))
-      return NextResponse.json(ANTWORT)
-    }
-    if (sperre) {
-      log.info('Anmeldung für gesperrte Adresse — keine Mail versendet')
-      return NextResponse.json(ANTWORT)
-    }
-
-    // ── Schon eingewilligt? ─────────────────────────────────────────────
-    const { data: bestehend, error: bestandFehler } = await admin
-      .from('marketing_consents')
-      .select('id')
-      .eq('organization_id', DEFAULT_ORG_ID)
-      .eq('email', email)
-      .eq('consent_type', typ)
-      .is('revoked_at', null)
-      .maybeSingle()
-
-    if (bestandFehler) {
-      log.errorWithException('Einwilligungsstand nicht lesbar', new Error(bestandFehler.message))
-      return NextResponse.json(ANTWORT)
-    }
-    if (bestehend) {
-      log.info('Anmeldung für bereits eingewilligte Adresse — keine Mail versendet')
-      return NextResponse.json(ANTWORT)
-    }
-
-    // ── Bestätigungsmail ────────────────────────────────────────────────
-    let link: string
-    try {
-      ({ link } = bestaetigungsLink(email, typ, DEFAULT_ORG_ID, SITE))
-    } catch (err) {
-      // Fehlender Signaturschluessel. Nach aussen unveraendert — der
-      // Betrieb sieht es im Protokoll.
-      log.errorWithException('Bestätigungslink nicht erzeugbar', err)
-      return NextResponse.json(ANTWORT)
-    }
-
-    const bezeichnung = CONSENT_BEZEICHNUNG[typ]
-    const ergebnis = await sendRawEmail({
-      to: email,
-      subject: `Bitte bestätigen Sie Ihre Anmeldung — ${bezeichnung}`,
-      html: bestaetigungsMail(bezeichnung, link),
-      text:
-        `Bitte bestätigen Sie Ihre Anmeldung zu: ${bezeichnung}\n\n${link}\n\n`
-        + `Der Link ist ${GUELTIGKEIT_TAGE} Tage gültig. Haben Sie sich nicht angemeldet, `
-        + `ignorieren Sie diese E-Mail einfach — ohne Bestätigung geschieht nichts.\n\n`
-        + `Herzliche Grüße\nIhr Team von Alltagsengel`,
-      // Diese Mail ist selbst KEINE Werbung, sondern die Rueckfrage zu
-      // einer Anfrage. Sie traegt deshalb bewusst keinen Abmeldelink:
-      // ohne Bestaetigung entsteht ohnehin nichts, wovon man sich
-      // abmelden koennte.
-      idempotenzSchluessel: `marketing-optin:${typ}:${email}`,
+    // Der Kern steht seit dem 31.08.2026 in lib/marketing/anmeldung.ts —
+    // dieselbe Fachlogik bedient jetzt auch /api/newsletter, das vorher
+    // ein EINFACHES Opt-in war. Zwei oeffentliche Anmeldewege mit
+    // verschiedener Rechtsfolge waren der eigentliche Befund.
+    const ergebnis = await sendeBestaetigungsmail(createAdminClient(), {
+      email, typ, organizationId: DEFAULT_ORG_ID, site: SITE,
     })
 
-    if (!ergebnis.ok) {
-      log.warn('Bestätigungsmail nicht versendet', { grund: ergebnis.grund })
+    // Nach aussen bleibt die Antwort in JEDEM Fall dieselbe. Nur das
+    // Protokoll unterscheidet.
+    if (!ergebnis.gesendet) {
+      const schwer = ergebnis.grund === 'sperrliste_unlesbar'
+        || ergebnis.grund === 'bestand_unlesbar'
+        || ergebnis.grund === 'kein_link'
+      if (schwer) {
+        log.errorWithException(
+          `Bestätigungsmail nicht versendet (${ergebnis.grund})`,
+          new Error(ergebnis.hinweis ?? ergebnis.grund),
+        )
+      } else {
+        log.info('Keine Bestätigungsmail versendet', { grund: ergebnis.grund })
+      }
     }
 
     return NextResponse.json(ANTWORT)
@@ -186,24 +135,3 @@ export const POST = withTracking(async function POST(request: Request) {
     return safeApiError(err, request)
   }
 })
-
-function bestaetigungsMail(bezeichnung: string, link: string): string {
-  return `<!DOCTYPE html>
-<html lang="de"><body style="margin:0;padding:24px;background:#F5F0E8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1A1612;">
-  <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:16px;padding:32px;">
-    <h1 style="font-size:20px;margin:0 0 16px;">Bitte bestätigen Sie Ihre Anmeldung</h1>
-    <p style="line-height:1.6;margin:0 0 16px;">
-      Sie haben sich für <strong>${bezeichnung}</strong> angemeldet. Damit wir sicher sein können,
-      dass diese Anmeldung wirklich von Ihnen stammt, bitten wir um eine Bestätigung.
-    </p>
-    <p style="margin:24px 0;">
-      <a href="${link}" style="display:inline-block;background:#1A1612;color:#F5F0E8;text-decoration:none;padding:14px 24px;border-radius:10px;font-weight:600;">Anmeldung bestätigen</a>
-    </p>
-    <p style="line-height:1.6;margin:0 0 16px;font-size:14px;color:#5A5248;">
-      Der Link ist ${GUELTIGKEIT_TAGE} Tage gültig. Haben Sie sich nicht angemeldet, ignorieren Sie
-      diese E-Mail einfach — ohne Bestätigung geschieht nichts, und wir speichern keine Einwilligung.
-    </p>
-    <p style="line-height:1.6;margin:24px 0 0;">Herzliche Grüße<br>Ihr Team von Alltagsengel</p>
-  </div>
-</body></html>`
-}

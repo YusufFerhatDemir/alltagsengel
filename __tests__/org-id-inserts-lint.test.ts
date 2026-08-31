@@ -184,7 +184,13 @@ describe('Die behobenen Stellen tragen den Mandanten jetzt wirklich', () => {
 describe('Oeffentliche Website — Stamm-Organisation steht ausdruecklich da', () => {
   const oeffentlich = [
     'app/api/lead-inquiry/route.ts',
-    'app/api/newsletter/route.ts',
+    // `app/api/newsletter/route.ts` stand hier bis zum 31.08.2026. Die
+    // Route legt seitdem NICHTS mehr an: sie loest nur noch die
+    // Bestaetigungsmail aus, und der Verteilereintrag entsteht erst nach
+    // dem Klick im Postfach. Der INSERT ist damit nach
+    // lib/marketing/abonnent.ts gewandert — und wird dort geprueft
+    // (siehe unten). Die Zeile hier ersatzlos zu streichen waere falsch
+    // gewesen: dann waere die Regel mit dem INSERT verschwunden.
     'app/api/track-conversion/route.ts',
     'app/api/analytics/vitals/route.ts',
     'app/api/whatsapp/webhook/route.ts',
@@ -197,6 +203,28 @@ describe('Oeffentliche Website — Stamm-Organisation steht ausdruecklich da', (
       expect(pruefeQuelltext(src, datei)).toHaveLength(0)
     })
   }
+})
+
+describe('Verteilereintrag nach Doppel-Opt-in', () => {
+  it('lib/marketing/abonnent.ts setzt die Organisation ausdruecklich', () => {
+    // Hierher ist der INSERT aus app/api/newsletter/route.ts gezogen.
+    // Der Weg laeuft mit dem Dienstschluessel ohne auth.uid(); der
+    // Spalten-Default current_org_id() faellt dann auf die Stamm-
+    // Organisation zurueck — aber als fail-open-Rueckfall, nicht als
+    // Aussage.
+    const src = lies('lib/marketing/abonnent.ts')
+    expect(src).toContain('organization_id: organizationId')
+    expect(src).toContain("from('newsletter_subscribers')")
+  })
+
+  it('app/api/newsletter/route.ts legt selbst nichts mehr an', () => {
+    // Die Gegenprobe zum Umzug: bliebe hier ein INSERT stehen, gaebe es
+    // wieder zwei Wege mit verschiedener Rechtsfolge — genau der Befund,
+    // der am 31.08.2026 behoben wurde.
+    const src = lies('app/api/newsletter/route.ts')
+    expect(src).not.toContain(".from('newsletter_subscribers')")
+    expect(src).toContain('sendeBestaetigungsmail')
+  })
 })
 
 describe('Die Tatsachengrundlage der Regel', () => {

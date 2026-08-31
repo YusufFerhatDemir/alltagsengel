@@ -2,10 +2,16 @@
 import { useState } from 'react'
 
 // ═══════════════════════════════════════════════════════════
-// NEWSLETTER SIGNUP — E-Mail Sammlung für Marketing
+// NEWSLETTER SIGNUP — Doppel-Opt-in
 // ═══════════════════════════════════════════════════════════
 // Einbettbar auf Blog, FAQ, Landing Pages.
-// Speichert in Supabase + sendet Willkommens-Mail.
+//
+// Das Absenden legt NICHTS an. Es löst eine Bestätigungsmail aus;
+// die Anmeldung entsteht erst mit dem Klick darin
+// (§ 7 Abs. 2 Nr. 2 UWG). Bis zum 31.08.2026 trug dieses Formular
+// die Adresse sofort ein und schickte eine Willkommensmail — der
+// Erfolgstext versprach hier aber schon damals eine Bestätigung,
+// die es nicht gab.
 // ═══════════════════════════════════════════════════════════
 
 interface Props {
@@ -59,9 +65,12 @@ export default function NewsletterSignup({
         textAlign: 'center',
         border: variant === 'banner' ? '1px solid rgba(45, 106, 79, 0.2)' : 'none',
       }}>
-        <div style={{ fontSize: 28, marginBottom: 8 }}>✓</div>
-        <p style={{ color: '#4CAF50', fontWeight: 600, fontSize: 15 }}>Willkommen an Bord!</p>
-        <p style={{ color: '#8A8279', fontSize: 13 }}>Bestätigen Sie Ihre E-Mail — wir haben Ihnen eine Nachricht geschickt.</p>
+        <div style={{ fontSize: 28, marginBottom: 8 }}>✉</div>
+        <p style={{ color: '#4CAF50', fontWeight: 600, fontSize: 15 }}>Fast geschafft!</p>
+        <p style={{ color: '#8A8279', fontSize: 13 }}>
+          Wir haben Ihnen eine E-Mail geschickt. Bitte öffnen Sie den Bestätigungslink darin —
+          erst dann ist die Anmeldung wirksam.
+        </p>
       </div>
     )
   }
@@ -129,7 +138,8 @@ export default function NewsletterSignup({
       )}
 
       <p style={{ color: '#555', fontSize: 11, marginTop: 10, textAlign: 'center' }}>
-        Kein Spam. Abmeldung jederzeit möglich. <a href="/datenschutz" style={{ color: '#C9963C' }}>Datenschutz</a>
+        Sie erhalten zuerst eine Bestätigungs-E-Mail. Abmeldung jederzeit möglich.{' '}
+        <a href="/datenschutz" style={{ color: '#C9963C' }}>Datenschutz</a>
       </p>
     </div>
   )

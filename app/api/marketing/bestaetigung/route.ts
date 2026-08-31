@@ -34,6 +34,7 @@ import { DEFAULT_ORG_ID } from '@/lib/organizations/types'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
 import { normalisiereAdresse, erteileEinwilligung } from '@/lib/marketing/einwilligung'
+import { registriereAbonnent } from '@/lib/marketing/abonnent'
 import { pruefeOptInToken, istConsentTyp } from '@/lib/marketing/doppel-opt-in'
 import { CONSENT_BEZEICHNUNG, type ConsentTyp } from '@/lib/marketing/typen'
 
@@ -147,6 +148,24 @@ export const POST = withTracking(async function POST(request: Request) {
         seite('Anmeldung nicht möglich', ergebnis.grund, false),
         { status: 409, headers: HTML },
       )
+    }
+
+    // ── Der Verteilereintrag (Befund vom 31.08.2026) ──────────────────
+    // Die Einwilligung ist die ERLAUBNIS, nicht der KONTAKT.
+    // `ladeMarketingKontakte()` baut die Auswahl aus profiles, caregivers,
+    // newsletter_subscribers und mis_applicants — nicht aus
+    // marketing_consents. Ohne diesen Schritt haette eine Person ohne
+    // Konto nach der Bestaetigung eine gueltige Einwilligung und stuende
+    // in KEINEM Segment: dauerhaft „0 versandfaehig", ohne Fehlermeldung.
+    //
+    // Bewusst NACH der Einwilligung und ohne die Antwort zu kippen: die
+    // Einwilligung ist die rechtlich tragende Aussage, der
+    // Verteilereintrag ist nachholbar. Begruendung in lib/marketing/abonnent.ts.
+    if (typ === 'newsletter') {
+      const verteiler = await registriereAbonnent(createAdminClient(), DEFAULT_ORG_ID, email)
+      if (!verteiler.ok) {
+        log.error('Einwilligung steht, Verteilereintrag fehlt', { grund: verteiler.grund })
+      }
     }
 
     return new NextResponse(
