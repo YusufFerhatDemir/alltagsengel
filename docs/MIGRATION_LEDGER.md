@@ -44,7 +44,20 @@
 
 ---
 
-## Block 20 — Marketing/CRM (2026-08-30), NOCH NICHT ANGEWENDET
+> **ÜBERHOLT (31.08.2026).** Der Abschnitt unten stimmte nicht mehr: alle
+> drei Marketing-Migrationen stehen live (6 Tabellen, `marketing.verwalten`
+> in `rollen_matrix()`, `mis_audit_log_action_check` erweitert). Umgekehrt
+> galten `20261008000000` und `20261009000000` hier als erledigt und fehlen
+> live.
+>
+> **Diese Datei ist ab sofort nicht mehr die Quelle für „ist X live?".**
+> Die Antwort misst `npm run check:migrationen`
+> (`scripts/check-migrationen-live.mjs`) am Katalog der Datenbank. Der
+> Stand vom 31.08.2026 mit Grund, Risiko, SQL und Verifikationsabfrage je
+> Datei steht in `docs/MIGRATIONEN_OFFEN_2026-08-31.md` — acht offene
+> Migrationen, nicht drei.
+
+## Block 20 — Marketing/CRM (2026-08-30) — ÜBERHOLT, siehe Kasten oben
 
 | Repo-Datei | Zweck | Status |
 |---|---|---|

@@ -70,6 +70,7 @@
     "verify:zeiterfassung": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/verify-zeiterfassung-kette.mjs",
     "verify:pflege-kette": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/verify-pflege-kette.mjs",
     "audit:rls-rollen": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/audit-rls-rollen.mjs",
+    "check:migrationen": "node scripts/check-migrationen-live.mjs",
     "verify:rls-lesepolicies": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/verify-rls-lesepolicies.mjs"
   },
   "dependencies": {
