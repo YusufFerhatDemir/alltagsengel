@@ -74,7 +74,8 @@
     "verify:dienstplan-touren": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/verify-dienstplan-touren-kette.mjs",
     "verify:unterschrift": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/verify-unterschrift-integritaet.mjs",
     "check:migrationen": "node scripts/check-migrationen-live.mjs",
-    "verify:rls-lesepolicies": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/verify-rls-lesepolicies.mjs"
+    "verify:rls-lesepolicies": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/verify-rls-lesepolicies.mjs",
+    "aufbewahrung:bericht": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/aufbewahrung-trockenlauf-bericht.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",
