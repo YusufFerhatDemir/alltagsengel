@@ -36,7 +36,11 @@ zugeschlagen haben:
   `…_aktion_check`, nicht `…_action_check`. Eine LIKE-Probe meldete
   „fehlt", wo nichts fehlte.
 
-## Ergebnis: 8 offen, 24 stehen
+## Ergebnis: 9 offen, 24 stehen
+
+> **Fortschreibung 31.08.2026 (nachmittags):** eine neunte ist hinzugekommen —
+> `20261023000000_signaturhash_beim_einfuegen`, Befund U11. Sie steht als
+> Nummer 9 unten. An den acht vorherigen hat sich nichts geändert.
 
 **Nicht 4.** Die Annahme „4 offene Migrationen" trifft nicht zu; die
 Messung findet acht, davon sieben aus dem Bestand und eine neue aus dem
@@ -116,6 +120,18 @@ heutigen P0-Block.
 | **EXAKTER SQL** | `supabase/migrations/20261022000000_rk_lesepolicies_verwaltungsrollen.sql` · Rollback: `…20261022000001_rollback_…sql` · Entscheidung und Begründung je Tabelle: `docs/security/RLS_LESEPOLICIES_ENTSCHEIDUNG_2026-08-31.md` |
 | **VERIFIKATION** | `npm run verify:rls-lesepolicies` → muss `24/24` melden. Danach `npm run lint:rls-sicht` → Abschnitt A auf 0, und die Obergrenze in `.github/workflows/ci.yml` entsprechend senken. |
 
+### 9 · `20261023000000_signaturhash_beim_einfuegen` *(neu, 31.08.2026)*
+
+| | |
+|---|---|
+| **GRUND** | `trg_compute_signature_hash` steht live als `BEFORE UPDATE` — **ohne INSERT**. Live nachgemessen: `pg_get_triggerdef` nennt nur UPDATE. |
+| **BEFUND** | Ein Leistungsnachweis, der **gleich als unterschrieben eingefügt** wird, läuft am Trigger vorbei: `signature_hash = NULL`, `is_locked = false` — und `sync_service_record_status` hebt ihn sofort auf `status='signed'`, also abrechenbar. Gemessen gegen Produktion mit `npm run verify:unterschrift`, Prüfung **U11**. |
+| **RISIKO** | **Kein offener Manipulationsweg heute**, aber ein fehlendes Siegel. `trg_a_unterschrift_beleg` greift auch beim INSERT und verlangt einen Beleg — es entsteht also keine beleglose Zeile; und `prevent_finalized_service_record_mutation` hält die Zeile im Status `signed` unveränderlich (Prüfung **U12** belegt das: die Betragsänderung wird abgewiesen). Was fehlt, ist der **Nachweis**: ohne Hash lässt sich später nicht belegen, dass Betrag, Zeitraum und Klient noch die sind, die unterschrieben wurden. Per INSERT schreiben Nacherfassung, Import aus einem Vorsystem und jede Datenmigration. |
+| **WIRKUNG AUF DEN BESTAND** | Keine. Ein Trigger wirkt nur nach vorn. Die 30 Bestandszeilen ohne Hash bleiben ohne Hash — Nachziehen wäre eine Fälschung (der Hash bildet den Unterschriftszeitpunkt mit ab). Siehe `docs/UNTERSCHRIFT_ALTBESTAND_2026-08-31.md`. |
+| **EXAKTER SQL** | `supabase/migrations/20261023000000_signaturhash_beim_einfuegen.sql` · Rollback: `…20261023000001_rollback_…sql` |
+| **VORAB BEWIESEN** | `__tests__/migrations/signaturhash-beim-einfuegen-pglite.test.ts` — 10 Prüfungen gegen echtes PostgreSQL (PGlite), mit der **wortgleichen** Funktion aus der Migrationsdatei und einer Gegenprobe gegen die heutige Live-Verdrahtung. |
+| **VERIFIKATION** | `npm run verify:unterschrift` → **U11 muss von OFFEN auf OK springen**. Zusätzlich `npm run check:migrationen`. |
+
 ---
 
 ## Warum ich sie nicht selbst anwenden kann
@@ -140,12 +156,12 @@ Und es gibt keinen zweiten Weg in dieser Umgebung:
 | `supabase db push` | im Projekt ausdrücklich verboten (Zukunfts-Zeitstempel) |
 | `public._run_sql` | Lese-Orakel, rollt immer zurück, kein DDL |
 
-**Die acht Dateien brauchen den Supabase-SQL-Editor als `postgres`.**
+**Die neun Dateien brauchen den Supabase-SQL-Editor als `postgres`.**
 
-Reihenfolge ist unkritisch — keine der acht hängt von einer anderen ab.
+Reihenfolge ist unkritisch — keine der neun hängt von einer anderen ab.
 Empfehlung: 3, 4, 5 zuerst (die drei Unveränderlichkeits-Trigger der
 Pflegeakte, höchstes fachliches Risiko), dann 8 (schaltet drei Rollen
-funktionsfähig), dann 1, 2, 7, 6.
+funktionsfähig), dann 1, 2, 7, 6, 9.
 
 Nach jeder Anwendung: `npm run check:migrationen` — der Lauf sagt
 selbst, welche noch offen sind.
