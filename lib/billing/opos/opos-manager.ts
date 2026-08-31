@@ -103,6 +103,12 @@ export async function getOposListe(
     .select('id, invoice_number, invoice_number_formatted, total_amount, paid_amount, status, dunning_level, created_at, due_date, client_id, client:clients(first_name, last_name)')
     .eq('organization_id', organizationId)
     .is('deleted_at', null)
+    // Nur festgeschriebene Rechnungen sind rechtswirksam ausgestellt und damit
+    // eine echte Forderung. Eine Zeile ohne frozen_at ist synthetisch
+    // (Demo-/Testbestand — siehe RE-2026-0001..0003, Kunde AE-TEST-0001) und
+    // hat in den offenen Posten nichts verloren; sonst weist OPOS Umsatz aus,
+    // den es nicht gibt. Dieselbe Sperre trägt das Mahnwesen (Gate-Punkt 11).
+    .not('frozen_at', 'is', null)
     // Die Liste steht in lib/billing/status-vokabular.ts, weil `invoices.status`
     // live ZWEI Vokabulare fuehrt und vier Stellen je eine eigene, halbe
     // Liste hatten. Eine stornierte Rechnung im englischen Wortlaut
