@@ -230,6 +230,13 @@ describe('Fehlerqueues melden nicht "leer", wenn sie nicht lesbar sind', () => {
       .rejects.toThrow(/nicht lesbar/i)
   })
 
+  it('getDunningOverview meldet nicht "0 offen, 0 EUR ueberfaellig", wenn sie nicht lesen konnte', async () => {
+    const { getDunningOverview } = await import('@/lib/billing/core/dunning')
+    const fake = erstelleFakeSupabase(() => ({ error: FEHLER, data: null }))
+    await expect(getDunningOverview(fake.client as never, ORG))
+      .rejects.toThrow(/nicht lesbar/i)
+  })
+
   it('Gegenprobe: eine wirklich leere Queue meldet 0 und wirft nicht', async () => {
     const { deadLetterUebersicht } = await import('@/lib/abrechnung/dead-letter')
     const fake = erstelleFakeSupabase(() => ({ data: [] }))

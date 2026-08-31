@@ -419,11 +419,20 @@ export async function getDunningOverview(
   supabase: SupabaseClient,
   organizationId: string
 ): Promise<DunningOverview> {
-  const { data: entries } = await supabase
+  const { data: entries, error } = await supabase
     .from('dunning_entries')
     .select('dunning_level, amount_due_cents, amount_paid_cents, block_dunning, due_date')
     .eq('organization_id', organizationId)
     .neq('dunning_level', 'bezahlt')
+
+  // Dieselbe Regel wie in deadLetterUebersicht und wiedervorlageUebersicht:
+  // der verworfene Fehler wurde zu lauter Nullen, und ein Mahn-Dashboard, das
+  // „0 offene Mahnungen, 0 EUR ueberfaellig" zeigt, sagt etwas ueber die
+  // Forderungen aus, das es gar nicht gelesen hat. Es ist genau die Zahl, die
+  // niemand nachprueft, weil sie beruhigt.
+  if (error) {
+    throw new Error(`Mahneintraege nicht lesbar: ${error.message}`)
+  }
 
   const overview: DunningOverview = {
     total: 0,
