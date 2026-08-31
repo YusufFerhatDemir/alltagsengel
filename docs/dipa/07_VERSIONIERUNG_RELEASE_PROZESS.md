@@ -79,8 +79,15 @@ Ablauf laut Kopf-Kommentar und Code von `deploy.sh` (7 Schritte):
 
 1. **Stale-Lock-Cleanup** — entfernt hängende xlsx-Locks, `.git/index.lock`
    (nur wenn älter als 5 Minuten), veraltete Next.js-Build-Verzeichnisse.
-2. **Typecheck (warn-only)** — `tsc --noEmit`; Fehler blockieren den Deploy
-   **nicht**, werden aber angezeigt. Überspringbar mit `SKIP_TYPECHECK=1`.
+2. **Typecheck** — `tsc --noEmit`; von tsc gemeldete Typfehler **blockieren**
+   den Deploy vor dem Commit (bis 31.08.2026 warn-only — so gelangten zwei
+   Typfehler-Commits nach main und machten die CI rot, die auf
+   `npm run typecheck` blockiert). Bricht tsc dagegen ohne eine einzige
+   `error TS`-Zeile ab (Speicher), ist das **kein** Typbefund: der Schritt
+   warnt „NICHT geprüft" und laesst durch, statt einen Fehler zu erfinden.
+   Der Lauf bekommt dafür `--max-old-space-size=4096`, weil der
+   Node-Standard-Heap fuer dieses Repo nicht reicht.
+   Überspringbar mit `SKIP_TYPECHECK=1` als bewusstem Notausstieg pro Lauf.
 3. **Precommit-Guard** — `scripts/precommit-guard.sh`; **blockiert** den
    Commit bei Secrets, `.env`-Dateien, `node_modules` o. ä. Override nur mit
    explizitem `GUARD_BYPASS=1` (laut CLAUDE.md nur mit ausdrücklicher

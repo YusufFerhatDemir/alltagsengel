@@ -5,7 +5,7 @@
 **Yusuf will NIE ein Terminal anfassen müssen.** Agents committen + pushen autonom.
 
 - **Immer** `./deploy.sh "commit message"` benutzen — NICHT direkt `git push`, NICHT direkt `git commit`.
-  `deploy.sh` macht: stale-lock-cleanup → typecheck (warn-only) → `precommit-guard` (Secrets/.env/node_modules → block) → `git add -A` → commit → push → `verify-push` (Remote-Wahrheits-Check).
+  `deploy.sh` macht: stale-lock-cleanup → typecheck (**blockiert** bei Fehlern) → `precommit-guard` (Secrets/.env/node_modules → block) → `git add -A` → commit → push → `verify-push` (Remote-Wahrheits-Check).
 - **Niemals** dem User sagen „führe X im Terminal aus". Wenn ein Schritt blockiert, selbst lösen oder im Report exakt benennen, was gerade NICHT geht.
 - **Worktree-Branches** (`claude/*`, `worktree/*`) pushen automatisch nach `main` — `deploy.sh` erkennt das.
 - **Rollback**: `./scripts/rollback.sh <N> --push` revertet die letzten N Commits via `git revert` (kein reset --hard).
