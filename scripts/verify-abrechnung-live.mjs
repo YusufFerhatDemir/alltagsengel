@@ -130,7 +130,10 @@ const PRUEFUNGEN = [
   {
     id: 'C1',
     titel: 'anon kommt an keine Geldtabelle',
-    erwartung: 'jede Abfrage 401/403 — geprueft mit dem oeffentlichen Schluessel',
+    erwartung: 'keine Tabelle gibt anon eine Zeile heraus — entweder 401/403, oder ein '
+      + 'nachgewiesener Riegel (kein SELECT-Grant bzw. RESTRICTIVE anon-Policy USING(false)). '
+      + 'Ein blosses HTTP 200 mit leerem Ergebnis zaehlt NICHT als dicht: die Tabelle kann '
+      + 'schlicht leer sein.',
     anonTest: [
       'client_budgets', 'service_records', 'payments', 'payment_allocations',
       'invoices', 'invoice_items', 'billing_tariffs', 'leistungspreise', 'angels',
@@ -243,17 +246,101 @@ const PRUEFUNGEN = [
   },
 ]
 
+/**
+ * Ist die Tabelle fuer anon durch einen RIEGEL geschlossen — unabhaengig
+ * davon, ob gerade Zeilen drinstehen?
+ *
+ * Zwei Riegel zaehlen, beide sind hart:
+ *   • kein SELECT-Grant fuer anon  → PostgREST antwortet 401,
+ *   • eine RESTRICTIVE Policy fuer anon mit `USING (false)` → RLS laesst
+ *     nie eine Zeile durch, auch mit Grant.
+ *
+ * Gefragt wird ueber has_table_privilege und pg_policies. information_schema
+ * taugt hier NICHT: es zeigt PUBLIC-Grants nicht, und ein Audit meldete
+ * dadurch alles als dicht.
+ */
+async function anonRiegel(tabellen) {
+  const liste = tabellen.map(t => `'${t}'`).join(',')
+  const text = await orakel(
+    `select c.relname || '|' `
+    + `|| has_table_privilege('anon','public.'||c.relname,'SELECT')::text || '|' `
+    + `|| (exists (select 1 from pg_policies p where p.schemaname='public' `
+    + `and p.tablename=c.relname and p.permissive='RESTRICTIVE' `
+    + `and p.roles @> ARRAY['anon']::name[] and coalesce(p.qual,'') = 'false'))::text `
+    + `from pg_class c where c.relnamespace='public'::regnamespace and c.relname in (${liste})`,
+  )
+  const karte = new Map()
+  if (!text.startsWith('(kein Treffer)') && text.trim() !== '(leer)') {
+    for (const zeile of text.split('\n')) {
+      const [name, grant, deny] = zeile.trim().split('|')
+      if (name) karte.set(name, { grant: grant === 'true', deny: deny === 'true' })
+    }
+  }
+  return karte
+}
+
+/**
+ * Prueft, ob anon an die Geldtabellen kommt.
+ *
+ * WARUM DER HTTP-STATUS ALLEIN NICHT GENUEGT
+ * 401/403 ist ein Beweis fuer „zu". 200 ist KEIN Beweis fuer „offen":
+ * PostgREST antwortet 200 mit `[]`, wenn anon zwar ein SELECT-Grant hat,
+ * RLS aber jede Zeile zurueckhaelt — und ebenso, wenn die Tabelle schlicht
+ * leer ist. Die alte Fassung zaehlte beides als LESBAR und meldete
+ * `payments` dauerhaft als offenen Punkt, obwohl dort eine RESTRICTIVE
+ * Policy `USING (false)` fuer anon steht. Eine Pruefung, die immer rot ist,
+ * wird nicht mehr gelesen — und dann faellt die echte auch nicht mehr auf.
+ *
+ * Deshalb entscheidet jetzt die Kombination:
+ *   Zeilen zurueckgekommen           → LECK, ohne Wenn und Aber.
+ *   200/leer + Riegel nachgewiesen   → dicht, mit Angabe welcher Riegel.
+ *   200/leer ohne Riegel             → OFFEN. Eine heute leere Tabelle ist
+ *                                      kein Riegel; morgen steht etwas drin.
+ */
 async function anonPruefung(tabellen) {
   const ANON = publishableKey()
   if (!ANON) return { ok: false, text: 'kein publishable/anon key gefunden — nicht geprueft' }
+
+  const riegel = await anonRiegel(tabellen)
   const zeilen = []
   let offen = 0
+
   for (const t of tabellen) {
-    const res = await fetch(`${URL_BASIS}/rest/v1/${t}?select=*&limit=1`, { headers: apiHeaders(ANON) })
-    const erlaubt = res.status === 200 || res.status === 206
-    if (erlaubt) offen++
-    zeilen.push(`${t.padEnd(22)} HTTP ${res.status}${erlaubt ? '  ← LESBAR' : ''}`)
+    const res = await fetch(
+      `${URL_BASIS}/rest/v1/${t}?select=*&limit=1`,
+      { headers: { ...apiHeaders(ANON), Prefer: 'count=exact' } },
+    )
+    const rumpf = await res.text()
+    const status = res.status
+
+    if (status !== 200 && status !== 206) {
+      zeilen.push(`${t.padEnd(22)} HTTP ${status}  kein Zugriff`)
+      continue
+    }
+
+    // Kamen Zeilen zurueck, ist die Sache entschieden.
+    let anzahl = 0
+    try { anzahl = Array.isArray(JSON.parse(rumpf)) ? JSON.parse(rumpf).length : 0 } catch { anzahl = 0 }
+    if (anzahl > 0) {
+      offen++
+      zeilen.push(`${t.padEnd(22)} HTTP ${status}  ← LECK: ${anzahl} Zeile(n) gelesen`)
+      continue
+    }
+
+    const r = riegel.get(t)
+    if (r?.deny) {
+      zeilen.push(`${t.padEnd(22)} HTTP ${status}  0 Zeilen — RESTRICTIVE anon-Policy USING(false)`)
+    } else if (r && !r.grant) {
+      zeilen.push(`${t.padEnd(22)} HTTP ${status}  0 Zeilen — kein SELECT-Grant fuer anon`)
+    } else {
+      offen++
+      zeilen.push(
+        `${t.padEnd(22)} HTTP ${status}  ← OFFEN: 0 Zeilen, aber KEIN Riegel `
+        + `(Grant=${r ? r.grant : '?'}, anon-Deny=${r ? r.deny : '?'}) — heute leer ist kein Schutz`,
+      )
+    }
   }
+
   return { ok: offen === 0, text: zeilen.join('\n') }
 }
 
