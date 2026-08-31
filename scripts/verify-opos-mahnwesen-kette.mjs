@@ -52,7 +52,7 @@ for (const datei of ['.env.local', '.env']) {
 import { createClient } from '@supabase/supabase-js'
 import { apiHeaders, envWert, secretKey } from './lib/supabase-keys.mjs'
 import { getOposListe, getKlientSalden } from '../lib/billing/opos/opos-manager.ts'
-import { pruefeMahnbarkeit, GESPERRTE_STATUS } from '../lib/billing/dunning/mahn-safety-gate.ts'
+import { pruefeMahnbarkeit, GESPERRTE_STATUS, MAHN_PRUEFPUNKTE } from '../lib/billing/dunning/mahn-safety-gate.ts'
 import { RECHNUNG_ERLEDIGT } from '../lib/billing/status-vokabular.ts'
 import { DUNNING_DAYS, DUNNING_FEES_CENTS, DUNNING_LEVEL_ORDER } from '../lib/billing/core/dunning.ts'
 
@@ -125,17 +125,28 @@ try {
   // ── M2) Die offenen Posten stimmen mit den Rechnungen ueberein ─────────
   const uebersicht = await getOposListe(admin, ORG)
   const { data: rechnungen } = await admin.from('invoices')
-    .select('id, invoice_number, status, total_amount, paid_amount, due_date')
+    .select('id, invoice_number, status, total_amount, paid_amount, due_date, frozen_at')
     .eq('organization_id', ORG).is('deleted_at', null)
   const alle = rechnungen ?? []
+  // frozen_at gehoert in die Erwartung, weil getOposListe es seit
+  // Commit 9b78ed1d verlangt: eine nie festgeschriebene Rechnung ist
+  // fachlich keine Forderung — sie wurde nie rechtswirksam ausgestellt.
+  // Ohne diese Bedingung erwartete der Lauf hier die drei synthetischen
+  // Produktionszeilen (RE-2026-0001..0003, alle frozen_at NULL) und
+  // meldete dauerhaft OFFEN, obwohl die Liste richtig rechnet. Die
+  // Pruefung wird an das Live-Invariant gezogen, nicht der Code an die
+  // Pruefung.
   const erwartet = alle.filter(r =>
     !RECHNUNG_ERLEDIGT.includes(String(r.status))
+    && r.frozen_at !== null
     && Math.round(((r.total_amount ?? 0) - (r.paid_amount ?? 0)) * 100) > 0)
   const summeErwartet = erwartet.reduce(
     (n, r) => n + Math.round(((r.total_amount ?? 0) - (r.paid_amount ?? 0)) * 100), 0)
   pruefe('M2', 'Die OPOS-Liste zeigt genau die Rechnungen, auf denen noch etwas offen steht',
     uebersicht.gesamtAnzahl === erwartet.length && uebersicht.gesamtOffen === summeErwartet,
-    `${alle.length} Rechnungen im Mandanten, davon ${erwartet.length} mit Restbetrag\n`
+    `${alle.length} Rechnungen im Mandanten, davon ${erwartet.length} festgeschrieben MIT Restbetrag\n`
+    + `(nicht festgeschrieben und daher keine Forderung: `
+    + `${alle.filter(r => r.frozen_at === null).length})\n`
     + `OPOS: ${uebersicht.gesamtAnzahl} Posten, ${euro(uebersicht.gesamtOffen)} `
     + `(erwartet ${erwartet.length} / ${euro(summeErwartet)})\n`
     + uebersicht.offenePosten.map(p => `  ${p.invoiceNumber} [${p.status}] offen ${euro(p.offenCent)}`
@@ -217,10 +228,18 @@ try {
   // ── M7) Jede Sperre wird EINZELN ausgewiesen ───────────────────────────
   //
   // Ein Tor, das nur „nein" sagt, ist im Betrieb unbrauchbar: niemand
-  // weiss, was zu tun ist. Alle zehn Punkte muessen einen Stand tragen.
+  // weiss, was zu tun ist. JEDER Punkt muss einen Stand tragen.
+  //
+  // Die Anzahl kommt aus dem Tor selbst, nicht aus einer hier
+  // eingetragenen Zahl. Vorher stand hier fest 10; mit Punkt 11
+  // (festgeschrieben) meldete der Lauf danach bei jeder Rechnung
+  // „unvollstaendige Begruendung" — obwohl das Tor vollstaendiger
+  // geworden war. Eine Pruefung, die eine Verbesserung als Fehler
+  // meldet, prueft die falsche Sache.
+  const SOLL_PUNKTE = MAHN_PRUEFPUNKTE.length
   const unvollstaendig = tore.filter(({ g }) =>
-    g.punkte.length !== 10 || g.punkte.some(p => !p.stand || !p.befund))
-  pruefe('M7', 'Das Tor begruendet alle zehn Pruefpunkte, nicht nur das Ergebnis',
+    g.punkte.length !== SOLL_PUNKTE || g.punkte.some(p => !p.stand || !p.befund))
+  pruefe('M7', `Das Tor begruendet alle ${SOLL_PUNKTE} Pruefpunkte, nicht nur das Ergebnis`,
     unvollstaendig.length === 0,
     `${tore.length} Rechnungen geprueft, ${unvollstaendig.length} mit unvollstaendiger Begruendung\n`
     + (tore[0] ? tore[0].g.punkte.map(p => `  ${p.nummer}. [${p.stand}] ${p.titel}`).join('\n') : ''))
