@@ -16,6 +16,8 @@ Eine Codebase, vier Oberflächen: **Web**, **Admin-Panel**, **MIS** (Management-
 | Backend | Supabase (Postgres + Auth + RLS), Next.js API-Routes |
 | E-Mail | Resend |
 | Push | FCM V1 (Native), VAPID (Web-Push) |
+| Desktop | Tauri 2 (macOS/Windows, `npm run tauri:build`) |
+| Zahlungen | Stripe (Selbstzahler), SEPA-Lastschrift + DTA/SGB-V (Kassen) |
 | Hosting | Vercel (Web), App Store + Play Store (Native) |
 | Tracking | GTM + Consent Mode v2 (DSGVO-konform) |
 
@@ -28,24 +30,32 @@ Supabase-Projekt: `nnwyktkqibdjxgimjyuq`
 
 ```
 alltagsengel/
-├── app/                 # Next.js App Router (Web + Admin + MIS + API)
-│   ├── (Public-Routes)  # Landing, blog, faq, kontakt, impressum, agb, datenschutz
+├── app/                 # Next.js App Router — 364 Seiten, 444 API-Routen
+│   ├── (Public-Routes)  # Landing, blog, faq, kontakt, impressum, agb, datenschutz,
+│   │                    # Stadt-Landingpages (alltagsbegleitung|krankenfahrten|
+│   │                    # hygienebox|engel-werden)/[stadt]
 │   ├── kunde/           # Kunden-Flow (Senioren/Pflegebedürftige)
 │   ├── engel/           # Engel-Flow (Alltagsbegleiter)
+│   ├── angehoerige/     # Angehörigenportal (Freigabe über den Code, nicht über RLS)
 │   ├── fahrer/          # Krankenfahrt-Fahrer
-│   ├── admin/           # Superadmin-Panel
+│   ├── pflegecoach/     # PflegeCoach (Selbstzahler-Produkt, noindex)
+│   ├── admin/           # Superadmin-Panel + Pflege-/Abrechnungsmodule
 │   ├── mis/             # Management-Informationssystem
-│   └── api/             # 22 Backend API-Routes
-├── components/          # Shared UI Components
-├── lib/                 # Business-Logic, Supabase-Client, Utils
+│   ├── investor/        # Investor-Bereich (DE + EN, robots-disallow)
+│   └── api/             # Backend API-Routen
+├── components/          # Shared UI Components (73)
+├── lib/                 # Business-Logic, Supabase-Client, Utils (~500 Module)
 ├── hooks/               # React Hooks (useTrackVisit, useUserLocation, …)
 ├── constants/           # Theme & Konstanten
 ├── types/               # TypeScript Type-Definitionen
 ├── public/              # Statische Assets (Web)
-├── supabase/            # DB-Migrations + initial-setup.sql
+├── supabase/            # DB-Migrations (460) + initial-setup.sql
 ├── android/             # Capacitor Android-Projekt
 ├── ios/                 # Capacitor iOS-Projekt
-├── scripts/             # Build/Setup-Scripts (GTM, Company-Overview)
+├── src-tauri/           # Tauri-Desktop-Projekt
+├── e2e/                 # Playwright-Specs
+├── __tests__/           # vitest-Suite (`npm test`)
+├── scripts/             # Lint-Gates, Live-Verifikation, Deploy-Werkzeuge
 │
 ├── docs/                # Alle Projekt-Dokumentation
 │   ├── store/           # App Store + Play Store Metadaten & Anleitungen
@@ -68,9 +78,13 @@ alltagsengel/
 │   ├── video-generation/    # _clips*/, _preview*/ Zwischenstände (gitignored)
 │   └── private/             # PII: Ausweise, Führerscheine, AABs (gitignored)
 │
+├── native/              # ABGELÖSTE Expo-App. Bleibt bewusst liegen, wird NICHT
+│                        # gebaut und NICHT submittet — siehe
+│                        # native/WARNUNG-NICHT-SUBMITTEN.md (Vorfall 02.07.2026).
+│                        # Aus dem Typecheck ausgeschlossen (tsconfig).
 ├── memory/              # Cowork-Memory (glossary, projects, people, context)
-├── CLAUDE.md            # Projekt-Anweisungen für Claude
-├── TASKS.md             # Aktive Aufgabenliste
+├── CLAUDE.md            # Projekt-Anweisungen für Claude (Autonomie-Regel, deploy.sh)
+├── TASKS.md             # Aufgabenliste — Stand April 2026, nicht mehr gepflegt
 └── README.md            # ← du bist hier
 ```
 
@@ -96,25 +110,40 @@ Erforderlich: `.env.local` mit Supabase-Keys (siehe `.env` als Vorlage; nichts d
 
 ---
 
-## Status (Stand 14.04.2026)
+## Status
 
-| Plattform | Status |
+Der technische Zustand steht **nicht hier** — er veraltet in dieser Datei
+schneller, als sie gepflegt wird. Führende Quelle ist:
+
+- `docs/reports/MASTER_HANDOFF_LATEST.md` — Gesamtstatus, offene P0/P1, letzter Track
+- `docs/reports/STATUS_MATRIX_2026-08-25.md` — Modul-Matrix
+
+| Plattform | Wo der Live-Stand steht |
 |---|---|
-| iOS App Store | LIVE — v1.0.0 Build 4 (18 Downloads, 20.9 % Conversion) |
-| Google Play | Identity verified 08.04.2026, 25 $ Dev-Fee bezahlt — Live-Status zu bestätigen |
-| Web (Vercel) | Live unter alltagsengel.care |
-
-**Tabellen (Supabase):** `profiles` (29), `angels` (7), `bookings` (6), `krankenfahrten` (9), `care_recipients` (neu seit 13.04.2026) u.a.
+| Web (Vercel) | alltagsengel.care — zwei Vercel-Projekte pro Commit, siehe `docs/` |
+| iOS / Android | Capacitor wrappt die Live-Site; Store-Stand in `docs/store/` |
 
 ---
 
-## Nächste Schritte (offen aus Audit/Glossary)
+## Prüfen und Ausliefern
 
-1. **Security:** GitGuardian-Alert + Service-Role-Key-Rotation (siehe `docs/security/SECURITY_ROTATION_14042026.md`)
-2. **DSGVO:** VisitorTracker-Fix (`consent === null` → nur `'accepted'`)
-3. **RLS:** Public-Read-Policy auf `profiles` schließen
-4. **Angehörigen-Modus:** End-to-End-Test mit `care_recipients`
-5. **Play Store:** Live-Release bestätigen
+```bash
+npm run typecheck          # tsc --noEmit
+npm test                   # vitest (__tests__/**)
+npm run test:unit          # node:test (lib/**/*.test.ts) — eigene Suite, CI fährt beide
+npm run lint:forbidden     # Regressions-Pattern aus scripts/forbidden-strings.json
+npm run check:schema-drift # Code-Spalten gegen das Live-Schema
+
+./deploy.sh "Beschreibung" # einziger Weg nach main:
+                           # typecheck (blockiert) → precommit-guard → commit → push → verify-push
+```
+
+`npm run setup:hooks` einmal pro Clone installiert den Pre-Commit-Hook.
+Rollback: `./scripts/rollback.sh <N> --push` (revert, kein `reset --hard`).
+
+Die vollständige Liste der Prüf- und Verifikationsläufe steht in `package.json`
+unter `scripts` — u. a. `verify:geldweg`, `verify:abrechnung`, `verify:perimeter`,
+`audit:rls`, `rls:matrix:check`.
 
 ---
 
