@@ -20,7 +20,18 @@
 
 import { esc } from '@/lib/notifications/html'
 
-export const BUCHUNGS_ARTEN = ['booking-neu', 'booking-zusage', 'booking-absage'] as const
+export const BUCHUNGS_ARTEN = [
+  'booking-neu',
+  'booking-zusage',
+  'booking-absage',
+  // Storno (31.08.2026). ZWEI Arten, nicht eine: der Text richtet sich an
+  // die jeweils ANDERE Seite. „Ihr Kunde hat abgesagt" und „Ihr Termin
+  // wurde abgesagt" sind verschiedene Nachrichten mit verschiedenen
+  // Anschlusshandlungen — eine gemeinsame Art muesste beides zugleich
+  // sagen und saehe fuer beide falsch aus.
+  'booking-storno-kunde',
+  'booking-storno-engel',
+] as const
 export type BuchungsArt = (typeof BUCHUNGS_ARTEN)[number]
 
 export interface BookingNotifyData {
@@ -181,6 +192,62 @@ export function baueBuchungsNachricht(
     }
   }
 
+  if (art === 'booking-storno-kunde' || art === 'booking-storno-engel') {
+    // Wer abgesagt hat, bestimmt Empfaenger, Anrede und Anschlusshandlung.
+    const vomKunden = art === 'booking-storno-kunde'
+    const absagender = vomKunden ? data.customerName : data.angelName
+    const ziel = vomKunden ? '/engel/buchungen' : '/kunde/home'
+    const grundZeile = grund ? ` Grund: ${grund}` : ''
+    const titel = 'Termin abgesagt'
+    const kurz = `${absagender} hat den Termin für ${data.service} am ${dateStr} um ${data.time} Uhr abgesagt.`
+
+    return {
+      inApp: {
+        type: 'booking',
+        title: titel,
+        body: vomKunden
+          ? `${kurz} Der Einsatz wurde aus Ihrer Einsatzliste entfernt.`
+          : `${kurz}${grundZeile} Sie können gerne einen anderen Engel anfragen.`,
+        link: ziel,
+        data: { bookingId: data.bookingId },
+      },
+      email: {
+        anredeFallback: vomKunden ? 'Engel' : 'Kunde',
+        subject: `Termin am ${dateStr} wurde abgesagt`,
+        html: `
+        <p>${vomKunden ? 'ein Kunde hat einen bestätigten Termin abgesagt:' : 'Ihr Termin wurde leider abgesagt:'}</p>
+        <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;width:120px;">${vomKunden ? 'Kunde' : 'Engel'}</td><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600;">${esc(absagender)}</td></tr>
+          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Leistung</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${esc(data.service)}</td></tr>
+          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Datum</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${dateStr}</td></tr>
+          <tr><td style="padding:8px 12px;color:#888;">Uhrzeit</td><td style="padding:8px 12px;">${esc(data.time)} Uhr</td></tr>
+        </table>
+        ${grund ? `<p style="color:#666;">Begründung: ${esc(grund)}</p>` : ''}
+        <p>${vomKunden
+          ? 'Der Einsatz wurde aus Ihrer Einsatzliste entfernt. Es ist nichts weiter zu tun.'
+          : 'Es stehen weitere Engel in Ihrer Nähe zur Verfügung — Sie können jederzeit einen neuen Termin anfragen.'}</p>
+        <a href="https://alltagsengel.care${ziel}" style="display:inline-block;padding:12px 28px;background:#C9963C;color:#1A1612;text-decoration:none;border-radius:10px;font-weight:600;margin-top:8px;">${vomKunden ? 'Einsätze ansehen' : 'Anderen Engel finden'}</a>
+      `,
+      },
+      push: {
+        title: titel,
+        body: kurz,
+        tag: `booking-cancelled-${data.bookingId}`,
+        url: ziel,
+        actions: [{ action: 'open', title: vomKunden ? 'Einsätze ansehen' : 'Anderen Engel finden' }],
+      },
+      fcm: {
+        title: titel,
+        body: kurz,
+        tag: `booking-cancelled-${data.bookingId}`,
+        url: ziel,
+      },
+    }
+  }
+
+  // Ab hier bleibt nur 'booking-absage'. Der Rueckfall ist bewusst
+  // benannt: eine neu eingefuehrte Art wuerde sonst stillschweigend den
+  // Ablehnungstext erhalten.
   const grundText = grund ? ` Grund: ${grund}` : ''
   return {
     inApp: {
