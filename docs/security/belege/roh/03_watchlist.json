@@ -1,0 +1,21 @@
+{
+  "name": "03_watchlist",
+  "pfad": "security_watchlist?id=eq.12db4b18-4b8b-4153-8752-b628d0e1ba12&select=*",
+  "status": 200,
+  "zeilen": 1,
+  "daten": [
+    {
+      "id": "12db4b18-4b8b-4153-8752-b628d0e1ba12",
+      "user_id": "5fa1df42-8eb5-416b-abb5-0c85a057e957",
+      "organization_id": "00000000-0000-4000-8000-000460629986",
+      "aktiv": true,
+      "melde_email": "info@alltagsengel.care",
+      "grund": "Kontoueberwachung auf Anweisung der Geschaeftsfuehrung (30.08.2026). Alle sicherheitsrelevanten Ereignisse melden.",
+      "angelegt_von": "55555555-5555-5555-5555-555555555555",
+      "created_at": "2026-08-30T17:32:06.92465+00:00",
+      "alle_ereignisse": true,
+      "ohne_sperrfrist": true,
+      "email_kontrolle": "rukiyekarakaya@web.de"
+    }
+  ]
+}

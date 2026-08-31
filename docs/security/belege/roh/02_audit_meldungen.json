@@ -1,0 +1,74 @@
+{
+  "name": "02_audit_meldungen",
+  "pfad": "security_audit_log?event_type=eq.security_notification_sent&user_id=eq.5fa1df42-8eb5-416b-abb5-0c85a057e957&select=*&order=created_at.desc&limit=20",
+  "status": 200,
+  "zeilen": 3,
+  "daten": [
+    {
+      "id": "690105a9-c35b-4417-a1ca-68dc8aa048ae",
+      "user_id": "5fa1df42-8eb5-416b-abb5-0c85a057e957",
+      "user_email": "rukiyekarakaya@web.de",
+      "organization_id": "00000000-0000-4000-8000-000460629986",
+      "event_type": "security_notification_sent",
+      "event_category": "security",
+      "created_at": "2026-08-31T11:44:41.80924+00:00",
+      "ip_address": null,
+      "user_agent": null,
+      "platform": "unbekannt",
+      "device_info": null,
+      "app_version": null,
+      "session_reference": null,
+      "metadata": {
+        "melde_grund": "Konto ueberwacht (voller Meldesatz)",
+        "bezug_ereignis": "cf56c43b-ed70-42c7-b8e5-686d4875761e",
+        "bezug_event_type": "security_action",
+        "empfaenger_anzahl": 1
+      },
+      "severity": "info"
+    },
+    {
+      "id": "aaf91dfc-51e3-450d-9164-ba043c62ec05",
+      "user_id": "5fa1df42-8eb5-416b-abb5-0c85a057e957",
+      "user_email": "rukiyekarakaya@web.de",
+      "organization_id": null,
+      "event_type": "security_notification_sent",
+      "event_category": "security",
+      "created_at": "2026-08-31T11:42:20.846551+00:00",
+      "ip_address": null,
+      "user_agent": null,
+      "platform": "unbekannt",
+      "device_info": null,
+      "app_version": null,
+      "session_reference": null,
+      "metadata": {
+        "melde_grund": "Konto ueberwacht (voller Meldesatz)",
+        "bezug_ereignis": "8dfd95d7-f64a-43bc-98c6-0f6b5471fef1",
+        "bezug_event_type": "security_action",
+        "empfaenger_anzahl": 1
+      },
+      "severity": "info"
+    },
+    {
+      "id": "17ec5445-b778-4bbe-bac8-a8e76a1c7e12",
+      "user_id": "5fa1df42-8eb5-416b-abb5-0c85a057e957",
+      "user_email": "rukiyekarakaya@web.de",
+      "organization_id": "00000000-0000-4000-8000-000460629986",
+      "event_type": "security_notification_sent",
+      "event_category": "security",
+      "created_at": "2026-08-31T04:01:15.711734+00:00",
+      "ip_address": null,
+      "user_agent": null,
+      "platform": "unbekannt",
+      "device_info": null,
+      "app_version": null,
+      "session_reference": null,
+      "metadata": {
+        "melde_grund": "Konto ueberwacht (voller Meldesatz)",
+        "bezug_ereignis": "9ec3e6dc-3b28-4119-b017-487cb55be7fe",
+        "bezug_event_type": "security_action",
+        "empfaenger_anzahl": 1
+      },
+      "severity": "info"
+    }
+  ]
+}

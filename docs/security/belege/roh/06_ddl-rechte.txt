@@ -1,0 +1,31 @@
+
+═══ DDL-Rechte auf Production — LIVE gemessen ═══
+Ziel     : nnwyktkqibdjxgimjyuq.supabase.co
+Schluessel: oeffentlicher Key: Legacy anon (JWT) · geheimer Key: Legacy service_role (JWT)
+Nichts bleibt zurueck: jede Probe endet mit RAISE EXCEPTION (Rollback).
+
+── Wer bin ich? ──
+  current_user                   service_role
+  session_user                   authenticator
+  superuser                      <NULL>
+  Mitglied "postgres"            false
+  CREATE auf public              false
+  Eigentuemer public.medikamente postgres
+
+── Darf ich die vier DDL-Arten der acht Migrationen? ──
+ BLOCK CREATE FUNCTION        SQLSTATE=42501 | permission denied for schema public
+ BLOCK CREATE TRIGGER         SQLSTATE=42501 | permission denied for schema public
+ BLOCK CREATE POLICY          SQLSTATE=42501 | must be owner of table absences
+ BLOCK CREATE INDEX           SQLSTATE=42501 | must be owner of table pflege_massnahmenplaene
+ BLOCK REVOKE                 SQLSTATE=42883 | function public.rollen_matrix() does not exist
+
+═══════════════════════════════════════════════════════
+ ERGEBNIS: DDL ist ueber den Dienstschluessel BLOCKIERT.
+ Einziger Weg: Supabase-SQL-Editor, angemeldet als `postgres`.
+ Vorlage: docs/MIGRATIONEN_APPLY_CHECKLISTE.md
+
+ ACHTUNG bei REVOKE (Schritt 8): steht dort " DARF ", ist das
+ KEIN Beleg. PostgreSQL laesst ein REVOKE ohne Eigentuemerrecht
+ mit blosser WARNING durchgehen — die Wirkung bleibt aus.
+═══════════════════════════════════════════════════════
+

@@ -1,0 +1,52 @@
+{
+  "name": "04_delivery_log",
+  "pfad": "notification_delivery_log?select=*&order=created_at.desc&limit=25",
+  "status": 200,
+  "zeilen": 2,
+  "daten": [
+    {
+      "id": "921532dc-37e4-4d45-83d8-5e8bdca515f0",
+      "organization_id": "00000000-0000-4000-8000-000460629986",
+      "notification_id": null,
+      "channel": "email",
+      "recipient": "info@alltagsengel.care",
+      "status": "sent",
+      "attempt_count": 1,
+      "provider": "resend",
+      "provider_message_id": "13307e4c-46da-4eb3-8584-48679557738e",
+      "sanitized_error": null,
+      "correlation_id": null,
+      "queued_at": null,
+      "attempted_at": "2026-08-31T11:44:41.612+00:00",
+      "delivered_at": "2026-08-31T11:44:41.612+00:00",
+      "failed_at": null,
+      "created_at": "2026-08-31T11:44:41.662996+00:00",
+      "vorgang_art": "sicherheitsmeldung",
+      "vorgang_ref": "cf56c43b-ed70-42c7-b8e5-686d4875761e",
+      "vorgang_empfaenger": "5fa1df42-8eb5-416b-abb5-0c85a057e957",
+      "grund": null
+    },
+    {
+      "id": "ec789742-33c3-4940-a0e5-6b2c04e238be",
+      "organization_id": "00000000-0000-4000-8000-000460629986",
+      "notification_id": null,
+      "channel": "email",
+      "recipient": "info@alltagsengel.care",
+      "status": "sent",
+      "attempt_count": 1,
+      "provider": "resend",
+      "provider_message_id": "02eebce1-f0ce-42c0-a862-de60c50de412",
+      "sanitized_error": null,
+      "correlation_id": null,
+      "queued_at": null,
+      "attempted_at": "2026-08-31T04:01:15.646+00:00",
+      "delivered_at": "2026-08-31T04:01:15.646+00:00",
+      "failed_at": null,
+      "created_at": "2026-08-31T04:01:15.647401+00:00",
+      "vorgang_art": "sicherheitsmeldung",
+      "vorgang_ref": "9ec3e6dc-3b28-4119-b017-487cb55be7fe",
+      "vorgang_empfaenger": "5fa1df42-8eb5-416b-abb5-0c85a057e957",
+      "grund": null
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "name": "05_migrationen_max",
+  "ausdruck": "SELECT max(version) FROM supabase_migrations.schema_migrations",
+  "wert": "?? HTTP 403: permission denied for schema supabase_migrations"
+}

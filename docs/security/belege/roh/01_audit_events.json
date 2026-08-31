@@ -1,0 +1,62 @@
+{
+  "name": "01_audit_events",
+  "pfad": "security_audit_log?id=in.(8dfd95d7-f64a-43bc-98c6-0f6b5471fef1,cf56c43b-ed70-42c7-b8e5-686d4875761e)&select=*&order=created_at.asc",
+  "status": 200,
+  "zeilen": 2,
+  "daten": [
+    {
+      "id": "8dfd95d7-f64a-43bc-98c6-0f6b5471fef1",
+      "user_id": "5fa1df42-8eb5-416b-abb5-0c85a057e957",
+      "user_email": "rukiyekarakaya@web.de",
+      "organization_id": null,
+      "event_type": "security_action",
+      "event_category": "security",
+      "created_at": "2026-08-31T11:42:19.868448+00:00",
+      "ip_address": null,
+      "user_agent": null,
+      "platform": "unbekannt",
+      "device_info": {
+        "browser": "unbekannt",
+        "plattform": "unbekannt",
+        "mac_address": "not_available",
+        "betriebssystem": "unbekannt"
+      },
+      "app_version": null,
+      "session_reference": null,
+      "metadata": {
+        "hinweis": "KEINE Anmeldung und KEIN Vorfall. Diese Zeile belegt einen Funktionstest der Meldekette.",
+        "pruefung": "Alarmkette Ereignis -> Regel -> Alarm -> Mail -> Zustellstatus beim Provider",
+        "ausgeloest_am": "2026-08-31T11:42:18.252Z",
+        "ausgeloest_von": "scripts/security-testalarm.mjs"
+      },
+      "severity": "warning"
+    },
+    {
+      "id": "cf56c43b-ed70-42c7-b8e5-686d4875761e",
+      "user_id": "5fa1df42-8eb5-416b-abb5-0c85a057e957",
+      "user_email": "rukiyekarakaya@web.de",
+      "organization_id": "00000000-0000-4000-8000-000460629986",
+      "event_type": "security_action",
+      "event_category": "security",
+      "created_at": "2026-08-31T11:44:40.90828+00:00",
+      "ip_address": null,
+      "user_agent": null,
+      "platform": "unbekannt",
+      "device_info": {
+        "browser": "unbekannt",
+        "plattform": "unbekannt",
+        "mac_address": "not_available",
+        "betriebssystem": "unbekannt"
+      },
+      "app_version": null,
+      "session_reference": null,
+      "metadata": {
+        "hinweis": "KEINE Anmeldung und KEIN Vorfall. Diese Zeile belegt einen Funktionstest der Meldekette.",
+        "pruefung": "Alarmkette Ereignis -> Regel -> Alarm -> Mail -> Zustellstatus beim Provider",
+        "ausgeloest_am": "2026-08-31T11:44:40.044Z",
+        "ausgeloest_von": "scripts/security-testalarm.mjs"
+      },
+      "severity": "warning"
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<title>DDL-Blocker — der Dienstschluessel darf kein Schema aendern</title><style>
+:root{--bg:#0f1419;--karte:#171e26;--rand:#2b3745;--text:#e6edf3;--matt:#8b98a5;
+      --gruen:#3fb950;--rot:#f85149;--gelb:#d29922;--blau:#58a6ff}
+*{box-sizing:border-box}
+body{margin:0;padding:28px;background:var(--bg);color:var(--text);
+     font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+h1{font-size:20px;margin:0 0 4px;letter-spacing:.3px}
+.kopf{border-bottom:2px solid var(--rand);padding-bottom:14px;margin-bottom:22px}
+.kopf .meta{color:var(--matt);font-size:12px}
+h2{font-size:15px;margin:26px 0 10px;color:var(--blau);
+   border-left:3px solid var(--blau);padding-left:9px}
+table{border-collapse:collapse;width:100%;margin-bottom:8px;background:var(--karte);
+      border:1px solid var(--rand);border-radius:6px;overflow:hidden}
+th,td{text-align:left;padding:7px 11px;border-bottom:1px solid var(--rand);
+      vertical-align:top;font-size:12.5px;word-break:break-word}
+th{background:#1e2733;color:var(--matt);font-weight:600;white-space:nowrap;width:210px}
+tr:last-child td,tr:last-child th{border-bottom:none}
+td.wert{color:var(--text)}
+.null{color:var(--matt);font-style:italic}
+.gruen{color:var(--gruen);font-weight:600}
+.rot{color:var(--rot);font-weight:600}
+.gelb{color:var(--gelb);font-weight:600}
+.hinweis{background:#1d2430;border-left:3px solid var(--gelb);padding:11px 14px;
+         margin:14px 0;border-radius:0 6px 6px 0;font-size:12.5px;color:#cbd5e0}
+pre{background:var(--karte);border:1px solid var(--rand);border-radius:6px;
+    padding:14px;font-size:12px;line-height:1.45;white-space:pre-wrap;margin:0}
+.j{color:#a5d6ff;font-size:12px}
+.fuss{margin-top:24px;padding-top:12px;border-top:1px solid var(--rand);
+      color:var(--matt);font-size:11.5px}
+</style></head><body>
+<div class="kopf"><h1>DDL-Blocker — der Dienstschluessel darf kein Schema aendern</h1>
+<div class="meta">node scripts/verify-ddl-rechte-live.mjs  ·  jede Probe endet mit RAISE EXCEPTION (Rollback)</div></div>
+<pre>
+═══ DDL-Rechte auf Production — LIVE gemessen ═══
+Ziel     : nnwyktkqibdjxgimjyuq.supabase.co
+Schluessel: oeffentlicher Key: Legacy anon (JWT) · geheimer Key: Legacy service_role (JWT)
+Nichts bleibt zurueck: jede Probe endet mit RAISE EXCEPTION (Rollback).
+
+── Wer bin ich? ──
+  current_user                   service_role
+  session_user                   authenticator
+  superuser                      &lt;NULL&gt;
+  Mitglied "postgres"            false
+  CREATE auf public              false
+  Eigentuemer public.medikamente postgres
+
+── Darf ich die vier DDL-Arten der acht Migrationen? ──
+ BLOCK CREATE FUNCTION        SQLSTATE=42501 | permission denied for schema public
+ BLOCK CREATE TRIGGER         SQLSTATE=42501 | permission denied for schema public
+ BLOCK CREATE POLICY          SQLSTATE=42501 | must be owner of table absences
+ BLOCK CREATE INDEX           SQLSTATE=42501 | must be owner of table pflege_massnahmenplaene
+ BLOCK REVOKE                 SQLSTATE=42883 | function public.rollen_matrix() does not exist
+
+═══════════════════════════════════════════════════════
+ ERGEBNIS: DDL ist ueber den Dienstschluessel BLOCKIERT.
+ Einziger Weg: Supabase-SQL-Editor, angemeldet als `postgres`.
+ Vorlage: docs/MIGRATIONEN_APPLY_CHECKLISTE.md
+
+ ACHTUNG bei REVOKE (Schritt 8): steht dort " DARF ", ist das
+ KEIN Beleg. PostgreSQL laesst ein REVOKE ohne Eigentuemerrecht
+ mit blosser WARNING durchgehen — die Wirkung bleibt aus.
+═══════════════════════════════════════════════════════
+
+</pre>
+     <div class="hinweis">Gemessen, nicht vermutet: <b>current_user =
+     service_role</b>, kein Mitglied von <code>postgres</code>, kein CREATE
+     auf <code>public</code>. Alle vier DDL-Arten scheitern mit
+     <span class="rot">SQLSTATE 42501</span>. Damit koennen die acht offenen
+     Migrationen aus Beleg 4 <b>nicht</b> automatisiert angewendet werden —
+     sie brauchen den Supabase-SQL-Editor als <code>postgres</code>.</div>
+<div class="fuss">Erhoben am 31.08.2026 gegen die Produktionsdatenbank
+(Projekt nnwyktkqibdjxgimjyuq) — nur lesend, ueber PostgREST mit dem
+Dienstschluessel. Zugangsdaten erscheinen in keinem Beleg.</div>
+</body></html>
