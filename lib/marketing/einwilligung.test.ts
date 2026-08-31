@@ -17,7 +17,7 @@ import type { MarketingKontakt } from './typen'
 function kontakt(ueber: Partial<MarketingKontakt> = {}): MarketingKontakt {
   return {
     userId: 'u1', email: 'a@example.com', anzeigename: 'A', rolle: 'kunde',
-    plz: null, bundesland: null, istTestkonto: false, istGeloescht: false,
+    plz: null, bundesland: null, istTestkonto: false, istGeloescht: false, istDipaNutzer: false,
     registrierungVollstaendig: true, registriertAm: null, letzteAktivitaet: null,
     letzteBuchung: null, anzahlBuchungen: 0, verfuegbarkeitsFenster: 0,
     qualifiziert: false, einsatzfreigabe: false, fuehrungszeugnisGueltigBis: null,
@@ -165,4 +165,53 @@ test('ohne Adressen wird gar nicht erst abgefragt', async () => {
   const l = await ladeEinwilligungsLage(zaehler as never, 'org', [], 'newsletter')
   assert.equal(aufrufe, 0)
   assert.equal(l.eingewilligt.size, 0)
+})
+
+// ── DiPA-Werbefreiheit (Befund 31.08.2026) ────────────────────────────────
+//
+// Der PflegeCoach ist die DiPA. DiPAV §6 Abs. 4 verlangt Werbefreiheit,
+// §5 Abs. 5 bindet die Datenverarbeitung an den Versorgungszweck und
+// schließt Werbung ausdrücklich aus. Ein Coach-Nutzer mit Kundenkonto war
+// bis hierher über die Kundenliste erreichbar — genau das Cross-Selling,
+// das AK-VS-01 verbietet.
+
+test('ein PflegeCoach-Nutzer wird nie angeschrieben', () => {
+  const [e] = pruefeEmpfaenger(
+    [kontakt({ email: 'a@example.com', istDipaNutzer: true })],
+    lage({ eingewilligt: new Set(['a@example.com']) }),
+  )
+  assert.equal(e.versandfaehig, false)
+  assert.equal(e.grund, 'dipa_nutzer')
+})
+
+test('auch eine ausdrückliche Einwilligung hebt die Werbefreiheit nicht auf', () => {
+  // Der einzige Ausschlussgrund, über den die betroffene Person NICHT
+  // verfügen kann: die Werbefreiheit ist eine Eigenschaft des Produkts,
+  // keine Frage des Willens.
+  const [e] = pruefeEmpfaenger(
+    [kontakt({ email: 'a@example.com', istDipaNutzer: true, rolle: 'kunde' })],
+    lage({ eingewilligt: new Set(['a@example.com']) }),
+  )
+  assert.equal(e.versandfaehig, false)
+  assert.equal(e.grund, 'dipa_nutzer')
+})
+
+test('der DiPA-Grund schlägt jeden anderen Ausschlussgrund', () => {
+  // Er steht ganz oben in der Reihenfolge — die Aufschlüsselung im
+  // Trockenlauf soll den Grund nennen, der sich nicht ändern lässt.
+  const [e] = pruefeEmpfaenger(
+    [kontakt({ email: 'a@example.com', istDipaNutzer: true, istTestkonto: true })],
+    lage({ gesperrt: new Set(['a@example.com']) }),
+  )
+  assert.equal(e.grund, 'dipa_nutzer')
+})
+
+test('ein gewöhnliches Konto bleibt versandfähig', () => {
+  // Gegenprobe: ohne sie wäre der Riegel auch dann grün, wenn er alles
+  // abwiese.
+  const [e] = pruefeEmpfaenger(
+    [kontakt({ email: 'a@example.com', istDipaNutzer: false })],
+    lage({ eingewilligt: new Set(['a@example.com']) }),
+  )
+  assert.equal(e.versandfaehig, true)
 })

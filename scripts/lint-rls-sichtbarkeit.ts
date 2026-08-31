@@ -55,6 +55,26 @@ import {
 const WURZEL = process.cwd()
 const STRENG = process.argv.includes('--strict')
 
+/**
+ * Obergrenze fuer die Zahl blinder Seite/Rolle-Paare (`--hoechstens <n>`).
+ *
+ * WARUM EINE OBERGRENZE UND NICHT `--strict`
+ * Am 31.08.2026 standen 52 Paare offen. Sie sind kein Datenleck — die
+ * Seite zeigt der Rolle NICHTS statt zu viel —, aber jedes einzelne ist
+ * eine stille Falschaussage gegenueber der Nutzerin: die Seite ist
+ * freigegeben und bleibt leer, ohne zu sagen warum. Jedes Paar zu
+ * schliessen heisst, je Tabelle zu entscheiden, WELCHE Rolle sie sehen
+ * darf; das ist eine Sicherheitsentscheidung und keine Sammelaktion.
+ *
+ * `--strict` haette den Bau ab sofort blockiert und waere binnen einer
+ * Woche mit `|| true` entschaerft worden — dann prueft die CI wieder
+ * nichts. Die Obergrenze haelt stattdessen den Stand fest: bestehende
+ * Paare stoeren nicht, ein NEUES bricht den Lauf. Wer eines schliesst,
+ * setzt die Zahl in .github/workflows/ci.yml herunter.
+ */
+const grenzeArg = process.argv.indexOf('--hoechstens')
+const HOECHSTENS = grenzeArg !== -1 ? Number(process.argv[grenzeArg + 1]) : null
+
 /** Feld- und Satztrenner für die Antwort des Lese-Orakels. */
 const FELD = '<<|>>'
 const SATZ = '<<||>>'
@@ -197,6 +217,23 @@ async function main() {
   console.log('   LEERE Ansicht statt einer Fehlermeldung. Zwei Wege heraus — die Seite über')
   console.log('   eine API-Route lesen lassen (Dienstschlüssel hinter einem Guard), oder der')
   console.log("   Tabelle eine rk_-Policy mit darf('…') geben.")
+
+  if (HOECHSTENS !== null && Number.isFinite(HOECHSTENS)) {
+    if (befunde.length > HOECHSTENS) {
+      console.log()
+      console.log(`❌ Obergrenze ueberschritten: ${befunde.length} blinde Paare, erlaubt sind ${HOECHSTENS}.`)
+      console.log('   Es ist mindestens eines dazugekommen. Entweder die neue Seite ueber eine')
+      console.log('   API-Route lesen lassen, oder der Tabelle eine rk_-Policy geben.')
+      process.exit(1)
+    }
+    if (befunde.length < HOECHSTENS) {
+      console.log()
+      console.log(`ℹ️  Nur noch ${befunde.length} blinde Paare (Obergrenze ${HOECHSTENS}).`)
+      console.log(`   Bitte die Zahl in .github/workflows/ci.yml auf ${befunde.length} senken —`)
+      console.log('   sonst duerfte unbemerkt wieder eines dazukommen.')
+    }
+    process.exit(0)
+  }
 
   process.exit(STRENG ? 1 : 0)
 }

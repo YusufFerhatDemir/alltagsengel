@@ -249,6 +249,32 @@ export const EREIGNISSE: Readonly<Record<string, EreignisRegel>> = {
     kategorie: 'admin', schweregrad: 'critical', meldepflichtig: true,
     bezeichnung: 'Ueberwachungsliste geaendert',
   },
+  // ── ZWEI SCHREIBWEISEN FUER DIESELBE SACHE (Befund 31.08.2026) ────────
+  // Die Route /api/admin/security/watchlist schreibt `watchlist_change`.
+  // Der erste Eintrag im Betrieb entstand aber nicht ueber die Route,
+  // sondern beim Einrichten — und trug `watchlist_aktiviert`. Der Wert
+  // stand in KEINEM Katalog und fiel damit auf UNBEKANNTE_REGEL zurueck:
+  // Schweregrad `warning` statt `critical`, nicht meldepflichtig, in der
+  // Oberflaeche ohne Bezeichnung.
+  //
+  // Das ist mehr als ein Schoenheitsfehler. `watchlist_aktiviert` stand
+  // nicht im Ueberwachungssatz — fuer ein Konto mit „alle Ereignisse"
+  // haette das Ein- oder Ausschalten seiner Ueberwachung KEINE Meldung
+  // ausgeloest. Der erste Schritt eines Missbrauchs ist aber genau das:
+  // die Ueberwachung stilllegen.
+  //
+  // Die Zeile in security_audit_log ist unveraenderlich; der Wert laesst
+  // sich nicht nachtraeglich umschreiben. Also lernt der Katalog ihn —
+  // und die zugehoerige Gegenrichtung gleich mit. Neue Schreibwege
+  // nehmen `watchlist_change`.
+  watchlist_aktiviert: {
+    kategorie: 'admin', schweregrad: 'critical', meldepflichtig: true,
+    bezeichnung: 'Ueberwachung eingeschaltet',
+  },
+  watchlist_deaktiviert: {
+    kategorie: 'admin', schweregrad: 'critical', meldepflichtig: true,
+    bezeichnung: 'Ueberwachung abgeschaltet',
+  },
   // Wer die Standortkarte oeffnet, hinterlaesst eine Spur — dieselbe
   // Regel wie beim CSV-Export der Sicherheitsspur. Eine Ansicht auf den
   // Aufenthaltsort von Kolleginnen und Kollegen, die niemand nachlesen
@@ -324,6 +350,8 @@ export const UEBERWACHUNGS_EREIGNISSE: readonly string[] = [
   'account_created',
   'account_deleted',
   'watchlist_change',
+  'watchlist_aktiviert',
+  'watchlist_deaktiviert',
   'location_tracking_view',
 ]
 

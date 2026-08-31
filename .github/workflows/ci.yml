@@ -139,6 +139,32 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ''
         run: node scripts/schema-drift-check.mjs --warn-only
 
+      - name: RLS-Sichtbarkeit — keine NEUE blinde Seite/Rolle-Kombination
+        # Findet Admin-Seiten, die fuer eine Rolle freigegeben sind, ihr unter
+        # RLS aber NICHTS liefern. Das ist kein Leck (zu wenig statt zu viel),
+        # aber eine stille Falschaussage: die Seite oeffnet sich und bleibt
+        # leer, ohne zu sagen warum. Genau so entstand die QM/PDL-Luecke.
+        #
+        # WARUM MIT OBERGRENZE STATT --strict
+        # Am 31.08.2026 standen 52 solcher Paare offen. Jedes zu schliessen
+        # heisst, je Tabelle zu entscheiden, welche Rolle sie sehen darf —
+        # eine Sicherheitsentscheidung, keine Sammelaktion. Ein harter
+        # Blocker waere binnen einer Woche mit `|| true` entschaerft worden,
+        # und dann prueft die CI wieder nichts. Die Obergrenze laesst den
+        # Bestand durch und bricht bei jedem NEUEN Paar.
+        #
+        # Wer eines schliesst, senkt die Zahl hier. Der Lauf sagt es selbst,
+        # sobald er weniger findet als erlaubt.
+        #
+        # Braucht dieselben Repo-Secrets wie der Schema-Drift-Check; fehlen
+        # sie, endet das Skript mit einer Meldung statt mit falschem Gruen.
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SCHEMA_DRIFT_SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SCHEMA_DRIFT_SUPABASE_SECRET_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ''
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ''
+        run: npm run lint:rls-sicht -- --hoechstens 52
+
       - name: Production build
         env:
           # Next.js Production-Builds dieses Repos sind speicherhungrig
