@@ -7,6 +7,10 @@ import { requireUser } from '@/lib/supabase/require-session'
 import SignaturePad from '@/components/admin/SignaturePad'
 import { logger } from '@/lib/logger';
 import DialogOverlay from '@/components/DialogOverlay'
+import { ladeListe, ladeZeile, zeileVon, zeilenVon, istFehler } from '@/lib/ui/ladelage'
+import { Ladefehler } from '@/components/ListenZustand'
+import type { Ladelage } from '@/lib/ui/ladelage'
+import { LAEDT } from '@/lib/ui/ladelage'
 const log = logger.child('engel:einsaetze');
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
@@ -49,6 +53,10 @@ export default function EngelEinsaetzePage() {
   const [loading, setLoading] = useState(true)
   const [caregiverId, setCaregiverId] = useState<string | null>(null)
   const [assignments, setAssignments] = useState<Assignment[]>([])
+  // Getrennt vom Aktionsfehler `err`: ein fehlgeschlagener Ladevorgang darf
+  // nicht als "Keine Einsaetze heute" erscheinen — ein Engel liest das als
+  // Aussage ueber seinen Tag und faehrt nicht los.
+  const [lage, setLage] = useState<Ladelage<unknown>>(LAEDT)
   const [activeRecord, setActiveRecord] = useState<string | null>(null)
   const [showDocument, setShowDocument] = useState<Assignment | null>(null)
   const [saving, setSaving] = useState(false)
@@ -63,29 +71,35 @@ export default function EngelEinsaetzePage() {
       if (!user) return
       const supabase = createClient()
 
-      const { data: cg } = await supabase
-        .from('caregivers')
-        .select('id')
-        .eq('user_id', user.id)
-        .single()
+      const cgLage = await ladeZeile<{ id: string }>(
+        supabase.from('caregivers').select('id').eq('user_id', user.id).single(),
+        'engel:einsaetze:caregiver',
+      )
+      if (istFehler(cgLage)) { setLage(cgLage); setLoading(false); return }
 
-      if (!cg) { setLoading(false); return }
+      const cg = zeileVon(cgLage)
+      // Kein Engel-Datensatz ist ein legitimes leeres Ergebnis, kein Fehler.
+      if (!cg) { setLage({ status: 'fertig', zeilen: [] }); setLoading(false); return }
       setCaregiverId(cg.id)
 
-      const { data } = await supabase
-        .from('assignments')
-        .select('id, client_id, assignment_date, weekday, start_time, end_time, service_type, status, address, notes, client:clients(first_name, last_name)')
-        .eq('caregiver_id', cg.id)
-        .in('status', ['GEPLANT', 'BESTAETIGT', 'UNTERWEGS', 'GESTARTET', 'active'])
-        .order('assignment_date', { ascending: true })
-        .order('start_time', { ascending: true })
-
-      setAssignments((data || []).map((a: any) => ({
+      const einsatzLage = await ladeListe<any>(
+        supabase
+          .from('assignments')
+          .select('id, client_id, assignment_date, weekday, start_time, end_time, service_type, status, address, notes, client:clients(first_name, last_name)')
+          .eq('caregiver_id', cg.id)
+          .in('status', ['GEPLANT', 'BESTAETIGT', 'UNTERWEGS', 'GESTARTET', 'active'])
+          .order('assignment_date', { ascending: true })
+          .order('start_time', { ascending: true }),
+        'engel:einsaetze',
+      )
+      setLage(einsatzLage)
+      setAssignments(zeilenVon(einsatzLage).map((a: any) => ({
         ...a,
         client_name: a.client ? `${a.client.first_name || ''} ${a.client.last_name || ''}`.trim() : '—',
       })))
     } catch (e) {
       log.errorWithException('Load error', e)
+      setLage({ status: 'fehler', meldung: 'Die Daten konnten nicht geladen werden. Bitte versuchen Sie es erneut.' })
     } finally {
       setLoading(false)
     }
@@ -209,13 +223,18 @@ export default function EngelEinsaetzePage() {
         {new Date().toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
       </p>
 
+      <Ladefehler lage={lage} erneut={() => { setLoading(true); setLage(LAEDT); load() }} />
       {err && <div style={{ background: 'rgba(208,75,59,.1)', border: '1px solid rgba(208,75,59,.3)', borderRadius: 10, padding: '10px 14px', marginBottom: 12, fontSize: 13, color: '#D04B3B' }}>{err}</div>}
       {success && <div style={{ background: 'rgba(92,184,130,.1)', border: '1px solid rgba(92,184,130,.3)', borderRadius: 10, padding: '10px 14px', marginBottom: 12, fontSize: 13, color: '#5CB882' }}>{success}</div>}
 
       <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink2)', marginBottom: 10 }}>
-        Heute ({todayAssignments.length})
+        Heute {istFehler(lage) ? '' : `(${todayAssignments.length})`}
       </h2>
-      {todayAssignments.length === 0 ? (
+      {istFehler(lage) ? (
+        <div style={{ background: 'var(--coal2)', border: '1px solid var(--border)', borderRadius: 12, padding: 20, textAlign: 'center', color: 'var(--ink4)', fontSize: 14, marginBottom: 20 }}>
+          Einsätze unbekannt — Liste nicht geladen
+        </div>
+      ) : todayAssignments.length === 0 ? (
         <div style={{ background: 'var(--coal2)', border: '1px solid var(--border)', borderRadius: 12, padding: 20, textAlign: 'center', color: 'var(--ink4)', fontSize: 14, marginBottom: 20 }}>
           Keine Einsätze heute
         </div>
@@ -234,9 +253,13 @@ export default function EngelEinsaetzePage() {
       )}
 
       <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink2)', marginBottom: 10 }}>
-        Kommende Einsätze ({upcomingAssignments.length})
+        Kommende Einsätze {istFehler(lage) ? '' : `(${upcomingAssignments.length})`}
       </h2>
-      {upcomingAssignments.length === 0 ? (
+      {istFehler(lage) ? (
+        <div style={{ background: 'var(--coal2)', border: '1px solid var(--border)', borderRadius: 12, padding: 20, textAlign: 'center', color: 'var(--ink4)', fontSize: 14 }}>
+          Einsätze unbekannt — Liste nicht geladen
+        </div>
+      ) : upcomingAssignments.length === 0 ? (
         <div style={{ background: 'var(--coal2)', border: '1px solid var(--border)', borderRadius: 12, padding: 20, textAlign: 'center', color: 'var(--ink4)', fontSize: 14 }}>
           Keine weiteren Einsätze geplant
         </div>
