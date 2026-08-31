@@ -22,6 +22,7 @@ function kontakt(ueber: Partial<MarketingKontakt> = {}): MarketingKontakt {
     registrierungVollstaendig: true, registriertAm: null, letzteAktivitaet: null,
     letzteBuchung: null, anzahlBuchungen: 0, verfuegbarkeitsFenster: 0,
     qualifiziert: false, einsatzfreigabe: false, fuehrungszeugnisGueltigBis: null,
+    vertragsstatus: null, ausgetretenAm: null,
     ...ueber,
   }
 }
