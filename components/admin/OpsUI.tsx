@@ -88,6 +88,52 @@ export function Banner({ tone, children }: { tone: 'warn' | 'danger' | 'info' | 
   )
 }
 
+/** Klartext fuer die Rechte, die eine Seite zusaetzlich braucht. */
+const RECHT_BEZEICHNUNG: Record<string, string> = {
+  'personal.lesen': 'Personal- und Betreuungskraftdaten',
+  'personal.schreiben': 'Personaldaten bearbeiten',
+  'abrechnung.lesen': 'Abrechnung und Rechnungen',
+  'stammdaten.lesen': 'Klienten-Stammdaten',
+  'pflege.lesen': 'Pflegedokumentation',
+  'qm.lesen': 'Qualitätsmanagement',
+  'tarife.lesen': 'Tarife',
+  'bankdaten.lesen': 'Bankverbindungen',
+}
+
+/**
+ * Sagt der Nutzerin, dass ein TEIL dieser Seite ihr nicht angezeigt wird —
+ * und warum.
+ *
+ * WOFUER (Befund 31.08.2026)
+ * Neun Seiten sind fuer eine Rolle freigegeben, zeigen aber Inhalte, die
+ * unter einem anderen Recht stehen. Der Dienstplan etwa ist ueber
+ * `einsatz.lesen` offen, die Betreuungskraefte darauf stehen unter
+ * `personal.lesen` — das die Buchhaltung bewusst nicht hat. Ohne diesen
+ * Hinweis sah man eine leere Tabelle, und „nichts da" ist an der Stelle
+ * eine Falschaussage: die Daten sind da, sie sind nur nicht fuer diese
+ * Rolle bestimmt.
+ *
+ * Kein Sicherheitsbauteil. Die Sperre steht in RLS und haelt auch ohne
+ * diesen Hinweis (nachgewiesen mit `npm run audit:rls-rollen`); hier geht
+ * es allein darum, dass die Oberflaeche die Wahrheit sagt.
+ *
+ * Rendert NICHTS, wenn nichts fehlt — die Seite kann ihn bedenkenlos
+ * immer einbinden.
+ */
+export function TeilweiseUnsichtbar({ fehlendeRechte }: { fehlendeRechte: readonly string[] }) {
+  if (fehlendeRechte.length === 0) return null
+  const bereiche = fehlendeRechte.map(r => RECHT_BEZEICHNUNG[r] ?? r)
+  return (
+    <Banner tone="info">
+      <strong>Ein Teil dieser Seite bleibt leer.</strong>{' '}
+      Ihre Rolle hat keinen Zugriff auf {bereiche.join(' und ')}. Die betroffenen
+      Bereiche werden deshalb ohne Inhalt angezeigt — das ist kein Fehler und keine
+      fehlende Erfassung. Wenden Sie sich an die Administration, wenn Sie diese
+      Angaben für Ihre Arbeit brauchen.
+    </Banner>
+  )
+}
+
 // Such-Eingabefeld im Admin-Stil
 export function SearchInput({ value, onChange, placeholder }: {
   value: string

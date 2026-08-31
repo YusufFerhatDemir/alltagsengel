@@ -18,12 +18,34 @@
 // Schreib-Berechtigung im Eintrag, gilt die Lese-Berechtigung fuer beides.
 // ═══════════════════════════════════════════════════════════════════════
 
-import type { Berechtigung } from './rollen'
+import type { Berechtigung, Rolle } from './rollen'
 import { istAdministration, hatBerechtigung } from './rollen'
 
 export interface BereichsRegel {
   lesen: Berechtigung
   schreiben?: Berechtigung
+  /**
+   * Rechte, die die Seite fuer TEILE ihres Inhalts braucht — zusaetzlich
+   * zu `lesen`.
+   *
+   * WOFUER DAS DA IST (Befund 31.08.2026)
+   * `lesen` entscheidet, ob jemand die Seite betreten darf. Es sagt aber
+   * nichts darueber, ob er auch alles sieht, was darauf steht. Der
+   * Dienstplan etwa ist ueber `einsatz.lesen` freigegeben — die
+   * Buchhaltung hat das —, er zeigt aber Betreuungskraefte, und die
+   * stehen unter `personal.lesen`, das die Buchhaltung bewusst NICHT hat
+   * („keine Personalakten", siehe ROLLEN_MATRIX).
+   *
+   * Bis hierher war die Folge eine LEERE Tabelle ohne Erklaerung. Das ist
+   * die schlechteste von drei moeglichen Antworten: „nichts da" ist eine
+   * Falschaussage, wo „duerfen Sie nicht sehen" die Wahrheit waere. Es
+   * ist kein Datenleck — die Rolle sieht zu WENIG —, aber wer eine leere
+   * Liste sieht, sucht den Fehler bei sich oder meldet einen Ausfall.
+   *
+   * Die Rechte stehen hier und nicht in der Seite, damit `lint:rls-sicht`
+   * und die Tests dieselbe Quelle lesen wie die Oberflaeche.
+   */
+  zusatzRechte?: readonly Berechtigung[]
 }
 
 /** Pfade, die JEDE angemeldete Verwaltungsrolle betreten koennen muss. */
@@ -41,7 +63,7 @@ const IMMER_ERLAUBT: readonly string[] = [
 export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   // ── Verwaltungsoberflaeche ────────────────────────────────────────
   '/admin/home':                      { lesen: 'berichte.lesen' },
-  '/admin/dashboard':                 { lesen: 'berichte.lesen' },
+  '/admin/dashboard':                 { lesen: 'berichte.lesen', zusatzRechte: ['personal.lesen', 'abrechnung.lesen'] },
   '/admin/analytics':                 { lesen: 'berichte.lesen' },
 
   // Klienten und Stammdaten
@@ -103,15 +125,15 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
 
   // Einsatzgeschehen
   '/admin/bookings':                  { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
-  '/admin/kalender':                  { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
+  '/admin/kalender':                  { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben', zusatzRechte: ['personal.lesen'] },
   '/admin/aufgaben':                  { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
-  '/admin/schedule':                  { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
-  '/admin/tourenplanung':             { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
-  '/admin/ausfallmanagement':         { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
+  '/admin/schedule':                  { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben', zusatzRechte: ['personal.lesen'] },
+  '/admin/tourenplanung':             { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben', zusatzRechte: ['personal.lesen'] },
+  '/admin/ausfallmanagement':         { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben', zusatzRechte: ['personal.lesen'] },
   '/admin/pdl-cockpit':               { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
-  '/admin/records':                   { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
+  '/admin/records':                   { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben', zusatzRechte: ['personal.lesen'] },
   '/admin/leistungsnachweis':         { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
-  '/admin/leistungsnachweis-digital': { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
+  '/admin/leistungsnachweis-digital': { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben', zusatzRechte: ['personal.lesen'] },
   '/admin/leistungsnachweis-upload':  { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
 
   // Gesundheitsdaten
@@ -152,7 +174,7 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   '/admin/kassenabrechnung':          { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
   '/admin/vpkzp':                     { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
   '/admin/monatsabschluss':           { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
-  '/admin/monatsabschluss-vorbereitung': { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
+  '/admin/monatsabschluss-vorbereitung': { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben', zusatzRechte: ['personal.lesen'] },
   '/admin/ruecklaeufer':              { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
   '/admin/zuzahlungen':               { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
   '/admin/datev':                     { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
@@ -356,6 +378,30 @@ export function bereichFuerPfad(pfad: string): string | null {
     }
   }
   return treffer
+}
+
+/**
+ * Welche der Zusatzrechte dieser Seite fehlen der Rolle?
+ *
+ * Leeres Ergebnis heisst: die Seite kann vollstaendig angezeigt werden.
+ * Sonst stehen darin die Rechte, deren Inhalte leer blieben — und genau
+ * die soll die Oberflaeche benennen, statt eine leere Tabelle zu zeigen.
+ *
+ * Bewusst OHNE Datenbankzugriff: die Antwort haengt allein an
+ * ROLLEN_MATRIX und diesem Katalog. Sie ist damit auch im Browser
+ * verfuegbar, wo die Seite sie braucht.
+ */
+export function fehlendeZusatzRechte(pfad: string, rolle: Rolle | null | undefined): Berechtigung[] {
+  if (!rolle) return []
+  // Die Administration sieht alles; fuer sie gibt es nichts zu melden.
+  if (istAdministration(rolle)) return []
+
+  const bereich = bereichFuerPfad(pfad.replace(/\/\[[^\]]+\]/g, ''))
+  if (!bereich) return []
+  const regel = BEREICHE[bereich]
+  if (!regel?.zusatzRechte) return []
+
+  return regel.zusatzRechte.filter(recht => !hatBerechtigung(rolle, recht))
 }
 
 /**

@@ -10,7 +10,9 @@ import OrgSwitcher from '@/components/OrgSwitcher'
 import BundeslandSwitcher from '@/components/admin/BundeslandSwitcher'
 import { BundeslandProvider } from '@/components/admin/BundeslandContext'
 import { MFA_AUSNAHME_PFADE } from '@/lib/admin/mfa'
-import { istVerwaltungsrolle, wirksameRolle } from '@/lib/auth/rollen'
+import { istVerwaltungsrolle, wirksameRolle, type Rolle } from '@/lib/auth/rollen'
+import { fehlendeZusatzRechte } from '@/lib/auth/bereiche'
+import { TeilweiseUnsichtbar } from '@/components/admin/OpsUI'
 import { darfPfad } from '@/lib/auth/bereiche'
 import { protokolliereAbmeldung } from '@/app/auth/login/actions'
 import { ReactNode } from 'react'
@@ -580,6 +582,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       </div>
 
       <main id="admin-main" className="admin-main">
+        {/* Sagt der Nutzerin, wenn ein TEIL dieser Seite ihr nicht
+            angezeigt wird — und warum. Steht hier und nicht in den neun
+            betroffenen Seiten: das Layout kennt Pfad UND Rolle, und eine
+            Stelle kann nicht auseinanderlaufen. Bereiche ohne
+            `zusatzRechte` bekommen nichts zu sehen, der Hinweis rendert
+            dann null (lib/auth/bereiche.ts, fehlendeZusatzRechte). */}
+        <TeilweiseUnsichtbar fehlendeRechte={fehlendeZusatzRechte(pathname, rolle as Rolle)} />
         <AdminMfaGuard>{children}</AdminMfaGuard>
       </main>
     </div>
