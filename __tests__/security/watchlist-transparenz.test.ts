@@ -28,7 +28,22 @@ vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => ({}) }))
 
 const KONTO = '5fa1df42-8eb5-416b-abb5-0c85a057e957'
 const ORG = '00000000-0000-4000-8000-000460629986'
-const GUT =
+/**
+ * Seit dem 31.08.2026 reicht der Inhalt nicht mehr — die vier Angaben
+ * muessen AUFFINDBAR sein, also mit ihrer Marke davor. Vorher stand hier
+ * derselbe Text als Fliesstext („Rechtsgrundlage Art. 6 …", ohne
+ * Doppelpunkt); er erfuellte die alte Laengenhuerde und liess sich
+ * hinterher nicht auswerten. Begruendung in lib/security/befristung.ts.
+ */
+const GUT = [
+  'Zweck: Verdacht auf unbefugte Kontonutzung nach Meldung vom 30.08.2026.',
+  'Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO, § 26 Abs. 1 BDSG.',
+  'Zeitraum: befristet bis 30.09.2026.',
+  'Transparenz: Person am 30.08.2026 mündlich informiert.',
+].join('\n')
+
+/** Derselbe Inhalt OHNE Marken — der Stand, der frueher genuegte. */
+const GUT_OHNE_MARKEN =
   'Verdacht auf unbefugte Kontonutzung nach Meldung vom 30.08.2026; '
   + 'Rechtsgrundlage Art. 6 Abs. 1 f DSGVO; befristet bis 30.09.2026; '
   + 'Person am 30.08.2026 mündlich informiert.'
@@ -66,6 +81,20 @@ describe('Einschalten verlangt eine tragfaehige Begruendung', () => {
     const { client, geschrieben } = fake()
     const r = await setzeUeberwachung(client, eingabe({ grund: ' '.repeat(80) }))
     expect(r.ok).toBe(false)
+    expect(geschrieben).toHaveLength(0)
+  })
+
+  it('ein Fliesstext mit denselben Angaben, aber ohne Marken, reicht NICHT', async () => {
+    // Die Verschaerfung vom 31.08.2026, ausdruecklich festgehalten: der
+    // Inhalt ist derselbe, nur nicht auffindbar. Wer sich spaeter auf
+    // eine Rechtsgrundlage berufen muss, findet sie in einem Fliesstext
+    // nicht wieder — und eine Auswertung ueber alle Eintraege schon gar
+    // nicht.
+    const { client, geschrieben } = fake()
+    const r = await setzeUeberwachung(client, eingabe({ grund: GUT_OHNE_MARKEN }))
+
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.grund).toContain('Zweck')
     expect(geschrieben).toHaveLength(0)
   })
 

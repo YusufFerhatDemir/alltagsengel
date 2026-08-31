@@ -82,8 +82,11 @@ function filterAus(url: URL, organizationId: string): SpurFilter {
     // Wert wird VERWORFEN, nicht geraten — dieselbe Regel wie beim Datum:
     // eine plausible, aber falsche Liste ist in einer Sicherheitsansicht
     // schlimmer als gar kein Filter.
+    // Erlaubnisliste statt Durchreichen: ein unbekannter Wert wird zu
+    // null (kein Filter), nicht zu einem Filterausdruck aus der URL.
     herkunft: p.get('herkunft') === 'echt' ? 'echt'
-      : p.get('herkunft') === 'nicht_echt' ? 'nicht_echt' : null,
+      : p.get('herkunft') === 'nicht_echt' ? 'nicht_echt'
+      : p.get('herkunft') === 'test' ? 'test' : null,
     seite: ganzzahl(p.get('seite'), 1),
     seitengroesse: ganzzahl(p.get('seitengroesse'), SEITENGROESSE_STANDARD),
     sortierFeld: (SORTIERFELDER as readonly string[]).includes(sortierFeld ?? '')

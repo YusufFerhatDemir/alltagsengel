@@ -69,7 +69,7 @@ export interface SpurFilter {
    * die am 31.08.2026 nicht stellbar war: „zeig mir, was WIRKLICH
    * passiert ist".
    */
-  herkunft?: 'echt' | 'nicht_echt' | null
+  herkunft?: 'echt' | 'nicht_echt' | 'test' | null
   seite?: number
   seitengroesse?: number
   sortierFeld?: Sortierfeld
@@ -190,7 +190,7 @@ function abfrage(admin: AdminClient, f: SpurFilter, spalten: string, zaehlen: bo
   //
   // Beide Werte sind hier vom Code gesetzt, kein Nutzertext — derselbe
   // Unterschied wie beim Mandantenfilter oben.
-  if (f.herkunft === 'echt' || f.herkunft === 'nicht_echt') {
+  if (f.herkunft === 'echt' || f.herkunft === 'nicht_echt' || f.herkunft === 'test') {
     q = q.or(herkunftFilterAusdruck(f.herkunft))
   }
 

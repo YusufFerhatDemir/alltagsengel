@@ -28,6 +28,10 @@ import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logger } from '@/lib/logger'
 
+import {
+  befristungFuer, istAbgelaufen, pruefeAngaben, HOECHSTDAUER_TAGE, type Befristung,
+} from './befristung'
+
 const log = logger.child('security-watchlist')
 
 type AdminClient = ReturnType<typeof createAdminClient>
@@ -134,8 +138,26 @@ async function ladeAktive(admin: AdminClient): Promise<Map<string, WatchlistEint
     return karte
   }
 
+  // ── Befristung (Befund 31.08.2026) ──────────────────────────────────
+  // Ein Eintrag, dessen Frist abgelaufen ist, wird hier NICHT aufgenommen.
+  // Damit endet die Ueberwachung von selbst, ohne dass jemand daran denken
+  // muss — der ganze Zweck einer Frist. Begruendung und Richtung des
+  // fail-closed stehen in lib/security/befristung.ts.
+  //
+  // Die Zeile bleibt in der Datenbank stehen und ist in der Verwaltung
+  // weiter sichtbar (als „abgelaufen"). Sie still zu loeschen waere das
+  // Gegenteil von Transparenz: dann waere hinterher nicht mehr
+  // nachvollziehbar, dass ueberhaupt beobachtet wurde.
+  const jetzt = new Date()
+  let abgelaufen = 0
   for (const r of (data ?? []) as unknown as RohEintrag[]) {
+    if (istAbgelaufen(r.created_at, jetzt)) { abgelaufen += 1; continue }
     karte.set(r.user_id, ausRoh(r))
+  }
+  if (abgelaufen > 0) {
+    log.info('Abgelaufene Ueberwachungen nicht beruecksichtigt', {
+      anzahl: abgelaufen, hoechstdauerTage: HOECHSTDAUER_TAGE,
+    })
   }
   return karte
 }
@@ -185,11 +207,25 @@ export interface WatchlistZeile extends WatchlistEintrag {
   rolle: string | null
   /** true, wenn email_kontrolle von der Adresse des Kontos abweicht. */
   adressenAbweichung: boolean
+  /**
+   * Frist des Eintrags. Ein abgelaufener Eintrag steht weiter in der
+   * Liste — er WIRKT nur nicht mehr (siehe ladeAktive). Ihn verschwinden
+   * zu lassen waere das Gegenteil von Transparenz: dann waere hinterher
+   * nicht mehr nachvollziehbar, dass beobachtet wurde.
+   */
+  befristung: Befristung
+  /**
+   * Wirkt der Eintrag JETZT? `aktiv` allein reicht als Antwort nicht mehr,
+   * seit es eine Frist gibt — und eine Liste, die „aktiv" sagt, wo nichts
+   * mehr passiert, ist eine Falschauskunft.
+   */
+  wirktJetzt: boolean
 }
 
 export async function leseWatchlist(
   admin: AdminClient,
   organizationId: string,
+  heute: Date = new Date(),
 ): Promise<WatchlistZeile[]> {
   let { data, error } = await admin
     .from('security_watchlist')
@@ -230,6 +266,7 @@ export async function leseWatchlist(
   return eintraege.map(e => {
     const p = nach.get(e.userId)
     const kontoEmail = p?.email ?? null
+    const befristung = befristungFuer(e.createdAt, heute)
     return {
       ...e,
       kontoEmail,
@@ -238,6 +275,8 @@ export async function leseWatchlist(
       adressenAbweichung:
         !!e.emailKontrolle && !!kontoEmail
         && e.emailKontrolle.trim().toLowerCase() !== kontoEmail.trim().toLowerCase(),
+      befristung,
+      wirktJetzt: e.aktiv && !befristung.abgelaufen,
     }
   })
 }
@@ -317,6 +356,18 @@ export async function setzeUeberwachung(
       grund: `Die Begründung ist zu knapp (mindestens ${GRUND_MINDESTLAENGE} Zeichen). `
         + TRANSPARENZ_HINWEIS,
     }
+  }
+
+  // ── Die vier Pflichtangaben (Befund 31.08.2026) ─────────────────────
+  // Die Laenge allein belegt nichts. Ein Fliesstext ueber 40 Zeichen
+  // erfuellte die bisherige Huerde, ohne zu sagen, WOZU beobachtet wird
+  // und WORAUF sich das stuetzt — und genau danach fragt im Ernstfall
+  // die Aufsichtsbehoerde. Die Marken sind in
+  // lib/security/befristung.ts beschrieben; die Oberflaeche gibt eine
+  // Vorlage vor, damit sie niemand auswendig kennen muss.
+  if (eingabe.aktiv) {
+    const angaben = pruefeAngaben(eingabe.grund)
+    if (!angaben.ok) return { ok: false, grund: angaben.meldung }
   }
 
   try {
