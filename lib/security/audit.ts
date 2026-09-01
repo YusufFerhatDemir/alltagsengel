@@ -179,6 +179,17 @@ export async function organisationFuerKonto(
   admin: AdminClient,
   userId: string,
 ): Promise<string | null> {
+  // GEPRUEFT 01.09.2026 (Dienstschluessel-Pass) — dass die vier
+  // Abfragen unten ihren Fehler verwerfen, ist Absicht: jede endet im
+  // Zweifel bei `return null`, und `null` heisst hier „kein Mandant
+  // feststellbar", nicht „Stamm-Organisation". Das ist genau die
+  // fail-closed-Zusage aus dem Kopf dieser Funktion.
+  //
+  // Der Preis ist benannt: bei einer Stoerung verliert die
+  // Sicherheitsmeldung ihren Zustellkontext und geht als Einmalversuch
+  // hinaus (siehe die Erlaeuterung zur vierten Quelle weiter unten).
+  // Das ist hinnehmbar — eine falsche Mandantenzuordnung an einer
+  // Sicherheitsmeldung waere es nicht.
   try {
     const { data: mitglied } = await admin
       .from('organization_members')

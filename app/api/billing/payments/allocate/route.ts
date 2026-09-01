@@ -54,6 +54,10 @@ export const POST = withTracking(async function POST(request: Request) {
     }
 
     const invoiceIds = [...new Set(allocations.map((a: { invoiceId: string }) => a.invoiceId))]
+    // GEPRUEFT 01.09.2026 — der verworfene Fehler wirkt hier fail-closed:
+    // `invoices` bleibt null, der Vergleich unten schlaegt fehl (0 !==
+    // Anzahl) und die Zuordnung wird mit 404 abgelehnt. Kein Geld
+    // bewegt sich auf einer Rechnung, die nicht gelesen werden konnte.
     const { data: invoices } = await admin
       .from('invoices')
       .select('id')

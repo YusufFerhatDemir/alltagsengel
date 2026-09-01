@@ -35,12 +35,24 @@ export const GET = withTracking(async function GET(request: Request) {
       return NextResponse.json({ code, klassifizierung })
     }
 
-    const { data } = await admin
+    // Der Hinweis unten ist eine ausdrueckliche Aussage ueber den
+    // Katalog („Der Katalog ist leer"). Bei verworfenem Fehler stand
+    // dieser Satz auch dann da, wenn der Katalog nur nicht lesbar war —
+    // die Route haette dem Betrieb eine leere Pflegestufe des eigenen
+    // Fehlerverzeichnisses gemeldet, die es so nicht gibt.
+    const { data, error: katalogFehler } = await admin
       .from('dta_fehlercode_katalog')
       .select('id, kassen_code, quelle_ik, kategorie, beschreibung, massnahme, korrigierbar, spec_quelle, organization_id')
       .or(`organization_id.eq.${auth.organizationId},organization_id.is.null`)
       .is('deleted_at', null)
       .order('kassen_code')
+
+    if (katalogFehler) {
+      return NextResponse.json(
+        { error: 'Der Fehlercode-Katalog konnte nicht geladen werden. Er wird nicht als leer ausgewiesen, solange er nicht lesbar ist.' },
+        { status: 500 },
+      )
+    }
 
     return NextResponse.json({
       kategorien: FEHLER_KATEGORIEN,

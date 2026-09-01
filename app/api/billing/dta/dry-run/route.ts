@@ -112,14 +112,26 @@ export const POST = withTracking(async function POST(request: Request) {
       rechnungenQuery = rechnungenQuery.eq('billing_type', 'kasse')
     }
 
-    const { data: rechnungen } = await rechnungenQuery
+    // ── Der Probelauf muss seine eigenen Luecken benennen ───────────
+    //
+    // Diese Route ist die letzte Pruefung, bevor eine Abrechnungsdatei an
+    // die Kasse geht. Ihre Schritte melden „ok" oder „fehler" — und ein
+    // verworfener Abfragefehler machte daraus die falsche Sorte Befund:
+    // aus „ich konnte die Rechnungen nicht lesen" wurde „Keine
+    // freigegebenen Rechnungen gefunden", aus einer unlesbaren
+    // Nachweisliste wurde „keine fehlenden Unterschriften". Ein
+    // Probelauf, der bei Stoerung Entwarnung gibt, ist schlimmer als
+    // keiner: er wird ausdruecklich als Freigabe gelesen.
+    const { data: rechnungen, error: rechnungenFehler } = await rechnungenQuery
     // total_amount steht in EURO — vor jeder Cent-Rechnung umrechnen.
     const gesamtCent = rechnungen?.reduce((s, r) => s + euroZuCent(r.total_amount), 0) ?? 0
 
     schritte.push({
       schritt: '2. Rechnungen geladen',
-      status: rechnungen?.length ? 'ok' : 'fehler',
-      details: rechnungen?.length
+      status: !rechnungenFehler && rechnungen?.length ? 'ok' : 'fehler',
+      details: rechnungenFehler
+        ? `Rechnungen NICHT LESBAR (${rechnungenFehler.message}) — das ist kein Befund über den Monat, sondern eine Störung.`
+        : rechnungen?.length
         ? `${rechnungen.length} Rechnungen, Gesamtbetrag: ${(gesamtCent / 100).toFixed(2)} €`
         : 'Keine freigegebenen Rechnungen gefunden',
       dauer_ms: Date.now() - rlStart,
@@ -138,21 +150,55 @@ export const POST = withTracking(async function POST(request: Request) {
     // ── 3. Kundendaten + Leistungsnachweise ─────────────────────
     const kdStart = Date.now()
     const clientIds = [...new Set(rechnungen.map(r => r.client_id))]
-    const { data: clients } = await admin
+    const { data: clients, error: clientsFehler } = await admin
       .from('clients')
       .select('id, first_name, last_name, versichertennummer, geburtsdatum, care_level, pflegegrad, pflegekasse_ik, address, city, zip_code')
       .in('id', clientIds)
       .eq('organization_id', organizationId)
 
+    // Ohne Stammdaten baut der Probelauf Faelle ohne Klienten und meldet
+    // die fehlenden Felder als Datenluecke beim Kunden — obwohl die Daten
+    // da sind und nur nicht gelesen werden konnten. Der Lauf bricht
+    // deshalb hier ab, statt einen Befund ueber Klienten zu erheben, die
+    // er nie gesehen hat.
+    if (clientsFehler) {
+      schritte.push({
+        schritt: '3. Kundendaten geladen',
+        status: 'fehler',
+        details: `Stammdaten NICHT LESBAR (${clientsFehler.message}) — der Probelauf trifft keine Aussage über fehlende Kundenfelder.`,
+        dauer_ms: Date.now() - kdStart,
+      })
+      return NextResponse.json({
+        modus: 'dry-run', ergebnis: 'NICHT BEREIT', schritte, validierung,
+        dauer_ms: Date.now() - start,
+      })
+    }
+
     const clientMap = new Map(clients?.map(c => [c.id, c]) ?? [])
 
     // Kostentraeger-Daten aus Verordnungen (clients hat kein kostentraeger_ik)
-    const { data: verordnungenDry } = await admin
+    const { data: verordnungenDry, error: verordnungenFehler } = await admin
       .from('verordnungen')
       .select('id, client_id, kostentraeger_ik_nummer, kostentraeger_name')
       .in('client_id', clientIds)
       .eq('genehmigung_status', 'genehmigt')
       .eq('organization_id', organizationId)
+
+    // Ein unlesbarer Verordnungsbestand faellt sonst still auf den
+    // Rechnungs-Rueckfall durch und der Lauf ginge im Zweifel mit dem
+    // falschen Kostentraeger hinaus.
+    if (verordnungenFehler) {
+      schritte.push({
+        schritt: '3. Kundendaten geladen',
+        status: 'fehler',
+        details: `Verordnungen NICHT LESBAR (${verordnungenFehler.message}) — der zuständige Kostenträger lässt sich nicht bestimmen.`,
+        dauer_ms: Date.now() - kdStart,
+      })
+      return NextResponse.json({
+        modus: 'dry-run', ergebnis: 'NICHT BEREIT', schritte, validierung,
+        dauer_ms: Date.now() - start,
+      })
+    }
 
     const ktByClient = new Map<string, { ik: string; name: string }>()
     for (const v of verordnungenDry ?? []) {
@@ -179,7 +225,14 @@ export const POST = withTracking(async function POST(request: Request) {
     const drStart = `${periodMonth}-01`
     const drLastDay = new Date(Number(periodMonth.slice(0, 4)), Number(periodMonth.slice(5, 7)), 0).getDate()
     const drEnd = `${periodMonth}-${String(drLastDay).padStart(2, '0')}`
-    const { data: alleRecords } = await admin
+    // DIE UNTERSCHRIFTENPRUEFUNG HAENGT AN DIESER LISTE.
+    //
+    // Weiter unten zaehlt der Probelauf, wie viele Nachweise ohne
+    // Unterschrift sind. Blieb `alleRecords` bei einem Fehler null, war
+    // die Liste leer, die Zahl fehlender Unterschriften null — und der
+    // Schritt meldete „alle Nachweise unterschrieben" fuer einen Monat,
+    // aus dem er keine einzige Zeile gesehen hatte.
+    const { data: alleRecords, error: recordsFehler } = await admin
       .from('service_records')
       .select('id, client_id, date, service_type, duration_minutes, amount, caregiver_id, caregiver:caregivers(first_name, last_name), proof_status, billing_status, signature_hash, client_signature')
       .in('client_id', clientIds)
@@ -187,6 +240,19 @@ export const POST = withTracking(async function POST(request: Request) {
       .gte('date', drStart)
       .lte('date', drEnd)
       .in('status', ['complete', 'signed', 'invoiced'])
+
+    if (recordsFehler) {
+      schritte.push({
+        schritt: '3. Kundendaten geladen',
+        status: 'fehler',
+        details: `Leistungsnachweise NICHT LESBAR (${recordsFehler.message}) — es wird NICHT behauptet, dass alle unterschrieben sind.`,
+        dauer_ms: Date.now() - kdStart,
+      })
+      return NextResponse.json({
+        modus: 'dry-run', ergebnis: 'NICHT BEREIT', schritte, validierung,
+        dauer_ms: Date.now() - start,
+      })
+    }
 
     // Storniertes zaehlt hier weder als Leistung noch als fehlende
     // Unterschrift — es geht gar nicht erst in die Datei.
@@ -389,7 +455,12 @@ export const POST = withTracking(async function POST(request: Request) {
 
     // ── 8. Routing (Kostenträger → Datenannahmestelle) ──────────
     const routingStart = Date.now()
-    const { data: aktiveDas } = await admin
+    // Ist die Stellenliste unlesbar, findet der Routing-Schritt fuer
+    // JEDE Datei keine zustaendige Annahmestelle. Das faellt zwar auf
+    // „fehler" und damit in die sichere Richtung — als Befund gelesen
+    // schickt es den Betrieb aber auf die falsche Faehrte: er sucht nach
+    // fehlenden Zustaendigkeiten statt nach der Stoerung.
+    const { data: aktiveDas, error: dasFehler } = await admin
       .from('datenannahmestellen')
       .select('id, name, ik_nummer, sftp_host, sftp_user, sftp_key_url, zustaendig_fuer')
       .eq('aktiv', true)
@@ -414,8 +485,10 @@ export const POST = withTracking(async function POST(request: Request) {
 
     schritte.push({
       schritt: '8. Routing → Datenannahmestellen',
-      status: alleGeroutet && alleSftp ? 'ok' : alleGeroutet ? 'warnung' : 'fehler',
-      details: alleGeroutet
+      status: dasFehler ? 'fehler' : alleGeroutet && alleSftp ? 'ok' : alleGeroutet ? 'warnung' : 'fehler',
+      details: dasFehler
+        ? `Datenannahmestellen NICHT LESBAR (${dasFehler.message}) — ob die Empfänger zugeordnet sind, ist damit ungeprüft.`
+        : alleGeroutet
         ? alleSftp
           ? `Alle ${routingErgebnisse.length} Empfänger zugeordnet und SFTP konfiguriert`
           : `Alle ${routingErgebnisse.length} Empfänger zugeordnet, aber SFTP-Daten fehlen`
@@ -437,6 +510,10 @@ export const POST = withTracking(async function POST(request: Request) {
     const absenderOk = absenderZert?.gueltig_bis && new Date(absenderZert.gueltig_bis) > new Date()
 
     const empfaengerIks = [...new Set(dateien.map(d => d.datenannahmestelle.ik))]
+    // GEPRUEFT 01.09.2026 — fail-closed: ohne lesbare Zertifikate ist
+    // `empfaengerGueltig` leer, jedes IK gilt als „Zertifikat fehlt" und
+    // der Schritt faellt auf 'fehler'. Der Probelauf sagt damit im
+    // Zweifel NICHT bereit, und das ist die richtige Richtung.
     const { data: empfaengerZerts } = await admin
       .from('abrechnung_zertifikate')
       .select('ik_nummer, gueltig_bis')

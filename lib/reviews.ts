@@ -20,6 +20,7 @@
 //     kein Nachname.
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logger } from '@/lib/logger'
 
 /** Maximal ausgelieferte Bewertungen pro Engel-Abfrage. */
 export const MAX_BEWERTUNGEN = 50
@@ -93,10 +94,22 @@ async function ladeVerfasser(
   const map = new Map<string, { first_name: string | null; avatar_color: string | null }>()
   if (ids.length === 0) return map
 
-  const { data } = await admin
+  // MITTEL — bewusst nicht fail-closed: faellt diese Abfrage aus, fehlen
+  // Vorname und Farbe, die Bewertung selbst bleibt aber vollstaendig und
+  // richtig. Eine Bewertungsliste wegen eines fehlenden Vornamens ganz zu
+  // verweigern waere unverhaeltnismaessig. Der Fehler gehoert trotzdem
+  // ins Protokoll, damit er nicht voellig unsichtbar bleibt.
+  const { data, error } = await admin
     .from('profiles')
     .select('id, first_name, avatar_color')
     .in('id', ids)
+
+  if (error) {
+    logger.child('reviews').warn(
+      'Verfassernamen nicht lesbar — Bewertungen erscheinen ohne Vornamen',
+      { errorMessage: error.message },
+    )
+  }
 
   for (const p of data || []) {
     map.set(p.id, { first_name: p.first_name ?? null, avatar_color: p.avatar_color ?? null })
@@ -225,6 +238,11 @@ export async function istAdminUser(userId: string): Promise<boolean> {
   if (!userId) return false
   try {
     const admin = createAdminClient()
+    // GEPRUEFT 01.09.2026 — verworfener Fehler mit der richtigen
+    // Wirkung: `data` bleibt null, `data?.role` ist undefined, die
+    // Funktion gibt false zurueck. „Im Zweifel kein Administrator" ist
+    // die Zusage im Kopf dieser Funktion. Nicht auf „Fehler werfen"
+    // umbauen, ohne den Aufrufer in app/api/reviews/route.ts mitzuziehen.
     const { data } = await admin
       .from('profiles')
       .select('role')

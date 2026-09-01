@@ -144,10 +144,23 @@ export const POST = withTracking(async function POST(
 
   // Verknüpfte Assignments umhängen — der Doppelbelegungs-Trigger
   // meldet Terminkonflikte der Vertretung (409)
-  const { data: stops } = await admin
+  const { data: stops, error: stopsFehler } = await admin
     .from('tour_stops')
     .select('id, assignment_id, status')
     .eq('tour_id', id)
+  // Der Vertretungsfall ist zu diesem Zeitpunkt bereits protokolliert.
+  // Bleibt diese Liste bei einem Fehler leer, haengt die Route keinen
+  // einzigen Einsatz um und meldet trotzdem Erfolg: die Tour gehoert der
+  // Vertretung, saemtliche Einsaetze weiter dem Erkrankten. Das ist
+  // dieselbe halb uebertragene Tour, die der Kommentar unten als Grund
+  // fuer die Ruecknahme-Logik beschreibt — nur ohne jede Ruecknahme,
+  // weil nichts gescheitert zu sein scheint.
+  if (stopsFehler) {
+    return NextResponse.json(
+      { error: 'Die Stops der Tour konnten nicht gelesen werden — die Einsätze wurden NICHT auf die Vertretung umgehängt. Bitte erneut versuchen.' },
+      { status: 500 },
+    )
+  }
   const offeneAssignments = (stops ?? [])
     .filter(s => s.assignment_id && !['ABGESCHLOSSEN', 'AUSGEFALLEN'].includes(s.status))
     .map(s => s.assignment_id as string)

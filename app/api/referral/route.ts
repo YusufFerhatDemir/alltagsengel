@@ -30,10 +30,21 @@ export const GET = withTracking(async function GET(request: NextRequest) {
       .single()
 
     // Referral-Statistiken
-    const { data: referrals } = await supabaseAdmin
+    //
+    // Die Zaehlung unten faellt bei verworfenem Fehler auf 0/0/0 — der
+    // Werber saehe „Sie haben noch niemanden geworben", obwohl seine
+    // Werbungen und der daraus faellige Bonus in der Tabelle stehen.
+    const { data: referrals, error: referralsFehler } = await supabaseAdmin
       .from('referrals')
       .select('id, status, created_at, completed_at')
       .eq('referrer_id', user.id)
+
+    if (referralsFehler) {
+      return NextResponse.json(
+        { error: 'Ihre Empfehlungen konnten nicht geladen werden. Es wird nicht angezeigt, dass Sie keine haben.' },
+        { status: 500 },
+      )
+    }
 
     const stats = {
       total: referrals?.length || 0,

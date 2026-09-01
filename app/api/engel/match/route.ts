@@ -113,10 +113,20 @@ export const GET = withTracking(async function GET(request: NextRequest) {
   // Zeitfenster aller Engel in einem Rutsch laden (nur wenn gebraucht)
   const fensterById = new Map<string, Zeitfenster[]>()
   if (pruefeZeit && engelIds.length > 0) {
-    const { data: slots } = await admin
+    // Ohne Zeitfenster entscheidet `istVerfuegbar` allein auf dem
+    // Freitextfeld `availability` — der Zeitfilter, den der Kunde gerade
+    // gesetzt hat, waere damit stillschweigend ein anderer als der
+    // angezeigte. Lieber sagen, dass es nicht geht.
+    const { data: slots, error: slotsFehler } = await admin
       .from('angel_availability')
       .select('angel_id, weekday, start_time, end_time')
       .in('angel_id', engelIds)
+    if (slotsFehler) {
+      return NextResponse.json(
+        { error: 'Die Verfügbarkeiten konnten gerade nicht geladen werden. Bitte versuchen Sie es in einem Moment erneut.' },
+        { status: 500 },
+      )
+    }
     for (const slot of slots || []) {
       const liste = fensterById.get(slot.angel_id) || []
       liste.push(slot as Zeitfenster)
@@ -150,20 +160,41 @@ export const GET = withTracking(async function GET(request: NextRequest) {
   // org_fence: nur Engel der eigenen Organisation
   const plzById = new Map<string, string | null>()
   if (engelIds.length > 0) {
+    // ── „Keine Engel in Ihrer Nähe" ist eine Aussage ────────────────
+    //
+    // Ohne die Mitgliederliste blieb `filteredIds` leer, ohne die
+    // Profile blieb `plzById` leer — und in beiden Faellen fiel jeder
+    // Engel durch den Umkreisfilter. Der Kunde las daraufhin, dass es in
+    // seiner Gegend niemanden gibt, obwohl die Engel da sind und nur
+    // ihre Postleitzahl nicht gelesen werden konnte. Das ist keine
+    // vorsichtige leere Liste, sondern eine falsche Auskunft an der
+    // Stelle, an der jemand Hilfe sucht.
     let filteredIds = engelIds
     {
-      const { data: members } = await admin
+      const { data: members, error: membersFehler } = await admin
         .from('organization_members')
         .select('user_id')
         .eq('organization_id', orgId)
         .in('user_id', engelIds)
+      if (membersFehler) {
+        return NextResponse.json(
+          { error: 'Die Engel in Ihrer Nähe konnten gerade nicht ermittelt werden. Bitte versuchen Sie es in einem Moment erneut.' },
+          { status: 500 },
+        )
+      }
       filteredIds = (members || []).map(m => m.user_id)
     }
     if (filteredIds.length > 0) {
-      const { data: engelRows } = await admin
+      const { data: engelRows, error: engelRowsFehler } = await admin
         .from('profiles')
         .select('id, postal_code, location')
         .in('id', filteredIds)
+      if (engelRowsFehler) {
+        return NextResponse.json(
+          { error: 'Die Engel in Ihrer Nähe konnten gerade nicht ermittelt werden. Bitte versuchen Sie es in einem Moment erneut.' },
+          { status: 500 },
+        )
+      }
       for (const row of engelRows || []) {
         plzById.set(row.id, resolvePlz(row.postal_code, row.location))
       }

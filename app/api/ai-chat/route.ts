@@ -32,10 +32,21 @@ async function fetchLiveContext(orgId: string): Promise<string> {
   try {
     const admin = createAdminClient()
 
-    const { data: members } = await admin
+    const { data: members, error: membersFehler } = await admin
       .from('organization_members')
       .select('user_id')
       .eq('organization_id', orgId)
+
+    // Was hier steht, geht als Tatsachenbehauptung in den Prompt eines
+    // Sprachmodells, das anschliessend Fragen zum Betrieb beantwortet.
+    // „(Keine Organisationsmitglieder gefunden)" bei bloss unlesbarer
+    // Liste hiesse: das Modell rechnet mit einer leeren Organisation und
+    // antwortet ueberzeugend auf einer Grundlage, die es nicht gibt.
+    if (membersFehler) {
+      return '(Die Live-Daten konnten nicht gelesen werden — es liegen für diese Antwort KEINE Betriebsdaten vor. '
+        + 'Bitte weise darauf hin, statt aus fehlenden Daten Schlüsse zu ziehen.)'
+    }
+
     const memberIdList = (members || []).map(m => m.user_id)
 
     if (memberIdList.length === 0) {

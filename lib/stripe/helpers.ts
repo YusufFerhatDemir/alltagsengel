@@ -30,11 +30,28 @@ function mapStripeStatus(status: Stripe.Subscription.Status): OrganizationSubscr
 export async function getOrCreateStripeCustomer(orgId: string): Promise<string> {
   const admin = createAdminClient()
 
-  const { data: sub } = await admin
+  // DIESE ABFRAGE ENTSCHEIDET, OB EIN ZWEITER STRIPE-KUNDE ENTSTEHT.
+  //
+  // Der verworfene Fehler war hier besonders folgenreich, weil die
+  // Funktion aus „ich konnte nicht nachsehen" ein „es gibt noch keinen"
+  // machte: bei jedem Ausfall der Abfrage legte sie bei Stripe einen
+  // NEUEN Customer an und schrieb dessen Kennung per Upsert ueber die
+  // bestehende. Der alte Customer behielt Zahlungsmittel und laufende
+  // Abonnements, war aus dem eigenen Bestand aber nicht mehr erreichbar —
+  // ein Schaden, der sich anders als eine doppelte Rechnung nicht durch
+  // eine Gutschrift zuruecknehmen laesst.
+  const { data: sub, error: subFehler } = await admin
     .from('organization_subscriptions')
     .select('stripe_customer_id')
     .eq('organization_id', orgId)
     .maybeSingle()
+
+  if (subFehler) {
+    throw new Error(
+      `Bestehende Stripe-Zuordnung der Organisation ${orgId} nicht lesbar — es wird kein neuer `
+      + `Kunde angelegt (${subFehler.message})`
+    )
+  }
 
   if (sub?.stripe_customer_id) return sub.stripe_customer_id
 

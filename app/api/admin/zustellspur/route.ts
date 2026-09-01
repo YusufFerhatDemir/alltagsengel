@@ -40,9 +40,17 @@ export const GET = withTracking(async function GET(request: Request) {
 
     const offen = await offeneZustellungen(organizationId, { limit: 200, admin })
 
+    // ── Diese Seite IST die Aufsicht ueber die Zustellung ───────────
+    //
+    // Sie zeigt, was endgueltig nicht zugestellt wurde (deadLetter) und
+    // ob der Wiederholungslauf ueberhaupt noch laeuft (laeufe). Beides
+    // liest man an leeren Listen ab: „nichts liegengeblieben", „keine
+    // Auffaelligkeit". Genau diese Beruhigung gab die Route mit
+    // verworfenem Fehler auch dann, wenn sie ihre eigene Zustellspur
+    // nicht lesen konnte — die Aufsicht meldete Ruhe, weil sie blind war.
     let deadLetter: unknown[] = []
     if (schemaBereit) {
-      const { data } = await admin
+      const { data, error: dlFehler } = await admin
         .from('notification_delivery_log')
         .select('id, channel, recipient, grund, sanitized_error, attempt_count, correlation_id, vorgang_art, vorgang_ref, created_at')
         .eq('organization_id', organizationId)
@@ -50,14 +58,27 @@ export const GET = withTracking(async function GET(request: Request) {
         .not('grund', 'is', null)
         .order('created_at', { ascending: false })
         .limit(100)
+      if (dlFehler) {
+        return NextResponse.json(
+          { error: 'Die Zustellspur konnte nicht geladen werden. Liegengebliebene Nachrichten werden nicht als „keine" angezeigt, solange sie nicht lesbar sind.' },
+          { status: 500 },
+        )
+      }
       deadLetter = data ?? []
     }
 
-    const { data: laeufe } = await admin
+    const { data: laeufe, error: laeufeFehler } = await admin
       .from('zustellung_retry_laeufe')
       .select('id, status, gestartet_am, beendet_am, laufzeit_ms, versuch, verarbeitet, erfolgreich, fehlgeschlagen, dead_letter, uebersprungen, abbruchgrund')
       .order('gestartet_am', { ascending: false })
       .limit(10)
+
+    if (laeufeFehler) {
+      return NextResponse.json(
+        { error: 'Die Wiederholungsläufe konnten nicht geladen werden — ob der Retry-Worker läuft, lässt sich gerade nicht feststellen.' },
+        { status: 500 },
+      )
+    }
 
     return NextResponse.json({
       schemaBereit,

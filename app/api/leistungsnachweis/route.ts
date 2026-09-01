@@ -220,11 +220,28 @@ export const GET = withTracking(async function GET(request: Request) {
     //  1) service_signatures (Native App): Bild + Rolle + Zeitstempel
     //  2) service_records.client_signature / caregiver_initials (Admin-Pfad)
     const recordIds = rows.map(r => r.id)
-    const { data: sigData } = await admin
+    // Der Leistungsnachweis ist das Papier, das die Kasse zu sehen
+    // bekommt — die Unterschrift darauf ist sein eigentlicher Inhalt.
+    //
+    // Bei verworfenem Fehler blieb `signatures` leer, der Nachweis fiel
+    // stillschweigend auf den Text-Rueckfall aus `service_records`
+    // zurueck und ging notfalls ganz ohne Handzeichen hinaus. Ein
+    // unterschriebener Einsatz saehe damit aus wie ein nicht
+    // unterschriebener — und das ist gegenueber der Kasse keine
+    // Nachlaessigkeit in der Anzeige, sondern eine falsche Angabe im
+    // Beleg. Deshalb lieber kein Nachweis als ein leerer.
+    const { data: sigData, error: sigFehler } = await admin
       .from('service_signatures')
       .select('service_record_id, signer_role, signer_name, signature_image, signed_at')
       .in('service_record_id', recordIds)
       .order('signed_at', { ascending: false })
+
+    if (sigFehler) {
+      return NextResponse.json(
+        { error: 'Die Unterschriften konnten nicht geladen werden. Der Leistungsnachweis wird nicht erstellt, weil er sonst ohne Handzeichen ausginge.' },
+        { status: 500 },
+      )
+    }
 
     interface ServiceSignature {
       service_record_id: string; signer_role: string; signer_name?: string

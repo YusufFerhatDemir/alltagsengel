@@ -60,6 +60,19 @@ function mailText(land: string, name: string | null): string {
   `
 }
 
+/**
+ * BEWUSST FAIL-CLOSED, und der verworfene Fehler ist hier die richtige
+ * Richtung — anders als an den meisten anderen Stellen.
+ *
+ * `null` heisst fuer beide Aufrufer „nicht freigeschaltet": der POST
+ * bricht mit 409 ab, der GET zeigt `freigeschaltet: false`. Ein Fehler
+ * fuehrt damit dazu, dass die Freischaltungs-Mail NICHT an die
+ * Warteliste hinausgeht — und eine Rundmail, die eine Freischaltung
+ * ankuendigt, die es womoeglich gar nicht gibt, laesst sich nicht
+ * zurueckholen. Der Preis ist eine Fehlermeldung, die die Stoerung als
+ * fehlende Freischaltung ausgibt; das ist hier hinnehmbar, weil der
+ * Versand ohnehin ein bewusster zweiter Schritt ist.
+ */
 async function ladeStatus(orgId: string, bundesland: BundeslandCode) {
   const admin = createAdminClient()
   const { data } = await admin

@@ -24,13 +24,26 @@ import { nachweisWerteAusEinsatz } from '@/lib/touren/leistungsnachweis'
 import { istZeitraumGueltig } from '@/lib/leistungsnachweis/zeitraum'
 import { withTracking } from '@/lib/monitoring/tracker'
 
+/**
+ * Laedt die Tour im Mandantenzaun.
+ *
+ * Gibt `undefined` zurueck, wenn die Tour NICHT GELESEN WERDEN KONNTE, und
+ * `null`, wenn es sie (in dieser Organisation) nicht gibt. Vorher war
+ * beides `null` und jeder Aufrufer antwortete darauf mit „Tour nicht
+ * gefunden" — eine Stoerung sah damit aus wie eine geloeschte Tour, und
+ * der Nutzer suchte den Fehler bei sich.
+ *
+ * PGRST116 ist die Auskunft „keine Zeile" von `.single()` und damit ein
+ * echtes Nicht-Gefunden, kein Fehler.
+ */
 async function ladeTour(admin: ReturnType<typeof createAdminClient>, id: string, organizationId: string) {
-  const { data } = await admin
+  const { data, error } = await admin
     .from('tours')
     .select('id, caregiver_id, tour_date, status, caregivers:caregiver_id(first_name, last_name, initials, zip_code)')
     .eq('id', id)
     .eq('organization_id', organizationId)
     .single()
+  if (error) return error.code === 'PGRST116' ? null : undefined
   return data
 }
 
@@ -45,6 +58,12 @@ export const POST = withTracking(async function POST(
 
   const admin = createAdminClient()
   const tour = await ladeTour(admin, id, auth.ctx.organizationId)
+  if (tour === undefined) {
+    return NextResponse.json(
+      { error: 'Die Tour konnte nicht geladen werden. Das heißt nicht, dass es sie nicht gibt.' },
+      { status: 500 },
+    )
+  }
   if (!tour) return NextResponse.json({ error: 'Tour nicht gefunden.' }, { status: 404 })
 
   const body = (await req.json()) as StopInput
@@ -119,6 +138,12 @@ export const PATCH = withTracking(async function PATCH(
 
   const admin = createAdminClient()
   const tour = await ladeTour(admin, id, auth.ctx.organizationId)
+  if (tour === undefined) {
+    return NextResponse.json(
+      { error: 'Die Tour konnte nicht geladen werden. Das heißt nicht, dass es sie nicht gibt.' },
+      { status: 500 },
+    )
+  }
   if (!tour) return NextResponse.json({ error: 'Tour nicht gefunden.' }, { status: 404 })
   const caregiver = Array.isArray(tour.caregivers) ? tour.caregivers[0] : tour.caregivers
 
@@ -132,10 +157,21 @@ export const PATCH = withTracking(async function PATCH(
 
   // ── Komplettes Umsortieren ──────────────────────────────────────
   if (body.reihenfolge !== undefined) {
-    const { data: vorhanden } = await admin
+    // Der Soll-Bestand fuer die Reihenfolgepruefung. Leer heisst hier
+    // „die Tour hat keine Stops" — bei verworfenem Fehler haette die
+    // Pruefung eine gueltige Umsortierung gegen eine leere Liste
+    // verglichen und sie mit der Begruendung abgewiesen, die Stops
+    // gehoerten nicht zur Tour.
+    const { data: vorhanden, error: vorhandenFehler } = await admin
       .from('tour_stops')
       .select('id')
       .eq('tour_id', id)
+    if (vorhandenFehler) {
+      return NextResponse.json(
+        { error: 'Die vorhandenen Stops konnten nicht gelesen werden — die Reihenfolge wurde NICHT geändert.' },
+        { status: 500 },
+      )
+    }
     const befund = pruefeReihenfolge(body.reihenfolge, (vorhanden ?? []).map(s => s.id as string))
     if (!befund.ok) {
       return NextResponse.json({ error: befund.fehler }, { status: 400 })
@@ -357,6 +393,12 @@ export const DELETE = withTracking(async function DELETE(
 
   const admin = createAdminClient()
   const tour = await ladeTour(admin, id, auth.ctx.organizationId)
+  if (tour === undefined) {
+    return NextResponse.json(
+      { error: 'Die Tour konnte nicht geladen werden. Das heißt nicht, dass es sie nicht gibt.' },
+      { status: 500 },
+    )
+  }
   if (!tour) return NextResponse.json({ error: 'Tour nicht gefunden.' }, { status: 404 })
 
   try {

@@ -59,11 +59,23 @@ export const POST = withTracking(async function POST(
 
   // PLZ der Klienten für die Fahrzeit-Schätzung zwischen den Stops
   const clientIds = [...new Set(templateStops.map(s => s.client_id))]
-  const { data: clients } = await admin
+  // Aus diesen Postleitzahlen entstehen die Fahrzeiten zwischen den
+  // Stops und damit die Ankunftszeiten der ganzen Tour. Blieb die Karte
+  // bei einem Fehler leer, wurde die Tour mit Fahrzeit null gebaut: alle
+  // Stops dicht an dicht, ein Plan, den kein Mensch fahren kann. Dieselbe
+  // Begruendung wie beim Rueckfall auf 08:00 weiter unten — eine still
+  // verschobene Tour merkt niemand rechtzeitig.
+  const { data: clients, error: clientsFehler } = await admin
     .from('clients')
     .select('id, zip_code')
     .in('id', clientIds)
     .eq('organization_id', auth.ctx.organizationId)
+  if (clientsFehler) {
+    return NextResponse.json(
+      { error: 'Die Postleitzahlen der Klienten konnten nicht gelesen werden — die Tour wurde NICHT angelegt, weil die Fahrzeiten sonst auf null geschätzt würden.' },
+      { status: 500 },
+    )
+  }
   const plzMap = new Map((clients ?? []).map(c => [c.id, c.zip_code]))
 
   const { data: caregiver } = await admin

@@ -112,6 +112,16 @@ export async function resolveUserOrgId(): Promise<string | null> {
 
     const admin = createAdminClient()
 
+    // GEPRUEFT 01.09.2026 (Dienstschluessel-Pass) — die verworfenen
+    // Fehler der beiden folgenden Abfragen sind hier die RICHTIGE
+    // Richtung und bleiben bewusst stehen.
+    //
+    // Beide enden bei einem Fehler in `return null`, und `null` heisst
+    // fuer jeden Aufrufer „keine Organisation" — also 403, nicht Zugang.
+    // Der Kopf dieser Funktion nennt das fail-closed; das gilt fuer den
+    // Fehlerfall genauso wie fuer den Fall ohne Treffer. Ein
+    // Unterscheiden waere hier keine Verbesserung, sondern die Gefahr,
+    // dass jemand den Fehlerzweig spaeter „grosszuegiger" behandelt.
     const { data: caregiver } = await admin
       .from('caregivers')
       .select('organization_id')

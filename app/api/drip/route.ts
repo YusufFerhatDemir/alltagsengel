@@ -157,19 +157,56 @@ export const POST = withTracking(async function POST(request: Request) {
     const fehlgeschlagen = { day3: 0, day7: 0, day14: 0 }
 
     // Alle Kunden ohne Buchung laden
-    const { data: customers } = await supabaseAdmin
+    const { data: customers, error: customersFehler } = await supabaseAdmin
       .from('profiles')
       .select('id, email, first_name, referral_code, created_at')
       .eq('role', 'kunde')
+
+    if (customersFehler) {
+      return NextResponse.json(
+        { error: 'Die Kundenliste konnte nicht gelesen werden — der Lauf wurde abgebrochen, es wurde nichts versendet.' },
+        { status: 500 },
+      )
+    }
 
     if (!customers || customers.length === 0) {
       return NextResponse.json({ message: 'Keine Kunden gefunden', sent, fehlgeschlagen })
     }
 
-    // Kunden mit Buchungen identifizieren
-    const { data: bookings } = await supabaseAdmin
+    // ── DIESE LISTE IST DIE SPERRLISTE DES VERSANDS ─────────────────
+    //
+    // Wer hier drin steht, hat gebucht und bekommt die Drip-Mail
+    // („Sie haben noch nicht gebucht") NICHT. Bei verworfenem Fehler war
+    // die Menge leer — und damit galt JEDER Kunde als Nichtbucher. Der
+    // Lauf haette langjaehrige Kundschaft angeschrieben, sie habe noch
+    // nie gebucht: eine Aussage, die nach aussen geht, beim Empfaenger
+    // ankommt und sich nicht zurueckholen laesst.
+    //
+    // An einem Weg, der Post verschickt, ist die leere Sperrliste die
+    // gefaehrlichste Form des verworfenen Fehlers. Deshalb bricht der
+    // Lauf ab, statt im Zweifel zu senden.
+    // TODO (MITTEL, Dienstschluessel-Pass 01.09.2026): diese Abfrage —
+    // wie die Kundenliste darueber — laeuft OHNE Mandantenfilter ueber
+    // alle Organisationen. Solange Alltagsengel der einzige Betrieb mit
+    // Endkundengeschaeft ist, trifft das denselben Personenkreis; sobald
+    // ein zweiter Mandant Privatkundschaft fuehrt, verschickt dieser
+    // Lauf Alltagsengel-Werbung an dessen Kundschaft. Fuer den Fix
+    // braucht es eine Festlegung, welcher Mandant die Drip-Strecke
+    // fahren darf — das ist eine Produktentscheidung, keine Codefrage,
+    // und deshalb hier nur vermerkt statt still geaendert.
+    const { data: bookings, error: bookingsFehler } = await supabaseAdmin
       .from('bookings')
       .select('customer_id')
+
+    if (bookingsFehler) {
+      return NextResponse.json(
+        {
+          error: 'Die bereits buchende Kundschaft konnte nicht ermittelt werden — der Lauf wurde '
+            + 'abgebrochen. Ohne diese Sperrliste würden Bestandskunden angeschrieben, sie hätten nie gebucht.',
+        },
+        { status: 500 },
+      )
+    }
 
     const customersWithBookings = new Set(bookings?.map(b => b.customer_id) || [])
 

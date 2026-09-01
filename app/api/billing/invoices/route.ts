@@ -66,13 +66,29 @@ export const GET = withTracking(async function GET(request: Request) {
   // eine N+1-Abfrage ueber die gesamte Rechnungsliste.
   const creditedByInvoice = new Map<string, number>()
   if (invoiceIds.length > 0) {
-    const { data: credits } = await admin
+    // Ohne die Gutschriften ist der ausgewiesene Offenbetrag ZU HOCH.
+    //
+    // Faellt diese Abfrage aus, blieb die Zuordnung leer, jede Rechnung
+    // galt als ungutgeschrieben und die Liste zeigte den vollen Betrag als
+    // offen — auch bei einer laengst vollstaendig gutgeschriebenen
+    // Rechnung. Genau diese Liste ist die Grundlage fuers Anmahnen: der
+    // verworfene Fehler haette also eine Forderung angemahnt, die es nicht
+    // mehr gibt.
+    const { data: credits, error: creditsFehler } = await admin
       .from('invoice_corrections')
       .select('original_invoice_id, original_amount_cents, corrected_amount_cents')
       .eq('organization_id', organizationId)
       .eq('correction_type', 'gutschrift')
       .in('original_invoice_id', invoiceIds)
       .is('deleted_at', null)
+
+    if (creditsFehler) {
+      log.error('Gutschriften nicht lesbar', { errorMessage: creditsFehler.message })
+      return NextResponse.json(
+        { error: 'Die Gutschriften konnten nicht geladen werden. Die Rechnungsliste wird nicht angezeigt, weil die Offenbeträge sonst zu hoch wären.' },
+        { status: 500 },
+      )
+    }
 
     for (const c of credits || []) {
       const orig = c.original_amount_cents || 0

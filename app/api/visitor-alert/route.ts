@@ -236,11 +236,23 @@ export const POST = withTracking(async function POST(req: NextRequest) {
 
     // In-App Notification — nur Stamm-Org-Admins (Multi-Mandant-sicher)
     const STAMM_ORG_ID = '00000000-0000-4000-8000-000460629986'
-    const { data: admins } = await supabase
+    const { data: admins, error: adminsFehler } = await supabase
       .from('organization_members')
       .select('user_id')
       .eq('organization_id', STAMM_ORG_ID)
       .in('role', ['admin', 'owner'])
+
+    // Der Alert ist der ganze Zweck dieser Route. Faellt die
+    // Empfaengerliste aus, wird nichts eingestellt — und weil die Route
+    // ohnehin `ok: true` antwortet, waere das nach aussen nicht von
+    // einem zugestellten Alert zu unterscheiden. Es muss wenigstens im
+    // Protokoll stehen.
+    if (adminsFehler) {
+      log.errorWithException(
+        'Empfängerliste für den Besucher-Alert nicht lesbar — keine In-App-Meldung eingestellt',
+        new Error(adminsFehler.message),
+      )
+    }
 
     if (admins) {
       const notifs = admins.map(a => ({

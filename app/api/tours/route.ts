@@ -111,11 +111,23 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     // Verfuegbarkeitspruefung eingegangen. Wenig Ertrag fuer einen
     // Angreifer, aber ein Lesezugriff ueber die Mandantengrenze bleibt
     // einer, und der Dienstschluessel hebt den org_fence auf.
-    const { data: vorhandene } = await admin
+    const { data: vorhandene, error: vorhandeneFehler } = await admin
       .from('assignments')
       .select('start_time, end_time')
       .eq('organization_id', auth.ctx.organizationId)
       .in('id', vorhandeneIds)
+    // Diese Zeiten gehen unmittelbar in die Verfuegbarkeitspruefung. Bei
+    // verworfenem Fehler blieben die Listen leer, die Pruefung sah eine
+    // Tour ohne bestehende Termine — und ein Engel, der laengst verplant
+    // ist, galt als frei. Der Kommentar direkt darueber begruendet den
+    // Mandanten-Fence auf derselben Abfrage; der Fehlerfall gehoert
+    // genauso dazu, sonst pruefen wir sauber abgegrenzt gegen nichts.
+    if (vorhandeneFehler) {
+      return NextResponse.json(
+        { error: 'Die bestehenden Einsätze konnten nicht gelesen werden — die Tour wurde NICHT angelegt, weil die Verfügbarkeit sonst ungeprüft bliebe.' },
+        { status: 500 },
+      )
+    }
     for (const a of vorhandene ?? []) {
       if (a.start_time) vorabStartZeiten.push(a.start_time)
       if (a.end_time) vorabEndZeiten.push(a.end_time)
@@ -212,7 +224,7 @@ export const POST = withTracking(async function POST(req: NextRequest) {
   const wochentag = datum.getUTCDay() === 0 ? 7 : datum.getUTCDay()
   const montag = new Date(datum); montag.setUTCDate(datum.getUTCDate() - (wochentag - 1))
   const sonntag = new Date(montag); sonntag.setUTCDate(montag.getUTCDate() + 6)
-  const { data: wochenTouren } = await admin
+  const { data: wochenTouren, error: wochenFehler } = await admin
     .from('tours')
     .select('id, gesamt_fahrzeit_minuten, tour_stops(geplante_ankunft, geplantes_ende, fahrzeit_minuten)')
     .eq('organization_id', auth.ctx.organizationId)
@@ -220,6 +232,17 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     .gte('tour_date', datumBerlin(montag))
     .lte('tour_date', datumBerlin(sonntag))
     .neq('status', 'STORNIERT')
+  // Aus dieser Summe entsteht die Warnung vor der Wochenueberlastung.
+  // Blieb sie bei einem Fehler auf 0, war jede Woche leer und jede
+  // zusaetzliche Tour unbedenklich — die Kapazitaetsgrenze eines
+  // Mitarbeiters ist aber Arbeitszeitrecht, nicht Komfort. Sie darf
+  // nicht daran scheitern, dass eine Abfrage stumm ausfaellt.
+  if (wochenFehler) {
+    return NextResponse.json(
+      { error: 'Die Touren der Woche konnten nicht gelesen werden — die Tour wurde NICHT angelegt, weil die Wochenkapazität sonst ungeprüft bliebe.' },
+      { status: 500 },
+    )
+  }
   const verplant = (wochenTouren ?? []).reduce((summe, t) =>
     summe + tourGesamtMinuten((t.tour_stops ?? []).map((s, i) => ({
       position: i + 1,

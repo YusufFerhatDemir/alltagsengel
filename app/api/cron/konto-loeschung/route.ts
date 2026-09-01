@@ -77,10 +77,25 @@ export const GET = withTracking(async function GET(request: Request) {
     const orgVonKonto = new Map<string, string>()
     const idListe = (kandidaten ?? []).map(k => k.id)
     if (idListe.length > 0) {
-      const { data: mitgliedschaften } = await admin
+      const { data: mitgliedschaften, error: mitgliedschaftenFehler } = await admin
         .from('organization_members')
         .select('user_id, organization_id')
         .in('user_id', idListe)
+      // Genau der Fall, den der Kommentar darueber verhindern soll: bei
+      // verworfenem Fehler bleibt die Zuordnung leer, der
+      // Protokolleintrag traegt keinen Mandanten und landet ueber
+      // current_org_id() in der Stamm-Organisation. Der Nachweis, dass
+      // ein Konto geloescht wurde, waere dann beim falschen Mandanten
+      // abgelegt — und beim richtigen gar nicht.
+      if (mitgliedschaftenFehler) {
+        return NextResponse.json(
+          {
+            error: 'Mandantenzuordnung der Löschkandidaten nicht lesbar — der Lauf bricht ab, '
+              + 'damit die Löschprotokolle nicht in der Stamm-Organisation landen.',
+          },
+          { status: 500 },
+        )
+      }
       for (const m of mitgliedschaften ?? []) {
         if (!orgVonKonto.has(m.user_id)) orgVonKonto.set(m.user_id, m.organization_id)
       }
