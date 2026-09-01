@@ -375,17 +375,18 @@ function DocumentModal({ assignment: a, onClose, onSave, saving }: {
           {a.client_name} — {fmtTime(a.start_time)}–{fmtTime(a.end_time)}
         </p>
 
-        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink3)', marginBottom: 4, display: 'block' }}>
+        <label htmlFor="einsaetze-erbrachte-leistung" style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink3)', marginBottom: 4, display: 'block' }}>
           Erbrachte Leistung
         </label>
-        <select value={leistung} onChange={e => setLeistung(e.target.value)} style={mobileSelect}>
+        <select id="einsaetze-erbrachte-leistung" value={leistung} onChange={e => setLeistung(e.target.value)} style={mobileSelect}>
           {SERVICE_TYPES.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
 
-        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink3)', marginBottom: 4, display: 'block', marginTop: 12 }}>
+        <label htmlFor="einsaetze-bemerkungen" style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink3)', marginBottom: 4, display: 'block', marginTop: 12 }}>
           Bemerkungen
         </label>
         <textarea
+          id="einsaetze-bemerkungen"
           value={bemerkungen}
           onChange={e => setBemerkungen(e.target.value)}
           placeholder="Besonderheiten, Beobachtungen..."
@@ -394,11 +395,12 @@ function DocumentModal({ assignment: a, onClose, onSave, saving }: {
         />
 
         <div style={{ marginTop: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink3)', marginBottom: 4, display: 'block' }}>
+          <label htmlFor="einsaetze-unterschrift-klient-angehoeriger" style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink3)', marginBottom: 4, display: 'block' }}>
             Unterschrift Klient/Angehöriger
           </label>
           <div style={{ display: 'flex', gap: 10, marginBottom: 8 }}>
             <input
+              id="einsaetze-unterschrift-klient-angehoeriger"
               value={signerName}
               onChange={e => setSignerName(e.target.value)}
               placeholder="Name des Unterzeichners"

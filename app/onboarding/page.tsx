@@ -207,12 +207,13 @@ export default function OnboardingPage() {
             <h2 style={{ fontSize: 20, color: '#2A2419', marginTop: 0 }}>Ihr Pflegedienst</h2>
             <div style={{ display: 'grid', gap: 14 }}>
               <div>
-                <label style={label}>Firmenname *</label>
-                <input style={input} value={name} onChange={e => setName(e.target.value)} placeholder="z. B. Pflegedienst Sonnenschein GmbH" />
+                <label htmlFor="onboarding-firmenname" style={label}>Firmenname *</label>
+                <input id="onboarding-firmenname" style={input} value={name} onChange={e => setName(e.target.value)} placeholder="z. B. Pflegedienst Sonnenschein GmbH" />
               </div>
               <div>
-                <label style={label}>IK-Nummer (Institutionskennzeichen) *</label>
+                <label htmlFor="onboarding-ik-nummer-institutionskennzeichen" style={label}>IK-Nummer (Institutionskennzeichen) *</label>
                 <input
+                  id="onboarding-ik-nummer-institutionskennzeichen"
                   style={{ ...input, ...(ikError ? { border: '1px solid #C96B3C' } : {}) }}
                   value={ik} onChange={e => handleIkChange(e.target.value)}
                   placeholder="9 Ziffern, z. B. 460629986" inputMode="numeric" maxLength={11}
@@ -223,12 +224,13 @@ export default function OnboardingPage() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
                 <div>
-                  <label style={label}>Straße & Hausnummer</label>
-                  <input style={input} value={strasse} onChange={e => setStrasse(e.target.value)} />
+                  <label htmlFor="onboarding-strasse-hausnummer" style={label}>Straße & Hausnummer</label>
+                  <input id="onboarding-strasse-hausnummer" style={input} value={strasse} onChange={e => setStrasse(e.target.value)} />
                 </div>
                 <div>
-                  <label style={label}>PLZ</label>
+                  <label htmlFor="onboarding-plz" style={label}>PLZ</label>
                   <input
+                    id="onboarding-plz"
                     style={input}
                     value={plz}
                     onChange={e => setPlz(e.target.value.replace(/\D/g, '').slice(0, 5))}
@@ -239,12 +241,12 @@ export default function OnboardingPage() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
-                  <label style={label}>Ort</label>
-                  <input style={input} value={ort} onChange={e => setOrt(e.target.value)} />
+                  <label htmlFor="onboarding-ort" style={label}>Ort</label>
+                  <input id="onboarding-ort" style={input} value={ort} onChange={e => setOrt(e.target.value)} />
                 </div>
                 <div>
-                  <label style={label}>Bundesland *</label>
-                  <select style={input} value={bundesland} onChange={e => setBundesland(e.target.value)}>
+                  <label htmlFor="onboarding-bundesland" style={label}>Bundesland *</label>
+                  <select id="onboarding-bundesland" style={input} value={bundesland} onChange={e => setBundesland(e.target.value)}>
                     {Object.entries(BUNDESLAND_NAMEN).map(([code, name]) => (
                       <option key={code} value={code}>{name}</option>
                     ))}
@@ -278,13 +280,13 @@ export default function OnboardingPage() {
             </p>
             <div style={{ display: 'grid', gap: 14, marginTop: 8 }}>
               <div>
-                <label style={label}>Zertifikatsdatei (.p12 oder .pem)</label>
-                <input type="file" accept=".p12,.pfx,.pem,.crt,.cer" style={{ fontSize: 14 }}
+                <label htmlFor="onboarding-zertifikatsdatei-p12-oder-pem" style={label}>Zertifikatsdatei (.p12 oder .pem)</label>
+                <input id="onboarding-zertifikatsdatei-p12-oder-pem" type="file" accept=".p12,.pfx,.pem,.crt,.cer" style={{ fontSize: 14 }}
                   onChange={e => setZertDatei(e.target.files?.[0] || null)} />
               </div>
               <div>
-                <label style={label}>Passwort (nur bei .p12-Dateien)</label>
-                <input type="password" style={input} value={zertPasswort} onChange={e => setZertPasswort(e.target.value)} autoComplete="off" />
+                <label htmlFor="onboarding-passwort-nur-bei-p12-dateien" style={label}>Passwort (nur bei .p12-Dateien)</label>
+                <input id="onboarding-passwort-nur-bei-p12-dateien" type="password" style={input} value={zertPasswort} onChange={e => setZertPasswort(e.target.value)} autoComplete="off" />
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>

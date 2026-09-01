@@ -347,10 +347,11 @@ export default function KundeProfilPage() {
               <p style={{ fontSize: 13, color: 'var(--ink3)', lineHeight: 1.5, marginBottom: 14 }}>
                 Alle deine Daten werden unwiderruflich gelöscht: Profil, Buchungen, Nachrichten und Dokumente. Diese Aktion kann nicht rückgängig gemacht werden.
               </p>
-              <label style={{ fontSize: 12, color: 'var(--ink3)', fontWeight: 500, display: 'block', marginBottom: 6 }}>
+              <label htmlFor="profil-zur-bestaetigung-dein-aktuelles-passwort" style={{ fontSize: 12, color: 'var(--ink3)', fontWeight: 500, display: 'block', marginBottom: 6 }}>
                 Zur Bestätigung: Dein aktuelles Passwort
               </label>
               <input
+                id="profil-zur-bestaetigung-dein-aktuelles-passwort"
                 type="password"
                 autoFocus
                 autoComplete="current-password"

@@ -256,8 +256,9 @@ export default function UrlaubPage() {
               Abwesenheit beantragen
             </div>
 
-            <label style={labelStyle}>Art</label>
+            <label htmlFor="urlaub-art" style={labelStyle}>Art</label>
             <select
+              id="urlaub-art"
               value={formTyp}
               onChange={e => setFormTyp(e.target.value)}
               style={inputStyle}
@@ -269,12 +270,12 @@ export default function UrlaubPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
               <div>
-                <label style={labelStyle}>Von</label>
-                <input type="date" value={formVon} onChange={e => setFormVon(e.target.value)} style={inputStyle} />
+                <label htmlFor="urlaub-von" style={labelStyle}>Von</label>
+                <input id="urlaub-von" type="date" value={formVon} onChange={e => setFormVon(e.target.value)} style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Bis</label>
-                <input type="date" value={formBis} onChange={e => setFormBis(e.target.value)} style={inputStyle} />
+                <label htmlFor="urlaub-bis" style={labelStyle}>Bis</label>
+                <input id="urlaub-bis" type="date" value={formBis} onChange={e => setFormBis(e.target.value)} style={inputStyle} />
               </div>
             </div>
 
@@ -289,8 +290,9 @@ export default function UrlaubPage() {
               <label htmlFor="halberTag" style={{ fontSize: 13, color: 'var(--ink)' }}>Halber Tag</label>
             </div>
 
-            <label style={{ ...labelStyle, marginTop: 10 }}>Bemerkung (optional)</label>
+            <label htmlFor="urlaub-bemerkung-optional" style={{ ...labelStyle, marginTop: 10 }}>Bemerkung (optional)</label>
             <textarea
+              id="urlaub-bemerkung-optional"
               value={formBemerkung}
               onChange={e => setFormBemerkung(e.target.value)}
               rows={3}

@@ -185,20 +185,20 @@ export default function FahrerProfilPage() {
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={labelStyle}>Firmenname</label>
-                <input value={companyName} onChange={e => setCompanyName(e.target.value)} style={inputStyle} />
+                <label htmlFor="profil-firmenname" style={labelStyle}>Firmenname</label>
+                <input id="profil-firmenname" value={companyName} onChange={e => setCompanyName(e.target.value)} style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Konzessionsnummer</label>
-                <input value={licenseNumber} onChange={e => setLicenseNumber(e.target.value)} style={inputStyle} />
+                <label htmlFor="profil-konzessionsnummer" style={labelStyle}>Konzessionsnummer</label>
+                <input id="profil-konzessionsnummer" value={licenseNumber} onChange={e => setLicenseNumber(e.target.value)} style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Adresse</label>
-                <input value={address} onChange={e => setAddress(e.target.value)} style={inputStyle} />
+                <label htmlFor="profil-adresse" style={labelStyle}>Adresse</label>
+                <input id="profil-adresse" value={address} onChange={e => setAddress(e.target.value)} style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Stadt</label>
-                <input value={city} onChange={e => setCity(e.target.value)} style={inputStyle} />
+                <label htmlFor="profil-stadt" style={labelStyle}>Stadt</label>
+                <input id="profil-stadt" value={city} onChange={e => setCity(e.target.value)} style={inputStyle} />
               </div>
             </div>
           </div>
@@ -210,8 +210,8 @@ export default function FahrerProfilPage() {
           }}>
             <div style={{ fontSize: '15px', fontWeight: '600', color: '#DBA84A', marginBottom: '16px' }}>Kontakt</div>
             <div>
-              <label style={labelStyle}>Telefon</label>
-              <input value={phone} onChange={e => setPhone(e.target.value)} style={inputStyle} />
+              <label htmlFor="profil-telefon" style={labelStyle}>Telefon</label>
+              <input id="profil-telefon" value={phone} onChange={e => setPhone(e.target.value)} style={inputStyle} />
             </div>
           </div>
 

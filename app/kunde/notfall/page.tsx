@@ -579,8 +579,9 @@ export default function NotfallPage() {
                   Gesundheitsdaten
                 </h3>
                 <div style={{ marginBottom: '14px' }}>
-                  <label style={s.label}>Blutgruppe</label>
+                  <label htmlFor="notfall-blutgruppe" style={s.label}>Blutgruppe</label>
                   <select
+                    id="notfall-blutgruppe"
                     value={notfallForm.blutgruppe}
                     onChange={(e) => setNotfallForm({ ...notfallForm, blutgruppe: e.target.value })}
                     style={s.input}
@@ -592,8 +593,9 @@ export default function NotfallPage() {
                   </select>
                 </div>
                 <div style={{ marginBottom: '14px' }}>
-                  <label style={s.label}>Allergien</label>
+                  <label htmlFor="notfall-allergien" style={s.label}>Allergien</label>
                   <textarea
+                    id="notfall-allergien"
                     value={notfallForm.allergien}
                     onChange={(e) => setNotfallForm({ ...notfallForm, allergien: e.target.value })}
                     style={{ ...s.input, minHeight: '80px', fontFamily: 'inherit', resize: 'vertical' as const }}
@@ -601,8 +603,9 @@ export default function NotfallPage() {
                   />
                 </div>
                 <div>
-                  <label style={s.label}>Vorerkrankungen</label>
+                  <label htmlFor="notfall-vorerkrankungen" style={s.label}>Vorerkrankungen</label>
                   <textarea
+                    id="notfall-vorerkrankungen"
                     value={notfallForm.vorerkrankungen}
                     onChange={(e) => setNotfallForm({ ...notfallForm, vorerkrankungen: e.target.value })}
                     style={{ ...s.input, minHeight: '80px', fontFamily: 'inherit', resize: 'vertical' as const }}
@@ -617,20 +620,20 @@ export default function NotfallPage() {
                   Notfallkontakt
                 </h3>
                 <div style={{ marginBottom: '14px' }}>
-                  <label style={s.label}>Name</label>
-                  <input type="text" value={notfallForm.notfallkontakt_name}
+                  <label htmlFor="notfall-name" style={s.label}>Name</label>
+                  <input id="notfall-name" type="text" value={notfallForm.notfallkontakt_name}
                     onChange={(e) => setNotfallForm({ ...notfallForm, notfallkontakt_name: e.target.value })}
                     style={s.input} placeholder="Vor- und Nachname" />
                 </div>
                 <div style={{ marginBottom: '14px' }}>
-                  <label style={s.label}>Telefon</label>
-                  <input type="tel" value={notfallForm.notfallkontakt_telefon}
+                  <label htmlFor="notfall-telefon" style={s.label}>Telefon</label>
+                  <input id="notfall-telefon" type="tel" value={notfallForm.notfallkontakt_telefon}
                     onChange={(e) => setNotfallForm({ ...notfallForm, notfallkontakt_telefon: e.target.value })}
                     style={s.input} placeholder="+49 ..." />
                 </div>
                 <div>
-                  <label style={s.label}>Beziehung</label>
-                  <select value={notfallForm.notfallkontakt_beziehung}
+                  <label htmlFor="notfall-beziehung" style={s.label}>Beziehung</label>
+                  <select id="notfall-beziehung" value={notfallForm.notfallkontakt_beziehung}
                     onChange={(e) => setNotfallForm({ ...notfallForm, notfallkontakt_beziehung: e.target.value })}
                     style={s.input}>
                     <option value="">Wählen</option>
@@ -647,14 +650,14 @@ export default function NotfallPage() {
                   Versicherung
                 </h3>
                 <div style={{ marginBottom: '14px' }}>
-                  <label style={s.label}>Krankenkasse</label>
-                  <input type="text" value={notfallForm.versicherung}
+                  <label htmlFor="notfall-krankenkasse" style={s.label}>Krankenkasse</label>
+                  <input id="notfall-krankenkasse" type="text" value={notfallForm.versicherung}
                     onChange={(e) => setNotfallForm({ ...notfallForm, versicherung: e.target.value })}
                     style={s.input} placeholder="z.B. AOK, TK, Barmer" />
                 </div>
                 <div>
-                  <label style={s.label}>Versicherungsnummer</label>
-                  <input type="text" value={notfallForm.versicherungsnummer}
+                  <label htmlFor="notfall-versicherungsnummer" style={s.label}>Versicherungsnummer</label>
+                  <input id="notfall-versicherungsnummer" type="text" value={notfallForm.versicherungsnummer}
                     onChange={(e) => setNotfallForm({ ...notfallForm, versicherungsnummer: e.target.value })}
                     style={s.input} />
                 </div>
@@ -666,14 +669,14 @@ export default function NotfallPage() {
                   Hausarzt
                 </h3>
                 <div style={{ marginBottom: '14px' }}>
-                  <label style={s.label}>Name</label>
-                  <input type="text" value={notfallForm.hausarzt_name}
+                  <label htmlFor="notfall-name-2" style={s.label}>Name</label>
+                  <input id="notfall-name-2" type="text" value={notfallForm.hausarzt_name}
                     onChange={(e) => setNotfallForm({ ...notfallForm, hausarzt_name: e.target.value })}
                     style={s.input} placeholder="Dr. ..." />
                 </div>
                 <div>
-                  <label style={s.label}>Telefon</label>
-                  <input type="tel" value={notfallForm.hausarzt_telefon}
+                  <label htmlFor="notfall-telefon-2" style={s.label}>Telefon</label>
+                  <input id="notfall-telefon-2" type="tel" value={notfallForm.hausarzt_telefon}
                     onChange={(e) => setNotfallForm({ ...notfallForm, hausarzt_telefon: e.target.value })}
                     style={s.input} />
                 </div>
@@ -906,16 +909,16 @@ export default function NotfallPage() {
 
                 {/* Medikament Name */}
                 <div>
-                  <label style={s.label}>Medikament *</label>
-                  <input type="text" value={medForm.medikament_name}
+                  <label htmlFor="notfall-medikament" style={s.label}>Medikament *</label>
+                  <input id="notfall-medikament" type="text" value={medForm.medikament_name}
                     onChange={(e) => setMedForm({ ...medForm, medikament_name: e.target.value })}
                     style={s.input} placeholder="z.B. Ibuprofen 400" />
                 </div>
 
                 {/* Wirkstoff */}
                 <div>
-                  <label style={s.label}>Wirkstoff</label>
-                  <input type="text" value={medForm.wirkstoff}
+                  <label htmlFor="notfall-wirkstoff" style={s.label}>Wirkstoff</label>
+                  <input id="notfall-wirkstoff" type="text" value={medForm.wirkstoff}
                     onChange={(e) => setMedForm({ ...medForm, wirkstoff: e.target.value })}
                     style={s.input} placeholder="z.B. Ibuprofen" />
                 </div>
@@ -923,14 +926,14 @@ export default function NotfallPage() {
                 {/* Dosierung + Einheit */}
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <div style={{ flex: 2 }}>
-                    <label style={s.label}>Dosierung *</label>
-                    <input type="number" value={medForm.dosierung}
+                    <label htmlFor="notfall-dosierung" style={s.label}>Dosierung *</label>
+                    <input id="notfall-dosierung" type="number" value={medForm.dosierung}
                       onChange={(e) => setMedForm({ ...medForm, dosierung: e.target.value })}
                       style={s.input} placeholder="400" />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <label style={s.label}>Einheit *</label>
-                    <select value={medForm.einheit}
+                    <label htmlFor="notfall-einheit" style={s.label}>Einheit *</label>
+                    <select id="notfall-einheit" value={medForm.einheit}
                       onChange={(e) => setMedForm({ ...medForm, einheit: e.target.value })}
                       style={s.input}>
                       {['mg', 'ml', 'Tabletten', 'Tropfen', 'IE', 'µg'].map(e => (
@@ -942,8 +945,8 @@ export default function NotfallPage() {
 
                 {/* Einnahmezeiten */}
                 <div>
-                  <label style={s.label}>Einnahmezeiten</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <div id="notfall-einnahmezeiten-label" style={s.label}>Einnahmezeiten</div>
+                  <div role="group" aria-labelledby="notfall-einnahmezeiten-label" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                     {[
                       { key: 'morgens', label: '☀️ Morgens' },
                       { key: 'mittags', label: '🌤️ Mittags' },
@@ -980,16 +983,16 @@ export default function NotfallPage() {
 
                 {/* Einnahmehinweis */}
                 <div>
-                  <label style={s.label}>Einnahmehinweis</label>
-                  <input type="text" value={medForm.einnahme_hinweis}
+                  <label htmlFor="notfall-einnahmehinweis" style={s.label}>Einnahmehinweis</label>
+                  <input id="notfall-einnahmehinweis" type="text" value={medForm.einnahme_hinweis}
                     onChange={(e) => setMedForm({ ...medForm, einnahme_hinweis: e.target.value })}
                     style={s.input} placeholder="z.B. Mit Wasser, nach dem Essen" />
                 </div>
 
                 {/* Verordnet von */}
                 <div>
-                  <label style={s.label}>Verordnet von</label>
-                  <input type="text" value={medForm.verordnet_von}
+                  <label htmlFor="notfall-verordnet-von" style={s.label}>Verordnet von</label>
+                  <input id="notfall-verordnet-von" type="text" value={medForm.verordnet_von}
                     onChange={(e) => setMedForm({ ...medForm, verordnet_von: e.target.value })}
                     style={s.input} placeholder="z.B. Dr. Müller" />
                 </div>
@@ -1029,14 +1032,14 @@ export default function NotfallPage() {
                 {!medForm.dauermedikation && (
                   <div style={{ display: 'flex', gap: '12px' }}>
                     <div style={{ flex: 1 }}>
-                      <label style={s.label}>Beginn</label>
-                      <input type="date" value={medForm.beginn_datum}
+                      <label htmlFor="notfall-beginn" style={s.label}>Beginn</label>
+                      <input id="notfall-beginn" type="date" value={medForm.beginn_datum}
                         onChange={(e) => setMedForm({ ...medForm, beginn_datum: e.target.value })}
                         style={s.input} />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <label style={s.label}>Ende</label>
-                      <input type="date" value={medForm.end_datum}
+                      <label htmlFor="notfall-ende" style={s.label}>Ende</label>
+                      <input id="notfall-ende" type="date" value={medForm.end_datum}
                         onChange={(e) => setMedForm({ ...medForm, end_datum: e.target.value })}
                         style={s.input} />
                     </div>
@@ -1045,8 +1048,8 @@ export default function NotfallPage() {
 
                 {/* Notizen */}
                 <div>
-                  <label style={s.label}>Notizen</label>
-                  <textarea value={medForm.notizen}
+                  <label htmlFor="notfall-notizen" style={s.label}>Notizen</label>
+                  <textarea id="notfall-notizen" value={medForm.notizen}
                     onChange={(e) => setMedForm({ ...medForm, notizen: e.target.value })}
                     style={{ ...s.input, minHeight: '70px', fontFamily: 'inherit', resize: 'vertical' as const }}
                     placeholder="Weitere Hinweise..." />

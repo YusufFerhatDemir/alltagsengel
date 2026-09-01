@@ -189,10 +189,11 @@ export default function KommunikationPage() {
             <form onSubmit={handleSend}>
               {zugaenge.length > 1 && (
                 <div style={{ marginBottom: 12 }}>
-                  <label style={{ fontSize: 12, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>
+                  <label htmlFor="kommunikation-betrifft" style={{ fontSize: 12, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>
                     Betrifft
                   </label>
                   <select
+                    id="kommunikation-betrifft"
                     value={selectedZugang}
                     onChange={e => setSelectedZugang(e.target.value)}
                     style={{
@@ -210,10 +211,11 @@ export default function KommunikationPage() {
               )}
 
               <div style={{ marginBottom: 12 }}>
-                <label style={{ fontSize: 12, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>
+                <label htmlFor="kommunikation-betreff" style={{ fontSize: 12, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>
                   Betreff
                 </label>
                 <input
+                  id="kommunikation-betreff"
                   type="text"
                   value={betreff}
                   onChange={e => setBetreff(e.target.value)}
@@ -228,10 +230,11 @@ export default function KommunikationPage() {
               </div>
 
               <div style={{ marginBottom: 12 }}>
-                <label style={{ fontSize: 12, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>
+                <label htmlFor="kommunikation-nachricht" style={{ fontSize: 12, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>
                   Nachricht
                 </label>
                 <textarea
+                  id="kommunikation-nachricht"
                   value={inhalt}
                   onChange={e => setInhalt(e.target.value)}
                   placeholder="Ihre Nachricht..."

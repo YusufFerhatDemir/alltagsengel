@@ -274,10 +274,11 @@ export default function MeinProfilPage() {
             <div role="dialog" aria-modal="true" aria-label="Konto löschen?" onClick={e => e.stopPropagation()} style={{ background: 'var(--coal2)', borderRadius: 18, padding: 24, maxWidth: 340, width: '100%', border: '1px solid rgba(255,80,80,.2)' }}>
               <div style={{ fontSize: 16, fontWeight: 600, color: '#ff6b6b', marginBottom: 8 }}>Konto löschen?</div>
               <p style={{ fontSize: 13, color: 'var(--ink3)', lineHeight: 1.5, marginBottom: 14 }}>Alle deine Daten werden unwiderruflich gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.</p>
-              <label style={{ fontSize: 12, color: 'var(--ink3)', fontWeight: 500, display: 'block', marginBottom: 6 }}>
+              <label htmlFor="profil-zur-bestaetigung-dein-aktuelles-passwort" style={{ fontSize: 12, color: 'var(--ink3)', fontWeight: 500, display: 'block', marginBottom: 6 }}>
                 Zur Bestätigung: Dein aktuelles Passwort
               </label>
               <input
+                id="profil-zur-bestaetigung-dein-aktuelles-passwort"
                 type="password"
                 autoFocus
                 autoComplete="current-password"
