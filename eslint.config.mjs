@@ -19,6 +19,19 @@ const eslintConfig = defineConfig([
     files: ["app/pflegecoach/**/*.{ts,tsx}"],
     rules: jsxA11y.flatConfigs.recommended.rules,
   },
+  // Diese eine a11y-Regel gilt global, nicht nur im PflegeCoach: der
+  // Restbestand war es einmal wert, auditiert zu werden. Alle 132 Dateien
+  // mit <label> im Repo sind durchgegangen, die 257 Fundstellen sind
+  // geschlossen (htmlFor+id, bzw. role="group"+aria-labelledby, wo die
+  // Beschriftung eine Gruppe benennt und kein einzelnes Feld). Der Schalter
+  // hält den Stand: eine neue Beschriftung ohne Feldbezug bricht CI, statt
+  // still als Warnung mitzulaufen. Die übrigen a11y-Regeln bleiben bewusst
+  // auf app/pflegecoach/** beschränkt — die sind weiter nicht auditiert.
+  {
+    rules: {
+      "jsx-a11y/label-has-associated-control": "error",
+    },
+  },
   // ── Globale Regel-Overrides ─────────────────────────────────────────
   // Diese Regeln erzeugen zusammen ~1 560 nicht sofort behebbare
   // Meldungen, die in CI als Annotations erscheinen und das Signal der
