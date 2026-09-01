@@ -109,33 +109,33 @@ export default function NeueWorkflowRegelPage() {
       <form onSubmit={handleSubmit}>
         <div style={{ maxWidth: 700 }}>
           <div style={fieldRow}>
-            <label style={fieldLabel}>Bezeichnung *</label>
-            <input style={inputStyle} value={form.bezeichnung} onChange={e => upd('bezeichnung', e.target.value)} required />
+            <label htmlFor="neu-bezeichnung" style={fieldLabel}>Bezeichnung *</label>
+            <input id="neu-bezeichnung" style={inputStyle} value={form.bezeichnung} onChange={e => upd('bezeichnung', e.target.value)} required />
           </div>
           <div style={fieldRow}>
-            <label style={fieldLabel}>Beschreibung</label>
-            <textarea style={{ ...inputStyle, minHeight: 70 }} value={form.beschreibung} onChange={e => upd('beschreibung', e.target.value)} />
+            <label htmlFor="neu-beschreibung" style={fieldLabel}>Beschreibung</label>
+            <textarea id="neu-beschreibung" style={{ ...inputStyle, minHeight: 70 }} value={form.beschreibung} onChange={e => upd('beschreibung', e.target.value)} />
           </div>
           <div style={fieldRow}>
-            <label style={fieldLabel}>WHEN — Event-Typ *</label>
-            <input style={inputStyle} value={form.event_typ} onChange={e => upd('event_typ', e.target.value)} placeholder="z.B. rechnung_ueberfaellig" required />
+            <label htmlFor="neu-when-event-typ" style={fieldLabel}>WHEN — Event-Typ *</label>
+            <input id="neu-when-event-typ" style={inputStyle} value={form.event_typ} onChange={e => upd('event_typ', e.target.value)} placeholder="z.B. rechnung_ueberfaellig" required />
           </div>
           <div style={fieldRow}>
-            <label style={fieldLabel}>Modul</label>
-            <select style={inputStyle} value={form.modul} onChange={e => upd('modul', e.target.value)}>
+            <label htmlFor="neu-modul" style={fieldLabel}>Modul</label>
+            <select id="neu-modul" style={inputStyle} value={form.modul} onChange={e => upd('modul', e.target.value)}>
               {Object.entries(WF_MODUL).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
             </select>
           </div>
 
-          <div style={fieldRow}>
-            <label style={fieldLabel}>IF — Bedingungen (optional, alle müssen erfüllt sein)</label>
+          <div role="group" aria-labelledby="neu-bedingungen-label" style={fieldRow}>
+            <div id="neu-bedingungen-label" style={fieldLabel}>IF — Bedingungen (optional, alle müssen erfüllt sein)</div>
             {bedingungen.map((b, i) => (
               <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                <input style={{ ...inputStyle, flex: 2 }} placeholder="Feld (payload-Key)" value={b.feld} onChange={e => updBedingung(i, { feld: e.target.value })} />
-                <select style={{ ...inputStyle, flex: 1 }} value={b.operator} onChange={e => updBedingung(i, { operator: e.target.value })}>
+                <input aria-label={`Feld (payload-Key), Bedingung ${i + 1}`} style={{ ...inputStyle, flex: 2 }} placeholder="Feld (payload-Key)" value={b.feld} onChange={e => updBedingung(i, { feld: e.target.value })} />
+                <select aria-label={`Operator, Bedingung ${i + 1}`} style={{ ...inputStyle, flex: 1 }} value={b.operator} onChange={e => updBedingung(i, { operator: e.target.value })}>
                   {Object.entries(WF_BEDINGUNG_OPERATOR).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
                 </select>
-                <input aria-label="Wert" style={{ ...inputStyle, flex: 2 }} placeholder="Wert" value={b.wert} onChange={e => updBedingung(i, { wert: e.target.value })} />
+                <input aria-label={`Wert, Bedingung ${i + 1}`} style={{ ...inputStyle, flex: 2 }} placeholder="Wert" value={b.wert} onChange={e => updBedingung(i, { wert: e.target.value })} />
                 <button type="button" onClick={() => removeBedingung(i)} style={{ ...secondaryBtn, color: '#D04B3B' }}>✕</button>
               </div>
             ))}
@@ -143,20 +143,20 @@ export default function NeueWorkflowRegelPage() {
           </div>
 
           <div style={fieldRow}>
-            <label style={fieldLabel}>Priorität (höher = zuerst geprüft)</label>
-            <input type="number" style={inputStyle} value={form.prioritaet} onChange={e => upd('prioritaet', e.target.value)} />
+            <label htmlFor="neu-prioritaet-hoeher-zuerst-geprueft" style={fieldLabel}>Priorität (höher = zuerst geprüft)</label>
+            <input id="neu-prioritaet-hoeher-zuerst-geprueft" type="number" style={inputStyle} value={form.prioritaet} onChange={e => upd('prioritaet', e.target.value)} />
           </div>
           <div style={fieldRow}>
-            <label style={fieldLabel}>Cooldown (Minuten, optional)</label>
-            <input type="number" style={inputStyle} value={form.cooldown_minuten} onChange={e => upd('cooldown_minuten', e.target.value)} />
+            <label htmlFor="neu-cooldown-minuten-optional" style={fieldLabel}>Cooldown (Minuten, optional)</label>
+            <input id="neu-cooldown-minuten-optional" type="number" style={inputStyle} value={form.cooldown_minuten} onChange={e => upd('cooldown_minuten', e.target.value)} />
           </div>
           <div style={fieldRow}>
-            <label style={fieldLabel}>Max. Ausführungen pro Entität (optional)</label>
-            <input type="number" style={inputStyle} value={form.max_ausfuehrungen_pro_entity} onChange={e => upd('max_ausfuehrungen_pro_entity', e.target.value)} />
+            <label htmlFor="neu-max-ausfuehrungen-pro-entitaet-optional" style={fieldLabel}>Max. Ausführungen pro Entität (optional)</label>
+            <input id="neu-max-ausfuehrungen-pro-entitaet-optional" type="number" style={inputStyle} value={form.max_ausfuehrungen_pro_entity} onChange={e => upd('max_ausfuehrungen_pro_entity', e.target.value)} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-            <input type="checkbox" checked={form.aktiv} onChange={e => upd('aktiv', e.target.checked)} />
-            <label style={{ fontSize: 13, color: 'var(--ink4)' }}>Regel ist aktiv</label>
+            <input id="neu-aktiv" type="checkbox" checked={form.aktiv} onChange={e => upd('aktiv', e.target.checked)} />
+            <label htmlFor="neu-aktiv" style={{ fontSize: 13, color: 'var(--ink4)' }}>Regel ist aktiv</label>
           </div>
         </div>
 

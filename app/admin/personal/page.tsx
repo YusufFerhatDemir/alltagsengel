@@ -163,28 +163,28 @@ export default function PersonalPage() {
             gap: 12, marginBottom: 16,
           }}>
             <div>
-              <label style={labelStil}>Vorname *</label>
-              <input style={feldStil} value={form.vorname}
+              <label htmlFor="personal-vorname" style={labelStil}>Vorname *</label>
+              <input id="personal-vorname" style={feldStil} value={form.vorname}
                 onChange={e => setForm(f => ({ ...f, vorname: e.target.value }))} />
             </div>
             <div>
-              <label style={labelStil}>Nachname *</label>
-              <input style={feldStil} value={form.nachname}
+              <label htmlFor="personal-nachname" style={labelStil}>Nachname *</label>
+              <input id="personal-nachname" style={feldStil} value={form.nachname}
                 onChange={e => setForm(f => ({ ...f, nachname: e.target.value }))} />
             </div>
             <div>
-              <label style={labelStil}>E-Mail</label>
-              <input style={feldStil} type="email" value={form.email}
+              <label htmlFor="personal-e-mail" style={labelStil}>E-Mail</label>
+              <input id="personal-e-mail" style={feldStil} type="email" value={form.email}
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
             </div>
             <div>
-              <label style={labelStil}>Telefon</label>
-              <input style={feldStil} value={form.telefon}
+              <label htmlFor="personal-telefon" style={labelStil}>Telefon</label>
+              <input id="personal-telefon" style={feldStil} value={form.telefon}
                 onChange={e => setForm(f => ({ ...f, telefon: e.target.value }))} />
             </div>
             <div>
-              <label style={labelStil}>Qualifikation</label>
-              <select style={feldStil} value={form.qualifikationsstufe}
+              <label htmlFor="personal-qualifikation" style={labelStil}>Qualifikation</label>
+              <select id="personal-qualifikation" style={feldStil} value={form.qualifikationsstufe}
                 onChange={e => setForm(f => ({ ...f, qualifikationsstufe: e.target.value }))}>
                 {Object.entries(QUALIFICATION_LEVEL).map(([k, v]) => (
                   <option key={k} value={k}>{v.label}</option>
@@ -192,8 +192,8 @@ export default function PersonalPage() {
               </select>
             </div>
             <div>
-              <label style={labelStil}>Vertragsstatus</label>
-              <select style={feldStil} value={form.vertragsstatus}
+              <label htmlFor="personal-vertragsstatus" style={labelStil}>Vertragsstatus</label>
+              <select id="personal-vertragsstatus" style={feldStil} value={form.vertragsstatus}
                 onChange={e => setForm(f => ({ ...f, vertragsstatus: e.target.value }))}>
                 {Object.entries(VERTRAGSSTATUS).map(([k, v]) => (
                   <option key={k} value={k}>{v.label}</option>
@@ -201,13 +201,13 @@ export default function PersonalPage() {
               </select>
             </div>
             <div>
-              <label style={labelStil}>Eintrittsdatum</label>
-              <input style={feldStil} type="date" value={form.eintrittsdatum}
+              <label htmlFor="personal-eintrittsdatum" style={labelStil}>Eintrittsdatum</label>
+              <input id="personal-eintrittsdatum" style={feldStil} type="date" value={form.eintrittsdatum}
                 onChange={e => setForm(f => ({ ...f, eintrittsdatum: e.target.value }))} />
             </div>
             <div>
-              <label style={labelStil}>Wochenstunden-Soll</label>
-              <input style={feldStil} type="number" min="0" max="60" step="0.5"
+              <label htmlFor="personal-wochenstunden-soll" style={labelStil}>Wochenstunden-Soll</label>
+              <input id="personal-wochenstunden-soll" style={feldStil} type="number" min="0" max="60" step="0.5"
                 value={form.wochenstundenSoll}
                 onChange={e => setForm(f => ({ ...f, wochenstundenSoll: e.target.value }))} />
             </div>

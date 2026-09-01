@@ -138,20 +138,20 @@ export default function WorkflowRegelDetailPage() {
         {editMode ? (
           <>
             <div style={fieldRow}>
-              <label style={fieldLabel}>Bezeichnung</label>
-              <input style={inputStyle} value={editData.bezeichnung ?? ''} onChange={e => setEditData(p => ({ ...p, bezeichnung: e.target.value }))} />
+              <label htmlFor="regeln-bezeichnung" style={fieldLabel}>Bezeichnung</label>
+              <input id="regeln-bezeichnung" style={inputStyle} value={editData.bezeichnung ?? ''} onChange={e => setEditData(p => ({ ...p, bezeichnung: e.target.value }))} />
             </div>
             <div style={fieldRow}>
-              <label style={fieldLabel}>Beschreibung</label>
-              <textarea style={{ ...inputStyle, minHeight: 70 }} value={editData.beschreibung ?? ''} onChange={e => setEditData(p => ({ ...p, beschreibung: e.target.value }))} />
+              <label htmlFor="regeln-beschreibung" style={fieldLabel}>Beschreibung</label>
+              <textarea id="regeln-beschreibung" style={{ ...inputStyle, minHeight: 70 }} value={editData.beschreibung ?? ''} onChange={e => setEditData(p => ({ ...p, beschreibung: e.target.value }))} />
             </div>
             <div style={fieldRow}>
-              <label style={fieldLabel}>Priorität</label>
-              <input type="number" style={inputStyle} value={editData.prioritaet ?? 100} onChange={e => setEditData(p => ({ ...p, prioritaet: parseInt(e.target.value) || 0 }))} />
+              <label htmlFor="regeln-prioritaet" style={fieldLabel}>Priorität</label>
+              <input id="regeln-prioritaet" type="number" style={inputStyle} value={editData.prioritaet ?? 100} onChange={e => setEditData(p => ({ ...p, prioritaet: parseInt(e.target.value) || 0 }))} />
             </div>
             <div style={fieldRow}>
-              <label style={fieldLabel}>Cooldown (Minuten)</label>
-              <input type="number" style={inputStyle} value={editData.cooldown_minuten ?? ''} onChange={e => setEditData(p => ({ ...p, cooldown_minuten: e.target.value ? parseInt(e.target.value) : null }))} />
+              <label htmlFor="regeln-cooldown-minuten" style={fieldLabel}>Cooldown (Minuten)</label>
+              <input id="regeln-cooldown-minuten" type="number" style={inputStyle} value={editData.cooldown_minuten ?? ''} onChange={e => setEditData(p => ({ ...p, cooldown_minuten: e.target.value ? parseInt(e.target.value) : null }))} />
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
               <button style={primaryBtn} onClick={saveDetails}>Speichern</button>
@@ -274,18 +274,18 @@ function AktionModal({
         {error && <Banner tone="danger">{error}</Banner>}
         <form onSubmit={handleSubmit}>
           <div style={fieldRow}>
-            <label style={fieldLabel}>Typ</label>
-            <select style={inputStyle} value={typ} onChange={e => setTyp(e.target.value)}>
+            <label htmlFor="regeln-typ" style={fieldLabel}>Typ</label>
+            <select id="regeln-typ" style={inputStyle} value={typ} onChange={e => setTyp(e.target.value)}>
               {Object.entries(WF_AKTION_TYP).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
             </select>
           </div>
           <div style={fieldRow}>
-            <label style={fieldLabel}>Reihenfolge</label>
-            <input type="number" style={inputStyle} value={reihenfolge} onChange={e => setReihenfolge(e.target.value)} min="1" />
+            <label htmlFor="regeln-reihenfolge" style={fieldLabel}>Reihenfolge</label>
+            <input id="regeln-reihenfolge" type="number" style={inputStyle} value={reihenfolge} onChange={e => setReihenfolge(e.target.value)} min="1" />
           </div>
           <div style={fieldRow}>
-            <label style={fieldLabel}>Konfiguration (JSON)</label>
-            <textarea style={{ ...inputStyle, minHeight: 120, fontFamily: 'monospace' }} value={konfigurationJson} onChange={e => setKonfigurationJson(e.target.value)} />
+            <label htmlFor="regeln-konfiguration-json" style={fieldLabel}>Konfiguration (JSON)</label>
+            <textarea id="regeln-konfiguration-json" style={{ ...inputStyle, minHeight: 120, fontFamily: 'monospace' }} value={konfigurationJson} onChange={e => setKonfigurationJson(e.target.value)} />
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
             <button type="button" onClick={onClose} style={secondaryBtn}>Abbrechen</button>

@@ -445,15 +445,15 @@ function MatrixTabelle({
 
                   {SCHALTBAR.map(feld => (
                     <td key={feld} style={zentriert}>
-                      <label title={MODUL_LABELS[feld]} style={{ cursor: gesperrt ? 'wait' : 'pointer', display: 'inline-flex' }}>
-                        <input
-                          type="checkbox"
-                          checked={z[feld] as boolean}
-                          disabled={gesperrt}
-                          onChange={e => onPatch(z.bundesland, { [feld]: e.target.checked })}
-                          style={{ width: 16, height: 16, accentColor: 'var(--gold2)', cursor: 'inherit' }}
-                        />
-                      </label>
+                      <input
+                        type="checkbox"
+                        title={MODUL_LABELS[feld]}
+                        aria-label={`${MODUL_LABELS[feld]} — ${z.bundesland}`}
+                        checked={z[feld] as boolean}
+                        disabled={gesperrt}
+                        onChange={e => onPatch(z.bundesland, { [feld]: e.target.checked })}
+                        style={{ width: 16, height: 16, accentColor: 'var(--gold2)', cursor: gesperrt ? 'wait' : 'pointer' }}
+                      />
                     </td>
                   ))}
 

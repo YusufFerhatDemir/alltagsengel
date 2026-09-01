@@ -372,7 +372,7 @@ export default function AdminSettings() {
             )}
           </div>
           <div style={{ marginBottom: 10 }}>
-            <label style={{ color: 'var(--dim)', fontSize: 13, display: 'block', marginBottom: 6 }}>Demo-Passwort (für Engel & Kunde Accounts):</label>
+            <label htmlFor="demo-pw-input" style={{ color: 'var(--dim)', fontSize: 13, display: 'block', marginBottom: 6 }}>Demo-Passwort (für Engel & Kunde Accounts):</label>
             <div style={{ display: 'flex', gap: 10 }}>
               <input
                 type="text"

@@ -621,8 +621,9 @@ function VerifizierungsDialog({
         <section style={{ marginTop: 20 }}>
           <h4 style={{ marginBottom: 8 }}>Status ändern</h4>
 
-          <label style={{ display: 'block', margin: '0 0 4px', fontSize: 13 }}>Neuer Status</label>
+          <label htmlFor="tarife-neuer-status" style={{ display: 'block', margin: '0 0 4px', fontSize: 13 }}>Neuer Status</label>
           <select
+            id="tarife-neuer-status"
             value={status}
             onChange={e => setStatus(e.target.value as TarifStatus)}
             style={{ width: '100%' }}

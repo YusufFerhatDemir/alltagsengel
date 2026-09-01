@@ -253,12 +253,12 @@ function EskalationsregelModal({
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div>
-              <label style={labelStyle}>Name *</label>
-              <input style={inputStyle} value={form.name} onChange={e => upd('name', e.target.value)} required />
+              <label htmlFor="eskalationen-name" style={labelStyle}>Name *</label>
+              <input id="eskalationen-name" style={inputStyle} value={form.name} onChange={e => upd('name', e.target.value)} required />
             </div>
             <div>
-              <label style={labelStyle}>Kategorie-Filter</label>
-              <select style={inputStyle} value={form.aufgaben_kategorie} onChange={e => upd('aufgaben_kategorie', e.target.value)}>
+              <label htmlFor="eskalationen-kategorie-filter" style={labelStyle}>Kategorie-Filter</label>
+              <select id="eskalationen-kategorie-filter" style={inputStyle} value={form.aufgaben_kategorie} onChange={e => upd('aufgaben_kategorie', e.target.value)}>
                 <option value="">Alle Kategorien</option>
                 {Object.entries(AUFGABEN_KATEGORIE).map(([k, v]) => (
                   <option key={k} value={k}>{v.label}</option>
@@ -266,8 +266,8 @@ function EskalationsregelModal({
               </select>
             </div>
             <div>
-              <label style={labelStyle}>Priorität-Filter</label>
-              <select style={inputStyle} value={form.aufgaben_prioritaet} onChange={e => upd('aufgaben_prioritaet', e.target.value)}>
+              <label htmlFor="eskalationen-prioritaet-filter" style={labelStyle}>Priorität-Filter</label>
+              <select id="eskalationen-prioritaet-filter" style={inputStyle} value={form.aufgaben_prioritaet} onChange={e => upd('aufgaben_prioritaet', e.target.value)}>
                 <option value="">Alle Prioritäten</option>
                 {Object.entries(AUFGABEN_PRIORITAET).map(([k, v]) => (
                   <option key={k} value={k}>{v.label}</option>
@@ -275,24 +275,24 @@ function EskalationsregelModal({
               </select>
             </div>
             <div>
-              <label style={labelStyle}>Überfällig nach (Stunden)</label>
-              <input type="number" style={inputStyle} value={form.ueberfaellig_stunden} onChange={e => upd('ueberfaellig_stunden', e.target.value)} min="1" />
+              <label htmlFor="eskalationen-ueberfaellig-nach-stunden" style={labelStyle}>Überfällig nach (Stunden)</label>
+              <input id="eskalationen-ueberfaellig-nach-stunden" type="number" style={inputStyle} value={form.ueberfaellig_stunden} onChange={e => upd('ueberfaellig_stunden', e.target.value)} min="1" />
             </div>
             <div>
-              <label style={labelStyle}>Stufe</label>
-              <input type="number" style={inputStyle} value={form.eskalationsstufe} onChange={e => upd('eskalationsstufe', e.target.value)} min="1" max="5" />
+              <label htmlFor="eskalationen-stufe" style={labelStyle}>Stufe</label>
+              <input id="eskalationen-stufe" type="number" style={inputStyle} value={form.eskalationsstufe} onChange={e => upd('eskalationsstufe', e.target.value)} min="1" max="5" />
             </div>
             <div>
-              <label style={labelStyle}>Eskalation an Rolle</label>
-              <select style={inputStyle} value={form.eskalation_an_rolle} onChange={e => upd('eskalation_an_rolle', e.target.value)}>
+              <label htmlFor="eskalationen-eskalation-an-rolle" style={labelStyle}>Eskalation an Rolle</label>
+              <select id="eskalationen-eskalation-an-rolle" style={inputStyle} value={form.eskalation_an_rolle} onChange={e => upd('eskalation_an_rolle', e.target.value)}>
                 {Object.entries(ESKALATION_AN_ROLLE).map(([k, v]) => (
                   <option key={k} value={k}>{v.label}</option>
                 ))}
               </select>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <input type="checkbox" checked={form.aktiv as boolean} onChange={e => upd('aktiv', e.target.checked)} />
-              <label style={{ fontSize: 13, color: 'var(--ink4)' }}>Regel ist aktiv</label>
+              <input id="eskalationen-aktiv" type="checkbox" checked={form.aktiv as boolean} onChange={e => upd('aktiv', e.target.checked)} />
+              <label htmlFor="eskalationen-aktiv" style={{ fontSize: 13, color: 'var(--ink4)' }}>Regel ist aktiv</label>
             </div>
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
