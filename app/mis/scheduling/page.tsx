@@ -607,8 +607,8 @@ export default function SchedulingPage() {
         <Modal open title="Neue Schicht anlegen" onClose={() => setCreateOpen(false)} width={520}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <label style={labelStyle}>Schichttyp *</label>
-              <select style={inputStyle} value={form.typ} onChange={e => handleTypChange(e.target.value)}>
+              <label htmlFor="scheduling-schichttyp" style={labelStyle}>Schichttyp *</label>
+              <select id="scheduling-schichttyp" style={inputStyle} value={form.typ} onChange={e => handleTypChange(e.target.value)}>
                 {Object.entries(SHIFT_TYPES).map(([k, v]) => (
                   <option key={k} value={k}>{v.label} ({v.zeit})</option>
                 ))}
@@ -616,31 +616,31 @@ export default function SchedulingPage() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={labelStyle}>Kunde / Einsatzort *</label>
-                <input style={inputStyle} value={form.kunde_name} onChange={e => setForm({ ...form, kunde_name: e.target.value })} placeholder="z.B. Frau Müller" />
+                <label htmlFor="scheduling-kunde-einsatzort" style={labelStyle}>Kunde / Einsatzort *</label>
+                <input id="scheduling-kunde-einsatzort" style={inputStyle} value={form.kunde_name} onChange={e => setForm({ ...form, kunde_name: e.target.value })} placeholder="z.B. Frau Müller" />
               </div>
               <div>
-                <label style={labelStyle}>Engel (optional)</label>
-                <input style={inputStyle} value={form.engel_name} onChange={e => setForm({ ...form, engel_name: e.target.value })} placeholder="Leer = offene Schicht" />
+                <label htmlFor="scheduling-engel-optional" style={labelStyle}>Engel (optional)</label>
+                <input id="scheduling-engel-optional" style={inputStyle} value={form.engel_name} onChange={e => setForm({ ...form, engel_name: e.target.value })} placeholder="Leer = offene Schicht" />
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
               <div>
-                <label style={labelStyle}>Datum *</label>
-                <input style={inputStyle} type="date" value={form.datum} onChange={e => setForm({ ...form, datum: e.target.value })} />
+                <label htmlFor="scheduling-datum" style={labelStyle}>Datum *</label>
+                <input id="scheduling-datum" style={inputStyle} type="date" value={form.datum} onChange={e => setForm({ ...form, datum: e.target.value })} />
               </div>
               <div>
-                <label style={labelStyle}>Von</label>
-                <input style={inputStyle} type="time" value={form.start_zeit} onChange={e => setForm({ ...form, start_zeit: e.target.value })} />
+                <label htmlFor="scheduling-von" style={labelStyle}>Von</label>
+                <input id="scheduling-von" style={inputStyle} type="time" value={form.start_zeit} onChange={e => setForm({ ...form, start_zeit: e.target.value })} />
               </div>
               <div>
-                <label style={labelStyle}>Bis</label>
-                <input style={inputStyle} type="time" value={form.end_zeit} onChange={e => setForm({ ...form, end_zeit: e.target.value })} />
+                <label htmlFor="scheduling-bis" style={labelStyle}>Bis</label>
+                <input id="scheduling-bis" style={inputStyle} type="time" value={form.end_zeit} onChange={e => setForm({ ...form, end_zeit: e.target.value })} />
               </div>
             </div>
             <div>
-              <label style={labelStyle}>Notizen</label>
-              <textarea style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} value={form.notizen} onChange={e => setForm({ ...form, notizen: e.target.value })} placeholder="Besonderheiten..." />
+              <label htmlFor="scheduling-notizen" style={labelStyle}>Notizen</label>
+              <textarea id="scheduling-notizen" style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} value={form.notizen} onChange={e => setForm({ ...form, notizen: e.target.value })} placeholder="Besonderheiten..." />
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
               <MisButton variant="secondary" onClick={() => setCreateOpen(false)}>Abbrechen</MisButton>
@@ -723,8 +723,8 @@ export default function SchedulingPage() {
               if (availableEngel.length > 0) {
                 return (
                   <div>
-                    <label style={labelStyle}>Verfügbare Engel an diesem Tag</label>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div id="scheduling-verfuegbare-engel-label" style={labelStyle}>Verfügbare Engel an diesem Tag</div>
+                    <div role="group" aria-labelledby="scheduling-verfuegbare-engel-label" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {availableEngel.map(a => {
                         const alreadyAssigned = shifts.some(s =>
                           s.datum === assignOpen.datum && s.engel_name === a.engel_name && s.status !== 'storniert' && s.id !== assignOpen.id
@@ -772,23 +772,23 @@ export default function SchedulingPage() {
         <Modal open title="Verfügbarkeit eintragen" onClose={() => setAvailForm(false)} width={440}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <label style={labelStyle}>Engel-Name *</label>
-              <input style={inputStyle} value={availData.engel_name} onChange={e => setAvailData({ ...availData, engel_name: e.target.value })} placeholder="Name des Engel" />
+              <label htmlFor="scheduling-engel-name" style={labelStyle}>Engel-Name *</label>
+              <input id="scheduling-engel-name" style={inputStyle} value={availData.engel_name} onChange={e => setAvailData({ ...availData, engel_name: e.target.value })} placeholder="Name des Engel" />
             </div>
             <div>
-              <label style={labelStyle}>Wochentag *</label>
-              <select style={inputStyle} value={availData.wochentag} onChange={e => setAvailData({ ...availData, wochentag: parseInt(e.target.value) })}>
+              <label htmlFor="scheduling-wochentag" style={labelStyle}>Wochentag *</label>
+              <select id="scheduling-wochentag" style={inputStyle} value={availData.wochentag} onChange={e => setAvailData({ ...availData, wochentag: parseInt(e.target.value) })}>
                 {WEEKDAY_FULL.map((d, i) => <option key={i} value={i}>{d}</option>)}
               </select>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={labelStyle}>Von</label>
-                <input style={inputStyle} type="time" value={availData.von} onChange={e => setAvailData({ ...availData, von: e.target.value })} />
+                <label htmlFor="scheduling-von-2" style={labelStyle}>Von</label>
+                <input id="scheduling-von-2" style={inputStyle} type="time" value={availData.von} onChange={e => setAvailData({ ...availData, von: e.target.value })} />
               </div>
               <div>
-                <label style={labelStyle}>Bis</label>
-                <input style={inputStyle} type="time" value={availData.bis} onChange={e => setAvailData({ ...availData, bis: e.target.value })} />
+                <label htmlFor="scheduling-bis-2" style={labelStyle}>Bis</label>
+                <input id="scheduling-bis-2" style={inputStyle} type="time" value={availData.bis} onChange={e => setAvailData({ ...availData, bis: e.target.value })} />
               </div>
             </div>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>

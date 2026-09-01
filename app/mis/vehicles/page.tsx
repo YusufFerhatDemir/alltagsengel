@@ -255,59 +255,59 @@ export default function VehiclesPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Kennzeichen *</label>
-                <input style={inputStyle} value={form.plate} onChange={e => setForm({ ...form, plate: e.target.value })} placeholder="F-AE 1234" />
+                <label htmlFor="vehicles-kennzeichen" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Kennzeichen *</label>
+                <input id="vehicles-kennzeichen" style={inputStyle} value={form.plate} onChange={e => setForm({ ...form, plate: e.target.value })} placeholder="F-AE 1234" />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Baujahr</label>
-                <input style={inputStyle} type="number" value={form.year} onChange={e => setForm({ ...form, year: e.target.value })} />
-              </div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Marke *</label>
-                <input style={inputStyle} value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} placeholder="z.B. Volkswagen" />
-              </div>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Modell *</label>
-                <input style={inputStyle} value={form.model} onChange={e => setForm({ ...form, model: e.target.value })} placeholder="z.B. Caddy" />
+                <label htmlFor="vehicles-baujahr" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Baujahr</label>
+                <input id="vehicles-baujahr" style={inputStyle} type="number" value={form.year} onChange={e => setForm({ ...form, year: e.target.value })} />
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Antriebsart</label>
-                <select style={inputStyle} value={form.fuel_type} onChange={e => setForm({ ...form, fuel_type: e.target.value })}>
+                <label htmlFor="vehicles-marke" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Marke *</label>
+                <input id="vehicles-marke" style={inputStyle} value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} placeholder="z.B. Volkswagen" />
+              </div>
+              <div>
+                <label htmlFor="vehicles-modell" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Modell *</label>
+                <input id="vehicles-modell" style={inputStyle} value={form.model} onChange={e => setForm({ ...form, model: e.target.value })} placeholder="z.B. Caddy" />
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label htmlFor="vehicles-antriebsart" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Antriebsart</label>
+                <select id="vehicles-antriebsart" style={inputStyle} value={form.fuel_type} onChange={e => setForm({ ...form, fuel_type: e.target.value })}>
                   {['Benzin', 'Diesel', 'Elektro', 'Hybrid', 'Erdgas'].map(f => <option key={f} value={f}>{f}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Aktueller Km-Stand</label>
-                <input style={inputStyle} type="number" value={form.current_km} onChange={e => setForm({ ...form, current_km: e.target.value })} placeholder="0" />
+                <label htmlFor="vehicles-aktueller-km-stand" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Aktueller Km-Stand</label>
+                <input id="vehicles-aktueller-km-stand" style={inputStyle} type="number" value={form.current_km} onChange={e => setForm({ ...form, current_km: e.target.value })} placeholder="0" />
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Nächster TÜV</label>
-                <input style={inputStyle} type="date" value={form.next_tuev} onChange={e => setForm({ ...form, next_tuev: e.target.value })} />
+                <label htmlFor="vehicles-naechster-tuev" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Nächster TÜV</label>
+                <input id="vehicles-naechster-tuev" style={inputStyle} type="date" value={form.next_tuev} onChange={e => setForm({ ...form, next_tuev: e.target.value })} />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Versicherung bis</label>
-                <input style={inputStyle} type="date" value={form.insurance_until} onChange={e => setForm({ ...form, insurance_until: e.target.value })} />
+                <label htmlFor="vehicles-versicherung-bis" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Versicherung bis</label>
+                <input id="vehicles-versicherung-bis" style={inputStyle} type="date" value={form.insurance_until} onChange={e => setForm({ ...form, insurance_until: e.target.value })} />
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Nächster Service bei (km)</label>
-                <input style={inputStyle} type="number" value={form.next_service_km} onChange={e => setForm({ ...form, next_service_km: e.target.value })} placeholder="z.B. 30000" />
+                <label htmlFor="vehicles-naechster-service-bei-km" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Nächster Service bei (km)</label>
+                <input id="vehicles-naechster-service-bei-km" style={inputStyle} type="number" value={form.next_service_km} onChange={e => setForm({ ...form, next_service_km: e.target.value })} placeholder="z.B. 30000" />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Zugewiesen an</label>
-                <input style={inputStyle} value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })} placeholder="Fahrer oder Engel" />
+                <label htmlFor="vehicles-zugewiesen-an" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Zugewiesen an</label>
+                <input id="vehicles-zugewiesen-an" style={inputStyle} value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })} placeholder="Fahrer oder Engel" />
               </div>
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Notizen</label>
-              <textarea style={{ ...inputStyle, minHeight: 70, resize: 'vertical' }} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Besonderheiten, Ausstattung..." />
+              <label htmlFor="vehicles-notizen" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Notizen</label>
+              <textarea id="vehicles-notizen" style={{ ...inputStyle, minHeight: 70, resize: 'vertical' }} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Besonderheiten, Ausstattung..." />
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
               <MisButton variant="secondary" onClick={() => setCreateOpen(false)}>Abbrechen</MisButton>

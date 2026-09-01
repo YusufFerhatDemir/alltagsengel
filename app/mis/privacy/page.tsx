@@ -572,51 +572,51 @@ export default function PrivacyPage() {
         <Modal open title="Neue Verarbeitungstätigkeit (Art. 30)" onClose={() => setCreateRecordOpen(false)} width={600}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Bezeichnung *</label>
-              <input style={inputStyle} value={recordForm.title} onChange={e => setRecordForm({ ...recordForm, title: e.target.value })} placeholder="z.B. Kundenverwaltung" />
+              <label htmlFor="privacy-bezeichnung" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Bezeichnung *</label>
+              <input id="privacy-bezeichnung" style={inputStyle} value={recordForm.title} onChange={e => setRecordForm({ ...recordForm, title: e.target.value })} placeholder="z.B. Kundenverwaltung" />
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Zweck der Verarbeitung *</label>
-              <textarea style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} value={recordForm.purpose} onChange={e => setRecordForm({ ...recordForm, purpose: e.target.value })} placeholder="Beschreiben Sie den Zweck..." />
+              <label htmlFor="privacy-zweck-der-verarbeitung" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Zweck der Verarbeitung *</label>
+              <textarea id="privacy-zweck-der-verarbeitung" style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} value={recordForm.purpose} onChange={e => setRecordForm({ ...recordForm, purpose: e.target.value })} placeholder="Beschreiben Sie den Zweck..." />
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Rechtsgrundlage *</label>
-              <select style={inputStyle} value={recordForm.legal_basis} onChange={e => setRecordForm({ ...recordForm, legal_basis: e.target.value })}>
+              <label htmlFor="privacy-rechtsgrundlage" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Rechtsgrundlage *</label>
+              <select id="privacy-rechtsgrundlage" style={inputStyle} value={recordForm.legal_basis} onChange={e => setRecordForm({ ...recordForm, legal_basis: e.target.value })}>
                 {LEGAL_BASIS_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
               </select>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Datenkategorien</label>
-                <input style={inputStyle} value={recordForm.data_categories} onChange={e => setRecordForm({ ...recordForm, data_categories: e.target.value })} placeholder="Name, Adresse, E-Mail (kommagetrennt)" />
+                <label htmlFor="privacy-datenkategorien" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Datenkategorien</label>
+                <input id="privacy-datenkategorien" style={inputStyle} value={recordForm.data_categories} onChange={e => setRecordForm({ ...recordForm, data_categories: e.target.value })} placeholder="Name, Adresse, E-Mail (kommagetrennt)" />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Betroffene Personen</label>
-                <input style={inputStyle} value={recordForm.affected_persons} onChange={e => setRecordForm({ ...recordForm, affected_persons: e.target.value })} placeholder="Kunden, Engel (kommagetrennt)" />
+                <label htmlFor="privacy-betroffene-personen" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Betroffene Personen</label>
+                <input id="privacy-betroffene-personen" style={inputStyle} value={recordForm.affected_persons} onChange={e => setRecordForm({ ...recordForm, affected_persons: e.target.value })} placeholder="Kunden, Engel (kommagetrennt)" />
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Empfänger</label>
-                <input style={inputStyle} value={recordForm.recipients} onChange={e => setRecordForm({ ...recordForm, recipients: e.target.value })} placeholder="Pflegekasse, Finanzamt (kommagetrennt)" />
+                <label htmlFor="privacy-empfaenger" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Empfänger</label>
+                <input id="privacy-empfaenger" style={inputStyle} value={recordForm.recipients} onChange={e => setRecordForm({ ...recordForm, recipients: e.target.value })} placeholder="Pflegekasse, Finanzamt (kommagetrennt)" />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Löschfrist (Monate)</label>
-                <input style={inputStyle} type="number" value={recordForm.retention_period} onChange={e => setRecordForm({ ...recordForm, retention_period: e.target.value })} placeholder="z.B. 36" />
+                <label htmlFor="privacy-loeschfrist-monate" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Löschfrist (Monate)</label>
+                <input id="privacy-loeschfrist-monate" style={inputStyle} type="number" value={recordForm.retention_period} onChange={e => setRecordForm({ ...recordForm, retention_period: e.target.value })} placeholder="z.B. 36" />
               </div>
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Technisch-organisatorische Maßnahmen (TOMs)</label>
-              <textarea style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} value={recordForm.toms} onChange={e => setRecordForm({ ...recordForm, toms: e.target.value })} placeholder="Verschlüsselung, Zugangskontrolle, Backup-Konzept..." />
+              <label htmlFor="privacy-technisch-organisatorische-massnahmen-toms" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Technisch-organisatorische Maßnahmen (TOMs)</label>
+              <textarea id="privacy-technisch-organisatorische-massnahmen-toms" style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} value={recordForm.toms} onChange={e => setRecordForm({ ...recordForm, toms: e.target.value })} placeholder="Verschlüsselung, Zugangskontrolle, Backup-Konzept..." />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Verantwortliche Person</label>
-                <input style={inputStyle} value={recordForm.responsible_person} onChange={e => setRecordForm({ ...recordForm, responsible_person: e.target.value })} placeholder="Name des/der DSB" />
+                <label htmlFor="privacy-verantwortliche-person" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Verantwortliche Person</label>
+                <input id="privacy-verantwortliche-person" style={inputStyle} value={recordForm.responsible_person} onChange={e => setRecordForm({ ...recordForm, responsible_person: e.target.value })} placeholder="Name des/der DSB" />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Notizen</label>
-                <input style={inputStyle} value={recordForm.notes} onChange={e => setRecordForm({ ...recordForm, notes: e.target.value })} placeholder="Zusätzliche Hinweise" />
+                <label htmlFor="privacy-notizen" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Notizen</label>
+                <input id="privacy-notizen" style={inputStyle} value={recordForm.notes} onChange={e => setRecordForm({ ...recordForm, notes: e.target.value })} placeholder="Zusätzliche Hinweise" />
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
@@ -632,32 +632,32 @@ export default function PrivacyPage() {
         <Modal open title="Einwilligung erfassen" onClose={() => setCreateConsentOpen(false)} width={480}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Name der Person *</label>
-              <input style={inputStyle} value={consentForm.person_name} onChange={e => setConsentForm({ ...consentForm, person_name: e.target.value })} placeholder="Vor- und Nachname" />
+              <label htmlFor="privacy-name-der-person" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Name der Person *</label>
+              <input id="privacy-name-der-person" style={inputStyle} value={consentForm.person_name} onChange={e => setConsentForm({ ...consentForm, person_name: e.target.value })} placeholder="Vor- und Nachname" />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Personentyp *</label>
-                <select style={inputStyle} value={consentForm.person_type} onChange={e => setConsentForm({ ...consentForm, person_type: e.target.value })}>
+                <label htmlFor="privacy-personentyp" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Personentyp *</label>
+                <select id="privacy-personentyp" style={inputStyle} value={consentForm.person_type} onChange={e => setConsentForm({ ...consentForm, person_type: e.target.value })}>
                   <option value="kunde">Kunde</option>
                   <option value="engel">Engel</option>
                   <option value="mitarbeiter">Mitarbeiter</option>
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Kanal</label>
-                <select style={inputStyle} value={consentForm.channel} onChange={e => setConsentForm({ ...consentForm, channel: e.target.value })}>
+                <label htmlFor="privacy-kanal" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Kanal</label>
+                <select id="privacy-kanal" style={inputStyle} value={consentForm.channel} onChange={e => setConsentForm({ ...consentForm, channel: e.target.value })}>
                   {['app', 'email', 'papier', 'telefon', 'website'].map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
                 </select>
               </div>
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Einwilligungstyp *</label>
-              <input style={inputStyle} value={consentForm.consent_type} onChange={e => setConsentForm({ ...consentForm, consent_type: e.target.value })} placeholder="z.B. Datenverarbeitung, Marketing, Fotonutzung" />
+              <label htmlFor="privacy-einwilligungstyp" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Einwilligungstyp *</label>
+              <input id="privacy-einwilligungstyp" style={inputStyle} value={consentForm.consent_type} onChange={e => setConsentForm({ ...consentForm, consent_type: e.target.value })} placeholder="z.B. Datenverarbeitung, Marketing, Fotonutzung" />
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Notizen</label>
-              <textarea style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} value={consentForm.notes} onChange={e => setConsentForm({ ...consentForm, notes: e.target.value })} placeholder="Zusätzliche Hinweise..." />
+              <label htmlFor="privacy-notizen-2" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Notizen</label>
+              <textarea id="privacy-notizen-2" style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} value={consentForm.notes} onChange={e => setConsentForm({ ...consentForm, notes: e.target.value })} placeholder="Zusätzliche Hinweise..." />
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
               <MisButton variant="secondary" onClick={() => setCreateConsentOpen(false)}>Abbrechen</MisButton>
@@ -672,22 +672,22 @@ export default function PrivacyPage() {
         <Modal open title="Neue Datenschutz-Anfrage" onClose={() => setCreateRequestOpen(false)} width={500}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Name des Anfragenden *</label>
-              <input style={inputStyle} value={requestForm.requester_name} onChange={e => setRequestForm({ ...requestForm, requester_name: e.target.value })} placeholder="Vor- und Nachname" />
+              <label htmlFor="privacy-name-des-anfragenden" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Name des Anfragenden *</label>
+              <input id="privacy-name-des-anfragenden" style={inputStyle} value={requestForm.requester_name} onChange={e => setRequestForm({ ...requestForm, requester_name: e.target.value })} placeholder="Vor- und Nachname" />
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Anfragetyp *</label>
-              <select style={inputStyle} value={requestForm.request_type} onChange={e => setRequestForm({ ...requestForm, request_type: e.target.value })}>
+              <label htmlFor="privacy-anfragetyp" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Anfragetyp *</label>
+              <select id="privacy-anfragetyp" style={inputStyle} value={requestForm.request_type} onChange={e => setRequestForm({ ...requestForm, request_type: e.target.value })}>
                 {Object.entries(REQUEST_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </select>
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Beschreibung</label>
-              <textarea style={{ ...inputStyle, minHeight: 70, resize: 'vertical' }} value={requestForm.description} onChange={e => setRequestForm({ ...requestForm, description: e.target.value })} placeholder="Details zur Anfrage..." />
+              <label htmlFor="privacy-beschreibung" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Beschreibung</label>
+              <textarea id="privacy-beschreibung" style={{ ...inputStyle, minHeight: 70, resize: 'vertical' }} value={requestForm.description} onChange={e => setRequestForm({ ...requestForm, description: e.target.value })} placeholder="Details zur Anfrage..." />
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Zuständiger Bearbeiter</label>
-              <input style={inputStyle} value={requestForm.assigned_to} onChange={e => setRequestForm({ ...requestForm, assigned_to: e.target.value })} placeholder="Name" />
+              <label htmlFor="privacy-zustaendiger-bearbeiter" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Zuständiger Bearbeiter</label>
+              <input id="privacy-zustaendiger-bearbeiter" style={inputStyle} value={requestForm.assigned_to} onChange={e => setRequestForm({ ...requestForm, assigned_to: e.target.value })} placeholder="Name" />
             </div>
             <div style={{ padding: '10px 14px', background: `${BRAND.info}10`, borderRadius: 8, fontSize: 12, color: BRAND.muted }}>
               <strong style={{ color: BRAND.info }}>Hinweis:</strong> Die gesetzliche Bearbeitungsfrist von 30 Tagen wird automatisch gesetzt.

@@ -206,32 +206,32 @@ export default function SignaturesPage() {
         <Modal open title="Neue Unterschriftsanfrage" onClose={() => setCreateOpen(false)} width={500}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Dokumentbezeichnung *</label>
-              <input style={inputStyle} value={form.document_title} onChange={e => setForm({ ...form, document_title: e.target.value })} placeholder="z.B. Arbeitsvertrag Max Mustermann" />
+              <label htmlFor="signatures-dokumentbezeichnung" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Dokumentbezeichnung *</label>
+              <input id="signatures-dokumentbezeichnung" style={inputStyle} value={form.document_title} onChange={e => setForm({ ...form, document_title: e.target.value })} placeholder="z.B. Arbeitsvertrag Max Mustermann" />
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Dokumenttyp</label>
-              <select style={inputStyle} value={form.document_type} onChange={e => setForm({ ...form, document_type: e.target.value })}>
+              <label htmlFor="signatures-dokumenttyp" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Dokumenttyp</label>
+              <select id="signatures-dokumenttyp" style={inputStyle} value={form.document_type} onChange={e => setForm({ ...form, document_type: e.target.value })}>
                 {['Vertrag', 'Vollmacht', 'Datenschutzerklärung', 'Einverständniserklärung', 'Kündigung', 'Sonstiges'].map(t => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Unterzeichner Name *</label>
-                <input style={inputStyle} value={form.signer_name} onChange={e => setForm({ ...form, signer_name: e.target.value })} placeholder="Vor- und Nachname" />
+                <label htmlFor="signatures-unterzeichner-name" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Unterzeichner Name *</label>
+                <input id="signatures-unterzeichner-name" style={inputStyle} value={form.signer_name} onChange={e => setForm({ ...form, signer_name: e.target.value })} placeholder="Vor- und Nachname" />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>E-Mail *</label>
-                <input style={inputStyle} type="email" value={form.signer_email} onChange={e => setForm({ ...form, signer_email: e.target.value })} placeholder="email@beispiel.de" />
+                <label htmlFor="signatures-e-mail" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>E-Mail *</label>
+                <input id="signatures-e-mail" style={inputStyle} type="email" value={form.signer_email} onChange={e => setForm({ ...form, signer_email: e.target.value })} placeholder="email@beispiel.de" />
               </div>
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Ablaufdatum</label>
-              <input style={inputStyle} type="date" value={form.expires_at} onChange={e => setForm({ ...form, expires_at: e.target.value })} />
+              <label htmlFor="signatures-ablaufdatum" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Ablaufdatum</label>
+              <input id="signatures-ablaufdatum" style={inputStyle} type="date" value={form.expires_at} onChange={e => setForm({ ...form, expires_at: e.target.value })} />
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Notizen</label>
-              <textarea style={{ ...inputStyle, minHeight: 70, resize: 'vertical' }} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Zusätzliche Hinweise..." />
+              <label htmlFor="signatures-notizen" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Notizen</label>
+              <textarea id="signatures-notizen" style={{ ...inputStyle, minHeight: 70, resize: 'vertical' }} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Zusätzliche Hinweise..." />
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
               <MisButton variant="secondary" onClick={() => setCreateOpen(false)}>Abbrechen</MisButton>
