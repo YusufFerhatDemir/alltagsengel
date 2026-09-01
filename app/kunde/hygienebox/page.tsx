@@ -264,10 +264,11 @@ export default function HygieneboBoxPage() {
           </div>
 
           <div style={{ marginTop: 16 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink3)', display: 'block', marginBottom: 8 }}>
+            <label htmlFor="hygienebox-lieferadresse" style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink3)', display: 'block', marginBottom: 8 }}>
               Lieferadresse
             </label>
             <input
+              id="hygienebox-lieferadresse"
               className="input"
               type="text"
               placeholder="Straße, Hausnummer, PLZ, Stadt"
@@ -279,10 +280,10 @@ export default function HygieneboBoxPage() {
 
         {/* Pflegegrad Selection */}
         <div className="form-card-h" style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', display: 'block', marginBottom: 12 }}>
+          <div id="hygienebox-pflegegrad-label" style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', display: 'block', marginBottom: 12 }}>
             Pflegegrad
-          </label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
+          </div>
+          <div role="group" aria-labelledby="hygienebox-pflegegrad-label" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
             {[1, 2, 3, 4, 5].map(grade => (
               <button
                 key={grade}
@@ -308,10 +309,10 @@ export default function HygieneboBoxPage() {
 
         {/* Insurance Info */}
         <div className="form-card-h" style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', display: 'block', marginBottom: 12 }}>
+          <div id="hygienebox-krankenkasse-label" style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', display: 'block', marginBottom: 12 }}>
             Krankenkasse
-          </label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
+          </div>
+          <div role="group" aria-labelledby="hygienebox-krankenkasse-label" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
             {insuranceOptions.map(company => (
               <button
                 key={company}
@@ -334,10 +335,11 @@ export default function HygieneboBoxPage() {
             ))}
           </div>
 
-          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink3)', display: 'block', marginBottom: 8 }}>
+          <label htmlFor="hygienebox-versichertennummer" style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink3)', display: 'block', marginBottom: 8 }}>
             Versichertennummer
           </label>
           <input
+            id="hygienebox-versichertennummer"
             className="input"
             type="text"
             placeholder="Ihre Versichertennummer"

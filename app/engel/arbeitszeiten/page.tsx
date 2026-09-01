@@ -245,8 +245,9 @@ export default function ArbeitszeitenPage() {
               Neue Arbeitszeit
             </div>
 
-            <label style={labelStyle}>Datum</label>
+            <label htmlFor="arbeitszeiten-datum" style={labelStyle}>Datum</label>
             <input
+              id="arbeitszeiten-datum"
               type="date"
               value={formDatum}
               onChange={e => setFormDatum(e.target.value)}
@@ -255,17 +256,18 @@ export default function ArbeitszeitenPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
               <div>
-                <label style={labelStyle}>Start</label>
-                <input type="time" value={formStart} onChange={e => setFormStart(e.target.value)} style={inputStyle} />
+                <label htmlFor="arbeitszeiten-start" style={labelStyle}>Start</label>
+                <input id="arbeitszeiten-start" type="time" value={formStart} onChange={e => setFormStart(e.target.value)} style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Ende</label>
-                <input type="time" value={formEnd} onChange={e => setFormEnd(e.target.value)} style={inputStyle} />
+                <label htmlFor="arbeitszeiten-ende" style={labelStyle}>Ende</label>
+                <input id="arbeitszeiten-ende" type="time" value={formEnd} onChange={e => setFormEnd(e.target.value)} style={inputStyle} />
               </div>
             </div>
 
-            <label style={{ ...labelStyle, marginTop: 10 }}>Pause (Minuten)</label>
+            <label htmlFor="arbeitszeiten-pause-minuten" style={{ ...labelStyle, marginTop: 10 }}>Pause (Minuten)</label>
             <input
+              id="arbeitszeiten-pause-minuten"
               type="number"
               min="0"
               value={formPause}

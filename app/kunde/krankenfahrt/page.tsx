@@ -289,12 +289,12 @@ export default function KrankenfahrtPage() {
           <input aria-label="Zieladresse" className="input" type="text" placeholder="Zieladresse" value={formData.zieladresse} onChange={(e) => handleInputChange('zieladresse', e.target.value)} />
           <div className="input-row2">
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--ink4)', marginBottom: '4px' }}>Datum</label>
-              <input className="input" type="date" value={formData.datum} onChange={(e) => handleInputChange('datum', e.target.value)} style={{ width: '100%' }} />
+              <label htmlFor="krankenfahrt-datum" style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--ink4)', marginBottom: '4px' }}>Datum</label>
+              <input id="krankenfahrt-datum" className="input" type="date" value={formData.datum} onChange={(e) => handleInputChange('datum', e.target.value)} style={{ width: '100%' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--ink4)', marginBottom: '4px' }}>Uhrzeit</label>
-              <input className="input" type="time" value={formData.uhrzeit} onChange={(e) => handleInputChange('uhrzeit', e.target.value)} style={{ width: '100%' }} />
+              <label htmlFor="krankenfahrt-uhrzeit" style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--ink4)', marginBottom: '4px' }}>Uhrzeit</label>
+              <input id="krankenfahrt-uhrzeit" className="input" type="time" value={formData.uhrzeit} onChange={(e) => handleInputChange('uhrzeit', e.target.value)} style={{ width: '100%' }} />
             </div>
           </div>
         </div>

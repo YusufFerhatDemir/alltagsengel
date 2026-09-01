@@ -433,10 +433,11 @@ export default function FahrzeugeManagementPage() {
                 {/* Form Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
                   <div>
-                    <label style={{ fontSize: '12px', color: '#a89976', display: 'block', marginBottom: '4px' }}>
+                    <label htmlFor="fahrzeuge-kennzeichen" style={{ fontSize: '12px', color: '#a89976', display: 'block', marginBottom: '4px' }}>
                       Kennzeichen *
                     </label>
                     <input
+                      id="fahrzeuge-kennzeichen"
                       type="text"
                       placeholder="z.B. AB-CD 123"
                       value={formData.kennzeichen}
@@ -454,10 +455,11 @@ export default function FahrzeugeManagementPage() {
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: '12px', color: '#a89976', display: 'block', marginBottom: '4px' }}>
+                    <label htmlFor="fahrzeuge-marke" style={{ fontSize: '12px', color: '#a89976', display: 'block', marginBottom: '4px' }}>
                       Marke *
                     </label>
                     <input
+                      id="fahrzeuge-marke"
                       type="text"
                       placeholder="z.B. Mercedes"
                       value={formData.marke}
@@ -475,10 +477,11 @@ export default function FahrzeugeManagementPage() {
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: '12px', color: '#a89976', display: 'block', marginBottom: '4px' }}>
+                    <label htmlFor="fahrzeuge-modell" style={{ fontSize: '12px', color: '#a89976', display: 'block', marginBottom: '4px' }}>
                       Modell *
                     </label>
                     <input
+                      id="fahrzeuge-modell"
                       type="text"
                       placeholder="z.B. Sprinter"
                       value={formData.modell}
@@ -496,10 +499,11 @@ export default function FahrzeugeManagementPage() {
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: '12px', color: '#a89976', display: 'block', marginBottom: '4px' }}>
+                    <label htmlFor="fahrzeuge-baujahr" style={{ fontSize: '12px', color: '#a89976', display: 'block', marginBottom: '4px' }}>
                       Baujahr
                     </label>
                     <input
+                      id="fahrzeuge-baujahr"
                       type="number"
                       placeholder="z.B. 2022"
                       value={formData.baujahr}
@@ -517,10 +521,11 @@ export default function FahrzeugeManagementPage() {
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: '12px', color: '#a89976', display: 'block', marginBottom: '4px' }}>
+                    <label htmlFor="fahrzeuge-farbe" style={{ fontSize: '12px', color: '#a89976', display: 'block', marginBottom: '4px' }}>
                       Farbe
                     </label>
                     <input
+                      id="fahrzeuge-farbe"
                       type="text"
                       placeholder="z.B. Weiß"
                       value={formData.farbe}
@@ -538,10 +543,11 @@ export default function FahrzeugeManagementPage() {
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: '12px', color: '#a89976', display: 'block', marginBottom: '4px' }}>
+                    <label htmlFor="fahrzeuge-sitze" style={{ fontSize: '12px', color: '#a89976', display: 'block', marginBottom: '4px' }}>
                       Sitze
                     </label>
                     <input
+                      id="fahrzeuge-sitze"
                       type="number"
                       placeholder="z.B. 4"
                       value={formData.sitze}
@@ -616,10 +622,11 @@ export default function FahrzeugeManagementPage() {
                 {/* Dates */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
                   <div>
-                    <label style={{ fontSize: '12px', color: '#a89976', display: 'block', marginBottom: '4px' }}>
+                    <label htmlFor="fahrzeuge-tuev-bis" style={{ fontSize: '12px', color: '#a89976', display: 'block', marginBottom: '4px' }}>
                       TÜV bis
                     </label>
                     <input
+                      id="fahrzeuge-tuev-bis"
                       type="date"
                       value={formData.tuev_bis}
                       onChange={(e) => setFormData({ ...formData, tuev_bis: e.target.value })}
@@ -636,10 +643,11 @@ export default function FahrzeugeManagementPage() {
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: '12px', color: '#a89976', display: 'block', marginBottom: '4px' }}>
+                    <label htmlFor="fahrzeuge-versicherung-bis" style={{ fontSize: '12px', color: '#a89976', display: 'block', marginBottom: '4px' }}>
                       Versicherung bis
                     </label>
                     <input
+                      id="fahrzeuge-versicherung-bis"
                       type="date"
                       value={formData.versicherung_bis}
                       onChange={(e) => setFormData({ ...formData, versicherung_bis: e.target.value })}
