@@ -35,10 +35,22 @@ export const GET = withTracking(async function GET() {
   // Status je Bundesland, damit der Umschalter farbig anzeigen kann,
   // wo bereits abgerechnet werden darf.
   const admin = createAdminClient()
-  const { data } = await admin
+  const { data, error: statusFehler } = await admin
     .from('state_settings')
     .select('bundesland, status, insurance_enabled, private_enabled')
     .eq('organization_id', auth.orgId)
+
+  // Jedes Bundesland ohne Zeile faellt unten auf 'VORBEREITUNG' und
+  // beide Freigaben auf false. Bei verworfenem Fehler galt das fuer ALLE
+  // sechzehn — der Umschalter haette einem Betrieb, der in Hessen
+  // laengst abrechnet, angezeigt, dass nirgends etwas freigeschaltet
+  // ist. Das ist die Uebersicht, nach der hier umgeschaltet wird.
+  if (statusFehler) {
+    return NextResponse.json(
+      { error: 'Der Freischaltungsstand der Bundesländer konnte nicht geladen werden. Es wird nicht angezeigt, dass nichts freigeschaltet ist.' },
+      { status: 500 },
+    )
+  }
 
   const laender = Object.entries(BUNDESLAND_NAMEN).map(([code, label]) => {
     const zeile = (data ?? []).find(z => z.bundesland === code)

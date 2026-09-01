@@ -44,35 +44,61 @@ export const GET = withTracking(async function GET(
       return NextResponse.json({ error: 'Lauf nicht gefunden.' }, { status: 404 })
     }
 
-    const { data: rechnungen } = await admin
-      .from('dta_lauf_rechnungen')
-      .select('*, invoice:invoices(id, invoice_number_formatted, total_amount, status, client_id)')
-      .eq('lauf_id', id)
-      .order('position_im_lauf')
+    // ── Warum hier JEDER Fehler zaehlt ──────────────────────────────
+    //
+    // Diese Ansicht ist der Ort, an dem ein Mensch entscheidet, ob ein
+    // Abrechnungslauf in Ordnung ist. Ihre Aussagekraft steckt fast
+    // vollstaendig in den LEEREN Listen: „kein Fehlerprotokoll", „keine
+    // Ruecklaeufer" heisst hier „der Lauf ist sauber durchgegangen".
+    //
+    // Mit verworfenem Fehler traf die Ansicht genau diese Aussage auch
+    // dann, wenn sie die Protokolle gar nicht lesen konnte. Ein
+    // abgewiesener Lauf mit Ruecklaeufern der Kasse sah dann aus wie ein
+    // beanstandungsfreier — und wurde als erledigt abgehakt.
+    //
+    // Es faellt deshalb die ganze Ansicht aus, nicht einzelne Teile: eine
+    // halb geladene Laufuebersicht ist schlechter als gar keine, weil man
+    // ihr nicht ansieht, welche Haelfte fehlt.
+    const [rechnungenRes, dakotaRes, validierungenRes, fehlerRes, ruecklaeuferRes] =
+      await Promise.all([
+        admin
+          .from('dta_lauf_rechnungen')
+          .select('*, invoice:invoices(id, invoice_number_formatted, total_amount, status, client_id)')
+          .eq('lauf_id', id)
+          .order('position_im_lauf'),
+        admin.from('dta_dakota_auftraege').select('*').eq('lauf_id', id),
+        admin
+          .from('dta_validierungen')
+          .select('*')
+          .eq('lauf_id', id)
+          .order('created_at', { ascending: false })
+          .limit(1),
+        admin
+          .from('dta_fehlerprotokoll')
+          .select('*')
+          .eq('lauf_id', id)
+          .order('created_at', { ascending: false }),
+        admin
+          .from('dta_ruecklaeufer')
+          .select('*')
+          .eq('lauf_id', id)
+          .order('created_at', { ascending: false }),
+      ])
 
-    const { data: dakotaAuftraege } = await admin
-      .from('dta_dakota_auftraege')
-      .select('*')
-      .eq('lauf_id', id)
+    const teilFehler = [rechnungenRes, dakotaRes, validierungenRes, fehlerRes, ruecklaeuferRes]
+      .find(r => r.error)?.error
+    if (teilFehler) {
+      return NextResponse.json(
+        { error: 'Der Abrechnungslauf konnte nicht vollständig geladen werden. Fehlerprotokoll und Rückläufer werden nicht als leer angezeigt, solange sie nicht lesbar sind.' },
+        { status: 500 },
+      )
+    }
 
-    const { data: validierungen } = await admin
-      .from('dta_validierungen')
-      .select('*')
-      .eq('lauf_id', id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-
-    const { data: fehler } = await admin
-      .from('dta_fehlerprotokoll')
-      .select('*')
-      .eq('lauf_id', id)
-      .order('created_at', { ascending: false })
-
-    const { data: ruecklaeufer } = await admin
-      .from('dta_ruecklaeufer')
-      .select('*')
-      .eq('lauf_id', id)
-      .order('created_at', { ascending: false })
+    const rechnungen = rechnungenRes.data
+    const dakotaAuftraege = dakotaRes.data
+    const validierungen = validierungenRes.data
+    const fehler = fehlerRes.data
+    const ruecklaeufer = ruecklaeuferRes.data
 
     return NextResponse.json({
       lauf,

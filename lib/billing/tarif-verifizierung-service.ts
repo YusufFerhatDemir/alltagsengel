@@ -280,14 +280,23 @@ export async function handleDetailGet(
     // Historie ohne Beleg-Bezug ist immer noch wertvoll — lieber die
     // reduzierte Ansicht als gar keine.
     let historie: HistorieEintrag[] = (historieRows ?? []) as HistorieEintrag[]
+    let historieHinweis: string | null = null
     if (historieFehler) {
-      const { data: fallback } = await admin
+      const { data: fallback, error: fallbackFehler } = await admin
         .from('billing_tariff_audit')
         .select('id, aktion, alter_status, neuer_status, alter_betrag_cent, neuer_betrag_cent, benutzer, quelle, created_at')
         .eq('tariff_id', id)
         .order('created_at', { ascending: false })
         .limit(100)
       historie = ((fallback ?? []) as Omit<HistorieEintrag, 'beleg_id'>[]).map(e => ({ ...e, beleg_id: null }))
+      // Eine leere Tarifhistorie heisst „an diesem Preis wurde nie etwas
+      // geaendert" — die Aussage, mit der ein Tarif als unveraendert
+      // durchgeht. Scheitert auch der Rueckfall, darf sie nicht stehen.
+      if (fallbackFehler) {
+        historieHinweis =
+          'Die Änderungshistorie konnte NICHT gelesen werden. Dass hier nichts steht, heißt nicht, '
+          + 'dass an diesem Tarif nichts geändert wurde.'
+      }
     }
 
     let belege: Array<Record<string, unknown>> = []
@@ -315,7 +324,9 @@ export async function handleDetailGet(
       belegHinweis = (e as Error).message
     }
 
-    return NextResponse.json({ quellTabelle, zeile: geladen.zeile, historie, belege, belegHinweis })
+    return NextResponse.json({
+      quellTabelle, zeile: geladen.zeile, historie, historieHinweis, belege, belegHinweis,
+    })
   } catch (err) {
     log.errorWithException('Tarif-Detail laden fehlgeschlagen', err)
     return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })

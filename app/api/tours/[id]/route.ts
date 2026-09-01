@@ -16,18 +16,34 @@ import { withTracking } from '@/lib/monitoring/tracker'
 async function storniereTourEinsaetze(
   admin: ReturnType<typeof createAdminClient>,
   tourId: string
-): Promise<void> {
-  const { data: stops } = await admin
+): Promise<{ ok: true } | { ok: false; fehler: string }> {
+  // Kein eigener Mandantenzaun noetig: beide Aufrufer haben die Tour
+  // unmittelbar davor mit `.eq('organization_id', …)` geladen, `tourId`
+  // ist dadurch bereits als eigene Tour belegt.
+  const { data: stops, error: stopsFehler } = await admin
     .from('tour_stops')
     .select('id, assignment_id, status')
     .eq('tour_id', tourId)
+  // Ohne die Stops kann diese Funktion nichts stornieren — und der
+  // stille Rueckweg ueber `offen.length === 0` sah genauso aus wie
+  // „es gab nichts zu stornieren". Die Tour waere dann storniert, ihre
+  // Einsaetze aber weiter im Kalender und in der Engel-App: der Engel
+  // faehrt zu einem Termin, den es nicht mehr gibt, und der Klient
+  // wartet auf einen, der nicht kommt. Der Aufrufer muss davon erfahren.
+  if (stopsFehler) {
+    return {
+      ok: false,
+      fehler: `Die Stops der Tour sind nicht lesbar — die Einsätze wurden NICHT storniert (${stopsFehler.message}).`,
+    }
+  }
   const offen = (stops ?? []).filter(s => s.status !== 'ABGESCHLOSSEN')
-  if (offen.length === 0) return
+  if (offen.length === 0) return { ok: true }
   await storniereGeloesteAssignments(
     admin,
     offen.map(s => s.assignment_id),
     { ignoriereStopIds: offen.map(s => s.id) }
   )
+  return { ok: true }
 }
 
 // ── GET /api/tours/[id] ───────────────────────────────────────────
@@ -105,10 +121,22 @@ export const PATCH = withTracking(async function PATCH(
     if (!/^\d{4}-\d{2}-\d{2}$/.test(neuesDatum)) {
       return NextResponse.json({ error: 'tour_date muss das Format JJJJ-MM-TT haben.' }, { status: 400 })
     }
-    const { data: stops } = await admin
+    const { data: stops, error: stopsFehler } = await admin
       .from('tour_stops')
       .select('assignment_id, status')
       .eq('tour_id', id)
+    // Diese Liste traegt hier ZWEI Entscheidungen: den Riegel gegen das
+    // Verschieben abgeschlossener Stops und die Menge der Einsaetze, die
+    // mitwandern muessen. Bei verworfenem Fehler war sie leer — und
+    // beide Entscheidungen fielen still falsch: der Riegel griff nicht,
+    // und kein einziger Einsatz wurde mitverschoben. Das Ergebnis ist
+    // genau der Zustand, den der Kommentar darueber als Grund fuer diesen
+    // Code-Block nennt: Tour am neuen Tag, Einsaetze am alten.
+    if (stopsFehler) {
+      return NextResponse.json({
+        error: `${uebersetzeDbFehler(stopsFehler)} — die Tour wurde NICHT verschoben, weil ihre Stops nicht lesbar sind.`,
+      }, { status: 500 })
+    }
     const offene = (stops ?? []).filter(
       s => s.assignment_id && !['ABGESCHLOSSEN', 'AUSGEFALLEN'].includes(s.status),
     )
@@ -145,10 +173,19 @@ export const PATCH = withTracking(async function PATCH(
   // geoeffnet, muessen sie zurueck — sonst steht eine geplante Tour da, hinter
   // der kein einziger gueltiger Einsatz mehr haengt.
   if (neuerStatus === 'GEPLANT' && bestand.status === 'STORNIERT') {
-    const { data: stops } = await admin
+    const { data: stops, error: stopsFehler } = await admin
       .from('tour_stops')
       .select('assignment_id, status')
       .eq('tour_id', id)
+    // Spiegelbild zum Stornieren: hier muessen die Einsaetze ZURUECK.
+    // Blieb die Liste bei einem Fehler leer, lief die Schleife nullmal
+    // durch und die Route meldete Erfolg — die Tour stand wieder auf
+    // GEPLANT, hinter ihr aber kein einziger gueltiger Einsatz.
+    if (stopsFehler) {
+      return NextResponse.json({
+        error: `${uebersetzeDbFehler(stopsFehler)} — die Tour bleibt storniert, weil ihre Stops nicht lesbar sind.`,
+      }, { status: 500 })
+    }
     for (const s of (stops ?? []).filter(x => x.assignment_id && x.status === 'GEPLANT')) {
       const sync = await schreibeAufAssignment(admin, s.assignment_id as string, { status: 'GEPLANT' })
       if (!sync.ok) {
@@ -171,7 +208,18 @@ export const PATCH = withTracking(async function PATCH(
     const status = error.code === 'PGRST116' ? 404 : 500
     return NextResponse.json({ error: uebersetzeDbFehler(error) }, { status })
   }
-  if (neuerStatus === 'STORNIERT') await storniereTourEinsaetze(admin, id)
+  if (neuerStatus === 'STORNIERT') {
+    const storno = await storniereTourEinsaetze(admin, id)
+    // Die Tour steht jetzt auf STORNIERT. Bleibt das Stornieren der
+    // Einsaetze stumm liegen, ist der Zustand halb — und genau das muss
+    // die Antwort sagen, statt die Tour als sauber storniert zu melden.
+    if (!storno.ok) {
+      return NextResponse.json(
+        { error: `${storno.fehler} Die Tour ist storniert, die Einsätze sind es NICHT — bitte in der Einsatzplanung prüfen.` },
+        { status: 500 },
+      )
+    }
+  }
   return NextResponse.json(data)
 })
 
@@ -211,6 +259,12 @@ export const DELETE = withTracking(async function DELETE(
     const status = error.code === 'PGRST116' ? 404 : 500
     return NextResponse.json({ error: uebersetzeDbFehler(error) }, { status })
   }
-  await storniereTourEinsaetze(admin, id)
+  const storno = await storniereTourEinsaetze(admin, id)
+  if (!storno.ok) {
+    return NextResponse.json(
+      { error: `${storno.fehler} Die Tour ist storniert, die Einsätze sind es NICHT — bitte in der Einsatzplanung prüfen.` },
+      { status: 500 },
+    )
+  }
   return NextResponse.json(data)
 })

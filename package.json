@@ -24,6 +24,7 @@
     "lint:leerzustand": "tsx scripts/lint-leerzustand.ts",
     "lint:client-bundle": "tsx scripts/lint-client-bundle.ts",
     "lint:rls-sicht": "tsx scripts/lint-rls-sichtbarkeit.ts",
+    "audit:admin-from": "tsx scripts/audit-admin-from.ts",
     "verify:loeschkette": "node scripts/verify-loeschkette-live.mjs",
     "gen:org-default-tables": "node scripts/gen-org-default-tables.mjs",
     "check:schema-drift": "node scripts/schema-drift-check.mjs",

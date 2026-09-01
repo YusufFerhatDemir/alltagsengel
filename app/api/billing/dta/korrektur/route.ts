@@ -50,12 +50,23 @@ export const GET = withTracking(async function GET(request: Request) {
       return NextResponse.json(historie)
     }
 
-    const { data } = await admin
+    // Eine leere Korrekturliste heisst „an diesem Lauf war nichts zu
+    // berichtigen". Bei verworfenem Fehler behauptete die Route das auch
+    // dann, wenn sie die Korrekturlaeufe nicht lesen konnte — und eine
+    // faellige Berichtigung gegenueber der Kasse verschwand aus dem Blick.
+    const { data, error: korrekturFehler } = await admin
       .from('dta_korrekturlaeufe')
       .select('*, original_lauf:abrechnungslaeufe!dta_korrekturlaeufe_original_lauf_id_fkey(id, abrechnungsmonat, kostentraeger_name, status)')
       .eq('organization_id', organizationId)
       .order('created_at', { ascending: false })
       .limit(100)
+
+    if (korrekturFehler) {
+      return NextResponse.json(
+        { error: 'Die Korrekturläufe konnten nicht geladen werden. Die Liste bleibt leer, weil sie nicht lesbar ist — nicht, weil es keine Korrekturen gäbe.' },
+        { status: 500 },
+      )
+    }
 
     return NextResponse.json(data ?? [])
   } catch (err) {

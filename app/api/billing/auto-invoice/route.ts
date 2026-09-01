@@ -241,10 +241,31 @@ export const POST = withTracking(async function POST(request: Request) {
 
     // ── Doppel-Abrechnung ausschließen (invoice_items-Verknüpfung) ──
     const signedIds = signed.map(r => r.id)
-    const { data: billedItems } = await admin
+    const { data: billedItems, error: billedErr } = await admin
       .from('invoice_items')
       .select('service_record_id')
       .in('service_record_id', signedIds)
+    // DIESE ABFRAGE IST DER DOPPELABRECHNUNGS-SCHUTZ, nicht eine Beigabe.
+    //
+    // Ihr Ergebnis ist die einzige Auskunft darueber, welche Nachweise
+    // schon an einer Rechnung haengen. Faellt sie aus, war `billedItems`
+    // bisher null, die Menge der bereits abgerechneten Kennungen leer —
+    // und damit galt JEDER unterschriebene Einsatz erneut als offen. Die
+    // Route haette denselben Monat ein zweites Mal in Rechnung gestellt,
+    // ohne dass irgendwo ein Fehler sichtbar geworden waere: ein
+    // Netzaussetzer oder Schema-Drift genuegte, um dem Klienten dieselbe
+    // Leistung doppelt zu berechnen.
+    //
+    // „Ich habe keine Rechnungsposition gefunden" und „ich konnte nicht
+    // nachsehen" sind hier verschiedene Aussagen, und nur die erste
+    // rechtfertigt eine neue Rechnung. Deshalb fail-closed: lieber keine
+    // Rechnung als eine zweite.
+    if (billedErr) {
+      log.error('Doppelabrechnungs-Pruefung fehlgeschlagen — es wird NICHT abgerechnet', {
+        clientId: resolvedClientId, month: resolvedMonth, errorMessage: billedErr.message,
+      })
+      return safeApiError(billedErr, request)
+    }
     const billedIds = new Set((billedItems || []).map((i: any) => i.service_record_id))
     const billable = signed.filter(r => !billedIds.has(r.id))
 
@@ -324,6 +345,20 @@ export const POST = withTracking(async function POST(request: Request) {
       .single()
 
     // Items laden (Rückwärtskompatibilität)
+    //
+    // HIER BLEIBT DER FEHLER BEWUSST UNGEPRUEFT — anders als bei der
+    // Doppelabrechnungs-Pruefung weiter oben.
+    //
+    // Diese beiden Abfragen laufen NACH `createInvoiceDraft`: die Rechnung
+    // steht zu diesem Zeitpunkt bereits in der Datenbank. Ein 500 waere
+    // hier die gefaehrlichere Antwort — der Aufrufer laese „Abrechnung
+    // fehlgeschlagen", versuchte es erneut, und der zweite Lauf traefe auf
+    // die inzwischen existierende Rechnung. Fail-closed ist nicht ueberall
+    // die sichere Richtung; an dieser Stelle ist es die Rueckmeldung, die
+    // zur Doppelabrechnung einlaedt.
+    //
+    // Beide Werte sind reine Anzeige-Rueckfaelle: `primary` traegt Nummer
+    // und Betrag der erzeugten Rechnung ohnehin schon.
     const { data: invoiceItems } = await admin
       .from('invoice_items')
       .select()

@@ -95,10 +95,20 @@ export const GET = withTracking(async function GET(request: Request) {
     const clientIds = [...new Set(aktiveEintraege.map(e => e.client_id))]
     let kunden: Record<string, string> = {}
     if (clientIds.length > 0) {
-      const { data: clients } = await admin
+      // Das Sturzprotokoll ist ein pflegerischer Nachweis; der Name des
+      // Betroffenen gehoert dazu. Bei verworfenem Fehler stand dort
+      // stillschweigend „—" — ein Protokoll ohne erkennbare Person,
+      // das aussieht wie ein unvollstaendig gefuehrtes.
+      const { data: clients, error: clientsFehler } = await admin
         .from('clients')
         .select('id, first_name, last_name')
         .in('id', clientIds)
+      if (clientsFehler) {
+        return NextResponse.json(
+          { error: 'Die Kundennamen konnten nicht geladen werden — die Sturzprotokolle werden nicht ohne Namenszuordnung angezeigt.' },
+          { status: 500 },
+        )
+      }
       if (clients) {
         kunden = Object.fromEntries(
           clients.map(c => [c.id, `${c.first_name || ''} ${c.last_name || ''}`.trim()])

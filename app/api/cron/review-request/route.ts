@@ -44,11 +44,22 @@ export const GET = withTracking(async function GET(request: Request) {
 
     // Abgeschlossene Buchungen von vor genau 2 Tagen laden
     // Hinweis: bookings hat kein completed_at — wir verwenden das date-Feld
-    const { data: bookings } = await supabaseAdmin
+    // TODO (MITTEL, Dienstschluessel-Pass 01.09.2026): ohne
+    // Mandantenfilter — der Lauf bittet die Kundschaft ALLER
+    // Organisationen um eine Bewertung. Dieselbe Produktfrage wie bei
+    // /api/drip: erst festlegen, welcher Mandant den Lauf fahren darf.
+    const { data: bookings, error: bookingsFehler } = await supabaseAdmin
       .from('bookings')
       .select('id, customer_id, angel_id, service, date')
       .eq('status', 'completed')
       .eq('date', stichtag)
+
+    if (bookingsFehler) {
+      return NextResponse.json(
+        { error: 'Die abgeschlossenen Buchungen konnten nicht gelesen werden — der Lauf wurde abgebrochen.' },
+        { status: 500 },
+      )
+    }
 
     if (!bookings || bookings.length === 0) {
       return NextResponse.json({ message: 'Keine Buchungen zum Bewerten', sent: 0 })
@@ -60,10 +71,27 @@ export const GET = withTracking(async function GET(request: Request) {
     // 20260318 ausschliesslich nach angel_reviews. Der Cron hat gegen die
     // leere Legacy-Tabelle geprueft und deshalb auch Kundschaft
     // angeschrieben, die laengst bewertet hatte.
-    const { data: existingReviews } = await supabaseAdmin
+    //
+    // Und wie dort ist diese Menge eine SPERRLISTE: wer schon bewertet
+    // hat, wird nicht erneut gefragt. Bei verworfenem Fehler blieb sie
+    // leer, und der Lauf schrieb genau die Kundschaft wieder an, die der
+    // Kommentar oben schon einmal faelschlich angeschrieben hat — nur
+    // diesmal nicht wegen der falschen Tabelle, sondern wegen einer
+    // Abfrage, die niemand geprueft hat. Der Lauf bricht deshalb ab.
+    const { data: existingReviews, error: reviewsFehler } = await supabaseAdmin
       .from('angel_reviews')
       .select('booking_id')
       .in('booking_id', bookingIds)
+
+    if (reviewsFehler) {
+      return NextResponse.json(
+        {
+          error: 'Die bereits abgegebenen Bewertungen konnten nicht gelesen werden — der Lauf wurde '
+            + 'abgebrochen, damit niemand ein zweites Mal um dieselbe Bewertung gebeten wird.',
+        },
+        { status: 500 },
+      )
+    }
 
     const reviewedBookingIds = new Set(existingReviews?.map(r => r.booking_id) || [])
 

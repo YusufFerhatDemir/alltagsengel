@@ -65,11 +65,23 @@ export const POST = withTracking(async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, sent: 0, grund: 'keine_mitglieder' })
     }
 
-    const { data: admins } = await supabase
+    // Dieselbe Unterscheidung wie bei der Mitgliederliste oben: „kein
+    // Administrator in dieser Organisation" und „die Liste ist nicht
+    // lesbar" enden sonst beide in einem stillen sent: 0 — und die
+    // Registrierung eines neuen Engels bleibt unbemerkt liegen.
+    const { data: admins, error: adminsError } = await supabase
       .from('profiles')
       .select('id, email, first_name')
       .in('role', ['admin', 'superadmin'])
       .in('id', memberIdList)
+
+    if (adminsError) {
+      log.errorWithException(
+        'Administratorenliste nicht lesbar — Registrierungsmeldung nicht versendet',
+        new Error(adminsError.message),
+      )
+      return NextResponse.json({ success: true, sent: 0, grund: 'admins_nicht_lesbar' })
+    }
 
     if (!admins || admins.length === 0) return NextResponse.json({ success: true, sent: 0 })
 

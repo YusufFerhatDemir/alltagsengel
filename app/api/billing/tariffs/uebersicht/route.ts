@@ -82,7 +82,7 @@ export const GET = withTracking(async function GET(request: Request) {
     // wird als Hinweis ausgewiesen statt still verschwiegen.
     let tarife = (tarifeRes.data ?? []) as unknown as Record<string, unknown>[]
     if (tarifeRes.error) {
-      const { data } = await admin
+      const { data, error: rueckfallFehler } = await admin
         .from('billing_tariffs')
         .select(
           'id, leistungsart, rechtsgrundlage, bundesland, preis_cent, einheit, verguetungsart, ' +
@@ -91,15 +91,26 @@ export const GET = withTracking(async function GET(request: Request) {
         .eq('organization_id', orgId)
         .is('deleted_at', null)
       tarife = (data ?? []) as unknown as Record<string, unknown>[]
-      hinweise.push(
-        'Belegverwaltung noch nicht eingerichtet (Migration 20260904000000 nicht angewendet) — ' +
-          'die Beleg-Spalte fehlt und Kassentarife können nicht freigegeben werden.'
-      )
+      // Scheitert AUCH der Rueckfall, ist die Uebersicht leer — und eine
+      // leere Tarifuebersicht liest sich als „es sind keine Tarife
+      // hinterlegt", also als Grund, welche anzulegen. Der Hinweis auf die
+      // fehlende Migration waere dann sogar noch die falsche Erklaerung.
+      if (rueckfallFehler) {
+        hinweise.push(
+          'Die Tarife konnten NICHT gelesen werden — die Liste ist deshalb leer, nicht weil keine '
+            + `Tarife hinterlegt wären (${rueckfallFehler.message}).`
+        )
+      } else {
+        hinweise.push(
+          'Belegverwaltung noch nicht eingerichtet (Migration 20260904000000 nicht angewendet) — ' +
+            'die Beleg-Spalte fehlt und Kassentarife können nicht freigegeben werden.'
+        )
+      }
     }
 
     let preise = (preiseRes.data ?? []) as unknown as Record<string, unknown>[]
     if (preiseRes.error) {
-      const { data } = await admin
+      const { data, error: preiseRueckfallFehler } = await admin
         .from('leistungspreise')
         .select(
           'id, leistungsart, bundesland, preis_cent, tarif_status, gueltig_ab, gueltig_bis, ' +
@@ -107,6 +118,12 @@ export const GET = withTracking(async function GET(request: Request) {
         )
         .or(`organization_id.eq.${orgId},organization_id.is.null`)
       preise = (data ?? []) as unknown as Record<string, unknown>[]
+      if (preiseRueckfallFehler) {
+        hinweise.push(
+          'Die Leistungspreise konnten NICHT gelesen werden — die zweite Preistabelle fehlt in dieser '
+            + `Übersicht, sie ist nicht leer (${preiseRueckfallFehler.message}).`
+        )
+      }
     }
 
     for (const t of tarife) {

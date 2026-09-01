@@ -141,7 +141,7 @@ export const PATCH = withTracking(async function PATCH(
 
     if (sperrt) {
       const heute = heuteBerlin()
-      const { data: offeneEinsaetze } = await admin
+      const { data: offeneEinsaetze, error: einsaetzeFehler } = await admin
         .from('assignments')
         .select('id')
         .eq('client_id', id)
@@ -149,6 +149,18 @@ export const PATCH = withTracking(async function PATCH(
         .gte('assignment_date', heute)
         .not('status', 'in', '("STORNIERT","ABGESCHLOSSEN")')
         .limit(200)
+
+      // Der Hinweis unten ist die einzige Warnung, dass der
+      // Statuswechsel geplante Einsaetze NICHT mit storniert. Fiel die
+      // Abfrage aus, blieb er einfach aus — und das Ausbleiben der
+      // Warnung liest sich wie „es gibt keine offenen Einsaetze". Der
+      // Klient ist dann inaktiv, die Engel fahren weiter hin.
+      if (einsaetzeFehler) {
+        hinweise.push(
+          'Ob noch geplante Einsätze bestehen, konnte NICHT geprüft werden — bitte die '
+          + 'Einsatzplanung von Hand durchsehen. Der Statuswechsel storniert Einsätze ohnehin nicht.'
+        )
+      }
 
       if (offeneEinsaetze && offeneEinsaetze.length > 0) {
         hinweise.push(
