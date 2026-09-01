@@ -431,21 +431,21 @@ function KanalKarte({
             </Banner>
           )}
 
-          <label style={feldLabel}>Begründung (Pflicht)</label>
-          <input style={feldInput} value={begruendung} onChange={e => setBegruendung(e.target.value)}
+          <label htmlFor="betrieb-begruendung-pflicht" style={feldLabel}>Begründung (Pflicht)</label>
+          <input id="betrieb-begruendung-pflicht" style={feldInput} value={begruendung} onChange={e => setBegruendung(e.target.value)}
             placeholder="Warum wird jetzt umgeschaltet?" />
 
           {zielModus === 'produktion' && (
             <>
-              <label style={feldLabel}>Datum der bestandenen Testübertragung (JJJJ-MM-TT)</label>
-              <input style={feldInput} value={testAm} onChange={e => setTestAm(e.target.value)}
+              <label htmlFor="betrieb-datum-der-bestandenen-testuebertragung-jjj" style={feldLabel}>Datum der bestandenen Testübertragung (JJJJ-MM-TT)</label>
+              <input id="betrieb-datum-der-bestandenen-testuebertragung-jjj" style={feldInput} value={testAm} onChange={e => setTestAm(e.target.value)}
                 placeholder="2026-09-01" />
 
-              <label style={feldLabel}>Beleg der Annahmestelle (Ticket-, Protokoll- oder Mailreferenz)</label>
-              <input style={feldInput} value={testReferenz} onChange={e => setTestReferenz(e.target.value)} />
+              <label htmlFor="betrieb-beleg-der-annahmestelle-ticket-protokoll-o" style={feldLabel}>Beleg der Annahmestelle (Ticket-, Protokoll- oder Mailreferenz)</label>
+              <input id="betrieb-beleg-der-annahmestelle-ticket-protokoll-o" style={feldInput} value={testReferenz} onChange={e => setTestReferenz(e.target.value)} />
 
-              <label style={feldLabel}>Annahmestelle (optional)</label>
-              <input style={feldInput} value={testStelle} onChange={e => setTestStelle(e.target.value)} />
+              <label htmlFor="betrieb-annahmestelle-optional" style={feldLabel}>Annahmestelle (optional)</label>
+              <input id="betrieb-annahmestelle-optional" style={feldInput} value={testStelle} onChange={e => setTestStelle(e.target.value)} />
 
               <label style={feldLabel}>Zur Bestätigung „{bestaetigungswort}“ eingeben</label>
               <input style={feldInput} value={bestaetigung} onChange={e => setBestaetigung(e.target.value)} />

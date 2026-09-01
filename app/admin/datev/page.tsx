@@ -319,12 +319,12 @@ export default function DatevExportPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 12, alignItems: 'end' }}>
               <div>
-                <label style={labelStyle}>Von</label>
-                <input type="date" value={exportVon} onChange={e => setExportVon(e.target.value)} style={inputStyle} />
+                <label htmlFor="datev-von" style={labelStyle}>Von</label>
+                <input id="datev-von" type="date" value={exportVon} onChange={e => setExportVon(e.target.value)} style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Bis</label>
-                <input type="date" value={exportBis} onChange={e => setExportBis(e.target.value)} style={inputStyle} />
+                <label htmlFor="datev-bis" style={labelStyle}>Bis</label>
+                <input id="datev-bis" type="date" value={exportBis} onChange={e => setExportBis(e.target.value)} style={inputStyle} />
               </div>
               <button
                 style={{ ...btnPrimary, opacity: exporting ? 0.6 : 1 }}
@@ -414,8 +414,9 @@ export default function DatevExportPage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, maxWidth: 600 }}>
             <div>
-              <label style={labelStyle}>Beraternummer</label>
+              <label htmlFor="datev-beraternummer" style={labelStyle}>Beraternummer</label>
               <input
+                id="datev-beraternummer"
                 style={inputStyle}
                 value={configForm.beraternummer}
                 onChange={e => setConfigForm({ ...configForm, beraternummer: e.target.value })}
@@ -423,8 +424,9 @@ export default function DatevExportPage() {
               />
             </div>
             <div>
-              <label style={labelStyle}>Mandantennummer</label>
+              <label htmlFor="datev-mandantennummer" style={labelStyle}>Mandantennummer</label>
               <input
+                id="datev-mandantennummer"
                 style={inputStyle}
                 value={configForm.mandantennummer}
                 onChange={e => setConfigForm({ ...configForm, mandantennummer: e.target.value })}
@@ -432,8 +434,9 @@ export default function DatevExportPage() {
               />
             </div>
             <div>
-              <label style={labelStyle}>Kontenrahmen</label>
+              <label htmlFor="datev-kontenrahmen" style={labelStyle}>Kontenrahmen</label>
               <select
+                id="datev-kontenrahmen"
                 style={inputStyle}
                 value={configForm.kontenrahmen}
                 onChange={e => setConfigForm({ ...configForm, kontenrahmen: e.target.value as 'SKR03' | 'SKR04' })}
@@ -443,8 +446,9 @@ export default function DatevExportPage() {
               </select>
             </div>
             <div>
-              <label style={labelStyle}>Sachkontenlänge</label>
+              <label htmlFor="datev-sachkontenlaenge" style={labelStyle}>Sachkontenlänge</label>
               <select
+                id="datev-sachkontenlaenge"
                 style={inputStyle}
                 value={configForm.sachkontenlaenge}
                 onChange={e => setConfigForm({ ...configForm, sachkontenlaenge: Number(e.target.value) })}
@@ -454,8 +458,9 @@ export default function DatevExportPage() {
               </select>
             </div>
             <div>
-              <label style={labelStyle}>WJ-Beginn (MM-TT)</label>
+              <label htmlFor="datev-wj-beginn-mm-tt" style={labelStyle}>WJ-Beginn (MM-TT)</label>
               <input
+                id="datev-wj-beginn-mm-tt"
                 style={inputStyle}
                 value={configForm.wjBeginn}
                 onChange={e => setConfigForm({ ...configForm, wjBeginn: e.target.value })}
@@ -463,8 +468,9 @@ export default function DatevExportPage() {
               />
             </div>
             <div>
-              <label style={labelStyle}>Erzeuger-Kürzel</label>
+              <label htmlFor="datev-erzeuger-kuerzel" style={labelStyle}>Erzeuger-Kürzel</label>
               <input
+                id="datev-erzeuger-kuerzel"
                 style={inputStyle}
                 value={configForm.erzeugerKuerzel}
                 onChange={e => setConfigForm({ ...configForm, erzeugerKuerzel: e.target.value })}

@@ -218,28 +218,28 @@ function CreateNachrichtModal({ onClose, onCreated }: { onClose: () => void; onC
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Betreff *</label>
-              <input style={inputStyle} value={form.betreff} onChange={e => upd('betreff', e.target.value)} required />
+              <label htmlFor="nachrichten-betreff" style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Betreff *</label>
+              <input id="nachrichten-betreff" style={inputStyle} value={form.betreff} onChange={e => upd('betreff', e.target.value)} required />
             </div>
             <div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Inhalt</label>
-              <textarea style={{ ...inputStyle, minHeight: 100, resize: 'vertical' }} value={form.inhalt} onChange={e => upd('inhalt', e.target.value)} />
+              <label htmlFor="nachrichten-inhalt" style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Inhalt</label>
+              <textarea id="nachrichten-inhalt" style={{ ...inputStyle, minHeight: 100, resize: 'vertical' }} value={form.inhalt} onChange={e => upd('inhalt', e.target.value)} />
             </div>
             <div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Empfänger-IDs</label>
-              <input style={inputStyle} value={form.empfaenger_ids} onChange={e => upd('empfaenger_ids', e.target.value)} placeholder="Kommagetrennte UUIDs" />
+              <label htmlFor="nachrichten-empfaenger-ids" style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Empfänger-IDs</label>
+              <input id="nachrichten-empfaenger-ids" style={inputStyle} value={form.empfaenger_ids} onChange={e => upd('empfaenger_ids', e.target.value)} placeholder="Kommagetrennte UUIDs" />
             </div>
             <div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Kategorie</label>
-              <select style={inputStyle} value={form.kategorie} onChange={e => upd('kategorie', e.target.value)}>
+              <label htmlFor="nachrichten-kategorie" style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Kategorie</label>
+              <select id="nachrichten-kategorie" style={inputStyle} value={form.kategorie} onChange={e => upd('kategorie', e.target.value)}>
                 {Object.entries(NACHRICHTEN_KATEGORIE).map(([k, v]) => (
                   <option key={k} value={k}>{v.label}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Priorität</label>
-              <select style={inputStyle} value={form.prioritaet} onChange={e => upd('prioritaet', e.target.value)}>
+              <label htmlFor="nachrichten-prioritaet" style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Priorität</label>
+              <select id="nachrichten-prioritaet" style={inputStyle} value={form.prioritaet} onChange={e => upd('prioritaet', e.target.value)}>
                 {Object.entries(NACHRICHTEN_PRIORITAET).map(([k, v]) => (
                   <option key={k} value={k}>{v.label}</option>
                 ))}

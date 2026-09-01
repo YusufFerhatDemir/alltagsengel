@@ -212,8 +212,9 @@ export default function AdminClientsPage() {
           <div style={sectionTitle}>Pflegedaten</div>
           <div style={gridStyle}>
             <div>
-              <label style={labelStyle}>Pflegegrad</label>
+              <label htmlFor="clients-pflegegrad" style={labelStyle}>Pflegegrad</label>
               <select
+                id="clients-pflegegrad"
                 style={fieldStyle}
                 value={form.care_level}
                 onChange={e => setForm(f => ({ ...f, care_level: e.target.value }))}
@@ -243,8 +244,9 @@ export default function AdminClientsPage() {
           </div>
 
           <div style={{ marginTop: 8 }}>
-            <label style={labelStyle}>Anmerkungen</label>
+            <label htmlFor="clients-anmerkungen" style={labelStyle}>Anmerkungen</label>
             <textarea
+              id="clients-anmerkungen"
               style={{ ...fieldStyle, minHeight: 60, resize: 'vertical' }}
               value={form.notes}
               onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}

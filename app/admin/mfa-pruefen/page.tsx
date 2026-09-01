@@ -128,10 +128,11 @@ export default function AdminMfaPruefen() {
         {error && <div style={msgStyle}>{error}</div>}
 
         <form onSubmit={handleSubmit}>
-          <label style={{ display: 'block', color: 'var(--ink)', fontSize: 14, fontWeight: 700, marginBottom: 8 }}>
+          <label htmlFor="mfa-pruefen-code-aus-der-app" style={{ display: 'block', color: 'var(--ink)', fontSize: 14, fontWeight: 700, marginBottom: 8 }}>
             Code aus der App
           </label>
           <input
+            id="mfa-pruefen-code-aus-der-app"
             type="text"
             inputMode="numeric"
             autoComplete="one-time-code"

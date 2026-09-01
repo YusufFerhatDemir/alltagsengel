@@ -251,10 +251,11 @@ export default function AdminMfaEinrichtung() {
           </p>
 
           <form onSubmit={bestaetige}>
-            <label style={{ display: 'block', color: 'var(--ink)', fontSize: 14, fontWeight: 700, marginBottom: 8 }}>
+            <label htmlFor="mfa-einrichtung-sechsstelliger-code-aus-der-app" style={{ display: 'block', color: 'var(--ink)', fontSize: 14, fontWeight: 700, marginBottom: 8 }}>
               Sechsstelliger Code aus der App
             </label>
             <input
+              id="mfa-einrichtung-sechsstelliger-code-aus-der-app"
               type="text"
               inputMode="numeric"
               autoComplete="one-time-code"

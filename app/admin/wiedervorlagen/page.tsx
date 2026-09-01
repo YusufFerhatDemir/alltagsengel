@@ -234,28 +234,28 @@ function CreateWiedervorlageModal({ onClose, onCreated }: { onClose: () => void;
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Titel *</label>
-              <input style={inputStyle} value={form.titel} onChange={e => upd('titel', e.target.value)} required />
+              <label htmlFor="wiedervorlagen-titel" style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Titel *</label>
+              <input id="wiedervorlagen-titel" style={inputStyle} value={form.titel} onChange={e => upd('titel', e.target.value)} required />
             </div>
             <div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Beschreibung</label>
-              <textarea style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} value={form.beschreibung} onChange={e => upd('beschreibung', e.target.value)} />
+              <label htmlFor="wiedervorlagen-beschreibung" style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Beschreibung</label>
+              <textarea id="wiedervorlagen-beschreibung" style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} value={form.beschreibung} onChange={e => upd('beschreibung', e.target.value)} />
             </div>
             <div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Entität-Typ</label>
-              <input style={inputStyle} value={form.entitaet_typ} onChange={e => upd('entitaet_typ', e.target.value)} placeholder="z.B. aufgabe, kunde, einsatz" />
+              <label htmlFor="wiedervorlagen-entitaet-typ" style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Entität-Typ</label>
+              <input id="wiedervorlagen-entitaet-typ" style={inputStyle} value={form.entitaet_typ} onChange={e => upd('entitaet_typ', e.target.value)} placeholder="z.B. aufgabe, kunde, einsatz" />
             </div>
             <div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Entität-ID</label>
-              <input style={inputStyle} value={form.entitaet_id} onChange={e => upd('entitaet_id', e.target.value)} placeholder="UUID" />
+              <label htmlFor="wiedervorlagen-entitaet-id" style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Entität-ID</label>
+              <input id="wiedervorlagen-entitaet-id" style={inputStyle} value={form.entitaet_id} onChange={e => upd('entitaet_id', e.target.value)} placeholder="UUID" />
             </div>
             <div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Fällig am</label>
-              <input type="date" style={inputStyle} value={form.faellig_am} onChange={e => upd('faellig_am', e.target.value)} />
+              <label htmlFor="wiedervorlagen-faellig-am" style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Fällig am</label>
+              <input id="wiedervorlagen-faellig-am" type="date" style={inputStyle} value={form.faellig_am} onChange={e => upd('faellig_am', e.target.value)} />
             </div>
             <div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Empfänger-ID</label>
-              <input style={inputStyle} value={form.empfaenger_id} onChange={e => upd('empfaenger_id', e.target.value)} placeholder="UUID des Empfängers" />
+              <label htmlFor="wiedervorlagen-empfaenger-id" style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink4)', display: 'block', marginBottom: 4 }}>Empfänger-ID</label>
+              <input id="wiedervorlagen-empfaenger-id" style={inputStyle} value={form.empfaenger_id} onChange={e => upd('empfaenger_id', e.target.value)} placeholder="UUID des Empfängers" />
             </div>
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
