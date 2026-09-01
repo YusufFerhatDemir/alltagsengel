@@ -537,33 +537,33 @@ export default function TrainingPage() {
         <Modal open title="Schulung zum Katalog hinzufügen" onClose={() => setCatalogOpen(false)} width={540}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Schulungsname *</label>
-              <input style={inputStyle} value={catalogForm.name} onChange={e => setCatalogForm({ ...catalogForm, name: e.target.value })} placeholder="z.B. Brandschutzunterweisung" />
+              <label htmlFor="training-schulungsname" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Schulungsname *</label>
+              <input id="training-schulungsname" style={inputStyle} value={catalogForm.name} onChange={e => setCatalogForm({ ...catalogForm, name: e.target.value })} placeholder="z.B. Brandschutzunterweisung" />
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Beschreibung</label>
-              <textarea style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} value={catalogForm.description} onChange={e => setCatalogForm({ ...catalogForm, description: e.target.value })} placeholder="Worum geht es in der Schulung?" />
+              <label htmlFor="training-beschreibung" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Beschreibung</label>
+              <textarea id="training-beschreibung" style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} value={catalogForm.description} onChange={e => setCatalogForm({ ...catalogForm, description: e.target.value })} placeholder="Worum geht es in der Schulung?" />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Kategorie</label>
-                <select style={inputStyle} value={catalogForm.category} onChange={e => setCatalogForm({ ...catalogForm, category: e.target.value })}>
+                <label htmlFor="training-kategorie" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Kategorie</label>
+                <select id="training-kategorie" style={inputStyle} value={catalogForm.category} onChange={e => setCatalogForm({ ...catalogForm, category: e.target.value })}>
                   {Object.entries(CATEGORY_LABELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Gültigkeit (Monate)</label>
-                <input style={inputStyle} type="number" value={catalogForm.validity_months} onChange={e => setCatalogForm({ ...catalogForm, validity_months: e.target.value })} placeholder="0 = einmalig" />
+                <label htmlFor="training-gueltigkeit-monate" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Gültigkeit (Monate)</label>
+                <input id="training-gueltigkeit-monate" style={inputStyle} type="number" value={catalogForm.validity_months} onChange={e => setCatalogForm({ ...catalogForm, validity_months: e.target.value })} placeholder="0 = einmalig" />
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Anbieter</label>
-                <input style={inputStyle} value={catalogForm.provider} onChange={e => setCatalogForm({ ...catalogForm, provider: e.target.value })} placeholder="Schulungsträger" />
+                <label htmlFor="training-anbieter" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Anbieter</label>
+                <input id="training-anbieter" style={inputStyle} value={catalogForm.provider} onChange={e => setCatalogForm({ ...catalogForm, provider: e.target.value })} placeholder="Schulungsträger" />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Dauer (Stunden)</label>
-                <input style={inputStyle} type="number" value={catalogForm.duration_hours} onChange={e => setCatalogForm({ ...catalogForm, duration_hours: e.target.value })} />
+                <label htmlFor="training-dauer-stunden" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Dauer (Stunden)</label>
+                <input id="training-dauer-stunden" style={inputStyle} type="number" value={catalogForm.duration_hours} onChange={e => setCatalogForm({ ...catalogForm, duration_hours: e.target.value })} />
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
@@ -579,15 +579,15 @@ export default function TrainingPage() {
         <Modal open title="Schulungsnachweis erfassen" onClose={() => setRecordOpen(false)} width={540}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Engel *</label>
-              <select style={inputStyle} value={recordForm.engel_id} onChange={e => setRecordForm({ ...recordForm, engel_id: e.target.value })}>
+              <label htmlFor="training-engel" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Engel *</label>
+              <select id="training-engel" style={inputStyle} value={recordForm.engel_id} onChange={e => setRecordForm({ ...recordForm, engel_id: e.target.value })}>
                 <option value="">— Engel auswählen —</option>
                 {engel.map(e => <option key={e.id} value={e.id}>{e.first_name} {e.last_name}</option>)}
               </select>
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Schulung *</label>
-              <select style={inputStyle} value={recordForm.training_id} onChange={e => setRecordForm({ ...recordForm, training_id: e.target.value })}>
+              <label htmlFor="training-schulung" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Schulung *</label>
+              <select id="training-schulung" style={inputStyle} value={recordForm.training_id} onChange={e => setRecordForm({ ...recordForm, training_id: e.target.value })}>
                 <option value="">— Schulung auswählen —</option>
                 {catalog.filter(t => t.is_active).map(t => (
                   <option key={t.id} value={t.id}>{t.name} ({CATEGORY_LABELS[t.category]?.label})</option>
@@ -595,8 +595,8 @@ export default function TrainingPage() {
               </select>
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Absolviert am *</label>
-              <input style={inputStyle} type="date" value={recordForm.completed_date} onChange={e => setRecordForm({ ...recordForm, completed_date: e.target.value })} />
+              <label htmlFor="training-absolviert-am" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Absolviert am *</label>
+              <input id="training-absolviert-am" style={inputStyle} type="date" value={recordForm.completed_date} onChange={e => setRecordForm({ ...recordForm, completed_date: e.target.value })} />
             </div>
             {recordForm.training_id && (() => {
               const t = catalog.find(c => c.id === recordForm.training_id)
@@ -607,12 +607,12 @@ export default function TrainingPage() {
               ) : null
             })()}
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Zertifikats-URL (optional)</label>
-              <input style={inputStyle} value={recordForm.certificate_url} onChange={e => setRecordForm({ ...recordForm, certificate_url: e.target.value })} placeholder="Link zum Zertifikat oder Dokument" />
+              <label htmlFor="training-zertifikats-url-optional" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Zertifikats-URL (optional)</label>
+              <input id="training-zertifikats-url-optional" style={inputStyle} value={recordForm.certificate_url} onChange={e => setRecordForm({ ...recordForm, certificate_url: e.target.value })} placeholder="Link zum Zertifikat oder Dokument" />
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Notizen</label>
-              <textarea style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} value={recordForm.notes} onChange={e => setRecordForm({ ...recordForm, notes: e.target.value })} placeholder="Zusätzliche Anmerkungen..." />
+              <label htmlFor="training-notizen" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Notizen</label>
+              <textarea id="training-notizen" style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} value={recordForm.notes} onChange={e => setRecordForm({ ...recordForm, notes: e.target.value })} placeholder="Zusätzliche Anmerkungen..." />
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
               <MisButton variant="secondary" onClick={() => setRecordOpen(false)}>Abbrechen</MisButton>

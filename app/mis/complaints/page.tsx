@@ -302,60 +302,60 @@ export default function ComplaintsPage() {
         <Modal open title="Neue Beschwerde erfassen" onClose={() => setCreateOpen(false)} width={600}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Betreff *</label>
-              <input style={inputStyle} value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="Kurzbeschreibung der Beschwerde" />
+              <label htmlFor="complaints-betreff" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Betreff *</label>
+              <input id="complaints-betreff" style={inputStyle} value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="Kurzbeschreibung der Beschwerde" />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Kunde</label>
-                <input style={inputStyle} value={form.customer_name} onChange={e => setForm({ ...form, customer_name: e.target.value })} placeholder="Name des Kunden" />
+                <label htmlFor="complaints-kunde" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Kunde</label>
+                <input id="complaints-kunde" style={inputStyle} value={form.customer_name} onChange={e => setForm({ ...form, customer_name: e.target.value })} placeholder="Name des Kunden" />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Betroffener Engel</label>
-                <input style={inputStyle} value={form.angel_name} onChange={e => setForm({ ...form, angel_name: e.target.value })} placeholder="Name des Engels" />
+                <label htmlFor="complaints-betroffener-engel" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Betroffener Engel</label>
+                <input id="complaints-betroffener-engel" style={inputStyle} value={form.angel_name} onChange={e => setForm({ ...form, angel_name: e.target.value })} placeholder="Name des Engels" />
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Kategorie</label>
-                <select style={inputStyle} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+                <label htmlFor="complaints-kategorie" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Kategorie</label>
+                <select id="complaints-kategorie" style={inputStyle} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
                   {Object.entries(COMPLAINT_CATEGORIES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Eskalationsstufe</label>
-                <select style={inputStyle} value={form.priority} onChange={e => setForm({ ...form, priority: e.target.value })}>
+                <label htmlFor="complaints-eskalationsstufe" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Eskalationsstufe</label>
+                <select id="complaints-eskalationsstufe" style={inputStyle} value={form.priority} onChange={e => setForm({ ...form, priority: e.target.value })}>
                   {Object.entries(PRIORITY_MAP).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                 </select>
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Vorfallsdatum</label>
-                <input style={inputStyle} type="date" value={form.incident_date} onChange={e => setForm({ ...form, incident_date: e.target.value })} />
+                <label htmlFor="complaints-vorfallsdatum" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Vorfallsdatum</label>
+                <input id="complaints-vorfallsdatum" style={inputStyle} type="date" value={form.incident_date} onChange={e => setForm({ ...form, incident_date: e.target.value })} />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Fälligkeitsdatum</label>
-                <input style={inputStyle} type="date" value={form.due_date} onChange={e => setForm({ ...form, due_date: e.target.value })} />
+                <label htmlFor="complaints-faelligkeitsdatum" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Fälligkeitsdatum</label>
+                <input id="complaints-faelligkeitsdatum" style={inputStyle} type="date" value={form.due_date} onChange={e => setForm({ ...form, due_date: e.target.value })} />
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Gemeldet von</label>
-                <input style={inputStyle} value={form.reported_by} onChange={e => setForm({ ...form, reported_by: e.target.value })} placeholder="Wer hat gemeldet?" />
+                <label htmlFor="complaints-gemeldet-von" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Gemeldet von</label>
+                <input id="complaints-gemeldet-von" style={inputStyle} value={form.reported_by} onChange={e => setForm({ ...form, reported_by: e.target.value })} placeholder="Wer hat gemeldet?" />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Zugewiesen an</label>
-                <input style={inputStyle} value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })} placeholder="Verantwortliche Person" />
+                <label htmlFor="complaints-zugewiesen-an" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Zugewiesen an</label>
+                <input id="complaints-zugewiesen-an" style={inputStyle} value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })} placeholder="Verantwortliche Person" />
               </div>
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Beschreibung *</label>
-              <textarea style={{ ...inputStyle, minHeight: 100, resize: 'vertical' }} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Detaillierte Beschreibung des Vorfalls..." />
+              <label htmlFor="complaints-beschreibung" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Beschreibung *</label>
+              <textarea id="complaints-beschreibung" style={{ ...inputStyle, minHeight: 100, resize: 'vertical' }} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Detaillierte Beschreibung des Vorfalls..." />
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Notizen</label>
-              <textarea style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Interne Anmerkungen..." />
+              <label htmlFor="complaints-notizen" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Notizen</label>
+              <textarea id="complaints-notizen" style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Interne Anmerkungen..." />
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
               <MisButton variant="secondary" onClick={() => setCreateOpen(false)}>Abbrechen</MisButton>
@@ -490,16 +490,16 @@ export default function ComplaintsPage() {
               <strong style={{ color: BRAND.gold }}>CAPA</strong> — Korrektur- und Präventivmaßnahmen dokumentieren, um systematische Verbesserungen nachzuweisen.
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Ursachenanalyse (Root Cause)</label>
-              <textarea style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} value={capaForm.root_cause} onChange={e => setCapaForm({ ...capaForm, root_cause: e.target.value })} placeholder="Was war die eigentliche Ursache?" />
+              <label htmlFor="complaints-ursachenanalyse-root-cause" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Ursachenanalyse (Root Cause)</label>
+              <textarea id="complaints-ursachenanalyse-root-cause" style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} value={capaForm.root_cause} onChange={e => setCapaForm({ ...capaForm, root_cause: e.target.value })} placeholder="Was war die eigentliche Ursache?" />
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Korrekturmaßnahme (Corrective Action)</label>
-              <textarea style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} value={capaForm.corrective_action} onChange={e => setCapaForm({ ...capaForm, corrective_action: e.target.value })} placeholder="Was wurde sofort unternommen?" />
+              <label htmlFor="complaints-korrekturmassnahme-corrective-action" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Korrekturmaßnahme (Corrective Action)</label>
+              <textarea id="complaints-korrekturmassnahme-corrective-action" style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} value={capaForm.corrective_action} onChange={e => setCapaForm({ ...capaForm, corrective_action: e.target.value })} placeholder="Was wurde sofort unternommen?" />
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Präventivmaßnahme (Preventive Action)</label>
-              <textarea style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} value={capaForm.preventive_action} onChange={e => setCapaForm({ ...capaForm, preventive_action: e.target.value })} placeholder="Wie wird verhindert, dass es wieder vorkommt?" />
+              <label htmlFor="complaints-praeventivmassnahme-preventive-action" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Präventivmaßnahme (Preventive Action)</label>
+              <textarea id="complaints-praeventivmassnahme-preventive-action" style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} value={capaForm.preventive_action} onChange={e => setCapaForm({ ...capaForm, preventive_action: e.target.value })} placeholder="Wie wird verhindert, dass es wieder vorkommt?" />
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
               <MisButton variant="secondary" onClick={() => setCapaOpen(false)}>Abbrechen</MisButton>

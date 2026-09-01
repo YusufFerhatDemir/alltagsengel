@@ -189,41 +189,41 @@ export default function DocumentsPage() {
       <Modal open={uploadOpen} onClose={() => setUploadOpen(false)} title="Dokument hochladen" width={600}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <label style={labelStyle}>Titel *</label>
-            <input value={uploadForm.title} onChange={e => setUploadForm({...uploadForm, title: e.target.value})} style={inputStyle} placeholder="Dokumenttitel" />
+            <label htmlFor="documents-titel" style={labelStyle}>Titel *</label>
+            <input id="documents-titel" value={uploadForm.title} onChange={e => setUploadForm({...uploadForm, title: e.target.value})} style={inputStyle} placeholder="Dokumenttitel" />
           </div>
           <div>
-            <label style={labelStyle}>Beschreibung</label>
-            <textarea value={uploadForm.description} onChange={e => setUploadForm({...uploadForm, description: e.target.value})} style={{...inputStyle, minHeight: 80}} placeholder="Kurzbeschreibung" />
+            <label htmlFor="documents-beschreibung" style={labelStyle}>Beschreibung</label>
+            <textarea id="documents-beschreibung" value={uploadForm.description} onChange={e => setUploadForm({...uploadForm, description: e.target.value})} style={{...inputStyle, minHeight: 80}} placeholder="Kurzbeschreibung" />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(250px, 100%), 1fr))', gap: isMobile ? 10 : 12 }}>
             <div>
-              <label style={labelStyle}>Kategorie</label>
-              <select value={uploadForm.category_id} onChange={e => setUploadForm({...uploadForm, category_id: e.target.value})} style={inputStyle}>
+              <label htmlFor="documents-kategorie" style={labelStyle}>Kategorie</label>
+              <select id="documents-kategorie" value={uploadForm.category_id} onChange={e => setUploadForm({...uploadForm, category_id: e.target.value})} style={inputStyle}>
                 <option value="">— Auswählen —</option>
                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
-              <label style={labelStyle}>Klassifikation</label>
-              <select value={uploadForm.classification} onChange={e => setUploadForm({...uploadForm, classification: e.target.value})} style={inputStyle}>
+              <label htmlFor="documents-klassifikation" style={labelStyle}>Klassifikation</label>
+              <select id="documents-klassifikation" value={uploadForm.classification} onChange={e => setUploadForm({...uploadForm, classification: e.target.value})} style={inputStyle}>
                 {Object.entries(CLASSIFICATION_LABELS).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
               </select>
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(250px, 100%), 1fr))', gap: isMobile ? 10 : 12 }}>
             <div>
-              <label style={labelStyle}>ISO Dok.-Nr.</label>
-              <input value={uploadForm.iso_doc_number} onChange={e => setUploadForm({...uploadForm, iso_doc_number: e.target.value})} style={inputStyle} placeholder="z.B. DOC-QMS-001" />
+              <label htmlFor="documents-iso-dok-nr" style={labelStyle}>ISO Dok.-Nr.</label>
+              <input id="documents-iso-dok-nr" value={uploadForm.iso_doc_number} onChange={e => setUploadForm({...uploadForm, iso_doc_number: e.target.value})} style={inputStyle} placeholder="z.B. DOC-QMS-001" />
             </div>
             <div>
-              <label style={labelStyle}>Tags (kommagetrennt)</label>
-              <input value={uploadForm.tags} onChange={e => setUploadForm({...uploadForm, tags: e.target.value})} style={inputStyle} placeholder="qualität, iso, prozess" />
+              <label htmlFor="documents-tags-kommagetrennt" style={labelStyle}>Tags (kommagetrennt)</label>
+              <input id="documents-tags-kommagetrennt" value={uploadForm.tags} onChange={e => setUploadForm({...uploadForm, tags: e.target.value})} style={inputStyle} placeholder="qualität, iso, prozess" />
             </div>
           </div>
           <div>
-            <label style={labelStyle}>Datei</label>
-            <input ref={fileRef} type="file" style={inputStyle} />
+            <label htmlFor="documents-datei" style={labelStyle}>Datei</label>
+            <input id="documents-datei" ref={fileRef} type="file" style={inputStyle} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
             <MisButton variant="secondary" onClick={() => setUploadOpen(false)}>Abbrechen</MisButton>

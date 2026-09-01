@@ -220,54 +220,54 @@ export default function ContractsPage() {
         <Modal open title="Neuer Vertrag" onClose={() => setCreateOpen(false)} width={540}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Vertragsbezeichnung *</label>
-              <input style={inputStyle} value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="z.B. Arbeitsvertrag Max Mustermann" />
+              <label htmlFor="contracts-vertragsbezeichnung" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Vertragsbezeichnung *</label>
+              <input id="contracts-vertragsbezeichnung" style={inputStyle} value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="z.B. Arbeitsvertrag Max Mustermann" />
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Vertragspartner *</label>
-              <input style={inputStyle} value={form.partner} onChange={e => setForm({ ...form, partner: e.target.value })} placeholder="Name oder Firma" />
+              <label htmlFor="contracts-vertragspartner" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Vertragspartner *</label>
+              <input id="contracts-vertragspartner" style={inputStyle} value={form.partner} onChange={e => setForm({ ...form, partner: e.target.value })} placeholder="Name oder Firma" />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Vertragsart</label>
-                <select style={inputStyle} value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
+                <label htmlFor="contracts-vertragsart" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Vertragsart</label>
+                <select id="contracts-vertragsart" style={inputStyle} value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
                   {CONTRACT_TYPES.filter(t => t !== 'Alle').map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Status</label>
-                <select style={inputStyle} value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
+                <label htmlFor="contracts-status" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Status</label>
+                <select id="contracts-status" style={inputStyle} value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
                   {Object.entries(CONTRACT_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                 </select>
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Vertragsbeginn</label>
-                <input style={inputStyle} type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} />
+                <label htmlFor="contracts-vertragsbeginn" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Vertragsbeginn</label>
+                <input id="contracts-vertragsbeginn" style={inputStyle} type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Vertragsende</label>
-                <input style={inputStyle} type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} />
+                <label htmlFor="contracts-vertragsende" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Vertragsende</label>
+                <input id="contracts-vertragsende" style={inputStyle} type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} />
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Vertragswert (€)</label>
-                <input style={inputStyle} type="number" value={form.value} onChange={e => setForm({ ...form, value: e.target.value })} placeholder="0,00" />
+                <label htmlFor="contracts-vertragswert" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Vertragswert (€)</label>
+                <input id="contracts-vertragswert" style={inputStyle} type="number" value={form.value} onChange={e => setForm({ ...form, value: e.target.value })} placeholder="0,00" />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Kündigungsfrist (Tage)</label>
-                <input style={inputStyle} type="number" value={form.notice_period_days} onChange={e => setForm({ ...form, notice_period_days: e.target.value })} />
+                <label htmlFor="contracts-kuendigungsfrist-tage" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Kündigungsfrist (Tage)</label>
+                <input id="contracts-kuendigungsfrist-tage" style={inputStyle} type="number" value={form.notice_period_days} onChange={e => setForm({ ...form, notice_period_days: e.target.value })} />
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="checkbox" checked={form.auto_renew} onChange={e => setForm({ ...form, auto_renew: e.target.checked })} />
-              <label style={{ fontSize: 13, color: BRAND.text }}>Automatische Verlängerung</label>
+              <input id="contracts-auto-verlaengerung" type="checkbox" checked={form.auto_renew} onChange={e => setForm({ ...form, auto_renew: e.target.checked })} />
+              <label htmlFor="contracts-auto-verlaengerung" style={{ fontSize: 13, color: BRAND.text }}>Automatische Verlängerung</label>
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Notizen</label>
-              <textarea style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Zusätzliche Informationen..." />
+              <label htmlFor="contracts-notizen" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Notizen</label>
+              <textarea id="contracts-notizen" style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Zusätzliche Informationen..." />
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
               <MisButton variant="secondary" onClick={() => setCreateOpen(false)}>Abbrechen</MisButton>

@@ -797,23 +797,23 @@ export default function CrmPage() {
         <Modal open title="Neuer Lead" onClose={() => setCreateLeadOpen(false)} width={500}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Name *</label>
-              <input style={inputStyle} value={leadForm.name} onChange={e => setLeadForm({ ...leadForm, name: e.target.value })} placeholder="Vor- und Nachname" />
+              <label htmlFor="crm-name" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Name *</label>
+              <input id="crm-name" style={inputStyle} value={leadForm.name} onChange={e => setLeadForm({ ...leadForm, name: e.target.value })} placeholder="Vor- und Nachname" />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Telefon *</label>
-                <input style={inputStyle} value={leadForm.phone} onChange={e => setLeadForm({ ...leadForm, phone: e.target.value })} placeholder="030 ..." />
+                <label htmlFor="crm-telefon" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Telefon *</label>
+                <input id="crm-telefon" style={inputStyle} value={leadForm.phone} onChange={e => setLeadForm({ ...leadForm, phone: e.target.value })} placeholder="030 ..." />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>PLZ *</label>
-                <input style={inputStyle} value={leadForm.plz} onChange={e => setLeadForm({ ...leadForm, plz: e.target.value })} placeholder="10115" />
+                <label htmlFor="crm-plz" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>PLZ *</label>
+                <input id="crm-plz" style={inputStyle} value={leadForm.plz} onChange={e => setLeadForm({ ...leadForm, plz: e.target.value })} placeholder="10115" />
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Quelle</label>
-                <select style={inputStyle} value={leadForm.source} onChange={e => setLeadForm({ ...leadForm, source: e.target.value })}>
+                <label htmlFor="crm-quelle" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Quelle</label>
+                <select id="crm-quelle" style={inputStyle} value={leadForm.source} onChange={e => setLeadForm({ ...leadForm, source: e.target.value })}>
                   <option value="">— Auswählen —</option>
                   <option value="Verbund Pflegehilfe">Verbund Pflegehilfe</option>
                   <option value="11880">11880</option>
@@ -824,8 +824,8 @@ export default function CrmPage() {
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Service</label>
-                <select style={inputStyle} value={leadForm.service} onChange={e => setLeadForm({ ...leadForm, service: e.target.value })}>
+                <label htmlFor="crm-service" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Service</label>
+                <select id="crm-service" style={inputStyle} value={leadForm.service} onChange={e => setLeadForm({ ...leadForm, service: e.target.value })}>
                   <option value="">— Auswählen —</option>
                   <option value="Alltagsbegleitung">Alltagsbegleitung</option>
                   <option value="Haushaltshilfe">Haushaltshilfe</option>
@@ -837,8 +837,8 @@ export default function CrmPage() {
               </div>
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Nachricht</label>
-              <textarea style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} value={leadForm.message} onChange={e => setLeadForm({ ...leadForm, message: e.target.value })} placeholder="Anfrage-Details..." />
+              <label htmlFor="crm-nachricht" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Nachricht</label>
+              <textarea id="crm-nachricht" style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} value={leadForm.message} onChange={e => setLeadForm({ ...leadForm, message: e.target.value })} placeholder="Anfrage-Details..." />
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
               <MisButton variant="secondary" onClick={() => setCreateLeadOpen(false)}>Abbrechen</MisButton>
@@ -853,34 +853,34 @@ export default function CrmPage() {
         <Modal open title="Neuer Kooperationspartner" onClose={() => setCreatePartnerOpen(false)} width={500}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Name *</label>
-              <input style={inputStyle} value={partnerForm.name} onChange={e => setPartnerForm({ ...partnerForm, name: e.target.value })} placeholder="Einrichtungsname" />
+              <label htmlFor="crm-name-2" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Name *</label>
+              <input id="crm-name-2" style={inputStyle} value={partnerForm.name} onChange={e => setPartnerForm({ ...partnerForm, name: e.target.value })} placeholder="Einrichtungsname" />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Typ</label>
-                <select style={inputStyle} value={partnerForm.type} onChange={e => setPartnerForm({ ...partnerForm, type: e.target.value })}>
+                <label htmlFor="crm-typ" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Typ</label>
+                <select id="crm-typ" style={inputStyle} value={partnerForm.type} onChange={e => setPartnerForm({ ...partnerForm, type: e.target.value })}>
                   {Object.entries(PARTNER_TYPES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Ort</label>
-                <input style={inputStyle} value={partnerForm.city} onChange={e => setPartnerForm({ ...partnerForm, city: e.target.value })} placeholder="Berlin" />
+                <label htmlFor="crm-ort" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Ort</label>
+                <input id="crm-ort" style={inputStyle} value={partnerForm.city} onChange={e => setPartnerForm({ ...partnerForm, city: e.target.value })} placeholder="Berlin" />
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Telefon</label>
-                <input style={inputStyle} value={partnerForm.phone} onChange={e => setPartnerForm({ ...partnerForm, phone: e.target.value })} placeholder="030 ..." />
+                <label htmlFor="crm-telefon-2" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Telefon</label>
+                <input id="crm-telefon-2" style={inputStyle} value={partnerForm.phone} onChange={e => setPartnerForm({ ...partnerForm, phone: e.target.value })} placeholder="030 ..." />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>E-Mail</label>
-                <input style={inputStyle} value={partnerForm.email} onChange={e => setPartnerForm({ ...partnerForm, email: e.target.value })} placeholder="info@..." />
+                <label htmlFor="crm-e-mail" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>E-Mail</label>
+                <input id="crm-e-mail" style={inputStyle} value={partnerForm.email} onChange={e => setPartnerForm({ ...partnerForm, email: e.target.value })} placeholder="info@..." />
               </div>
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Ansprechpartner</label>
-              <input style={inputStyle} value={partnerForm.contact_person} onChange={e => setPartnerForm({ ...partnerForm, contact_person: e.target.value })} placeholder="Vor- und Nachname" />
+              <label htmlFor="crm-ansprechpartner" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Ansprechpartner</label>
+              <input id="crm-ansprechpartner" style={inputStyle} value={partnerForm.contact_person} onChange={e => setPartnerForm({ ...partnerForm, contact_person: e.target.value })} placeholder="Vor- und Nachname" />
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
               <MisButton variant="secondary" onClick={() => setCreatePartnerOpen(false)}>Abbrechen</MisButton>
@@ -895,8 +895,8 @@ export default function CrmPage() {
         <Modal open title="Aktivität hinzufügen" onClose={() => setAddActivityOpen(false)} width={460}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Typ</label>
-              <select style={inputStyle} value={activityForm.activity_type} onChange={e => setActivityForm({ ...activityForm, activity_type: e.target.value })}>
+              <label htmlFor="crm-typ-2" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Typ</label>
+              <select id="crm-typ-2" style={inputStyle} value={activityForm.activity_type} onChange={e => setActivityForm({ ...activityForm, activity_type: e.target.value })}>
                 <option value="call">Anruf</option>
                 <option value="email">E-Mail</option>
                 <option value="visit">Besuch</option>
@@ -905,16 +905,16 @@ export default function CrmPage() {
               </select>
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Titel *</label>
-              <input style={inputStyle} value={activityForm.title} onChange={e => setActivityForm({ ...activityForm, title: e.target.value })} placeholder="z.B. Erstgespräch geführt" />
+              <label htmlFor="crm-titel" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Titel *</label>
+              <input id="crm-titel" style={inputStyle} value={activityForm.title} onChange={e => setActivityForm({ ...activityForm, title: e.target.value })} placeholder="z.B. Erstgespräch geführt" />
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Beschreibung</label>
-              <textarea style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} value={activityForm.description} onChange={e => setActivityForm({ ...activityForm, description: e.target.value })} placeholder="Details..." />
+              <label htmlFor="crm-beschreibung" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Beschreibung</label>
+              <textarea id="crm-beschreibung" style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} value={activityForm.description} onChange={e => setActivityForm({ ...activityForm, description: e.target.value })} placeholder="Details..." />
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Durchgeführt von</label>
-              <input style={inputStyle} value={activityForm.performed_by} onChange={e => setActivityForm({ ...activityForm, performed_by: e.target.value })} placeholder="Name" />
+              <label htmlFor="crm-durchgefuehrt-von" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Durchgeführt von</label>
+              <input id="crm-durchgefuehrt-von" style={inputStyle} value={activityForm.performed_by} onChange={e => setActivityForm({ ...activityForm, performed_by: e.target.value })} placeholder="Name" />
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
               <MisButton variant="secondary" onClick={() => setAddActivityOpen(false)}>Abbrechen</MisButton>

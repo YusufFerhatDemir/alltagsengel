@@ -450,42 +450,42 @@ export default function RecruitingPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Vorname *</label>
-                <input style={inputStyle} value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} placeholder="Vorname" />
+                <label htmlFor="recruiting-vorname" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Vorname *</label>
+                <input id="recruiting-vorname" style={inputStyle} value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} placeholder="Vorname" />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Nachname *</label>
-                <input style={inputStyle} value={form.last_name} onChange={e => setForm({ ...form, last_name: e.target.value })} placeholder="Nachname" />
-              </div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>E-Mail</label>
-                <input style={inputStyle} type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="email@beispiel.de" />
-              </div>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Telefon</label>
-                <input style={inputStyle} value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+49..." />
+                <label htmlFor="recruiting-nachname" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Nachname *</label>
+                <input id="recruiting-nachname" style={inputStyle} value={form.last_name} onChange={e => setForm({ ...form, last_name: e.target.value })} placeholder="Nachname" />
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Position *</label>
-                <select style={inputStyle} value={form.position} onChange={e => setForm({ ...form, position: e.target.value })}>
+                <label htmlFor="recruiting-e-mail" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>E-Mail</label>
+                <input id="recruiting-e-mail" style={inputStyle} type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="email@beispiel.de" />
+              </div>
+              <div>
+                <label htmlFor="recruiting-telefon" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Telefon</label>
+                <input id="recruiting-telefon" style={inputStyle} value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+49..." />
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label htmlFor="recruiting-position" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Position *</label>
+                <select id="recruiting-position" style={inputStyle} value={form.position} onChange={e => setForm({ ...form, position: e.target.value })}>
                   {POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Quelle</label>
-                <select style={inputStyle} value={form.source} onChange={e => setForm({ ...form, source: e.target.value })}>
+                <label htmlFor="recruiting-quelle" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Quelle</label>
+                <select id="recruiting-quelle" style={inputStyle} value={form.source} onChange={e => setForm({ ...form, source: e.target.value })}>
                   {SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
             </div>
             {postings.filter(p => p.status === 'active').length > 0 && (
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Stellenanzeige (optional)</label>
-                <select style={inputStyle} value={form.job_posting_id} onChange={e => setForm({ ...form, job_posting_id: e.target.value })}>
+                <label htmlFor="recruiting-stellenanzeige-optional" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Stellenanzeige (optional)</label>
+                <select id="recruiting-stellenanzeige-optional" style={inputStyle} value={form.job_posting_id} onChange={e => setForm({ ...form, job_posting_id: e.target.value })}>
                   <option value="">— Keine —</option>
                   {postings.filter(p => p.status === 'active').map(p => (
                     <option key={p.id} value={p.id}>{p.title}</option>
@@ -494,8 +494,8 @@ export default function RecruitingPage() {
               </div>
             )}
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Notizen</label>
-              <textarea style={{ ...inputStyle, minHeight: 70, resize: 'vertical' }} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Zusätzliche Informationen..." />
+              <label htmlFor="recruiting-notizen" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Notizen</label>
+              <textarea id="recruiting-notizen" style={{ ...inputStyle, minHeight: 70, resize: 'vertical' }} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Zusätzliche Informationen..." />
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
               <MisButton variant="secondary" onClick={() => setCreateOpen(false)}>Abbrechen</MisButton>
@@ -512,28 +512,28 @@ export default function RecruitingPage() {
         <Modal open title="Neue Stellenanzeige" onClose={() => setCreatePostingOpen(false)} width={520}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Titel *</label>
-              <input style={inputStyle} value={postingForm.title} onChange={e => setPostingForm({ ...postingForm, title: e.target.value })} placeholder="z.B. Alltagsbegleiter/in (m/w/d)" />
+              <label htmlFor="recruiting-titel" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Titel *</label>
+              <input id="recruiting-titel" style={inputStyle} value={postingForm.title} onChange={e => setPostingForm({ ...postingForm, title: e.target.value })} placeholder="z.B. Alltagsbegleiter/in (m/w/d)" />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Positionstyp</label>
-                <select style={inputStyle} value={postingForm.position_type} onChange={e => setPostingForm({ ...postingForm, position_type: e.target.value })}>
+                <label htmlFor="recruiting-positionstyp" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Positionstyp</label>
+                <select id="recruiting-positionstyp" style={inputStyle} value={postingForm.position_type} onChange={e => setPostingForm({ ...postingForm, position_type: e.target.value })}>
                   {POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Standort</label>
-                <input style={inputStyle} value={postingForm.location} onChange={e => setPostingForm({ ...postingForm, location: e.target.value })} placeholder="Standort" />
+                <label htmlFor="recruiting-standort" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Standort</label>
+                <input id="recruiting-standort" style={inputStyle} value={postingForm.location} onChange={e => setPostingForm({ ...postingForm, location: e.target.value })} placeholder="Standort" />
               </div>
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Beschreibung</label>
-              <textarea style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} value={postingForm.description} onChange={e => setPostingForm({ ...postingForm, description: e.target.value })} placeholder="Stellenbeschreibung..." />
+              <label htmlFor="recruiting-beschreibung" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Beschreibung</label>
+              <textarea id="recruiting-beschreibung" style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} value={postingForm.description} onChange={e => setPostingForm({ ...postingForm, description: e.target.value })} placeholder="Stellenbeschreibung..." />
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Veröffentlichungskanäle</label>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <div id="recruiting-kanaele-label" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Veröffentlichungskanäle</div>
+              <div role="group" aria-labelledby="recruiting-kanaele-label" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {CHANNELS.map(ch => {
                   const selected = postingForm.channels.includes(ch)
                   return (
