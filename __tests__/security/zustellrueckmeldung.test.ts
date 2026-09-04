@@ -17,7 +17,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { erstelleFakeSupabase, hatFilter, type FakeAufruf } from '../helpers/supabase-fake'
 import {
   verarbeiteTransaktionsRueckmeldung, istRueckmeldung, fehlertext, RANG,
-  SICHERHEITSMELDUNG_ART,
+  SICHERHEITSMELDUNG_ART, istEndzustand,
 } from '@/lib/notifications/zustellrueckmeldung'
 
 const PID = 'ff275ea7-f382-43c0-a59c-e0c086bbf374'
@@ -213,5 +213,169 @@ describe('istRueckmeldung', () => {
     for (const e of ['email.opened', 'email.clicked', '', null, 42]) {
       expect(istRueckmeldung(e)).toBe(false)
     }
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════
+// Endzustand nach dauerhaftem Fehler (Befund 04.09.2026)
+// ═══════════════════════════════════════════════════════════════════════
+//
+// DER FEHLER, DEN DIESE TESTS FESTHALTEN
+// Der Erstversand schreibt eine Zeile mit status 'sent'. Ein Bounce hebt
+// GENAU DIESE Zeile auf 'failed'. Danach gibt es fuer den Vorgang keine
+// 'sent'/'delivered'-Zeile mehr — und beide Sperren des
+// Wiederholungswegs fragen genau danach:
+//
+//   bereitsZugestellt()   zaehlt status IN ('sent','delivered')
+//   offeneZustellungen()  waehlt status IN ('queued','failed') und
+//                         schliesst nur Vorgaenge mit Erfolgszeile aus
+//
+// Der Vorgang sah damit wieder „offen" aus und wurde erneut versendet —
+// an eine Adresse, von der der Empfangsserver bereits gesagt hat, dass
+// es sie nicht gibt. Die Fehlerklassen-Sperre greift dabei NICHT: Resend
+// nimmt den neuen Auftrag mit 2xx an, der Versuch gilt als 'versendet'.
+//
+// Der Riegel ist eine 'skipped'-Zeile mit grund 'dauerhaft_fehlgeschlagen'
+// — genau darauf filtert offeneZustellungen() den Vorgang aus.
+
+const KORRELATION = '6a1d3f2e-9c44-4b1a-9f0e-2d7c5b8a1e33'
+const NACHRICHT = 'b2c9f0a1-3d5e-4f60-8a72-91c4d6e0f3b5'
+
+/** Wie `fake()`, faengt aber zusaetzlich INSERTs ab (Dead-Letter-Zeile). */
+function fakeMitInsert(zeile: Record<string, unknown> | null) {
+  const geschrieben: unknown[] = []
+  const eingefuegt: Record<string, unknown>[] = []
+  const f = erstelleFakeSupabase((a: FakeAufruf) => {
+    if (a.tabelle !== 'notification_delivery_log') return { data: null }
+    if (a.operation === 'update') {
+      geschrieben.push(a.payload)
+      return { data: [{ id: 'z1' }] }
+    }
+    if (a.operation === 'insert') {
+      eingefuegt.push(a.payload as Record<string, unknown>)
+      return { data: [{ id: 'neu' }] }
+    }
+    return { data: zeile }
+  })
+  return { client: f.client as unknown as Client, eingefuegt, geschrieben }
+}
+
+const VOLLE_ZEILE = (felder: Record<string, unknown> = {}) => ZEILE({
+  channel: 'email',
+  correlation_id: KORRELATION,
+  notification_id: NACHRICHT,
+  attempt_count: 1,
+  ...felder,
+})
+
+describe('istEndzustand', () => {
+  it('ein dauerhafter Bounce ist ein Endzustand', () => {
+    expect(istEndzustand('email.bounced', 'Permanent')).toBe(true)
+    expect(istEndzustand('email.bounced', 'permanent')).toBe(true)
+  })
+
+  it('eine Beschwerde ist ein Endzustand', () => {
+    // Nach „als Spam gemeldet" erneut zu senden ist die schlechteste
+    // denkbare Reaktion.
+    expect(istEndzustand('email.complained', null)).toBe(true)
+  })
+
+  it('ein voruebergehender Bounce ist KEIN Endzustand', () => {
+    // Postfach voll, Server gerade weg — hier ist die Wiederholung richtig.
+    expect(istEndzustand('email.bounced', 'Transient')).toBe(false)
+    expect(istEndzustand('email.bounced', null)).toBe(false)
+    expect(istEndzustand('email.bounced', 'Undetermined')).toBe(false)
+  })
+
+  it('email.failed ist KEIN Endzustand', () => {
+    // Ein Providerfehler ist ein Betriebsproblem, kein Empfaengerproblem
+    // — dieselbe Begruendung wie bei 401/403 in fehlerklassen.ts.
+    expect(istEndzustand('email.failed', null)).toBe(false)
+  })
+})
+
+describe('Hard Bounce beendet die Wiederholung', () => {
+  it('schreibt eine Dead-Letter-Zeile mit grund dauerhaft_fehlgeschlagen', async () => {
+    const { client, eingefuegt } = fakeMitInsert(VOLLE_ZEILE({ status: 'sent' }))
+    const r = await verarbeiteTransaktionsRueckmeldung(client, {
+      providerNachrichtId: PID, ereignis: 'email.bounced',
+      zeitpunkt: ZEIT, bounceTyp: 'Permanent',
+    })
+
+    expect(r.beendet).toBe(true)
+    expect(eingefuegt).toHaveLength(1)
+    const zeile = eingefuegt[0]
+    expect(zeile.status).toBe('skipped')
+    expect(zeile.grund).toBe('dauerhaft_fehlgeschlagen')
+    // Ohne correlation_id findet der Dead-Letter-Filter in
+    // offeneZustellungen() den Vorgang nicht — die Zeile waere wirkungslos.
+    expect(zeile.correlation_id).toBe(KORRELATION)
+    expect(zeile.channel).toBe('email')
+  })
+
+  it('sagt es auch im Hinweis', async () => {
+    const { client } = fakeMitInsert(VOLLE_ZEILE({ status: 'sent' }))
+    const r = await verarbeiteTransaktionsRueckmeldung(client, {
+      providerNachrichtId: PID, ereignis: 'email.bounced',
+      zeitpunkt: ZEIT, bounceTyp: 'Permanent',
+    })
+    expect(r.hinweis).toMatch(/keine weitere Wiederholung/)
+  })
+
+  it('eine Beschwerde beendet ebenfalls', async () => {
+    const { client, eingefuegt } = fakeMitInsert(VOLLE_ZEILE({ status: 'sent' }))
+    const r = await verarbeiteTransaktionsRueckmeldung(client, {
+      providerNachrichtId: PID, ereignis: 'email.complained', zeitpunkt: ZEIT,
+    })
+    expect(r.beendet).toBe(true)
+    expect(eingefuegt[0].grund).toBe('dauerhaft_fehlgeschlagen')
+  })
+})
+
+describe('Was NICHT beendet werden darf', () => {
+  it('ein Soft Bounce bleibt wiederholbar', async () => {
+    const { client, eingefuegt } = fakeMitInsert(VOLLE_ZEILE({ status: 'sent' }))
+    const r = await verarbeiteTransaktionsRueckmeldung(client, {
+      providerNachrichtId: PID, ereignis: 'email.bounced',
+      zeitpunkt: ZEIT, bounceTyp: 'Transient',
+    })
+    expect(r.status).toBe('failed')      // der Bounce steht trotzdem an der Zeile
+    expect(r.beendet).toBe(false)
+    expect(eingefuegt).toHaveLength(0)
+  })
+
+  it('ein Providerfehler bleibt wiederholbar', async () => {
+    const { client, eingefuegt } = fakeMitInsert(VOLLE_ZEILE({ status: 'sent' }))
+    const r = await verarbeiteTransaktionsRueckmeldung(client, {
+      providerNachrichtId: PID, ereignis: 'email.failed', zeitpunkt: ZEIT,
+    })
+    expect(r.beendet).toBe(false)
+    expect(eingefuegt).toHaveLength(0)
+  })
+
+  it('eine erfolgreiche Zustellung schreibt keinen Endzustand', async () => {
+    const { client, eingefuegt } = fakeMitInsert(VOLLE_ZEILE({ status: 'sent' }))
+    const r = await verarbeiteTransaktionsRueckmeldung(client, {
+      providerNachrichtId: PID, ereignis: 'email.delivered', zeitpunkt: ZEIT,
+    })
+    expect(r.beendet).toBe(false)
+    expect(eingefuegt).toHaveLength(0)
+  })
+})
+
+describe('Die Adresse bleibt erreichbar', () => {
+  it('der Endzustand sperrt die Adresse NICHT', async () => {
+    // Transaktionspost wird nicht gesperrt (siehe Modulkopf): der
+    // naechste fachliche Vorgang hat eine eigene correlation_id und geht
+    // wieder raus. Beendet wird nur die Wiederholung DIESES Vorgangs —
+    // sonst verstummte man gegenueber dem, den man erreichen MUSS.
+    const { client, eingefuegt } = fakeMitInsert(VOLLE_ZEILE({ status: 'sent' }))
+    await verarbeiteTransaktionsRueckmeldung(client, {
+      providerNachrichtId: PID, ereignis: 'email.bounced',
+      zeitpunkt: ZEIT, bounceTyp: 'Permanent',
+    })
+    // Nur die eine Dead-Letter-Zeile, kein Eintrag auf einer Sperrliste.
+    expect(eingefuegt).toHaveLength(1)
+    expect(eingefuegt[0].status).toBe('skipped')
   })
 })
