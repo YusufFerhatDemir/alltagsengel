@@ -61,21 +61,46 @@ export type NachrichtenAnlass = (typeof NACHRICHTEN_ANLAESSE)[number]
 // ---------------------------------------------------------------------------
 
 /**
- * Karenzzeit, bevor die erste Erinnerung faellig wird. Wer gestern
- * angefangen hat, macht vielleicht heute Abend weiter — eine Nachricht
- * nach zwoelf Stunden ist Draengeln, keine Hilfe.
+ * Der Erinnerungsplan — die EINE Stelle, an der die Fristen stehen.
+ *
+ * Zwei Stufen, dann Schluss:
+ *
+ *   Stufe 1  nach 1 Tag ohne Aktivitaet   freundlicher Anstoss
+ *   Stufe 2  nach 3 Tagen ohne Aktivitaet letzte Erinnerung
+ *   danach   nichts mehr
+ *
+ * Die Obergrenze ist keine Zahl, die man hochsetzen kann, sondern eine
+ * Zusage: wer zweimal nicht reagiert hat, moechte nicht reagieren. Die
+ * dritte Nachricht bringt niemanden zurueck, sie kostet nur Vertrauen —
+ * und landet beim naechsten Mal im Spamordner, samt allem anderen, was
+ * wir dieser Person je schreiben.
+ *
+ * Die Verwaltung sieht offene Ablaeufe weiterhin in der Betriebssicht
+ * (/admin/onboarding). Automatisch passiert danach nichts mehr; ein
+ * Mensch kann sich jederzeit melden.
+ *
+ * Die Tage zaehlen ab der letzten AKTIVITAET der Person, nicht ab dem
+ * Beginn: wer gestern noch einen Schritt gemacht hat, ist mitten im
+ * Ablauf und wird nicht angestossen.
  */
-export const KARENZ_TAGE = 2
+export const ERINNERUNGS_STUFEN = [
+  { stufe: 1, nachTagenInaktiv: 1 },
+  { stufe: 2, nachTagenInaktiv: 3 },
+] as const
 
-/** Mindestabstand zwischen zwei automatischen Nachrichten. */
-export const ABSTAND_TAGE = 4
+/** Hoechstzahl automatischer Erinnerungen — ergibt sich aus dem Plan. */
+export const MAX_ERINNERUNGEN = ERINNERUNGS_STUFEN.length
+
+/** Wartezeit bis zur ERSTEN Erinnerung (Tage ohne Aktivitaet). */
+export const KARENZ_TAGE = ERINNERUNGS_STUFEN[0].nachTagenInaktiv
 
 /**
- * Hoechstzahl automatischer Erinnerungen je Ablauf. Danach passiert
- * nichts mehr — wer dreimal nicht reagiert hat, moechte nicht reagieren.
- * Die Verwaltung sieht den offenen Ablauf weiterhin in der Betriebssicht.
+ * Mindestabstand zwischen zwei Nachrichten. Abgeleitet aus dem Plan,
+ * nicht daneben gepflegt — sonst koennen sich Plan und Abstand
+ * widersprechen und die zweite Stufe faellt still aus.
  */
-export const MAX_ERINNERUNGEN = 3
+export const ABSTAND_TAGE =
+  ERINNERUNGS_STUFEN[1].nachTagenInaktiv - ERINNERUNGS_STUFEN[0].nachTagenInaktiv
 
 const TAG_MS = 24 * 60 * 60 * 1000
 
@@ -134,20 +159,23 @@ export function pruefeErinnerung(
     return nein('Ablauf ist abgeschlossen — es gibt nichts zu erinnern.')
   }
 
-  if (lage.bisherigeErinnerungen >= MAX_ERINNERUNGEN) {
+  const bisher = Math.max(0, Math.trunc(lage.bisherigeErinnerungen) || 0)
+  if (bisher >= MAX_ERINNERUNGEN) {
     return nein(
-      `Bereits ${lage.bisherigeErinnerungen} Erinnerungen versendet (Hoechstzahl `
-      + `${MAX_ERINNERUNGEN}) — es wird nicht weiter nachgefasst.`,
+      `Bereits ${bisher} Erinnerungen versendet (Hoechstzahl ${MAX_ERINNERUNGEN}) — `
+      + 'es wird nicht weiter nachgefasst.',
     )
   }
 
-  // Karenz laeuft ab der letzten AKTIVITAET, nicht ab dem Beginn: wer
-  // gestern noch einen Schritt gemacht hat, ist mitten im Ablauf.
+  // Die naechste faellige Stufe ergibt sich aus der Zahl der bisherigen
+  // Nachrichten: wer eine hat, ist als Naechstes bei Stufe 2.
+  const stufe = ERINNERUNGS_STUFEN[bisher]
+
   const tageInaktiv = tageSeit(lage.updatedAt, jetzt)
-  if (tageInaktiv < KARENZ_TAGE) {
+  if (tageInaktiv < stufe.nachTagenInaktiv) {
     return nein(
-      `Letzte Aktivität vor ${tageInaktiv} Tag(en) — die Karenzzeit von `
-      + `${KARENZ_TAGE} Tagen läuft noch.`,
+      `Letzte Aktivität vor ${tageInaktiv} Tag(en) — Stufe ${stufe.stufe} wird erst `
+      + `nach ${stufe.nachTagenInaktiv} Tag(en) ohne Aktivität fällig.`,
     )
   }
 
@@ -168,7 +196,7 @@ export function pruefeErinnerung(
     faellig: true,
     anlass,
     begruendung:
-      `Seit ${tageInaktiv} Tagen keine Aktivität bei Schritt `
+      `Stufe ${stufe.stufe}: seit ${tageInaktiv} Tagen keine Aktivität bei Schritt `
       + `${lage.aktuellerSchritt} von ${lage.gesamtSchritte}.`,
   }
 }
