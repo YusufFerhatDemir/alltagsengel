@@ -195,7 +195,8 @@ export const POST = withTracking(async function POST(request: Request) {
       }
       return NextResponse.json({
         ok: true, art: 'transaktion', vorgang: rueck.vorgangArt,
-        status: rueck.status, eskaliert: rueck.eskaliert, hinweis: rueck.hinweis,
+        status: rueck.status, eskaliert: rueck.eskaliert,
+        beendet: rueck.beendet, hinweis: rueck.hinweis,
       }, { status: 200 })
     }
 

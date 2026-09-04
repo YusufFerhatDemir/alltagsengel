@@ -53,7 +53,7 @@
 import 'server-only'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { logger } from '@/lib/logger'
-import type { ZustellStatus } from './delivery-log'
+import { protokolliereZustellung, type ZustellStatus } from './delivery-log'
 
 const log = logger.child('zustellrueckmeldung')
 
@@ -138,6 +138,8 @@ export interface RueckmeldungsErgebnis {
   vorgangArt: string | null
   /** Ist daraus ein Sicherheitsereignis entstanden? */
   eskaliert: boolean
+  /** Wurde die Wiederholung dieses Vorgangs beendet (Hard Bounce/Beschwerde)? */
+  beendet: boolean
   hinweis: string
 }
 
@@ -149,6 +151,34 @@ interface Zeile {
   vorgang_art: string | null
   vorgang_ref: string | null
   vorgang_empfaenger: string | null
+  // Fuer die Endzustands-Zeile bei dauerhaftem Fehler (siehe unten).
+  channel: string | null
+  correlation_id: string | null
+  notification_id: string | null
+  attempt_count: number | null
+}
+
+/**
+ * Ist diese Rueckmeldung ein ENDZUSTAND — also einer, nach dem ein
+ * weiterer Zustellversuch aussichtslos ist?
+ *
+ * Bewusst eng, nach dem Grundsatz aus fehlerklassen.ts („im Zweifel
+ * voruebergehend"):
+ *   - Hard Bounce (`bounce.type === 'Permanent'`): die Adresse existiert
+ *     nicht. Ein weiterer Versuch kann nicht ankommen.
+ *   - Beschwerde: der Empfaenger hat die Mail als Spam gemeldet. Erneut
+ *     zu senden ist die schlechteste denkbare Reaktion.
+ *
+ * NICHT endgueltig sind ein Soft Bounce (Postfach voll, Server gerade
+ * weg) und `email.failed` — dort ist die Wiederholung richtig.
+ */
+export function istEndzustand(
+  ereignis: Rueckmeldung,
+  bounceTyp: string | null | undefined,
+): boolean {
+  if (ereignis === 'email.complained') return true
+  if (ereignis !== 'email.bounced') return false
+  return String(bounceTyp ?? '').toLowerCase() === 'permanent'
 }
 
 /**
@@ -178,12 +208,15 @@ export async function verarbeiteTransaktionsRueckmeldung(
 ): Promise<RueckmeldungsErgebnis> {
   const nichts = (hinweis: string): RueckmeldungsErgebnis => ({
     gefunden: false, geaendert: false, status: null,
-    vorgangArt: null, eskaliert: false, hinweis,
+    vorgangArt: null, eskaliert: false, beendet: false, hinweis,
   })
 
   const { data, error } = await admin
     .from('notification_delivery_log')
-    .select('id, status, recipient, organization_id, vorgang_art, vorgang_ref, vorgang_empfaenger')
+    .select(
+      'id, status, recipient, organization_id, vorgang_art, vorgang_ref, '
+      + 'vorgang_empfaenger, channel, correlation_id, notification_id, attempt_count',
+    )
     .eq('provider_message_id', eingabe.providerNachrichtId)
     .maybeSingle()
 
@@ -213,7 +246,7 @@ export async function verarbeiteTransaktionsRueckmeldung(
   if (Object.keys(felder).length === 0) {
     return {
       gefunden: true, geaendert: false, status: bisher,
-      vorgangArt: zeile.vorgang_art, eskaliert: false,
+      vorgangArt: zeile.vorgang_art, eskaliert: false, beendet: false,
       hinweis: `Rueckmeldung ${eingabe.ereignis} aendert nichts (Stand: ${bisher}).`,
     }
   }
@@ -229,6 +262,68 @@ export async function verarbeiteTransaktionsRueckmeldung(
   if (schreibFehler) throw new Error(`Zustellzeile nicht schreibbar: ${schreibFehler.message}`)
   if (!getroffen || getroffen.length === 0) {
     log.warn('Zustellrueckmeldung ohne Wirkung geschrieben', { zeile: zeile.id })
+  }
+
+  // ── Endzustand: keine weitere Wiederholung ──────────────────────────
+  // BEFUND 04.09.2026. Ohne diese Zeile wird eine dauerhaft
+  // unzustellbare Adresse WEITER ANGESCHRIEBEN. Der Weg dahin:
+  //
+  //   1. Der Erstversand schreibt eine Zeile mit status 'sent'.
+  //   2. Diese Rueckmeldung hebt genau diese Zeile auf 'failed'.
+  //   3. Danach gibt es fuer den Vorgang KEINE 'sent'/'delivered'-Zeile
+  //      mehr — und beide Sperren des Wiederholungswegs fragen genau
+  //      danach: bereitsZugestellt() (delivery-log.ts) zaehlt
+  //      status IN ('sent','delivered'), offeneZustellungen()
+  //      (retry.ts) waehlt status IN ('queued','failed') und schliesst
+  //      nur Vorgaenge mit einer Erfolgszeile aus.
+  //   4. Der Vorgang sieht also wieder „offen" aus und wird erneut
+  //      versendet — bis MAX_VERSUCHE erreicht ist.
+  //
+  // Die Fehlerklassen-Sperre aus retry-worker.ts greift hier NICHT:
+  // Resend nimmt den erneuten Auftrag mit 2xx an und meldet den Bounce
+  // erst asynchron. Der Versuch gilt damit als 'versendet', nicht als
+  // 'fehlgeschlagen' — und nur der fehlgeschlagene Zweig fragt
+  // istDauerhaft().
+  //
+  // Ein Hard Bounce loest deshalb hier einen Endzustand aus: eine
+  // 'skipped'-Zeile mit grund 'dauerhaft_fehlgeschlagen'. Genau darauf
+  // filtert offeneZustellungen() den Vorgang aus (Dead-Letter-Filter).
+  // Kein neuer Statuswert, keine Migration — 'dauerhaft_fehlgeschlagen'
+  // steht bereits in notification_delivery_log_grund_check
+  // (20260927000000).
+  //
+  // Die Adresse wird weiterhin NICHT gesperrt (siehe Kopf): der naechste
+  // fachliche Vorgang — neue Rechnung, neue Sicherheitsmeldung — hat
+  // eine eigene correlation_id und geht wieder raus. Beendet wird nur
+  // die Wiederholung DIESES Vorgangs.
+  let beendet = false
+  if (gescheitert && istEndzustand(eingabe.ereignis, eingabe.bounceTyp)) {
+    const ergebnis = await protokolliereZustellung(
+      {
+        organizationId: zeile.organization_id ?? '',
+        correlationId: zeile.correlation_id,
+        notificationId: zeile.notification_id,
+        vorgangArt: zeile.vorgang_art,
+        vorgangRef: zeile.vorgang_ref,
+        vorgangEmpfaenger: zeile.vorgang_empfaenger,
+        channel: (zeile.channel ?? 'email') as never,
+        recipient: zeile.recipient ?? '',
+        status: 'skipped',
+        grund: 'dauerhaft_fehlgeschlagen',
+        fehler: grundtext,
+        attemptCount: Math.max(1, zeile.attempt_count ?? 1),
+      },
+      admin,
+    )
+    beendet = ergebnis.ok
+    if (!ergebnis.ok) {
+      // Fail-soft: der Bounce steht bereits an der Zeile. Ein
+      // fehlender Endzustand bedeutet nur, dass der Wiederholungslauf
+      // es noch einmal versucht — nicht, dass etwas verloren geht.
+      log.warn('Endzustand nach dauerhaftem Fehler nicht schreibbar', {
+        zeile: zeile.id, grund: ergebnis.grund,
+      })
+    }
   }
 
   // ── Eskalation ──────────────────────────────────────────────────────
@@ -261,8 +356,9 @@ export async function verarbeiteTransaktionsRueckmeldung(
     status: (felder.status as ZustellStatus) ?? bisher,
     vorgangArt: zeile.vorgang_art,
     eskaliert,
+    beendet,
     hinweis: gescheitert
-      ? `Zustellung gescheitert: ${grundtext}`
+      ? `Zustellung gescheitert: ${grundtext}${beendet ? ' — keine weitere Wiederholung.' : ''}`
       : `Stand auf ${String(felder.status)} gehoben.`,
   }
 }
