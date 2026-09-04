@@ -28,8 +28,14 @@
 
 import type { SchrittDefinition } from './schritte'
 
-/** Was der Wizard ueber einen Schritt wissen muss. */
-export interface WizardSchritt extends SchrittDefinition {}
+/**
+ * Was der Wizard ueber einen Schritt wissen muss.
+ *
+ * Deckungsgleich mit SchrittDefinition — als eigener Name, damit der
+ * Wizard nicht an die Onboarding-Schrittfolgen gebunden ist: er laesst
+ * sich mit jeder Folge betreiben, die diese Form erfuellt.
+ */
+export type WizardSchritt = SchrittDefinition
 
 export interface WizardZustand {
   /** 1-basiert. */

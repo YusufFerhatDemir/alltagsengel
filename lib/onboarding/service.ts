@@ -308,6 +308,36 @@ export function ermittleFehlendeAngaben(
 }
 
 /**
+ * Vermerkt eine hochgeladene Unterlage.
+ *
+ * Nur der VERWEIS steht hier — die Datei selbst liegt im Storage. Der
+ * Fortschritt ist ein Protokoll des Ablaufs, kein Dateispeicher; ein
+ * Base64-Anhang in jsonb waere in jeder Abfrage mit dabei.
+ */
+export async function vermerkeDokument(
+  supabase: SupabaseClient,
+  schluessel: OnboardingSchluessel,
+  art: string,
+  eintrag: { pfad: string; dateiname: string; groesse: number },
+): Promise<void> {
+  const bestand = await holeOderStarte(supabase, schluessel)
+  if (bestand.abgeschlossenAm) throw new OnboardingAbgeschlossenError(schluessel.typ)
+
+  const dokumentStatus = {
+    ...bestand.dokumentStatus,
+    [art]: { ...eintrag, status: 'hochgeladen', zeitpunkt: new Date().toISOString() },
+  }
+
+  const { error } = await supabase
+    .from(TABELLE)
+    .update({ dokument_status: dokumentStatus })
+    .eq('id', bestand.id)
+    .is('abgeschlossen_am', null)
+
+  if (error) throw new OnboardingNichtLesbarError(`Unterlage nicht vermerkbar (${error.message})`)
+}
+
+/**
  * Haelt fest, wo jemand den Ablauf verlassen hat.
  *
  * Bewusst getrennt von aktueller_schritt: der sagt, wo die Person STEHT,
