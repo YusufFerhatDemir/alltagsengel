@@ -181,6 +181,12 @@ jobs:
         # aber eine stille Falschaussage: die Seite oeffnet sich und bleibt
         # leer, ohne zu sagen warum. Genau so entstand die QM/PDL-Luecke.
         #
+        # STAND 04.09.2026: nur noch 14 Paare. Die Obergrenze war auf 50
+        # stehengeblieben und liess damit 36 NEUE blinde Paare unbemerkt
+        # durch — die Grenze prueft nur dann etwas, wenn sie am Ist-Stand
+        # klebt. Der Lauf sagt das selbst, sobald er weniger findet als
+        # erlaubt; hier ist die Zahl jetzt nachgezogen.
+        #
         # WARUM MIT OBERGRENZE STATT --strict
         # Am 31.08.2026 standen 50 solcher Paare offen. Von den urspruenglich
         # 52 fiel eines als Fehlbefund weg (/admin/sepa → documents war der
@@ -205,7 +211,7 @@ jobs:
           SUPABASE_SECRET_KEY: ${{ secrets.SCHEMA_DRIFT_SUPABASE_SECRET_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ''
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ''
-        run: npm run lint:rls-sicht -- --hoechstens 50
+        run: npm run lint:rls-sicht -- --hoechstens 14
 
       - name: Production build
         env:
