@@ -224,6 +224,24 @@ export function zustandNachSpeichern(
 }
 
 /**
+ * Zu einem bereits erreichten Schritt springen — der Weg der
+ * Korrektur-Knoepfe in der Zusammenfassung.
+ *
+ * Bewusst nur RUECKWAERTS: vorwaerts zu springen wuerde Schritte
+ * ueberspringen, ohne sie zu speichern, und der Fortschritt in der
+ * Datenbank liefe der Oberflaeche hinterher. Ein Ziel jenseits des
+ * aktuellen Schritts wird deshalb auf ihn begrenzt, statt abgelehnt — die
+ * Oberflaeche soll dafuer keine Fehlermeldung brauchen.
+ */
+export function springeZu(zustand: WizardZustand, ziel: number): WizardZustand {
+  const begrenzt = Math.min(
+    Math.max(1, Math.trunc(ziel) || 1),
+    zustand.aktuellerSchritt,
+  )
+  return { ...zustand, aktuellerSchritt: begrenzt, fehler: null, fehlendePflicht: [] }
+}
+
+/**
  * Einen Schritt zurueck. Aendert nur die Ansicht: gespeicherte Angaben
  * bleiben, und der Fortschritt in der Datenbank wird nie gesenkt (siehe
  * service.ts).
