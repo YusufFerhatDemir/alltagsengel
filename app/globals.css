@@ -2630,3 +2630,20 @@ body:has(.admin-layout) {
   .ui-skelett-zeile, .ui-shimmer-line, .ui-shimmer-circle { animation:none; }
 }
 
+
+
+/* ══════════════════════════════════════════════
+   Cookie-Banner — Platz statt Überdeckung
+   ══════════════════════════════════════════════
+   Der Banner liegt als `position: fixed` unten. Ohne diesen Abstand
+   verdeckt er auf schmalen Geräten die untersten Bedienelemente — auf
+   einem iPhone 14 waren das die Absende-Knöpfe der Formulare, und wer
+   den Banner nicht wegklickte, kam nicht weiter.
+
+   Die Variable setzt components/CookieConsent.tsx, solange der Banner
+   sichtbar ist; danach wird sie entfernt und der Abstand fällt auf 0.
+   Kein Standardwert im Fallback: ohne Banner soll kein Rand entstehen. */
+body {
+  padding-bottom: var(--ae-consent-hoehe, 0);
+  transition: padding-bottom 0.25s ease;
+}

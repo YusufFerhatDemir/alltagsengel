@@ -2,7 +2,8 @@
 import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Script from 'next/script'
-import { getCookieConsent } from './CookieConsent'
+import { getConsentZustand } from './CookieConsent'
+import { gtagEinwilligung, type ConsentZustand } from '@/lib/consent/kategorien'
 
 const GTM_ID = 'GTM-NPNL3D3Q'
 const GOOGLE_ADS_ID = 'AW-18061588897'
@@ -33,17 +34,17 @@ export default function GoogleTagManager() {
 
   useEffect(() => {
     if (istPflegeCoach) return
-    // Prüfe ob Consent bereits vorhanden ist und aktualisiere
-    const consent = getCookieConsent()
-    if (consent === 'accepted') {
-      updateConsentToGranted()
-    }
+    // Bestehende Entscheidung sofort anwenden — auch eine teilweise.
+    // Frueher wurde nur auf 'accepted' reagiert; wer nur der Statistik
+    // zugestimmt hatte, bekam gar keine Aktualisierung und blieb auf dem
+    // Default 'denied' fuer analytics_storage stehen.
+    const zustand = getConsentZustand()
+    if (zustand) uebertrageConsent(zustand)
 
     // Event-basiert statt Polling: reagiert sofort auf Consent-Änderung
     const handleConsent = (e: Event) => {
-      if ((e as CustomEvent).detail === 'accepted') {
-        updateConsentToGranted()
-      }
+      const neu = (e as CustomEvent).detail as ConsentZustand | undefined
+      if (neu) uebertrageConsent(neu)
     }
     window.addEventListener('ae_consent_change', handleConsent)
 
@@ -110,21 +111,24 @@ export default function GoogleTagManager() {
 }
 
 /**
- * Consent auf "granted" aktualisieren — wird aufgerufen wenn der Nutzer
- * Cookies akzeptiert. Erlaubt Google Ads Conversion-Tracking und Analytics.
+ * Überträgt den Einwilligungsstand an den Google Consent Mode v2.
+ *
+ * Je Kategorie einzeln: analytics_storage haengt an der Statistik, die
+ * drei ad_*-Schalter am Marketing. Sie zusammenzufassen waere bequem und
+ * falsch — wer nur der Reichweitenmessung zustimmt, hat der Werbemessung
+ * nicht zugestimmt.
+ *
+ * Die Uebertragung erfolgt IMMER, auch wenn alles auf 'denied' laeuft:
+ * beim Widerruf nach vorheriger Zustimmung muss der Schalter aktiv
+ * zurueckgesetzt werden, sonst gilt die alte Erlaubnis weiter.
  */
-function updateConsentToGranted(attempt = 0) {
+function uebertrageConsent(zustand: ConsentZustand, attempt = 0) {
   if (typeof window === 'undefined' || typeof window.gtag !== 'function') {
     // gtag noch nicht geladen — max. 20 Versuche (10 s), sonst aufgeben
     // (z. B. AdBlocker: gtag kommt nie, Endlos-Timer wäre sinnlos)
-    if (attempt < 20) setTimeout(() => updateConsentToGranted(attempt + 1), 500)
+    if (attempt < 20) setTimeout(() => uebertrageConsent(zustand, attempt + 1), 500)
     return
   }
 
-  window.gtag('consent', 'update', {
-    'ad_storage': 'granted',
-    'ad_user_data': 'granted',
-    'ad_personalization': 'granted',
-    'analytics_storage': 'granted',
-  })
+  window.gtag('consent', 'update', gtagEinwilligung(zustand))
 }
