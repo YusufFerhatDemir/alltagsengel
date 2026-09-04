@@ -199,12 +199,29 @@ describe('POST /api/marketing/resend-webhook — die Signatur ist die Grenze', (
     expect(antwort.status).toBe(401)
   })
 
-  it('weist einen Aufruf GANZ OHNE Signaturkopfzeilen ab (401)', async () => {
+  it('weist einen Aufruf GANZ OHNE Signaturkopfzeilen ab (400)', async () => {
+    // 400, nicht 401: fehlende Kopfzeilen sind eine fehlerhaft AUFGEBAUTE
+    // Anfrage, keine fehlgeschlagene Authentifizierung. Ein 401 zeigte bei
+    // der Fehlersuche auf den Schlüssel, wo in Wirklichkeit die Kopfzeilen
+    // fehlen. Sicherheitlich ist beides gleichwertig — entscheidend ist,
+    // dass NICHTS verarbeitet wird, und das prüft die zweite Zusicherung.
     process.env.RESEND_WEBHOOK_SECRET = `whsec_${SCHLUESSEL_ROH}`
     vi.resetModules()
     const { POST } = await import('@/app/api/marketing/resend-webhook/route')
     const antwort = await POST(webhookAnfrage({}))
-    expect(antwort.status).toBe(401)
+    expect(antwort.status).toBe(400)
+    expect(antwort.status).toBeGreaterThanOrEqual(400)
+  })
+
+  it('lädt bei fehlenden Kopfzeilen NICHT zum erneuten Versuch ein', async () => {
+    // Ein Retry-After hier hieße: „versuch's gleich nochmal" — genau das,
+    // was ein Angreifer hören möchte. Nur der 503 (Fehler bei uns) darf
+    // um Wiederholung bitten.
+    process.env.RESEND_WEBHOOK_SECRET = `whsec_${SCHLUESSEL_ROH}`
+    vi.resetModules()
+    const { POST } = await import('@/app/api/marketing/resend-webhook/route')
+    const antwort = await POST(webhookAnfrage({}))
+    expect(antwort.headers.get('Retry-After')).toBeNull()
   })
 
   it('antwortet 503, solange RESEND_WEBHOOK_SECRET fehlt — und verarbeitet NICHTS', async () => {
@@ -222,5 +239,16 @@ describe('POST /api/marketing/resend-webhook — die Signatur ist die Grenze', (
       'svix-signature': `v1,${signiereRumpf(RUMPF, id, sek)}`,
     }))
     expect(antwort.status).toBe(503)
+
+    // Der Rumpf muss sagen, WAS fehlt — sonst steht bei der Fehlersuche
+    // nur „nicht konfiguriert" da. Der Variablenname ist kein Geheimnis;
+    // ihr Wert darf nirgends auftauchen.
+    const rumpf = await antwort.json()
+    expect(rumpf.fehlend).toBe('RESEND_WEBHOOK_SECRET')
+    expect(JSON.stringify(rumpf)).not.toContain(SCHLUESSEL_ROH)
+
+    // Wiederholen ist hier erwünscht: sobald die Variable gesetzt ist,
+    // soll das Ereignis ankommen.
+    expect(antwort.headers.get('Retry-After')).toBeTruthy()
   })
 })
