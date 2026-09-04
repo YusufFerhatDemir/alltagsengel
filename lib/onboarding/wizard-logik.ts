@@ -26,7 +26,7 @@
  * kommen ueber die Erinnerung zurueck.
  */
 
-import type { SchrittDefinition } from './schritte'
+import { erwarteteAngabenFuer, type SchrittDefinition } from './schritte'
 
 /**
  * Was der Wizard ueber einen Schritt wissen muss.
@@ -122,7 +122,10 @@ export function fehlendeAngabenImSchritt(
   schritt: WizardSchritt,
   daten: Record<string, unknown> | undefined,
 ): string[] {
-  return schritt.erwarteteAngaben.filter(a => istLeer(daten?.[a]))
+  // erwarteteAngabenFuer() loest die bedingten Angaben auf: „Für wen?"
+  // verlangt den Namen der pflegebeduerftigen Person nur dann, wenn es
+  // nicht die eigene ist.
+  return erwarteteAngabenFuer(schritt, daten).filter(a => istLeer(daten?.[a]))
 }
 
 /**
@@ -184,8 +187,10 @@ export function beginneWeiter(
   // Ein ueberspringbarer Schritt ohne jede Eingabe gilt als uebersprungen,
   // nicht als fertig — sonst behauptet die Auswertung, jemand habe ihn
   // beantwortet.
+  // Der Nenner muss die BEDINGTEN Angaben mitzaehlen, sonst gilt ein
+  // Schritt als uebersprungen, in dem sehr wohl etwas ausgefuellt wurde.
   const status: SpeicherAuftrag['status'] =
-    schritt.ueberspringbar && fehlend.length === schritt.erwarteteAngaben.length
+    schritt.ueberspringbar && fehlend.length === erwarteteAngabenFuer(schritt, daten).length
       ? 'uebersprungen'
       : 'fertig'
 

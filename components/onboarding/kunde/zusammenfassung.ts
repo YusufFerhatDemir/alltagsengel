@@ -6,7 +6,7 @@
  * Gespräche" — und prüft damit etwas, das sie nie eingegeben hat.
  */
 
-import { SCHRITTFOLGEN } from '@/lib/onboarding/schritte'
+import { SCHRITTFOLGEN, erwarteteAngabenFuer } from '@/lib/onboarding/schritte'
 import { finanzierungsLabel } from '@/lib/onboarding/finanzierung'
 import { leistungLabel } from './leistungen'
 
@@ -15,6 +15,14 @@ const KLARTEXT: Record<string, string> = {
   selbst: 'Für mich selbst',
   angehoeriger: 'Für eine angehörige Person',
   andere: 'Für jemand anderen',
+  // Verhältnis zur pflegebedürftigen Person
+  kind: 'Tochter oder Sohn',
+  partner: 'Partnerin oder Partner',
+  elternteil: 'Mutter oder Vater',
+  geschwister: 'Schwester oder Bruder',
+  betreuer: 'Rechtliche Betreuung',
+  bevollmaechtigter: 'Bevollmächtigt',
+  sonstige: 'Etwas anderes',
   // Pflegegrad
   keiner: 'Kein Pflegegrad',
   unbekannt: 'Weiß ich nicht',
@@ -38,6 +46,11 @@ const KLARTEXT: Record<string, string> = {
 
 const FELD_LABEL: Record<string, string> = {
   fuer_wen: 'Unterstützung für',
+  person_vorname: 'Name der Person (Vorname)',
+  person_nachname: 'Name der Person (Nachname)',
+  person_geburtsdatum: 'Geburtsdatum der Person',
+  person_telefon: 'Telefon der Person',
+  beziehung: 'Ihr Verhältnis zur Person',
   strasse: 'Straße', plz: 'Postleitzahl', ort: 'Ort',
   leistungsarten: 'Gewünschte Unterstützung', sonstiges: 'Weiterer Bedarf',
   pflegegrad: 'Pflegegrad',
@@ -85,9 +98,12 @@ export function baueBloecke(
   SCHRITTFOLGEN.kunde.forEach((schritt, index) => {
     if (schritt.art !== 'formular') return
     const daten = alleDaten[schritt.schluessel] ?? {}
+    // Bedingte Angaben mit aufloesen — sonst fehlt in der Pruefung genau
+    // der Block, den jemand zur pflegebeduerftigen Person ausgefuellt hat.
+    const erwartet = erwarteteAngabenFuer(schritt, daten)
     const felder = [
-      ...schritt.erwarteteAngaben,
-      ...Object.keys(daten).filter(f => !schritt.erwarteteAngaben.includes(f)),
+      ...erwartet,
+      ...Object.keys(daten).filter(f => !erwartet.includes(f)),
     ]
     bloecke.push({
       nummer: index + 1,
@@ -109,7 +125,7 @@ export function offenePflichtangaben(
   for (const schritt of SCHRITTFOLGEN.kunde) {
     if (schritt.art !== 'formular' || schritt.ueberspringbar) continue
     const daten = alleDaten[schritt.schluessel] ?? {}
-    for (const feld of schritt.erwarteteAngaben) {
+    for (const feld of erwarteteAngabenFuer(schritt, daten)) {
       const wert = daten[feld]
       const leer = wert === undefined || wert === null || wert === ''
         || (Array.isArray(wert) && wert.length === 0)

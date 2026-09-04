@@ -69,6 +69,53 @@ export interface SchrittDefinition {
    * Erinnerung namentlich genannt.
    */
   erwarteteAngaben: readonly string[]
+  /**
+   * Angaben, die NUR unter einer Bedingung erwartet werden.
+   *
+   * Der Fall, für den es das gibt: „Für wen suchen Sie Unterstützung?" —
+   * bei „für mich selbst" ist die Frage nach dem Namen der
+   * pflegebedürftigen Person sinnlos, bei „für meine Mutter" ist sie
+   * unverzichtbar. Beide Angaben fest zu erwarten, hielte die Hälfte der
+   * Menschen an einer Frage auf, die sie nicht beantworten können.
+   *
+   * BEWUSST DEKLARATIV und nicht als Funktion: eine Bedingung als
+   * Datenstruktur lässt sich lesen, prüfen und später auch außerhalb von
+   * TypeScript auswerten. Eine Funktion im Katalog wäre nur zur Laufzeit
+   * verständlich.
+   */
+  bedingteAngaben?: readonly {
+    /** Feld im SELBEN Schritt … */
+    feld: string
+    /** … hat einen dieser Werte … */
+    werte: readonly string[]
+    /** … dann werden diese Angaben zusätzlich erwartet. */
+    dannErwartet: readonly string[]
+  }[]
+}
+
+/**
+ * Die Angaben, die dieser Schritt bei DIESEM Antwortstand erwartet —
+ * feste plus die durch eine Bedingung ausgelösten.
+ *
+ * Die eine Stelle, an der Bedingungen ausgewertet werden. Wizard,
+ * Fortschritt und Zusammenfassung rufen alle hier auf; rechnete jede
+ * Seite selbst, hielte die Oberfläche jemanden auf, den der Service
+ * längst für vollständig hält (oder umgekehrt).
+ */
+export function erwarteteAngabenFuer(
+  schritt: SchrittDefinition,
+  daten: Record<string, unknown> | undefined,
+): string[] {
+  const angaben = [...schritt.erwarteteAngaben]
+  for (const bedingung of schritt.bedingteAngaben ?? []) {
+    const wert = String(daten?.[bedingung.feld] ?? '')
+    if (bedingung.werte.includes(wert)) {
+      for (const a of bedingung.dannErwartet) {
+        if (!angaben.includes(a)) angaben.push(a)
+      }
+    }
+  }
+  return angaben
 }
 
 /**
@@ -197,6 +244,14 @@ const KUNDE_SCHRITTE: readonly SchrittDefinition[] = [
     hinweis: 'Damit wir wissen, mit wem wir sprechen.',
     ueberspringbar: false,
     erwarteteAngaben: ['fuer_wen'],
+    // Wer für eine andere Person anfragt, wird zusätzlich nach ihr
+    // gefragt. Bei „für mich selbst" entfallen diese Felder ganz — sie
+    // wären dann eine Frage nach der eigenen Person in dritter Person.
+    bedingteAngaben: [{
+      feld: 'fuer_wen',
+      werte: ['angehoeriger', 'andere'],
+      dannErwartet: ['person_vorname', 'person_nachname', 'beziehung'],
+    }],
   },
   {
     art: 'formular',
@@ -293,10 +348,17 @@ const ANGEHOERIGE_SCHRITTE: readonly SchrittDefinition[] = [
   {
     art: 'formular',
     schluessel: 'bezug',
-    titel: 'In welchem Verhältnis stehen Sie?',
-    hinweis: 'Angehörig, betreuend oder bevollmächtigt.',
+    titel: 'Zu wem gehören Sie?',
+    hinweis: 'Die Person, die bereits von uns betreut wird.',
     ueberspringbar: false,
-    erwarteteAngaben: ['beziehungsart', 'betroffene_person'],
+    erwarteteAngaben: ['person_vorname', 'person_nachname', 'beziehungsart'],
+    // Wer als bevollmächtigt oder betreuend auftritt, muss das belegen
+    // können — bei „angehoerig" verlangt niemand eine Urkunde.
+    bedingteAngaben: [{
+      feld: 'beziehungsart',
+      werte: ['betreuer', 'bevollmaechtigter'],
+      dannErwartet: ['nachweis_art'],
+    }],
   },
   {
     art: 'formular',
@@ -305,6 +367,30 @@ const ANGEHOERIGE_SCHRITTE: readonly SchrittDefinition[] = [
     hinweis: 'Sie bestimmen, welche Informationen Sie erreichen.',
     ueberspringbar: false,
     erwarteteAngaben: ['einsicht_umfang'],
+  },
+  {
+    art: 'formular',
+    schluessel: 'unterlagen',
+    titel: 'Nachweis hochladen',
+    hinweis: 'Nur nötig bei Betreuung oder Vollmacht — sonst überspringen.',
+    ueberspringbar: true,
+    erwarteteAngaben: ['vollmacht'],
+  },
+  {
+    art: 'pruefung',
+    schluessel: 'zusammenfassung',
+    titel: 'Bitte prüfen Sie Ihre Angaben',
+    hinweis: 'Sie können jeden Punkt noch ändern.',
+    ueberspringbar: false,
+    erwarteteAngaben: [],
+  },
+  {
+    art: 'pruefung',
+    schluessel: 'abschluss',
+    titel: 'Zugang beantragen',
+    hinweis: 'Die Freigabe erteilt die betreute Person oder unsere Verwaltung.',
+    ueberspringbar: false,
+    erwarteteAngaben: [],
   },
 ]
 

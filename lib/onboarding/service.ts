@@ -34,6 +34,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
+  erwarteteAngabenFuer,
   gesamtSchritte,
   istSchrittStatus,
   schrittNummer,
@@ -297,7 +298,9 @@ export function ermittleFehlendeAngaben(
   const fehlend: string[] = []
   for (const schritt of schrittfolge(typ)) {
     const eintrag = schritteDaten[schritt.schluessel]
-    for (const angabe of schritt.erwarteteAngaben) {
+    // Dieselbe Aufloesung wie im Wizard — sonst haelt die Oberflaeche
+    // jemanden auf, den der Fortschritt fuer vollstaendig haelt.
+    for (const angabe of erwarteteAngabenFuer(schritt, eintrag?.daten)) {
       const wert = eintrag?.daten?.[angabe]
       const leer = wert === undefined || wert === null || wert === ''
         || (Array.isArray(wert) && wert.length === 0)
