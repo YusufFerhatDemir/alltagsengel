@@ -8,6 +8,7 @@
  *   assistent.ts      Regelbasierte Auskunft zum eigenen Ablauf (rein)
  *   anleitung.ts      Personalisierte Anleitung: erledigt / erforderlich / offen (rein)
  *   uebersicht.ts     Betriebssicht der Verwaltung: Auswertung und Filter (rein)
+ *   erinnerungen.ts   Erinnerungslauf: Planung (rein) + Ausfuehrung (Datenbank/Versand)
  *   wizard-logik.ts   Ablaufsteuerung des Wizards (rein)
  *   einreichung.ts    Bewerbung aus dem Fortschritt bauen (rein)
  *   service.ts        onboarding_progress lesen und fortschreiben (Datenbank)
@@ -23,6 +24,7 @@ export * from './notifications'
 export * from './assistent'
 export * from './anleitung'
 export * from './uebersicht'
+export * from './erinnerungen'
 export * from './wizard-logik'
 export * from './service'
 export * from './einreichung'

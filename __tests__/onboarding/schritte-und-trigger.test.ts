@@ -14,7 +14,7 @@ import {
 } from '@/lib/onboarding/schritte'
 import {
   pruefeErinnerung, wirkungVon, tageSeit,
-  KARENZ_TAGE, ABSTAND_TAGE, MAX_ERINNERUNGEN,
+  KARENZ_TAGE, ABSTAND_TAGE, MAX_ERINNERUNGEN, ERINNERUNGS_STUFEN,
   type ErinnerungsLage,
 } from '@/lib/onboarding/triggers'
 import { anrede, baueNachricht, alleVorlagen, GRUSS } from '@/lib/onboarding/notifications'
@@ -157,10 +157,34 @@ describe('Erinnerung — wann NICHT', () => {
     expect(e.begruendung).toMatch(/Hoechstzahl/)
   })
 
-  it('nicht waehrend der Karenzzeit', () => {
+  it('nicht vor der ersten Stufe', () => {
+    // Wer heute noch etwas gemacht hat, ist mitten im Ablauf.
     const e = pruefeErinnerung(lage({ updatedAt: vorTagen(KARENZ_TAGE - 1) }), JETZT)
     expect(e.faellig).toBe(false)
-    expect(e.begruendung).toMatch(/Karenzzeit/)
+    expect(e.begruendung).toMatch(/Stufe 1/)
+  })
+
+  it('nicht vor der zweiten Stufe, auch wenn der Abstand reicht', () => {
+    // Nach der ersten Erinnerung zaehlt die Stufe, nicht nur der Abstand.
+    const e = pruefeErinnerung(lage({
+      bisherigeErinnerungen: 1,
+      updatedAt: vorTagen(ERINNERUNGS_STUFEN[1].nachTagenInaktiv - 1),
+      letzteAutoNachricht: vorTagen(30),
+    }), JETZT)
+    expect(e.faellig).toBe(false)
+    expect(e.begruendung).toMatch(/Stufe 2/)
+  })
+
+  it('hoert nach der zweiten Erinnerung auf — keine Spam-Schleife', () => {
+    const e = pruefeErinnerung(lage({
+      bisherigeErinnerungen: 2, updatedAt: vorTagen(90), letzteAutoNachricht: vorTagen(60),
+    }), JETZT)
+    expect(e.faellig).toBe(false)
+    expect(MAX_ERINNERUNGEN).toBe(2)
+  })
+
+  it('der Plan hat genau zwei Stufen mit 1 und 3 Tagen', () => {
+    expect(ERINNERUNGS_STUFEN.map(s => s.nachTagenInaktiv)).toEqual([1, 3])
   })
 
   it('nicht vor Ablauf des Mindestabstands', () => {
