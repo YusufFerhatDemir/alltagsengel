@@ -93,3 +93,78 @@ export function baueEinreichung(eingabe: EinreichungsEingabe): Einreichung {
     eingereicht_am: new Date().toISOString(),
   }
 }
+
+// ---------------------------------------------------------------------------
+// Kundenanfrage
+// ---------------------------------------------------------------------------
+
+export interface Anfrage {
+  organization_id: string
+  onboarding_progress_id: string
+  art: 'anfrage'
+  name: string
+  phone: string
+  email: string | null
+  plz: string
+  message: string | null
+  source: string
+  status: string
+  anfrage_daten: Record<string, unknown>
+  eingereicht_am: string
+}
+
+/**
+ * Baut die Zeile fuer eine Kundenanfrage.
+ *
+ * ── DER NAME KOMMT NICHT AUS DEM ABLAUF ────────────────────────────────
+ * Der Kundenablauf fragt bewusst KEINE Kontaktdaten ab — die Person ist
+ * angemeldet, ihr Name und ihre Nummer stehen im Profil. Sie werden
+ * deshalb hereingereicht statt aus schritte_daten gelesen. Waeren sie
+ * doppelt erfasst, wichen sie irgendwann voneinander ab.
+ *
+ * ── WAS DIE VERWALTUNG SOFORT SEHEN MUSS ───────────────────────────────
+ * Gewuenschte Leistungen, Pflegegrad, Finanzierungsweg und der Wunsch,
+ * wie es weitergehen soll, stehen im Klartext-Feld. Wer den Posteingang
+ * durchsieht, soll nicht erst ein jsonb aufklappen muessen, um zu wissen,
+ * ob ein Rueckruf gewuenscht ist.
+ */
+export function baueAnfrage(eingabe: EinreichungsEingabe & {
+  /** Aus dem Profil, nicht aus dem Ablauf. */
+  kontakt: { name: string; telefon: string | null; email: string | null }
+}): Anfrage {
+  const d = eingabe.schritteDaten
+
+  const leistungen = d.bedarf?.daten?.leistungsarten
+  const leistungsliste = Array.isArray(leistungen) ? leistungen.map(String) : []
+
+  const zeilen = [
+    feld(d, 'abschluss', 'nachricht') || null,
+    leistungsliste.length > 0 ? `Gewuenschte Leistungen: ${leistungsliste.join(', ')}` : null,
+    feld(d, 'pflegegrad', 'pflegegrad') ? `Pflegegrad: ${feld(d, 'pflegegrad', 'pflegegrad')}` : null,
+    feld(d, 'finanzierung', 'finanzierungsweg')
+      ? `Finanzierung: ${feld(d, 'finanzierung', 'finanzierungsweg')}` : null,
+    feld(d, 'abschluss', 'wie_weiter') ? `Wunsch: ${feld(d, 'abschluss', 'wie_weiter')}` : null,
+    feld(d, 'fuer_wen', 'fuer_wen') ? `Unterstuetzung fuer: ${feld(d, 'fuer_wen', 'fuer_wen')}` : null,
+    eingabe.fehlendeAngaben.length > 0
+      ? `Noch offen: ${eingabe.fehlendeAngaben.join(', ')}` : null,
+  ].filter((z): z is string => Boolean(z))
+
+  return {
+    organization_id: eingabe.organizationId,
+    onboarding_progress_id: eingabe.fortschrittId,
+    art: 'anfrage',
+    name: eingabe.kontakt.name.trim() || 'Ohne Namensangabe',
+    phone: (eingabe.kontakt.telefon ?? '').trim() || 'Keine Angabe',
+    email: eingabe.kontakt.email?.trim() || null,
+    plz: feld(d, 'adresse', 'plz'),
+    message: zeilen.length > 0 ? zeilen.join('\n') : null,
+    source: 'onboarding_wizard',
+    status: 'new',
+    anfrage_daten: {
+      schritte: d,
+      fehlende_angaben: [...eingabe.fehlendeAngaben],
+      eingefroren_am: new Date().toISOString(),
+    },
+    eingereicht_am: new Date().toISOString(),
+  }
+}

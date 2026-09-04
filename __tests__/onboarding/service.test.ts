@@ -15,6 +15,33 @@ import {
   merkeAbbruch, offeneAblaeufe, vermerkeAutoNachricht, ermittleFehlendeAngaben,
   OnboardingNichtLesbarError, OnboardingAbgeschlossenError,
 } from '@/lib/onboarding/service'
+import { SCHRITTFOLGEN, gesamtSchritte } from '@/lib/onboarding/schritte'
+
+// ── Die Erwartungen werden aus der Schrittfolge ABGELEITET ────────────
+// Frueher standen hier feste Schluessel ('kontakt') und feste Zahlen (5).
+// Beim ersten Umbau der Kundenfolge fielen dadurch neun Tests aus, ohne
+// dass am Service irgendetwas kaputt war. Diese Datei prueft das
+// VERHALTEN des Service, nicht den Inhalt des Katalogs — also holt sie
+// sich, was sie braucht, aus der Quelle.
+const FOLGE = SCHRITTFOLGEN.kunde
+const SCHRITTE = gesamtSchritte('kunde')
+const ERSTER = FOLGE[0]
+const ERSTE_ANGABE = ERSTER.erwarteteAngaben[0]
+const WEITERE_ANGABEN = ERSTER.erwarteteAngaben.slice(1)
+/** Erster ueberspringbarer Schritt, 1-basiert. */
+const UEBERSPRINGBAR_NR = FOLGE.findIndex(s => s.ueberspringbar) + 1
+const UEBERSPRINGBAR = FOLGE[UEBERSPRINGBAR_NR - 1]
+/**
+ * Alle Pflichtschritte als „fertig" — auch die Pruef- und Hinweisschritte.
+ * schliesseAb() verlangt jeden nicht ueberspringbaren Schritt, nicht nur
+ * die Formulare: im Wizard wird auch die Zusammenfassung beim Weiterklicken
+ * als erledigt vermerkt, und ein Ablauf, der ohne sie abschliesst, waere
+ * nie geprueft worden.
+ */
+const ALLE_PFLICHT_FERTIG = Object.fromEntries(
+  FOLGE.filter(s => !s.ueberspringbar)
+    .map(s => [s.schluessel, { status: 'fertig', daten: {}, zeitpunkt: 'x' }]),
+)
 
 type Client = Parameters<typeof holeFortschritt>[0]
 
@@ -28,7 +55,7 @@ const ZEILE = (ueber: Record<string, unknown> = {}) => ({
   organization_id: ORG,
   typ: 'kunde',
   aktueller_schritt: 1,
-  gesamt_schritte: 5,
+  gesamt_schritte: SCHRITTE,
   schritte_daten: {},
   fehlende_angaben: [],
   dokument_status: {},
@@ -111,10 +138,10 @@ describe('holeOderStarte', () => {
     // Oberflaeche und Fortschrittsbalken verschiedene Laengen.
     const { client, inserts } = fake(null)
     const f = await holeOderStarte(client, SCHLUESSEL)
-    expect(inserts[0].gesamt_schritte).toBe(5)
+    expect(inserts[0].gesamt_schritte).toBe(SCHRITTE)
     expect(inserts[0].aktueller_schritt).toBe(1)
     expect(inserts[0].organization_id).toBe(ORG)
-    expect(f.gesamtSchritte).toBe(5)
+    expect(f.gesamtSchritte).toBe(SCHRITTE)
   })
 
   it('legt nichts an, wenn es den Ablauf schon gibt', async () => {
@@ -129,45 +156,48 @@ describe('speichereSchritt — nur vorwaerts', () => {
   it('haelt Daten fest und rueckt einen Schritt vor', async () => {
     const { client, updates } = fake(ZEILE({ aktueller_schritt: 1 }))
     const f = await speichereSchritt(client, SCHLUESSEL, {
-      schritt: 1, daten: { vorname: 'Erika', nachname: 'Müller', telefon: '069' },
+      schritt: 1,
+      daten: Object.fromEntries(ERSTER.erwarteteAngaben.map(a => [a, 'x'])),
     })
     expect(f.aktuellerSchritt).toBe(2)
     const daten = updates[0].schritte_daten as Record<string, { status: string }>
-    expect(daten.kontakt.status).toBe('fertig')
+    expect(daten[ERSTER.schluessel].status).toBe('fertig')
   })
 
   it('senkt aktueller_schritt NICHT, wenn ein alter Schritt nachtraeglich kommt', async () => {
     // Zweiter Browsertab, Zurueck-Taste, wiederholter Request.
     const { client } = fake(ZEILE({ aktueller_schritt: 4 }))
-    const f = await speichereSchritt(client, SCHLUESSEL, { schritt: 1, daten: { vorname: 'E' } })
+    const f = await speichereSchritt(client, SCHLUESSEL, { schritt: 1, daten: { [ERSTE_ANGABE]: 'x' } })
     expect(f.aktuellerSchritt).toBe(4)
   })
 
   it('laeuft nicht ueber das Ende der Folge hinaus', async () => {
     // Sonst verletzt der Wert den CHECK in der Datenbank.
-    const { client } = fake(ZEILE({ aktueller_schritt: 5 }))
-    const f = await speichereSchritt(client, SCHLUESSEL, { schritt: 5, daten: {} })
-    expect(f.aktuellerSchritt).toBe(5)
+    const { client } = fake(ZEILE({ aktueller_schritt: SCHRITTE }))
+    const f = await speichereSchritt(client, SCHLUESSEL, { schritt: SCHRITTE, daten: {} })
+    expect(f.aktuellerSchritt).toBe(SCHRITTE)
   })
 
   it('stuft einen bereits fertigen Schritt nicht zurueck', async () => {
     const { client, updates } = fake(ZEILE({
-      schritte_daten: { kontakt: { status: 'fertig', daten: { vorname: 'E' }, zeitpunkt: 'x' } },
+      schritte_daten: {
+        [ERSTER.schluessel]: { status: 'fertig', daten: { [ERSTE_ANGABE]: 'x' }, zeitpunkt: 'x' },
+      },
     }))
     await speichereSchritt(client, SCHLUESSEL, { schritt: 1, status: 'offen', daten: {} })
     const daten = updates[0].schritte_daten as Record<string, { status: string }>
-    expect(daten.kontakt.status).toBe('fertig')
+    expect(daten[ERSTER.schluessel].status).toBe('fertig')
   })
 
   it('behaelt frueher gegebene Antworten bei einer Teilaenderung', async () => {
     const { client, updates } = fake(ZEILE({
       schritte_daten: {
-        kontakt: { status: 'fertig', daten: { vorname: 'Erika', telefon: '069' }, zeitpunkt: 'x' },
+        [ERSTER.schluessel]: { status: 'fertig', daten: { [ERSTE_ANGABE]: 'alt' }, zeitpunkt: 'x' },
       },
     }))
-    await speichereSchritt(client, SCHLUESSEL, { schritt: 1, daten: { telefon: '0170' } })
+    await speichereSchritt(client, SCHLUESSEL, { schritt: 1, daten: { zusatz: 'neu' } })
     const daten = updates[0].schritte_daten as Record<string, { daten: Record<string, unknown> }>
-    expect(daten.kontakt.daten).toEqual({ vorname: 'Erika', telefon: '0170' })
+    expect(daten[ERSTER.schluessel].daten).toEqual({ [ERSTE_ANGABE]: 'alt', zusatz: 'neu' })
   })
 
   it('weist einen abgeschlossenen Ablauf ab', async () => {
@@ -190,17 +220,21 @@ describe('speichereSchritt — nur vorwaerts', () => {
 
   it('erlaubt das Ueberspringen ueberspringbarer Schritte', async () => {
     const { client, updates } = fake(ZEILE())
-    await speichereSchritt(client, SCHLUESSEL, { schritt: 3, status: 'uebersprungen' })
+    await speichereSchritt(client, SCHLUESSEL, {
+      schritt: UEBERSPRINGBAR_NR, status: 'uebersprungen',
+    })
     const daten = updates[0].schritte_daten as Record<string, { status: string }>
-    expect(daten.pflegegrad.status).toBe('uebersprungen')
+    expect(daten[UEBERSPRINGBAR.schluessel].status).toBe('uebersprungen')
   })
 
   it('vermerkt fehlende Angaben, statt die Eingabe abzulehnen', async () => {
     // Ein Ablauf, der bei der ersten Luecke stehenbleibt, wird verlassen.
     const { client, updates } = fake(ZEILE())
-    await speichereSchritt(client, SCHLUESSEL, { schritt: 1, daten: { vorname: 'Erika' } })
-    expect(updates[0].fehlende_angaben).toContain('nachname')
-    expect(updates[0].fehlende_angaben).toContain('telefon')
+    await speichereSchritt(client, SCHLUESSEL, { schritt: 1, daten: { [ERSTE_ANGABE]: 'x' } })
+    for (const angabe of WEITERE_ANGABEN) {
+      expect(updates[0].fehlende_angaben).toContain(angabe)
+    }
+    expect(updates[0].fehlende_angaben).not.toContain(ERSTE_ANGABE)
   })
 
   it('loescht die Abbruchstelle — wer weitermacht, hat nicht abgebrochen', async () => {
@@ -213,24 +247,22 @@ describe('speichereSchritt — nur vorwaerts', () => {
 describe('ermittleFehlendeAngaben', () => {
   it('zaehlt leere Werte, leere Listen und fehlende Schluessel', () => {
     const fehlend = ermittleFehlendeAngaben('kunde', {
-      kontakt: {
+      [ERSTER.schluessel]: {
         status: 'fertig',
-        daten: { vorname: 'Erika', nachname: '', telefon: null },
+        daten: Object.fromEntries([
+          [ERSTE_ANGABE, 'gesetzt'],
+          ...WEITERE_ANGABEN.map((a, i) => [a, i % 2 === 0 ? '' : null]),
+        ]),
         zeitpunkt: 'x',
       },
     })
-    expect(fehlend).toContain('nachname')
-    expect(fehlend).toContain('telefon')
-    expect(fehlend).not.toContain('vorname')
+    expect(fehlend).not.toContain(ERSTE_ANGABE)
+    for (const angabe of WEITERE_ANGABEN) expect(fehlend).toContain(angabe)
   })
 })
 
 describe('schliesseAb', () => {
-  const vollstaendig = {
-    kontakt: { status: 'fertig', daten: {}, zeitpunkt: 'x' },
-    adresse: { status: 'fertig', daten: {}, zeitpunkt: 'x' },
-    bedarf: { status: 'fertig', daten: {}, zeitpunkt: 'x' },
-  }
+  const vollstaendig = ALLE_PFLICHT_FERTIG
 
   it('schliesst ab, wenn alle Pflichtschritte fertig sind', async () => {
     const { client, updates } = fake(ZEILE({ schritte_daten: vollstaendig }))
@@ -243,7 +275,9 @@ describe('schliesseAb', () => {
     // Sonst verschwindet der Ablauf aus jeder Erinnerungsliste, und
     // niemand fragt die fehlenden Angaben je nach.
     const { client } = fake(ZEILE({
-      schritte_daten: { kontakt: { status: 'fertig', daten: {}, zeitpunkt: 'x' } },
+      schritte_daten: {
+        [ERSTER.schluessel]: { status: 'fertig', daten: {}, zeitpunkt: 'x' },
+      },
     }))
     await expect(schliesseAb(client, SCHLUESSEL))
       .rejects.toThrow(/offene Pflichtschritte/)
@@ -286,7 +320,7 @@ describe('starteNeu', () => {
   it('setzt alles zurueck — der einzige Weg dorthin', async () => {
     const { client, updates } = fake(ZEILE({
       aktueller_schritt: 4,
-      schritte_daten: { kontakt: { status: 'fertig', daten: {}, zeitpunkt: 'x' } },
+      schritte_daten: { [ERSTER.schluessel]: { status: 'fertig', daten: {}, zeitpunkt: 'x' } },
       abgeschlossen_am: '2026-09-10T00:00:00Z',
       letzte_auto_nachricht: '2026-09-09T00:00:00Z',
     }))
