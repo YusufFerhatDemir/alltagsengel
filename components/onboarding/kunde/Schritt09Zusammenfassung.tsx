@@ -3,6 +3,7 @@
 import { Karte, pflegeMiniBtn } from '@/components/admin/PflegeUI'
 import type { WizardMaskeProps } from '@/components/onboarding/Wizard'
 import { baueBloecke, offenePflichtangaben } from './zusammenfassung'
+import { TIPPFLAECHE_MIN } from '@/components/onboarding/masse'
 
 export default function Schritt09Zusammenfassung({ alleDaten, geheZuSchritt, disabled }: WizardMaskeProps) {
   const bloecke = baueBloecke(alleDaten)
@@ -27,7 +28,7 @@ export default function Schritt09Zusammenfassung({ alleDaten, geheZuSchritt, dis
           aktion={
             <button type="button" disabled={disabled}
               onClick={() => geheZuSchritt(block.nummer)}
-              style={{ ...pflegeMiniBtn, minHeight: 40, paddingInline: 14 }}>
+              style={{ ...pflegeMiniBtn, minHeight: TIPPFLAECHE_MIN, paddingInline: 14 }}>
               Ändern
             </button>
           }
