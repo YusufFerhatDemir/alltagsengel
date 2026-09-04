@@ -38,6 +38,16 @@ import type { Page } from '@playwright/test'
  * `rejected` ist die datensparsame Antwort und schaltet die Trackingskripte
  * NICHT frei. Ein Testlauf soll keine Analyse- und Werbepixel laden.
  *
+ * ────────────────────────────────────────────────────────────────────────────
+ * FORMAT (Stand 04.09.2026)
+ * ────────────────────────────────────────────────────────────────────────────
+ * Gespeichert wird seit der Kategorien-Umstellung JSON mit einzelnen
+ * Kategorien. Die alten Zeichenketten wuerden zwar weiterhin gelesen
+ * (`lies()` uebersetzt sie), aber ein Helfer, der ein Altformat schreibt,
+ * prueft nebenbei die Uebersetzung mit — und faellt still aus, sobald die
+ * irgendwann entfaellt. Er schreibt deshalb dasselbe, was die Komponente
+ * schreiben wuerde.
+ *
  * Aufruf VOR `page.goto`:
  *
  *     await cookieBannerVorwegBeantworten(page)
@@ -47,12 +57,22 @@ export async function cookieBannerVorwegBeantworten(
   page: Page,
   antwort: 'accepted' | 'rejected' = 'rejected',
 ): Promise<void> {
-  await page.addInitScript((wert: string) => {
+  const alles = antwort === 'accepted'
+  await page.addInitScript((erlaubt: boolean) => {
     try {
-      window.localStorage.setItem('ae_cookie_consent', wert)
+      window.localStorage.setItem('ae_cookie_consent', JSON.stringify({
+        notwendig: true,
+        statistik: erlaubt,
+        marketing: erlaubt,
+        zeitpunkt: new Date().toISOString(),
+        // Muss zu CONSENT_VERSION in lib/consent/kategorien.ts passen —
+        // eine aeltere Fassung wird dort verworfen und der Banner kaeme
+        // trotz Helfer.
+        version: 2,
+      }))
     } catch {
       // Privater Modus o. ae.: dann erscheint der Banner eben. Ein Test soll
       // daran nicht scheitern, bevor er ueberhaupt angefangen hat.
     }
-  }, antwort)
+  }, alles)
 }
