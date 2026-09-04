@@ -106,7 +106,7 @@ step "2/7  Typecheck (blockiert)"
 if [ "${SKIP_TYPECHECK:-0}" = "1" ]; then
   warn "SKIP_TYPECHECK=1 — übersprungen (die CI prüft trotzdem)"
 elif [ -f tsconfig.json ] && [ -d node_modules/typescript ]; then
-  tsc_log="$(mktemp -t deploy-tsc)"
+  tsc_log="$(mktemp -t deploy-tsc-XXXXXX)"
   if NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=4096}" \
      npx --no-install tsc --noEmit -p tsconfig.json > "$tsc_log" 2>&1; then
     ok "Typecheck clean"
