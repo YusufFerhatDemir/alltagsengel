@@ -1,7 +1,8 @@
 'use client'
 import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
-import { getCookieConsent } from '@/components/CookieConsent'
+import { getConsentZustand } from '@/components/CookieConsent'
+import { darf } from '@/lib/consent/kategorien'
 import { getIpGeo } from '@/lib/ipGeo'
 import { useTrackVisit, type Portal } from '@/hooks/useTrackVisit'
 
@@ -49,9 +50,12 @@ export default function VisitorTracker() {
     } catch {}
 
     // Ab hier: Consent-Check für PageView-Tracking (Visitor-Tabelle, Visitor-Alert)
-    const consent = getCookieConsent()
-    // DSGVO: Only track if EXPLICITLY accepted, not if decision is pending (null)
-    if (consent !== 'accepted') return
+    // Die Besucherzaehlung ist Reichweitenmessung und haengt deshalb an
+    // 'statistik'. Vorher verlangte sie die VOLLE Zustimmung — wer nur
+    // der Statistik zugestimmt hatte, wurde nicht gezaehlt, obwohl er
+    // genau dem zugestimmt hatte.
+    // Ohne Entscheidung (null) wird nicht gezaehlt — darf() sagt dazu Nein.
+    if (!darf(getConsentZustand(), 'statistik')) return
 
     const key = `visited_${pathname}`
     if (sessionStorage.getItem(key)) return

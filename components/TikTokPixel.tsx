@@ -1,7 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Script from 'next/script'
-import { getCookieConsent } from './CookieConsent'
+import { getConsentZustand } from './CookieConsent'
+import { darf, type ConsentZustand } from '@/lib/consent/kategorien'
 
 // ═══════════════════════════════════════════════════════════
 // TIKTOK PIXEL — DSGVO-konform
@@ -29,15 +30,21 @@ export default function TikTokPixel() {
     if (isCapacitor) return
 
     // Cookie-Consent prüfen — bewusster Initial-Check beim Mount.
-    const consent = getCookieConsent()
-    if (consent === 'accepted') {
+    // Marketing-Pixel haengen an der Kategorie 'marketing' — nicht mehr
+    // an einer Gesamtzustimmung. Wer nur der Statistik zugestimmt hat,
+    // bekommt sie nicht.
+    if (darf(getConsentZustand(), 'marketing')) {
       setShouldLoad(true)
       return
     }
 
     // Event-basiert statt Polling
     const handleConsent = (e: Event) => {
-      if ((e as CustomEvent).detail === 'accepted') setShouldLoad(true)
+      // Der Ereignis-Inhalt ist seit der Kategorien-Umstellung der
+      // vollstaendige Zustand, nicht mehr die Zeichenkette 'accepted'.
+      // Ein Vergleich auf 'accepted' waere toter Code und der Pixel
+      // wuerde nach der Zustimmung nie nachgeladen.
+      if (darf((e as CustomEvent).detail as ConsentZustand | null, 'marketing')) setShouldLoad(true)
     }
     window.addEventListener('ae_consent_change', handleConsent)
 
