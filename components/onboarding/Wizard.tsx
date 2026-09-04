@@ -36,6 +36,7 @@ import {
   schrittBeschriftung,
   setzeSchrittDaten,
   weiterBeschriftung,
+  springeZu,
   zurueck as zurueckLogik,
   zustandNachSpeichern,
   type SpeicherAuftrag,
@@ -48,6 +49,10 @@ export interface WizardMaskeProps {
   /** Angaben, die beim letzten „Weiter" gefehlt haben. */
   fehlendePflicht: string[]
   disabled: boolean
+  /** Alle bisherigen Eingaben — die Zusammenfassung braucht sie. */
+  alleDaten: Record<string, Record<string, unknown>>
+  /** Zu einem bereits erreichten Schritt zurückspringen (Korrektur). */
+  geheZuSchritt: (nummer: number) => void
 }
 
 export interface WizardProps {
@@ -192,6 +197,8 @@ export default function Wizard({
           setzeDaten,
           fehlendePflicht: zustand.fehlendePflicht,
           disabled: zustand.speichert,
+          alleDaten: zustand.daten,
+          geheZuSchritt: n => setZustand(z => springeZu(z, n)),
         })}
 
         {zustand.fehler && (

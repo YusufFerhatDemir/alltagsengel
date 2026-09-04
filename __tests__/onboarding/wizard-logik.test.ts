@@ -218,8 +218,26 @@ describe('Zusammenspiel mit den echten Schrittfolgen', () => {
     for (const folge of Object.values(SCHRITTFOLGEN)) {
       const z = ersterZustand(folge.length, 1)
       expect(z.gesamtSchritte).toBe(folge.length)
-      // Der erste Schritt ist ueberall Pflicht — ohne Eingaben kein Weiter.
-      expect(beginneWeiter(z, folge[0]).art).toBe('unvollstaendig')
+
+      // Jeder Ablauf hat mindestens einen Pflicht-Formularschritt, und der
+      // haelt ohne Eingaben auf. (Frueher stand hier `folge[0]` — seit der
+      // Bewerberablauf mit einem Begruessungsschritt beginnt, ist der
+      // erste Schritt nicht mehr zwingend ein Formular.)
+      const erstesPflichtformular = folge.find(s => s.art === 'formular' && !s.ueberspringbar)
+      expect(erstesPflichtformular).toBeDefined()
+      expect(beginneWeiter(z, erstesPflichtformular!).art).toBe('unvollstaendig')
+    }
+  })
+
+  it('laesst Hinweis- und Pruefschritte ohne Eingaben durch', () => {
+    // Begruessung, Zusammenfassung und Absenden sammeln nichts. Wuerden
+    // sie blockieren, kaeme niemand ueber den ersten Bildschirm hinaus.
+    const ohneAngaben = SCHRITTFOLGEN.bewerber.filter(s => s.art !== 'formular')
+    expect(ohneAngaben.length).toBeGreaterThan(0)
+    for (const schritt of ohneAngaben) {
+      const e = beginneWeiter(ersterZustand(12, 1), schritt)
+      expect(e.art).toBe('speichern')
+      if (e.art === 'speichern') expect(e.auftrag.status).toBe('fertig')
     }
   })
 })

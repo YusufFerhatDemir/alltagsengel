@@ -46,14 +46,51 @@ describe('Schrittfolgen', () => {
     }
   })
 
-  it('jeder Schritt hat Titel, Hinweis und erwartete Angaben', () => {
+  it('jeder Schritt hat Titel und Hinweis', () => {
     for (const typ of ONBOARDING_TYPEN) {
       for (const s of SCHRITTFOLGEN[typ]) {
         expect(s.titel.length).toBeGreaterThan(0)
         expect(s.hinweis.length).toBeGreaterThan(0)
-        expect(s.erwarteteAngaben.length).toBeGreaterThan(0)
       }
     }
+  })
+
+  it('nur Formularschritte erwarten Angaben', () => {
+    // Begruessung, Zusammenfassung und Absenden sammeln nichts. Ohne die
+    // Unterscheidung muessten sie eine Angabe erfinden, damit dieser Test
+    // gruen bleibt — und die Pruefung im Wizard liefe ins Leere.
+    for (const typ of ONBOARDING_TYPEN) {
+      for (const s of SCHRITTFOLGEN[typ]) {
+        if (s.art === 'formular') {
+          expect(s.erwarteteAngaben.length).toBeGreaterThan(0)
+        } else {
+          expect(s.erwarteteAngaben).toEqual([])
+        }
+      }
+    }
+  })
+
+  it('der Bewerberablauf hat die zwölf vereinbarten Schritte', () => {
+    expect(SCHRITTFOLGEN.bewerber.map(s => s.schluessel)).toEqual([
+      'willkommen', 'kontakt', 'einsatzgebiet', 'erfahrung', 'fuehrerschein',
+      'sprachen', 'verfuegbarkeit', 'stundenumfang', 'fuehrungszeugnis',
+      'unterlagen', 'zusammenfassung', 'absenden',
+    ])
+  })
+
+  it('verlangt beim Führungszeugnis die Auskunft, nicht das Dokument', () => {
+    // „Beantrage ich noch" ist eine gueltige Antwort und darf niemanden
+    // aufhalten — sonst bricht der Ablauf genau dort ab, wo die meisten
+    // Bewerbungen ohnehin warten muessen.
+    const s = SCHRITTFOLGEN.bewerber.find(x => x.schluessel === 'fuehrungszeugnis')
+    expect(s?.erwarteteAngaben).toEqual(['fuehrungszeugnis_status'])
+  })
+
+  it('macht ein Fahrzeug nicht zur Pflichtangabe', () => {
+    // Wer „kein Führerschein" antwortet, hat den Schritt vollstaendig
+    // beantwortet und wird nicht nach einem Fahrzeug gefragt.
+    const s = SCHRITTFOLGEN.bewerber.find(x => x.schluessel === 'fuehrerschein')
+    expect(s?.erwarteteAngaben).toEqual(['fuehrerschein'])
   })
 
   it('fragt im Kundenablauf keine Zahlungsdaten ab', () => {
