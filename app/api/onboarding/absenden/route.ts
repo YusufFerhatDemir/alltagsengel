@@ -30,10 +30,41 @@ import {
   holeFortschritt, schliesseAb,
   OnboardingNichtLesbarError,
 } from '@/lib/onboarding/service'
-import { baueEinreichung } from '@/lib/onboarding/einreichung'
+import { baueAnfrage, baueEinreichung } from '@/lib/onboarding/einreichung'
 import { logger } from '@/lib/logger'
 
 const log = logger.child('api:onboarding:absenden')
+
+/**
+ * Name und Telefon aus dem Profil.
+ *
+ * Fail-soft: fehlt das Profil oder ist es nicht lesbar, entsteht die
+ * Anfrage trotzdem — mit Platzhaltern, die baueAnfrage() setzt. Eine
+ * Anfrage, die am fehlenden Nachnamen scheitert, ist fuer die Verwaltung
+ * unsichtbar; das waere schlimmer als eine Zeile ohne Namen.
+ */
+async function holeKontakt(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+  emailAusSitzung: string | null,
+): Promise<{ name: string; telefon: string | null; email: string | null }> {
+  try {
+    const { data } = await admin
+      .from('profiles')
+      .select('first_name, last_name, phone, email')
+      .eq('id', userId)
+      .maybeSingle()
+
+    const name = [data?.first_name, data?.last_name].filter(Boolean).join(' ').trim()
+    return {
+      name,
+      telefon: (data?.phone as string | null) ?? null,
+      email: (data?.email as string | null) ?? emailAusSitzung,
+    }
+  } catch {
+    return { name: '', telefon: null, email: emailAusSitzung }
+  }
+}
 
 export const POST = withTracking(async function POST(request: Request) {
   const supabase = await createClient()
@@ -57,9 +88,9 @@ export const POST = withTracking(async function POST(request: Request) {
   if (!istOnboardingTyp(typ)) {
     return NextResponse.json({ error: 'Unbekannte Ablaufart.' }, { status: 400 })
   }
-  if (typ !== 'bewerber') {
-    // Kunden- und Angehoerigenablauf reichen nichts ein; sie enden mit
-    // dem Abschluss. Hier bewusst abgewiesen statt still nichts zu tun.
+  if (typ !== 'bewerber' && typ !== 'kunde') {
+    // Der Angehoerigenablauf reicht nichts ein; er endet mit dem
+    // Abschluss. Hier bewusst abgewiesen statt still nichts zu tun.
     return NextResponse.json(
       { error: 'Für diesen Ablauf gibt es kein Absenden.' },
       { status: 400 },
@@ -80,13 +111,20 @@ export const POST = withTracking(async function POST(request: Request) {
       )
     }
 
-    // ── 1. Bewerbung anlegen ────────────────────────────────────────
-    const einreichung = baueEinreichung({
+    // ── 1. Vorgang anlegen ──────────────────────────────────────────
+    const gemeinsam = {
       schritteDaten: fortschritt.schritteDaten,
       fehlendeAngaben: fortschritt.fehlendeAngaben,
       fortschrittId: fortschritt.id,
       organizationId,
-    })
+    }
+
+    // Beim Kundenablauf kommen Name und Telefon aus dem PROFIL, nicht aus
+    // den Schritten: der Ablauf fragt sie nicht ab, weil die Person
+    // angemeldet ist. Doppelt erfasst wichen sie irgendwann voneinander ab.
+    const einreichung = typ === 'kunde'
+      ? baueAnfrage({ ...gemeinsam, kontakt: await holeKontakt(admin, user.id, user.email ?? null) })
+      : baueEinreichung(gemeinsam)
 
     const { error: schreibFehler } = await admin
       .from('lead_inquiries')

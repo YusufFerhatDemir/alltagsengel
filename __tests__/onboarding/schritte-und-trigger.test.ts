@@ -109,7 +109,7 @@ describe('Schrittfolgen', () => {
     // Sonst rendert der Wizard eine leere Maske.
     expect(() => schrittNummer('kunde', 0)).toThrow(RangeError)
     expect(() => schrittNummer('kunde', 99)).toThrow(RangeError)
-    expect(schrittNummer('kunde', 1).schluessel).toBe('kontakt')
+    expect(schrittNummer('kunde', 1).schluessel).toBe(SCHRITTFOLGEN.kunde[0].schluessel)
   })
 })
 
