@@ -135,13 +135,21 @@ export function TeilweiseUnsichtbar({ fehlendeRechte }: { fehlendeRechte: readon
 }
 
 // Such-Eingabefeld im Admin-Stil
-export function SearchInput({ value, onChange, placeholder }: {
+export function SearchInput({ value, onChange, placeholder, id }: {
   value: string
   onChange: (v: string) => void
   placeholder?: string
+  /**
+   * Optionale Kennung, damit ein <label htmlFor> wirklich auf dieses Feld
+   * zeigt. Ohne sie beschriftet ein umschliessendes <label> nichts, was
+   * Vorlesesoftware findet — die eslint-Regel
+   * label-has-associated-control meldet genau das.
+   */
+  id?: string
 }) {
   return (
     <input
+      id={id}
       type="search"
       value={value}
       onChange={e => onChange(e.target.value)}

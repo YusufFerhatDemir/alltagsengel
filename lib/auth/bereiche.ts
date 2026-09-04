@@ -74,6 +74,7 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   // eine leere Liste zu deuten.
   '/admin/kundenakte':                { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben', zusatzRechte: ['pflege.lesen'] },
   '/admin/budgets':                   { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
+  '/admin/onboarding':                { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
   '/admin/vertraege':                 { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
   '/admin/dokumente':                 { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
   // `care_notes` haengt ueber verlauf_id/massnahme_id am Pflegeprozess
@@ -271,6 +272,7 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   '/api/admin/angehoerige':           { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
   '/api/admin/clients':               { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
   '/api/admin/budgets':               { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
+  '/api/admin/onboarding':            { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
   '/api/admin/biografiebogen':        { lesen: 'pflege.lesen', schreiben: 'pflege.schreiben' },
   '/api/admin/fixierungen':           { lesen: 'pflege.lesen', schreiben: 'pflege.schreiben' },
   '/api/admin/lagerungsprotokoll':    { lesen: 'pflege.lesen', schreiben: 'pflege.schreiben' },
