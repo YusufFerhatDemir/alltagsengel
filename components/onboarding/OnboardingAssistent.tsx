@@ -23,6 +23,7 @@ import {
   beantworte, vorschlaege,
   type Aktion, type AssistentLage,
 } from '@/lib/onboarding/assistent'
+import { TIPPFLAECHE_MIN } from './masse'
 
 interface Zeile {
   von: 'assistent' | 'person'
@@ -105,7 +106,7 @@ export default function OnboardingAssistent({
             </strong>
             <button type="button" onClick={() => setOffen(false)} aria-label="Assistent schließen"
               style={{
-                minWidth: 44, minHeight: 44, background: 'transparent', border: 'none',
+                minWidth: 44, minHeight: TIPPFLAECHE_MIN, background: 'transparent', border: 'none',
                 color: 'var(--ink4, #aaa)', fontSize: 20, cursor: 'pointer',
               }}>
               ×
@@ -163,12 +164,12 @@ export default function OnboardingAssistent({
               onChange={e => setEingabe(e.target.value)}
               placeholder="Ihre Frage …"
               style={{
-                flex: 1, minHeight: 44, padding: '10px 12px', borderRadius: 10,
+                flex: 1, minHeight: TIPPFLAECHE_MIN, padding: '10px 12px', borderRadius: 10,
                 border: '1px solid var(--border, #333)', background: 'transparent',
                 color: 'var(--ink, #eee)', fontSize: 15,
               }}
             />
-            <button type="submit" style={{ ...knopfStil, minHeight: 44, paddingInline: 16 }}>
+            <button type="submit" style={{ ...knopfStil, minHeight: TIPPFLAECHE_MIN, paddingInline: 16 }}>
               Senden
             </button>
           </form>
@@ -195,7 +196,7 @@ export default function OnboardingAssistent({
 }
 
 const knopfStil = {
-  minHeight: 40,
+  minHeight: TIPPFLAECHE_MIN,
   padding: '8px 12px',
   borderRadius: 10,
   border: '1px solid var(--border, #333)',
