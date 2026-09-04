@@ -29,8 +29,22 @@ const SCHLUESSEL = 'ae_cookie_consent'
 const banner = (page: import('@playwright/test').Page) =>
   page.getByRole('button', { name: 'Alle akzeptieren' })
 
-async function gespeicherteAntwort(page: import('@playwright/test').Page) {
+async function rohwert(page: import('@playwright/test').Page) {
   return page.evaluate((k) => window.localStorage.getItem(k), SCHLUESSEL)
+}
+
+/**
+ * Die gespeicherte Entscheidung als Kategorien.
+ *
+ * Liest bewusst nicht die Schreibweise, sondern den Inhalt — sonst prueft
+ * dieser Spec das Speicherformat und nicht die Einwilligung. `null` heisst
+ * „noch nicht entschieden".
+ */
+async function entscheidung(page: import('@playwright/test').Page) {
+  const roh = await rohwert(page)
+  if (!roh) return null
+  const o = JSON.parse(roh) as Record<string, unknown>
+  return { statistik: o.statistik === true, marketing: o.marketing === true }
 }
 
 test.describe('Cookie-Banner', () => {
@@ -42,15 +56,16 @@ test.describe('Cookie-Banner', () => {
     await expect(page.getByRole('button', { name: 'Nur Notwendige' })).toBeVisible()
     // Vor der Antwort darf nichts gespeichert sein: ein vorab gesetzter Wert
     // waere eine Einwilligung, die niemand erteilt hat.
-    expect(await gespeicherteAntwort(page)).toBeNull()
+    expect(await rohwert(page)).toBeNull()
   })
 
   test('Ablehnen wird gespeichert und schliesst den Banner', async ({ page }) => {
     await page.goto('/')
     await expect(banner(page)).toBeVisible({ timeout: 15_000 })
-    await page.getByRole('button', { name: 'Nur Notwendige' }).click()
+    await page.getByRole('button', { name: 'Nur notwendige' }).click()
     await expect(banner(page)).toBeHidden()
-    expect(await gespeicherteAntwort(page)).toBe('rejected')
+    // Ablehnen heisst: KEINE der abwaehlbaren Kategorien ist erlaubt.
+    expect(await entscheidung(page)).toEqual({ statistik: false, marketing: false })
   })
 
   test('Annehmen wird gespeichert und schliesst den Banner', async ({ page }) => {
@@ -58,13 +73,13 @@ test.describe('Cookie-Banner', () => {
     await expect(banner(page)).toBeVisible({ timeout: 15_000 })
     await banner(page).click()
     await expect(banner(page)).toBeHidden()
-    expect(await gespeicherteAntwort(page)).toBe('accepted')
+    expect(await entscheidung(page)).toEqual({ statistik: true, marketing: true })
   })
 
   test('die Antwort ueberlebt den Reload — der Banner kommt nicht wieder', async ({ page }) => {
     await page.goto('/')
     await expect(banner(page)).toBeVisible({ timeout: 15_000 })
-    await page.getByRole('button', { name: 'Nur Notwendige' }).click()
+    await page.getByRole('button', { name: 'Nur notwendige' }).click()
     await expect(banner(page)).toBeHidden()
 
     await page.reload()
@@ -73,7 +88,7 @@ test.describe('Cookie-Banner', () => {
     // erst nach der Zusicherung auftaucht, wuerde sonst durchrutschen.
     await page.waitForTimeout(2_000)
     await expect(banner(page)).toBeHidden()
-    expect(await gespeicherteAntwort(page)).toBe('rejected')
+    expect(await entscheidung(page)).toEqual({ statistik: false, marketing: false })
   })
 
   test('Widerruf ueber den Footer oeffnet den Banner erneut (Art. 7 Abs. 3)', async ({ page }) => {
@@ -88,8 +103,47 @@ test.describe('Cookie-Banner', () => {
     await expect(banner(page)).toBeVisible()
 
     // Und der Widerruf muss auch WIRKEN, nicht nur den Banner zeigen.
-    await page.getByRole('button', { name: 'Nur Notwendige' }).click()
-    expect(await gespeicherteAntwort(page)).toBe('rejected')
+    await page.getByRole('button', { name: 'Nur notwendige' }).click()
+    expect(await entscheidung(page)).toEqual({ statistik: false, marketing: false })
+  })
+
+  test('eine EINZELNE Kategorie laesst sich erlauben', async ({ page }) => {
+    // Der Kern der Umstellung: wer der Reichweitenmessung zustimmen will,
+    // aber nicht dem Retargeting, musste vorher alles ablehnen.
+    await page.goto('/')
+    await expect(banner(page)).toBeVisible({ timeout: 15_000 })
+
+    await page.getByRole('button', { name: 'Einstellungen anpassen' }).click()
+    await page.getByLabel(/Statistik und Analyse/).check()
+    await page.getByRole('button', { name: 'Auswahl speichern' }).click()
+
+    await expect(banner(page)).toBeHidden()
+    expect(await entscheidung(page)).toEqual({ statistik: true, marketing: false })
+  })
+
+  test('Notwendig laesst sich nicht abwaehlen', async ({ page }) => {
+    await page.goto('/')
+    await expect(banner(page)).toBeVisible({ timeout: 15_000 })
+    await page.getByRole('button', { name: 'Einstellungen anpassen' }).click()
+
+    const notwendig = page.getByLabel(/Notwendig/)
+    await expect(notwendig).toBeChecked()
+    await expect(notwendig).toBeDisabled()
+  })
+
+  test('beide Hauptknoepfe sind gleich gross — keine gestalterische Schieflage', async ({ page }) => {
+    // Art. 4 Nr. 11 DSGVO: eine Einwilligung, die ueber eine optische
+    // Bevorzugung zustande kommt, ist nicht freiwillig. Geprueft wird die
+    // tatsaechlich gerenderte Groesse, nicht die Absicht im Stylesheet.
+    await page.goto('/')
+    await expect(banner(page)).toBeVisible({ timeout: 15_000 })
+
+    const ablehnen = await page.getByRole('button', { name: 'Nur notwendige' }).boundingBox()
+    const annehmen = await banner(page).boundingBox()
+    expect(ablehnen).not.toBeNull()
+    expect(annehmen).not.toBeNull()
+    expect(Math.abs(ablehnen!.height - annehmen!.height)).toBeLessThanOrEqual(2)
+    expect(Math.abs(ablehnen!.width - annehmen!.width)).toBeLessThanOrEqual(2)
   })
 
   test('der offene Banner ist frei von axe-Verstoessen', async ({ page }) => {
