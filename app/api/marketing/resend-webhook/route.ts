@@ -34,6 +34,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
 import { pruefeSvixSignatur, svixKopfzeilen } from '@/lib/marketing/webhook-signatur'
+import { signaturAbweisung } from '@/lib/marketing/webhook-antwort'
 import {
   berechneAenderung, istWebhookEreignis, sperrgrundFuer, type Bestand,
 } from '@/lib/marketing/zustellereignis'
@@ -65,18 +66,16 @@ export const POST = withTracking(async function POST(request: Request) {
 
   const signatur = pruefeSvixSignatur(rumpf, svixKopfzeilen(request))
   if (!signatur.ok) {
-    if (signatur.grund === 'kein_geheimnis') {
-      // Kein RESEND_WEBHOOK_SECRET gesetzt. Das ist ein Betriebsfehler,
-      // keine Angriffsmeldung — und es MUSS auffallen, sonst laeuft die
-      // Zustellspur still weiter ins Leere.
-      log.error('RESEND_WEBHOOK_SECRET fehlt — Webhook wird nicht verarbeitet')
-      return NextResponse.json(
-        { error: 'Webhook nicht konfiguriert.' },
-        { status: 503 },
-      )
-    }
-    log.warn('Webhook mit ungültiger Signatur abgewiesen', { grund: signatur.grund })
-    return NextResponse.json({ error: 'Signatur ungültig.' }, { status: 401 })
+    // Status, Rumpf und Kopfzeilen entscheidet lib/marketing/webhook-antwort.ts
+    // — dort ist die Zuordnung geprueft. Hier wird nur protokolliert und
+    // ausgeliefert.
+    const antwort = signaturAbweisung(signatur.grund)
+    if (antwort.protokoll.schwere === 'error') log.error(antwort.protokoll.text)
+    else log.warn(antwort.protokoll.text, antwort.protokoll.details)
+    return NextResponse.json(antwort.rumpf, {
+      status: antwort.status,
+      headers: antwort.kopfzeilen,
+    })
   }
 
   let nutzlast: Record<string, unknown>
