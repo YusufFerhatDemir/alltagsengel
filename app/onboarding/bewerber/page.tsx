@@ -18,6 +18,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Wizard, { type WizardMaskeProps } from '@/components/onboarding/Wizard'
+import OnboardingAssistent from '@/components/onboarding/OnboardingAssistent'
 import {
   Schritt01Willkommen, Schritt02Person, Schritt03Einsatzgebiet,
   Schritt04Qualifikation, Schritt05Fuehrerschein, Schritt06Sprachen,
@@ -32,13 +33,20 @@ const log = logger.child('onboarding:bewerber')
 
 interface GeladenerStand {
   aktuellerSchritt: number
-  schritteDaten: Record<string, { daten?: Record<string, unknown> }>
+  schritteDaten: Record<string, { daten?: Record<string, unknown>; status?: string }>
+  fehlendeAngaben: string[]
+  dokumentStatus: Record<string, unknown>
+  abgeschlossenAm: string | null
 }
 
 export default function BewerberOnboardingSeite() {
   const router = useRouter()
   const [stand, setStand] = useState<GeladenerStand | null>(null)
   const [ladefehler, setLadefehler] = useState<string | null>(null)
+  // Der Assistent kann zu einem Schritt springen. Der Wizard haelt
+  // seinen Stand selbst, deshalb wird er ueber `key` neu aufgesetzt —
+  // die Antworten kommen dabei aus `anfangsDaten` zurueck.
+  const [sprung, setSprung] = useState<number | null>(null)
 
   useEffect(() => {
     let abgebrochen = false
@@ -59,6 +67,9 @@ export default function BewerberOnboardingSeite() {
         setStand({
           aktuellerSchritt: Number(daten.fortschritt?.aktuellerSchritt ?? 1),
           schritteDaten: daten.fortschritt?.schritteDaten ?? {},
+          fehlendeAngaben: daten.fortschritt?.fehlendeAngaben ?? [],
+          dokumentStatus: daten.fortschritt?.dokumentStatus ?? {},
+          abgeschlossenAm: daten.fortschritt?.abgeschlossenAm ?? null,
         })
       } catch (err) {
         log.errorWithException('Fortschritt laden', err)
@@ -164,9 +175,10 @@ export default function BewerberOnboardingSeite() {
         Ihre Bewerbung bei Alltagsengel
       </h1>
       <Wizard
+        key={sprung ?? 'start'}
         schritte={SCHRITTFOLGEN.bewerber}
         masken={masken}
-        startSchritt={stand.aktuellerSchritt}
+        startSchritt={sprung ?? stand.aktuellerSchritt}
         anfangsDaten={anfangsDaten}
         onSpeichern={speichern}
         onAbschluss={abschluss}
@@ -184,11 +196,27 @@ export default function BewerberOnboardingSeite() {
           </div>
         }
       />
+
+      <OnboardingAssistent
+        lage={{
+          typ: 'bewerber',
+          aktuellerSchritt: stand.aktuellerSchritt,
+          gesamtSchritte: SCHRITTFOLGEN.bewerber.length,
+          schritteDaten: stand.schritteDaten as never,
+          fehlendeAngaben: stand.fehlendeAngaben,
+          dokumentStatus: stand.dokumentStatus,
+          abgeschlossenAm: stand.abgeschlossenAm,
+        }}
+        onGeheZuSchritt={setSprung}
+        onOeffneAblauf={t => router.push(`/onboarding/${t}`)}
+        onHochladen={() => setSprung(SCHRITTFOLGEN.bewerber.findIndex(s => s.schluessel === 'unterlagen') + 1)}
+        onMensch={() => router.push('/kontakt?anliegen=bewerbung')}
+      />
     </main>
   )
 }
 
-const huelle = { maxWidth: 640, margin: '0 auto', padding: '16px 8px 48px' } as const
+const huelle = { maxWidth: 640, margin: '0 auto', padding: '16px 8px 96px' } as const
 const fehlerStil = {
   margin: 16, padding: '12px 14px', borderRadius: 10,
   background: 'rgba(180,40,40,.10)', color: '#B42828', fontSize: 14,

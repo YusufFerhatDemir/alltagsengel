@@ -14,6 +14,7 @@ import { useUserLocation } from '@/hooks/useUserLocation'
 import { useTrackVisit } from '@/hooks/useTrackVisit'
 import ReferralWidget from '@/components/ReferralWidget'
 import OnboardingFlow from '@/components/OnboardingFlow'
+import FortschrittsKarteGeladen from '@/components/onboarding/FortschrittsKarteGeladen'
 import BundeslandHinweis from '@/components/kunde/BundeslandHinweis'
 import { useBundeslandLage } from '@/lib/expansion/client'
 import { resolvePlz } from '@/lib/expansion/plz-bundesland'
@@ -176,6 +177,8 @@ export default function KundeHomePage() {
       </div>
 
       <div className="kh-body">
+        {/* Zeigt sich nur, solange ein Ablauf laeuft — legt keinen an. */}
+        <FortschrittsKarteGeladen typ="kunde" />
         <div className="search-bar" id="search-bar">
           <span><IconSearch size={16} aria-hidden="true" /></span>
           <input
