@@ -6,6 +6,7 @@ import { requireUser } from '@/lib/supabase/require-session'
 import Icon3D from '@/components/Icon3D'
 import { IconUser, IconCard } from '@/components/Icons'
 import NotificationBell from '@/components/NotificationBell'
+import FortschrittsKarteGeladen from '@/components/onboarding/FortschrittsKarteGeladen'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { useTrackVisit } from '@/hooks/useTrackVisit'
 import { updateEngelLocation, toggleEngelOnline } from './actions'
@@ -215,6 +216,8 @@ export default function EngelHomePage() {
       </div>
 
       <div className="ed-body">
+        {/* Zeigt sich nur, solange die Bewerbung laeuft — legt keine an. */}
+        <FortschrittsKarteGeladen typ="bewerber" />
         <div className="section-label">Neue Anfragen{pendingBookings.length > 0 ? ` (${pendingBookings.length})` : ''}</div>
         {respondError && (
           <div style={{ margin: '0 0 10px', padding: '10px 14px', borderRadius: 10, background: 'rgba(200,60,60,.08)', color: 'var(--red-w)', fontSize: 13 }}>

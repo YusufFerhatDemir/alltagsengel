@@ -1,12 +1,11 @@
 'use client'
 /**
- * Unterstützung anfragen — 10 Schritte.
+ * Zugang als angehörige Person — 6 Schritte.
  *
- * Gleiche Bauweise wie der Bewerberablauf: die Seite lädt, rendert und
- * reicht weiter; jede Regel steckt in lib/onboarding/wizard-logik.ts und
- * ist dort getestet. Auch hier ist eine Anmeldung nötig, weil
- * onboarding_progress.user_id auf profiles zeigt — ohne Konto gibt es
- * keinen Stand, den man später fortsetzen könnte.
+ * Gleiche Bauweise wie die beiden anderen Abläufe. Der Unterschied steht
+ * im letzten Schritt: dieser Ablauf ERTEILT KEINEN ZUGANG. Er sammelt,
+ * was für eine Freigabe gebraucht wird; freigegeben wird von der
+ * betreuten Person oder der Verwaltung.
  */
 
 import { useCallback, useEffect, useState } from 'react'
@@ -14,17 +13,16 @@ import { useRouter } from 'next/navigation'
 import Wizard, { type WizardMaskeProps } from '@/components/onboarding/Wizard'
 import OnboardingAssistent from '@/components/onboarding/OnboardingAssistent'
 import {
-  Schritt01FuerWen, Schritt02Adresse, Schritt03Bedarf, Schritt04Pflegegrad,
-  Schritt05Finanzierung, Schritt06Zeiten, Schritt07Besonderheiten,
-  Schritt08Unterlagen, Schritt09Zusammenfassung, Schritt10Abschluss,
-} from '@/components/onboarding/kunde'
+  SchrittAbschluss, SchrittBezug, SchrittKontakt, SchrittUmfang,
+  SchrittUnterlagen, SchrittZusammenfassung,
+} from '@/components/onboarding/angehoerige'
 import { SCHRITTFOLGEN } from '@/lib/onboarding/schritte'
 import type { SpeicherAuftrag } from '@/lib/onboarding/wizard-logik'
 import { logger } from '@/lib/logger'
 
-const log = logger.child('onboarding:kunde')
+const log = logger.child('onboarding:angehoerige')
 
-interface GeladenerStand {
+interface Stand {
   aktuellerSchritt: number
   schritteDaten: Record<string, { daten?: Record<string, unknown>; status?: string }>
   fehlendeAngaben: string[]
@@ -32,22 +30,19 @@ interface GeladenerStand {
   abgeschlossenAm: string | null
 }
 
-export default function KundenOnboardingSeite() {
+export default function AngehoerigenOnboardingSeite() {
   const router = useRouter()
-  const [stand, setStand] = useState<GeladenerStand | null>(null)
+  const [stand, setStand] = useState<Stand | null>(null)
   const [ladefehler, setLadefehler] = useState<string | null>(null)
-  // Der Assistent kann zu einem Schritt springen. Der Wizard haelt
-  // seinen Stand selbst, deshalb wird er ueber `key` neu aufgesetzt —
-  // die Antworten kommen dabei aus `anfangsDaten` zurueck.
   const [sprung, setSprung] = useState<number | null>(null)
 
   useEffect(() => {
     let abgebrochen = false
     async function laden() {
       try {
-        const antwort = await fetch('/api/onboarding/fortschritt?typ=kunde')
+        const antwort = await fetch('/api/onboarding/fortschritt?typ=angehoerige')
         if (antwort.status === 401) {
-          router.replace('/auth/register?redirectTo=/onboarding/kunde')
+          router.replace('/auth/register?redirectTo=/onboarding/angehoerige')
           return
         }
         const daten = await antwort.json()
@@ -56,12 +51,13 @@ export default function KundenOnboardingSeite() {
           setLadefehler(daten?.error ?? 'Ihr Stand konnte nicht geladen werden.')
           return
         }
+        const f = daten.fortschritt ?? {}
         setStand({
-          aktuellerSchritt: Number(daten.fortschritt?.aktuellerSchritt ?? 1),
-          schritteDaten: daten.fortschritt?.schritteDaten ?? {},
-          fehlendeAngaben: daten.fortschritt?.fehlendeAngaben ?? [],
-          dokumentStatus: daten.fortschritt?.dokumentStatus ?? {},
-          abgeschlossenAm: daten.fortschritt?.abgeschlossenAm ?? null,
+          aktuellerSchritt: Number(f.aktuellerSchritt ?? 1),
+          schritteDaten: f.schritteDaten ?? {},
+          fehlendeAngaben: f.fehlendeAngaben ?? [],
+          dokumentStatus: f.dokumentStatus ?? {},
+          abgeschlossenAm: f.abgeschlossenAm ?? null,
         })
       } catch (err) {
         log.errorWithException('Fortschritt laden', err)
@@ -76,7 +72,7 @@ export default function KundenOnboardingSeite() {
     const antwort = await fetch('/api/onboarding/fortschritt', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ typ: 'kunde', ...auftrag }),
+      body: JSON.stringify({ typ: 'angehoerige', ...auftrag }),
     })
     if (!antwort.ok) {
       const fehler = await antwort.json().catch(() => null)
@@ -86,7 +82,7 @@ export default function KundenOnboardingSeite() {
 
   const hochladen = useCallback(async (art: string, datei: File): Promise<string> => {
     const formular = new FormData()
-    formular.append('typ', 'kunde')
+    formular.append('typ', 'angehoerige')
     formular.append('art', art)
     formular.append('datei', datei)
     const antwort = await fetch('/api/onboarding/dokumente', { method: 'POST', body: formular })
@@ -95,29 +91,28 @@ export default function KundenOnboardingSeite() {
     return String(daten?.dateiname ?? datei.name)
   }, [])
 
+  // Dieser Ablauf reicht nichts ein — er endet mit dem Abschluss.
+  // /api/onboarding/absenden weist 'angehoerige' bewusst ab.
   const abschluss = useCallback(async () => {
-    const antwort = await fetch('/api/onboarding/absenden', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ typ: 'kunde' }),
+    await speichern({
+      schritt: SCHRITTFOLGEN.angehoerige.length,
+      schluessel: 'abschluss',
+      daten: { abgesendet: true },
+      status: 'fertig',
     })
-    if (!antwort.ok) {
-      const fehler = await antwort.json().catch(() => null)
-      throw new Error(fehler?.error ?? 'Das Absenden hat nicht geklappt.')
-    }
-  }, [])
+  }, [speichern])
 
   const spaeter = useCallback(async (stelle: string) => {
     try {
       await fetch('/api/onboarding/fortschritt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ typ: 'kunde', abbruchstelle: stelle }),
+        body: JSON.stringify({ typ: 'angehoerige', abbruchstelle: stelle }),
       })
     } catch (err) {
       log.errorWithException('Abbruchstelle merken', err)
     }
-    router.push('/kunde/home')
+    router.push('/angehoerige')
   }, [router])
 
   if (ladefehler) {
@@ -133,59 +128,45 @@ export default function KundenOnboardingSeite() {
   }
 
   const masken: Record<string, (p: WizardMaskeProps) => React.ReactNode> = {
-    fuer_wen: p => <Schritt01FuerWen {...p} />,
-    adresse: p => <Schritt02Adresse {...p} />,
-    bedarf: p => <Schritt03Bedarf {...p} />,
-    pflegegrad: p => <Schritt04Pflegegrad {...p} />,
-    finanzierung: p => <Schritt05Finanzierung {...p} />,
-    zeiten: p => <Schritt06Zeiten {...p} />,
-    besonderheiten: p => <Schritt07Besonderheiten {...p} />,
-    unterlagen: p => <Schritt08Unterlagen {...p} onUpload={hochladen} />,
-    zusammenfassung: p => <Schritt09Zusammenfassung {...p} />,
-    abschluss: p => <Schritt10Abschluss {...p} />,
+    kontakt: p => <SchrittKontakt {...p} />,
+    bezug: p => <SchrittBezug {...p} />,
+    umfang: p => <SchrittUmfang {...p} />,
+    unterlagen: p => <SchrittUnterlagen {...p} onUpload={hochladen} />,
+    zusammenfassung: p => <SchrittZusammenfassung {...p} />,
+    abschluss: () => <SchrittAbschluss />,
   }
 
   return (
     <main style={huelle}>
       <h1 style={{ fontSize: 20, fontWeight: 700, textAlign: 'center', margin: '8px 0 0' }}>
-        Unterstützung im Alltag anfragen
+        Zugang als angehörige Person
       </h1>
       <Wizard
         key={sprung ?? 'start'}
-        schritte={SCHRITTFOLGEN.kunde}
+        schritte={SCHRITTFOLGEN.angehoerige}
         masken={masken}
         startSchritt={sprung ?? stand.aktuellerSchritt}
         anfangsDaten={anfangsDaten}
         onSpeichern={speichern}
         onAbschluss={abschluss}
         onSpaeter={spaeter}
-        onHilfe={() => router.push('/kontakt?anliegen=unterstuetzung')}
-        abschlussInhalt={
-          <div style={{ fontSize: 15, lineHeight: 1.6 }}>
-            <p style={{ marginTop: 0 }}>Vielen Dank — Ihre Anfrage ist bei uns eingegangen.</p>
-            <p style={{ marginBottom: 0, color: 'var(--ink4)' }}>
-              Wir sehen sie uns an und melden uns innerhalb weniger Tage bei Ihnen.
-              Die Anfrage ist unverbindlich und kostenfrei.
-            </p>
-          </div>
-        }
+        onHilfe={() => router.push('/kontakt?anliegen=angehoerige')}
+        abschlussInhalt={<SchrittAbschluss />}
       />
 
       <OnboardingAssistent
         lage={{
-          typ: 'kunde',
+          typ: 'angehoerige',
           aktuellerSchritt: stand.aktuellerSchritt,
-          gesamtSchritte: SCHRITTFOLGEN.kunde.length,
+          gesamtSchritte: SCHRITTFOLGEN.angehoerige.length,
           schritteDaten: stand.schritteDaten as never,
           fehlendeAngaben: stand.fehlendeAngaben,
           dokumentStatus: stand.dokumentStatus,
           abgeschlossenAm: stand.abgeschlossenAm,
         }}
         onGeheZuSchritt={setSprung}
-        onOeffneAblauf={t => router.push(`/onboarding/${t}`)}
-        onWaehleLeistung={() => setSprung(3)}
-        onHochladen={() => setSprung(SCHRITTFOLGEN.kunde.findIndex(s => s.schluessel === 'unterlagen') + 1)}
-        onMensch={() => router.push('/kontakt?anliegen=unterstuetzung')}
+        onOeffneAblauf={typ => router.push(`/onboarding/${typ}`)}
+        onMensch={() => router.push('/kontakt?anliegen=angehoerige')}
       />
     </main>
   )

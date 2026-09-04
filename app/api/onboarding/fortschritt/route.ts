@@ -24,7 +24,7 @@ import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
 import { withTracking } from '@/lib/monitoring/tracker'
 import { logger } from '@/lib/logger'
 import {
-  holeOderStarte, merkeAbbruch, speichereSchritt,
+  holeFortschritt, holeOderStarte, merkeAbbruch, speichereSchritt,
   OnboardingAbgeschlossenError, OnboardingNichtLesbarError,
 } from '@/lib/onboarding/service'
 import { istOnboardingTyp, istSchrittStatus } from '@/lib/onboarding/schritte'
@@ -50,13 +50,26 @@ export const GET = withTracking(async function GET(request: Request) {
   const nutzer = await holeNutzer()
   if (!nutzer) return nichtAngemeldet()
 
-  const typ = new URL(request.url).searchParams.get('typ')
+  const parameter = new URL(request.url).searchParams
+  const typ = parameter.get('typ')
   if (!istOnboardingTyp(typ)) {
     return NextResponse.json({ error: 'Unbekannte Ablaufart.' }, { status: 400 })
   }
 
+  // `anlegen=0` liest NUR und legt keinen Ablauf an.
+  //
+  // Der Wizard braucht das Anlegen — wer ihn betritt, hat begonnen. Eine
+  // Dashboard-Karte darf es NICHT: sonst entstuende fuer jeden Besucher
+  // ein Ablauf, den er nie angefangen hat. Der Erinnerungslauf schriebe
+  // ihn danach an, und die Betriebssicht zaehlte ihn als offen.
+  const anlegen = parameter.get('anlegen') !== '0'
+
   try {
-    const fortschritt = await holeOderStarte(createAdminClient(), { ...nutzer, typ })
+    const admin = createAdminClient()
+    const kennung = { ...nutzer, typ }
+    const fortschritt = anlegen
+      ? await holeOderStarte(admin, kennung)
+      : await holeFortschritt(admin, kennung)
     return NextResponse.json({ fortschritt })
   } catch (err) {
     if (err instanceof OnboardingNichtLesbarError) {
