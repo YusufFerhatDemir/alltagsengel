@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P5 — Automatisierte Kommunikation Audit</title>
+<style>
+:root { color-scheme: light; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8f7f4; color: #1a1612; padding: 20px; line-height: 1.5; }
+h1 { font-size: 20px; margin-bottom: 4px; }
+.subtitle { color: #888; font-size: 13px; margin-bottom: 20px; }
+.section { margin-bottom: 28px; }
+.section h2 { font-size: 15px; font-weight: 700; color: #C9963C; margin-bottom: 10px; border-bottom: 2px solid #C9963C; padding-bottom: 4px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+th { background: #1a1612; color: #fff; text-align: left; padding: 8px 10px; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+td { padding: 8px 10px; border-bottom: 1px solid #eee; vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #faf8f3; }
+.status { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.ok { background: #d4edda; color: #155724; }
+.warn { background: #fff3cd; color: #856404; }
+.miss { background: #f8d7da; color: #721c24; }
+.info { background: #d1ecf1; color: #0c5460; }
+.note { font-size: 12px; color: #666; margin-top: 8px; padding: 8px 12px; background: #fff; border-left: 3px solid #C9963C; border-radius: 4px; }
+.legend { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.legend span { font-size: 12px; }
+.summary-box { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
+.metric { text-align: center; }
+.metric .num { font-size: 28px; font-weight: 700; }
+.metric .label { font-size: 11px; color: #888; text-transform: uppercase; }
+.num.green { color: #28a745; }
+.num.yellow { color: #d4a017; }
+.num.red { color: #dc3545; }
+</style>
+</head>
+<body>
+
+<h1>P5 — Automatisierte Kommunikation</h1>
+<p class="subtitle">Audit-Datum: 05.09.2026 · Projekt: Alltagsengel · Supabase: nnwyktkqibdjxgimjyuq</p>
+
+<div class="summary-box">
+  <div class="metric"><div class="num green">12</div><div class="label">Implementiert</div></div>
+  <div class="metric"><div class="num yellow">3</div><div class="label">Teilweise</div></div>
+  <div class="metric"><div class="num red">1</div><div class="label">Fehlt</div></div>
+  <div class="metric"><div class="num green">5</div><div class="label">Schutzschichten</div></div>
+</div>
+
+<div class="legend">
+  <span><span class="status ok">OK</span> Vollständig implementiert</span>
+  <span><span class="status warn">TEILW.</span> Teilweise / mit Einschränkung</span>
+  <span><span class="status miss">FEHLT</span> Nicht implementiert</span>
+  <span><span class="status info">INFO</span> Bewusst so gewählt</span>
+</div>
+
+<!-- ═══ TEIL 1: KOMMUNIKATIONS-TRIGGER ═══ -->
+<div class="section">
+<h2>1 — Kommunikations-Trigger</h2>
+<table>
+<tr><th style="width:25%">Trigger</th><th style="width:30%">Implementierung</th><th style="width:25%">Schutzmaßnahme</th><th style="width:20%">Status</th></tr>
+
+<tr>
+  <td><strong>Registrierung → Willkommens-Mail</strong></td>
+  <td><code>app/api/auth/send-welcome/route.ts</code><br>POST durch authentifizierten User. Rollenspezifisch (Engel vs. Kunde).</td>
+  <td>Auth-Check, eigene E-Mail-Validierung (403 bei Fremd-E-Mail)</td>
+  <td><span class="status warn">TEILW.</span><br><small>Kein Rate-Limit, kein Idempotenzschlüssel — mehrfacher Aufruf = mehrfache Mail</small></td>
+</tr>
+
+<tr>
+  <td><strong>Bewerbung → Eingangsbestätigung</strong></td>
+  <td><code>app/api/kontakt/route.ts</code> + <code>app/api/coach/anfrage/route.ts</code><br>Öffentliche POST-Endpoints. Team-Mail + Bestätigung an Absender.</td>
+  <td>Persistentes Rate-Limit (5/IP/10min), Input-Validierung, HTML-Escaping, Längenbegrenzung</td>
+  <td><span class="status ok">OK</span></td>
+</tr>
+
+<tr>
+  <td><strong>Fehlende Dokumente → Erinnerung</strong></td>
+  <td><code>lib/onboarding/erinnerungen.ts</code><br>Cron-gesteuert, 2 Stufen (Tag 1 + Tag 3 Inaktivität).</td>
+  <td>Idempotent (UNIQUE Index auf correlation_id+channel), Consent-Check, Hard-Bounce/Spam-Sperre, Max 200/Lauf, Fail-closed, Dry-run</td>
+  <td><span class="status ok">OK</span></td>
+</tr>
+
+<tr>
+  <td><strong>Unvollst. Onboarding → Follow-up</strong></td>
+  <td><code>app/api/drip/route.ts</code><br>Cron: Drip-Kampagne Tag 3, 7, 14 nach Registrierung für Kunden ohne Buchung.</td>
+  <td>Exact-Day-Match (keine Ranges), Idempotenzschlüssel (drip:{stage}:{id}), Fail-closed (Buchungs-Query-Fehler = Abbruch), HTML-Escaping</td>
+  <td><span class="status warn">TEILW.</span><br><small>TODO: Kein Multi-Tenant-Filter — alle Orgs bekommen AE-Drip</small></td>
+</tr>
+
+<tr>
+  <td><strong>Freigabe → Bestätigung an Bewerber</strong></td>
+  <td>Keine dedizierte automatische E-Mail bei Engel-Freigabe gefunden. Status-Änderung erzeugt In-App-Notification.</td>
+  <td>—</td>
+  <td><span class="status miss">FEHLT</span><br><small>Nur In-App, keine E-Mail bei Freigabe</small></td>
+</tr>
+
+<tr>
+  <td><strong>Buchung → Bestätigung Kunde + Engel</strong></td>
+  <td><code>lib/notifications.ts</code><br>4-Kanal-Versand: In-App + E-Mail + Web-Push + FCM. Ereignisse: booking-neu (→Engel), booking-zusage (→Kunde), booking-absage, booking-storno-kunde/engel.</td>
+  <td>Idempotente Vorgangs-ID (UUID v5 pro Ereignis+Buchung+Empfänger), Zustellspur in delivery_log, HTML-Escaping, Resend-Timeout 20s mit Idempotenzschlüssel</td>
+  <td><span class="status ok">OK</span></td>
+</tr>
+
+<tr>
+  <td><strong>Termin-Erinnerung (Vortag)</strong></td>
+  <td><code>lib/automation/termin-erinnerung.ts</code><br>Täglicher Cron. Erinnert Kunden + bevollmächtigte Angehörige.</td>
+  <td>Duplikat-Check (assignment_id+user_id), Fail-closed, stornierte/abgeschlossene Termine ausgeschlossen</td>
+  <td><span class="status warn">TEILW.</span><br><small>Nur In-App (kein E-Mail). clients.user_id=NULL bei 4 Live-Kunden → aktuell wirkungslos</small></td>
+</tr>
+
+<tr>
+  <td><strong>Bewertungsanfrage (2 Tage nach Termin)</strong></td>
+  <td><code>app/api/cron/review-request/route.ts</code><br>Täglicher Cron 10:00. Prüft angel_reviews-Tabelle.</td>
+  <td>Exact-Day-Match, Idempotenzschlüssel (bewertung:{bookingId}), Fail-closed, Header-Injection-Schutz</td>
+  <td><span class="status ok">OK</span></td>
+</tr>
+
+<tr>
+  <td><strong>Rechnungsversand</strong></td>
+  <td><code>lib/billing/versand/rechnung-versand.ts</code><br>Nach Festschreibung, manueller Nachversand oder Retry-Worker.</td>
+  <td>16-Punkt-Preflight, Pilot-Gate (Einmal-Token), sent_at verhindert Doppelversand, Idempotenzschlüssel (rechnung:{id}), invoice_email_log, Audit-Trail</td>
+  <td><span class="status ok">OK</span></td>
+</tr>
+
+<tr>
+  <td><strong>Mahnlauf</strong></td>
+  <td><code>app/api/cron/mahnlauf/route.ts</code> + <code>lib/billing/core/dunning.ts</code><br>Täglicher Cron 07:00. 6 Eskalationsstufen.</td>
+  <td>CAS auf dunning_level, 10-Punkt-Prüfung (Storno, Streit, Teilzahlung…), Queue statt Sofortversand, Retry mit Dead-Letter, Umgebungs-Gate (MAHNVERSAND_AUTOMATISCH)</td>
+  <td><span class="status ok">OK</span></td>
+</tr>
+
+<tr>
+  <td><strong>Marketing-Kampagnen</strong></td>
+  <td><code>lib/marketing/versand.ts</code><br>Manuell via Admin-UI. Dry-run, Preview, Test, Produktion.</td>
+  <td>3 Gates (Env-Flag + Freigabe + DB-UNIQUE), CAS, Pro-Empfänger-Log vor Versand, Consent-Prüfung, RFC 8058 Abmelde-Header, Test nur @alltagsengel.care</td>
+  <td><span class="status ok">OK</span></td>
+</tr>
+
+<tr>
+  <td><strong>Fristen-/Budget-Warnungen</strong></td>
+  <td><code>lib/automation/fristen-warnung.ts</code> + <code>budget-warnung.ts</code><br>Täglicher Cron. Qualifikationsablauf (30/14/7 Tage), Budget 80%/100%.</td>
+  <td>Duplikat-Check per Marker+Bezug, Fail-closed, Exact-Day-Match</td>
+  <td><span class="status info">INFO</span><br><small>Nur In-App (ops_benachrichtigungen) — bewusste Designentscheidung</small></td>
+</tr>
+
+<tr>
+  <td><strong>Sicherheitswarnungen</strong></td>
+  <td><code>lib/security/benachrichtigung.ts</code><br>Automatisch bei Security-Events. E-Mail an privilegierte Rollen + Watchlist.</td>
+  <td>12h Sperrfrist (nicht für kritisch), Provenienz-Tagging (echt vs. synthetisch), Audit-Log, fail-soft (blockiert nie die auslösende Aktion)</td>
+  <td><span class="status ok">OK</span></td>
+</tr>
+</table>
+</div>
+
+<!-- ═══ TEIL 2: SCHUTZMASSNAHMEN ═══ -->
+<div class="section">
+<h2>2 — Schutzmaßnahmen (Querschnitt)</h2>
+<table>
+<tr><th style="width:25%">Schutzmaßnahme</th><th style="width:40%">Implementierung</th><th style="width:15%">Abdeckung</th><th style="width:20%">Status</th></tr>
+
+<tr>
+  <td><strong>Hard-Bounce-Schutz</strong></td>
+  <td>Resend-Webhook → <code>zustellrueckmeldung.ts</code> + <code>zustellereignis.ts</code>.<br>
+  <strong>Marketing:</strong> Hard-Bounce = Adresse gesperrt (<code>sperreAdresse</code>), Spam-Beschwerde = Consent widerrufen + Adresse gesperrt.<br>
+  <strong>Transaktional:</strong> Bounce sperrt NICHT (Rechnung muss ankommen), erzeugt stattdessen kritisches Security-Event.</td>
+  <td>Marketing: ✓<br>Transaktional: ✓ (bewusst anders)</td>
+  <td><span class="status ok">OK</span></td>
+</tr>
+
+<tr>
+  <td><strong>Rate-Limit</strong></td>
+  <td>3 Schichten:<br>
+  1. In-Memory Sliding Window (<code>lib/rate-limit.ts</code>) — 10K Buckets<br>
+  2. DB-persistent (<code>lib/rate-limit-persistent.ts</code>) — cross-instance via RPC<br>
+  3. WhatsApp-spezifisch — 20 Nachrichten/Telefon/Stunde<br>
+  Öffentliche Formulare: 5 Req/IP/10min. Cron-Endpoints: Secret-geschützt.</td>
+  <td>Formulare: ✓<br>Crons: ✓ (Secret)<br>Auth-Endpoints: ✗</td>
+  <td><span class="status ok">OK</span></td>
+</tr>
+
+<tr>
+  <td><strong>Duplikat-Schutz</strong></td>
+  <td>Mehrere Mechanismen:<br>
+  — Resend Idempotenzschlüssel (24h-Fenster) pro Vorgang<br>
+  — UNIQUE Partial Index auf <code>(correlation_id, channel)</code> in delivery_log<br>
+  — CAS (Compare-and-Swap) auf Status-Feldern (dunning_level, versendet_am)<br>
+  — Exact-Day-Match bei Crons (keine Ranges → kein Nachholen = kein Doppeln)<br>
+  — Pro-Empfänger-Log vor Versand bei Marketing</td>
+  <td>Vollständig</td>
+  <td><span class="status ok">OK</span></td>
+</tr>
+
+<tr>
+  <td><strong>Opt-out / Abmeldung</strong></td>
+  <td><strong>Marketing:</strong> RFC 8058 List-Unsubscribe Header, Abmeldelink mit Token, Consent-Widerruf bei Spam-Beschwerde.<br>
+  <strong>Transaktional:</strong> Kein Opt-out (Rechnungen, Mahnungen = gesetzliche Pflicht).<br>
+  <strong>Onboarding:</strong> Newsletter-Opt-out blockiert NICHT (transaktional, vom User angestoßen), aber Hard-Bounce/Spam-Sperre greift.</td>
+  <td>Marketing: ✓<br>Transaktional: ✓ (bewusst kein Opt-out)<br>DiPA-Nutzer: ✓ (komplett ausgeschlossen per DiPAV §6(4))</td>
+  <td><span class="status ok">OK</span></td>
+</tr>
+
+<tr>
+  <td><strong>Webhook-Sicherheit</strong></td>
+  <td><code>lib/marketing/webhook-signatur.ts</code><br>Svix HMAC-SHA256, Timestamp-Toleranz 5min, timing-safe Vergleich, Key-Rotation. Fail-closed.</td>
+  <td>Vollständig</td>
+  <td><span class="status ok">OK</span></td>
+</tr>
+</table>
+</div>
+
+<!-- ═══ TEIL 3: FINDINGS ═══ -->
+<div class="section">
+<h2>3 — Handlungsbedarf</h2>
+<table>
+<tr><th style="width:8%">Prio</th><th style="width:30%">Finding</th><th style="width:40%">Detail</th><th style="width:22%">Empfehlung</th></tr>
+
+<tr>
+  <td><span class="status miss">HOCH</span></td>
+  <td>Freigabe-Bestätigung fehlt</td>
+  <td>Wenn ein Engel freigeschaltet wird, erhält er keine E-Mail-Benachrichtigung. Nur In-App-Notification.</td>
+  <td>E-Mail-Trigger bei Status-Wechsel auf „freigegeben" implementieren.</td>
+</tr>
+
+<tr>
+  <td><span class="status warn">MITTEL</span></td>
+  <td>Willkommens-Mail ohne Idempotenz</td>
+  <td><code>send-welcome</code> hat keinen Idempotenzschlüssel und kein Rate-Limit. Mehrfacher Aufruf = mehrfache Mail.</td>
+  <td>Idempotenzschlüssel <code>welcome:{userId}</code> + DB-Check „bereits gesendet" hinzufügen.</td>
+</tr>
+
+<tr>
+  <td><span class="status warn">MITTEL</span></td>
+  <td>Termin-Erinnerung wirkungslos</td>
+  <td><code>clients.user_id</code> ist NULL für alle 4 Live-Kunden → <code>ohneEmpfaenger</code>-Zähler läuft hoch, keine Erinnerung kommt an. Außerdem nur In-App, nicht E-Mail.</td>
+  <td>user_id-Zuordnung fixen. E-Mail-Kanal optional ergänzen.</td>
+</tr>
+
+<tr>
+  <td><span class="status warn">NIEDRIG</span></td>
+  <td>Drip ohne Multi-Tenant-Filter</td>
+  <td>Alle Organisationen erhalten Alltagsengel-Drip-Mails. Bei Multi-Org-Betrieb problematisch.</td>
+  <td>Org-Filter im Drip-Query ergänzen.</td>
+</tr>
+</table>
+</div>
+
+<!-- ═══ TEIL 4: ARCHITEKTUR ═══ -->
+<div class="section">
+<h2>4 — Architektur-Überblick</h2>
+<div class="note">
+<strong>E-Mail-Provider:</strong> Resend (API-Key: <code>RESEND_API_KEY</code>)<br>
+<strong>Absender-Domain:</strong> info@alltagsengel.care (Strato, nie Gmail)<br>
+<strong>Absender-Name:</strong> Immer „Alltagsengel" — nie persönliche Namen<br>
+<strong>Webhook:</strong> Resend → <code>/api/marketing/resend-webhook</code> (Svix-signiert)<br>
+<strong>Kanäle:</strong> E-Mail, In-App, Web-Push, FCM, WhatsApp<br>
+<strong>Zustellspur:</strong> <code>notification_delivery_log</code> (cross-channel, mit Retry-Worker)<br>
+<strong>Consent-Modell:</strong> 4 Typen × 7 Quellen, Double-Opt-In, DSGVO-konform<br>
+<strong>Timeout:</strong> 20s pro Resend-Aufruf, danach Retry mit Idempotenzschlüssel<br>
+<strong>Cron-Schutz:</strong> Shared Secret (<code>pruefeCronGeheimnis()</code>) auf allen Cron-Endpoints
+</div>
+</div>
+
+<p style="text-align:center; color:#aaa; font-size:11px; margin-top:24px;">Automatisch generiert · Claude Audit · 05.09.2026</p>
+
+</body>
+</html>
