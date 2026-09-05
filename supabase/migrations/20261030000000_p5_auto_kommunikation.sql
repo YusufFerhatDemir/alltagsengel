@@ -55,18 +55,26 @@ BEGIN
       v_count int;
     BEGIN
       -- Exakte Uebereinstimmung, case-insensitive
-      SELECT count(*), min(au.id)
-      INTO v_count, v_user_id
+      SELECT count(*) INTO v_count
       FROM auth.users au
       WHERE lower(trim(au.email)) = lower(trim(rec.client_email));
 
-      IF v_count = 1 AND v_user_id IS NOT NULL THEN
-        UPDATE clients
-        SET user_id = v_user_id, updated_at = now()
-        WHERE id = rec.client_id
-          AND user_id IS NULL;  -- Nochmal pruefen gegen Race Condition
-        IF FOUND THEN
-          v_verknuepft := v_verknuepft + 1;
+      IF v_count = 1 THEN
+        SELECT au.id INTO v_user_id
+        FROM auth.users au
+        WHERE lower(trim(au.email)) = lower(trim(rec.client_email))
+        LIMIT 1;
+
+        IF v_user_id IS NOT NULL THEN
+          UPDATE clients
+          SET user_id = v_user_id, updated_at = now()
+          WHERE id = rec.client_id
+            AND user_id IS NULL;  -- Nochmal pruefen gegen Race Condition
+          IF FOUND THEN
+            v_verknuepft := v_verknuepft + 1;
+          ELSE
+            v_uebersprungen := v_uebersprungen + 1;
+          END IF;
         ELSE
           v_uebersprungen := v_uebersprungen + 1;
         END IF;
