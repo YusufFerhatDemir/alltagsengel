@@ -268,10 +268,13 @@ export async function erinnereAnKommendeTermine(
   }
   const emailJeUser = new Map<string, { email: string; firstName: string }>()
   if (alleUserIds.size > 0) {
-    const { data: profile } = await supabase
+    const { data: profile, error: profileFehler } = await supabase
       .from('profiles')
       .select('id, email, first_name')
       .in('id', Array.from(alleUserIds))
+    if (profileFehler) {
+      ergebnis.fehler.push(`Profile nicht lesbar — Empfänger ohne E-Mail: ${profileFehler.message}`)
+    }
     for (const p of profile ?? []) {
       if (p.email) emailJeUser.set(p.id, { email: p.email, firstName: p.first_name || '' })
     }
