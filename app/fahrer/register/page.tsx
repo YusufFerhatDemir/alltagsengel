@@ -86,7 +86,9 @@ export default function FahrerRegisterPage() {
 
       if (authError) {
         if (authError.message.includes('already registered') || authError.message.includes('already been registered')) {
-          setError('Diese E-Mail ist bereits registriert. Bitte melden Sie sich an.')
+          // AUTH-005: Kein Hinweis ob E-Mail existiert — stille Weiterleitung
+          router.push('/auth/login?registered=true')
+          return
         } else if (authError.message.includes('valid email')) {
           setError('Bitte geben Sie eine gültige E-Mail-Adresse ein.')
         } else if (authError.message.includes('at least')) {

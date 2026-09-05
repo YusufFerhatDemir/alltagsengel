@@ -50,6 +50,18 @@ export async function registerAsEngel(data: {
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
     // --- Input validation ---
+    const requiredText: { key: keyof typeof data; label: string }[] = [
+      { key: 'firstName', label: 'Vorname' },
+      { key: 'lastName',  label: 'Nachname' },
+      { key: 'email',     label: 'E-Mail' },
+      { key: 'phone',     label: 'Telefon' },
+    ]
+    for (const { key, label } of requiredText) {
+      const val = data[key]
+      if (typeof val !== 'string' || val.trim().length === 0) {
+        return { ok: false, error: `${label} darf nicht leer sein.` }
+      }
+    }
     if (!Array.isArray(data.services) || data.services.length === 0) {
       return { ok: false, error: 'Bitte mindestens eine Leistung wählen.' }
     }
