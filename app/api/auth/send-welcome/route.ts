@@ -2,13 +2,23 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { sendEmailNotification } from '@/lib/notifications'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { logger } from '@/lib/logger'
+
+const log = logger.child('auth:send-welcome')
 
 /**
  * POST /api/auth/send-welcome
  * Sends a branded welcome email with usage guide to newly registered users via Resend.
  * Different content for Engel, Kunde, and Fahrer.
  * Geschützt: Nur authentifizierte Nutzer können ihre eigene Welcome-Mail auslösen.
+ *
+ * IDEMPOTENZ: Wiederholte Aufrufe (z. B. durch doppelten Klick, Webhook-Retry
+ * oder erneutes Laden der Registrierungsseite) erzeugen hoechstens EINE
+ * Welcome-Mail je Nutzer. Die Sperre sitzt in profiles.welcome_email_sent_at
+ * — ein Zeitstempel statt eines Booleans, damit im Fehlerfall erkennbar ist,
+ * wann die erste Mail rausging.
  */
 export const POST = withTracking(async function POST(request: Request) {
   try {
@@ -27,6 +37,31 @@ export const POST = withTracking(async function POST(request: Request) {
     // Sicherheit: Nutzer kann nur seine eigene E-Mail-Adresse verwenden
     if (user.email !== email) {
       return NextResponse.json({ error: 'Nicht autorisiert für diese E-Mail' }, { status: 403 })
+    }
+
+    // ── Idempotenz-Schutz ─────────────────────────────────────────
+    // Pruefen, ob bereits eine Welcome-Mail versendet wurde. Atomarer
+    // Update mit WHERE-Bedingung: nur wenn welcome_email_sent_at noch
+    // NULL ist, wird der Zeitstempel gesetzt. Kommt ein zweiter Aufruf
+    // gleichzeitig, sieht er den bereits gesetzten Wert und bricht ab.
+    const admin = createAdminClient()
+    const { data: flagResult, error: flagError } = await admin
+      .from('profiles')
+      .update({ welcome_email_sent_at: new Date().toISOString() })
+      .eq('id', user.id)
+      .is('welcome_email_sent_at', null)
+      .select('id')
+
+    if (flagError) {
+      // Spalte existiert moeglicherweise noch nicht (Migration ausstehend).
+      // In dem Fall: Warnung loggen und trotzdem senden — besser eine
+      // doppelte Mail als gar keine. Die Migration wird den Schutz dann
+      // aktivieren.
+      log.error('Idempotenz-Flag konnte nicht gesetzt werden', { errorMessage: flagError.message })
+    } else if (!flagResult || flagResult.length === 0) {
+      // Zeitstempel war schon gesetzt → Mail wurde bereits versendet.
+      log.info('Welcome-Mail bereits versendet — Duplikat verhindert', { userId: user.id })
+      return NextResponse.json({ success: true, duplicate: true })
     }
 
     const name = firstName || 'Nutzer'
