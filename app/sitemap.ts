@@ -72,6 +72,7 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/alltagsbegleitung/maintal', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/alltagsbegleitung/bad-vilbel', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/alltagsbegleitung/main-taunus', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/alltagsbegleitung/eschborn', changeFrequency: 'weekly', priority: 0.85 },
   // City-Landingpages Krankenfahrten (frankfurt: siehe Hinweis oben)
   { url: '/krankenfahrten/offenbach', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/krankenfahrten/wiesbaden', changeFrequency: 'weekly', priority: 0.85 },
@@ -97,6 +98,7 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/krankenfahrten/maintal', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/krankenfahrten/bad-vilbel', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/krankenfahrten/main-taunus', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/krankenfahrten/eschborn', changeFrequency: 'weekly', priority: 0.85 },
   // City-Landingpages Pflegebox (frankfurt: siehe Hinweis oben)
   { url: '/hygienebox/offenbach', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/hygienebox/wiesbaden', changeFrequency: 'weekly', priority: 0.85 },
@@ -122,6 +124,7 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/hygienebox/maintal', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/hygienebox/bad-vilbel', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/hygienebox/main-taunus', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/hygienebox/eschborn', changeFrequency: 'weekly', priority: 0.85 },
   // Recruiting-Stadtseiten "Alltagsbegleiter Job [Stadt]"
   // HINWEIS: /engel-werden/frankfurt fehlt BEWUSST — kanonisiert auf
   // /engel-werden (die Hauptseite zielt bereits auf "… Frankfurt"-Keywords).
@@ -139,6 +142,7 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/engel-werden/maintal', changeFrequency: 'weekly', priority: 0.8 },
   { url: '/engel-werden/bad-vilbel', changeFrequency: 'weekly', priority: 0.8 },
   { url: '/engel-werden/main-taunus', changeFrequency: 'weekly', priority: 0.8 },
+  { url: '/engel-werden/eschborn', changeFrequency: 'weekly', priority: 0.8 },
   // /lp/* sind noindex-Redirects (Werbe-Tracking) — gehören NICHT in die Sitemap.
   // /karriere ist 301 → /engel-werden (Recruiting-Konsolidierung, next.config.ts).
   { url: '/jobs', changeFrequency: 'weekly', priority: 0.9 },

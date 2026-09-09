@@ -211,6 +211,18 @@ const cities: Record<string, CityData> = {
     nachbarn: ['frankfurt-hoechst', 'frankfurt', 'wiesbaden', 'bad-homburg'],
     beratung: 'beim Pflegestützpunkt Main-Taunus-Kreis',
   },
+  eschborn: {
+    name: 'Eschborn',
+    region: 'Hessen',
+    slug: 'eschborn',
+    description: 'Eschborn und Niederhöchstadt',
+    lat: 50.1433,
+    lng: 8.5706,
+    stadtteile: ['Eschborn-Mitte', 'Niederhöchstadt', 'Camp Phönix Park'],
+    lokal: 'In Eschborn sind unsere Alltagsbegleiter in der Kernstadt und in Niederhöchstadt unterwegs — beide Ortsteile liegen an der S-Bahn, was kurze Wege auch ohne Auto möglich macht.',
+    nachbarn: ['frankfurt-hoechst', 'frankfurt', 'main-taunus', 'bad-homburg'],
+    beratung: 'beim Pflegestützpunkt Main-Taunus-Kreis',
+  },
   giessen: {
     name: 'Gießen',
     region: 'Hessen',
@@ -386,11 +398,11 @@ function buildFaqs(city: CityData): { frage: string; antwort: string }[] {
   return [
     {
       frage: `Was kostet Alltagsbegleitung in ${city.name}?`,
-      antwort: `Die Alltagsbegleitung in ${city.name} kostet ab 32 € pro Stunde. Pflegebedürftigen mit Pflegegrad steht nach § 45b SGB XI grundsätzlich ein monatlicher Entlastungsbetrag von 131 € zur Verfügung. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.`,
+      antwort: `Die Alltagsbegleitung in ${city.name} kostet ab 32 € pro Stunde. Pflegebedürftigen mit Pflegegrad steht nach § 45b SGB XI grundsätzlich ein monatlicher Entlastungsbetrag von 131 € zur Verfügung. Alltagsengel befindet sich aktuell im Anerkennungsverfahren. Nach erfolgter Anerkennung können berechtigte Pflegebedürftige Leistungen über den Entlastungsbetrag nach §45b SGB XI abrechnen. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.`,
     },
     {
       frage: 'Wer hat Anspruch auf den Entlastungsbetrag?',
-      antwort: 'Jede Person mit anerkanntem Pflegegrad (1–5) hat Anspruch auf den Entlastungsbetrag von 131 € monatlich nach §45b SGB XI — auch schon mit Pflegegrad 1. Welche Angebote damit finanziert werden können, richtet sich nach der Anerkennung des Anbieters nach §45a SGB XI; Alltagsengel befindet sich derzeit im Anerkennungsverfahren.',
+      antwort: 'Jede Person mit anerkanntem Pflegegrad (1–5) hat Anspruch auf den Entlastungsbetrag von 131 € monatlich nach §45b SGB XI — auch schon mit Pflegegrad 1. Alltagsengel befindet sich aktuell im Anerkennungsverfahren. Nach erfolgter Anerkennung können berechtigte Pflegebedürftige Leistungen über den Entlastungsbetrag nach §45b SGB XI abrechnen.',
     },
     {
       frage: `Wie buche ich Alltagsbegleitung in ${city.name}?`,
@@ -552,9 +564,10 @@ export default async function StadtPage({ params }: { params: Promise<{ stadt: s
           <p className="info-price-note">
             Pflegebedürftigen mit Pflegegrad steht nach § 45b SGB XI grundsätzlich ein
             monatlicher Entlastungsbetrag von 131 € zur Verfügung. Nicht genutzte Beträge
-            verfallen am 30. Juni des Folgejahres. Ob der Betrag für ein konkretes Angebot
-            eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI
-            voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren.
+            verfallen am 30. Juni des Folgejahres. Alltagsengel befindet sich aktuell im
+            Anerkennungsverfahren. Nach erfolgter Anerkennung können berechtigte
+            Pflegebedürftige Leistungen über den Entlastungsbetrag nach § 45b SGB XI
+            abrechnen.
           </p>
         </section>
 
@@ -562,10 +575,11 @@ export default async function StadtPage({ params }: { params: Promise<{ stadt: s
           <h3>Wer hat Anspruch?</h3>
           <p>
             Jede Person mit anerkanntem Pflegegrad (1–5) hat Anspruch auf den Entlastungsbetrag
-            von 131 € monatlich. Welche Angebote damit finanziert werden können, richtet sich nach
-            der Anerkennung des Anbieters nach § 45a SGB XI — Alltagsengel befindet sich derzeit im
-            Anerkennungsverfahren. Unsere Alltagsbegleitung in {city.name} können Sie unabhängig
-            davon als Selbstzahler nutzen; wir beraten Sie kostenlos zu allen Finanzierungswegen.
+            von 131 € monatlich. Alltagsengel befindet sich aktuell im Anerkennungsverfahren.
+            Nach erfolgter Anerkennung können berechtigte Pflegebedürftige Leistungen über den
+            Entlastungsbetrag nach § 45b SGB XI abrechnen. Unsere Alltagsbegleitung in
+            {city.name} können Sie unabhängig davon als Selbstzahler nutzen; wir beraten Sie
+            kostenlos zu allen Finanzierungswegen.
           </p>
         </section>
 
@@ -660,10 +674,11 @@ export default async function StadtPage({ params }: { params: Promise<{ stadt: s
         </section>
 
         <section className="info-card">
-          <h3>Kostenlose Beratung anfragen</h3>
+          <h3>Jetzt unverbindlich vormerken — Beratung anfragen</h3>
           <p style={{ marginBottom: 16 }}>
             Sie haben Fragen zur Alltagsbegleitung in {city.name} oder zum Entlastungsbetrag?
-            Hinterlassen Sie Ihre Nummer — wir rufen Sie zurück, kostenlos und unverbindlich.
+            Lassen Sie sich unverbindlich vormerken — wir rufen Sie zurück, kostenlos und
+            ohne Verpflichtung.
           </p>
           <LeadForm defaultService="Alltagsbegleitung" source={`alltagsbegleitung-${city.slug}`} />
         </section>
@@ -701,7 +716,7 @@ export default async function StadtPage({ params }: { params: Promise<{ stadt: s
         </section>
 
         <div className="info-cta">
-          <Link href="/choose" className="btn-gold" style={{ width: '100%' }}>JETZT ENGEL IN {city.name.toUpperCase()} FINDEN</Link>
+          <Link href="/choose" className="btn-gold" style={{ width: '100%' }}>JETZT UNVERBINDLICH VORMERKEN</Link>
         </div>
 
         <section className="info-card">

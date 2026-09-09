@@ -163,6 +163,15 @@ const cities: Record<string, CityData> = {
     lokal: 'Im Main-Taunus-Kreis reichen die Einsätze von Eschborn und Schwalbach über Hofheim und Kelkheim bis nach Hattersheim — du wählst, was in deiner Nähe liegt.',
     nachbarn: ['frankfurt-hoechst', 'frankfurt', 'wiesbaden', 'bad-homburg'],
   },
+  eschborn: {
+    name: 'Eschborn',
+    region: 'Hessen',
+    slug: 'eschborn',
+    plz: '65760',
+    stadtteile: ['Eschborn-Mitte', 'Niederhöchstadt', 'Camp Phönix Park'],
+    lokal: 'In Eschborn liegen die Einsätze in der Kernstadt und in Niederhöchstadt — beide an der S-Bahn, du kommst also auch ohne Auto gut zu deinen Klienten.',
+    nachbarn: ['frankfurt-hoechst', 'frankfurt', 'main-taunus', 'bad-homburg'],
+  },
 }
 
 export function generateStaticParams() {
@@ -356,9 +365,9 @@ export default async function EngelWerdenStadtPage({ params }: { params: Promise
             Rente oder Hauptberuf. Wer mehr möchte, übernimmt einfach mehr Stunden. Auf Wunsch
             unterstützen wir auch deine Qualifizierung zur anerkannten Betreuungskraft nach
             §45a SGB XI. Pflegebedürftigen steht grundsätzlich ein Entlastungsbetrag von
-            131 €/Monat zu; ob er für ein Angebot eingesetzt werden kann, hängt an der
-            Anerkennung des Anbieters — Alltagsengel befindet sich derzeit im
-            Anerkennungsverfahren.
+            131 €/Monat zu. Alltagsengel befindet sich aktuell im Anerkennungsverfahren;
+            nach erfolgter Anerkennung können berechtigte Pflegebedürftige Leistungen über
+            den Entlastungsbetrag nach §45b SGB XI abrechnen.
           </p>
         </section>
 
