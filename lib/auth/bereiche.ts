@@ -355,6 +355,9 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   // das auch pdl oder qm tragen, oeffnete sich ein Dashboard, das diesen
   // Rollen ueberall 0 anzeigt: dieselbe Falle wie bei /admin/nachweise.
   '/admin/marketing-dashboard':       { lesen: 'marketing.verwalten', schreiben: 'marketing.verwalten' },
+  // Gleiche Grenze aus dem gleichen Grund: waitlist_customers traegt genau
+  // eine verwaltende Policy, „Admin full access" mit is_admin().
+  '/admin/waitlist':                  { lesen: 'marketing.verwalten', schreiben: 'marketing.verwalten' },
   '/api/admin/marketing':             { lesen: 'marketing.verwalten', schreiben: 'marketing.verwalten' },
   '/api/admin/manage-role':           { lesen: 'benutzer.verwalten' },
   '/api/admin/reset-password':        { lesen: 'benutzer.verwalten' },

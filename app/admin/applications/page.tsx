@@ -7,6 +7,12 @@ import {
   APPLICATION_ABGELEHNT, APPLICATION_SOURCE, BEWERBUNG_FILTER,
 } from '@/lib/admin/ops'
 import { updateApplicationStatus, createApplication } from './actions'
+import {
+  qualifikationLabel, fuehrerscheinLabel, spracheLabel,
+  verfuegbarkeitLabel, stundenLabel, beschaeftigungsartLabel,
+  type BewerbungDaten,
+} from '@/lib/bewerbung/katalog'
+import { regionLabel } from '@/lib/warteliste/katalog'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger'
 import DialogOverlay from '@/components/DialogOverlay'
@@ -44,6 +50,8 @@ interface AppRow {
   notes: string | null
   created_at: string | null
   eingereicht_am: string | null
+  /** Zusatzangaben aus /api/apply — bei Altbestaenden leer. */
+  daten: BewerbungDaten | null
 }
 
 export default function AdminApplicationsPage() {
@@ -85,6 +93,9 @@ export default function AdminApplicationsPage() {
           notes: a.message,
           created_at: a.created_at,
           eingereicht_am: a.eingereicht_am,
+          daten: (a.bewerbung_daten && typeof a.bewerbung_daten === 'object')
+            ? a.bewerbung_daten as BewerbungDaten
+            : null,
         }
       }))
     } catch (err) {
@@ -206,11 +217,32 @@ export default function AdminApplicationsPage() {
                             {a.phone && <span style={{ color: 'var(--ink3)' }}>📞 {a.phone}</span>}
                             {a.email
                               ? <span style={{ color: 'var(--ink3)' }}>✉️ {a.email}</span>
-                              : <span style={{ color: 'var(--ink5)' }}>✉️ keine E-Mail — das Formular fragt keine ab</span>}
+                              : <span style={{ color: 'var(--ink5)' }}>✉️ keine E-Mail hinterlassen</span>}
                             {a.plz && <span style={{ color: 'var(--ink3)' }}>📍 {a.plz}</span>}
+                            {a.daten?.region && <span style={{ color: 'var(--ink3)' }}>🗺️ {regionLabel(a.daten.region)}</span>}
                             {a.referredBy && <span style={{ color: 'var(--ink3)' }}>🤝 Empfohlen von {a.referredBy}</span>}
                             <span style={{ color: 'var(--ink5)' }}>Eingegangen: {formatDate(a.eingereicht_am || a.created_at)}</span>
                           </div>
+
+                          {/* Zusatzangaben aus /api/apply. Die 34 Altbestaende
+                              aus dem frueheren Kurzformular tragen sie nicht —
+                              dann steht hier ein Hinweis statt einer Reihe
+                              leerer Felder, die wie fehlende Daten aussaehe. */}
+                          {a.daten ? (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: '8px 18px', fontSize: 13, marginBottom: 10 }}>
+                              <Detail label="Qualifikation" wert={qualifikationLabel(a.daten.qualifikation)} />
+                              <Detail label="Führerschein" wert={fuehrerscheinLabel(a.daten.fuehrerschein)} />
+                              <Detail label="Stunden/Woche" wert={stundenLabel(a.daten.stunden)} />
+                              <Detail label="Beschäftigungsart" wert={beschaeftigungsartLabel(a.daten.beschaeftigungsart)} />
+                              <Detail label="Sprachen" wert={a.daten.sprachen?.length ? a.daten.sprachen.map(spracheLabel).join(', ') : '—'} />
+                              <Detail label="Verfügbarkeit" wert={a.daten.verfuegbarkeit?.length ? a.daten.verfuegbarkeit.map(verfuegbarkeitLabel).join(', ') : '—'} />
+                            </div>
+                          ) : (
+                            <div style={{ fontSize: 12, color: 'var(--ink5)', marginBottom: 10 }}>
+                              Über das frühere Kurzformular eingegangen — keine Zusatzangaben vorhanden.
+                            </div>
+                          )}
+
                           {a.notes && <div style={{ fontSize: 13, color: 'var(--ink2)' }}>{a.notes}</div>}
                         </td>
                       </tr>
@@ -320,6 +352,15 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span style={{ fontSize: 12, color: 'var(--ink3)', fontWeight: 600 }}>{label}</span>
       <div style={{ marginTop: 3 }}>{children}</div>
     </label>
+  )
+}
+
+function Detail({ label, wert }: { label: string; wert: string }) {
+  return (
+    <div>
+      <div style={{ fontSize: 11, color: 'var(--ink5)', fontWeight: 600 }}>{label}</div>
+      <div style={{ color: 'var(--ink2)' }}>{wert}</div>
+    </div>
   )
 }
 
