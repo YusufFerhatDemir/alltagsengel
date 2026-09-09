@@ -31,6 +31,7 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/pflegebox', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/krankenfahrten', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/alltagsbegleitung', changeFrequency: 'weekly', priority: 0.9 },
+  { url: '/haushaltshilfe', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/entlastungsbetrag', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/verhinderungspflege', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/engel-werden', changeFrequency: 'weekly', priority: 0.9 },
@@ -74,6 +75,19 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/alltagsbegleitung/bad-vilbel', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/alltagsbegleitung/main-taunus', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/alltagsbegleitung/eschborn', changeFrequency: 'weekly', priority: 0.85 },
+
+  // /haushaltshilfe/frankfurt fehlt BEWUSST — es kanonisiert auf
+  // /haushaltshilfe (wie bei krankenfahrten und hygienebox).
+  { url: '/haushaltshilfe/offenbach', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/haushaltshilfe/hanau', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/haushaltshilfe/maintal', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/haushaltshilfe/bad-homburg', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/haushaltshilfe/neu-isenburg', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/haushaltshilfe/eschborn', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/haushaltshilfe/frankfurt-hoechst', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/haushaltshilfe/darmstadt', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/haushaltshilfe/wiesbaden', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/haushaltshilfe/bad-vilbel', changeFrequency: 'weekly', priority: 0.85 },
   // City-Landingpages Krankenfahrten (frankfurt: siehe Hinweis oben)
   { url: '/krankenfahrten/offenbach', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/krankenfahrten/wiesbaden', changeFrequency: 'weekly', priority: 0.85 },
