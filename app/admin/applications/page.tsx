@@ -3,7 +3,8 @@ import { Fragment, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   formatDate, timeAgo, statusMeta,
-  APPLICATION_STATUS, APPLICATION_FLOW, APPLICATION_SOURCE,
+  APPLICATION_STATUS, APPLICATION_FLOW, APPLICATION_FORTSCHRITT,
+  APPLICATION_ABGELEHNT, APPLICATION_SOURCE,
 } from '@/lib/admin/ops'
 import { updateApplicationStatus, createApplication } from './actions'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
@@ -12,21 +13,47 @@ import DialogOverlay from '@/components/DialogOverlay'
 import { klickbareZeile } from '@/lib/a11y'
 const log = logger.child('admin:applications')
 
+/**
+ * Eine Bewerbung, wie sie in `lead_inquiries` steht.
+ *
+ * Die Tabelle `applications`, aus der diese Seite frueher gelesen hat, ist
+ * laut Migration 20261027000000 bewusst tot und traegt produktiv null
+ * Zeilen — die Verwaltung sah deshalb dauerhaft eine leere Liste, waehrend
+ * die echten Bewerbungen ueber das Website-Formular in `lead_inquiries`
+ * eingingen.
+ *
+ * Vier Spalten heissen hier anders als vorher, und zwei gibt es nicht mehr:
+ *   first_name + last_name  →  name      (ein Feld, ungetrennt)
+ *   position                →  service   ("Engel-Bewerbung (Pflegehelfer/in)")
+ *   notes                   →  message
+ *   interview_date          →  entfaellt (keine Spalte)
+ *   referred_by_caregiver_id→  bewerbung_daten.empfohlen_von_caregiver_id
+ */
 interface AppRow {
   id: string
-  first_name: string
-  last_name: string
+  name: string
   email: string | null
   phone: string | null
+  plz: string | null
   source: string | null
-  referred_by_caregiver_id: string | null
+  referredById: string | null
   referredBy: string | null
+  /** Qualifikation/Stelle aus `service`. */
   position: string | null
   status: string
   notes: string | null
-  interview_date: string | null
   created_at: string | null
+  eingereicht_am: string | null
 }
+
+/**
+ * Zwei Bedingungen, weil zwei Wege in die Tabelle fuehren: `art='bewerbung'`
+ * setzen der Onboarding-Ablauf und diese Seite. Das Website-Formular setzt
+ * `art` nicht und faellt auf den Default 'anfrage' — erkennbar bleibt es nur
+ * an `source='engel-bewerbung'`. Wer nur `art` prueft, sieht produktiv null
+ * Zeilen, obwohl der Posteingang voll ist.
+ */
+const BEWERBUNG_FILTER = 'art.eq.bewerbung,source.eq.engel-bewerbung'
 
 export default function AdminApplicationsPage() {
   const [rows, setRows] = useState<AppRow[]>([])
@@ -41,19 +68,34 @@ export default function AdminApplicationsPage() {
     try {
       const supabase = createClient()
       const [appRes, cgRes] = await Promise.all([
-        supabase.from('applications').select('*').order('created_at', { ascending: false }),
+        supabase
+          .from('lead_inquiries')
+          .select('id, name, email, phone, plz, service, source, message, status, created_at, eingereicht_am, bewerbung_daten')
+          .or(BEWERBUNG_FILTER)
+          .order('created_at', { ascending: false }),
         supabase.from('caregivers').select('id, first_name, last_name'),
       ])
       if (appRes.error) { setError(appRes.error.message); setLoading(false); return }
       const cgMap = new Map<string, string>()
       ;(cgRes.data || []).forEach((c: any) => cgMap.set(c.id, `${c.first_name} ${c.last_name}`.trim()))
-      setRows((appRes.data || []).map((a: any) => ({
-        id: a.id, first_name: a.first_name, last_name: a.last_name, email: a.email, phone: a.phone,
-        source: a.source, referred_by_caregiver_id: a.referred_by_caregiver_id,
-        referredBy: a.referred_by_caregiver_id ? (cgMap.get(a.referred_by_caregiver_id) || 'Mitarbeiter') : null,
-        position: a.position, status: a.status || 'new', notes: a.notes,
-        interview_date: a.interview_date, created_at: a.created_at,
-      })))
+      setRows((appRes.data || []).map((a: any) => {
+        const empfohlenVon: string | null = a.bewerbung_daten?.empfohlen_von_caregiver_id ?? null
+        return {
+          id: a.id,
+          name: a.name || '—',
+          email: a.email,
+          phone: a.phone,
+          plz: a.plz || null,
+          source: a.source,
+          referredById: empfohlenVon,
+          referredBy: empfohlenVon ? (cgMap.get(empfohlenVon) || 'Mitarbeiter') : null,
+          position: a.service,
+          status: a.status || 'new',
+          notes: a.message,
+          created_at: a.created_at,
+          eingereicht_am: a.eingereicht_am,
+        }
+      }))
     } catch (err) {
       log.errorWithException('Applications load error', err)
     } finally {
@@ -75,16 +117,24 @@ export default function AdminApplicationsPage() {
     return m
   }, [rows])
 
-  const referralCount = useMemo(() => rows.filter(r => r.referred_by_caregiver_id).length, [rows])
-  const openCount = useMemo(() => rows.filter(r => !['accepted', 'rejected'].includes(r.status)).length, [rows])
+  const referralCount = useMemo(() => rows.filter(r => r.referredById).length, [rows])
+  // Endzustaende im Wortschatz von lead_inquiries: eingestellt oder abgesagt.
+  const openCount = useMemo(
+    () => rows.filter(r => !['converted', APPLICATION_ABGELEHNT].includes(r.status)).length,
+    [rows],
+  )
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     return rows.filter(r => {
       if (filter !== 'all' && r.status !== filter) return false
       if (!q) return true
-      return `${r.first_name} ${r.last_name}`.toLowerCase().includes(q) ||
-        (r.email || '').toLowerCase().includes(q) || (r.position || '').toLowerCase().includes(q)
+      // Telefon mitsuchen: bei Website-Bewerbungen ist es das einzige
+      // Kontaktmerkmal — eine E-Mail fragt das Formular nicht ab.
+      return r.name.toLowerCase().includes(q) ||
+        (r.email || '').toLowerCase().includes(q) ||
+        (r.phone || '').toLowerCase().includes(q) ||
+        (r.position || '').toLowerCase().includes(q)
     })
   }, [rows, filter, search])
 
@@ -101,7 +151,7 @@ export default function AdminApplicationsPage() {
       {error && <Banner tone="danger">{error}</Banner>}
 
       <div style={{ marginBottom: 16 }}>
-        <SearchInput value={search} onChange={setSearch} placeholder="Name, E-Mail, Position…" />
+        <SearchInput value={search} onChange={setSearch} placeholder="Name, Telefon, E-Mail, Qualifikation…" />
       </div>
 
       <div className="admin-filters">
@@ -119,7 +169,7 @@ export default function AdminApplicationsPage() {
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
-              <tr><th>Name</th><th>Position</th><th>Quelle</th><th>Eingegangen</th><th>Status</th><th>Aktion</th></tr>
+              <tr><th>Name</th><th>Qualifikation</th><th>Quelle</th><th>Eingegangen</th><th>Status</th><th>Aktion</th></tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
@@ -128,14 +178,18 @@ export default function AdminApplicationsPage() {
                 const sm = statusMeta(APPLICATION_STATUS, a.status)
                 const src = a.source ? (APPLICATION_SOURCE[a.source] || APPLICATION_SOURCE.sonstige) : null
                 const isOpen = expanded === a.id
-                const idx = APPLICATION_FLOW.indexOf(a.status)
-                const next = idx >= 0 && idx < 4 ? APPLICATION_FLOW[idx + 1] : null
+                // Der Vorwaertsweg endet bei „Eingestellt". Eine Absage ist
+                // kein naechster Schritt, sondern der eigene Knopf daneben.
+                const idx = APPLICATION_FORTSCHRITT.indexOf(a.status)
+                const next = idx >= 0 && idx < APPLICATION_FORTSCHRITT.length - 1
+                  ? APPLICATION_FORTSCHRITT[idx + 1]
+                  : null
                 return (
                   <Fragment key={a.id}>
                     <tr {...klickbareZeile(() => setExpanded(isOpen ? null : a.id))} aria-expanded={isOpen} style={{ cursor: 'pointer' }}>
                       <td style={{ fontWeight: 600 }}>
-                        {a.first_name} {a.last_name}
-                        {a.referred_by_caregiver_id && <span title={`Empfohlen von ${a.referredBy}`} style={{ marginLeft: 6 }}>🤝</span>}
+                        {a.name}
+                        {a.referredById && <span title={`Empfohlen von ${a.referredBy}`} style={{ marginLeft: 6 }}>🤝</span>}
                       </td>
                       <td style={{ fontSize: 13 }}>{a.position || '—'}</td>
                       <td style={{ fontSize: 13 }}>{src ? `${src.emoji} ${src.label}` : '—'}</td>
@@ -148,8 +202,8 @@ export default function AdminApplicationsPage() {
                               → {statusMeta(APPLICATION_STATUS, next).label}
                             </button>
                           )}
-                          {a.status !== 'rejected' && a.status !== 'accepted' && (
-                            <button onClick={() => setStatus(a, 'rejected')} style={rejectBtn}>Ablehnen</button>
+                          {a.status !== APPLICATION_ABGELEHNT && a.status !== 'converted' && (
+                            <button onClick={() => setStatus(a, APPLICATION_ABGELEHNT)} style={rejectBtn}>Ablehnen</button>
                           )}
                         </div>
                       </td>
@@ -158,11 +212,13 @@ export default function AdminApplicationsPage() {
                       <tr>
                         <td colSpan={6} style={{ background: 'var(--coal3)', padding: 16 }}>
                           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 13, marginBottom: a.notes ? 10 : 0 }}>
-                            {a.email && <span style={{ color: 'var(--ink3)' }}>✉️ {a.email}</span>}
                             {a.phone && <span style={{ color: 'var(--ink3)' }}>📞 {a.phone}</span>}
+                            {a.email
+                              ? <span style={{ color: 'var(--ink3)' }}>✉️ {a.email}</span>
+                              : <span style={{ color: 'var(--ink5)' }}>✉️ keine E-Mail — das Formular fragt keine ab</span>}
+                            {a.plz && <span style={{ color: 'var(--ink3)' }}>📍 {a.plz}</span>}
                             {a.referredBy && <span style={{ color: 'var(--ink3)' }}>🤝 Empfohlen von {a.referredBy}</span>}
-                            {a.interview_date && <span style={{ color: 'var(--ink3)' }}>📅 Gespräch: {formatDate(a.interview_date)}</span>}
-                            <span style={{ color: 'var(--ink5)' }}>Eingegangen: {formatDate(a.created_at)}</span>
+                            <span style={{ color: 'var(--ink5)' }}>Eingegangen: {formatDate(a.eingereicht_am || a.created_at)}</span>
                           </div>
                           {a.notes && <div style={{ fontSize: 13, color: 'var(--ink2)' }}>{a.notes}</div>}
                         </td>
@@ -183,8 +239,10 @@ export default function AdminApplicationsPage() {
 
 function CreateAppModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [caregivers, setCaregivers] = useState<{ id: string; label: string }[]>([])
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
+  // Ein Namensfeld, nicht zwei: `lead_inquiries` fuehrt nur `name`. Zwei
+  // Felder anzubieten und sie beim Speichern zusammenzukleben waere eine
+  // Trennung, die nirgends ankommt.
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [position, setPosition] = useState('')
@@ -212,11 +270,14 @@ function CreateAppModal({ onClose, onCreated }: { onClose: () => void; onCreated
 
   async function save() {
     setErr(null)
-    if (!firstName.trim() || !lastName.trim()) { setErr('Bitte Vor- und Nachname angeben.'); return }
+    if (!name.trim()) { setErr('Bitte den Namen angeben.'); return }
+    if (!phone.trim() && !email.trim()) {
+      setErr('Bitte Telefon oder E-Mail angeben — sonst gibt es keinen Rückweg zur Bewerberin.')
+      return
+    }
     setSaving(true)
     const result = await createApplication({
-      first_name: firstName.trim(),
-      last_name: lastName.trim(),
+      name: name.trim(),
       email: email.trim() || null,
       phone: phone.trim() || null,
       position: position.trim() || null,
@@ -233,15 +294,12 @@ function CreateAppModal({ onClose, onCreated }: { onClose: () => void; onCreated
       <div role="dialog" aria-label="Neue Bewerbung erfassen" aria-modal="true" className="admin-modal" style={{ maxWidth: 500, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Neue Bewerbung erfassen</h3>
         {err && <Banner tone="danger">{err}</Banner>}
+        <Field label="Name *"><input value={name} onChange={e => setName(e.target.value)} placeholder="Vor- und Nachname" style={modalInput} /></Field>
         <div style={{ display: 'flex', gap: 10 }}>
-          <Field label="Vorname *"><input value={firstName} onChange={e => setFirstName(e.target.value)} style={modalInput} /></Field>
-          <Field label="Nachname *"><input value={lastName} onChange={e => setLastName(e.target.value)} style={modalInput} /></Field>
-        </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <Field label="E-Mail"><input value={email} onChange={e => setEmail(e.target.value)} style={modalInput} /></Field>
           <Field label="Telefon"><input value={phone} onChange={e => setPhone(e.target.value)} style={modalInput} /></Field>
+          <Field label="E-Mail"><input value={email} onChange={e => setEmail(e.target.value)} style={modalInput} /></Field>
         </div>
-        <Field label="Position"><input value={position} onChange={e => setPosition(e.target.value)} placeholder="z. B. Alltagsbegleitung (Minijob)" style={modalInput} /></Field>
+        <Field label="Qualifikation"><input value={position} onChange={e => setPosition(e.target.value)} placeholder="z. B. Alltagsbegleitung (Minijob)" style={modalInput} /></Field>
         <Field label="Quelle">
           <select value={source} onChange={e => setSource(e.target.value)} style={modalSelect}>
             {Object.entries(APPLICATION_SOURCE).map(([k, v]) => <option key={k} value={k}>{v.emoji} {v.label}</option>)}
