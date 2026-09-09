@@ -5,7 +5,7 @@ import { getActiveOrgId } from '@/lib/organizations/server'
 import { logAuditEventOrWarn } from '@/lib/audit-log'
 import { sendEmailNotification } from '@/lib/notifications'
 import { esc } from '@/lib/notifications/html'
-import { istBewerbungsStatus } from '@/lib/admin/ops'
+import { istBewerbungsStatus, BEWERBUNG_FILTER } from '@/lib/admin/ops'
 import { logger } from '@/lib/logger'
 
 const log = logger.child('applications:actions')
@@ -20,17 +20,6 @@ const log = logger.child('applications:actions')
 // dort. Diese Aktionen haben vorher in die tote Tabelle geschrieben —
 // fehlerfrei, folgenlos und fuer niemanden sichtbar.
 // ═══════════════════════════════════════════════════════════════
-
-/**
- * Was in dieser Oberflaeche als Bewerbung gilt.
- *
- * Zwei Bedingungen, weil zwei Wege hineinfuehren: `art = 'bewerbung'` setzt
- * der Onboarding-Ablauf und diese Seite beim Anlegen. Das Website-Formular
- * setzt `art` NICHT — es kennt die Spalte nicht und faellt auf den Default
- * 'anfrage', erkennbar bleibt es nur an `source = 'engel-bewerbung'`.
- * Wer nur die erste Bedingung prueft, sieht heute produktiv null Zeilen.
- */
-const BEWERBUNG_FILTER = 'art.eq.bewerbung,source.eq.engel-bewerbung'
 
 async function requireAdmin() {
   const supabase = await createClient()

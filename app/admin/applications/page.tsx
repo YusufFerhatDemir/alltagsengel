@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   formatDate, timeAgo, statusMeta,
   APPLICATION_STATUS, APPLICATION_FLOW, APPLICATION_FORTSCHRITT,
-  APPLICATION_ABGELEHNT, APPLICATION_SOURCE,
+  APPLICATION_ABGELEHNT, APPLICATION_SOURCE, BEWERBUNG_FILTER,
 } from '@/lib/admin/ops'
 import { updateApplicationStatus, createApplication } from './actions'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
@@ -45,15 +45,6 @@ interface AppRow {
   created_at: string | null
   eingereicht_am: string | null
 }
-
-/**
- * Zwei Bedingungen, weil zwei Wege in die Tabelle fuehren: `art='bewerbung'`
- * setzen der Onboarding-Ablauf und diese Seite. Das Website-Formular setzt
- * `art` nicht und faellt auf den Default 'anfrage' — erkennbar bleibt es nur
- * an `source='engel-bewerbung'`. Wer nur `art` prueft, sieht produktiv null
- * Zeilen, obwohl der Posteingang voll ist.
- */
-const BEWERBUNG_FILTER = 'art.eq.bewerbung,source.eq.engel-bewerbung'
 
 export default function AdminApplicationsPage() {
   const [rows, setRows] = useState<AppRow[]>([])
