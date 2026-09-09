@@ -9,6 +9,7 @@ import { DEFAULT_ORG_ID } from '@/lib/organizations/types'
 import {
   istLeistung, istRegion, istPflegegrad, WARTELISTE_MAX,
 } from '@/lib/warteliste/katalog'
+import { entwurfAnlegenOhneAbbruch, vornameAus } from '@/lib/email/entwuerfe'
 
 const log = logger.child('waitlist')
 
@@ -122,7 +123,11 @@ export const POST = withTracking(async function POST(request: Request) {
       status: 'neu',
     }
 
-    const { error: dbFehler } = await supabaseAdmin.from('waitlist_customers').insert(zeile)
+    const { data: angelegt, error: dbFehler } = await supabaseAdmin
+      .from('waitlist_customers')
+      .insert(zeile)
+      .select('id')
+      .single()
 
     if (dbFehler) {
       // ── Schon vorgemerkt ────────────────────────────────────────────
@@ -157,6 +162,25 @@ export const POST = withTracking(async function POST(request: Request) {
 
       log.errorWithException('Vormerkung konnte nicht gespeichert werden', dbFehler)
       return NextResponse.json({ error: 'Speicherfehler' }, { status: 500 })
+    }
+
+    // ── Bestaetigung vorbereiten, NICHT senden ──────────────────────
+    // Vorgabe: keine automatisch versendeten E-Mails. Der Eintrag erzeugt
+    // deshalb einen ENTWURF, den die Verwaltung unter /admin/waitlist sieht
+    // und mit einem Klick sendet. Ohne diesen Schritt muesste sie jede
+    // Vormerkung von Hand nacharbeiten — mit ihm ist es ein Knopf.
+    //
+    // Scheitert der Entwurf, laeuft die Vormerkung trotzdem durch: die
+    // Vormerkung ist das Wertvolle, der Entwurf nur die Bequemlichkeit.
+    if (email) {
+      await entwurfAnlegenOhneAbbruch({
+        vorlageId: 'warteliste_welcome',
+        empfaengerEmail: email,
+        empfaengerName: name,
+        bezugTabelle: 'waitlist_customers',
+        bezugId: angelegt?.id ?? null,
+        werte: { vorname: vornameAus(name) },
+      })
     }
 
     return NextResponse.json({ success: true }, { status: 201 })

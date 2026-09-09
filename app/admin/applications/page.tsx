@@ -17,6 +17,7 @@ import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/O
 import { logger } from '@/lib/logger'
 import DialogOverlay from '@/components/DialogOverlay'
 import { klickbareZeile } from '@/lib/a11y'
+import EmailVorlagenDialog from '@/components/admin/EmailVorlagenDialog'
 const log = logger.child('admin:applications')
 
 /**
@@ -62,6 +63,7 @@ export default function AdminApplicationsPage() {
   const [expanded, setExpanded] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
+  const [mailAn, setMailAn] = useState<AppRow | null>(null)
 
   async function load() {
     try {
@@ -204,6 +206,9 @@ export default function AdminApplicationsPage() {
                               → {statusMeta(APPLICATION_STATUS, next).label}
                             </button>
                           )}
+                          <button onClick={() => setMailAn(a)} style={mailBtn}>
+                            ✉ E-Mail
+                          </button>
                           {a.status !== APPLICATION_ABGELEHNT && a.status !== 'converted' && (
                             <button onClick={() => setStatus(a, APPLICATION_ABGELEHNT)} style={rejectBtn}>Ablehnen</button>
                           )}
@@ -253,6 +258,16 @@ export default function AdminApplicationsPage() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {mailAn && (
+        <EmailVorlagenDialog
+          zielgruppe="bewerber"
+          empfaengerEmail={mailAn.email}
+          empfaengerName={mailAn.name}
+          vorbelegung={{ vorname: (mailAn.name || '').trim().split(/\s+/)[0] ?? '' }}
+          onClose={() => setMailAn(null)}
+        />
       )}
 
       {showCreate && <CreateAppModal onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); load() }} />}
@@ -364,6 +379,11 @@ function Detail({ label, wert }: { label: string; wert: string }) {
   )
 }
 
+const mailBtn: React.CSSProperties = {
+  fontSize: 12, color: 'var(--ink2)', background: 'rgba(255,255,255,0.06)',
+  border: '1px solid var(--border)', borderRadius: 6, padding: '4px 10px',
+  cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+}
 const primaryBtn: React.CSSProperties = {
   fontSize: 14, color: 'var(--coal)', fontWeight: 600,
   background: 'linear-gradient(135deg,var(--gold2),var(--gold))', border: 'none',

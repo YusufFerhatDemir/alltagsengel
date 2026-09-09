@@ -7,6 +7,7 @@ import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
 import { DEFAULT_ORG_ID } from '@/lib/organizations/types'
 import { regionLabel, istRegion } from '@/lib/warteliste/katalog'
+import { entwurfAnlegenOhneAbbruch, vornameAus } from '@/lib/email/entwuerfe'
 import {
   BEWERBUNG_MAX, type BewerbungDaten,
   istQualifikation, istFuehrerschein, istSprache,
@@ -140,11 +141,34 @@ export const POST = withTracking(async function POST(request: Request) {
       utm_source: text(body.utm_source, 120),
     }
 
-    const { error: dbFehler } = await supabaseAdmin.from('lead_inquiries').insert(zeile)
+    const { data: angelegt, error: dbFehler } = await supabaseAdmin
+      .from('lead_inquiries')
+      .insert(zeile)
+      .select('id')
+      .single()
 
     if (dbFehler) {
       log.errorWithException('Bewerbung konnte nicht gespeichert werden', dbFehler)
       return NextResponse.json({ error: 'Speicherfehler' }, { status: 500 })
+    }
+
+    // ── Bestaetigung vorbereiten, NICHT senden ──────────────────────
+    // Wie bei der Warteliste: der Eingang erzeugt einen ENTWURF, den die
+    // Verwaltung unter /admin/applications mit einem Klick sendet.
+    //
+    // Nur mit E-Mail — und das ist hier die Ausnahme, nicht die Regel: das
+    // frueherer Kurzformular hat keine Adresse abgefragt, alle 34
+    // Altbestaende tragen keine. Ueber dieses Formular kommt sie jetzt
+    // herein, und damit wird die Bestaetigung ueberhaupt erst moeglich.
+    if (email) {
+      await entwurfAnlegenOhneAbbruch({
+        vorlageId: 'bewerber_eingang',
+        empfaengerEmail: email,
+        empfaengerName: name,
+        bezugTabelle: 'lead_inquiries',
+        bezugId: angelegt?.id ?? null,
+        werte: { vorname: vornameAus(name) },
+      })
     }
 
     return NextResponse.json({ success: true }, { status: 201 })
