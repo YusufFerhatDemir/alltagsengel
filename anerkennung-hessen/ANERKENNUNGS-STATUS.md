@@ -1,6 +1,7 @@
 # ANERKENNUNGS-STATUS
 
-**Stand: 10.08.2026**
+**Stand: 09.09.2026**  
+**Interner Status: ANERKENNUNG_ERWARTET | TELEFONISCH_POSITIV_BESTÄTIGT**
 
 ## Stammdaten
 
@@ -14,7 +15,10 @@
 | Anbieterform | II (Gewerblich Taetige) |
 | Ersteinreichung | 15.12.2025 |
 | Rueckmeldung Behoerde | 08.07.2026 (Frau Krause) |
-| **FRIST NACHREICHUNG** | **31.08.2026** |
+| **FRIST NACHREICHUNG** | **31.08.2026** (ABGELAUFEN — Verlängerung auf 10.10.2026 beantragt) |
+| **Telefonische Bestätigung** | Frau Krause hat telefonisch POSITIV bestätigt — Anerkennung wird ERWARTET |
+| **Interner Status** | ANERKENNUNG_ERWARTET |
+| **Externer Status** | „im Anerkennungsverfahren" (bis schriftlicher Bescheid) |
 
 ## Pruefpunkte
 
@@ -26,7 +30,7 @@
 | IK-Nr. eingetragen | JA | 460629986 (ARGE-IK Bestaetigung vorhanden, Anlage-03) |
 | Steuernummer eingetragen | **NEIN** | Nicht auf dem Mac gefunden. Beim Finanzamt anfordern! HINWEIS: Behoerde hat Steuernr. NICHT explizit angefordert, PfluV erlaubt alternativ Gewerbeanzeige (Par. 9 Abs. 1 Nr. 3a) |
 | Gewerbeanmeldung | **NEIN** | Von Behoerde explizit angefordert (Rueckmeldung 08.07.2026). Beim Gewerbeamt Frankfurt beantragen! |
-| Betriebshaftpflicht (Police) | **NEIN** | Von Behoerde explizit angefordert. Versicherung abgeschlossen (5 Mio. Deckung), Police wird nachgereicht |
+| Betriebshaftpflicht (Police) | **JA** | Generali, 10 Mio. EUR Deckung. Abgelegt als `docs/genehmigung/07_Haftpflichtversicherung.pdf` (18 MB, Scan). Manuelle Sichtprüfung empfohlen. |
 | Konzept zum Angebot | JA | Anlage-05 (gem. Par. 6 PfluV) |
 | Schulungskonzept | JA | Anlage-06 (30 UE + Fortbildung) |
 | Leistungs-/Kostenuebersicht | JA | Anlage-07 (gem. Par. 8 PfluV) |
@@ -99,14 +103,17 @@
 | Anlage-11 Datenschutzkonzept | Datum + Unterschrift unter GF-Name (Yusuf) | Seite 3, unten |
 | Anlage-13 Einverstaendnis | Datum + Unterschrift (Yusuf) | Seite 1, unten |
 
-## EINREICHUNGS-GO: NEIN
+## EINREICHUNGS-GO: NEIN (Stand 09.09.2026)
 
-### Gruende:
-1. Gewerbeanmeldung fehlt (von Behoerde explizit gefordert)
-2. Betriebshaftpflicht-Nachweis/Police fehlt (von Behoerde explizit gefordert)
-3. 12 Unterschriften fehlen (10x Yusuf + 2x Sabrina Martin)
+### Status: ANERKENNUNG_ERWARTET (telefonisch positiv bestätigt durch Fr. Krause)
+
+### Verbleibende Blocker:
+1. Gewerbeanmeldung fehlt (von Behoerde explizit gefordert) — Sachstandsanfrage erstellt
+2. ~~Betriebshaftpflicht~~ ERLEDIGT — Generali, 10 Mio. EUR, abgelegt
+3. 14 Unterschriften fehlen (12x Yusuf + 2x Sabrina Martin)
 4. 4 Arbeitsvertrag-Felder unausgefuellt (Beginn, Stunden, Verguetung, Urlaub)
 5. Steuernummer KEIN BLOCKER (PfluV erlaubt alternativ Gewerbeanzeige)
+6. Frist 31.08.2026 ABGELAUFEN — Verlaengerung auf 10.10.2026 beantragt
 
 ### Sobald 1-3 vorliegen:
 - Steuernummer im Erhebungsbogen eintragen
@@ -116,7 +123,7 @@
 - Gesamtpaket per Post an: Hansaallee 150, 60320 Frankfurt am Main
 - Parallel per E-Mail an: entlastungsangebote45@stadt-frankfurt.de
 
-### FRIST: 31.08.2026 - NUR NOCH 3 WOCHEN!
+### FRIST: 31.08.2026 ABGELAUFEN — Verlaengerung auf 10.10.2026 beantragt (31 Tage verbleibend)
 
 ## VERIFIZIERUNG (10.08.2026)
 
