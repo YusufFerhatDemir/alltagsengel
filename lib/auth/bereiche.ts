@@ -124,7 +124,18 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   // Seite, Schnittstelle und Datenbank drei verschiedene Antworten gaben.
   '/admin/dienstplanfreigabe':        { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
   '/admin/arbeitszeiten':             { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
-  '/admin/applications':              { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
+  // Seit dem Wechsel der Datenquelle auf `lead_inquiries` (die Tabelle
+  // `applications` ist tot und traegt null Zeilen) gilt hier dieselbe Grenze
+  // wie fuer /admin/marketing-dashboard: auf lead_inquiries steht live genau
+  // eine verwaltende Policy, „Admin full access" mit is_admin().
+  //
+  // Mit `personal.lesen` stand die Seite fuer pdl und qm in der Navigation und
+  // zeigte ihnen eine LEERE Bewerbungsliste — kein Fehler, keine Meldung.
+  // Genau das Muster, gegen das lint:rls-sicht gebaut wurde; die Pruefung hat
+  // es auch prompt gemeldet. Bis `lead_inquiries` eine rk_-Policy fuer
+  // Verwaltungsrollen bekommt, ist die ehrliche Registrierung die
+  // administrationsweite.
+  '/admin/applications':              { lesen: 'marketing.verwalten', schreiben: 'marketing.verwalten' },
   // Boni sind Verguetung, nicht Personalstammdaten: die Seite oeffnete sich
   // fuer die PDL (personal.lesen), die Schnittstelle liess zusaetzlich QM und
   // Buchhaltung herein (berichte.lesen) — und die Datenbank wies alle drei ab
@@ -337,6 +348,13 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   // Art. 21 DSGVO verbietet, den Widerspruch zu erschweren. Er ist
   // stattdessen durch das HMAC-Token und eine Ratenbegrenzung gesichert.
   '/admin/marketing':                 { lesen: 'marketing.verwalten', schreiben: 'marketing.verwalten' },
+  // Bewusst `marketing.verwalten` (NUR_ADMINISTRATION) und NICHT etwa
+  // `berichte.lesen`: Die Seite liest `lead_inquiries` mit dem Browser-Client,
+  // also unter RLS — und dort steht live genau eine verwaltende Policy,
+  // „Admin full access lead_inquiries" mit is_admin(). Stuende hier ein Recht,
+  // das auch pdl oder qm tragen, oeffnete sich ein Dashboard, das diesen
+  // Rollen ueberall 0 anzeigt: dieselbe Falle wie bei /admin/nachweise.
+  '/admin/marketing-dashboard':       { lesen: 'marketing.verwalten', schreiben: 'marketing.verwalten' },
   '/api/admin/marketing':             { lesen: 'marketing.verwalten', schreiben: 'marketing.verwalten' },
   '/api/admin/manage-role':           { lesen: 'benutzer.verwalten' },
   '/api/admin/reset-password':        { lesen: 'benutzer.verwalten' },
