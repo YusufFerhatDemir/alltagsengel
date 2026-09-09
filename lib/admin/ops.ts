@@ -650,6 +650,30 @@ export const APPLICATION_STATUS: Record<string, { label: string; color: string }
 export const APPLICATION_FLOW = ['new', 'contacted', 'qualified', 'converted', 'lost']
 
 /**
+ * Was in `lead_inquiries` als Bewerbung gilt — als PostgREST-`or()`-Ausdruck.
+ *
+ * Zwei Bedingungen, weil zwei Wege hineinfuehren: `art='bewerbung'` setzen
+ * der Onboarding-Ablauf und /admin/applications beim Anlegen. Das
+ * Website-Formular setzt `art` NICHT (components/EngelBewerbungForm.tsx →
+ * POST /api/lead-inquiry kennt die Spalte nicht) und faellt auf den Default
+ * 'anfrage'; erkennbar bleibt es nur an `source='engel-bewerbung'`.
+ *
+ * Steht bewusst HIER und nicht je Seite: /admin/applications und
+ * /admin/marketing-dashboard muessen dieselbe Menge meinen. Zwei Kopien
+ * derselben Bedingung driften auseinander, und dann zaehlt das Dashboard
+ * etwas anderes, als der Posteingang zeigt — ohne dass es jemandem auffaellt.
+ *
+ * Die Werte sind feste Literale, kein Nutzereingabe-Fragment: ein roher
+ * Suchbegriff in `.or()` waere eine frei formulierbare Abfrage.
+ */
+export const BEWERBUNG_FILTER = 'art.eq.bewerbung,source.eq.engel-bewerbung'
+
+/** Gegenstueck fuer den Anwendungscode — dieselbe Regel, ohne PostgREST. */
+export function istBewerbung(zeile: { art?: string | null; source?: string | null }): boolean {
+  return zeile.art === 'bewerbung' || zeile.source === 'engel-bewerbung'
+}
+
+/**
  * Der Vorwaertsweg. `lost` steht bewusst NICHT drin: eine Absage ist kein
  * naechster Schritt, den man versehentlich anklickt, sondern eine eigene
  * Entscheidung mit eigenem Knopf.

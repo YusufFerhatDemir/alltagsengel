@@ -173,6 +173,16 @@ const cities: Record<string, CityData> = {
     geo: { latitude: 50.0872, longitude: 8.4472 },
     beratung: 'beim Pflegestützpunkt Main-Taunus-Kreis',
   },
+  eschborn: {
+    name: 'Eschborn',
+    region: 'Hessen',
+    slug: 'eschborn',
+    plz: '65760',
+    description: 'Eschborn und Niederhöchstadt',
+    landmarks: ['Main-Taunus-Kliniken Bad Soden', 'Klinikum Frankfurt Höchst', 'Universitätsklinikum Frankfurt'],
+    geo: { latitude: 50.1433, longitude: 8.5706 },
+    beratung: 'beim Pflegestützpunkt Main-Taunus-Kreis',
+  },
   giessen: {
     name: 'Gießen',
     region: 'Hessen',
