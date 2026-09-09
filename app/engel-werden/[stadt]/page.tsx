@@ -355,8 +355,10 @@ export default async function EngelWerdenStadtPage({ params }: { params: Promise
             Viele Engel in {city.name} starten als Minijobber (bis 603 €/Monat) — ideal neben Studium,
             Rente oder Hauptberuf. Wer mehr möchte, übernimmt einfach mehr Stunden. Auf Wunsch
             unterstützen wir auch deine Qualifizierung zur anerkannten Betreuungskraft nach
-            §45a SGB XI — damit sind deine Einsätze für Klienten über den Entlastungsbetrag
-            (131 €/Monat) abrechenbar.
+            §45a SGB XI. Pflegebedürftigen steht grundsätzlich ein Entlastungsbetrag von
+            131 €/Monat zu; ob er für ein Angebot eingesetzt werden kann, hängt an der
+            Anerkennung des Anbieters — Alltagsengel befindet sich derzeit im
+            Anerkennungsverfahren.
           </p>
         </section>
 

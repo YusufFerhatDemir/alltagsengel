@@ -363,7 +363,7 @@ function buildFaqItems(city: CityData) {
     },
     {
       frage: 'Kann ich die Pflegebox mit Entlastungsbetrag und Verhinderungspflege kombinieren?',
-      antwort: `Ja — es sind getrennte Budgets. Die Pflegebox läuft über §40 SGB XI (42 €/Monat), der Entlastungsbetrag über §45b (131 €/Monat für Alltagsbegleitung, ab Pflegegrad 1) und die Verhinderungspflege über §39 (bis 3.539 €/Jahr ab Pflegegrad 2). Alle drei können Sie in ${city.name} parallel über Alltagsengel nutzen.`,
+      antwort: `Ja — es sind getrennte Budgets. Die Pflegebox läuft über §40 SGB XI (42 €/Monat), der Entlastungsbetrag über §45b (131 €/Monat für Alltagsbegleitung, ab Pflegegrad 1) und die Verhinderungspflege über §39 (bis 3.539 €/Jahr ab Pflegegrad 2). Die drei Budgets bestehen unabhängig voneinander. Für den Entlastungsbetrag nach §45b gilt: seine Nutzung setzt die Anerkennung des Anbieters nach §45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren.`,
     },
   ]
 }
