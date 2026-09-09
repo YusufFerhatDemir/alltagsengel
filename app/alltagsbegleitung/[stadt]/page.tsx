@@ -491,6 +491,13 @@ export default async function StadtPage({ params }: { params: Promise<{ stadt: s
   // interne Links folgen dem Canonical, alle anderen Städte verlinken die Stadtseite.
   const krankenfahrtHref = city.slug === 'frankfurt' ? '/krankenfahrten' : `/krankenfahrten/${city.slug}`
   const pflegeboxHref = city.slug === 'frankfurt' ? '/hygienebox' : `/hygienebox/${city.slug}`
+  // Haushaltshilfe gibt es nur fuer die elf Prioritaetsstaedte; ausserhalb
+  // davon fuehrt der Link auf die Hauptseite statt auf eine 404.
+  const HAUSHALTSHILFE_STAEDTE = ['offenbach', 'hanau', 'maintal', 'bad-homburg',
+    'neu-isenburg', 'eschborn', 'frankfurt-hoechst', 'darmstadt', 'wiesbaden', 'bad-vilbel']
+  const haushaltshilfeHref = HAUSHALTSHILFE_STAEDTE.includes(city.slug)
+    ? `/haushaltshilfe/${city.slug}`
+    : '/haushaltshilfe'
 
   return (
     <div className="screen info-screen">
@@ -697,6 +704,7 @@ export default async function StadtPage({ params }: { params: Promise<{ stadt: s
           <h3>Weitere Dienste in {city.name}</h3>
           <p>Neben Alltagsbegleitung bieten wir in {city.name} auch:</p>
           <ul className="info-list">
+            <li><Link href={haushaltshilfeHref}>Haushaltshilfe in {city.name}</Link> — Reinigung, Wäsche, Einkauf und Kochen</li>
             <li><Link href={krankenfahrtHref}>Krankenfahrten in {city.name}</Link> — Mit Verordnung zahlt die Krankenkasse (§60 SGB V)</li>
             <li><Link href={pflegeboxHref}>Pflegebox für {city.name}</Link> — Kostenlose Pflegehilfsmittel (42 €/Monat nach §40 SGB XI)</li>
             <li><Link href="/verhinderungspflege">Verhinderungspflege</Link> — Ersatzpflege bis 3.539 €/Jahr (§39 SGB XI)</li>
