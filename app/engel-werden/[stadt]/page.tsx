@@ -136,6 +136,33 @@ const cities: Record<string, CityData> = {
     lokal: 'In Rodgau vermitteln wir Einsätze in allen fünf Stadtteilen — von Weiskirchen bis Nieder-Roden.',
     nachbarn: ['offenbach', 'hanau', 'neu-isenburg'],
   },
+  maintal: {
+    name: 'Maintal',
+    region: 'Hessen',
+    slug: 'maintal',
+    plz: '63477',
+    stadtteile: ['Dörnigheim', 'Bischofsheim', 'Hochstadt', 'Wachenbuchen'],
+    lokal: 'In Maintal vermitteln wir Einsätze in allen vier Stadtteilen — von Dörnigheim bis Wachenbuchen, meist nur wenige Minuten von deiner Haustür entfernt.',
+    nachbarn: ['hanau', 'frankfurt', 'offenbach', 'bad-vilbel'],
+  },
+  'bad-vilbel': {
+    name: 'Bad Vilbel',
+    region: 'Hessen',
+    slug: 'bad-vilbel',
+    plz: '61118',
+    stadtteile: ['Dortelweil', 'Massenheim', 'Gronau', 'Heilsberg'],
+    lokal: 'In Bad Vilbel gibt es Einsätze in der Kernstadt und in Dortelweil, Massenheim, Gronau und auf dem Heilsberg.',
+    nachbarn: ['frankfurt', 'friedberg-wetterau', 'maintal', 'bad-homburg'],
+  },
+  'main-taunus': {
+    name: 'Main-Taunus-Kreis',
+    region: 'Hessen',
+    slug: 'main-taunus',
+    plz: '65719',
+    stadtteile: ['Hofheim am Taunus', 'Kelkheim', 'Bad Soden', 'Eschborn', 'Schwalbach', 'Hattersheim'],
+    lokal: 'Im Main-Taunus-Kreis reichen die Einsätze von Eschborn und Schwalbach über Hofheim und Kelkheim bis nach Hattersheim — du wählst, was in deiner Nähe liegt.',
+    nachbarn: ['frankfurt-hoechst', 'frankfurt', 'wiesbaden', 'bad-homburg'],
+  },
 }
 
 export function generateStaticParams() {
