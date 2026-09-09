@@ -622,19 +622,55 @@ export const REQUIRED_DOCUMENTS: string[] = [
 ]
 
 // ── Bewerbungen ─────────────────────────────────────────────────
+// ── Bewerbungen ─────────────────────────────────────────────────
+// Bewerbungen liegen in `lead_inquiries`, NICHT in `applications`.
+// `applications` ist laut Migration 20261027000000 bewusst tot: kein
+// Schreibweg, keine Oberflaeche, keine Ueberfuehrung nach `caregivers`.
+//
+// WARUM DIESE FUENF WERTE UND KEINE ANDEREN
+// `lead_inquiries.status` traegt seit 20260828180000 einen CHECK auf genau
+// ('new','contacted','qualified','converted','lost'). Der frueher hier
+// gefuehrte Trichter (reviewed/invited/interview/accepted/rejected) existiert
+// in der Datenbank NICHT — ein Schreibversuch scheitert mit 23514, und zwar
+// erst zur Laufzeit beim Klick der Verwaltung.
+//
+// Die Schluessel sind deshalb die der CRM-Pipeline, die Beschriftung ist auf
+// den Bewerbungsfall gemuenzt. Dieselbe Zeile heisst in /mis/crm
+// „Qualifiziert", hier „Im Gespraech" — gleicher Bestand, gleicher
+// Datenbankwert, kontextgerechtes Wort.
 export const APPLICATION_STATUS: Record<string, { label: string; color: string }> = {
   new: { label: 'Neu', color: '#2196F3' },
-  reviewed: { label: 'Gesichtet', color: '#26A69A' },
-  invited: { label: 'Eingeladen', color: '#9C27B0' },
-  interview: { label: 'Vorstellungsgespräch', color: '#E8A000' },
-  accepted: { label: 'Angenommen', color: '#5CB882' },
-  rejected: { label: 'Abgelehnt', color: '#D04B3B' },
+  contacted: { label: 'Kontaktiert', color: '#E8A000' },
+  qualified: { label: 'Im Gespräch', color: '#9C27B0' },
+  converted: { label: 'Eingestellt', color: '#5CB882' },
+  lost: { label: 'Abgelehnt', color: '#D04B3B' },
 }
 
-// Reihenfolge des Bewerbungs-Trichters (für Pipeline-Logik)
-export const APPLICATION_FLOW = ['new', 'reviewed', 'invited', 'interview', 'accepted', 'rejected']
+/** Alle erlaubten Werte — Reihenfolge der Filterleiste. */
+export const APPLICATION_FLOW = ['new', 'contacted', 'qualified', 'converted', 'lost']
+
+/**
+ * Der Vorwaertsweg. `lost` steht bewusst NICHT drin: eine Absage ist kein
+ * naechster Schritt, den man versehentlich anklickt, sondern eine eigene
+ * Entscheidung mit eigenem Knopf.
+ */
+export const APPLICATION_FORTSCHRITT = ['new', 'contacted', 'qualified', 'converted']
+
+/** Endzustand Absage. */
+export const APPLICATION_ABGELEHNT = 'lost'
+
+/**
+ * Fail-closed-Pruefung fuer Server Actions: ein Status, den die Datenbank
+ * ablehnen wuerde, wird gar nicht erst gesendet.
+ */
+export function istBewerbungsStatus(wert: unknown): wert is string {
+  return typeof wert === 'string' && APPLICATION_FLOW.includes(wert)
+}
 
 export const APPLICATION_SOURCE: Record<string, { label: string; emoji: string }> = {
+  // Der Wert, mit dem das Website-Formular tatsaechlich ankommt
+  // (components/EngelBewerbungForm.tsx → POST /api/lead-inquiry).
+  'engel-bewerbung': { label: 'Website-Bewerbung', emoji: '🌐' },
   indeed: { label: 'Indeed', emoji: '🔎' },
   instagram: { label: 'Instagram', emoji: '📸' },
   facebook: { label: 'Facebook', emoji: '👍' },

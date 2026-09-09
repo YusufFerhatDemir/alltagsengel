@@ -5,14 +5,32 @@ import { getActiveOrgId } from '@/lib/organizations/server'
 import { logAuditEventOrWarn } from '@/lib/audit-log'
 import { sendEmailNotification } from '@/lib/notifications'
 import { esc } from '@/lib/notifications/html'
+import { istBewerbungsStatus } from '@/lib/admin/ops'
 import { logger } from '@/lib/logger'
 
 const log = logger.child('applications:actions')
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen für Bewerbungen
-// Ersetzt client-seitige Supabase-Writes durch geprüfte Server Actions
+//
+// ZIELTABELLE IST `lead_inquiries`, NICHT `applications`.
+// `applications` ist laut Migration 20261027000000 bewusst tot und traegt
+// produktiv null Zeilen. Die echten Bewerbungen kommen ueber
+// components/EngelBewerbungForm.tsx → POST /api/lead-inquiry und landen
+// dort. Diese Aktionen haben vorher in die tote Tabelle geschrieben —
+// fehlerfrei, folgenlos und fuer niemanden sichtbar.
 // ═══════════════════════════════════════════════════════════════
+
+/**
+ * Was in dieser Oberflaeche als Bewerbung gilt.
+ *
+ * Zwei Bedingungen, weil zwei Wege hineinfuehren: `art = 'bewerbung'` setzt
+ * der Onboarding-Ablauf und diese Seite beim Anlegen. Das Website-Formular
+ * setzt `art` NICHT — es kennt die Spalte nicht und faellt auf den Default
+ * 'anfrage', erkennbar bleibt es nur an `source = 'engel-bewerbung'`.
+ * Wer nur die erste Bedingung prueft, sieht heute produktiv null Zeilen.
+ */
+const BEWERBUNG_FILTER = 'art.eq.bewerbung,source.eq.engel-bewerbung'
 
 async function requireAdmin() {
   const supabase = await createClient()
@@ -48,24 +66,32 @@ export async function updateApplicationStatus(
     if (!applicationId || typeof applicationId !== 'string') {
       return { ok: false, error: 'Ungueltige Bewerbungs-ID.' }
     }
-    if (!status || typeof status !== 'string') {
-      return { ok: false, error: 'Ungueltiger Status.' }
+    // Fail-closed gegen den CHECK auf lead_inquiries.status: ein Wert
+    // ausserhalb der fuenf erlaubten wuerde die Datenbank mit 23514
+    // abweisen — und die Verwaltung saehe eine rohe Postgres-Meldung.
+    if (!istBewerbungsStatus(status)) {
+      return { ok: false, error: 'Ungueltiger Status fuer eine Bewerbung.' }
     }
 
-    // Bewerbungsdaten laden — fuer die Freigabe-E-Mail brauchen wir
-    // Name und E-Mail-Adresse des Bewerbers.
+    // Bewerbungsdaten laden — fuer die Freigabe-E-Mail brauchen wir Name und
+    // E-Mail-Adresse. `.single()` bleibt richtig: die ID ist der
+    // Primaerschluessel. Der Bewerbungsfilter steht trotzdem dabei, damit
+    // ueber diese Aktion keine Kundenanfrage aus derselben Tabelle
+    // umgestempelt werden kann.
     const { data: bewerbung, error: lesenFehler } = await supabase
-      .from('applications')
-      .select('first_name, last_name, email')
+      .from('lead_inquiries')
+      .select('name, email')
       .eq('id', applicationId)
+      .or(BEWERBUNG_FILTER)
       .single()
 
     if (lesenFehler) return { ok: false, error: `Bewerbung nicht gefunden: ${lesenFehler.message}` }
 
     const { error: dbError } = await supabase
-      .from('applications')
+      .from('lead_inquiries')
       .update({ status })
       .eq('id', applicationId)
+      .or(BEWERBUNG_FILTER)
 
     if (dbError) return { ok: false, error: `Status-Update fehlgeschlagen: ${dbError.message}` }
 
@@ -81,11 +107,20 @@ export async function updateApplicationStatus(
     })
 
     // ── Freigabe-Bestätigung per E-Mail ──────────────────────────
-    // Bei Freigabe/Genehmigung automatische E-Mail an den Bewerber.
+    // Bei Freigabe automatische E-Mail an den Bewerber.
     // Absender immer „Alltagsengel", nie ein persoenlicher Name.
-    const FREIGABE_STATUS = new Set(['approved', 'freigegeben', 'angenommen', 'active'])
-    if (FREIGABE_STATUS.has(status.toLowerCase()) && bewerbung?.email) {
-      const empfaengerName = esc([bewerbung.first_name, bewerbung.last_name].filter(Boolean).join(' ') || 'Bewerber')
+    //
+    // `converted` ist der Freigabezustand im Wortschatz von lead_inquiries.
+    // Die frueher hier geprueften Werte (approved/freigegeben/angenommen/
+    // active) kann die Spalte gar nicht annehmen — der Zweig war unerreichbar.
+    //
+    // ZWEITE EINSCHRAENKUNG, die man kennen muss: das Website-Formular fragt
+    // keine E-Mail ab (siehe Migration 20261027000000). Produktiv traegt
+    // heute KEINE der eingegangenen Bewerbungen eine Adresse, die Mail geht
+    // also nur bei hier von Hand erfassten Bewerbungen raus. Der Rueckruf
+    // ueber die Telefonnummer bleibt der eigentliche Weg.
+    if (status === 'converted' && bewerbung?.email) {
+      const empfaengerName = esc(bewerbung.name || 'Bewerber')
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://alltagsengel.care'
 
       try {
@@ -136,10 +171,11 @@ export async function updateApplicationStatus(
 // ── Neue Bewerbung anlegen ───────────────────────────────────────
 
 interface NewApplicationPayload {
-  first_name: string
-  last_name: string
+  /** Ein Feld, kein Vor-/Nachname: `lead_inquiries` fuehrt nur `name`. */
+  name: string
   email: string | null
   phone: string | null
+  /** Qualifikation/Stelle — liegt in `service`, es gibt keine Spalte `position`. */
   position: string | null
   source: string
   referred_by_caregiver_id: string | null
@@ -152,23 +188,45 @@ export async function createApplication(
   try {
     const { supabase, userId, organizationId, role, name } = await requireAdmin()
 
-    if (!payload.first_name?.trim() || !payload.last_name?.trim()) {
-      return { ok: false, error: 'Vor- und Nachname sind Pflichtfelder.' }
+    if (!payload.name?.trim()) {
+      return { ok: false, error: 'Name ist ein Pflichtfeld.' }
+    }
+    // `phone` ist in der Praxis der einzige Rueckweg zur Bewerberin: das
+    // Website-Formular fragt keine E-Mail ab. Eine Bewerbung ohne beides
+    // waere ein Datensatz, den niemand beantworten kann.
+    if (!payload.phone?.trim() && !payload.email?.trim()) {
+      return { ok: false, error: 'Bitte Telefon oder E-Mail angeben — sonst gibt es keinen Rueckweg.' }
     }
 
     const row = {
-      first_name: payload.first_name.trim(),
-      last_name: payload.last_name.trim(),
+      // Ausdruecklich gesetzt statt auf den Spalten-Default current_org_id()
+      // zu vertrauen: der ist fail-open und liefert bei fehlender
+      // Mitgliedschaft die Stamm-Organisation. Hier ist die Organisation
+      // bekannt, also wird sie genannt.
+      organization_id: organizationId,
+      art: 'bewerbung',
+      name: payload.name.trim(),
       email: payload.email,
       phone: payload.phone,
-      position: payload.position,
+      service: payload.position,
       source: payload.source,
-      referred_by_caregiver_id: payload.referred_by_caregiver_id,
-      notes: payload.notes,
+      message: payload.notes,
       status: 'new',
+      eingereicht_am: new Date().toISOString(),
+      // `lead_inquiries` hat keine Spalte fuer die Empfehlung. Sie hier
+      // wegzulassen hiesse, die Mitarbeiter-werben-Mitarbeiter-Angabe
+      // stillschweigend zu verwerfen; `bewerbung_daten` ist das dafuer
+      // vorgesehene jsonb-Feld.
+      bewerbung_daten: payload.referred_by_caregiver_id
+        ? { empfohlen_von_caregiver_id: payload.referred_by_caregiver_id }
+        : null,
     }
 
-    const { error: dbError } = await supabase.from('applications').insert(row)
+    const { data: angelegt, error: dbError } = await supabase
+      .from('lead_inquiries')
+      .insert(row)
+      .select('id')
+      .single()
     if (dbError) return { ok: false, error: `Anlegen fehlgeschlagen: ${dbError.message}` }
 
     await logAuditEventOrWarn({
@@ -178,8 +236,8 @@ export async function createApplication(
       actorName: name,
       organizationId,
       entityType: 'application',
-      entityId: 'neu',
-      details: { first_name: row.first_name, last_name: row.last_name, source: row.source },
+      entityId: angelegt?.id ?? 'neu',
+      details: { name: row.name, source: row.source },
     })
 
     return { ok: true }
