@@ -30,6 +30,21 @@ const STAEDTE = [
   { slug: 'darmstadt', name: 'Darmstadt' },
   { slug: 'wiesbaden', name: 'Wiesbaden' },
   { slug: 'bad-vilbel', name: 'Bad Vilbel' },
+  { slug: 'rodgau', name: 'Rodgau' },
+  { slug: 'main-taunus', name: 'Main-Taunus-Kreis' },
+  { slug: 'friedberg-wetterau', name: 'Friedberg (Wetterau)' },
+  { slug: 'aschaffenburg', name: 'Aschaffenburg' },
+  { slug: 'giessen', name: 'Gießen' },
+  { slug: 'marburg', name: 'Marburg' },
+  { slug: 'kassel', name: 'Kassel' },
+  { slug: 'fulda', name: 'Fulda' },
+  { slug: 'limburg', name: 'Limburg an der Lahn' },
+  { slug: 'mainz', name: 'Mainz' },
+  { slug: 'koeln', name: 'Köln' },
+  { slug: 'duesseldorf', name: 'Düsseldorf' },
+  { slug: 'essen', name: 'Essen' },
+  { slug: 'dortmund', name: 'Dortmund' },
+  { slug: 'bonn', name: 'Bonn' },
 ]
 
 export const metadata: Metadata = {
