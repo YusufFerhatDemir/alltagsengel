@@ -493,8 +493,13 @@ export default async function StadtPage({ params }: { params: Promise<{ stadt: s
   const pflegeboxHref = city.slug === 'frankfurt' ? '/hygienebox' : `/hygienebox/${city.slug}`
   // Haushaltshilfe gibt es nur fuer die elf Prioritaetsstaedte; ausserhalb
   // davon fuehrt der Link auf die Hauptseite statt auf eine 404.
+  // Deckt sich jetzt mit allen Staedten von /alltagsbegleitung; die Liste
+  // bleibt trotzdem stehen, damit ein spaeter dort ergaenzter Ort nicht
+  // stillschweigend auf eine 404 zeigt.
   const HAUSHALTSHILFE_STAEDTE = ['offenbach', 'hanau', 'maintal', 'bad-homburg',
-    'neu-isenburg', 'eschborn', 'frankfurt-hoechst', 'darmstadt', 'wiesbaden', 'bad-vilbel']
+    'neu-isenburg', 'eschborn', 'frankfurt-hoechst', 'darmstadt', 'wiesbaden', 'bad-vilbel',
+    'rodgau', 'main-taunus', 'friedberg-wetterau', 'aschaffenburg', 'giessen', 'marburg',
+    'kassel', 'fulda', 'limburg', 'mainz', 'koeln', 'duesseldorf', 'essen', 'dortmund', 'bonn']
   const haushaltshilfeHref = HAUSHALTSHILFE_STAEDTE.includes(city.slug)
     ? `/haushaltshilfe/${city.slug}`
     : '/haushaltshilfe'
