@@ -1,8 +1,14 @@
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
 import {
   ladeContentKatalog, frequenzProWoche, ZIEL_PRO_WOCHE,
   type ContentStueck,
 } from '@/lib/marketing/contentplan'
+import {
+  standNachContentId, CONTENT_STATUS, CONTENT_STATUS_WERTE, STATUS_VORGABE,
+  type ContentStand,
+} from '@/lib/marketing/content-status'
+import ContentStatusSchalter from '@/components/admin/ContentStatusSchalter'
 
 // ═══════════════════════════════════════════════════════════════════════
 // MARKETING-CONTENT — veröffentlichungsfertige Stücke, organisiert
@@ -16,12 +22,41 @@ import {
 // macht kopierbar. Das Veröffentlichen bleibt eine Handlung eines
 // Menschen auf der jeweiligen Plattform.
 //
-// Keine Datenbank, kein Schreibweg — deshalb auch kein Statusfeld je
-// Stück: ein Status, den nur der eigene Browser kennt, wäre schlimmer als
-// keiner, weil er wie eine geteilte Wahrheit aussieht.
+// Der Bearbeitungsstand je Stück kommt dagegen aus der Datenbank
+// (marketing_content_status) und ist damit für alle derselbe. Ein Stand,
+// den nur der eigene Browser kennt, wäre schlimmer als keiner: zwei
+// Personen sähen verschiedene Listen und hielten beide ihre für richtig.
 // ═══════════════════════════════════════════════════════════════════════
 
 export const metadata = { title: 'Marketing-Content' }
+
+// Der Stand ändert sich zur Laufzeit — die Seite darf nicht eingefroren
+// werden wie der Plan, der nur mit einem Deploy wechselt.
+export const dynamic = 'force-dynamic'
+
+/**
+ * Bearbeitungsstand laden.
+ *
+ * Fail-OPEN und offen gesagt: Fehlt die Tabelle noch (Migration nicht
+ * angewendet), zeigt die Seite alle Inhalte und sagt, dass der Stand noch
+ * nicht geführt wird. Die Alternative wäre eine leere Seite — und die
+ * Texte sind auch ohne Stand brauchbar.
+ */
+async function ladeStand(): Promise<{ stand: Map<string, ContentStand>; tabelleFehlt: boolean }> {
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('marketing_content_status')
+      .select('content_id, status, kanal, veroeffentlicht_am, notiz, updated_at')
+
+    if (error) {
+      return { stand: new Map(), tabelleFehlt: error.code === 'PGRST205' }
+    }
+    return { stand: standNachContentId(data), tabelleFehlt: false }
+  } catch {
+    return { stand: new Map(), tabelleFehlt: false }
+  }
+}
 
 /** Kategorien auf eine Farbe abbilden — für die Übersicht auf einen Blick. */
 const KATEGORIE_FARBE: Record<string, string> = {
@@ -41,7 +76,12 @@ function farbeFuer(kategorie: string | null): string {
   return treffer ? KATEGORIE_FARBE[treffer] : '#8A8279'
 }
 
-function Stueck({ s }: { s: ContentStueck }) {
+function Stueck({ s, stand, standAus }: {
+  s: ContentStueck
+  stand: ContentStand | null
+  /** Wenn die Tabelle fehlt, wird kein Schalter gezeigt — er ginge ins Leere. */
+  standAus: boolean
+}) {
   const farbe = farbeFuer(s.kategorie)
   return (
     <section className="admin-table-wrap" style={{ padding: 18, marginBottom: 14, borderLeft: `3px solid ${farbe}` }}>
@@ -98,13 +138,25 @@ function Stueck({ s }: { s: ContentStueck }) {
       <div style={{ fontSize: 11, color: 'var(--ink5)', marginTop: 10 }}>
         Quelle: <code>docs/marketing/{s.quelle}</code>
       </div>
+
+      {!standAus && <ContentStatusSchalter contentId={s.id} stand={stand} />}
     </section>
   )
 }
 
-export default function MarketingContentPage() {
+export default async function MarketingContentPage() {
   const katalog = ladeContentKatalog()
   const frequenz = frequenzProWoche(katalog.stuecke)
+  const { stand, tabelleFehlt } = await ladeStand()
+
+  // Verteilung der Stände. Stücke ohne Eintrag sind „offen" — kein Eintrag
+  // heißt, dass noch nichts passiert ist.
+  const standZahlen = CONTENT_STATUS_WERTE.map(w => ({
+    wert: w,
+    anzahl: katalog.stuecke.filter(
+      s => (stand.get(s.id)?.status ?? STATUS_VORGABE) === w,
+    ).length,
+  }))
 
   const nachKategorie = katalog.stuecke.reduce((acc, s) => {
     const k = s.kategorie || '— ohne Kategorie'
@@ -166,6 +218,41 @@ export default function MarketingContentPage() {
             nur mit schriftlicher Einwilligung veröffentlicht werden dürfen.
           </p>
         </div>
+      )}
+
+      {tabelleFehlt && (
+        <div className="admin-table-wrap" style={{ padding: 16, marginBottom: 18, borderLeft: '3px solid #E8A000' }}>
+          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>
+            <strong>Der Bearbeitungsstand wird noch nicht geführt.</strong> Die Tabelle{' '}
+            <code>marketing_content_status</code> fehlt — Migration{' '}
+            <code>20261103000000</code> ist noch nicht angewendet. Die Texte unten sind
+            vollständig nutzbar; nur „veröffentlicht / geplant / verworfen" lässt sich bis
+            dahin nicht vermerken.
+          </p>
+        </div>
+      )}
+
+      {/* ── Stand ──────────────────────────────────────────────────── */}
+      {!tabelleFehlt && (
+        <section style={{ marginBottom: 22 }}>
+          <h2 style={ueberschrift}>Bearbeitungsstand</h2>
+          <p style={hinweis}>
+            Der Stand gilt für alle, die diese Seite öffnen — er liegt in der Datenbank, nicht
+            im Browser. Gesetzt wird er unten an jedem Stück.
+          </p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {standZahlen.map(z => (
+              <div
+                key={z.wert}
+                className="admin-table-wrap"
+                style={{ padding: '12px 16px', borderLeft: `3px solid ${CONTENT_STATUS[z.wert].farbe}`, minWidth: 130 }}
+              >
+                <div style={{ fontSize: 22, fontWeight: 700, lineHeight: 1.1 }}>{z.anzahl}</div>
+                <div style={{ fontSize: 12, color: 'var(--ink3)' }}>{CONTENT_STATUS[z.wert].label}</div>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* ── Herkunft ───────────────────────────────────────────────── */}
@@ -268,7 +355,9 @@ export default function MarketingContentPage() {
               <code>**Caption:**</code>, <code>### Post-Text</code> oder <code>### Text</code>).
             </p>
           </div>
-        ) : katalog.stuecke.map(s => <Stueck key={s.id} s={s} />)}
+        ) : katalog.stuecke.map(s => (
+          <Stueck key={s.id} s={s} stand={stand.get(s.id) ?? null} standAus={tabelleFehlt} />
+        ))}
       </section>
     </div>
   )
