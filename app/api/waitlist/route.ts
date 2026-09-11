@@ -8,6 +8,7 @@ import { withTracking } from '@/lib/monitoring/tracker'
 import { DEFAULT_ORG_ID } from '@/lib/organizations/types'
 import {
   istLeistung, istRegion, istPflegegrad, WARTELISTE_MAX,
+  bundeslandFuerRegion, interesseFuerPflegegrad, regionLabel,
 } from '@/lib/warteliste/katalog'
 import { entwurfAnlegenOhneAbbruch, vornameAus } from '@/lib/email/entwuerfe'
 
@@ -15,6 +16,17 @@ const log = logger.child('waitlist')
 
 // ═══════════════════════════════════════════════════════════════════════
 // KUNDEN-WARTELISTE — Vormerkung entgegennehmen
+//
+// ZIELTABELLE IST `state_waitlist` — die EINE Warteliste.
+// Sie steht live seit 20260808100000, traegt RLS und vier Policies und
+// haengt bereits am Expansion-Modul: /api/expansion/waitlist schreibt
+// hinein, notify-waitlist liest daraus, /admin/expansion zeigt sie. Eine
+// zweite Tabelle fuer denselben Vorgang („benachrichtigt werden, sobald
+// ihr bei mir startet") haette zwei Antworten auf eine Frage erzeugt.
+//
+// Die frueher geplante `waitlist_customers` ist deshalb am 11.09.2026
+// zurueckgenommen worden; ihre Migration traegt einen entsprechenden
+// Vermerk und wird nicht angewendet.
 //
 // Schreibt mit dem Dienstschluessel, nicht als anon: dieselbe Bauweise wie
 // /api/lead-inquiry seit dem 28.08.2026. Rate-Limit, Honeypot und
@@ -64,18 +76,20 @@ export const POST = withTracking(async function POST(request: Request) {
       return NextResponse.json({ error: 'Bitte geben Sie Ihren Namen an.' }, { status: 400 })
     }
 
-    // Ohne Rueckweg ist eine Vormerkung wertlos — wir koennen den Bescheid
-    // dann niemandem melden. Dieselbe Bedingung steht als CHECK in der
-    // Datenbank; hier steht sie, damit der Mensch davor einen Satz liest
-    // und keine Postgres-Meldung.
-    if (!email && !phone) {
+    // E-Mail ist PFLICHT, und das hat zwei Gruende:
+    // 1. `state_waitlist.email` ist NOT NULL — ohne Adresse scheitert der
+    //    Eintrag ohnehin mit 23502.
+    // 2. Die automatische Bestaetigung braucht sie. Eine Vormerkung, die
+    //    niemand bestaetigen kann, ist ein Zettel in einer Schublade.
+    // Telefon bleibt freiwillig und wird als Rueckruf-Weg mitgefuehrt.
+    if (!email) {
       return NextResponse.json(
-        { error: 'Bitte geben Sie eine E-Mail-Adresse oder eine Telefonnummer an — sonst können wir Sie nicht benachrichtigen.' },
+        { error: 'Bitte geben Sie eine E-Mail-Adresse an — wir bestätigen Ihre Vormerkung darüber.' },
         { status: 400 },
       )
     }
 
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
       return NextResponse.json({ error: 'Bitte geben Sie eine gültige E-Mail-Adresse an.' }, { status: 400 })
     }
 
@@ -105,36 +119,77 @@ export const POST = withTracking(async function POST(request: Request) {
       roheLeistungen.filter((w): w is string => istLeistung(w)),
     )]
 
-    const zeile = {
-      // Ausdruecklich gesetzt statt auf den Spalten-Default current_org_id()
-      // zu vertrauen: dieser Weg laeuft ohne auth.uid(), der Default waere
-      // dort ein fail-open-Rueckfall statt einer Aussage.
+    const bundesland = bundeslandFuerRegion(region)
+    const plz = typeof body.plz === 'string' && /^[0-9]{5}$/.test(body.plz.trim())
+      ? body.plz.trim()
+      : null
+
+    // Die Spalten, die `state_waitlist` seit jeher hat. Dieser Teil laeuft
+    // AUCH ohne die Erweiterung 20261102000000.
+    const kern = {
       organization_id: DEFAULT_ORG_ID,
+      bundesland,
+      plz,
+      ort: region ? regionLabel(region) : null,
       name,
       email,
-      phone,
-      region,
+      telefon: phone,
+      // Einwertig, meint die Finanzierungsart — nicht die Leistung.
+      interesse: interesseFuerPflegegrad(pflegegrad),
+      benachrichtigen: true,
+      quelle: text(body.utm_source, WARTELISTE_MAX.utm) || 'warteliste',
+    }
+
+    // Die Spalten aus der Erweiterung. Steht sie noch nicht, faellt der
+    // Schreibweg unten auf `kern` zurueck.
+    const erweitert = {
+      ...kern,
       pflegegrad,
       gewuenschte_leistungen: leistungen,
       nachricht,
-      utm_source: text(body.utm_source, WARTELISTE_MAX.utm),
+      status: 'neu',
       utm_medium: text(body.utm_medium, WARTELISTE_MAX.utm),
       utm_campaign: text(body.utm_campaign, WARTELISTE_MAX.utm),
-      status: 'neu',
     }
 
-    const { data: angelegt, error: dbFehler } = await supabaseAdmin
-      .from('waitlist_customers')
-      .insert(zeile)
+    let { data: angelegt, error: dbFehler } = await supabaseAdmin
+      .from('state_waitlist')
+      .insert(erweitert)
       .select('id')
       .single()
 
+    // Unbekannte Spalte → die Erweiterung 20261102000000 fehlt noch. DDL
+    // geht aus einer Agentensitzung nicht (42501), also muss der Funnel
+    // ohne sie laufen koennen. Der zweite Versuch schreibt den Kern;
+    // Pflegegrad, Leistungen und Nachricht gehen dabei verloren, und das
+    // wird protokolliert statt verschwiegen.
+    //
+    // ZWEI CODES, und der erste ist der haeufigere: PostgREST faengt eine
+    // unbekannte Spalte bereits im Schema-Cache ab (PGRST204) und kommt gar
+    // nicht bis Postgres, das 42703 melden wuerde. Wer nur auf 42703
+    // prueft, hat einen Rueckfall, der nie greift — genau so ist dieser
+    // Weg beim ersten E2E-Lauf am 11.09.2026 mit „Speicherfehler"
+    // gescheitert.
+    if (dbFehler?.code === 'PGRST204' || dbFehler?.code === '42703') {
+      log.warn(
+        'state_waitlist ohne Kunden-Funnel-Spalten — Migration 20261102000000 fehlt. '
+        + 'Eintrag wird ohne Pflegegrad, Leistungen und Nachricht gespeichert.',
+      )
+      const rueckfall = await supabaseAdmin
+        .from('state_waitlist')
+        .insert(kern)
+        .select('id')
+        .single()
+      angelegt = rueckfall.data
+      dbFehler = rueckfall.error
+    }
+
     if (dbFehler) {
       // ── Schon vorgemerkt ────────────────────────────────────────────
-      // Der Teil-Unique-Index greift. Das ist kein Fehler des Menschen
-      // davor, sondern die richtige Antwort: er steht bereits auf der
-      // Liste. 200 statt 409, weil das Ergebnis aus seiner Sicht dasselbe
-      // ist — er ist vorgemerkt.
+      // uq_waitlist_org_land_email greift: dieselbe Adresse, dasselbe
+      // Bundesland. Kein Fehler des Menschen davor, sondern die richtige
+      // Antwort — er steht bereits auf der Liste. 200 statt 409, weil das
+      // Ergebnis aus seiner Sicht dasselbe ist.
       if (dbFehler.code === DUPLIKAT) {
         return NextResponse.json(
           { success: true, bereits_vorgemerkt: true },
@@ -142,18 +197,16 @@ export const POST = withTracking(async function POST(request: Request) {
         )
       }
 
-      // ── Tabelle steht noch nicht ────────────────────────────────────
-      // Die Migration 20261031000000 kann nur ein Mensch im
-      // Supabase-SQL-Editor als `postgres` anwenden; ueber den
-      // Dienstschluessel scheitert jedes DDL am Eigentuemer (42501).
-      // Solange sie fehlt, wird das AUSDRUECKLICH gemeldet — eine
-      // Erfolgsmeldung waere hier die teuerste Luege der ganzen Seite:
-      // der Interessent glaubte sich vorgemerkt und stuende nirgends.
+      // ── Tabelle steht nicht ─────────────────────────────────────────
+      // Sollte nicht vorkommen: `state_waitlist` ist seit dem 08.08.2026
+      // live. Bleibt trotzdem stehen — eine Erfolgsmeldung waere hier die
+      // teuerste Luege der Seite: der Interessent glaubte sich vorgemerkt
+      // und stuende nirgends.
       if (dbFehler.code === TABELLE_FEHLT) {
-        log.error('waitlist_customers fehlt — Migration 20261031000000 ist nicht angewendet.')
+        log.error('state_waitlist nicht erreichbar — Schema pruefen.')
         return NextResponse.json(
           {
-            error: 'Die Warteliste ist noch nicht freigeschaltet. Bitte versuchen Sie es später erneut oder rufen Sie uns an.',
+            error: 'Die Warteliste ist gerade nicht erreichbar. Bitte versuchen Sie es später erneut oder rufen Sie uns an.',
             code: 'WARTELISTE_NICHT_BEREIT',
           },
           { status: 503 },
@@ -172,12 +225,12 @@ export const POST = withTracking(async function POST(request: Request) {
     //
     // Scheitert der Entwurf, laeuft die Vormerkung trotzdem durch: die
     // Vormerkung ist das Wertvolle, der Entwurf nur die Bequemlichkeit.
-    if (email) {
+    {
       await entwurfAnlegenOhneAbbruch({
         vorlageId: 'warteliste_welcome',
         empfaengerEmail: email,
         empfaengerName: name,
-        bezugTabelle: 'waitlist_customers',
+        bezugTabelle: 'state_waitlist',
         bezugId: angelegt?.id ?? null,
         werte: { vorname: vornameAus(name) },
       })

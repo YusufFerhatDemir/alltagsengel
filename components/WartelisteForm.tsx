@@ -24,6 +24,7 @@ export default function WartelisteForm() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
+  const [plz, setPlz] = useState('')
   const [region, setRegion] = useState('')
   const [pflegegrad, setPflegegrad] = useState('')
   const [leistungen, setLeistungen] = useState<string[]>([])
@@ -53,8 +54,10 @@ export default function WartelisteForm() {
     setFehler(null)
 
     if (!name.trim()) { setFehler('Bitte geben Sie Ihren Namen an.'); return }
-    if (!email.trim() && !phone.trim()) {
-      setFehler('Bitte geben Sie eine E-Mail-Adresse oder eine Telefonnummer an — sonst können wir Sie nicht benachrichtigen.')
+    // E-Mail ist Pflicht: darüber geht die Bestätigung raus, und die
+    // Zieltabelle verlangt sie ohnehin (NOT NULL).
+    if (!email.trim()) {
+      setFehler('Bitte geben Sie eine E-Mail-Adresse an — wir bestätigen Ihre Vormerkung darüber.')
       return
     }
     if (!datenschutz) { setFehler('Bitte bestätigen Sie die Datenschutzhinweise.'); return }
@@ -65,7 +68,7 @@ export default function WartelisteForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name, email, phone, region, pflegegrad,
+          name, email, phone, plz, region, pflegegrad,
           gewuenschte_leistungen: leistungen,
           nachricht,
           datenschutz,
@@ -123,10 +126,10 @@ export default function WartelisteForm() {
 
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <label style={{ ...feld, flex: '1 1 200px' }}>
-            <span style={beschriftung}>E-Mail</span>
+            <span style={beschriftung}>E-Mail *</span>
             <input
               type="email" value={email} onChange={e => setEmail(e.target.value)}
-              maxLength={WARTELISTE_MAX.email} autoComplete="email"
+              maxLength={WARTELISTE_MAX.email} required autoComplete="email"
               placeholder="name@beispiel.de" style={eingabe}
             />
           </label>
@@ -140,10 +143,20 @@ export default function WartelisteForm() {
           </label>
         </div>
         <p style={{ color: '#6A6259', fontSize: 12, margin: '-4px 0 0' }}>
-          Eines von beiden genügt — wir brauchen einen Weg, Sie zu erreichen.
+          Die E-Mail brauchen wir für die Bestätigung. Eine Telefonnummer ist freiwillig —
+          damit rufen wir zurück, wenn Sie das möchten.
         </p>
 
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <label style={{ ...feld, flex: '0 1 130px' }}>
+            <span style={beschriftung}>PLZ</span>
+            <input
+              type="text" inputMode="numeric" value={plz}
+              onChange={e => setPlz(e.target.value.replace(/\D/g, '').slice(0, 5))}
+              maxLength={5} autoComplete="postal-code"
+              placeholder="60311" style={eingabe}
+            />
+          </label>
           <label style={{ ...feld, flex: '1 1 200px' }}>
             <span style={beschriftung}>Region</span>
             <select value={region} onChange={e => setRegion(e.target.value)}

@@ -1,4 +1,23 @@
 -- ═══════════════════════════════════════════════════════════════════════
+-- ZURUECKGENOMMEN AM 11.09.2026 — NICHT ANWENDEN
+-- ═══════════════════════════════════════════════════════════════════════
+-- Diese Migration wurde nie angewendet und wird es nicht mehr.
+--
+-- GRUND: `public.state_waitlist` (live seit 20260808100000) beantwortet
+-- denselben Geschaeftsvorgang und haengt bereits am Expansion-Modul —
+-- /api/expansion/waitlist schreibt hinein, notify-waitlist liest daraus.
+-- Zwei Tabellen fuer eine Frage bedeuten zwei Antworten auf „wie viele
+-- Vormerkungen haben wir?".
+--
+-- Der Kunden-Funnel laeuft seit 11.09.2026 auf state_waitlist; die
+-- fehlenden Spalten ergaenzt 20261102000000_state_waitlist_kundenfunnel.sql.
+--
+-- Die Datei bleibt als Beleg stehen. Wer sie versehentlich anwendet,
+-- erzeugt eine zweite, leere Tabelle — dann
+-- 20261031000001_rollback_waitlist_customers.sql ausfuehren.
+-- ═══════════════════════════════════════════════════════════════════════
+
+-- ═══════════════════════════════════════════════════════════════════════
 -- Kunden-Warteliste  (Phase 1)
 -- ═══════════════════════════════════════════════════════════════════════
 --

@@ -53,7 +53,7 @@ export async function updateWaitlistStatus(
     }
 
     const { error: dbFehler } = await supabase
-      .from('waitlist_customers')
+      .from('state_waitlist')
       .update({ status })
       .eq('id', eintragId)
 
@@ -61,7 +61,7 @@ export async function updateWaitlistStatus(
       if (dbFehler.code === 'PGRST205') {
         return {
           ok: false,
-          error: 'Die Tabelle waitlist_customers steht noch nicht — Migration 20261031000000 ist nicht angewendet.',
+          error: 'Die Tabelle state_waitlist ist nicht erreichbar — Schema pruefen.',
         }
       }
       return { ok: false, error: `Status-Update fehlgeschlagen: ${dbFehler.message}` }
@@ -73,7 +73,7 @@ export async function updateWaitlistStatus(
       actorRole: role,
       actorName: name,
       organizationId,
-      entityType: 'waitlist_customer',
+      entityType: 'state_waitlist',
       entityId: eintragId,
       details: { neuer_status: status },
     })

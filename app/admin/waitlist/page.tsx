@@ -17,11 +17,15 @@ const log = logger.child('admin:waitlist')
 // ═══════════════════════════════════════════════════════════════════════
 // Kunden-Warteliste — Verwaltung
 //
-// Liest `waitlist_customers` mit dem Browser-Client, also unter RLS. Dort
-// steht genau eine verwaltende Policy: is_admin(). Die Seite ist in
-// BEREICHE entsprechend auf `marketing.verwalten` (NUR_ADMINISTRATION)
-// registriert — stuende dort ein Recht, das auch pdl oder qm tragen,
-// saehen die eine leere Liste ohne Fehlermeldung (siehe lint:rls-sicht).
+// Liest `state_waitlist` — die EINE Warteliste, live seit 20260808100000
+// und zugleich die Quelle des Expansion-Moduls. Gelesen wird mit dem
+// Browser-Client, also unter RLS; die Seite ist in BEREICHE auf
+// `marketing.verwalten` (NUR_ADMINISTRATION) registriert.
+//
+// Spalten, die es nur nach Migration 20261102000000 gibt (pflegegrad,
+// gewuenschte_leistungen, nachricht, status, utm_medium, utm_campaign),
+// werden beim Laden einzeln abgesichert: fehlen sie, zeigt die Seite den
+// Rest statt gar nichts.
 // ═══════════════════════════════════════════════════════════════════════
 
 interface Eintrag {
@@ -55,8 +59,8 @@ export default function AdminWaitlistPage() {
     try {
       const supabase = createClient()
       const { data, error: fehler } = await supabase
-        .from('waitlist_customers')
-        .select('id, name, email, phone, region, pflegegrad, gewuenschte_leistungen, nachricht, utm_source, utm_medium, utm_campaign, status, created_at')
+        .from('state_waitlist')
+        .select('*')
         .order('created_at', { ascending: false })
 
       if (fehler) {
@@ -68,7 +72,7 @@ export default function AdminWaitlistPage() {
           setTabelleFehlt(true)
           return
         }
-        log.error(`waitlist_customers laden fehlgeschlagen: ${fehler.message}`)
+        log.error(`state_waitlist laden fehlgeschlagen: ${fehler.message}`)
         setError(`Die Warteliste konnte nicht geladen werden: ${fehler.message}`)
         return
       }
@@ -77,14 +81,15 @@ export default function AdminWaitlistPage() {
         id: z.id,
         name: z.name || '—',
         email: z.email,
-        phone: z.phone,
-        region: z.region,
-        pflegegrad: z.pflegegrad,
+        phone: z.telefon,
+        // `ort` traegt das Regions-Label; `bundesland` den FK-Code.
+        region: z.ort || z.bundesland || null,
+        pflegegrad: z.pflegegrad ?? null,
         gewuenschte_leistungen: Array.isArray(z.gewuenschte_leistungen) ? z.gewuenschte_leistungen : [],
-        nachricht: z.nachricht,
-        utm_source: z.utm_source,
-        utm_medium: z.utm_medium,
-        utm_campaign: z.utm_campaign,
+        nachricht: z.nachricht ?? null,
+        utm_source: z.quelle ?? null,
+        utm_medium: z.utm_medium ?? null,
+        utm_campaign: z.utm_campaign ?? null,
         status: z.status || 'neu',
         created_at: z.created_at,
       })))
@@ -120,7 +125,7 @@ export default function AdminWaitlistPage() {
     const q = search.trim().toLowerCase()
     return rows.filter(r => {
       if (filter !== 'alle' && r.status !== filter) return false
-      if (region !== 'alle' && r.region !== region) return false
+      if (region !== 'alle' && r.region !== regionLabel(region)) return false
       if (!q) return true
       return r.name.toLowerCase().includes(q)
         || (r.email || '').toLowerCase().includes(q)
@@ -142,18 +147,17 @@ export default function AdminWaitlistPage() {
       <div className="admin-page">
         <h1>Warteliste</h1>
         <Banner tone="warn">
-          Die Tabelle <code>waitlist_customers</code> steht noch nicht in der Produktionsdatenbank.
+          Die Tabelle <code>state_waitlist</code> ist nicht erreichbar.
         </Banner>
         <div className="admin-table-wrap" style={{ marginTop: 14, padding: 16 }}>
           <p style={{ marginTop: 0 }}>
-            Anzuwenden ist <strong>supabase/migrations/20261031000000_waitlist_customers.sql</strong> im
-            Supabase-SQL-Editor als Rolle <code>postgres</code>. Über den Dienstschlüssel scheitert
-            jedes DDL am Eigentümer (Fehler 42501) — dieser Schritt lässt sich nicht automatisieren.
+            Das sollte nicht vorkommen: <code>state_waitlist</code> steht live seit dem 08.08.2026
+            (Migration 20260808100000). Bitte Schema und Rechte prüfen.
           </p>
           <p>
-            Bis dahin nimmt auch das öffentliche Formular unter <code>/warteliste</code> keine
-            Einträge an: die Route antwortet mit <code>503</code> und einem Hinweis, statt einen
-            Erfolg vorzutäuschen. Es geht also nichts verloren — es kommt nur noch nichts an.
+            Solange sie fehlt, nimmt auch das öffentliche Formular unter <code>/warteliste</code>
+            keine Einträge an: die Route antwortet mit <code>503</code> und einem Hinweis, statt
+            einen Erfolg vorzutäuschen.
           </p>
         </div>
       </div>
@@ -203,7 +207,7 @@ export default function AdminWaitlistPage() {
           <option value="alle">Alle Regionen</option>
           {WARTELISTE_REGIONEN.map(r => (
             <option key={r.key} value={r.key}>
-              {r.label} ({rows.filter(x => x.region === r.key).length})
+              {r.label} ({rows.filter(x => x.region === r.label).length})
             </option>
           ))}
         </select>
@@ -244,7 +248,7 @@ export default function AdminWaitlistPage() {
                       {e.email && <div>{e.email}</div>}
                       {e.phone && <div style={{ color: 'var(--ink3)' }}>{e.phone}</div>}
                     </td>
-                    <td style={{ fontSize: 13 }}>{regionLabel(e.region)}</td>
+                    <td style={{ fontSize: 13 }}>{e.region || '—'}</td>
                     <td style={{ fontSize: 13 }}>{pflegegradLabel(e.pflegegrad)}</td>
                     <td><StatusBadge label={sm.label} color={sm.color} /></td>
                     <td onClick={ev => ev.stopPropagation()}>
