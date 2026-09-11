@@ -59,6 +59,56 @@ export const WARTELISTE_REGIONEN = [
 
 export type RegionsSchluessel = (typeof WARTELISTE_REGIONEN)[number]['key']
 
+/**
+ * Region → Bundesland-Code aus `public.bundeslaender`.
+ *
+ * `state_waitlist.bundesland` ist NOT NULL und ein Fremdschlüssel auf
+ * `bundeslaender(code)` — ohne gültigen Code scheitert jeder Eintrag mit
+ * 23503. Die Codes sind am 11.09.2026 aus der Live-Tabelle gelesen
+ * (16 Einträge, Form `baden_wuerttemberg`), nicht geraten.
+ *
+ * `umland` („anderer Ort im Rhein-Main-Gebiet") fällt auf Hessen — das ist
+ * der weit überwiegende Fall und lässt sich in der Verwaltung am Ort
+ * korrigieren. Ein Eintrag abzulehnen, weil die Region nicht in der Liste
+ * steht, wäre die schlechtere Antwort.
+ */
+export const REGION_BUNDESLAND: Record<string, string> = {
+  frankfurt: 'hessen',
+  'frankfurt-hoechst': 'hessen',
+  offenbach: 'hessen',
+  hanau: 'hessen',
+  maintal: 'hessen',
+  'bad-vilbel': 'hessen',
+  'bad-homburg': 'hessen',
+  'main-taunus': 'hessen',
+  eschborn: 'hessen',
+  'neu-isenburg': 'hessen',
+  rodgau: 'hessen',
+  darmstadt: 'hessen',
+  wiesbaden: 'hessen',
+  mainz: 'rheinland_pfalz',
+  umland: 'hessen',
+}
+
+/** Fällt auf Hessen zurück — siehe Kommentar an REGION_BUNDESLAND. */
+export function bundeslandFuerRegion(region: string | null | undefined): string {
+  if (!region) return 'hessen'
+  return REGION_BUNDESLAND[region] ?? 'hessen'
+}
+
+/**
+ * `state_waitlist.interesse` ist einwertig und meint die Finanzierungsart,
+ * nicht die gewünschte Leistung. Der CHECK erlaubt genau vier Werte.
+ *
+ * Aus dem Pflegegrad lässt sich der passende ableiten: Wer keinen hat,
+ * zahlt selbst; wer einen hat, käme nach erfolgter §45a-Anerkennung auch
+ * über die Kasse infrage — bis dahin ist „beides" die ehrliche Antwort.
+ */
+export function interesseFuerPflegegrad(pflegegrad: string | null | undefined): string {
+  if (pflegegrad === '0') return 'privat'
+  return 'beides'
+}
+
 const REGIONS_SCHLUESSEL: readonly string[] = WARTELISTE_REGIONEN.map(r => r.key)
 
 export function istRegion(wert: unknown): wert is RegionsSchluessel {
