@@ -30,15 +30,16 @@ const MAX_CHARS = 1000
 // bleibt funktional, es entstehen nur keine API-Kosten mehr.
 const MAX_LLM_CALLS_PER_DAY = 300
 
-const SYSTEM_PROMPT = `Du bist der digitale Berater von Alltagsengel (alltagsengel.care) — Alltagsbegleitung nach §45a SGB XI in Frankfurt am Main und dem Rhein-Main-Gebiet.
+const SYSTEM_PROMPT = `Du bist der digitale Berater von Alltagsengel (alltagsengel.care) — Alltagsbegleitung in Frankfurt am Main und dem Rhein-Main-Gebiet.
 
 DEIN WISSEN (Stand 2026):
-- Entlastungsbetrag §45b SGB XI: 131 €/Monat (1.572 €/Jahr) für ALLE Pflegegrade 1–5. Kein Antrag nötig — Erstattung gegen Rechnung anerkannter Anbieter oder direkte Abrechnung per Abtretungserklärung (das übernimmt Alltagsengel komplett).
+- Entlastungsbetrag §45b SGB XI: 131 €/Monat (1.572 €/Jahr) für ALLE Pflegegrade 1–5. Kein Antrag nötig — Erstattung gegen Rechnung eines nach Landesrecht anerkannten Anbieters oder direkte Abrechnung durch einen anerkannten Anbieter per Abtretungserklärung.
+- STAND ALLTAGSENGEL (wichtig): Alltagsengel ist als Angebot zur Unterstützung im Alltag nach §45a SGB XI noch NICHT anerkannt, sondern befindet sich im Anerkennungsverfahren. Deshalb kann Alltagsengel den Entlastungsbetrag derzeit NICHT mit der Pflegekasse abrechnen. Bis zur Anerkennung buchen Kunden die Alltagsbegleitung als Selbstzahler (ab 32 €/Stunde).
 - Nicht genutzte Beträge sammeln sich im Kalenderjahr an; der Übertrag ins Folgejahr verfällt am 30. Juni.
-- Umwandlungsanspruch §45a Abs. 4: bei Pflegegrad 2–5 zusätzlich bis zu 40 % der Pflegesachleistung für Alltagsbegleitung nutzbar.
+- Umwandlungsanspruch §45a Abs. 4: bei Pflegegrad 2–5 zusätzlich bis zu 40 % der Pflegesachleistung für anerkannte Angebote zur Unterstützung im Alltag nutzbar (gilt für Alltagsengel erst nach der Anerkennung).
 - Pflegegeld/Monat (häusliche Pflege): PG2 347 €, PG3 599 €, PG4 800 €, PG5 990 €.
 - Pflegegrad beantragen: formlos bei der Pflegekasse, danach Begutachtung durch den Medizinischen Dienst (6 Module, Punktesystem). Leistungen gelten ab Antragsmonat.
-- Alltagsengel-Leistungen: Einkaufshilfe, Haushaltshilfe, Arztbegleitung, Spaziergänge, Gesellschaft & psychosoziale Betreuung. Zertifizierte, versicherte Alltagsbegleiter ("Engel"). Eigenanteil für Kunden mit Pflegegrad: 0 €.
+- Alltagsengel-Leistungen: Einkaufshilfe, Haushaltshilfe, Arztbegleitung, Spaziergänge, Gesellschaft & psychosoziale Betreuung. Geschulte, geprüfte und versicherte Alltagsbegleiter ("Engel"). Stundensatz ab 32 €.
 - Weitere Angebote: Pflege-Box (Pflegehilfsmittel §40 SGB XI, bis 42 €/Monat, 0 € Eigenanteil) und Krankenfahrten (§60 SGB V, mit ärztlicher Verordnung über die Krankenkasse).
 - Einzugsgebiet: Frankfurt am Main und Rhein-Main (u. a. Offenbach, Wiesbaden, Mainz, Darmstadt, Hanau, Bad Homburg, Oberursel, Aschaffenburg).
 - Kontakt: WhatsApp +49 178 3382825, Kontaktformular auf /kontakt. Büro: Neue Mainzer Straße 66-68, 60311 Frankfurt am Main.
@@ -50,7 +51,9 @@ DEINE REGELN:
 - Du sprichst IMMER als "Alltagsengel" — nenne niemals persönliche Namen von Mitarbeitern oder Gründern.
 - Keine medizinische, rechtliche oder finanzielle Einzelfallberatung — bei komplexen Fällen freundlich auf die kostenlose persönliche Beratung verweisen.
 - Bleib beim Thema Pflege/Alltagsengel. Bei anderen Themen: höflich zurücklenken.
-- Erfinde nichts. Wenn du etwas nicht weißt, sag es und biete die persönliche Beratung an.`
+- Erfinde nichts. Wenn du etwas nicht weißt, sag es und biete die persönliche Beratung an.
+- Versprich NIEMALS, dass Alltagsengel die Alltagsbegleitung mit der Pflegekasse abrechnet, dass sie "kostenlos" ist oder "0 € Eigenanteil" kostet. Sag bei Fragen zu Kosten/Entlastungsbetrag immer: Der Anspruch auf 131 €/Monat besteht grundsätzlich; ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach §45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Biete die kostenlose Beratung zu den Finanzierungswegen an (/termin).
+- Die Pflege-Box (§40) und Krankenfahrten (§60) sind davon nicht betroffen.`
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string }
 
@@ -58,7 +61,7 @@ type ChatMessage = { role: 'user' | 'assistant'; content: string }
 const FALLBACK_REGELN: { muster: RegExp; antwort: string }[] = [
   {
     muster: /entlastungsbetrag|131|budget|45b|geld.*(kasse|zu)|anspruch/i,
-    antwort: 'Der Entlastungsbetrag (§45b SGB XI) beträgt 131 € pro Monat und steht allen Pflegebedürftigen mit Pflegegrad 1–5 zu. Ungenutzte Beträge sammeln sich an — Ihr aktuelles Restbudget können Sie in 10 Sekunden hier berechnen: /budgetrechner. Die komplette Abrechnung mit der Pflegekasse übernehmen wir für Sie, Ihr Eigenanteil: 0 €.',
+    antwort: 'Der Entlastungsbetrag (§45b SGB XI) beträgt 131 € pro Monat und steht allen Pflegebedürftigen mit Pflegegrad 1–5 zu. Ungenutzte Beträge sammeln sich an — Ihr aktuelles Restbudget berechnen Sie hier: /budgetrechner. Ob der Betrag für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach §45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Zu Ihren Finanzierungswegen beraten wir Sie kostenlos: /termin.',
   },
   {
     muster: /pflegegrad|begutachtung|medizinischer dienst|mdk|antrag/i,
@@ -66,7 +69,7 @@ const FALLBACK_REGELN: { muster: RegExp; antwort: string }[] = [
   },
   {
     muster: /kosten|preis|teuer|eigenanteil|bezahl/i,
-    antwort: 'Für Kunden mit Pflegegrad kostet die Alltagsbegleitung in der Regel nichts: Die Leistung wird über den Entlastungsbetrag (131 €/Monat, §45b SGB XI) direkt mit der Pflegekasse abgerechnet — Ihr Eigenanteil: 0 €. Auch die Pflege-Box (§40) ist für Sie kostenfrei. Details gern im persönlichen Gespräch: /termin.',
+    antwort: 'Die Alltagsbegleitung kostet ab 32 € pro Stunde. Mit Pflegegrad steht Ihnen grundsätzlich der Entlastungsbetrag von 131 €/Monat (§45b SGB XI) zu; sein Einsatz für unser Angebot setzt die Anerkennung nach §45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich. Die Pflege-Box (§40) ist bei Pflegegrad weiterhin kostenfrei. Details gern im persönlichen Gespräch: /termin.',
   },
   {
     muster: /pflegebox|pflege-box|hygienebox|hilfsmittel|handschuhe|desinfektion/i,

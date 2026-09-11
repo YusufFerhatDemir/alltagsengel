@@ -33,12 +33,12 @@ const faqItems = [
   {
     frage: 'Wer zahlt Alltagsbegleitung bei psychischen Erkrankungen?',
     antwort:
-      'Mit Pflegegrad 1 bis 5 zahlt die Pflegekasse über den Entlastungsbetrag (§45b SGB XI) 131 € pro Monat für anerkannte Alltagsbegleitung — ohne Eigenanteil. Ab Pflegegrad 2 können Umwandlungsanspruch und Verhinderungspflege hinzukommen.',
+      'Mit Pflegegrad 1 bis 5 zahlt die Pflegekasse über den Entlastungsbetrag (§45b SGB XI) 131 € pro Monat für anerkannte Alltagsbegleitung. Ab Pflegegrad 2 können Umwandlungsanspruch und Verhinderungspflege hinzukommen.',
   },
   {
     frage: 'Was ist der Unterschied zwischen Alltagsbegleitung und Soziotherapie?',
     antwort:
-      'Soziotherapie (§37a SGB V) ist eine ärztlich verordnete Leistung für schwer psychisch erkrankte Menschen, die von speziell qualifizierten Fachkräften koordiniert wird. Alltagsbegleitung ist niedrigschwelliger: praktische Hilfe und Begleitung im Alltag, ohne Verordnung, finanziert über die Pflegekasse.',
+      'Soziotherapie (§37a SGB V) ist eine ärztlich verordnete Leistung für schwer psychisch erkrankte Menschen, die von speziell qualifizierten Fachkräften koordiniert wird. Alltagsbegleitung ist niedrigschwelliger: praktische Hilfe und Begleitung im Alltag, ohne Verordnung, bei anerkannten Anbietern über die Pflegekasse finanzierbar.',
   },
   {
     frage: 'Darf ein Alltagsbegleiter therapeutische Gespräche führen?',
@@ -93,12 +93,12 @@ export default function AlltagsbegleitungPsychischeErkrankungenPage() {
       <SpeakableSchema url="/blog/alltagsbegleitung-psychische-erkrankungen" cssSelectors={['.blog-header h1', '.blog-intro p']} />
       <HowToSchema
         name="Alltagsbegleitung bei einer psychischen Erkrankung organisieren"
-        description="In fünf Schritten passende Alltagsunterstützung bei Depression, Angststörung oder anderen psychischen Erkrankungen aufbauen — finanziert über den Entlastungsbetrag."
+        description="In fünf Schritten passende Alltagsunterstützung bei Depression, Angststörung oder anderen psychischen Erkrankungen aufbauen — mit Blick auf den Entlastungsbetrag."
         totalTime="P14D"
         steps={[
           { name: 'Bedarf mit Behandlern besprechen', text: 'Klären Sie mit Hausarzt, Psychiater oder Therapeut, welche Alltagsunterstützung sinnvoll ist — Alltagsbegleitung ergänzt die Behandlung, ersetzt sie aber nicht.' },
           { name: 'Pflegegrad beantragen', text: 'Psychische Beeinträchtigungen zählen bei der Begutachtung gleichwertig. Stellen Sie einen formlosen Antrag bei der Pflegekasse; ein Pflegetagebuch über typische Alltagseinschränkungen hilft.', url: '/pflegegrad-check' },
-          { name: 'Entlastungsbetrag nutzen', text: 'Ab Pflegegrad 1 stehen 131 €/Monat für anerkannte Alltagsbegleitung bereit — die Abrechnung mit der Pflegekasse übernimmt Alltagsengel komplett.', url: '/entlastungsbetrag' },
+          { name: 'Entlastungsbetrag nutzen', text: 'Ab Pflegegrad 1 stehen 131 €/Monat für anerkannte Alltagsbegleitung bereit. Alltagsengel befindet sich derzeit im Anerkennungsverfahren nach § 45a SGB XI; bis dahin ist die Buchung als Selbstzahler möglich.', url: '/entlastungsbetrag' },
           { name: 'Begleitung behutsam starten', text: 'Ein unverbindliches Kennenlernen, klare Absprachen über Nähe und Distanz, kleine erste Schritte — Vertrauen wächst über Verlässlichkeit.', url: '/auth/register' },
           { name: 'Rhythmus und Ziele festhalten', text: 'Ein fester wöchentlicher Termin mit wiederkehrenden Elementen (Einkauf, Spaziergang, Papierkram) gibt Struktur — und lässt sich flexibel an gute und schlechte Tage anpassen.' },
         ]}
@@ -115,7 +115,7 @@ export default function AlltagsbegleitungPsychischeErkrankungenPage() {
         </div>
 
         <div className="blog-intro">
-          <p>Eine Depression, eine Angststörung oder eine andere psychische Erkrankung verändert den Alltag oft gründlicher als jede körperliche Diagnose: Der Einkauf wird zur Hürde, Post bleibt ungeöffnet, Kontakte schlafen ein. Alltagsbegleitung setzt genau dort an — mit praktischer Hilfe, verlässlicher Struktur und menschlicher Ansprache. Sie ersetzt keine Therapie, aber sie stützt den Alltag, in dem Genesung stattfindet. Und: Mit Pflegegrad zahlt die Pflegekasse über den Entlastungsbetrag 131 € pro Monat dafür.</p>
+          <p>Eine Depression, eine Angststörung oder eine andere psychische Erkrankung verändert den Alltag oft gründlicher als jede körperliche Diagnose: Der Einkauf wird zur Hürde, Post bleibt ungeöffnet, Kontakte schlafen ein. Alltagsbegleitung setzt genau dort an — mit praktischer Hilfe, verlässlicher Struktur und menschlicher Ansprache. Sie ersetzt keine Therapie, aber sie stützt den Alltag, in dem Genesung stattfindet. Und: Mit Pflegegrad zahlt die Pflegekasse über den Entlastungsbetrag 131 € pro Monat für anerkannte Angebote zur Unterstützung im Alltag.</p>
         </div>
 
         <div className="blog-content">
@@ -158,11 +158,12 @@ export default function AlltagsbegleitungPsychischeErkrankungenPage() {
 
           <h2>Wer zahlt? Finanzierung über die Pflegekasse</h2>
           <ul>
-            <li><strong>Entlastungsbetrag (§45b SGB XI):</strong> <strong>131 € pro Monat</strong> ab Pflegegrad 1, zweckgebunden für anerkannte Angebote zur Unterstützung im Alltag. Das finanziert etwa vier Begleitstunden monatlich ohne Eigenanteil — nicht Genutztes bleibt bis zum 30. Juni des Folgejahres erhalten. Details: <Link href="/entlastungsbetrag">Entlastungsbetrag</Link>.</li>
+            <li><strong>Entlastungsbetrag (§45b SGB XI):</strong> <strong>131 € pro Monat</strong> ab Pflegegrad 1, zweckgebunden für anerkannte Angebote zur Unterstützung im Alltag. Das finanziert etwa vier Begleitstunden monatlich — nicht Genutztes bleibt bis zum 30. Juni des Folgejahres erhalten. Details: <Link href="/entlastungsbetrag">Entlastungsbetrag</Link>.</li>
             <li><strong>Umwandlungsanspruch (§45a Abs. 4 SGB XI):</strong> Ab Pflegegrad 2 können bis zu 40 % der Pflegesachleistungen zusätzlich in Alltagsunterstützung fließen.</li>
             <li><strong>Verhinderungspflege (§39 SGB XI):</strong> Kümmert sich hauptsächlich ein Angehöriger, finanziert sie mit bis zu 3.539 € pro Jahr stundenweise Vertretung — Details: <Link href="/verhinderungspflege">Verhinderungspflege</Link>.</li>
             <li><strong>Selbstzahler:</strong> Ohne Pflegegrad ist Alltagsbegleitung ab 32 €/Stunde privat buchbar; haushaltsnahe Dienstleistungen sind steuerlich absetzbar.</li>
           </ul>
+          <p>Ob der Entlastungsbetrag für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.</p>
           <p>Alle Finanzierungswege im Überblick: <Link href="/blog/wer-zahlt-alltagsbegleitung">Wer zahlt die Alltagsbegleitung?</Link> — und der <Link href="/budgetrechner">Budgetrechner</Link> zeigt Ihr persönliches Budget.</p>
 
           <h2>Worauf es bei der Begleitung psychisch erkrankter Menschen ankommt</h2>
@@ -184,12 +185,12 @@ export default function AlltagsbegleitungPsychischeErkrankungenPage() {
           ))}
 
           <h2>Fazit: Praktische Hilfe, die Behandlung trägt</h2>
-          <p>Psychische Erkrankungen werden in Praxis und Klinik behandelt — aber bewältigt werden sie im Alltag. Alltagsbegleitung füllt genau diese Lücke: mit Struktur, praktischer Unterstützung und verlässlicher menschlicher Präsenz, ohne Therapieanspruch und ohne Stigma. Dank des Entlastungsbetrags von 131 € monatlich ist sie ab Pflegegrad 1 ohne Eigenanteil zugänglich — auch für jüngere Betroffene. Der erste Schritt ist oft der Pflegegrad-Antrag; alles Weitere übernimmt ein anerkannter Anbieter wie Alltagsengel, inklusive der kompletten Abrechnung mit der Pflegekasse.</p>
+          <p>Psychische Erkrankungen werden in Praxis und Klinik behandelt — aber bewältigt werden sie im Alltag. Alltagsbegleitung füllt genau diese Lücke: mit Struktur, praktischer Unterstützung und verlässlicher menschlicher Präsenz, ohne Therapieanspruch und ohne Stigma. Dank des Entlastungsbetrags von 131 € monatlich ist sie ab Pflegegrad 1 bei einem anerkannten Anbieter über die Pflegekasse finanzierbar — auch für jüngere Betroffene. Der erste Schritt ist oft der Pflegegrad-Antrag. Alltagsengel befindet sich derzeit im Anerkennungsverfahren nach § 45a SGB XI; bis dahin ist die Buchung als Selbstzahler möglich, und zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.</p>
         </div>
 
         <div className="blog-cta">
           <h3>Behutsam starten — mit einem Kennenlernen</h3>
-          <p>Wählen Sie einen geprüften Engel aus, lernen Sie ihn unverbindlich kennen und nutzen Sie Ihre 131 €/Monat von der Pflegekasse. Wir übernehmen die komplette Abrechnung.</p>
+          <p>Wählen Sie einen geprüften Engel aus und lernen Sie ihn unverbindlich kennen. Wir beraten Sie kostenlos zu Ihren Finanzierungswegen — die Anerkennung nach § 45a SGB XI läuft.</p>
           <Link href="/alltagsbegleitung" className="btn-gold">Mehr zur Alltagsbegleitung</Link>
         </div>
 

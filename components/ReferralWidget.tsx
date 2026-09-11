@@ -54,7 +54,7 @@ export default function ReferralWidget() {
 
   async function handleShare() {
     if (!data?.referral_link) return
-    const shareText = `Ich nutze Alltagsengel für Alltagshilfe — 131 €/Monat zahlt die Pflegekasse! Registriere dich über meinen Link und wir bekommen beide 20 € Bonus: ${data.referral_link}`
+    const shareText = `Ich nutze Alltagsengel für Alltagshilfe — geprüfte Begleiter in Frankfurt & Rhein-Main. Registriere dich über meinen Link und wir bekommen beide 20 € Bonus: ${data.referral_link}`
 
     if (navigator.share) {
       try {

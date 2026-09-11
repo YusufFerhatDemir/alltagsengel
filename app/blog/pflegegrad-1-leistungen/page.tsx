@@ -48,7 +48,7 @@ const articleJsonLd = {
 const faqData = [
   { q: 'Bekomme ich mit Pflegegrad 1 Pflegegeld?', a: 'Nein, Pflegegeld gibt es erst ab Pflegegrad 2. Bei Pflegegrad 1 erhalten Sie aber den Entlastungsbetrag von 131€/Monat, Pflegehilfsmittel (42€/Monat), Pflegeberatung und Wohnraumanpassung (bis 4.000€).' },
   { q: 'Was bekomme ich mit Pflegegrad 1 monatlich?', a: 'Mit Pflegegrad 1 erhalten Sie monatlich: 131€ Entlastungsbetrag (§45b) für Alltagsbegleitung/Haushaltshilfe und bis zu 42€ für Pflegehilfsmittel zum Verbrauch (§40). Zusammen bis zu 173€ monatlich.' },
-  { q: 'Kann ich mit Pflegegrad 1 Alltagsbegleitung buchen?', a: 'Ja! Der Entlastungsbetrag von 131€/Monat kann für Alltagsbegleitung, Haushaltshilfe oder Betreuung bei einem anerkannten Anbieter wie Alltagsengel genutzt werden.' },
+  { q: 'Kann ich mit Pflegegrad 1 Alltagsbegleitung buchen?', a: 'Ja! Der Entlastungsbetrag von 131€/Monat kann für Alltagsbegleitung, Haushaltshilfe oder Betreuung bei einem nach § 45a SGB XI anerkannten Anbieter genutzt werden. Alltagsengel befindet sich derzeit im Anerkennungsverfahren; bis dahin ist die Buchung als Selbstzahler möglich.' },
   { q: 'Welche Pflegehilfsmittel stehen mir bei Pflegegrad 1 zu?', a: 'Bei Pflegegrad 1 haben Sie Anspruch auf Pflegehilfsmittel zum Verbrauch im Wert von bis zu 42€/Monat: Einmalhandschuhe, Desinfektionsmittel, Bettschutzeinlagen, Mundschutz und Schutzschürzen.' },
 ]
 
@@ -101,9 +101,11 @@ export default function Pflegegrad1Leistungen() {
             <li>Betreuungsgruppen besuchen</li>
           </ul>
           <p>
-            Das Geld wird nicht ausgezahlt, sondern direkt mit einem anerkannten Anbieter (wie
-            Alltagsengel) verrechnet. Nicht genutzte Beträge können bis zum 30. Juni des
-            Folgejahres angespart werden.
+            Das Geld wird nicht ausgezahlt, sondern direkt mit einem anerkannten Anbieter
+            verrechnet. Nicht genutzte Beträge können bis zum 30. Juni des
+            Folgejahres angespart werden. Ob der Entlastungsbetrag für ein konkretes Angebot
+            eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus —
+            Alltagsengel befindet sich derzeit im Anerkennungsverfahren.
           </p>
 
           <h3>2. Pflegehilfsmittel — 42 €/Monat</h3>
@@ -192,12 +194,13 @@ export default function Pflegegrad1Leistungen() {
 
           <h2>So nutzen Sie die Leistungen mit Alltagsengel</h2>
           <p>
-            Bei Alltagsengel können Sie zwei Leistungen bei Pflegegrad 1 sofort nutzen:
+            Bei Alltagsengel können Sie bei Pflegegrad 1 zwei Angebote sofort nutzen:
           </p>
           <ul>
             <li>
-              <strong><Link href="/alltagsbegleitung">Alltagsbegleitung</Link></strong> — über den
-              Entlastungsbetrag (131 €/Monat). Wir rechnen direkt mit Ihrer Kasse ab.
+              <strong><Link href="/alltagsbegleitung">Alltagsbegleitung</Link></strong> — Buchung als
+              Selbstzahler. Der Einsatz des Entlastungsbetrags setzt die Anerkennung nach § 45a SGB XI
+              voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren.
             </li>
             <li>
               <strong><Link href="/hygienebox">Pflegebox</Link></strong> — Pflegehilfsmittel
@@ -205,8 +208,8 @@ export default function Pflegegrad1Leistungen() {
             </li>
           </ul>
           <p>
-            Registrieren Sie sich kostenlos, und wir kümmern uns um alles — von der Antragstellung
-            bis zur monatlichen Abrechnung.
+            Registrieren Sie sich kostenlos. Bei der Pflegebox kümmern wir uns um Antrag und
+            Abrechnung; zu Ihren Finanzierungswegen für die Alltagsbegleitung beraten wir Sie vorab kostenlos.
           </p>
 
           <h2>Häufige Fragen zu Pflegegrad 1</h2>
@@ -222,7 +225,7 @@ export default function Pflegegrad1Leistungen() {
 
         <div className="blog-cta">
           <h3>Pflegegrad 1? Leistungen jetzt nutzen!</h3>
-          <p>Entlastungsbetrag + Pflegebox = 173 €/Monat. Registrieren Sie sich kostenlos.</p>
+          <p>Pflegebox über die Pflegekasse, Alltagsbegleitung als Selbstzahler — §45a-Anerkennung im Verfahren. Registrieren Sie sich kostenlos.</p>
           <Link href="/alltagsbegleitung" className="btn-gold">Alltagsbegleitung buchen</Link>
         </div>
 

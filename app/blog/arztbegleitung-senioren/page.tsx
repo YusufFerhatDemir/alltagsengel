@@ -117,13 +117,16 @@ export default function ArztbegleitungPage() {
             <strong>Privat:</strong> 15–25€ pro Stunde
           </p>
           <p>
-            <strong>Über Pflegekasse (§45b):</strong> Bis zu 131€ monatlich für Betreuungsleistungen (darin enthalten: Arztbegleitung, Einkaufen, Spaziergänge, etc.)
+            <strong>Über Pflegekasse (§45b):</strong> Bis zu 131€ monatlich für Betreuungsleistungen anerkannter Anbieter (darin enthalten: Arztbegleitung, Einkaufen, Spaziergänge, etc.)
           </p>
           <p>
             <strong>Über Verhinderungspflege:</strong> Bis zu 3.539€ pro Jahr (gemeinsamer Jahresbetrag Verhinderungs-/Kurzzeitpflege, seit 01.07.2025)
           </p>
           <p>
             <strong>Tipp:</strong> Viele Pflegekassen zahlen regelmäßige Arztbegleitungen aus der §45b-Quote. Fragen Sie Ihre Pflegekasse!
+          </p>
+          <p>
+            Ob der Entlastungsbetrag für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.
           </p>
 
           <h2>Wie finden Sie die richtige Arztbegleitperson?</h2>

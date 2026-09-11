@@ -5,7 +5,7 @@ import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
   title: 'Einkaufshilfe für Senioren: Kosten & Ablauf',
-  description: 'Einkaufshilfe für Senioren: So funktionieren Begleitdienste, was sie kosten und wie Sie über den Entlastungsbetrag (131 €/Monat) kostenfrei buchen.',
+  description: 'Einkaufshilfe für Senioren: So funktionieren Begleitdienste, was sie kosten und wann der Entlastungsbetrag (131 €/Monat) eingesetzt werden kann.',
   keywords: 'Einkaufshilfe Senioren, Einkaufsbegleitung, Einkaufsdienst, Begleitperson, Pflege',
   alternates: { canonical: 'https://alltagsengel.care/blog/einkaufshilfe-senioren' },
   openGraph: {
@@ -22,7 +22,7 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Einkaufshilfe für Senioren: So klappt der Einkauf mit Begleitung',
-  description: 'Einkaufshilfe für Senioren: So funktionieren Begleitdienste, was sie kosten und wie Sie über den Entlastungsbetrag (131 €/Monat) kostenfrei buchen.',
+  description: 'Einkaufshilfe für Senioren: So funktionieren Begleitdienste, was sie kosten und wann der Entlastungsbetrag (131 €/Monat) eingesetzt werden kann.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
   datePublished: '2026-03-20',
@@ -93,7 +93,7 @@ export default function EinkaufshilfePage() {
             <strong>Über Verhinderungspflege:</strong> Falls Sie bereits Verhinderungspflege in Anspruch nehmen, können Sie diese auch für Einkaufshilfen nutzen (gemeinsamer Jahresbetrag Verhinderungs-/Kurzzeitpflege: bis 3.539€ pro Jahr, seit 01.07.2025).
           </p>
           <p>
-            <strong>Stundensatz bei Alltagsengel:</strong> ab 32 € pro Stunde – mit anerkanntem Pflegegrad rechnet Alltagsengel direkt über den Entlastungsbetrag (§ 45b, 131 €/Monat) mit der Pflegekasse ab, sodass für Sie keine Kosten entstehen.
+            <strong>Stundensatz bei Alltagsengel:</strong> ab 32 € pro Stunde. Ob der Entlastungsbetrag (§ 45b, 131 €/Monat) für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.
           </p>
 
           <h2>Wie buchen Sie eine Einkaufshilfe über Alltagsengel?</h2>
@@ -140,7 +140,7 @@ export default function EinkaufshilfePage() {
           <p>
             <strong>Wird Einkaufshilfe von der Pflegekasse bezahlt?</strong>
             <br />
-            Ja, über §45b-Leistungen bis zu 131€ monatlich oder über Verhinderungspflege.
+            Ja, bei anerkannten Anbietern über §45b-Leistungen bis zu 131€ monatlich oder über Verhinderungspflege.
           </p>
           <p>
             <strong>Kann ich eine feste Begleitperson haben?</strong>

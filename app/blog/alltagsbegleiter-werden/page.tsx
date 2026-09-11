@@ -213,7 +213,7 @@ export default function AlltagsbegleiterWerden() {
             <li><strong>Teilzeit:</strong> 20–25 Stunden pro Woche à 20 € ≈ <strong>1.600–2.000 €/Monat</strong> brutto.</li>
             <li><strong>Vollzeitnah:</strong> 30–35 Stunden pro Woche ≈ <strong>2.600–3.000 €/Monat</strong> brutto, je nach Region und Modell.</li>
           </ul>
-          <p>Warum die Nachfrage stabil ist: Die Einsätze werden überwiegend von der Pflegekasse finanziert — allein der <Link href="/entlastungsbetrag">Entlastungsbetrag nach §45b SGB XI</Link> stellt jedem Menschen mit Pflegegrad <strong>131 € pro Monat</strong> für Alltagsunterstützung bereit. Millionen Anspruchsberechtigte schöpfen ihn bislang nicht aus — der Markt wächst also unabhängig von der Konjunktur. Mehr zum flexiblen Einstieg: <Link href="/blog/nebenjob-pflege">Nebenjob in der Pflege</Link>.</p>
+          <p>Warum die Nachfrage stabil ist: Allein der <Link href="/entlastungsbetrag">Entlastungsbetrag nach §45b SGB XI</Link> stellt jedem Menschen mit Pflegegrad <strong>131 € pro Monat</strong> für anerkannte Angebote zur Alltagsunterstützung bereit. Millionen Anspruchsberechtigte schöpfen ihn bislang nicht aus — der Markt wächst also unabhängig von der Konjunktur. Mehr zum flexiblen Einstieg: <Link href="/blog/nebenjob-pflege">Nebenjob in der Pflege</Link>.</p>
 
           <h2>Voraussetzungen: Das müssen Sie mitbringen</h2>
           <h3>Formale Voraussetzungen</h3>
@@ -235,7 +235,7 @@ export default function AlltagsbegleiterWerden() {
 
           <h2>Schritt für Schritt zum Alltagsbegleiter</h2>
           <h3>Schritt 1: Arbeitsmodell wählen</h3>
-          <p>Überlegen Sie zuerst, wie Sie arbeiten möchten: angestellt mit festen Touren oder flexibel mit selbstgewählten Kunden. Plattformen wie Alltagsengel vermitteln Aufträge in Ihrer Nähe, übernehmen Versicherung und Abrechnung mit der Pflegekasse und lassen Sie Umfang und Zeiten selbst bestimmen.</p>
+          <p>Überlegen Sie zuerst, wie Sie arbeiten möchten: angestellt mit festen Touren oder flexibel mit selbstgewählten Kunden. Plattformen wie Alltagsengel vermitteln Aufträge in Ihrer Nähe, übernehmen Versicherung und Abrechnung und lassen Sie Umfang und Zeiten selbst bestimmen.</p>
           <h3>Schritt 2: Qualifizierung absolvieren</h3>
           <p>Melden Sie sich für einen Basiskurs nach den Vorgaben Ihres Bundeslandes an — oder wählen Sie einen Anbieter, der die Schulung ins Onboarding integriert. Berufserfahrung in Pflege, Betreuung oder Hauswirtschaft wird häufig angerechnet.</p>
           <h3>Schritt 3: Unterlagen zusammenstellen</h3>
@@ -260,7 +260,7 @@ export default function AlltagsbegleiterWerden() {
             <li>Schneller Einstieg ohne lange Ausbildung — auch mit 50+ oder als Wiedereinstieg</li>
             <li>Flexible Zeiteinteilung: ideal neben Familie, Studium oder Rente</li>
             <li>Sinnstiftende Arbeit mit direktem, sichtbarem Nutzen</li>
-            <li>Wachsender Markt mit sicherer Nachfrage durch die Pflegekassen-Finanzierung</li>
+            <li>Wachsender Markt mit stabiler Nachfrage — Millionen Pflegebedürftige wollen zu Hause leben</li>
             <li>Echte Beziehungen statt anonymer Dienstleistung — feste Bezugspersonen sind das Modell</li>
           </ul>
           <h3>Das sollten Sie realistisch sehen</h3>
@@ -280,7 +280,7 @@ export default function AlltagsbegleiterWerden() {
           ))}
 
           <h2>Fazit: Der zugänglichste Weg in die soziale Arbeit</h2>
-          <p>Alltagsbegleiter werden heißt: in wenigen Wochen startklar sein, fair verdienen und Arbeit leisten, die unmittelbar ankommt. Die Basisqualifizierung nach §45a SGB XI ist überschaubar, die Nachfrage wächst mit jedem Jahr — und über Plattformen wie Alltagsengel entfällt der organisatorische Ballast: Aufträge, Versicherung und die komplette Abrechnung mit der Pflegekasse sind abgedeckt. Wer Empathie, Zuverlässigkeit und Freude am Umgang mit Menschen mitbringt, findet hier einen Beruf mit Sinn und Zukunft.</p>
+          <p>Alltagsbegleiter werden heißt: in wenigen Wochen startklar sein, fair verdienen und Arbeit leisten, die unmittelbar ankommt. Die Basisqualifizierung nach §45a SGB XI ist überschaubar, die Nachfrage wächst mit jedem Jahr — und über Plattformen wie Alltagsengel entfällt der organisatorische Ballast: Aufträge, Versicherung und Abrechnung sind abgedeckt. Wer Empathie, Zuverlässigkeit und Freude am Umgang mit Menschen mitbringt, findet hier einen Beruf mit Sinn und Zukunft.</p>
           <p>Sie wohnen außerhalb Frankfurts? Alle Infos zum Einstieg in Ihrer Stadt: <Link href="/engel-werden/offenbach">Offenbach</Link>, <Link href="/engel-werden/wiesbaden">Wiesbaden</Link>, <Link href="/engel-werden/darmstadt">Darmstadt</Link>, <Link href="/engel-werden/hanau">Hanau</Link>, <Link href="/engel-werden/mainz">Mainz</Link> und <Link href="/engel-werden/bad-homburg">Bad Homburg</Link>.</p>
         </div>
 

@@ -5,7 +5,7 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
   title: 'Bewertungen & Erfahrungen — Familien berichten',
-  description: 'Echte Google-Bewertungen zu Alltagsengel: Alltagsbegleitung nach §45b SGB XI in Frankfurt & Rhein-Main, 0 € Eigenanteil möglich. Überzeugen Sie sich selbst!',
+  description: 'Echte Google-Bewertungen zu Alltagsengel: Alltagsbegleitung in Frankfurt & Rhein-Main, §45a-Anerkennung im Verfahren. Überzeugen Sie sich selbst!',
   keywords: ['Alltagsengel Bewertungen', 'Alltagsengel Erfahrungen', 'Alltagsbegleitung Frankfurt Bewertung', 'Betreuungsdienst Frankfurt Erfahrungen'],
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
@@ -34,8 +34,8 @@ const VERSPRECHEN = [
     text: 'Kein ständiger Wechsel: Sie bekommen einen festen Alltagsengel, der Ihre Gewohnheiten und Wünsche kennt.',
   },
   {
-    titel: '0 € Eigenanteil möglich',
-    text: 'Wir rechnen direkt über den Entlastungsbetrag (131 €/Monat, §45b SGB XI) mit Ihrer Pflegekasse ab — inklusive Abtretungserklärung, ohne Papierkram für Sie.',
+    titel: 'Kostenlose Beratung zur Finanzierung',
+    text: 'Pflegebedürftigen steht nach § 45b SGB XI grundsätzlich ein Entlastungsbetrag von 131 € monatlich zu. Sein Einsatz für unser Angebot setzt die Anerkennung nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.',
   },
   {
     titel: 'Ehrliche Bewertungen',

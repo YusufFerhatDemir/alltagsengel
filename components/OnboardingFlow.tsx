@@ -147,8 +147,8 @@ export default function OnboardingFlow() {
             />
           </div>
           <p style={{ color: '#B8B0A4', fontSize: 15, lineHeight: 1.7, maxWidth: 320, margin: '0 auto' }}>
-            Wir verbinden Sie mit zertifizierten Alltagsbegleitern in Ihrer Nähe.
-            <strong style={{ color: '#C9963C' }}> 131€/Monat</strong> übernimmt die Pflegekasse — Sie zahlen nichts.
+            Wir verbinden Sie mit geschulten, geprüften Alltagsbegleitern in Ihrer Nähe.
+            Mit Pflegegrad stehen Ihnen <strong style={{ color: '#C9963C' }}>131€/Monat</strong> Entlastungsbetrag zu.
           </p>
         </div>
       ),

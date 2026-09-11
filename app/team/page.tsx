@@ -57,14 +57,14 @@ const TEAM: Member[] = [
   },
   {
     name: 'Qualität & Pflegeberatung',
-    role: 'Qualitätssicherung nach §45a SGB XI',
+    role: 'Qualitätssicherung nach den Anforderungen des §45a SGB XI',
     bio: 'Sorgt für geschulte Begleiter:innen, geprüfte Führungszeugnisse und einheitliche Qualität — und berät zu Pflegegrad und Ansprüchen.',
     initials: 'QP',
   },
   {
     name: 'Buchhaltung & Abrechnung',
     role: 'Direkte Kassenabrechnung',
-    bio: 'Rechnet den Entlastungsbetrag und die Pflegebox direkt mit der Pflegekasse ab — damit Sie nicht in Vorleistung gehen müssen.',
+    bio: 'Rechnet die Pflegebox direkt mit der Pflegekasse ab — damit Sie nicht in Vorleistung gehen müssen. Den Entlastungsbetrag kann Alltagsengel erst nach Anerkennung nach § 45a SGB XI abrechnen — das Anerkennungsverfahren läuft.',
     initials: 'BA',
   },
 ]

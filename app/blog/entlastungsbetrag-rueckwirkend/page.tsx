@@ -60,7 +60,7 @@ const faqItems = [
   },
   {
     question: 'Kann ich den Entlastungsbetrag auch ohne Pflegedienst nutzen?',
-    answer: 'Der Entlastungsbetrag muss für Leistungen nach §45a SGB XI verwendet werden — z.B. Alltagsbegleitung, Haushaltshilfe oder Tagesbetreuung. Der Anbieter muss nach Landesrecht anerkannt sein, wie Alltagsengel.',
+    answer: 'Der Entlastungsbetrag muss für Leistungen nach §45a SGB XI verwendet werden — z.B. Alltagsbegleitung, Haushaltshilfe oder Tagesbetreuung. Der Anbieter muss nach Landesrecht anerkannt sein. Alltagsengel befindet sich derzeit im Anerkennungsverfahren nach § 45a SGB XI; bis dahin ist die Buchung als Selbstzahler möglich.',
   },
 ]
 
@@ -160,21 +160,23 @@ export default function EntlastungsbetragRueckwirkend() {
           <h3>Schritt 2: Anerkannten Anbieter wählen</h3>
           <p>
             Der Entlastungsbetrag darf nur für Leistungen nach § 45a SGB XI bei einem nach
-            Landesrecht anerkannten Anbieter eingesetzt werden. Alltagsengel ist in Hessen
-            zugelassen und rechnet direkt mit Ihrer Pflegekasse ab.
+            Landesrecht anerkannten Anbieter eingesetzt werden. Ob der Entlastungsbetrag für ein
+            konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach
+            § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren.
           </p>
 
           <h3>Schritt 3: Termine buchen</h3>
           <p>
-            Buchen Sie bei Alltagsengel Alltagsbegleitung, Haushaltshilfe oder Betreuung — so
+            Buchen Sie bei einem anerkannten Anbieter Alltagsbegleitung, Haushaltshilfe oder Betreuung — so
             viele Stunden, wie Ihr Guthaben hergibt. Bei 32 €/Stunde und 1.572 € Restguthaben
             sind das fast <strong>50 Stunden</strong> Alltagsbegleitung!
           </p>
 
-          <h3>Schritt 4: Abrechnung läuft automatisch</h3>
+          <h3>Schritt 4: Abrechnung klären</h3>
           <p>
-            Alltagsengel rechnet die erbrachten Leistungen direkt mit Ihrer Pflegekasse über den
-            Entlastungsbetrag ab. Sie zahlen nichts aus eigener Tasche.
+            Mit einer Abtretungserklärung rechnet der anerkannte Anbieter die erbrachten Leistungen
+            direkt mit Ihrer Pflegekasse über den Entlastungsbetrag ab. Alternativ reichen Sie die
+            Rechnungen zur Kostenerstattung bei der Kasse ein.
           </p>
 
           <h2>Wofür kann der Entlastungsbetrag verwendet werden?</h2>
@@ -214,8 +216,8 @@ export default function EntlastungsbetragRueckwirkend() {
         </div>
 
         <div className="blog-cta">
-          <h3>Entlastungsbetrag jetzt nutzen</h3>
-          <p>Buchen Sie Alltagsbegleitung über den Entlastungsbetrag — bevor Ihr Guthaben verfällt.</p>
+          <h3>Alltagsbegleitung mit Alltagsengel</h3>
+          <p>§45a-Anerkennung im Verfahren — bis dahin ist die Buchung als Selbstzahler möglich. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.</p>
           <Link href="/alltagsbegleitung" className="btn-gold">Alltagsbegleitung buchen</Link>
         </div>
 

@@ -34,7 +34,7 @@ export default function EngelInfoPage() {
             mit Menschen zusammenbringt, die Unterstützung im Alltag brauchen. Wir sind
             <strong> kein Arbeitgeber</strong> — du bleibst selbständig und entscheidest,
             welche Aufträge du annimmst. Wir kümmern uns um das Drumherum: Verifizierung,
-            Versicherung, Abrechnung mit der Pflegekasse.
+            Versicherung und Abrechnung.
           </p>
         </section>
 
@@ -96,10 +96,14 @@ export default function EngelInfoPage() {
           <div className="info-step">
             <div className="info-step-num">5</div>
             <div className="info-step-body">
-              <h3>Abrechnung — §45b SGB XI</h3>
+              <h3>Abrechnung</h3>
               <p>
-                Nach dem Einsatz rechnen wir direkt mit der Pflegekasse der
-                Kund:in ab (Entlastungsbetrag 131&nbsp;€ pro Monat). Du
+                Nach dem Einsatz rechnen wir mit der Kund:in ab. Eine Abrechnung
+                über den Entlastungsbetrag (131&nbsp;€ pro Monat, §45b SGB XI)
+                direkt mit der Pflegekasse ist erst nach Anerkennung nach §45a
+                SGB XI möglich — Alltagsengel befindet sich derzeit im
+                Anerkennungsverfahren; bis dahin buchen Kund:innen als
+                Selbstzahler. Du
                 bekommst deine Vergütung automatisch aufs hinterlegte Konto
                 — in der Regel innerhalb von 14 Tagen.
               </p>
@@ -184,7 +188,7 @@ export default function EngelInfoPage() {
             </li>
             <li>
               Auszahlung automatisch nach jedem Einsatz (ca. 7–14 Tage nach
-              Abrechnung mit der Pflegekasse).
+              Abrechnung des Einsatzes).
             </li>
             <li>
               Du bekommst monatlich eine Abrechnungs­übersicht zum Export für

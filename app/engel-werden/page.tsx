@@ -205,7 +205,7 @@ const JOB_POSTINGS = [
     '@type': 'JobPosting',
     title: 'Betreuungskraft nach §45a SGB XI (m/w/d) – Frankfurt & Rhein-Main',
     description:
-      'Werde Betreuungskraft nach §45a SGB XI bei Alltagsengel in Frankfurt und dem Rhein-Main-Gebiet. Du begleitest Menschen mit Pflegegrad in deren Zuhause: alltagspraktische Hilfe, Gesellschaft, Spaziergänge, Arztbegleitung, kognitive Aktivierung. Wir unterstützen deine Qualifizierung zur anerkannten Betreuungskraft nach §45a/§53c SGB XI. 20 € pro Stunde, flexible Zeiteinteilung, Minijob oder Nebenjob möglich. Deine Einsätze sind über den gesetzlichen Entlastungsbetrag (131 €/Monat nach §45b SGB XI) abrechenbar — das macht unsere Dienstleistung für Klientinnen und Klienten besonders zugänglich.',
+      'Werde Betreuungskraft nach §45a SGB XI bei Alltagsengel in Frankfurt und dem Rhein-Main-Gebiet. Du begleitest Menschen mit Pflegegrad in deren Zuhause: alltagspraktische Hilfe, Gesellschaft, Spaziergänge, Arztbegleitung, kognitive Aktivierung. Wir unterstützen deine Qualifizierung zur anerkannten Betreuungskraft nach §45a/§53c SGB XI. 20 € pro Stunde, flexible Zeiteinteilung, Minijob oder Nebenjob möglich. Alltagsengel befindet sich derzeit im Anerkennungsverfahren nach §45a SGB XI; erst nach der Anerkennung können Einsätze über den gesetzlichen Entlastungsbetrag (131 €/Monat nach §45b SGB XI) abgerechnet werden. Bis dahin buchen Klientinnen und Klienten als Selbstzahler.',
     identifier: { '@type': 'PropertyValue', name: 'Alltagsengel', value: 'ae-betreuungskraft-45a-001' },
     datePosted: '2026-07-08',
     validThrough: '2026-12-31',

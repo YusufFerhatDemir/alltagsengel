@@ -15,7 +15,7 @@ import SpeakableSchema from '@/components/SpeakableSchema'
 export const metadata: Metadata = {
   title: 'Entlastungsbetrag 131 € nutzen — §45b SGB XI',
   description:
-    'Entlastungsbetrag §45b SGB XI: 131 €/Monat für Alltagsbegleitung & Haushaltshilfe — ab Pflegegrad 1, 0 € Eigenanteil. Wir rechnen direkt mit der Pflegekasse ab.',
+    'Entlastungsbetrag §45b SGB XI: 131 €/Monat für anerkannte Angebote wie Alltagsbegleitung & Haushaltshilfe — ab Pflegegrad 1. Alltagsengel: §45a-Anerkennung im Verfahren, Buchung als Selbstzahler möglich.',
   keywords: [
     'Entlastungsbetrag',
     'Entlastungsbetrag 131 Euro',
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Entlastungsbetrag: 131 €/Monat von der Pflegekasse nutzen',
     description:
-      'Jede Person mit Pflegegrad 1–5 hat Anspruch auf 131 €/Monat nach §45b SGB XI. Alltagsengel rechnet direkt mit der Kasse ab — 0 € Eigenanteil.',
+      'Jede Person mit Pflegegrad 1–5 hat Anspruch auf 131 €/Monat nach §45b SGB XI. Alltagsengel: Anerkennung nach § 45a SGB XI läuft — bis dahin Buchung als Selbstzahler.',
     url: 'https://alltagsengel.care/entlastungsbetrag',
     siteName: 'Alltagsengel',
     locale: 'de_DE',
@@ -57,12 +57,12 @@ const faqs = [
   {
     frage: 'Wofür darf ich den Entlastungsbetrag verwenden?',
     antwort:
-      'Für anerkannte Angebote zur Unterstützung im Alltag (z. B. Alltagsbegleitung und Haushaltshilfe von Alltagsengel), Tages- und Nachtpflege, Kurzzeitpflege sowie — ab Pflegegrad 2 — anteilig für Leistungen ambulanter Pflegedienste. Nicht erlaubt ist die Verwendung für Verhinderungspflege.',
+      'Für anerkannte Angebote zur Unterstützung im Alltag (z. B. Alltagsbegleitung und Haushaltshilfe), Tages- und Nachtpflege, Kurzzeitpflege sowie — ab Pflegegrad 2 — anteilig für Leistungen ambulanter Pflegedienste. Nicht erlaubt ist die Verwendung für Verhinderungspflege.',
   },
   {
     frage: 'Muss ich den Entlastungsbetrag beantragen?',
     antwort:
-      'Nein, ein formeller Antrag ist nicht nötig — der Anspruch besteht automatisch mit dem Pflegegrad. Sie reichen lediglich die Rechnungen des anerkannten Anbieters bei der Pflegekasse ein. Bei Alltagsengel entfällt sogar das: Wir rechnen per Abtretungserklärung direkt mit Ihrer Kasse ab.',
+      'Nein, ein formeller Antrag ist nicht nötig — der Anspruch besteht automatisch mit dem Pflegegrad. Sie reichen lediglich die Rechnungen des anerkannten Anbieters bei der Pflegekasse ein oder der Anbieter rechnet per Abtretungserklärung direkt mit der Kasse ab. Alltagsengel befindet sich derzeit im Anerkennungsverfahren nach § 45a SGB XI; bis dahin ist die Buchung als Selbstzahler möglich.',
   },
   {
     frage: 'Verfällt der Entlastungsbetrag, wenn ich ihn nicht nutze?',
@@ -82,7 +82,7 @@ const faqs = [
   {
     frage: 'Wie nutze ich den Entlastungsbetrag bei Alltagsengel?',
     antwort:
-      'Registrieren Sie sich kostenlos, wählen Sie einen Alltagsbegleiter (Engel) in Ihrer Stadt und buchen Sie Termine. Die Abrechnung über §45b übernehmen wir komplett — Ihr Eigenanteil: 0 €.',
+      'Pflegebedürftigen steht nach § 45b SGB XI grundsätzlich ein Entlastungsbetrag von 131 € monatlich zu. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich: Registrieren Sie sich kostenlos, wählen Sie einen Alltagsbegleiter (Engel) in Ihrer Stadt und buchen Sie Termine.',
   },
   {
     frage: 'Wird der Entlastungsbetrag bar ausgezahlt?',
@@ -97,7 +97,7 @@ const faqs = [
   {
     frage: 'Welche Anbieter darf ich mit dem Entlastungsbetrag bezahlen?',
     antwort:
-      'Nur nach Landesrecht anerkannte Angebote zur Unterstützung im Alltag (§45a SGB XI), zugelassene ambulante Pflegedienste sowie Einrichtungen der Tages-, Nacht- und Kurzzeitpflege. Privatpersonen oder Nachbarn ohne Anerkennung können nicht abgerechnet werden. Die Alltagsbegleiter von Alltagsengel erfüllen diese Anforderungen und sind versichert.',
+      'Nur nach Landesrecht anerkannte Angebote zur Unterstützung im Alltag (§45a SGB XI), zugelassene ambulante Pflegedienste sowie Einrichtungen der Tages-, Nacht- und Kurzzeitpflege. Privatpersonen oder Nachbarn ohne Anerkennung können nicht abgerechnet werden. Alltagsengel befindet sich derzeit im Anerkennungsverfahren nach § 45a SGB XI; unsere Alltagsbegleiter sind versichert.',
   },
 ]
 
@@ -106,19 +106,20 @@ const jsonLd = {
   '@graph': [
     {
       '@type': 'Service',
-      name: 'Alltagsbegleitung über den Entlastungsbetrag (§45b SGB XI)',
+      name: 'Alltagsbegleitung (Entlastungsangebot, §45a SGB XI im Anerkennungsverfahren)',
       description:
-        'Anerkannte Angebote zur Unterstützung im Alltag: Alltagsbegleitung, Haushaltshilfe und Betreuung — finanziert über den Entlastungsbetrag von 131 €/Monat, abgerechnet direkt mit der Pflegekasse.',
+        'Alltagsbegleitung, Haushaltshilfe und Betreuung. Pflegebedürftigen steht nach §45b SGB XI grundsätzlich ein Entlastungsbetrag von 131 €/Monat zu; seine Nutzung setzt die Anerkennung des Anbieters nach §45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren.',
       image: 'https://alltagsengel.care/og-image.png',
       provider: { '@id': 'https://alltagsengel.care/#localbusiness' },
       areaServed: { '@type': 'AdministrativeArea', name: 'Rhein-Main-Gebiet' },
       serviceType: 'Alltagsbegleitung / Entlastungsleistungen §45b SGB XI',
       offers: {
         '@type': 'Offer',
-        price: '0.00',
+        price: '32.00',
         priceCurrency: 'EUR',
+        priceSpecification: { '@type': 'UnitPriceSpecification', price: '32.00', priceCurrency: 'EUR', unitText: 'Stunde' },
         description:
-          '131 €/Monat übernimmt die Pflegekasse (§45b SGB XI) — 0 € Eigenanteil bei Direktabrechnung',
+          'Stundensatz 32 €. Einsatz des Entlastungsbetrags (131 €/Monat, §45b SGB XI) erst nach Anerkennung nach §45a SGB XI möglich — Anerkennungsverfahren läuft.',
       },
     },
     {
@@ -161,9 +162,9 @@ export default function EntlastungsbetragPage() {
         totalTime="PT10M"
         steps={[
           { name: 'Pflegegrad prüfen oder beantragen', text: 'Voraussetzung ist ein anerkannter Pflegegrad 1–5. Noch kein Pflegegrad? Stellen Sie einen formlosen Antrag bei Ihrer Pflegekasse — der kostenlose Pflegegrad-Check hilft bei der Einschätzung.', url: '/pflegegrad-check' },
-          { name: 'Anerkannten Anbieter wählen', text: 'Der Entlastungsbetrag darf nur bei anerkannten Angeboten zur Unterstützung im Alltag eingesetzt werden — zum Beispiel für Alltagsbegleitung über Alltagsengel.', url: '/alltagsbegleitung' },
+          { name: 'Anerkannten Anbieter wählen', text: 'Der Entlastungsbetrag darf nur bei anerkannten Angeboten zur Unterstützung im Alltag eingesetzt werden — zum Beispiel für Alltagsbegleitung. Alltagsengel befindet sich derzeit im Anerkennungsverfahren nach § 45a SGB XI.', url: '/alltagsbegleitung' },
           { name: 'Abtretungserklärung unterschreiben', text: 'Mit einer einmaligen Abtretungserklärung rechnet der Anbieter direkt mit Ihrer Pflegekasse ab. Sie gehen nicht in Vorleistung und reichen keine Belege ein.' },
-          { name: 'Leistungen buchen und abrechnen lassen', text: 'Buchen Sie Termine nach Bedarf. Die geleisteten Stunden werden dokumentiert und automatisch über den Entlastungsbetrag §45b abgerechnet — bis 131 € pro Monat ohne Eigenanteil.', url: '/choose' },
+          { name: 'Leistungen buchen und abrechnen lassen', text: 'Buchen Sie Termine nach Bedarf. Die geleisteten Stunden werden dokumentiert; ein anerkannter Anbieter rechnet sie über den Entlastungsbetrag §45b ab — bis 131 € pro Monat.', url: '/choose' },
         ]}
       />
       <div className="legal-header">
@@ -175,7 +176,7 @@ export default function EntlastungsbetragPage() {
           <div className="info-hero-icon">💶</div>
           <h2 className="info-hero-title">Entlastungsbetrag: 131 €/Monat von der Pflegekasse</h2>
           <p className="info-hero-sub">
-            Jede Person mit Pflegegrad 1–5 hat Anspruch — wir rechnen direkt mit der Kasse ab, Ihr Eigenanteil: 0 €
+            Jede Person mit Pflegegrad 1–5 hat Anspruch — Alltagsengel befindet sich im Anerkennungsverfahren nach § 45a SGB XI, bis dahin ist die Buchung als Selbstzahler möglich
           </p>
         </div>
 
@@ -186,8 +187,10 @@ export default function EntlastungsbetragPage() {
             in Höhe von <strong>131 € pro Monat</strong> (1.572 € pro Jahr). Er soll pflegende Angehörige
             entlasten und Pflegebedürftigen helfen, möglichst lange selbstständig zu Hause zu leben.
             Anders als das Pflegegeld wird er nicht ausgezahlt, sondern gegen Rechnung eines anerkannten
-            Anbieters mit der Pflegekasse abgerechnet — zum Beispiel für die Alltagsbegleitung und
-            Haushaltshilfe von Alltagsengel.
+            Anbieters mit der Pflegekasse abgerechnet — zum Beispiel für Alltagsbegleitung und
+            Haushaltshilfe. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die
+            Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit
+            im Anerkennungsverfahren.
           </p>
           <p style={{ marginTop: 8 }}>
             Das Beste: Der Anspruch besteht <strong>ab Pflegegrad 1</strong> — also auch dann, wenn Sie
@@ -211,13 +214,13 @@ export default function EntlastungsbetragPage() {
             <span className="info-price-val">Pflegegrad 1–5</span>
           </div>
           <div className="info-price-row">
-            <span className="info-price-label">Ihr Eigenanteil bei Alltagsengel</span>
-            <span className="info-price-val">0 €</span>
+            <span className="info-price-label">Alltagsengel</span>
+            <span className="info-price-val">§45a-Anerkennung im Verfahren</span>
           </div>
           <p className="info-price-note">
             Nicht genutzte Beträge sammeln sich an und bleiben bis zum 30. Juni des Folgejahres
-            nutzbar — danach verfallen sie. Die Abrechnung mit Ihrer Pflegekasse übernehmen wir
-            komplett für Sie.
+            nutzbar — danach verfallen sie. Bis zur Anerkennung ist die Buchung bei Alltagsengel als
+            Selbstzahler möglich. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.
           </p>
         </section>
 
@@ -253,7 +256,9 @@ export default function EntlastungsbetragPage() {
             <li>
               <strong>Direktabrechnung per Abtretungserklärung:</strong> Sie unterschreiben
               einmalig eine Abtretungserklärung, danach rechnet der Anbieter direkt mit der
-              Pflegekasse ab — kein Papierkram, keine Vorleistung. Diesen Weg nutzt Alltagsengel.
+              Pflegekasse ab — kein Papierkram, keine Vorleistung. Beide Wege setzen einen nach
+              § 45a SGB XI anerkannten Anbieter voraus — Alltagsengel befindet sich derzeit im
+              Anerkennungsverfahren; bis dahin ist die Buchung als Selbstzahler möglich.
             </li>
           </ul>
           <p style={{ marginTop: 12 }}>
@@ -285,11 +290,11 @@ export default function EntlastungsbetragPage() {
         </section>
 
         <section className="info-card">
-          <h3>So nutzen Sie den Entlastungsbetrag — in 3 Schritten</h3>
+          <h3>So starten Sie mit Alltagsengel — in 3 Schritten</h3>
           <div className="info-steps">
             <div className="info-step">
               <div className="info-step-num">1</div>
-              <div className="info-step-text">Kostenlos bei Alltagsengel registrieren — kein Antrag bei der Kasse nötig</div>
+              <div className="info-step-text">Kostenlos bei Alltagsengel registrieren</div>
             </div>
             <div className="info-step">
               <div className="info-step-num">2</div>
@@ -297,7 +302,7 @@ export default function EntlastungsbetragPage() {
             </div>
             <div className="info-step">
               <div className="info-step-num">3</div>
-              <div className="info-step-text">Wir rechnen direkt mit Ihrer Pflegekasse ab — Sie zahlen 0 €</div>
+              <div className="info-step-text">Bis zur Anerkennung nach § 45a SGB XI als Selbstzahler buchen — zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos</div>
             </div>
           </div>
         </section>
@@ -350,8 +355,8 @@ export default function EntlastungsbetragPage() {
           <h3>Typische Beispiele aus der Praxis</h3>
           <p>
             <strong>Frau K., Pflegegrad 1, Frankfurt-Bornheim:</strong> Nutzt die 131 € für eine
-            wöchentliche Einkaufsbegleitung und Hilfe im Haushalt. Eigenanteil: 0 €, Aufwand: keiner —
-            die Rechnung geht direkt an die Pflegekasse.
+            wöchentliche Einkaufsbegleitung und Hilfe im Haushalt. Ihr anerkannter Anbieter rechnet
+            per Abtretungserklärung ab — die Rechnung geht direkt an die Pflegekasse.
           </p>
           <p style={{ marginTop: 8 }}>
             <strong>Familie M., Pflegegrad 3, Offenbach:</strong> Der Vater wird von der Tochter
@@ -412,8 +417,7 @@ export default function EntlastungsbetragPage() {
               nichts — er bleibt bei 131 €. Es lohnt sich aber, die übrigen Budgets neu zu
               prüfen, vor allem den Umwandlungsanspruch aus den gestiegenen Sachleistungen.</li>
             <li><strong>Wechsel der Pflegekasse:</strong> Der Anspruch läuft nahtlos weiter;
-              nur die Abtretungserklärung muss bei der neuen Kasse neu hinterlegt werden —
-              das übernehmen wir.</li>
+              nur eine Abtretungserklärung muss bei der neuen Kasse neu hinterlegt werden.</li>
           </ul>
         </section>
 
@@ -428,8 +432,9 @@ export default function EntlastungsbetragPage() {
             <li><strong>Bedarf notieren:</strong> Was würde am meisten entlasten — Einkauf,
               Haushalt, Begleitung zu Terminen, Gesellschaft? Das hilft bei der Wahl des
               passenden Engels.</li>
-            <li><strong>Abtretungserklärung unterschreiben</strong> — einmalig, digital in der
-              App. Ab dann läuft die Abrechnung automatisch.</li>
+            <li><strong>Finanzierungsweg klären</strong> — Alltagsengel befindet sich derzeit im
+              Anerkennungsverfahren nach § 45a SGB XI. Bis dahin ist die Buchung als Selbstzahler
+              möglich. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.</li>
             <li><strong>Ersten Termin buchen</strong> — viele Kunden starten mit einem
               Kennenlerntermin von zwei Stunden.</li>
           </ul>
@@ -451,7 +456,7 @@ export default function EntlastungsbetragPage() {
         </section>
 
         <div className="info-cta">
-          <Link href="/choose" className="btn-gold" style={{ width: '100%' }}>JETZT 131 € MONATLICH NUTZEN</Link>
+          <Link href="/choose" className="btn-gold" style={{ width: '100%' }}>JETZT ENGEL FINDEN</Link>
         </div>
 
         <section className="info-card">
@@ -465,8 +470,8 @@ export default function EntlastungsbetragPage() {
         </section>
 
         <section className="info-card">
-          <h3>Entlastungsbetrag in Ihrer Stadt nutzen</h3>
-          <p>Unsere Alltagsbegleiter rechnen den Entlastungsbetrag in diesen Städten direkt mit der Pflegekasse ab:</p>
+          <h3>Alltagsbegleitung in Ihrer Stadt</h3>
+          <p>Unsere Alltagsbegleiter sind in diesen Städten für Sie da:</p>
           <ul className="info-list">
             {cityLinks.map((c) => (
               <li key={c.slug}><Link href={`/alltagsbegleitung/${c.slug}`}>Alltagsbegleitung {c.name}</Link></li>

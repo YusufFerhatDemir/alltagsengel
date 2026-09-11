@@ -55,12 +55,12 @@ const faqs: FAQItem[] = [
   {
     category: 'Entlastungsbetrag (§ 45b SGB XI)',
     question: 'Wer hat Anspruch auf den Entlastungsbetrag?',
-    answer: 'Jede Person mit anerkanntem Pflegegrad 1, 2, 3, 4 oder 5 hat Anspruch auf den Entlastungsbetrag von 131 € pro Monat. Ein gesonderter Antrag ist in der Regel nicht nötig — der Anspruch besteht automatisch ab Feststellung des Pflegegrads. Die Abrechnung erfolgt über zugelassene Anbieter wie Alltagsengel.',
+    answer: 'Jede Person mit anerkanntem Pflegegrad 1, 2, 3, 4 oder 5 hat Anspruch auf den Entlastungsbetrag von 131 € pro Monat. Ein gesonderter Antrag ist in der Regel nicht nötig — der Anspruch besteht automatisch ab Feststellung des Pflegegrads. Eingesetzt werden kann er für nach § 45a SGB XI anerkannte Angebote — Alltagsengel befindet sich derzeit im Anerkennungsverfahren.',
   },
   {
     category: 'Entlastungsbetrag (§ 45b SGB XI)',
     question: 'Wie beantrage ich den Entlastungsbetrag?',
-    answer: 'Der Entlastungsbetrag muss nicht separat beantragt werden. Sobald ein Pflegegrad vorliegt, besteht der Anspruch. Sie nutzen einfach einen nach Landesrecht anerkannten Anbieter wie Alltagsengel und reichen die Rechnungen bei der Pflegekasse ein. Alltagsengel übernimmt die komplette Abrechnung für Sie.',
+    answer: 'Der Entlastungsbetrag muss nicht separat beantragt werden. Sobald ein Pflegegrad vorliegt, besteht der Anspruch. Sie nutzen einen nach Landesrecht anerkannten Anbieter und reichen die Rechnungen bei der Pflegekasse ein — oder der Anbieter rechnet per Abtretungserklärung direkt mit der Kasse ab. Alltagsengel befindet sich derzeit im Anerkennungsverfahren nach § 45a SGB XI; bis dahin ist die Buchung als Selbstzahler möglich.',
   },
   {
     category: 'Entlastungsbetrag (§ 45b SGB XI)',
@@ -119,24 +119,24 @@ const faqs: FAQItem[] = [
   {
     category: 'Pflegegrad',
     question: 'Brauche ich einen Pflegegrad, um Alltagsengel zu nutzen?',
-    answer: 'Nein. Alltagsengel kann auch ohne Pflegegrad genutzt werden — dann als Selbstzahler zum regulären Stundensatz von 32 €. Mit anerkanntem Pflegegrad übernimmt die Pflegekasse die Kosten jedoch über den Entlastungsbetrag (131 €/Monat), sodass für Sie keine Kosten entstehen.',
+    answer: 'Nein. Alltagsengel kann auch ohne Pflegegrad genutzt werden — dann als Selbstzahler zum regulären Stundensatz von 32 €. Pflegebedürftigen steht nach § 45b SGB XI grundsätzlich ein Entlastungsbetrag von 131 € monatlich zu. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.',
   },
 
   // ──── Alltagsbegleitung ────
   {
     category: 'Alltagsbegleitung',
     question: 'Was ist Alltagsbegleitung?',
-    answer: 'Alltagsbegleitung ist eine Unterstützungsleistung für pflegebedürftige Menschen und Senioren im Alltag. Zertifizierte Alltagsbegleiter (nach § 45a SGB XI) helfen bei Einkäufen, Arztbegleitung, Haushaltshilfe, Spaziergängen, Behördengängen und leisten Gesellschaft. Alltagsbegleitung ist keine medizinische Pflege, sondern eine Entlastung im täglichen Leben — finanziert über den Entlastungsbetrag der Pflegekasse.',
+    answer: 'Alltagsbegleitung ist eine Unterstützungsleistung für pflegebedürftige Menschen und Senioren im Alltag. Zertifizierte Alltagsbegleiter (nach § 45a SGB XI) helfen bei Einkäufen, Arztbegleitung, Haushaltshilfe, Spaziergängen, Behördengängen und leisten Gesellschaft. Alltagsbegleitung ist keine medizinische Pflege, sondern eine Entlastung im täglichen Leben — über den Entlastungsbetrag der Pflegekasse finanzierbar, wenn der Anbieter nach § 45a SGB XI anerkannt ist.',
   },
   {
     category: 'Alltagsbegleitung',
     question: 'Was kostet Alltagsbegleitung bei Alltagsengel?',
-    answer: 'Für Personen mit Pflegegrad ist Alltagsbegleitung über Alltagsengel ohne eigene Zuzahlung möglich. Die Kosten werden direkt über den Entlastungsbetrag (§ 45b, 131 €/Monat) mit der Pflegekasse abgerechnet. Der reguläre Stundensatz beträgt ab 32 €. Selbstzahler ohne Pflegegrad zahlen den Stundensatz privat.',
+    answer: 'Der reguläre Stundensatz beträgt ab 32 €. Pflegebedürftigen steht nach § 45b SGB XI grundsätzlich ein Entlastungsbetrag von 131 € monatlich zu. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.',
   },
   {
     category: 'Alltagsbegleitung',
     question: 'Was ist Alltagsengel?',
-    answer: 'Alltagsengel ist eine Plattform, die Senioren und Pflegebedürftige mit zertifizierten Alltagsbegleitern in ihrer Nähe verbindet. Wir bieten Einkaufsbegleitung, Arztbesuche, Haushaltshilfe, Gesellschaft und vieles mehr — finanziert über den Entlastungsbetrag der Pflegekasse. Aktuell sind wir in Frankfurt am Main und dem gesamten Rhein-Main-Gebiet verfügbar.',
+    answer: 'Alltagsengel ist eine Plattform, die Senioren und Pflegebedürftige mit zertifizierten Alltagsbegleitern in ihrer Nähe verbindet. Wir bieten Einkaufsbegleitung, Arztbesuche, Haushaltshilfe, Gesellschaft und vieles mehr. Die Anerkennung nach § 45a SGB XI läuft; bis dahin ist die Buchung als Selbstzahler möglich. Aktuell sind wir in Frankfurt am Main und dem gesamten Rhein-Main-Gebiet verfügbar.',
   },
   {
     category: 'Alltagsbegleitung',
@@ -151,7 +151,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Alltagsbegleitung',
     question: 'Wie buche ich einen Alltagsbegleiter?',
-    answer: 'Die Buchung ist einfach: 1. Registrieren Sie sich kostenlos in der App oder auf der Website. 2. Wählen Sie den gewünschten Service (Einkauf, Arztbegleitung, Haushaltshilfe etc.). 3. Wählen Sie Datum und Uhrzeit. 4. Ein passender, zertifizierter Engel wird Ihnen zugewiesen. Die Buchung dauert nur 2 Minuten und ist kostenlos.',
+    answer: 'Die Buchung ist einfach: 1. Registrieren Sie sich kostenlos in der App oder auf der Website. 2. Wählen Sie den gewünschten Service (Einkauf, Arztbegleitung, Haushaltshilfe etc.). 3. Wählen Sie Datum und Uhrzeit. 4. Ein passender, zertifizierter Engel wird Ihnen zugewiesen. Die Buchung dauert nur 2 Minuten.',
   },
   {
     category: 'Alltagsbegleitung',
@@ -180,12 +180,12 @@ const faqs: FAQItem[] = [
   {
     category: 'Kosten & Abrechnung',
     question: 'Was kostet Alltagsengel?',
-    answer: 'Für Personen mit Pflegegrad ist Alltagsengel in der Regel komplett kostenlos. Die Abrechnung erfolgt direkt über den Entlastungsbetrag (§ 45b SGB XI) — 131 € pro Monat von der Pflegekasse. Sie zahlen keinen Cent aus eigener Tasche. Selbstzahler ohne Pflegegrad zahlen den regulären Stundensatz ab 32 €.',
+    answer: 'Alltagsbegleitung bei Alltagsengel kostet ab 32 € pro Stunde. Pflegebedürftigen steht nach § 45b SGB XI grundsätzlich ein Entlastungsbetrag von 131 € monatlich zu. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.',
   },
   {
     category: 'Kosten & Abrechnung',
     question: 'Wie funktioniert die Abrechnung mit der Pflegekasse?',
-    answer: 'Alltagsengel übernimmt die komplette Abrechnung für Sie. Nach jedem Einsatz erstellen wir automatisch eine Rechnung, die direkt an Ihre Pflegekasse gesendet wird. Sie müssen sich um nichts kümmern — kein Papierkram, keine Vorkasse, keine Formulare.',
+    answer: 'Eine Abrechnung des Entlastungsbetrags direkt mit der Pflegekasse setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich; nach jedem Einsatz erstellen wir automatisch eine Rechnung. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.',
   },
 
   // ──── Für Alltagsbegleiter ────
@@ -241,7 +241,7 @@ export default function FAQPage() {
     '@type': 'Organization',
     name: 'Alltagsengel',
     url: 'https://alltagsengel.care',
-    description: 'Zertifizierte Alltagsbegleitung im Rhein-Main-Gebiet. Abrechnung über den Entlastungsbetrag §45b SGB XI.',
+    description: 'Zertifizierte Alltagsbegleitung im Rhein-Main-Gebiet. Anerkennung nach § 45a SGB XI läuft.',
     areaServed: {
       '@type': 'GeoCircle',
       geoMidpoint: { '@type': 'GeoCoordinates', latitude: 50.1109, longitude: 8.6821 },

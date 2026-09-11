@@ -119,7 +119,7 @@ export const POST = withTracking(async function POST(request: Request) {
             <tr><td style="padding:8px 0;vertical-align:top;width:32px;font-size:18px;">1️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Engel in der Nähe finden</strong><br/><span style="color:#555;font-size:13px;">Durchsuchen Sie zertifizierte Alltagsbegleiter in Ihrer Region. Alle Engel sind geprüft und qualifiziert.</span></td></tr>
             <tr><td style="padding:8px 0;vertical-align:top;font-size:18px;">2️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Termin buchen</strong><br/><span style="color:#555;font-size:13px;">Wählen Sie eine Leistung, Datum und Uhrzeit — die Buchung dauert nur 2 Minuten.</span></td></tr>
             <tr><td style="padding:8px 0;vertical-align:top;font-size:18px;">3️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Begleitung genießen</strong><br/><span style="color:#555;font-size:13px;">Ihr Engel kommt zur vereinbarten Zeit. Einfach zurücklehnen und die Unterstützung genießen.</span></td></tr>
-            <tr><td style="padding:8px 0;vertical-align:top;font-size:18px;">4️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Bequem abrechnen</strong><br/><span style="color:#555;font-size:13px;">Mit Pflegegrad wird die Leistung über den Entlastungsbetrag (§45b SGB XI) abgerechnet — bis zu 131€/Monat von der Pflegekasse.</span></td></tr>
+            <tr><td style="padding:8px 0;vertical-align:top;font-size:18px;">4️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Transparent abrechnen</strong><br/><span style="color:#555;font-size:13px;">Sie erhalten eine nachvollziehbare Rechnung. Für die Abrechnung über den Entlastungsbetrag (§45b SGB XI) läuft unsere Anerkennung nach §45a SGB XI — bis dahin rechnen wir privat ab.</span></td></tr>
           </table>
         </div>
 
@@ -137,8 +137,8 @@ export const POST = withTracking(async function POST(request: Request) {
         </div>
 
         <div style="background:#E8F5E9;border-radius:10px;padding:14px 18px;margin:16px 0;">
-          <strong style="color:#2D8F5E;">Kostenübernahme durch die Pflegekasse</strong><br/>
-          <span style="font-size:13px;color:#555;">Ab Pflegegrad 1 übernimmt Ihre Pflegekasse bis zu 131€/Monat für Entlastungsleistungen nach §45b SGB XI. Sie zahlen nichts aus eigener Tasche!</span>
+          <strong style="color:#2D8F5E;">Entlastungsbetrag: 131 € pro Monat</strong><br/>
+          <span style="font-size:13px;color:#555;">Ab Pflegegrad 1 steht Ihnen nach §45b SGB XI grundsätzlich ein Entlastungsbetrag von 131 € monatlich zu. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach §45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Zu Ihren Finanzierungswegen beraten wir Sie gern kostenlos.</span>
         </div>
 
         <div style="background:#F0EBE0;border-radius:10px;padding:14px 18px;margin:16px 0;">

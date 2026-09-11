@@ -45,7 +45,7 @@ export default function MarketAnalysisPage() {
           <strong>Eligible Activities:</strong> Companionship, household help, transportation, hobbies, social activities
         </BulletItem>
         <BulletItem icon="🔗">
-          <strong>Payment Method:</strong> Direktabrechnung (direct billing) with Pflegekassen -- families pay nothing out of pocket
+          <strong>Payment Method:</strong> Direktabrechnung (direct billing) with Pflegekassen once recognition under §45a SGB XI is granted (application pending) -- until then, self-pay
         </BulletItem>
       </Card>
 

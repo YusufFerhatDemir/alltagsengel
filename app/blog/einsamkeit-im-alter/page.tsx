@@ -5,7 +5,7 @@ import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
   title: 'Einsamkeit im Alter: So helfen Alltagsbegleiter',
-  description: 'Einsamkeit im Alter schadet der Gesundheit wie Rauchen. Erfahren Sie, wie Alltagsbegleiter helfen – über §45b oft ohne Zusatzkosten. Jetzt informieren.',
+  description: 'Einsamkeit im Alter schadet der Gesundheit wie Rauchen. Erfahren Sie, wie Alltagsbegleiter helfen und wie der Entlastungsbetrag (131 €/Monat) greift. Jetzt informieren.',
   keywords: 'Einsamkeit im Alter, Isolation, Seniorenhilfe, Alltagsbegleiter, Seniorenbetreuung',
   alternates: { canonical: 'https://alltagsengel.care/blog/einsamkeit-im-alter' },
   openGraph: {
@@ -22,7 +22,7 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Einsamkeit im Alter: So helfen Alltagsbegleiter gegen Isolation',
-  description: 'Einsamkeit im Alter schadet der Gesundheit wie Rauchen. Erfahren Sie, wie Alltagsbegleiter helfen – über §45b oft ohne Zusatzkosten. Jetzt informieren.',
+  description: 'Einsamkeit im Alter schadet der Gesundheit wie Rauchen. Erfahren Sie, wie Alltagsbegleiter helfen und wie der Entlastungsbetrag (131 €/Monat) greift. Jetzt informieren.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
   datePublished: '2026-04-01',
@@ -168,7 +168,7 @@ export default function EinsamkeitImAlterPage() {
             <strong>Über Pflegekasse (§45b):</strong> Bis zu 131€ monatlich – und Begleitungen zur Bekämpfung von Isolation sind genau das, wofür §45b gedacht ist!
           </p>
           <p>
-            Tipp: Sprechen Sie mit Ihrer Krankenkasse. Viele bezahlen regelmäßige Alltagsbegleitungen, um Einsamkeit zu bekämpfen und damit teurere Krankheitsausfälle zu vermeiden.
+            Wichtig: Der Entlastungsbetrag kann nur bei einem nach § 45a SGB XI anerkannten Anbieter eingesetzt werden — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Welche Leistungen Ihnen zustehen, klären Sie mit Ihrer Pflegekasse oder einem Pflegestützpunkt; zu Ihren Finanzierungswegen beraten auch wir Sie kostenlos.
           </p>
 
           <h2>Praktische Tipps gegen Einsamkeit</h2>
@@ -184,7 +184,7 @@ export default function EinsamkeitImAlterPage() {
           <p>
             <strong>„Das ist doch zu teuer!"</strong>
             <br />
-            Nein – mit §45b kostet es oft nichts extra. Und Depression oder Herzprobleme kosten das Vielfache.
+            Nicht unbedingt – bei einem anerkannten Anbieter kann der Entlastungsbetrag (§45b) die Kosten ganz oder teilweise decken. Und Depression oder Herzprobleme kosten das Vielfache.
           </p>
           <p>
             <strong>„Ich schäme mich, mit einem Fremden zusammen Zeit zu verbringen."</strong>

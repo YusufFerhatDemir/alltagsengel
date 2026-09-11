@@ -16,7 +16,7 @@ const log = logger.child('api:drip')
 // aber noch keine Buchung gemacht haben.
 //
 // Tag 1: Willkommen (wird schon bei Register gesendet)
-// Tag 3: "Wusstest du? 131€/Monat von der Pflegekasse"
+// Tag 3: Entlastungsbetrag erklären (131 €/Monat) — ohne Abrechnungsversprechen, §45a im Anerkennungsverfahren
 // Tag 7: "Dein erster Engel wartet auf dich"
 // Tag 14: "Letzte Erinnerung + Referral-Bonus"
 //
@@ -69,8 +69,9 @@ const templates = {
         Das ist der sogenannte <strong>Entlastungsbetrag nach §45b SGB XI</strong> — und viele Menschen nutzen ihn nicht.
       </p>
       <p style="color:#444;line-height:1.6;font-size:15px">
-        Mit Alltagsengel können Sie dieses Geld ganz einfach einsetzen: für Einkaufsbegleitung,
-        Arztbesuche, Gesellschaft oder Haushaltshilfe. <strong>Sie zahlen nichts aus eigener Tasche.</strong>
+        Der Betrag ist für Unterstützung im Alltag gedacht — zum Beispiel Einkaufsbegleitung,
+        Arztbesuche, Gesellschaft oder Haushaltshilfe. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach §45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren.
+        Zu Ihren Finanzierungswegen beraten wir Sie gern kostenlos.
       </p>
       <div style="text-align:center;margin:28px 0">
         <a href="https://alltagsengel.care/kunde/home" style="display:inline-block;background:#C9963C;color:#1A1612;padding:14px 36px;border-radius:12px;font-weight:700;text-decoration:none;font-size:16px">
@@ -90,7 +91,7 @@ const templates = {
         Aber wir haben bemerkt, dass Sie noch keine Buchung gemacht haben.
       </p>
       <p style="color:#444;line-height:1.6;font-size:15px">
-        In Ihrer Region gibt es bereits <strong>zertifizierte Alltagsbegleiter</strong>, die sofort für Sie da sein können.
+        In Ihrer Region gibt es bereits <strong>geschulte und geprüfte Alltagsbegleiter</strong>, die für Sie da sein können.
         Eine Buchung dauert nur 2 Minuten:
       </p>
       <ol style="color:#444;line-height:1.8;font-size:15px">
@@ -99,7 +100,8 @@ const templates = {
         <li>Engel wird automatisch zugewiesen</li>
       </ol>
       <p style="color:#444;line-height:1.6;font-size:15px">
-        <strong>Die Pflegekasse übernimmt die Kosten</strong> — Sie zahlen 0 €.
+        Die Alltagsbegleitung ist ab 32 € pro Stunde buchbar. Die Anerkennung nach §45a SGB XI
+        für die Abrechnung über den Entlastungsbetrag läuft — bis dahin rechnen wir privat ab.
       </p>
       <div style="text-align:center;margin:28px 0">
         <a href="https://alltagsengel.care/kunde/buchen" style="display:inline-block;background:#C9963C;color:#1A1612;padding:14px 36px;border-radius:12px;font-weight:700;text-decoration:none;font-size:16px">
@@ -111,13 +113,14 @@ const templates = {
   },
 
   day14: {
-    subject: 'Letzte Erinnerung: 131€/Monat verfallen sonst, ${firstName}',
+    subject: 'Gut zu wissen: Ihr Entlastungsbetrag von 131 €, ${firstName}',
     html: (firstName: string, referralCode: string) => wrapEmail(`
       <h2 style="color:#1A1612;font-size:22px;margin:0 0 16px">Hallo ${firstName},</h2>
       <p style="color:#444;line-height:1.6;font-size:15px">
-        Ihr Entlastungsbetrag von <strong>131 € pro Monat</strong> verfällt, wenn Sie ihn nicht nutzen.
-        Nicht genutztes Guthaben kann teilweise ins nächste Halbjahr übertragen werden —
-        aber warum warten?
+        Ihr Entlastungsbetrag von <strong>131 € pro Monat</strong> sammelt sich an, wenn Sie ihn nicht nutzen.
+        Nicht verbrauchte Beträge eines Jahres können noch bis zum 30. Juni des Folgejahres eingesetzt
+        werden — danach verfallen sie. Für die Abrechnung über den Entlastungsbetrag läuft unsere
+        Anerkennung nach §45a SGB XI; wir beraten Sie gern kostenlos zu Ihren Finanzierungswegen.
       </p>
       <div style="background:#F7F2EA;border-radius:12px;padding:20px;margin:20px 0;border-left:4px solid #C9963C">
         <p style="margin:0;color:#1A1612;font-size:15px;font-weight:600">

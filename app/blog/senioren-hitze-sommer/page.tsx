@@ -6,7 +6,7 @@ import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
   title: 'Senioren & Hitze: 7 Tipps für den Sommer',
-  description: 'Hitze ist für Senioren gefährlich: 7 praktische Tipps gegen Dehydration und Hitzschlag. Plus: Alltagsbegleitung für 131 €/Monat über die Pflegekasse sichern.',
+  description: 'Hitze ist für Senioren gefährlich: 7 praktische Tipps gegen Dehydration und Hitzschlag. Plus: wie Alltagsbegleitung im Sommer entlastet.',
   keywords: ['Senioren Hitze', 'Senioren Hitze Tipps', 'Pflege im Sommer', 'Hitze ältere Menschen', 'Dehydration Senioren', 'Hitzschlag Vorbeugung', 'Alltagsbegleitung Sommer'],
   alternates: { canonical: 'https://alltagsengel.care/blog/senioren-hitze-sommer' },
   openGraph: {
@@ -22,7 +22,7 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Senioren & Hitze: 7 Tipps, wie Sie Ihre Angehörigen im Sommer schützen',
-  description: 'Hitze ist für Senioren gefährlich: 7 praktische Tipps gegen Dehydration und Hitzschlag. Plus: Alltagsbegleitung für 131 €/Monat über die Pflegekasse sichern.',
+  description: 'Hitze ist für Senioren gefährlich: 7 praktische Tipps gegen Dehydration und Hitzschlag. Plus: wie Alltagsbegleitung im Sommer entlastet.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
   datePublished: '2026-07-02',
@@ -44,7 +44,7 @@ const faqs = [
   },
   {
     q: 'Kann ich die Betreuung im Sommer über die Pflegekasse finanzieren?',
-    a: 'Ja. Der Entlastungsbetrag von 131 €/Monat steht ab Pflegegrad 1 nach §45b SGB XI zur Verfügung und kann für Alltagsbegleitung genutzt werden. Nicht genutzte Beträge verfallen erst am 30. Juni des Folgejahres — der Sommer ist also ein guter Zeitpunkt, das Budget sinnvoll einzusetzen.',
+    a: 'Der Entlastungsbetrag von 131 €/Monat steht ab Pflegegrad 1 nach §45b SGB XI zur Verfügung und kann für Alltagsbegleitung bei nach § 45a SGB XI anerkannten Anbietern genutzt werden. Nicht genutzte Beträge verfallen erst am 30. Juni des Folgejahres. Alltagsengel befindet sich derzeit im Anerkennungsverfahren; bis dahin ist die Buchung als Selbstzahler möglich.',
   },
 ]
 
@@ -173,10 +173,11 @@ export default function SeniorenHitzeSommerPage() {
             <li>Bei Bedarf Kontakt zu Angehörigen oder Hausarzt herstellen</li>
           </ul>
           <p>
-            Das Beste: Ab <Link href="/blog/pflegegrad-1-leistungen">Pflegegrad 1</Link> übernimmt die Pflegekasse
-            die Kosten über den <Link href="/blog/entlastungsbetrag-45b">Entlastungsbetrag nach §45b SGB XI</Link> —
-            <strong> 131 € pro Monat</strong>. Die komplette Abrechnung übernimmt Alltagsengel für Sie, ganz
-            ohne Papierkram.
+            Ab <Link href="/blog/pflegegrad-1-leistungen">Pflegegrad 1</Link> steht der
+            <Link href="/blog/entlastungsbetrag-45b"> Entlastungsbetrag nach §45b SGB XI</Link> zur Verfügung —
+            <strong> 131 € pro Monat</strong>. Ob der Entlastungsbetrag für ein konkretes Angebot eingesetzt werden
+            kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit
+            im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.
           </p>
 
           <h2>Häufige Fragen zu Senioren und Hitze</h2>
@@ -193,7 +194,7 @@ export default function SeniorenHitzeSommerPage() {
             <p>
               Damit Ihre Angehörigen auch bei Hitze gut versorgt sind: Registrieren Sie sich kostenlos bei
               Alltagsengel und finden Sie zertifizierte Alltagsbegleiter:innen in Frankfurt &amp; Rhein-Main.
-              Abrechnung über den Entlastungsbetrag, keine Vermittlungsgebühr.
+              §45a-Anerkennung im Verfahren — bis dahin ist die Buchung als Selbstzahler möglich. Keine Vermittlungsgebühr.
             </p>
             <Link href="/auth/register" className="cta-button">
               Kostenlos registrieren →

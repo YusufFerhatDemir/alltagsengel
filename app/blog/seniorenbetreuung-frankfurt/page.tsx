@@ -82,7 +82,8 @@ export default function SeniorenbetreuungFrankfurtPage() {
             <li>Unterstützung bei Demenz und kognitiven Einschränkungen</li>
           </ul>
           <p>
-            Der große Vorteil: Alltagsbegleitung ist <strong>über den Entlastungsbetrag von 131 €/Monat</strong> finanzierbar
+            Der große Vorteil: Alltagsbegleitung bei einem nach § 45a SGB XI anerkannten Anbieter ist
+            <strong> über den Entlastungsbetrag von 131 €/Monat</strong> finanzierbar
             und erfordert keine ärztliche Verordnung — lediglich einen anerkannten Pflegegrad.
           </p>
 
@@ -241,7 +242,7 @@ export default function SeniorenbetreuungFrankfurtPage() {
             <li><strong>Über 150 zertifizierte Begleiter</strong> im Raum Frankfurt</li>
             <li><strong>Schnelle Vermittlung:</strong> Oft innerhalb von 48 Stunden</li>
             <li><strong>Keine Vermittlungsgebühr:</strong> Registrierung und Vermittlung sind kostenlos</li>
-            <li><strong>Kassenabrechnung:</strong> Alle Begleiter sind § 45a-zertifiziert und über den Entlastungsbetrag abrechenbar</li>
+            <li><strong>§45a-Anerkennung im Verfahren:</strong> Bis dahin ist die Buchung als Selbstzahler möglich</li>
             <li><strong>Flexible Buchung:</strong> Stundenweise, wöchentlich oder nach Bedarf</li>
             <li><strong>Persönliche Beratung:</strong> Unser Team hilft bei Fragen zu Pflegegrad und Finanzierung</li>
           </ul>
@@ -260,7 +261,9 @@ export default function SeniorenbetreuungFrankfurtPage() {
             Nein. Sie können Seniorenbetreuung auch ohne Pflegegrad privat buchen. Allerdings
             entfällt dann die Kostenübernahme durch die Pflegekasse. Wir empfehlen,
             einen <Link href="/blog/pflegegrad-beantragen">Pflegegrad zu beantragen</Link>,
-            um den Entlastungsbetrag von 131 €/Monat zu nutzen.
+            um den Entlastungsbetrag von 131 €/Monat zu nutzen. Ob der Entlastungsbetrag für ein konkretes
+            Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus —
+            Alltagsengel befindet sich derzeit im Anerkennungsverfahren.
           </p>
 
           <h3>Gibt es Seniorenbetreuung auch am Wochenende?</h3>
@@ -281,20 +284,23 @@ export default function SeniorenbetreuungFrankfurtPage() {
             Die Seniorenbetreuung in Frankfurt ist gut aufgestellt — von ehrenamtlichen
             Besuchsdiensten über ambulante Pflegedienste bis hin zu digitalen Plattformen
             wie Alltagsengel. Für die meisten Senioren mit Pflegegrad ist die
-            <strong> Alltagsbegleitung über den Entlastungsbetrag</strong> die ideale Lösung:
-            professionell, flexibel und vollständig von der Pflegekasse finanziert.
+            <strong> Alltagsbegleitung</strong> die ideale Lösung: professionell, flexibel und —
+            bei einem nach § 45a SGB XI anerkannten Anbieter — über den Entlastungsbetrag finanzierbar.
           </p>
           <p>
             Wichtig ist, frühzeitig zu handeln und den <Link href="/blog/entlastungsbetrag-nutzen">Entlastungsbetrag</Link> nicht
             verfallen zu lassen. Alltagsengel macht den Einstieg so einfach wie möglich —
             mit kostenloser Registrierung, transparenten Preisen und persönlicher Beratung.
+            Alltagsengel befindet sich derzeit im Anerkennungsverfahren nach § 45a SGB XI; bis dahin
+            ist die Buchung als Selbstzahler möglich.
           </p>
 
           <div className="blog-cta">
             <h3>Seniorenbetreuung in Frankfurt finden</h3>
             <p>
               Entdecken Sie zertifizierte Alltagsbegleiter in Ihrem Frankfurter Stadtteil.
-              Kostenlose Registrierung, transparente Preise und Kassenabrechnung.
+              Kostenlose Registrierung und transparente Preise. §45a-Anerkennung im Verfahren —
+              bis dahin ist die Buchung als Selbstzahler möglich.
             </p>
             <Link href="/alltagsbegleitung" className="cta-button">
               Angebote in Frankfurt entdecken →
