@@ -7,7 +7,7 @@ import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
 import { DEFAULT_ORG_ID } from '@/lib/organizations/types'
 import { regionLabel, istRegion } from '@/lib/warteliste/katalog'
-import { entwurfAnlegenOhneAbbruch, vornameAus } from '@/lib/email/entwuerfe'
+import { sendeAutomatischeBestaetigung, vornameAus } from '@/lib/email/auto-versand'
 import {
   BEWERBUNG_MAX, type BewerbungDaten,
   istQualifikation, istFuehrerschein, istSprache,
@@ -152,21 +152,20 @@ export const POST = withTracking(async function POST(request: Request) {
       return NextResponse.json({ error: 'Speicherfehler' }, { status: 500 })
     }
 
-    // ── Bestaetigung vorbereiten, NICHT senden ──────────────────────
-    // Wie bei der Warteliste: der Eingang erzeugt einen ENTWURF, den die
-    // Verwaltung unter /admin/applications mit einem Klick sendet.
+    // ── Bestaetigung SOFORT senden ──────────────────────────────────
+    // Transaktional, idempotent ueber die Zustellspur, protokolliert.
     //
     // Nur mit E-Mail — und das ist hier die Ausnahme, nicht die Regel: das
     // frueherer Kurzformular hat keine Adresse abgefragt, alle 34
     // Altbestaende tragen keine. Ueber dieses Formular kommt sie jetzt
     // herein, und damit wird die Bestaetigung ueberhaupt erst moeglich.
-    if (email) {
-      await entwurfAnlegenOhneAbbruch({
+    if (email && angelegt?.id) {
+      await sendeAutomatischeBestaetigung({
         vorlageId: 'bewerber_eingang',
         empfaengerEmail: email,
         empfaengerName: name,
-        bezugTabelle: 'lead_inquiries',
-        bezugId: angelegt?.id ?? null,
+        vorgangArt: 'bewerbung-bestaetigung',
+        vorgangRef: angelegt.id,
         werte: { vorname: vornameAus(name) },
       })
     }
