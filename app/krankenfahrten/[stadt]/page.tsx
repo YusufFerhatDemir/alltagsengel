@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { stadtGeoMeta } from '@/lib/seo/stadt-geo'
 import LeadForm from '@/components/LeadForm'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
@@ -295,6 +296,8 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
   if (!city) return {}
 
   return {
+    // Stadt-Geo statt der vom Layout geerbten Frankfurt-Werte (lib/seo/stadt-geo.ts)
+    other: stadtGeoMeta(stadt),
     title: `Krankenfahrt ${city.name} buchen`,
     description: `Krankenfahrt ${city.name}: Arzt-, Dialyse- & Klinikfahrten. Mit Verordnung zahlt die Kasse (§60 SGB V). Jetzt pünktliche Fahrt buchen!`,
     keywords: [

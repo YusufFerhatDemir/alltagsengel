@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 }
 
 const SERVICES = [
+  { href: '/leistungen', label: 'Alle Leistungen im Überblick' },
   { href: '/alltagsbegleitung', label: 'Alltagsbegleitung' },
   { href: '/hygienebox', label: 'Kostenlose Pflegebox (Pflegehilfsmittel)' },
   { href: '/pflegebox', label: 'Pflegebox bestellen' },

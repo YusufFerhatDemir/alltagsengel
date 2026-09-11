@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { stadtGeoMeta } from '@/lib/seo/stadt-geo'
 import EngelBewerbungForm from '@/components/EngelBewerbungForm'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
@@ -184,6 +185,8 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
   if (!city) return {}
 
   return {
+    // Stadt-Geo statt der vom Layout geerbten Frankfurt-Werte (lib/seo/stadt-geo.ts)
+    other: stadtGeoMeta(stadt),
     title: `Alltagsbegleiter Job ${city.name} — 20 €/Std. Nebenjob & Minijob`,
     description: `Alltagsbegleiter Job in ${city.name}: 20 €/Stunde, flexible Zeiten, keine Pflegeausbildung nötig. Stellenangebot als Betreuungskraft — Nebenjob oder Minijob. Jetzt bewerben!`,
     keywords: [

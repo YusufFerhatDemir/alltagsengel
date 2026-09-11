@@ -7,12 +7,12 @@ import SpeakableSchema from '@/components/SpeakableSchema'
 
 export const metadata: Metadata = {
   title: 'Alltagsbegleitung — Frankfurt & Rhein-Main | Entlastungsbetrag',
-  description: 'Was ist Alltagsbegleitung? Zertifizierte Begleiter nach §45a SGB XI in Frankfurt & Rhein-Main — 131€/Monat über den Entlastungsbetrag (§45b). Definition, Kosten, Ablauf & Kostenübernahme erklärt.',
+  description: 'Was ist Alltagsbegleitung? Geschulte Begleiter in Frankfurt & Rhein-Main, Entlastungsbetrag 131 €/Monat (§45b) — Definition, Kosten, Ablauf & Finanzierung erklärt.',
   keywords: ['Alltagsbegleitung', 'Alltagsbegleitung Frankfurt', 'Alltagsbegleiter finden', 'Alltagsbegleitung Senioren', 'Alltagsbegleitung buchen', 'Entlastungsbetrag', '§45b SGB XI', 'Alltagsbegleiter', 'Pflegegrad', 'Haushaltshilfe', '131 Euro Pflegekasse', 'Was ist Alltagsbegleitung'],
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
-    title: 'Alltagsbegleitung — 131€/Monat von der Pflegekasse',
-    description: 'Professionelle Alltagsbegleitung in Frankfurt & Rhein-Main. Abrechnung direkt über den Entlastungsbetrag §45b. Versichert und zertifiziert.',
+    title: 'Alltagsbegleitung Frankfurt & Rhein-Main',
+    description: 'Professionelle Alltagsbegleitung in Frankfurt & Rhein-Main. Versichert und geprüft. Anerkennung nach §45a SGB XI im Verfahren.',
     url: 'https://alltagsengel.care/alltagsbegleitung',
     siteName: 'Alltagsengel',
     locale: 'de_DE',
@@ -26,11 +26,11 @@ export const metadata: Metadata = {
 const faqs: { frage: string; antwort: string }[] = [
   {
     frage: 'Was kostet Alltagsbegleitung?',
-    antwort: 'Alltagsbegleitung kostet ab 32 € pro Stunde. Mit einem anerkannten Pflegegrad stehen Ihnen über den Entlastungsbetrag (§45b SGB XI) 131 € monatlich zu, die direkt mit der Pflegekasse abgerechnet werden — für Sie entsteht in diesem Rahmen kein Eigenanteil.',
+    antwort: 'Alltagsbegleitung kostet ab 32 € pro Stunde. Mit einem anerkannten Pflegegrad stehen Ihnen über den Entlastungsbetrag (§45b SGB XI) 131 € monatlich zu. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach §45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren.',
   },
   {
     frage: 'Wer bezahlt die Alltagsbegleitung?',
-    antwort: 'Die Alltagsbegleitung wird über den Entlastungsbetrag nach §45b SGB XI von der Pflegekasse bezahlt. Jede pflegebedürftige Person mit Pflegegrad 1 bis 5 hat Anspruch auf 131 € pro Monat. Wir rechnen direkt mit Ihrer Pflegekasse ab — Sie müssen nicht in Vorleistung gehen.',
+    antwort: 'Jede pflegebedürftige Person mit Pflegegrad 1 bis 5 hat nach §45b SGB XI Anspruch auf einen Entlastungsbetrag von 131 € pro Monat. Er kann für anerkannte Angebote zur Unterstützung im Alltag eingesetzt werden; die Anerkennung nach §45a SGB XI setzt der Anbieter voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.',
   },
   {
     frage: 'Was macht ein Alltagsbegleiter?',
@@ -42,7 +42,7 @@ const faqs: { frage: string; antwort: string }[] = [
   },
   {
     frage: 'Wie finde ich einen Alltagsbegleiter?',
-    antwort: 'Über Alltagsengel finden Sie einen zertifizierten Alltagsbegleiter in Ihrer Nähe. Registrieren Sie sich kostenlos, geben Sie Ihren Pflegegrad an und wählen Sie einen geprüften und versicherten Engel aus. Die Terminbuchung und die Abrechnung mit der Pflegekasse übernehmen wir für Sie.',
+    antwort: 'Über Alltagsengel finden Sie einen zertifizierten Alltagsbegleiter in Ihrer Nähe. Registrieren Sie sich kostenlos, geben Sie Ihren Pflegegrad an und wählen Sie einen geprüften und versicherten Engel aus. Die Terminbuchung übernehmen wir für Sie.',
   },
   {
     frage: 'Was ist der Entlastungsbetrag?',
@@ -50,7 +50,7 @@ const faqs: { frage: string; antwort: string }[] = [
   },
   {
     frage: 'Bekomme ich Alltagsbegleitung auch mit Pflegegrad 1?',
-    antwort: 'Ja. Der Entlastungsbetrag von 131 € monatlich steht bereits ab Pflegegrad 1 zur Verfügung. Damit können Sie Alltagsbegleitung ohne eigene Zuzahlung nutzen. Auch ohne Pflegegrad ist eine Buchung als Selbstzahler möglich.',
+    antwort: 'Ja. Der Entlastungsbetrag von 131 € monatlich steht bereits ab Pflegegrad 1 zur Verfügung. Sein Einsatz für unser Angebot setzt die Anerkennung nach §45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Eine Buchung als Selbstzahler ist jederzeit möglich, auch ohne Pflegegrad.',
   },
   {
     frage: 'Verfällt der Entlastungsbetrag, wenn ich ihn nicht nutze?',
@@ -72,7 +72,7 @@ const jsonLd = {
     {
       '@type': 'Service',
       name: 'Alltagsbegleitung',
-      description: 'Zertifizierte Alltagsbegleitung nach §45a SGB XI in Frankfurt und dem Rhein-Main-Gebiet. Haushaltshilfe, Arztbegleitung, Einkaufshilfe und psychosoziale Betreuung — abrechenbar über den Entlastungsbetrag §45b SGB XI.',
+      description: 'Alltagsbegleitung in Frankfurt und dem Rhein-Main-Gebiet: Haushaltshilfe, Arztbegleitung, Einkaufshilfe und psychosoziale Betreuung. Anerkennung als Angebot zur Unterstützung im Alltag nach §45a SGB XI: Alltagsengel befindet sich derzeit im Anerkennungsverfahren.',
       image: 'https://alltagsengel.care/og-image.png',
       provider: { '@id': 'https://alltagsengel.care/#localbusiness' },
       areaServed: [
@@ -113,13 +113,13 @@ export default function AlltagsbegleitungPage() {
       <SpeakableSchema url="/alltagsbegleitung" />
       <HowToSchema
         name="Alltagsbegleitung über Alltagsengel buchen"
-        description="So buchen Sie eine zertifizierte Alltagsbegleitung über den Entlastungsbetrag (§45b SGB XI, 131€/Monat) bei Alltagsengel in Frankfurt & Rhein-Main."
+        description="So buchen Sie eine Alltagsbegleitung bei Alltagsengel in Frankfurt & Rhein-Main."
         totalTime="PT5M"
         steps={[
           { name: 'Kostenlos registrieren', text: 'Erstellen Sie ein kostenloses Konto bei Alltagsengel — in der App oder auf alltagsengel.care.', url: '/auth/register' },
           { name: 'Pflegegrad angeben', text: 'Geben Sie Ihren Pflegegrad (1–5) an. Mit Pflegegrad stehen Ihnen 131€/Monat Entlastungsbetrag zu.' },
           { name: 'Engel in Ihrer Nähe finden', text: 'Wählen Sie einen zertifizierten Alltagsbegleiter in Ihrer Nähe aus. Alle Engel sind versichert und geprüft.' },
-          { name: 'Termin buchen', text: 'Buchen Sie einen Termin — die Abrechnung erfolgt direkt über den Entlastungsbetrag §45b mit Ihrer Pflegekasse.' },
+          { name: 'Termin buchen', text: 'Buchen Sie einen Termin in der App. Bis zur Anerkennung nach §45a SGB XI (im Verfahren) erfolgt die Abrechnung privat.' },
         ]}
       />
       <div className="legal-header">
@@ -129,8 +129,8 @@ export default function AlltagsbegleitungPage() {
       <div className="info-body">
         <div className="info-hero">
           <div className="info-hero-icon">💛</div>
-          <h2 className="info-hero-title">Alltagsbegleitung nach § 45a SGB XI</h2>
-          <p className="info-hero-sub">Zertifizierte Begleiter für Ihren Alltag — versichert und über den Entlastungsbetrag abrechenbar</p>
+          <h2 className="info-hero-title">Alltagsbegleitung im Alltag zu Hause</h2>
+          <p className="info-hero-sub">Geschulte Begleiter für Ihren Alltag — versichert und geprüft. Anerkennung nach § 45a SGB XI im Verfahren.</p>
         </div>
 
         <section className="info-card">
@@ -151,11 +151,10 @@ export default function AlltagsbegleitungPage() {
             entsprechend geschult, geprüft und über unsere Plattform haftpflichtversichert.
           </p>
           <p style={{ marginTop: 12 }}>
-            Der große Vorteil: Für Menschen mit einem anerkannten Pflegegrad wird die Alltagsbegleitung
-            über den <strong>Entlastungsbetrag nach §45b SGB XI</strong> finanziert. Das sind
-            <strong> 131 € pro Monat</strong>, die die Pflegekasse zweckgebunden bereitstellt. In diesem
-            Rahmen entsteht für Sie kein Eigenanteil — die Betreuung ist also faktisch kostenlos, solange
-            Sie innerhalb des monatlichen Budgets bleiben.
+            Für Menschen mit einem anerkannten Pflegegrad stellt die Pflegekasse den
+            <strong>Entlastungsbetrag nach §45b SGB XI</strong> bereit — <strong>131 € pro Monat</strong>,
+            zweckgebunden für anerkannte Angebote. Ob er für ein konkretes Angebot eingesetzt werden kann,
+            setzt die Anerkennung des Anbieters nach §45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren.
           </p>
         </section>
 
@@ -209,9 +208,9 @@ export default function AlltagsbegleitungPage() {
             <span className="info-price-val">inklusive</span>
           </div>
           <p className="info-price-note">
-            Mit dem Entlastungsbetrag (§ 45b SGB XI) stehen Ihnen 131 € monatlich zu, die direkt
-            mit der Pflegekasse abgerechnet werden. Nicht genutzte Beträge verfallen am 30. Juni
-            des Folgejahres.
+            Mit dem Entlastungsbetrag (§ 45b SGB XI) stehen Ihnen 131 € monatlich zu. Sein Einsatz
+            für unser Angebot setzt die Anerkennung nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren.
+            Nicht genutzte Beträge verfallen am 30. Juni des Folgejahres.
           </p>
         </section>
 
@@ -219,8 +218,8 @@ export default function AlltagsbegleitungPage() {
           <h3>Wer hat Anspruch?</h3>
           <p>
             Jede Person mit anerkanntem Pflegegrad (1–5) hat Anspruch auf den Entlastungsbetrag
-            von 131 € monatlich. Damit können Sie Alltagsbegleitung über Alltagsengel buchen —
-            ohne eigene Zuzahlung. Auch mit dem niedrigsten Pflegegrad 1, bei dem viele andere
+            von 131 € monatlich. Für Alltagsengel gilt: Die Anerkennung nach § 45a SGB XI läuft noch;
+            bis dahin buchen Sie als Selbstzahler. Auch mit dem niedrigsten Pflegegrad 1, bei dem viele andere
             Leistungen der Pflegeversicherung noch nicht greifen, steht Ihnen der Entlastungsbetrag
             bereits in voller Höhe zu. Wer noch keinen Pflegegrad hat, kann die Alltagsbegleitung
             als Selbstzahler nutzen — und wir unterstützen Sie gerne bei der Antragstellung.
@@ -291,7 +290,7 @@ export default function AlltagsbegleitungPage() {
               Spielenachmittag oder gemeinsames Gedächtnistraining — soziale Teilhabe ist ein
               Kernbestandteil der Alltagsbegleitung.</li>
             <li><strong>Dokumentation & Abrechnung:</strong> Die geleisteten Stunden werden in der
-              App erfasst und automatisch über den Entlastungsbetrag mit der Pflegekasse abgerechnet.</li>
+              App erfasst und nachvollziehbar abgerechnet.</li>
           </ul>
           <p style={{ marginTop: 12 }}>
             Sie bestimmen Rhythmus und Umfang selbst: Manche Menschen buchen eine feste wöchentliche
@@ -312,8 +311,8 @@ export default function AlltagsbegleitungPage() {
           <p style={{ marginTop: 12 }}>
             Wichtig sind zwei Regeln: Erstens wird der Entlastungsbetrag <strong>nicht bar ausgezahlt</strong>,
             sondern im Wege der Kostenerstattung bzw. Direktabrechnung mit einem anerkannten Anbieter
-            verrechnet. Bei Alltagsengel übernehmen wir diese Abrechnung vollständig für Sie — Sie müssen
-            weder in Vorleistung gehen noch Belege einreichen. Zweitens wird ein nicht ausgeschöpfter Betrag
+            verrechnet. Diese Direktabrechnung setzt die Anerkennung nach §45a SGB XI voraus —
+            Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Zweitens wird ein nicht ausgeschöpfter Betrag
             <strong> angespart</strong>: Guthaben aus dem laufenden Kalenderjahr bleibt noch bis zum
             <strong> 30. Juni des Folgejahres</strong> nutzbar und verfällt erst danach.
           </p>

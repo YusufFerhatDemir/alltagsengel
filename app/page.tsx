@@ -10,11 +10,11 @@ import GoogleReviews from '@/components/GoogleReviews'
 const FAQS = [
   {
     q: 'Was ist Alltagsbegleitung?',
-    a: 'Zertifizierte Alltagsbegleiter unterstützen Senioren und pflegebedürftige Menschen im Alltag — Einkaufshilfe, Arztbegleitung, Spaziergänge, Haushaltshilfe und psychosoziale Betreuung. Alles nach §45a SGB XI.',
+    a: 'Zertifizierte Alltagsbegleiter unterstützen Senioren und pflegebedürftige Menschen im Alltag — Einkaufshilfe, Arztbegleitung, Spaziergänge, Haushaltshilfe und psychosoziale Betreuung. Als Entlastungsangebot nach §45a SGB XI befindet sich Alltagsengel derzeit im Anerkennungsverfahren.',
   },
   {
     q: 'Was kostet mich die Alltagsbegleitung?',
-    a: 'In der Regel nichts. Ab Pflegegrad 1 steht Ihnen der Entlastungsbetrag nach §45b SGB XI zu — 131 € pro Monat (1.572 € pro Jahr). Die Kosten werden direkt mit der Pflegekasse abgerechnet. Ihr Eigenanteil: 0 €.',
+    a: 'Die Alltagsbegleitung kostet ab 32 € pro Stunde. Ab Pflegegrad 1 steht Pflegebedürftigen nach §45b SGB XI grundsätzlich ein Entlastungsbetrag von 131 € pro Monat (1.572 € pro Jahr) zur Verfügung. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach §45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.',
   },
   {
     q: 'Was kostet mich die Pflege-Box?',
@@ -89,8 +89,8 @@ const jsonLdServices = [
     '@context': 'https://schema.org',
     '@type': 'Service',
     '@id': 'https://alltagsengel.care/#service-alltagsbegleitung',
-    name: 'Alltagsbegleitung (nach §45a SGB XI)',
-    description: 'Zertifizierte Alltagsbegleitung für Senioren und Pflegebedürftige in Frankfurt und dem Rhein-Main-Gebiet. Einkaufshilfe, Arztbegleitung, Haushaltshilfe, psychosoziale Betreuung — abrechenbar über den Entlastungsbetrag (131 €/Monat nach §45b SGB XI).',
+    name: 'Alltagsbegleitung (Entlastungsangebot, §45a SGB XI im Anerkennungsverfahren)',
+    description: 'Zertifizierte Alltagsbegleitung für Senioren und Pflegebedürftige in Frankfurt und dem Rhein-Main-Gebiet. Einkaufshilfe, Arztbegleitung, Haushaltshilfe, psychosoziale Betreuung. Pflegebedürftigen steht nach §45b SGB XI grundsätzlich ein Entlastungsbetrag von 131 €/Monat zu; seine Nutzung setzt die Anerkennung des Anbieters nach §45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren.',
     image: 'https://alltagsengel.care/og-image.png',
     provider: { '@id': 'https://alltagsengel.care/#organization' },
     serviceType: 'Alltagsbegleitung / Entlastungsangebot',
@@ -103,7 +103,7 @@ const jsonLdServices = [
       price: '32.00',
       priceCurrency: 'EUR',
       priceSpecification: { '@type': 'UnitPriceSpecification', price: '32.00', priceCurrency: 'EUR', unitText: 'Stunde' },
-      description: '131 €/Monat über Entlastungsbetrag §45b SGB XI abrechenbar — 0 € Eigenanteil bei Pflegegrad.',
+      description: 'Stundensatz 32 €. Einsatz des Entlastungsbetrags (131 €/Monat, §45b SGB XI) erst nach Anerkennung nach §45a SGB XI möglich — Anerkennungsverfahren läuft.',
     },
   },
 ]
@@ -121,7 +121,7 @@ const jsonLdFAQ = {
 export const metadata: Metadata = {
   // absolute: Homepage-Titel ohne Template-Suffix (Marke steckt im Keyword-Set, ≤60 Zeichen)
   title: { absolute: 'Alltagsbegleitung, Pflegebox & Krankenfahrten Frankfurt' },
-  description: 'Entlastungsbetrag nutzen: 131 €/Monat für Alltagsbegleitung (§45b), Pflegebox mit 0 € Eigenanteil & Krankenfahrten in Frankfurt. Jetzt kostenlos starten.',
+  description: 'Alltagsbegleitung in Frankfurt & Rhein-Main, Pflegebox mit 0 € Eigenanteil (§40 SGB XI) und Krankenfahrten. Beratung zum Entlastungsbetrag (131 €/Monat) kostenlos.',
   alternates: { canonical: 'https://alltagsengel.care/' },
 }
 
@@ -196,27 +196,28 @@ export default function SplashPage() {
           <p className="lp-text">
             Alltagsbegleitung, Pflege-Box und Krankenfahrten — drei Leistungen,
             die pflegebedürftige Menschen und ihre Angehörigen wirklich entlasten.
-            Alles direkt in der App, alles über die Kasse abrechenbar.
+            Alles direkt in der App. Pflegebox und Krankenfahrten laufen über die Kasse; für die Alltagsbegleitung läuft die Anerkennung nach §45a SGB XI.
           </p>
         </section>
 
         {/* ─── ANGEBOT 1: Alltagsbegleitung ─── */}
         <section className="lp-section">
           <div className="lp-badge">Angebot 1 · Alltagsbegleitung</div>
-          <h2 className="lp-h2">Zertifizierte Alltagsbegleitung nach §45a SGB XI</h2>
+          <h2 className="lp-h2">Alltagsbegleitung in Frankfurt und Rhein-Main</h2>
           <p className="lp-text">
             Unsere zertifizierten Alltagsbegleiter unterstützen Senioren und pflegebedürftige
             Menschen dort, wo es im Alltag zählt: Einkaufshilfe, Arztbegleitung, gemeinsame
-            Spaziergänge, Haushaltshilfe und psychosoziale Betreuung. Ab Pflegegrad 1 wird die
-            Leistung über den <strong>Entlastungsbetrag nach §45b SGB XI</strong> finanziert —
-            <strong> 131 € pro Monat</strong> (1.572 € pro Jahr), direkt mit der Pflegekasse abgerechnet.
+            Spaziergänge, Haushaltshilfe und psychosoziale Betreuung. Ab Pflegegrad 1 steht
+            Pflegebedürftigen der <strong>Entlastungsbetrag nach §45b SGB XI</strong> zu —
+            <strong> 131 € pro Monat</strong> (1.572 € pro Jahr). Ob er für unser Angebot eingesetzt
+            werden kann, setzt die Anerkennung nach §45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren.
           </p>
           <div className="lp-price-cards">
             <div className="lp-price-card featured">
               <div className="lp-pc-name">Entlastungsbetrag</div>
               <div className="lp-pc-val">131 €</div>
               <div className="lp-pc-per">pro Monat · ab Pflegegrad 1</div>
-              <p>Ihr Eigenanteil: 0 € — direkte Abrechnung mit der Pflegekasse.</p>
+              <p>Einsatz für unser Angebot nach Anerkennung nach §45a SGB XI — das Verfahren läuft.</p>
             </div>
             <div className="lp-price-card">
               <div className="lp-pc-name">Unsere Leistungen</div>
@@ -341,7 +342,7 @@ export default function SplashPage() {
                 </svg>
               </div>
               <h4>§45a SGB XI · Alltagsbegleitung</h4>
-              <p>131 € Entlastungsbetrag pro Monat — zertifizierte Begleitung im Alltag.</p>
+              <p>Entlastungsangebot — Anerkennung nach §45a SGB XI im Verfahren.</p>
             </div>
             <div className="lp-value-item">
               <div className="lp-value-icon">

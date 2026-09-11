@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { stadtGeoMeta } from '@/lib/seo/stadt-geo'
 import LeadForm from '@/components/LeadForm'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import SpeakableSchema from '@/components/SpeakableSchema'
@@ -355,6 +356,8 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
   if (!city) return {}
 
   return {
+    // Stadt-Geo statt der vom Layout geerbten Frankfurt-Werte (lib/seo/stadt-geo.ts)
+    other: stadtGeoMeta(stadt),
     title: `Alltagsbegleitung ${city.name}`,
     description: `Alltagsbegleitung in ${city.name} — auch in ${city.stadtteile[0]} & ${city.stadtteile[1]}. 131 €/Monat über den Entlastungsbetrag (§45b SGB XI). Jetzt kostenlos beraten lassen.`,
     keywords: [
