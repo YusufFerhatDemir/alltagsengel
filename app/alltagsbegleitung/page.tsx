@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 const faqs: { frage: string; antwort: string }[] = [
   {
     frage: 'Was kostet Alltagsbegleitung?',
-    antwort: 'Alltagsbegleitung kostet ab 32 € pro Stunde. Mit einem anerkannten Pflegegrad stehen Ihnen über den Entlastungsbetrag (§45b SGB XI) 131 € monatlich zu. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach §45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren.',
+    antwort: 'Die Kosten richten sich nach Umfang und Art der Unterstützung — Sie erhalten vorab ein individuelles Angebot. Mit einem anerkannten Pflegegrad stehen Ihnen über den Entlastungsbetrag (§45b SGB XI) 131 € monatlich zu. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach §45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren.',
   },
   {
     frage: 'Wer bezahlt die Alltagsbegleitung?',
@@ -88,10 +88,8 @@ const jsonLd = {
       serviceType: 'Alltagsbegleitung',
       offers: {
         '@type': 'Offer',
-        price: '32.00',
         priceCurrency: 'EUR',
-        priceSpecification: { '@type': 'UnitPriceSpecification', price: '32.00', priceCurrency: 'EUR', unitText: 'Stunde' },
-        description: '131€/Monat über Entlastungsbetrag §45b SGB XI abrechenbar',
+        description: 'Individuelle Preisgestaltung — Preis auf Anfrage. Entlastungsbetrag (131 €/Monat, §45b SGB XI) erst nach Anerkennung nach §45a SGB XI einsetzbar — Anerkennungsverfahren läuft.',
       },
     },
     {
@@ -197,7 +195,7 @@ export default function AlltagsbegleitungPage() {
           <h3>Preise</h3>
           <div className="info-price-row">
             <span className="info-price-label">Stundensatz</span>
-            <span className="info-price-val">ab 32,00 €</span>
+            <span className="info-price-val">auf Anfrage</span>
           </div>
           <div className="info-price-row">
             <span className="info-price-label">Entlastungsbetrag (§ 45b)</span>
@@ -358,9 +356,9 @@ export default function AlltagsbegleitungPage() {
             dieselbe Uhrzeit, derselbe Engel. Gerade für Menschen mit beginnender Demenz ist diese
             Verlässlichkeit wertvoller als jede einzelne Leistung. Und sollte die Chemie einmal
             nicht stimmen: Sie können den Engel jederzeit wechseln, ohne Begründung. Mit dem
-            <Link href="/entlastungsbetrag"> Entlastungsbetrag von 131 €/Monat</Link> sind je nach
-            Stundensatz etwa vier Begleitstunden monatlich dauerhaft finanziert — genug für einen
-            festen wöchentlichen Besuch.
+            <Link href="/entlastungsbetrag"> Entlastungsbetrag von 131 €/Monat</Link> lässt sich
+            — bei einem anerkannten Anbieter — ein regelmäßiger Besuch mitfinanzieren; wie viele
+            Stunden er abdeckt, hängt vom Stundensatz ab.
           </p>
         </section>
 

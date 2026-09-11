@@ -208,10 +208,10 @@ export default function VerhinderungspflegePage() {
 
           <h2>Beispielrechnung: So weit reicht das Budget</h2>
           <p>
-            <strong>Szenario 1 – regelmäßige Auszeit:</strong> Eine Betreuungskraft kommt jeden Freitag für 4 Stunden (stundenweise Verhinderungspflege). Bei rund 35 € pro Stunde sind das etwa 140 € pro Woche bzw. 560–600 € im Monat. Das Jahresbudget von 3.539 € trägt damit rund ein halbes Jahr wöchentlicher Entlastung – und weil zusätzlich der Entlastungsbetrag von 131 € pro Monat für Alltagsbegleitung genutzt werden kann, lässt sich die Betreuung ganzjährig durchfinanzieren. Das Pflegegeld bleibt dabei ungekürzt.
+            <strong>Szenario 1 – regelmäßige Auszeit:</strong> Eine Betreuungskraft kommt jeden Freitag für 4 Stunden (stundenweise Verhinderungspflege). Wie viele Wochen das Jahresbudget von 3.539 € damit trägt, hängt vom Stundensatz des Anbieters ab – die Stundensätze unterscheiden sich je nach Anbieter, Region und Leistung deutlich, fragen Sie konkret nach. Zusätzlich kann der Entlastungsbetrag von 131 € pro Monat für Alltagsbegleitung genutzt werden. Das Pflegegeld bleibt dabei ungekürzt.
           </p>
           <p>
-            <strong>Szenario 2 – zwei Wochen Urlaub:</strong> Während der Reise der Pflegeperson kommt die Ersatzkraft täglich 5 Stunden. 14 Tage × 5 Stunden × 35 € ergeben 2.450 € – das Budget deckt den kompletten Urlaub, und es bleiben noch über 1.000 € für den Rest des Jahres. Da jeder Einsatz unter 8 Stunden bleibt, läuft auch hier das Pflegegeld in voller Höhe weiter.
+            <strong>Szenario 2 – zwei Wochen Urlaub:</strong> Während der Reise der Pflegeperson kommt die Ersatzkraft täglich 5 Stunden. 14 Tage × 5 Stunden ergeben 70 Stunden – welcher Anteil des Jahresbudgets dafür benötigt wird, hängt vom Stundensatz des Anbieters ab. Da jeder Einsatz unter 8 Stunden bleibt, läuft auch hier das Pflegegeld in voller Höhe weiter.
           </p>
           <p>
             Einen Überblick über alle Pflegekassen-Budgets nach Pflegegrad – von der Verhinderungspflege über den Entlastungsbetrag bis zur Pflegebox – gibt die Seite <Link href="/finanzierung">Finanzierung</Link>.

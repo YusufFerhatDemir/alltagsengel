@@ -162,7 +162,7 @@ export default function EinsamkeitImAlterPage() {
 
           <h2>Die Kosten und Finanzierung</h2>
           <p>
-            <strong>Privat:</strong> 15–25€ pro Stunde
+            <strong>Privat:</strong> Die Stundensätze unterscheiden sich je nach Anbieter, Region und Leistung deutlich — fragen Sie konkret nach.
           </p>
           <p>
             <strong>Über Pflegekasse (§45b):</strong> Bis zu 131€ monatlich – und Begleitungen zur Bekämpfung von Isolation sind genau das, wofür §45b gedacht ist!

@@ -337,19 +337,18 @@ export default function VerhinderungspflegePage() {
           <h3>Beispielrechnung: So weit reicht das Budget</h3>
           <p>
             <strong>Szenario 1 — regelmäßige Auszeit:</strong> Eine Betreuungskraft kommt jeden
-            Freitag für 4 Stunden (stundenweise Verhinderungspflege). Bei rund 35 € pro Stunde
-            sind das etwa 140 € pro Woche bzw. 560–600 € im Monat. Das Jahresbudget von 3.539 €
-            trägt damit rund ein halbes Jahr wöchentlicher Entlastung — und weil zusätzlich der
-            <Link href="/entlastungsbetrag"> Entlastungsbetrag (131 €/Monat)</Link> für
-            Alltagsbegleitung genutzt werden kann, lässt sich die Betreuung ganzjährig
-            durchfinanzieren.
+            Freitag für 4 Stunden (stundenweise Verhinderungspflege) — rund 17 Stunden im Monat.
+            Wie viele Monate das Jahresbudget von 3.539 € damit trägt, hängt vom Stundensatz des
+            Anbieters ab. Zusätzlich kann der
+            <Link href="/entlastungsbetrag"> Entlastungsbetrag (131 €/Monat)</Link> bei einem nach
+            § 45a SGB XI anerkannten Anbieter für Alltagsbegleitung eingesetzt werden.
           </p>
           <p style={{ marginTop: 12 }}>
             <strong>Szenario 2 — zwei Wochen Urlaub:</strong> Während der Reise der Pflegeperson
-            kommt die Ersatzkraft täglich 5 Stunden. 14 Tage × 5 Stunden × 35 € ergeben 2.450 € —
-            das Budget deckt den kompletten Urlaub, und es bleiben noch über 1.000 € für den Rest
-            des Jahres. Das Pflegegeld läuft während der stundenweisen Einsätze in voller Höhe
-            weiter.
+            kommt die Ersatzkraft täglich 5 Stunden — 14 Tage × 5 Stunden ergeben 70 Stunden
+            Betreuung. Ob das Budget den Urlaub vollständig deckt, hängt vom Stundensatz ab; wir
+            rechnen es Ihnen vorab individuell durch. Das Pflegegeld läuft während der
+            stundenweisen Einsätze in voller Höhe weiter.
           </p>
           <p style={{ marginTop: 12 }}>
             Wie viel Budget in Ihrer Konstellation verfügbar ist, rechnet der

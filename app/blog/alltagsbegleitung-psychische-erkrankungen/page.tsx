@@ -158,10 +158,10 @@ export default function AlltagsbegleitungPsychischeErkrankungenPage() {
 
           <h2>Wer zahlt? Finanzierung über die Pflegekasse</h2>
           <ul>
-            <li><strong>Entlastungsbetrag (§45b SGB XI):</strong> <strong>131 € pro Monat</strong> ab Pflegegrad 1, zweckgebunden für anerkannte Angebote zur Unterstützung im Alltag. Das finanziert etwa vier Begleitstunden monatlich — nicht Genutztes bleibt bis zum 30. Juni des Folgejahres erhalten. Details: <Link href="/entlastungsbetrag">Entlastungsbetrag</Link>.</li>
+            <li><strong>Entlastungsbetrag (§45b SGB XI):</strong> <strong>131 € pro Monat</strong> ab Pflegegrad 1, zweckgebunden für anerkannte Angebote zur Unterstützung im Alltag. Wie viele Begleitstunden das abdeckt, hängt vom Stundensatz des Anbieters ab — nicht Genutztes bleibt bis zum 30. Juni des Folgejahres erhalten. Details: <Link href="/entlastungsbetrag">Entlastungsbetrag</Link>.</li>
             <li><strong>Umwandlungsanspruch (§45a Abs. 4 SGB XI):</strong> Ab Pflegegrad 2 können bis zu 40 % der Pflegesachleistungen zusätzlich in Alltagsunterstützung fließen.</li>
             <li><strong>Verhinderungspflege (§39 SGB XI):</strong> Kümmert sich hauptsächlich ein Angehöriger, finanziert sie mit bis zu 3.539 € pro Jahr stundenweise Vertretung — Details: <Link href="/verhinderungspflege">Verhinderungspflege</Link>.</li>
-            <li><strong>Selbstzahler:</strong> Ohne Pflegegrad ist Alltagsbegleitung ab 32 €/Stunde privat buchbar; haushaltsnahe Dienstleistungen sind steuerlich absetzbar.</li>
+            <li><strong>Selbstzahler:</strong> Ohne Pflegegrad ist Alltagsbegleitung privat buchbar — bei Alltagsengel mit individueller Preisgestaltung, Preis auf Anfrage; haushaltsnahe Dienstleistungen sind steuerlich absetzbar.</li>
           </ul>
           <p>Ob der Entlastungsbetrag für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.</p>
           <p>Alle Finanzierungswege im Überblick: <Link href="/blog/wer-zahlt-alltagsbegleitung">Wer zahlt die Alltagsbegleitung?</Link> — und der <Link href="/budgetrechner">Budgetrechner</Link> zeigt Ihr persönliches Budget.</p>

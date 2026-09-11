@@ -114,7 +114,7 @@ export default function ArztbegleitungPage() {
 
           <h2>Kosten für Arztbegleitung</h2>
           <p>
-            <strong>Privat:</strong> 15–25€ pro Stunde
+            <strong>Privat:</strong> Die Stundensätze unterscheiden sich je nach Anbieter, Region und Leistung deutlich — fragen Sie konkret nach.
           </p>
           <p>
             <strong>Über Pflegekasse (§45b):</strong> Bis zu 131€ monatlich für Betreuungsleistungen anerkannter Anbieter (darin enthalten: Arztbegleitung, Einkaufen, Spaziergänge, etc.)

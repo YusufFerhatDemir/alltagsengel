@@ -119,7 +119,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Pflegegrad',
     question: 'Brauche ich einen Pflegegrad, um Alltagsengel zu nutzen?',
-    answer: 'Nein. Alltagsengel kann auch ohne Pflegegrad genutzt werden — dann als Selbstzahler zum regulären Stundensatz von 32 €. Pflegebedürftigen steht nach § 45b SGB XI grundsätzlich ein Entlastungsbetrag von 131 € monatlich zu. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.',
+    answer: 'Nein. Alltagsengel kann auch ohne Pflegegrad genutzt werden — dann als Selbstzahler; die Kosten richten sich nach Umfang und Art der Unterstützung (individuelles Angebot). Pflegebedürftigen steht nach § 45b SGB XI grundsätzlich ein Entlastungsbetrag von 131 € monatlich zu. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.',
   },
 
   // ──── Alltagsbegleitung ────
@@ -131,7 +131,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Alltagsbegleitung',
     question: 'Was kostet Alltagsbegleitung bei Alltagsengel?',
-    answer: 'Der reguläre Stundensatz beträgt ab 32 €. Pflegebedürftigen steht nach § 45b SGB XI grundsätzlich ein Entlastungsbetrag von 131 € monatlich zu. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.',
+    answer: 'Die Kosten richten sich nach Umfang und Art der Unterstützung — Sie erhalten vorab ein individuelles Angebot. Pflegebedürftigen steht nach § 45b SGB XI grundsätzlich ein Entlastungsbetrag von 131 € monatlich zu. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.',
   },
   {
     category: 'Alltagsbegleitung',
@@ -180,7 +180,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Kosten & Abrechnung',
     question: 'Was kostet Alltagsengel?',
-    answer: 'Alltagsbegleitung bei Alltagsengel kostet ab 32 € pro Stunde. Pflegebedürftigen steht nach § 45b SGB XI grundsätzlich ein Entlastungsbetrag von 131 € monatlich zu. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.',
+    answer: 'Alltagsbegleitung bei Alltagsengel wird individuell kalkuliert — Preis auf Anfrage. Pflegebedürftigen steht nach § 45b SGB XI grundsätzlich ein Entlastungsbetrag von 131 € monatlich zu. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.',
   },
   {
     category: 'Kosten & Abrechnung',
@@ -297,7 +297,7 @@ export default function FAQPage() {
         {[
           { label: 'Entlastungsbetrag', value: '131 €/Monat', detail: '§ 45b SGB XI' },
           { label: 'Pflegehilfsmittel', value: '42 €/Monat', detail: '§ 40 SGB XI' },
-          { label: 'Stundensatz', value: 'ab 32 €', detail: 'Alltagsbegleitung' },
+          { label: 'Stundensatz', value: 'auf Anfrage', detail: 'Alltagsbegleitung' },
         ].map(item => (
           <div key={item.label} style={{
             background: 'rgba(201, 150, 60, 0.08)',

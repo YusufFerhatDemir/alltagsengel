@@ -69,7 +69,7 @@ export default function AlltagsbegleitungFrankfurtPage() {
 
           <h2>Wer kann Alltagsbegleiter werden?</h2>
           <p>
-            In Frankfurt arbeiten mit Alltagsengel über <strong>150 geprüfte Begleiter</strong>. 
+            In Frankfurt arbeitet mit Alltagsengel <strong>unser wachsendes Team qualifizierter Alltagsbegleiter</strong>. 
             Unsere Anforderungen orientieren sich an den Qualifizierungsvorgaben nach <strong>§45a SGB XI</strong>:
           </p>
           <ul className="blog-list">
@@ -99,8 +99,8 @@ export default function AlltagsbegleitungFrankfurtPage() {
 
           <h2>Kosten & Abrechnung in Frankfurt</h2>
           <p>
-            Die Stundensätze für Alltagsbegleitungen liegen bundesweit bei etwa <strong>32€/Stunde</strong>. 
-            In Frankfurt können je nach Qualifikation und Zusatzleistungen auch höhere Sätze gelten.
+            Die Stundensätze für Alltagsbegleitung unterscheiden sich je nach Anbieter, Region und Leistung deutlich — fragen Sie konkret nach. 
+            Bei Alltagsengel gilt eine <strong>individuelle Preisgestaltung — Preis auf Anfrage</strong>: Die Kosten richten sich nach Umfang und Art der Unterstützung; wir erstellen Ihnen ein individuelles Angebot.
           </p>
           <p>
             <strong>Wichtig:</strong> Mit Pflegegrad steht der 
@@ -130,7 +130,7 @@ export default function AlltagsbegleitungFrankfurtPage() {
             <li><strong>Diskret:</strong> Wir respektieren Ihre Privatsphäre vollständig</li>
             <li><strong>Digital:</strong> Einfache Buchung über App oder Webseite</li>
             <li><strong>Zuverlässig:</strong> 24/7 Support für Notfälle oder Fragen</li>
-            <li><strong>Transparent:</strong> Keine versteckten Gebühren, feste Preise</li>
+            <li><strong>Transparent:</strong> Keine versteckten Gebühren — Sie erhalten vorab ein individuelles Angebot</li>
           </ul>
 
           <h2>Häufige Fragen zu Alltagsbegleitung in Frankfurt</h2>
@@ -165,7 +165,7 @@ export default function AlltagsbegleitungFrankfurtPage() {
           <div className="blog-cta">
             <h3>Finden Sie einen Engel in Frankfurt</h3>
             <p>
-              Registrieren Sie sich kostenlos und entdecken Sie 150+ geprüfte Begleiter in Ihrer Nähe. 
+              Registrieren Sie sich kostenlos und entdecken Sie unser wachsendes Team qualifizierter Alltagsbegleiter in Ihrer Nähe. 
               Buchen Sie schnell, diskret und transparent.
             </p>
             <Link href="/termin" className="cta-button">
@@ -183,7 +183,7 @@ export default function AlltagsbegleitungFrankfurtPage() {
         <section className="blog-related" style={{ marginTop: 40, padding: '24px 20px', background: 'rgba(201,150,60,0.06)', borderRadius: 12, border: '1px solid rgba(201,150,60,0.15)' }}>
           <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#C9963C' }}>Weiterführende Informationen</h3>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <li><Link href="/alltagsbegleitung/frankfurt" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alltagsbegleitung in Frankfurt buchen — ab 32 Euro/Stunde</Link></li>
+            <li><Link href="/alltagsbegleitung/frankfurt" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alltagsbegleitung in Frankfurt buchen — Preis auf Anfrage</Link></li>
             <li><Link href="/engel-werden" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alltagsbegleiter werden — 20 Euro/Stunde</Link></li>
             <li><Link href="/blog/entlastungsbetrag-45b" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Entlastungsbetrag 45b nutzen</Link></li>
           </ul>

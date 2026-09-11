@@ -66,7 +66,7 @@ export default function EntlastungsbetragPage() {
             Mit 131 Euro pro Monat haben Sie vielfältige Möglichkeiten:
           </p>
           <ul className="blog-list">
-            <li><strong>4 Stunden Alltagsbegleitung</strong> bei 32€/Stunde</li>
+            <li><strong>Stundenweise Alltagsbegleitung</strong> — wie viele Stunden der Betrag abdeckt, hängt vom Stundensatz des Anbieters ab</li>
             <li><strong>Regelmäßige Arztbesuche</strong> mit geschultem Begleiter</li>
             <li><strong>Einkaufshilfe &amp; Besorgungen</strong> wöchentlich</li>
             <li><strong>Gesellschaftliche Teilhabe:</strong> Spaziergang, Museumsbesuch, kulturelle Veranstaltungen</li>
@@ -105,7 +105,7 @@ export default function EntlastungsbetragPage() {
             <li>✓ <strong>100% Versichert:</strong> Jeder Einsatz ist haftpflichtversichert</li>
             <li>✓ <strong>§45a-Anerkennung im Verfahren:</strong> Alltagsengel befindet sich derzeit im Anerkennungsverfahren nach § 45a SGB XI</li>
             <li>✓ <strong>Sofort buchbar:</strong> Engel in Ihrer Nähe finden, Termin wählen, fertig</li>
-            <li>✓ <strong>Transparente Preise:</strong> ab 32 €/Stunde, kostenlose Beratung zu Ihren Finanzierungswegen</li>
+            <li>✓ <strong>Individuelle Preisgestaltung:</strong> Preis auf Anfrage, kostenlose Beratung zu Ihren Finanzierungswegen</li>
           </ul>
 
           <h2>Beispiel: So sieht der Ablauf aus</h2>
@@ -115,7 +115,7 @@ export default function EntlastungsbetragPage() {
           </p>
           <p>
             Sie bucht über Alltagsengel einen Begleiter für <strong>2 × 2 Stunden/Woche = 4 Std./Woche = 16 Std./Monat</strong>. 
-            Bei 32€/Stunde = 512€/Monat. Bei einem nach § 45a SGB XI anerkannten Anbieter könnte sie davon <strong>131€ über den Entlastungsbetrag</strong> decken. 
+            Die Kosten richten sich nach Umfang und Art der Unterstützung; wir erstellen ihr ein individuelles Angebot. Bei einem nach § 45a SGB XI anerkannten Anbieter könnte sie davon <strong>131€ im Monat über den Entlastungsbetrag</strong> decken. 
             Da Alltagsengel sich derzeit im Anerkennungsverfahren befindet, bucht Maria bis dahin als Selbstzahlerin.
           </p>
           <p>
@@ -164,7 +164,7 @@ export default function EntlastungsbetragPage() {
         <section className="blog-related" style={{ marginTop: 40, padding: '24px 20px', background: 'rgba(201,150,60,0.06)', borderRadius: 12, border: '1px solid rgba(201,150,60,0.15)' }}>
           <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#C9963C' }}>Weiterführende Informationen</h3>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <li><Link href="/alltagsbegleitung" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alltagsbegleitung buchen — ab 32 Euro/Stunde</Link></li>
+            <li><Link href="/alltagsbegleitung" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alltagsbegleitung buchen — Preis auf Anfrage</Link></li>
             <li><Link href="/hygienebox" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Pflegebox bestellen — 42 Euro/Monat von der Kasse</Link></li>
             <li><Link href="/blog/entlastungsbetrag-beantragen" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Entlastungsbetrag beantragen: Anleitung</Link></li>
           </ul>

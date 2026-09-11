@@ -115,11 +115,9 @@ const jsonLd = {
       serviceType: 'Alltagsbegleitung / Entlastungsleistungen §45b SGB XI',
       offers: {
         '@type': 'Offer',
-        price: '32.00',
         priceCurrency: 'EUR',
-        priceSpecification: { '@type': 'UnitPriceSpecification', price: '32.00', priceCurrency: 'EUR', unitText: 'Stunde' },
         description:
-          'Stundensatz 32 €. Einsatz des Entlastungsbetrags (131 €/Monat, §45b SGB XI) erst nach Anerkennung nach §45a SGB XI möglich — Anerkennungsverfahren läuft.',
+          'Individuelle Preisgestaltung — Preis auf Anfrage. Einsatz des Entlastungsbetrags (131 €/Monat, §45b SGB XI) erst nach Anerkennung nach §45a SGB XI möglich — Anerkennungsverfahren läuft.',
       },
     },
     {

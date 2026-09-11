@@ -82,7 +82,7 @@ const FAQ = [
   {
     frage: 'Was kostet eine Haushaltshilfe?',
     antwort:
-      'Ab 32 € pro Stunde. Pflegebedürftigen mit Pflegegrad steht nach § 45b SGB XI '
+      'Die Kosten richten sich nach Umfang und Art der Hilfe — Sie erhalten vorab ein individuelles Angebot. Pflegebedürftigen mit Pflegegrad steht nach § 45b SGB XI '
       + 'grundsätzlich ein monatlicher Entlastungsbetrag von 131 € zur Verfügung, bereits ab '
       + `Pflegegrad 1. ${HINWEIS_ANERKENNUNG}`,
   },
@@ -131,8 +131,7 @@ export default function HaushaltshilfePage() {
         offers: {
           '@type': 'Offer',
           priceCurrency: 'EUR',
-          price: '32',
-          description: 'Haushaltshilfe ab 32 € pro Stunde',
+          description: 'Haushaltshilfe — individuelle Preisgestaltung, Preis auf Anfrage',
         },
       },
       {
@@ -211,7 +210,7 @@ export default function HaushaltshilfePage() {
           <h3>Kosten und Finanzierung</h3>
           <div className="info-price-row">
             <span className="info-price-label">Haushaltshilfe</span>
-            <span className="info-price-val">ab 32 €/Std.</span>
+            <span className="info-price-val">auf Anfrage</span>
           </div>
           <div className="info-price-row">
             <span className="info-price-label">Entlastungsbetrag (§ 45b SGB XI)</span>

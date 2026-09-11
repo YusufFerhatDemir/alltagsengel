@@ -55,13 +55,13 @@ export default function SeniorenbetreuungZuHause() {
           <h2>Arten von Seniorenbetreuung zu Hause</h2>
 
           <h3>1. Haushaltshilfen</h3>
-          <p>Haushaltshilfen unterstützen bei Putzarbeiten, Wäsche, Einkaufen und einfachen Aufgaben im Haushalt. Sie sind nicht spezialisiert auf pflegerische Aufgaben. Eine Haushaltshilfe kostet durchschnittlich zwischen 12 und 18 Euro pro Stunde. Viele Pflegekassen übernehmen teilweise die Kosten, wenn eine Person einen Pflegegrad hat.</p>
+          <p>Haushaltshilfen unterstützen bei Putzarbeiten, Wäsche, Einkaufen und einfachen Aufgaben im Haushalt. Sie sind nicht spezialisiert auf pflegerische Aufgaben. Die Stundensätze unterscheiden sich je nach Anbieter, Region und Leistung deutlich — fragen Sie konkret nach. Viele Pflegekassen übernehmen teilweise die Kosten, wenn eine Person einen Pflegegrad hat.</p>
 
           <h3>2. Alltagsbegleiter</h3>
-          <p>Alltagsbegleiter bieten Gesellschaft und Begleitung zu Aktivitäten. Sie helfen beim Einkaufen, gehen spazieren, leisten Gesprächspartnerschaft und unterstützen bei alltäglichen Aufgaben. Der Stundensatz liegt bei etwa 18-22 Euro und wird oft durch den Entlastungsbetrag (§ 45b) finanziert, den die Pflegekasse bezahlt.</p>
+          <p>Alltagsbegleiter bieten Gesellschaft und Begleitung zu Aktivitäten. Sie helfen beim Einkaufen, gehen spazieren, leisten Gesprächspartnerschaft und unterstützen bei alltäglichen Aufgaben. Der Stundensatz unterscheidet sich je nach Anbieter; bei einem nach § 45a SGB XI anerkannten Anbieter kann die Leistung über den Entlastungsbetrag (§ 45b) finanziert werden, den die Pflegekasse bezahlt.</p>
 
           <h3>3. Pflegehilfen</h3>
-          <p>Pflegehilfen (ausgebildete Pflegefachkräfte oder Pflegehelfer) unterstützen bei pflegerischen Aufgaben wie Körperpflege, Mobilitätshilfe oder Wundversorgung. Diese kostet 20-35 Euro pro Stunde und wird über Pflegekasse oder privat bezahlt. Sie wird oft durch Pflegeleistungen abgedeckt.</p>
+          <p>Pflegehilfen (ausgebildete Pflegefachkräfte oder Pflegehelfer) unterstützen bei pflegerischen Aufgaben wie Körperpflege, Mobilitätshilfe oder Wundversorgung. Die Kosten richten sich nach Anbieter und Leistung; bezahlt wird über die Pflegekasse oder privat. Sie wird oft durch Pflegeleistungen abgedeckt.</p>
 
           <h3>4. Kombinierte Betreuung</h3>
           <p>Die meisten älteren Menschen brauchen eine Kombination: vielleicht 5 Stunden Pflegehilfe pro Woche, 3 Stunden Haushaltshilfe und 2 Stunden Gesellschaftsbegleitung. Diese Mischung ist optimal für Unabhängigkeit und Wohlbefinden.</p>
@@ -71,9 +71,9 @@ export default function SeniorenbetreuungZuHause() {
           <h3>Was kostet Seniorenbetreuung?</h3>
           <p>Die Kosten variieren stark je nach Art und Umfang:</p>
           <ul>
-            <li><strong>Haushaltshilfe:</strong> 12-18 Euro/Stunde (3-4 Stunden/Woche = 150-250 Euro/Monat)</li>
-            <li><strong>Alltagsbegleiter:</strong> 18-22 Euro/Stunde (bis 131 Euro/Monat über Entlastungsbetrag finanzierbar)</li>
-            <li><strong>Pflegehilfe:</strong> 20-35 Euro/Stunde (kann über Pflegeleistungen gedeckt sein)</li>
+            <li><strong>Haushaltshilfe:</strong> je nach Anbieter</li>
+            <li><strong>Alltagsbegleiter:</strong> je nach Anbieter (bei anerkannten Anbietern bis 131 Euro/Monat über den Entlastungsbetrag finanzierbar)</li>
+            <li><strong>Pflegehilfe:</strong> je nach Anbieter (kann über Pflegeleistungen gedeckt sein)</li>
             <li><strong>24-Stunden-Betreuung:</strong> 2.000-4.000 Euro pro Monat</li>
           </ul>
 
@@ -110,7 +110,7 @@ export default function SeniorenbetreuungZuHause() {
           <p>Oftmals finden sich zuverlässige Betreuer durch Mundpropaganda oder lokale Anzeigen. Günstiger, aber Sie müssen selbst Versicherung und Abrechnungen regeln.</p>
 
           <h3>Option 3: Alltagsengel</h3>
-          <p>Alltagsengel bietet direkten Zugang zu geprüften Alltagsbegleitern und Haushaltshilfen in Ihrer Region. Die Plattform eliminiert lange Suche und Abstimmung – Sie können schnell die richtige Person für Ihre Bedürfnisse finden, mit transparenten Preisen und zuverlässigen, geprüften Helfern. Dies ist ideal für flexible, stundenweise Unterstützung im Haushalt und zur Alltagsbegleitung.</p>
+          <p>Alltagsengel bietet direkten Zugang zu geprüften Alltagsbegleitern und Haushaltshilfen in Ihrer Region. Die Plattform eliminiert lange Suche und Abstimmung – Sie können schnell die richtige Person für Ihre Bedürfnisse finden, mit individueller Preisgestaltung (Preis auf Anfrage) und zuverlässigen, geprüften Helfern. Dies ist ideal für flexible, stundenweise Unterstützung im Haushalt und zur Alltagsbegleitung.</p>
 
           <h2>Tipps für die Auswahl der richtigen Betreuung</h2>
 

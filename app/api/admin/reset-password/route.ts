@@ -190,7 +190,7 @@ export const POST = withTracking(async function POST(request: NextRequest) {
             <a href="${resetLink}" style="display:inline-block;padding:14px 32px;background:#C9963C;color:#1A1612;text-decoration:none;border-radius:10px;font-weight:600;margin:16px 0;">PASSWORT JETZT FESTLEGEN</a>
             <p style="color:#888;font-size:12px;margin-top:16px;">Dieser Link ist aus Sicherheitsgründen nur begrenzt gültig.
                Wenn Sie keine Passwort-Änderung angefordert haben, wenden Sie sich bitte umgehend an unseren Support.</p>
-            <p style="margin-top:20px;color:#888;">Liebe Grüße,<br/><strong style="color:#C9963C;">Ihr Alltagsengel Team</strong></p>
+            <p style="margin-top:20px;color:#888;">Herzliche Grüße<br/><strong style="color:#C9963C;">Ihr Team von Alltagsengel</strong></p>
           `
         )
       }

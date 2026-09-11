@@ -84,7 +84,7 @@ export default function EinkaufshilfePage() {
 
           <h2>Kosten für Einkaufshilfen</h2>
           <p>
-            <strong>Private Bezahlung:</strong> 15–25€ pro Stunde, je nach Region und Qualifikation
+            <strong>Private Bezahlung:</strong> Die Stundensätze unterscheiden sich je nach Anbieter, Region und Qualifikation deutlich — fragen Sie konkret nach.
           </p>
           <p>
             <strong>Über Pflegekasse (§45b):</strong> Viele Pflegekassen zahlen bis zu 131€ pro Monat für Betreuungsleistungen, unter die auch Einkaufshilfen fallen.
@@ -93,7 +93,7 @@ export default function EinkaufshilfePage() {
             <strong>Über Verhinderungspflege:</strong> Falls Sie bereits Verhinderungspflege in Anspruch nehmen, können Sie diese auch für Einkaufshilfen nutzen (gemeinsamer Jahresbetrag Verhinderungs-/Kurzzeitpflege: bis 3.539€ pro Jahr, seit 01.07.2025).
           </p>
           <p>
-            <strong>Stundensatz bei Alltagsengel:</strong> ab 32 € pro Stunde. Ob der Entlastungsbetrag (§ 45b, 131 €/Monat) für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.
+            <strong>Preis bei Alltagsengel:</strong> individuelle Preisgestaltung — Preis auf Anfrage. Die Kosten richten sich nach Umfang und Art der Unterstützung; wir erstellen Ihnen ein individuelles Angebot. Ob der Entlastungsbetrag (§ 45b, 131 €/Monat) für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.
           </p>
 
           <h2>Wie buchen Sie eine Einkaufshilfe über Alltagsengel?</h2>

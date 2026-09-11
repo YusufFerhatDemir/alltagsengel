@@ -401,7 +401,7 @@ function buildFaqs(city: CityData): { frage: string; antwort: string }[] {
   return [
     {
       frage: `Was kostet Alltagsbegleitung in ${city.name}?`,
-      antwort: `Die Alltagsbegleitung in ${city.name} kostet ab 32 € pro Stunde. Pflegebedürftigen mit Pflegegrad steht nach § 45b SGB XI grundsätzlich ein monatlicher Entlastungsbetrag von 131 € zur Verfügung. Alltagsengel befindet sich aktuell im Anerkennungsverfahren. Nach erfolgter Anerkennung können berechtigte Pflegebedürftige Leistungen über den Entlastungsbetrag nach §45b SGB XI abrechnen. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.`,
+      antwort: `Die Kosten der Alltagsbegleitung in ${city.name} richten sich nach Umfang und Art der Unterstützung — Sie erhalten vorab ein individuelles Angebot. Pflegebedürftigen mit Pflegegrad steht nach § 45b SGB XI grundsätzlich ein monatlicher Entlastungsbetrag von 131 € zur Verfügung. Alltagsengel befindet sich aktuell im Anerkennungsverfahren. Nach erfolgter Anerkennung können berechtigte Pflegebedürftige Leistungen über den Entlastungsbetrag nach §45b SGB XI abrechnen. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.`,
     },
     {
       frage: 'Wer hat Anspruch auf den Entlastungsbetrag?',
@@ -458,15 +458,8 @@ function buildJsonLd(city: CityData, faqs: { frage: string; antwort: string }[])
         serviceType: 'Alltagsbegleitung',
         offers: {
           '@type': 'Offer',
-          price: '32.00',
           priceCurrency: 'EUR',
-          priceSpecification: {
-            '@type': 'UnitPriceSpecification',
-            price: '32.00',
-            priceCurrency: 'EUR',
-            unitText: 'Stunde',
-          },
-          description: 'Entlastungsbetrag nach §45b SGB XI: 131 €/Monat für Pflegebedürftige',
+          description: 'Individuelle Preisgestaltung — Preis auf Anfrage. Entlastungsbetrag nach §45b SGB XI: 131 €/Monat für Pflegebedürftige (Einsatz nach §45a-Anerkennung, Verfahren läuft).',
         },
       },
       {
@@ -562,7 +555,7 @@ export default async function StadtPage({ params }: { params: Promise<{ stadt: s
           <h3>Preise &amp; Kostenübernahme</h3>
           <div className="info-price-row">
             <span className="info-price-label">Stundensatz</span>
-            <span className="info-price-val">ab 32,00 €</span>
+            <span className="info-price-val">auf Anfrage</span>
           </div>
           <div className="info-price-row">
             <span className="info-price-label">Entlastungsbetrag (§ 45b)</span>

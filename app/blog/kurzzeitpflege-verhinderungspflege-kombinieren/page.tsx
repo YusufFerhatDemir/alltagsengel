@@ -158,23 +158,22 @@ export default function KurzzeitpflegeVerhinderungspflegeKombinierenPage() {
             <strong>Beispiel 1 — Kurzzeitpflege plus regelmäßige Entlastung:</strong> Nach einem
             Krankenhausaufenthalt im Frühjahr verbringt die pflegebedürftige Mutter zwei Wochen in
             der Kurzzeitpflege; die pflegebedingten Kosten von 1.500 € übernimmt die Pflegekasse aus
-            dem gemeinsamen Jahresbetrag. Es bleiben 2.039 € für den Rest des Jahres. Bei rund
-            35 € pro Stunde für eine professionelle Betreuungskraft sind das über 58 Stunden
-            stundenweise Verhinderungspflege — genug für einen freien Nachmittag pro Woche über
-            mehr als ein Vierteljahr.
+            dem gemeinsamen Jahresbetrag. Es bleiben 2.039 € für den Rest des Jahres — für
+            stundenweise Verhinderungspflege, etwa einen freien Nachmittag pro Woche. Wie viele
+            Stunden das abdeckt, hängt vom Stundensatz des Anbieters ab.
           </p>
           <p>
             <strong>Beispiel 2 — nur Verhinderungspflege, wöchentliche Auszeit:</strong> Eine
-            Betreuungskraft kommt jeden Freitag für 4 Stunden. Bei rund 35 € pro Stunde sind das
-            etwa 140 € pro Woche bzw. 560–600 € im Monat. Das Jahresbudget von 3.539 € trägt damit
-            rund ein halbes Jahr wöchentlicher Entlastung — und mit dem zusätzlichen
-            Entlastungsbetrag lässt sich die Betreuung ganzjährig durchfinanzieren.
+            Betreuungskraft kommt jeden Freitag für 4 Stunden. Wie viele Wochen das Jahresbudget
+            von 3.539 € damit trägt, hängt vom Stundensatz des Anbieters ab — die Stundensätze
+            unterscheiden sich je nach Anbieter, Region und Leistung deutlich. Der zusätzliche
+            Entlastungsbetrag von 131 € im Monat verlängert die finanzierte Entlastung.
           </p>
           <p>
             <strong>Beispiel 3 — zwei Wochen Urlaub der Pflegeperson:</strong> Während der Reise
-            kommt die Ersatzkraft täglich 5 Stunden nach Hause. 14 Tage × 5 Stunden × 35 € ergeben
-            2.450 € — das Budget deckt den kompletten Urlaub, und es bleiben noch über 1.000 € für
-            den Rest des Jahres. Weil die Einsätze unter 8 Stunden am Tag bleiben, läuft das
+            kommt die Ersatzkraft täglich 5 Stunden nach Hause — 14 Tage × 5 Stunden ergeben
+            70 Stunden. Welcher Anteil des Budgets dafür benötigt wird, hängt vom Stundensatz des
+            Anbieters ab; fragen Sie vorab konkret nach. Weil die Einsätze unter 8 Stunden am Tag bleiben, läuft das
             Pflegegeld in voller Höhe weiter.
           </p>
           <p>

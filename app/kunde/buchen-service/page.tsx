@@ -532,7 +532,7 @@ function BuchenServiceInner() {
                       </div>
                     </div>
                     <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)' }}>
-                      32€<span style={{ fontSize: 12, fontWeight: 400 }}>/h</span>
+                      {rate}€<span style={{ fontSize: 12, fontWeight: 400 }}>/h</span>
                     </div>
                   </button>
                 ))}

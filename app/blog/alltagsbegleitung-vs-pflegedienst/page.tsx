@@ -40,7 +40,7 @@ const faqData = [
   { q: 'Ersetzt Alltagsbegleitung den Pflegedienst?', a: 'Nein. Alltagsbegleitung übernimmt keine Grundpflege und keine medizinischen Aufgaben. Wer Hilfe beim Waschen, Anziehen oder bei der Medikamentengabe braucht, benötigt weiterhin einen ambulanten Pflegedienst. Alltagsbegleitung ergänzt die Pflege um Haushalt, Begleitung und Gesellschaft.' },
   { q: 'Darf ein Alltagsbegleiter Medikamente geben?', a: 'Nein. Das Verabreichen von Medikamenten ist Behandlungspflege und bleibt ausgebildeten Pflegekräften vorbehalten. Ein Alltagsbegleiter kann aber daran erinnern, dass es Zeit für die Tablette ist, oder zur Apotheke begleiten.' },
   { q: 'Kann ich Alltagsbegleitung und Pflegedienst gleichzeitig nutzen?', a: 'Ja, das ist sogar der Regelfall. Beide Leistungen werden aus unterschiedlichen Budgets der Pflegeversicherung bezahlt: der Pflegedienst über die Pflegesachleistungen (§36 SGB XI), die Alltagsbegleitung über den Entlastungsbetrag von 131 € pro Monat (§45b SGB XI). Das eine schmälert das andere nicht.' },
-  { q: 'Was kostet Alltagsbegleitung im Vergleich zum Pflegedienst?', a: 'Alltagsbegleitung kostet bei Alltagsengel ab 32 € pro Stunde. Bei einem nach § 45a SGB XI anerkannten Anbieter kann dafür der Entlastungsbetrag von 131 € monatlich eingesetzt werden — Alltagsengel befindet sich derzeit im Anerkennungsverfahren; bis dahin ist die Buchung als Selbstzahler möglich. Ein Pflegedienst rechnet nach Leistungskomplexen über die Pflegesachleistungen ab; deren Höhe richtet sich nach dem Pflegegrad.' },
+  { q: 'Was kostet Alltagsbegleitung im Vergleich zum Pflegedienst?', a: 'Für Alltagsbegleitung bei Alltagsengel gilt eine individuelle Preisgestaltung — Preis auf Anfrage: Die Kosten richten sich nach Umfang und Art der Unterstützung; wir erstellen Ihnen ein individuelles Angebot. Bei einem nach § 45a SGB XI anerkannten Anbieter kann dafür der Entlastungsbetrag von 131 € monatlich eingesetzt werden — Alltagsengel befindet sich derzeit im Anerkennungsverfahren; bis dahin ist die Buchung als Selbstzahler möglich. Ein Pflegedienst rechnet nach Leistungskomplexen über die Pflegesachleistungen ab; deren Höhe richtet sich nach dem Pflegegrad.' },
   { q: 'Bekomme ich Alltagsbegleitung schon mit Pflegegrad 1?', a: 'Ja. Der Entlastungsbetrag von 131 € monatlich steht bereits ab Pflegegrad 1 zu — anders als die Pflegesachleistungen für den Pflegedienst, die erst ab Pflegegrad 2 gezahlt werden. Für viele Menschen mit Pflegegrad 1 ist die Alltagsbegleitung deshalb die erste finanzierte Unterstützung überhaupt.' },
   { q: 'Wer bezahlt die Alltagsbegleitung?', a: 'Die Pflegekasse — über den Entlastungsbetrag nach §45b SGB XI in Höhe von 131 € pro Monat, der allen Menschen mit Pflegegrad 1 bis 5 zusteht. Ob der Entlastungsbetrag für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.' },
   { q: 'Verfällt der Entlastungsbetrag, wenn ich ihn nicht nutze?', a: 'Nicht sofort. Nicht genutzte Beträge werden angespart und können noch bis zum 30. Juni des Folgejahres eingesetzt werden. Danach verfällt der Restbetrag — es lohnt sich also, die 131 € pro Monat regelmäßig zu verwenden.' },
@@ -198,12 +198,13 @@ export default function AlltagsbegleitungVsPflegedienstPage() {
 
           <h2>Kosten im Vergleich</h2>
           <p>
-            Bei Alltagsengel kostet die Alltagsbegleitung <strong>ab 32 € pro Stunde</strong> —
-            inklusive Versicherungsschutz. Bei einem anerkannten Anbieter finanziert der Entlastungsbetrag
-            von 131 € monatlich bei diesem Stundensatz etwa vier Begleitstunden pro Monat — genug für
-            einen festen wöchentlichen Besuch. Alltagsengel befindet sich derzeit im
-            Anerkennungsverfahren nach § 45a SGB XI; bis dahin ist die Buchung als Selbstzahler möglich. Eine
-            ausführliche Beispielrechnung finden Sie im Ratgeber
+            Bei Alltagsengel gilt für die Alltagsbegleitung eine <strong>individuelle Preisgestaltung —
+            Preis auf Anfrage</strong>, inklusive Versicherungsschutz: Die Kosten richten sich nach Umfang
+            und Art der Unterstützung; wir erstellen Ihnen ein individuelles Angebot. Bei einem anerkannten
+            Anbieter kann der Entlastungsbetrag von 131 € monatlich dafür eingesetzt werden — wie viele
+            Begleitstunden das abdeckt, hängt vom Stundensatz des Anbieters ab. Alltagsengel befindet sich derzeit im
+            Anerkennungsverfahren nach § 45a SGB XI; bis dahin ist die Buchung als Selbstzahler möglich. Mehr zu
+            Preisfaktoren und Finanzierungswegen finden Sie im Ratgeber
             <Link href="/blog/alltagsbegleitung-kosten"> Was kostet Alltagsbegleitung?</Link>
           </p>
           <p>

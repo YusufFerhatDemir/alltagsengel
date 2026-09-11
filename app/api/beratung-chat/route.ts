@@ -34,12 +34,13 @@ const SYSTEM_PROMPT = `Du bist der digitale Berater von Alltagsengel (alltagseng
 
 DEIN WISSEN (Stand 2026):
 - Entlastungsbetrag §45b SGB XI: 131 €/Monat (1.572 €/Jahr) für ALLE Pflegegrade 1–5. Kein Antrag nötig — Erstattung gegen Rechnung eines nach Landesrecht anerkannten Anbieters oder direkte Abrechnung durch einen anerkannten Anbieter per Abtretungserklärung.
-- STAND ALLTAGSENGEL (wichtig): Alltagsengel ist als Angebot zur Unterstützung im Alltag nach §45a SGB XI noch NICHT anerkannt, sondern befindet sich im Anerkennungsverfahren. Deshalb kann Alltagsengel den Entlastungsbetrag derzeit NICHT mit der Pflegekasse abrechnen. Bis zur Anerkennung buchen Kunden die Alltagsbegleitung als Selbstzahler (ab 32 €/Stunde).
+- STAND ALLTAGSENGEL (wichtig): Alltagsengel ist als Angebot zur Unterstützung im Alltag nach §45a SGB XI noch NICHT anerkannt, sondern befindet sich im Anerkennungsverfahren. Deshalb kann Alltagsengel den Entlastungsbetrag derzeit NICHT mit der Pflegekasse abrechnen. Bis zur Anerkennung buchen Kunden die Alltagsbegleitung als Selbstzahler.
 - Nicht genutzte Beträge sammeln sich im Kalenderjahr an; der Übertrag ins Folgejahr verfällt am 30. Juni.
 - Umwandlungsanspruch §45a Abs. 4: bei Pflegegrad 2–5 zusätzlich bis zu 40 % der Pflegesachleistung für anerkannte Angebote zur Unterstützung im Alltag nutzbar (gilt für Alltagsengel erst nach der Anerkennung).
 - Pflegegeld/Monat (häusliche Pflege): PG2 347 €, PG3 599 €, PG4 800 €, PG5 990 €.
 - Pflegegrad beantragen: formlos bei der Pflegekasse, danach Begutachtung durch den Medizinischen Dienst (6 Module, Punktesystem). Leistungen gelten ab Antragsmonat.
-- Alltagsengel-Leistungen: Einkaufshilfe, Haushaltshilfe, Arztbegleitung, Spaziergänge, Gesellschaft & psychosoziale Betreuung. Geschulte, geprüfte und versicherte Alltagsbegleiter ("Engel"). Stundensatz ab 32 €.
+- Alltagsengel-Leistungen: Einkaufshilfe, Haushaltshilfe, Arztbegleitung, Spaziergänge, Gesellschaft & psychosoziale Betreuung. Geschulte, geprüfte und versicherte Alltagsbegleiter ("Engel").
+- PREISE: Es gibt noch keine festen Stundenpreise. Nenne NIEMALS einen Euro-Betrag pro Stunde (auch keine Marktspannen). Sag: "Die Kosten richten sich nach Umfang und Art der Unterstützung — Sie erhalten vorab ein individuelles Angebot" und verweise auf /termin.
 - Weitere Angebote: Pflege-Box (Pflegehilfsmittel §40 SGB XI, bis 42 €/Monat, 0 € Eigenanteil) und Krankenfahrten (§60 SGB V, mit ärztlicher Verordnung über die Krankenkasse).
 - Einzugsgebiet: Frankfurt am Main und Rhein-Main (u. a. Offenbach, Wiesbaden, Mainz, Darmstadt, Hanau, Bad Homburg, Oberursel, Aschaffenburg).
 - Kontakt: WhatsApp +49 178 3382825, Kontaktformular auf /kontakt. Büro: Neue Mainzer Straße 66-68, 60311 Frankfurt am Main.
@@ -69,7 +70,7 @@ const FALLBACK_REGELN: { muster: RegExp; antwort: string }[] = [
   },
   {
     muster: /kosten|preis|teuer|eigenanteil|bezahl/i,
-    antwort: 'Die Alltagsbegleitung kostet ab 32 € pro Stunde. Mit Pflegegrad steht Ihnen grundsätzlich der Entlastungsbetrag von 131 €/Monat (§45b SGB XI) zu; sein Einsatz für unser Angebot setzt die Anerkennung nach §45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich. Die Pflege-Box (§40) ist bei Pflegegrad weiterhin kostenfrei. Details gern im persönlichen Gespräch: /termin.',
+    antwort: 'Die Kosten der Alltagsbegleitung richten sich nach Umfang und Art der Unterstützung — Sie erhalten vorab ein individuelles Angebot. Mit Pflegegrad steht Ihnen grundsätzlich der Entlastungsbetrag von 131 €/Monat (§45b SGB XI) zu; sein Einsatz für unser Angebot setzt die Anerkennung nach §45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich. Die Pflege-Box (§40) ist bei Pflegegrad weiterhin kostenfrei. Details gern im persönlichen Gespräch: /termin.',
   },
   {
     muster: /pflegebox|pflege-box|hygienebox|hilfsmittel|handschuhe|desinfektion/i,

@@ -128,21 +128,19 @@ export default function SeniorenbetreuungFrankfurtPage() {
           <h2>Was kostet Seniorenbetreuung in Frankfurt?</h2>
           <p>
             Die Kosten unterscheiden sich je nach Art der Betreuung deutlich. Hier ein Überblick
-            über die <Link href="/blog/alltagsbegleitung-kosten">typischen Stundensätze in Frankfurt</Link>:
+            (mehr dazu im Ratgeber <Link href="/blog/alltagsbegleitung-kosten">Was kostet Alltagsbegleitung?</Link>):
           </p>
           <ul className="blog-list">
-            <li><strong>Alltagsbegleitung:</strong> 30–40 €/Stunde</li>
-            <li><strong>Haushaltshilfe:</strong> 15–25 €/Stunde</li>
-            <li><strong>Ambulanter Pflegedienst:</strong> 35–55 €/Stunde (Fachkraft)</li>
-            <li><strong>Demenzbetreuung:</strong> 35–45 €/Stunde</li>
+            <li><strong>Alltagsbegleitung:</strong> je nach Anbieter</li>
+            <li><strong>Haushaltshilfe:</strong> je nach Anbieter</li>
+            <li><strong>Ambulanter Pflegedienst:</strong> je nach Anbieter und Leistung</li>
+            <li><strong>Demenzbetreuung:</strong> je nach Anbieter</li>
             <li><strong>Tagespflege:</strong> 60–80 €/Tag</li>
             <li><strong>Ehrenamtliche Dienste:</strong> kostenlos</li>
           </ul>
           <p>
-            Frankfurt liegt preislich leicht über dem Bundesdurchschnitt, was an den höheren
-            Lebenshaltungskosten im Rhein-Main-Gebiet liegt. Allerdings sind die Zuschüsse
-            der Pflegekasse bundesweit gleich, sodass die <strong>Eigenbelastung prozentual
-            ähnlich ist</strong>.
+            Die Stundensätze unterscheiden sich je nach Anbieter, Region und Leistung deutlich —
+            fragen Sie konkret nach. Die Zuschüsse der Pflegekasse sind dagegen bundesweit gleich.
           </p>
 
           <h2>Finanzierung: So bezahlt die Pflegekasse</h2>
@@ -239,7 +237,7 @@ export default function SeniorenbetreuungFrankfurtPage() {
             mit <strong>zertifizierten Alltagsbegleitern</strong> in ihrer Nachbarschaft.
           </p>
           <ul className="blog-list">
-            <li><strong>Über 150 zertifizierte Begleiter</strong> im Raum Frankfurt</li>
+            <li><strong>Unser wachsendes Team qualifizierter Alltagsbegleiter</strong> im Raum Frankfurt</li>
             <li><strong>Schnelle Vermittlung:</strong> Oft innerhalb von 48 Stunden</li>
             <li><strong>Keine Vermittlungsgebühr:</strong> Registrierung und Vermittlung sind kostenlos</li>
             <li><strong>§45a-Anerkennung im Verfahren:</strong> Bis dahin ist die Buchung als Selbstzahler möglich</li>
@@ -290,7 +288,7 @@ export default function SeniorenbetreuungFrankfurtPage() {
           <p>
             Wichtig ist, frühzeitig zu handeln und den <Link href="/blog/entlastungsbetrag-nutzen">Entlastungsbetrag</Link> nicht
             verfallen zu lassen. Alltagsengel macht den Einstieg so einfach wie möglich —
-            mit kostenloser Registrierung, transparenten Preisen und persönlicher Beratung.
+            mit kostenloser Registrierung, individueller Preisgestaltung (Preis auf Anfrage) und persönlicher Beratung.
             Alltagsengel befindet sich derzeit im Anerkennungsverfahren nach § 45a SGB XI; bis dahin
             ist die Buchung als Selbstzahler möglich.
           </p>
@@ -299,7 +297,7 @@ export default function SeniorenbetreuungFrankfurtPage() {
             <h3>Seniorenbetreuung in Frankfurt finden</h3>
             <p>
               Entdecken Sie zertifizierte Alltagsbegleiter in Ihrem Frankfurter Stadtteil.
-              Kostenlose Registrierung und transparente Preise. §45a-Anerkennung im Verfahren —
+              Kostenlose Registrierung, Preis auf Anfrage. §45a-Anerkennung im Verfahren —
               bis dahin ist die Buchung als Selbstzahler möglich.
             </p>
             <Link href="/alltagsbegleitung" className="cta-button">
