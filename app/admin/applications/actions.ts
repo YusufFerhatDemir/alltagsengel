@@ -6,6 +6,10 @@ import { logAuditEventOrWarn } from '@/lib/audit-log'
 import { sendEmailNotification } from '@/lib/notifications'
 import { esc } from '@/lib/notifications/html'
 import { istBewerbungsStatus, BEWERBUNG_FILTER } from '@/lib/admin/ops'
+import {
+  istBewerberStufe, bewerberStufe, stufeFuerBewerbung, mitPipelineStufe, naechsteWiedervorlage,
+  BEWERBER_ENDZUSTAENDE,
+} from '@/lib/bewerbung/pipeline'
 import { logger } from '@/lib/logger'
 
 const log = logger.child('applications:actions')
@@ -43,46 +47,85 @@ async function requireAdmin() {
   return { supabase, userId: user.id, organizationId, role: profile.role, name }
 }
 
-// ── Bewerbungsstatus ändern ──────────────────────────────────────
+// ── Bewerbungsstufe ändern ───────────────────────────────────────
 
+/**
+ * Stufenwechsel einer Bewerbung (acht Stufen, lib/bewerbung/pipeline.ts).
+ *
+ * Schreibt in EINEM Update:
+ *   bewerbung_daten.pipeline  feine Stufe + Verlauf (übrige Schlüssel bleiben)
+ *   status                    grobe CRM-Stufe (CHECK-konform)
+ *   follow_up_date            automatische Wiedervorlage, NULL im Endzustand
+ *
+ * `erwartet` ist die Stufe, welche die Verwaltung beim Klick gesehen hat.
+ * Stimmt sie nicht mehr, wird nicht geschrieben (zwei Tabs, /mis/crm).
+ */
 export async function updateApplicationStatus(
   applicationId: string,
-  status: string,
-): Promise<{ ok: true } | { ok: false; error: string }> {
+  stufe: string,
+  erwartet?: string,
+): Promise<{ ok: true; followUpDate: string | null } | { ok: false; error: string }> {
   try {
     const { supabase, userId, organizationId, role, name } = await requireAdmin()
 
     if (!applicationId || typeof applicationId !== 'string') {
       return { ok: false, error: 'Ungueltige Bewerbungs-ID.' }
     }
-    // Fail-closed gegen den CHECK auf lead_inquiries.status: ein Wert
-    // ausserhalb der fuenf erlaubten wuerde die Datenbank mit 23514
-    // abweisen — und die Verwaltung saehe eine rohe Postgres-Meldung.
-    if (!istBewerbungsStatus(status)) {
-      return { ok: false, error: 'Ungueltiger Status fuer eine Bewerbung.' }
+    // Fail-closed: nur bekannte Stufen. Der daraus abgeleitete Status ist
+    // per Konstruktion CHECK-konform (istBewerbungsStatus prueft es trotzdem).
+    if (!istBewerberStufe(stufe)) {
+      return { ok: false, error: 'Ungueltige Stufe fuer eine Bewerbung.' }
+    }
+    const ziel = bewerberStufe(stufe)
+    if (!istBewerbungsStatus(ziel.dbStatus)) {
+      return { ok: false, error: 'Stufe ohne gueltigen CRM-Status.' }
     }
 
     // Bewerbungsdaten laden — fuer die Freigabe-E-Mail brauchen wir Name und
-    // E-Mail-Adresse. `.single()` bleibt richtig: die ID ist der
-    // Primaerschluessel. Der Bewerbungsfilter steht trotzdem dabei, damit
-    // ueber diese Aktion keine Kundenanfrage aus derselben Tabelle
-    // umgestempelt werden kann.
+    // E-Mail-Adresse, fuer den Pipeline-Stand die bestehende jsonb-Nutzlast.
+    // Der Bewerbungsfilter steht dabei, damit ueber diese Aktion keine
+    // Kundenanfrage aus derselben Tabelle umgestempelt werden kann.
     const { data: bewerbung, error: lesenFehler } = await supabase
       .from('lead_inquiries')
-      .select('name, email')
+      .select('name, email, status, bewerbung_daten')
       .eq('id', applicationId)
+      .eq('organization_id', organizationId)
       .or(BEWERBUNG_FILTER)
       .single()
 
-    if (lesenFehler) return { ok: false, error: `Bewerbung nicht gefunden: ${lesenFehler.message}` }
+    if (lesenFehler || !bewerbung) {
+      return { ok: false, error: `Bewerbung nicht gefunden: ${lesenFehler?.message ?? 'keine Zeile'}` }
+    }
 
-    const { error: dbError } = await supabase
+    const vorher = stufeFuerBewerbung(bewerbung.bewerbung_daten, bewerbung.status)
+    if (erwartet && erwartet !== vorher.stufe) {
+      return {
+        ok: false,
+        error: `Die Bewerbung steht inzwischen auf „${bewerberStufe(vorher.stufe).label}" — bitte Seite neu laden.`,
+      }
+    }
+
+    const jetzt = new Date()
+    const followUpDate = naechsteWiedervorlage(stufe, jetzt)
+
+    const { data: geaendert, error: dbError } = await supabase
       .from('lead_inquiries')
-      .update({ status })
+      .update({
+        status: ziel.dbStatus,
+        bewerbung_daten: mitPipelineStufe(bewerbung.bewerbung_daten, stufe, jetzt, name),
+        follow_up_date: followUpDate,
+      })
       .eq('id', applicationId)
+      .eq('organization_id', organizationId)
+      // CAS auf den gelesenen Status: dazwischen umgestellt → keine Zeile.
+      .eq('status', bewerbung.status)
       .or(BEWERBUNG_FILTER)
+      .select('id')
 
     if (dbError) return { ok: false, error: `Status-Update fehlgeschlagen: ${dbError.message}` }
+    if (!geaendert || geaendert.length === 0) {
+      return { ok: false, error: 'Die Bewerbung wurde inzwischen geaendert — bitte Seite neu laden.' }
+    }
 
     await logAuditEventOrWarn({
       action: 'update',
@@ -92,8 +135,16 @@ export async function updateApplicationStatus(
       organizationId,
       entityType: 'application',
       entityId: applicationId,
-      details: { neuer_status: status },
+      details: {
+        neue_stufe: stufe,
+        vorherige_stufe: vorher.stufe,
+        neuer_status: ziel.dbStatus,
+        wiedervorlage: followUpDate,
+      },
     })
+
+    const status = ziel.dbStatus
+    const warSchonFreigegeben = bewerbung.status === 'converted'
 
     // ── Freigabe-Bestätigung per E-Mail ──────────────────────────
     // Bei Freigabe automatische E-Mail an den Bewerber.
@@ -108,7 +159,9 @@ export async function updateApplicationStatus(
     // heute KEINE der eingegangenen Bewerbungen eine Adresse, die Mail geht
     // also nur bei hier von Hand erfassten Bewerbungen raus. Der Rueckruf
     // ueber die Telefonnummer bleibt der eigentliche Weg.
-    if (status === 'converted' && bewerbung?.email) {
+    // Nur beim UEBERGANG nach „einsatzbereit": ein erneutes Setzen derselben
+    // Stufe darf keine zweite Freigabe-Mail ausloesen.
+    if (status === 'converted' && !warSchonFreigegeben && bewerbung?.email) {
       const empfaengerName = esc(bewerbung.name || 'Bewerber')
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://alltagsengel.care'
 
@@ -150,6 +203,73 @@ export async function updateApplicationStatus(
         log.errorWithException('Freigabe-E-Mail konnte nicht gesendet werden', err)
       }
     }
+
+    return { ok: true, followUpDate }
+  } catch (err: any) {
+    return { ok: false, error: err.message || 'Unerwarteter Fehler.' }
+  }
+}
+
+// ── Wiedervorlage von Hand setzen ────────────────────────────────
+
+/**
+ * Überschreibt die automatische Wiedervorlage, z. B. mit dem Datum des
+ * vereinbarten Vorstellungsgesprächs. `null` ist nur im Endzustand
+ * erlaubt: eine offene Bewerbung ohne Wiedervorlage ist genau der Lead,
+ * der tagelang vergessen wird.
+ */
+export async function setApplicationWiedervorlage(
+  applicationId: string,
+  datum: string | null,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const { supabase, userId, organizationId, role, name } = await requireAdmin()
+
+    if (!applicationId || typeof applicationId !== 'string') {
+      return { ok: false, error: 'Ungueltige Bewerbungs-ID.' }
+    }
+    if (datum !== null && (typeof datum !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(datum) || Number.isNaN(Date.parse(datum)))) {
+      return { ok: false, error: 'Bitte ein gueltiges Datum angeben.' }
+    }
+
+    const { data: bewerbung, error: lesenFehler } = await supabase
+      .from('lead_inquiries')
+      .select('status, bewerbung_daten')
+      .eq('id', applicationId)
+      .eq('organization_id', organizationId)
+      .or(BEWERBUNG_FILTER)
+      .single()
+    if (lesenFehler || !bewerbung) {
+      return { ok: false, error: `Bewerbung nicht gefunden: ${lesenFehler?.message ?? 'keine Zeile'}` }
+    }
+
+    const { stufe } = stufeFuerBewerbung(bewerbung.bewerbung_daten, bewerbung.status)
+    if (datum === null && !BEWERBER_ENDZUSTAENDE.includes(stufe)) {
+      return { ok: false, error: 'Eine offene Bewerbung braucht eine Wiedervorlage.' }
+    }
+
+    const { data: geaendert, error: dbError } = await supabase
+      .from('lead_inquiries')
+      .update({ follow_up_date: datum })
+      .eq('id', applicationId)
+      .eq('organization_id', organizationId)
+      .or(BEWERBUNG_FILTER)
+      .select('id')
+    if (dbError) return { ok: false, error: `Wiedervorlage fehlgeschlagen: ${dbError.message}` }
+    if (!geaendert || geaendert.length === 0) {
+      return { ok: false, error: 'Bewerbung nicht mehr vorhanden — bitte Seite neu laden.' }
+    }
+
+    await logAuditEventOrWarn({
+      action: 'update',
+      actorId: userId,
+      actorRole: role,
+      actorName: name,
+      organizationId,
+      entityType: 'application',
+      entityId: applicationId,
+      details: { wiedervorlage: datum, stufe },
+    })
 
     return { ok: true }
   } catch (err: any) {

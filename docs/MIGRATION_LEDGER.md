@@ -108,7 +108,11 @@ sperrt `anon` gegen und meldet Exit 1, solange etwas fehlt.
 Routen laufen in „Tabelle existiert nicht" und das Cockpit zeigt einen
 Ladefehler. Das ist der richtige Zustand — kein Versand ohne Schema.
 
-## Block 5 — Bearbeitungsstand Content (2026-09-11) — WARTET AUF ANWENDUNG
+## Block 5 — Bearbeitungsstand Content (2026-09-11) — LIVE
+
+> **Nachtrag 11.09.2026 (Lead-Funnel-Sitzung):** `marketing_content_status` ist live —
+> `GET /rest/v1/marketing_content_status?select=id&limit=1` mit Dienstschlüssel antwortet `[]`
+> (nicht `PGRST205`). Der Abschnitt unten bleibt als Beleg des Anwendungswegs stehen.
 
 | Datei | Inhalt |
 |---|---|
@@ -147,3 +151,32 @@ Drift-Guard auf Dateien gezeigt, die älter benannt, aber schon angewendet
 sind. Die Abweichung ist also eine Folge der Altlast, keine Notwendigkeit
 der Sache — wer die Kette einmal auf echte Zeitstempel umstellt, sollte sie
 in einem Zug umstellen.
+
+
+## Block 6 — Lead-Funnel: Stufe „Termin" der Warteliste (2026-09-11) — WARTET AUF ANWENDUNG
+
+| Datei | Inhalt |
+|---|---|
+| `20261104000000_state_waitlist_stufe_termin.sql` | `state_waitlist_status_check` um `'termin'` erweitert — sonst nichts |
+| `20261104000001_rollback_state_waitlist_stufe_termin.sql` | Rücknahme (setzt `termin` → `kontaktiert`, dann alter CHECK) |
+
+### Warum
+
+Die Admin-Inbox der Warteliste führt sechs Stufen (NEU → KONTAKTIERT → TERMIN →
+WARTELISTE → KUNDE, ABGELEHNT). Fünf bildet der bestehende CHECK über die
+Übersetzung in `lib/warteliste/katalog.ts` ab; nur „termin" fehlt. Live belegt:
+`PATCH state_waitlist SET status='termin'` → `23514 … state_waitlist_status_check`.
+
+Die Bewerber-Stufen (8) brauchen **keine** Migration: sie stehen in
+`lead_inquiries.bewerbung_daten.pipeline` (jsonb), der grobe CRM-Status wird
+CHECK-konform mitgeschrieben, die Wiedervorlage in `follow_up_date` (beide Spalten live).
+
+### Anwenden
+
+Supabase-SQL-Editor oder MCP `apply_migration`, Datei `20261104000000`.
+PGlite-Test: `__tests__/migrations/state-waitlist-stufe-termin-pglite.test.ts`.
+
+### Bis dahin
+
+Alle anderen Stufen laufen. Ein Klick auf „→ Termin" antwortet mit einem Satz,
+der diese Dateinummer nennt — kein stiller Ausfall, keine rohe Postgres-Meldung.

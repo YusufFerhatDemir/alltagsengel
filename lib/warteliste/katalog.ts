@@ -145,22 +145,84 @@ export function pflegegradLabel(key: string | null): string {
   return WARTELISTE_PFLEGEGRADE.find(p => p.key === key)?.label ?? key
 }
 
-// ── Status ─────────────────────────────────────────────────────────────
-// Deckungsgleich mit waitlist_customers_status_check. Ein Wert außerhalb
-// dieser fünf wird von der Datenbank mit 23514 abgewiesen — die Prüfung
-// steht deshalb fail-closed vor dem Schreibweg, nicht dahinter.
-export const WARTELISTE_STATUS: Record<string, { label: string; color: string }> = {
-  neu: { label: 'Neu', color: '#2196F3' },
-  kontaktiert: { label: 'Kontaktiert', color: '#E8A000' },
-  vorgemerkt: { label: 'Vorgemerkt', color: '#9C27B0' },
-  aktiviert: { label: 'Aktiviert', color: '#5CB882' },
-  abgemeldet: { label: 'Abgemeldet', color: '#D04B3B' },
+// ── Bearbeitungsstufen ─────────────────────────────────────────────────
+// NEU → KONTAKTIERT → TERMIN → WARTELISTE → KUNDE, Ausstieg ABGELEHNT.
+//
+// Die Stufe ist das, was die Verwaltung sieht; der DB-Wert ist das, was in
+// `state_waitlist.status` steht. Beide sind BEWUSST getrennt:
+//
+//   Stufe        DB-Wert       warum
+//   neu          neu
+//   kontaktiert  kontaktiert
+//   termin       termin        braucht Migration 20261104000000 (CHECK)
+//   warteliste   vorgemerkt    alter Wert bleibt — Expansion-Modul,
+//   kunde        aktiviert     Marketing-Dashboard und Rollback lesen ihn
+//   abgelehnt    abgemeldet
+//
+// Die Werte umzubenennen hätte jeden Leser der Tabelle mitgerissen
+// (marketing-dashboard zählt `aktiviert` als Conversion). Die Abbildung an
+// EINER Stelle hält alle Leser auf demselben Stand.
+//
+// `state_waitlist_status_check` erlaubt live (11.09.2026, per 23514-Probe
+// belegt) genau: neu, kontaktiert, vorgemerkt, aktiviert, abgemeldet.
+// „termin" wird bis zur Migration mit 23514 abgewiesen; die Server Action
+// übersetzt das in einen Satz statt einer rohen Postgres-Meldung.
+export interface WartelisteStufe {
+  key: string
+  label: string
+  color: string
+  dbWert: string
+  /** Tage ohne Bearbeitung, nach denen die Stufe wieder vorgelegt wird. `null` = Endzustand. */
+  wiedervorlageTage: number | null
 }
 
-export const WARTELISTE_STATUS_FLOW = ['neu', 'kontaktiert', 'vorgemerkt', 'aktiviert', 'abgemeldet']
+export const WARTELISTE_STUFEN: readonly WartelisteStufe[] = [
+  { key: 'neu', label: 'Neu', color: '#2196F3', dbWert: 'neu', wiedervorlageTage: null },
+  { key: 'kontaktiert', label: 'Kontaktiert', color: '#E8A000', dbWert: 'kontaktiert', wiedervorlageTage: 2 },
+  { key: 'termin', label: 'Termin', color: '#26A69A', dbWert: 'termin', wiedervorlageTage: 7 },
+  { key: 'warteliste', label: 'Warteliste', color: '#9C27B0', dbWert: 'vorgemerkt', wiedervorlageTage: 30 },
+  { key: 'kunde', label: 'Kunde', color: '#5CB882', dbWert: 'aktiviert', wiedervorlageTage: null },
+  { key: 'abgelehnt', label: 'Abgelehnt', color: '#D04B3B', dbWert: 'abgemeldet', wiedervorlageTage: null },
+] as const
 
-export function istWartelisteStatus(wert: unknown): wert is string {
-  return typeof wert === 'string' && WARTELISTE_STATUS_FLOW.includes(wert)
+/** Reihenfolge der Filterleiste und des Vorwärtswegs. */
+export const WARTELISTE_STUFEN_FLOW: readonly string[] = WARTELISTE_STUFEN.map(s => s.key)
+
+/** Vorwärtsweg ohne Ausstieg — „abgelehnt" ist ein eigener Knopf, kein nächster Schritt. */
+export const WARTELISTE_VORWAERTS: readonly string[] = ['neu', 'kontaktiert', 'termin', 'warteliste', 'kunde']
+
+/** Stufen, in denen ein Lead noch Arbeit braucht. */
+export const WARTELISTE_OFFEN: readonly string[] = ['neu', 'kontaktiert', 'termin', 'warteliste']
+
+/** Stufe, die den Migrationsstand braucht, der live noch fehlen kann. */
+export const WARTELISTE_STUFE_MIGRATION: Record<string, string> = { termin: '20261104000000' }
+
+export function istWartelisteStufe(wert: unknown): wert is string {
+  return typeof wert === 'string' && WARTELISTE_STUFEN_FLOW.includes(wert)
+}
+
+export function wartelisteStufe(key: string): WartelisteStufe {
+  return WARTELISTE_STUFEN.find(s => s.key === key) ?? WARTELISTE_STUFEN[0]
+}
+
+/**
+ * DB-Wert → Stufe. Ein unbekannter Wert fällt NICHT still auf „neu":
+ * er wird als eigene Stufe durchgereicht, damit die Zeile sichtbar bleibt
+ * und auffällt, statt sich als unbearbeiteter Lead zu tarnen.
+ */
+export function stufeAusDbWert(dbWert: string | null | undefined): string {
+  if (!dbWert) return 'neu'
+  return WARTELISTE_STUFEN.find(s => s.dbWert === dbWert)?.key ?? dbWert
+}
+
+export function dbWertFuerStufe(stufe: string): string | null {
+  return WARTELISTE_STUFEN.find(s => s.key === stufe)?.dbWert ?? null
+}
+
+/** Label/Farbe für die Anzeige, auch für unbekannte Werte. */
+export function wartelisteStufeMeta(key: string): { label: string; color: string } {
+  const s = WARTELISTE_STUFEN.find(x => x.key === key)
+  return s ? { label: s.label, color: s.color } : { label: key, color: '#8A8A8A' }
 }
 
 // ── Längengrenzen ──────────────────────────────────────────────────────
