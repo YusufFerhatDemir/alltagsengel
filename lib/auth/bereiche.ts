@@ -358,6 +358,9 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   // Gleiche Grenze aus dem gleichen Grund: waitlist_customers traegt genau
   // eine verwaltende Policy, „Admin full access" mit is_admin().
   '/admin/waitlist':                  { lesen: 'marketing.verwalten', schreiben: 'marketing.verwalten' },
+  // Liest keine Datenbank, sondern die Plaene aus docs/marketing/. Trotzdem
+  // dieselbe Grenze: es sind unveroeffentlichte Werbetexte.
+  '/admin/marketing-content':         { lesen: 'marketing.verwalten', schreiben: 'marketing.verwalten' },
   '/api/admin/marketing':             { lesen: 'marketing.verwalten', schreiben: 'marketing.verwalten' },
   '/api/admin/manage-role':           { lesen: 'benutzer.verwalten' },
   '/api/admin/reset-password':        { lesen: 'benutzer.verwalten' },

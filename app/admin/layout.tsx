@@ -278,6 +278,7 @@ const navGroups = [
     items: [
       { href: '/admin/marketing-dashboard', label: 'Marketing-Dashboard', icon: <IconTarget size={18} /> },
       { href: '/admin/waitlist', label: 'Warteliste', icon: <IconHeart size={18} /> },
+      { href: '/admin/marketing-content', label: 'Content-Plan', icon: <IconDocument size={18} /> },
       { href: '/admin/marketing/campaigns', label: 'Kampagnen', icon: <IconChat size={18} /> },
       { href: '/admin/marketing/kontakte', label: 'Einwilligungen & Sperrliste', icon: <IconShield size={18} /> },
     ],
