@@ -6,11 +6,11 @@ import RelatedContent from '@/components/RelatedContent'
 export const metadata: Metadata = {
   title: 'Finanzierung: Alltagsbegleitung bis 5.111 €/Jahr',
   description:
-    'Entlastungsbetrag 131 €/Monat plus Verhinderungs-/Kurzzeitpflege 3.539 €/Jahr — bis zu 5.111 €/Jahr für Ihre Alltagsbegleitung. Jetzt kostenlos beraten lassen!',
+    'Entlastungsbetrag 131 €/Monat plus Verhinderungs-/Kurzzeitpflege 3.539 €/Jahr — bis zu 5.111 €/Jahr kombinierbar. Alltagsengel: §45a-Anerkennung im Verfahren. Jetzt kostenlos beraten lassen!',
   alternates: { canonical: 'https://alltagsengel.care/finanzierung' },
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
-    title: 'Finanzierung — bis zu 5.111 €/Jahr für Alltagsengel-Leistungen',
+    title: 'Finanzierung — bis zu 5.111 €/Jahr aus Entlastungsbetrag und Verhinderungspflege',
     description:
       'Entlastungsbetrag 131 €/Monat plus Verhinderungs-/Kurzzeitpflege 3.539 €/Jahr = bis zu 5.111 €/Jahr kombinierbar. Steuervorteil und Unfallversicherung — klar nach Pflegegrad erklärt.',
     url: 'https://alltagsengel.care/finanzierung',
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: 'Was ist der Entlastungsbetrag nach §45b SGB XI?',
-    a: 'Der Entlastungsbetrag beträgt 131 € pro Monat (1.572 € pro Jahr) und steht jeder Person mit Pflegegrad 1 bis 5 zu. Er kann für anerkannte Angebote zur Unterstützung im Alltag — wie die Alltagsbegleitung von Alltagsengel — genutzt werden. Wir rechnen direkt mit der Pflegekasse ab, Ihr Eigenanteil liegt bei 0 €.',
+    a: 'Der Entlastungsbetrag beträgt 131 € pro Monat (1.572 € pro Jahr) und steht jeder Person mit Pflegegrad 1 bis 5 zu. Er kann für anerkannte Angebote zur Unterstützung im Alltag genutzt werden. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.',
   },
   {
     q: 'Wie hoch ist das Budget für die Verhinderungspflege?',
@@ -71,7 +71,7 @@ const BAUSTEINE = [
   {
     zahl: '131 € / Monat',
     titel: 'Entlastungsbetrag (§45b SGB XI)',
-    text: '1.572 € pro Jahr für anerkannte Alltagsbegleitung — ab Pflegegrad 1. Direkt mit der Pflegekasse abgerechnet, 0 € Eigenanteil.',
+    text: '1.572 € pro Jahr für anerkannte Alltagsbegleitung — ab Pflegegrad 1. Setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren.',
   },
   {
     zahl: '3.539 € / Jahr',
@@ -128,7 +128,8 @@ const WUSSTEN_SIE = [
 ]
 
 // Vollständige Leistungs-Übersicht nach Pflegegrad — Beträge 2026.
-// `relevant: true` markiert die Töpfe, über die Alltagsengel abrechnet.
+// `relevant: true` markiert die Töpfe, die für Alltagsbegleitung infrage kommen
+// (Entlastungsbetrag erst nach §45a-Anerkennung — Verfahren läuft).
 const GRADE = ['PG 1', 'PG 2', 'PG 3', 'PG 4', 'PG 5']
 
 const LEISTUNGEN = [
@@ -180,9 +181,9 @@ export default function FinanzierungPage() {
           Wer zahlt Ihre Betreuung?
         </h1>
         <p style={{ color: '#B8B0A4', fontSize: 16, lineHeight: 1.6 }}>
-          Alltagsbegleitung, Pflegebox und Krankenfahrten müssen Sie in den meisten Fällen nicht
-          selbst bezahlen. Hier sehen Sie transparent, welche Töpfe Ihnen zustehen — klar
-          aufgeteilt nach Pflegegrad.
+          Pflegebox und Krankenfahrten müssen Sie in den meisten Fällen nicht selbst bezahlen,
+          für Alltagsbegleitung gibt es mehrere Finanzierungswege. Hier sehen Sie transparent,
+          welche Töpfe Ihnen zustehen — klar aufgeteilt nach Pflegegrad.
         </p>
       </section>
 
@@ -247,7 +248,8 @@ export default function FinanzierungPage() {
 
           <p style={{ color: '#B8B0A4', fontSize: 13, lineHeight: 1.6, marginTop: 16, marginBottom: 0 }}>
             Beide Töpfe lassen sich kombinieren — plus Steuervorteil und ggf. Unfallversicherung.
-            Wir rechnen direkt mit Ihrer Pflegekasse ab.
+            Der Einsatz des Entlastungsbetrags setzt die Anerkennung des Anbieters nach § 45a SGB XI
+            voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren.
           </p>
         </section>
 
@@ -315,7 +317,7 @@ export default function FinanzierungPage() {
           </h2>
           <p style={{ color: '#B8B0A4', fontSize: 14, lineHeight: 1.6, textAlign: 'center', marginBottom: 18, maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}>
             Diese gesetzlichen Leistungen stehen Ihnen je nach Pflegegrad zu.
-            <strong style={{ color: '#E0B860' }}> Golden hervorgehoben</strong> sind die Töpfe, über die Alltagsengel Ihre Alltagsbegleitung abrechnet.
+            <strong style={{ color: '#E0B860' }}> Golden hervorgehoben</strong> sind die Töpfe, die für Alltagsbegleitung infrage kommen — der Entlastungsbetrag setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus, Alltagsengel befindet sich derzeit im Anerkennungsverfahren.
           </p>
 
           <div style={{ ...cardStyle, padding: 0, overflowX: 'auto' }}>
@@ -381,11 +383,11 @@ export default function FinanzierungPage() {
             </h3>
             <p style={{ color: '#D8D0C4', fontSize: 14, lineHeight: 1.7, marginTop: 0, marginBottom: 12 }}>
               Alltagsengel ist <strong style={{ color: '#F5F0E8' }}>kein Pflegedienst</strong> — wir bieten
-              Alltagsbegleitung und Hauswirtschaft. Bezahlt werden diese Leistungen vor allem über zwei Töpfe:
+              Alltagsbegleitung und Hauswirtschaft. Für diese Leistungen kommen vor allem folgende Finanzierungswege infrage:
             </p>
             <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
-                ['Entlastungsbetrag §45b', 'Der Haupttopf: 131 €/Monat (1.572 €/Jahr) — schon ab Pflegegrad 1. Wir rechnen direkt mit der Pflegekasse ab, 0 € Eigenanteil.'],
+                ['Entlastungsbetrag §45b', 'Pflegebedürftigen steht nach § 45b SGB XI grundsätzlich ein Entlastungsbetrag von 131 € monatlich zu (1.572 €/Jahr) — schon ab Pflegegrad 1. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.'],
                 ['Verhinderungspflege', 'Ist die Hauptpflegeperson verhindert, finanzieren wir unsere Begleitung aus dem gemeinsamen Jahresbetrag von 3.539 € (ab Pflegegrad 2).'],
                 ['Steuerliche Entlastung §35a', 'Selbst getragene Kosten für haushaltsnahe Dienstleistungen sind zu 20 % (bis 4.000 €/Jahr) direkt von der Steuer absetzbar.'],
               ].map(([t, txt]) => (
@@ -405,12 +407,16 @@ export default function FinanzierungPage() {
           </div>
         </section>
 
-        {/* Hinweis 0 € Eigenanteil */}
+        {/* Hinweis Pflegebox 0 € Eigenanteil / Alltagsbegleitung: §45a-Anerkennung läuft */}
         <section style={{ ...cardStyle, background: 'rgba(127,183,126,0.08)', border: '1px solid rgba(127,183,126,0.2)' }}>
-          <h2 style={{ color: '#7FB77E', fontSize: 20, fontWeight: 700, marginBottom: 10 }}>0 € Eigenanteil in den meisten Fällen</h2>
+          <h2 style={{ color: '#7FB77E', fontSize: 20, fontWeight: 700, marginBottom: 10 }}>Pflegebox ohne Eigenanteil — Alltagsbegleitung als Selbstzahler</h2>
           <p style={{ color: '#D8D0C4', fontSize: 15, lineHeight: 1.7, margin: 0 }}>
-            Bei anerkanntem Pflegegrad rechnen wir Entlastungsbetrag und Pflegebox direkt mit Ihrer
-            Pflegekasse ab. Sie müssen nicht in Vorleistung gehen und tragen keinen Eigenanteil.
+            Bei anerkanntem Pflegegrad rechnen wir die Pflegebox direkt mit Ihrer Pflegekasse ab.
+            Für die Pflegebox gehen Sie nicht in Vorleistung und tragen keinen Eigenanteil. Für die
+            Alltagsbegleitung gilt: Der Einsatz des Entlastungsbetrags setzt die Anerkennung des
+            Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im
+            Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich. Zu Ihren
+            Finanzierungswegen beraten wir Sie vorab kostenlos.
             Noch keinen Pflegegrad? Wir zeigen Ihnen den Weg zum Antrag.
           </p>
         </section>

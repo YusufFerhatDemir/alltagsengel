@@ -41,7 +41,7 @@ const faqData = [
   { q: 'Bekommen pflegende Angehörige Geld von der Pflegekasse?', a: 'Indirekt ja: Das Pflegegeld wird an die pflegebedürftige Person gezahlt, die es an pflegende Angehörige weitergeben kann. Zusätzlich zahlt die Pflegekasse unter bestimmten Voraussetzungen Rentenbeiträge für Pflegepersonen und übernimmt Kosten für Ersatzpflege, Hilfsmittel und Entlastungsleistungen.' },
   { q: 'Sind Pflegekurse für Angehörige wirklich kostenlos?', a: 'Ja. Nach §45 SGB XI haben pflegende Angehörige und ehrenamtliche Pflegepersonen Anspruch auf kostenlose Pflegekurse. Die Pflegekassen bieten sie vor Ort, online oder auf Wunsch als individuelle Schulung in der häuslichen Umgebung an.' },
   { q: 'Was ist eine Vorsorgevollmacht und warum ist sie so wichtig?', a: 'Mit einer Vorsorgevollmacht bestimmt die pflegebedürftige Person, wer für sie entscheiden darf, wenn sie es selbst nicht mehr kann. Ohne Vollmacht dürfen selbst Ehepartner und Kinder nicht automatisch handeln — dann bestellt das Betreuungsgericht einen Betreuer. Ergänzend regelt eine Patientenverfügung medizinische Wünsche.' },
-  { q: 'Wo finden pflegende Angehörige kostenlose Beratung?', a: 'Pflegestützpunkte beraten kostenlos und neutral zu allen Fragen rund um Pflege und Leistungen. Auch die Pflegekassen sind zur Beratung verpflichtet (§7a SGB XI). Alltagsengel unterstützt Sie zusätzlich bei Anträgen und rechnet Leistungen wie den Entlastungsbetrag direkt mit der Kasse ab.' },
+  { q: 'Wo finden pflegende Angehörige kostenlose Beratung?', a: 'Pflegestützpunkte beraten kostenlos und neutral zu allen Fragen rund um Pflege und Leistungen. Auch die Pflegekassen sind zur Beratung verpflichtet (§7a SGB XI). Alltagsengel unterstützt Sie zusätzlich bei Anträgen und berät Sie vorab kostenlos zu Ihren Finanzierungswegen.' },
   { q: 'Verfallen ungenutzte Pflegeleistungen?', a: 'Teilweise. Der Entlastungsbetrag kann im laufenden Jahr angespart und bis zum 30. Juni des Folgejahres genutzt werden — danach verfällt er. Ansprüche auf Erstattung von Verhinderungspflege verjähren erst nach vier Jahren. Es lohnt sich also, auch rückwirkend zu prüfen, welche Leistungen noch abgerechnet werden können.' },
 ]
 
@@ -103,8 +103,10 @@ export default function TippsPflegendeAngehoerigePage() {
             Angebote zur Unterstützung im Alltag, etwa <Link href="/alltagsbegleitung">Alltagsbegleitung</Link> und
             Haushaltshilfe, aber auch für Tages- und Kurzzeitpflege. Ein formeller Antrag ist nicht nötig —
             der Anspruch besteht automatisch mit dem Pflegegrad. Ungenutzte Beträge sammeln sich an und
-            können bis zum 30. Juni des Folgejahres verwendet werden; danach verfallen sie ersatzlos. Alle
-            Details und wie die Abrechnung ohne Papierkram funktioniert, finden Sie auf unserer Seite
+            können bis zum 30. Juni des Folgejahres verwendet werden; danach verfallen sie ersatzlos. Ob der
+            Entlastungsbetrag für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des
+            Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren.
+            Alle Details und die Abrechnungswege finden Sie auf unserer Seite
             zum <Link href="/entlastungsbetrag">Entlastungsbetrag</Link>.
           </p>
 
@@ -172,7 +174,8 @@ export default function TippsPflegendeAngehoerigePage() {
             Auch Geschwister, die weiter weg wohnen, können Verantwortung tragen: Behördenpost, Telefonate
             mit der Kasse oder die Finanzierung einer Haushaltshilfe. Ergänzen Sie das familiäre Netz durch
             professionelle Unterstützung, etwa eine regelmäßige <Link href="/alltagsbegleitung">Alltagsbegleitung</Link>,
-            die über den Entlastungsbetrag ohne Eigenanteil finanziert werden kann. Wenn Sie unsicher sind,
+            die bei einem nach § 45a SGB XI anerkannten Anbieter über den Entlastungsbetrag finanziert werden
+            kann (Alltagsengel befindet sich derzeit im Anerkennungsverfahren). Wenn Sie unsicher sind,
             welche Unterstützung zu Ihrer Situation passt, vereinbaren Sie einfach
             einen <Link href="/termin">kostenlosen Beratungstermin</Link> — gemeinsam findet sich fast immer
             eine Lösung, die alle entlastet.
@@ -217,7 +220,7 @@ export default function TippsPflegendeAngehoerigePage() {
             Entlastungsangeboten. Zusätzlich hat jede pflegebedürftige Person nach §7a SGB XI Anspruch auf
             individuelle Pflegeberatung durch die Pflegekasse. Nutzen Sie diese Angebote früh und nicht
             erst in der Krise. Und wenn Sie praktische Unterstützung im Alltag brauchen: Alltagsengel
-            begleitet Familien im Rhein-Main-Gebiet von der Antragstellung bis zur Abrechnung — vereinbaren
+            begleitet Familien im Rhein-Main-Gebiet und berät Sie vorab kostenlos zu Ihren Finanzierungswegen — vereinbaren
             Sie einfach einen <Link href="/termin">unverbindlichen Termin</Link>, wir hören zu und finden
             gemeinsam den passenden Weg.
           </p>
@@ -244,7 +247,7 @@ export default function TippsPflegendeAngehoerigePage() {
 
           <div className="blog-cta">
             <h2>Entlastung beginnt mit einem Gespräch</h2>
-            <p>Wir prüfen Ihre Ansprüche, übernehmen die Anträge und rechnen direkt mit der Pflegekasse ab — 0 € Eigenanteil.</p>
+            <p>Wir prüfen Ihre Ansprüche und beraten Sie vorab kostenlos zu Ihren Finanzierungswegen. §45a-Anerkennung im Verfahren — bis dahin ist die Buchung als Selbstzahler möglich.</p>
             <Link href="/termin" className="btn-gold">KOSTENLOSEN TERMIN VEREINBAREN</Link>
           </div>
 

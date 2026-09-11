@@ -93,14 +93,14 @@ export default function AlltagsbegleitungDemenzPage() {
       <SpeakableSchema url="/blog/alltagsbegleitung-demenz" cssSelectors={['.blog-header h1', '.blog-intro p']} />
       <HowToSchema
         name="Alltagsbegleitung für einen Menschen mit Demenz einrichten"
-        description="In fünf Schritten eine verlässliche Demenz-Begleitung zu Hause aufbauen — von Pflegegrad bis Eingewöhnung, finanziert über den Entlastungsbetrag (131 €/Monat)."
+        description="In fünf Schritten eine verlässliche Demenz-Begleitung zu Hause aufbauen — von Pflegegrad bis Eingewöhnung, mit Blick auf den Entlastungsbetrag (131 €/Monat)."
         totalTime="P14D"
         steps={[
           { name: 'Pflegegrad beantragen oder prüfen', text: 'Bei Demenz wird meist mindestens Pflegegrad 2 anerkannt, da kognitive Einschränkungen seit 2017 gleichwertig zählen. Ohne Pflegegrad: formloser Antrag bei der Pflegekasse.', url: '/pflegegrad-check' },
           { name: 'Budgets zusammenstellen', text: 'Entlastungsbetrag (131 €/Monat ab Pflegegrad 1), Umwandlungsanspruch (bis 40 % der Pflegesachleistungen) und Verhinderungspflege (bis 3.539 €/Jahr) kombinieren.', url: '/budgetrechner' },
           { name: 'Passenden Begleiter auswählen', text: 'Bei der Buchung den Demenz-Bedarf angeben und einen Engel mit Betreuungserfahrung wählen. Wichtig: eine feste Bezugsperson, die regelmäßig kommt.', url: '/auth/register' },
           { name: 'Kennenlernen mit Angehörigen', text: 'Den ersten Termin gemeinsam gestalten: vertraute Umgebung, Biografie-Infos übergeben (Gewohnheiten, Vorlieben, Tagesrhythmus), kurze Dauer.' },
-          { name: 'Festen Rhythmus etablieren', text: 'Gleicher Tag, gleiche Uhrzeit, gleiche Person — Verlässlichkeit ist bei Demenz wichtiger als jede einzelne Aktivität. Die Abrechnung mit der Pflegekasse übernimmt Alltagsengel.' },
+          { name: 'Festen Rhythmus etablieren', text: 'Gleicher Tag, gleiche Uhrzeit, gleiche Person — Verlässlichkeit ist bei Demenz wichtiger als jede einzelne Aktivität. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos — die Anerkennung von Alltagsengel nach § 45a SGB XI läuft.' },
         ]}
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
@@ -115,7 +115,7 @@ export default function AlltagsbegleitungDemenzPage() {
         </div>
 
         <div className="blog-intro">
-          <p>Rund 1,8 Millionen Menschen leben in Deutschland mit einer Demenz — die meisten von ihnen zu Hause, betreut von Angehörigen. Was Familien dabei am dringendsten brauchen, sind zwei Dinge: verlässliche Struktur für den erkrankten Menschen und planbare Entlastung für sich selbst. Genau das leistet Alltagsbegleitung. Dieser Ratgeber zeigt, wie die Begleitung bei Demenz konkret aussieht, worauf es im Umgang ankommt und wie Sie sie über den Entlastungsbetrag von 131 € monatlich finanzieren — oft ganz ohne Eigenanteil.</p>
+          <p>Rund 1,8 Millionen Menschen leben in Deutschland mit einer Demenz — die meisten von ihnen zu Hause, betreut von Angehörigen. Was Familien dabei am dringendsten brauchen, sind zwei Dinge: verlässliche Struktur für den erkrankten Menschen und planbare Entlastung für sich selbst. Genau das leistet Alltagsbegleitung. Dieser Ratgeber zeigt, wie die Begleitung bei Demenz konkret aussieht, worauf es im Umgang ankommt und wie Sie sie über den Entlastungsbetrag von 131 € monatlich finanzieren können.</p>
         </div>
 
         <div className="blog-content">
@@ -158,13 +158,14 @@ export default function AlltagsbegleitungDemenzPage() {
           <p>Ein bewährtes Modell: ein fester Nachmittag pro Woche, an dem die Alltagsbegleitung übernimmt. Angehörige wissen verlässlich, wann sie frei haben — für Sport, Freunde, eigene Arzttermine oder schlicht Schlaf. Praktische Strategien für den Pflegealltag sammelt der Ratgeber <Link href="/blog/tipps-fuer-pflegende-angehoerige">Tipps für pflegende Angehörige</Link>.</p>
 
           <h2>Kosten und Finanzierung: So zahlt die Pflegekasse</h2>
-          <p>Alltagsbegleitung kostet bei Alltagsengel ab <strong>32 € pro Stunde</strong>. Bei Demenz stehen dafür gleich mehrere Budgets bereit:</p>
+          <p>Alltagsbegleitung kostet bei Alltagsengel ab <strong>32 € pro Stunde</strong>. Bei Demenz stehen für anerkannte Angebote gleich mehrere Budgets der Pflegeversicherung bereit:</p>
           <ul>
-            <li><strong>Entlastungsbetrag (§45b SGB XI):</strong> <strong>131 € pro Monat</strong> ab Pflegegrad 1 — die Basisfinanzierung für Alltagsbegleitung, ohne Eigenanteil. Nicht genutzte Beträge bleiben bis zum 30. Juni des Folgejahres nutzbar. Alle Details: <Link href="/entlastungsbetrag">Entlastungsbetrag</Link>.</li>
+            <li><strong>Entlastungsbetrag (§45b SGB XI):</strong> <strong>131 € pro Monat</strong> ab Pflegegrad 1 — die Basisfinanzierung für anerkannte Alltagsbegleitung. Nicht genutzte Beträge bleiben bis zum 30. Juni des Folgejahres nutzbar. Alle Details: <Link href="/entlastungsbetrag">Entlastungsbetrag</Link>.</li>
             <li><strong>Umwandlungsanspruch (§45a Abs. 4 SGB XI):</strong> Ab Pflegegrad 2 lassen sich bis zu 40 % der ambulanten Pflegesachleistungen zusätzlich für Betreuung umwidmen — bei Pflegegrad 3 sind das mehrere hundert Euro monatlich.</li>
             <li><strong>Verhinderungspflege (§39 SGB XI):</strong> Bis zu <strong>3.539 € pro Jahr</strong>, wenn die private Pflegeperson verhindert ist — auch stundenweise nutzbar, etwa für einen ganzen Entlastungstag pro Woche. Details: <Link href="/verhinderungspflege">Verhinderungspflege</Link>.</li>
             <li><strong>Tages- und Nachtpflege (§41 SGB XI):</strong> Ergänzend zur Begleitung zu Hause — ein eigenes Budget, das die anderen Leistungen nicht schmälert.</li>
           </ul>
+          <p>Ob der Entlastungsbetrag für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.</p>
           <p>Wichtig: Menschen mit Demenz erhalten bei der Begutachtung seit 2017 eine faire Bewertung, weil kognitive und psychische Beeinträchtigungen gleichwertig zu körperlichen zählen — meist wird mindestens Pflegegrad 2 anerkannt. Falls noch kein Pflegegrad besteht: Der Ratgeber <Link href="/blog/pflegegrad-beantragen">Pflegegrad beantragen</Link> führt durch den Antrag, unser <Link href="/pflegegrad-check">Pflegegrad-Check</Link> liefert eine erste Einschätzung. Wie viel Budget insgesamt zusammenkommt, rechnet der <Link href="/budgetrechner">Budgetrechner</Link> aus.</p>
 
           <h2>So gelingt der Start: Eingewöhnung Schritt für Schritt</h2>
@@ -185,12 +186,12 @@ export default function AlltagsbegleitungDemenzPage() {
           ))}
 
           <h2>Fazit: Früh anfangen, verlässlich bleiben</h2>
-          <p>Alltagsbegleitung ist bei Demenz doppelt wirksam: Sie gibt dem erkrankten Menschen Struktur, Aktivierung und eine vertraute Bezugsperson — und den Angehörigen planbare Erholung, bevor die Kraft ausgeht. Weil Vertrauen bei Demenz Zeit braucht, gilt: je früher die Begleitung beginnt, desto tragfähiger wird sie im weiteren Verlauf. Mit Entlastungsbetrag, Umwandlungsanspruch und Verhinderungspflege ist eine wöchentliche Begleitung in den meisten Fällen komplett über die Pflegekasse finanzierbar.</p>
+          <p>Alltagsbegleitung ist bei Demenz doppelt wirksam: Sie gibt dem erkrankten Menschen Struktur, Aktivierung und eine vertraute Bezugsperson — und den Angehörigen planbare Erholung, bevor die Kraft ausgeht. Weil Vertrauen bei Demenz Zeit braucht, gilt: je früher die Begleitung beginnt, desto tragfähiger wird sie im weiteren Verlauf. Mit Entlastungsbetrag, Umwandlungsanspruch und Verhinderungspflege ist eine wöchentliche Begleitung bei einem nach § 45a SGB XI anerkannten Anbieter in vielen Fällen über die Pflegekasse finanzierbar.</p>
         </div>
 
         <div className="blog-cta">
           <h3>Demenz-erfahrene Begleitung finden</h3>
-          <p>Geprüfte Engel mit Betreuungserfahrung, feste Bezugsperson, komplette Abrechnung mit der Pflegekasse — lernen Sie uns unverbindlich kennen.</p>
+          <p>Geprüfte Engel mit Betreuungserfahrung, feste Bezugsperson, kostenlose Beratung zu Ihren Finanzierungswegen (§45a-Anerkennung im Verfahren) — lernen Sie uns unverbindlich kennen.</p>
           <Link href="/alltagsbegleitung" className="btn-gold">Jetzt Engel finden</Link>
         </div>
 

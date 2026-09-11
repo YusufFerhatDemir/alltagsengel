@@ -144,12 +144,12 @@ export const VORLAGEN: readonly Vorlage[] = [
       h('{{entlastungsbetrag}} € im Monat, die Ihnen zustehen') +
         p('{{anrede}}') +
         p(
-          'wer einen anerkannten Pflegegrad hat, bekommt von der Pflegekasse den Entlastungsbetrag nach § 45b SGB XI: <strong>{{entlastungsbetrag}} € pro Monat</strong>. Dieses Geld ist ausdrücklich für Unterstützung im Alltag gedacht — genau dafür, was ein Alltagsengel tut.',
+          'wer einen anerkannten Pflegegrad hat, bekommt von der Pflegekasse den Entlastungsbetrag nach § 45b SGB XI: <strong>{{entlastungsbetrag}} € pro Monat</strong>. Dieses Geld ist ausdrücklich für anerkannte Angebote zur Unterstützung im Alltag gedacht.',
         ) +
         liste([
           'Gilt ab Pflegegrad 1',
           'Nicht genutztes Guthaben wird übertragen und verfällt erst zum 30. Juni des Folgejahres',
-          'Wir rechnen auf Wunsch direkt mit Ihrer Pflegekasse ab — Sie zahlen nichts aus eigener Tasche',
+          'Ob der Betrag für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren',
         ]) +
         knopf('Entlastungsbetrag verstehen', `${SITE}/entlastungsbetrag`),
     ),
@@ -191,8 +191,8 @@ export const VORLAGEN: readonly Vorlage[] = [
           'Das Guthaben sammelt sich an, wenn Sie es nicht nutzen. Zum <strong>30. Juni</strong> des Folgejahres verfällt der Übertrag aus dem Vorjahr allerdings endgültig.',
         ) +
         liste([
-          'Wir rechnen direkt mit Ihrer Pflegekasse ab',
-          'Keine Vorkasse, keine Zuzahlung im Rahmen des Betrags',
+          'Wir beraten Sie kostenlos zu Ihren Finanzierungswegen',
+          'Für die Abrechnung über den Entlastungsbetrag läuft unsere Anerkennung nach § 45a SGB XI',
           'Sie entscheiden, wofür die Stunden verwendet werden',
         ]) +
         knopf('Guthaben prüfen lassen', `${SITE}/kontakt`),
@@ -477,10 +477,35 @@ export function pruefeVorlage(vorlage: Pick<Vorlage, 'betreff' | 'html'>): Vorla
     )
   }
 
+  // Abrechnungsversprechen vor der §45a-Anerkennung: Alltagsengel befindet
+  // sich im Anerkennungsverfahren und kann den Entlastungsbetrag nicht mit
+  // der Pflegekasse abrechnen. Eine Mail, die das verspricht, ist eine
+  // falsche Angabe an die gesamte Kundschaft. Nach dem Bescheid die
+  // Konstante umstellen — nicht die Regel löschen.
+  if (!ANERKENNUNG_45A_LIEGT_VOR) {
+    const versprechen = [...`${vorlage.betreff} ${vorlage.html}`.matchAll(ABRECHNUNGS_VERSPRECHEN)].map((m) => m[0])
+    if (versprechen.length > 0) {
+      fehler.push(
+        `Vorlage verspricht eine Abrechnung mit der Pflegekasse („${versprechen[0]}"). Alltagsengel befindet sich im `
+        + '§45a-Anerkennungsverfahren — so nicht versandfähig.',
+      )
+    }
+  }
+
   if (!vorlage.betreff.trim()) fehler.push('Kein Betreff.')
 
   return { ok: fehler.length === 0, fehler }
 }
+
+/**
+ * Stand der Anerkennung nach § 45a SGB XI (Hessen). Solange `false`, weist
+ * `pruefeVorlage` jedes Abrechnungsversprechen ab.
+ */
+export const ANERKENNUNG_45A_LIEGT_VOR = false
+
+/** Formulierungen, die eine Abrechnung des Entlastungsbetrags durch Alltagsengel zusagen. */
+export const ABRECHNUNGS_VERSPRECHEN =
+  /rechnen[^.<]{0,40}direkt mit (?:Ihrer|der) (?:Pflege)?kasse|direkt mit (?:Ihrer|der) Pflegekasse abgerechnet|nichts aus eigener Tasche|keine Zuzahlung im Rahmen|Abrechnung mit der Pflegekasse übernehmen wir/gi
 
 /**
  * Ersetzt die Platzhalter.

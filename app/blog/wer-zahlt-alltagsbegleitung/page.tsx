@@ -42,7 +42,7 @@ const faqItems = [
   {
     frage: 'Zahlt die Pflegekasse Alltagsbegleitung auch bei Pflegegrad 1?',
     antwort:
-      'Ja. Der Entlastungsbetrag von 131 € pro Monat steht bereits ab Pflegegrad 1 zu und kann für zertifizierte Alltagsbegleitung eingesetzt werden. Die Abrechnung übernimmt Alltagsengel direkt mit der Pflegekasse.',
+      'Ja. Der Entlastungsbetrag von 131 € pro Monat steht bereits ab Pflegegrad 1 zu und kann für Alltagsbegleitung bei einem nach §45a SGB XI anerkannten Anbieter eingesetzt werden. Alltagsengel befindet sich derzeit im Anerkennungsverfahren; bis dahin ist die Buchung als Selbstzahler möglich.',
   },
   {
     frage: 'Zahlt die Krankenkasse die Alltagsbegleitung?',
@@ -53,7 +53,7 @@ const faqItems = [
   {
     frage: 'Muss ich die Kosten vorstrecken?',
     antwort:
-      'Bei Alltagsengel nicht. Wir rechnen die Alltagsbegleitung direkt mit Ihrer Pflegekasse über den Entlastungsbetrag ab — Sie müssen weder in Vorleistung gehen noch Belege einreichen.',
+      'Bei einem anerkannten Anbieter mit Abtretungserklärung nicht — er rechnet direkt mit der Pflegekasse ab. Beim Kostenerstattungsweg zahlen Sie zunächst selbst und reichen die Rechnung bei der Kasse ein. Alltagsengel befindet sich derzeit im Anerkennungsverfahren nach §45a SGB XI; bis dahin ist die Buchung als Selbstzahler möglich.',
   },
   {
     frage: 'Was, wenn ich noch keinen Pflegegrad habe?',
@@ -103,8 +103,8 @@ export default function WerZahltAlltagsbegleitungPage() {
           </p>
           <p>
             Wichtig: Der Anbieter muss nach <strong>§45a SGB XI anerkannt</strong> sein, damit die Pflegekasse
-            zahlt. Alle Alltagsbegleiter:innen von Alltagsengel erfüllen diese Voraussetzung. Die Abrechnung
-            läuft direkt über die Kasse — Sie gehen nicht in Vorleistung.
+            zahlt. Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung
+            als Selbstzahler möglich.
           </p>
 
           <h2>2. Verhinderungspflege — zusätzliches Budget</h2>
@@ -146,7 +146,7 @@ export default function WerZahltAlltagsbegleitungPage() {
             So lässt sich eine verlässliche Betreuung aufbauen, ohne die Familie finanziell zu belasten.
           </p>
 
-          <h2>So läuft die Abrechnung bei Alltagsengel</h2>
+          <h2>So starten Sie bei Alltagsengel</h2>
           <div className="info-steps" style={{ marginTop: 8 }}>
             <div className="info-step">
               <div className="info-step-num">1</div>
@@ -158,7 +158,7 @@ export default function WerZahltAlltagsbegleitungPage() {
             </div>
             <div className="info-step">
               <div className="info-step-num">3</div>
-              <div className="info-step-text">Wir rechnen direkt mit der Pflegekasse ab — kein Papierkram</div>
+              <div className="info-step-text">Als Selbstzahler buchen — §45a-Anerkennung im Verfahren</div>
             </div>
           </div>
 
@@ -180,11 +180,10 @@ export default function WerZahltAlltagsbegleitungPage() {
           ))}
 
           <div className="blog-cta">
-            <h3>Kostenlose Alltagsbegleitung über die Pflegekasse</h3>
+            <h3>Alltagsbegleitung mit Alltagsengel</h3>
             <p>
-              Nutzen Sie Ihren Anspruch: Registrieren Sie sich kostenlos bei Alltagsengel und lassen Sie die
-              Alltagsbegleitung direkt über den Entlastungsbetrag (131 €/Monat) abrechnen — ohne Vorleistung,
-              ohne Vermittlungsgebühr.
+              Registrieren Sie sich kostenlos bei Alltagsengel — ohne Vermittlungsgebühr.
+              §45a-Anerkennung im Verfahren — bis dahin ist die Buchung als Selbstzahler möglich.
             </p>
             <Link href="/auth/register" className="cta-button">
               Kostenlos registrieren →

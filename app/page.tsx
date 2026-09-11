@@ -295,7 +295,8 @@ export default function SplashPage() {
           <h2 className="lp-h2">Eine App. Drei Leistungen.</h2>
           <p className="lp-text">
             Alltagsbegleitung buchen, Pflege-Box bestellen, Krankenfahrt planen — alles in einer
-            App. Direkt mit der Pflegekasse abgerechnet, ohne Papierkram, ohne Telefon-Schleifen.
+            App — ohne Papierkram, ohne Telefon-Schleifen. Pflege-Box und Krankenfahrten laufen über die Kasse,
+            für die Alltagsbegleitung läuft unsere Anerkennung nach §45a SGB XI.
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', margin: '24px 0 8px' }}>
             <AppMockup size={260} />

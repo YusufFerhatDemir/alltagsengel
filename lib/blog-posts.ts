@@ -335,7 +335,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     slug: 'einsamkeit-im-alter',
     headline: 'Einsamkeit im Alter: So helfen Alltagsbegleiter gegen Isolation',
     description:
-      'Einsamkeit im Alter schadet der Gesundheit wie Rauchen. Erfahren Sie, wie Alltagsbegleiter helfen – über §45b oft ohne Zusatzkosten. Jetzt informieren.',
+      'Einsamkeit im Alter schadet der Gesundheit wie Rauchen. Erfahren Sie, wie Alltagsbegleiter helfen und wie der Entlastungsbetrag (131 €/Monat) greift. Jetzt informieren.',
     category: 'Alltagsbegleitung',
     datePublished: '2026-04-01',
     dateModified: '2026-04-01',
@@ -365,7 +365,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     slug: 'einkaufshilfe-senioren',
     headline: 'Einkaufshilfe für Senioren: So klappt der Einkauf mit Begleitung',
     description:
-      'Einkaufshilfe für Senioren: So funktionieren Begleitdienste, was sie kosten und wie Sie über den Entlastungsbetrag (131 €/Monat) kostenfrei buchen.',
+      'Einkaufshilfe für Senioren: So funktionieren Begleitdienste, was sie kosten und wann der Entlastungsbetrag (131 €/Monat) eingesetzt werden kann.',
     category: 'Alltagsbegleitung',
     datePublished: '2026-03-20',
     dateModified: '2026-03-20',
@@ -373,9 +373,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   },
   {
     slug: 'alltagsbegleitung-frankfurt',
-    headline: 'Alltagsbegleitung in Frankfurt — Zertifizierte Alltagsbegleiter finden',
+    headline: 'Alltagsbegleitung in Frankfurt — Geprüfte Alltagsbegleiter finden',
     description:
-      'Finden Sie zertifizierte Alltagsbegleiter in Frankfurt. §45a qualifiziert, versichert & abrechenbar über §45b. Schnell, diskret, professionell.',
+      'Finden Sie geprüfte Alltagsbegleiter in Frankfurt. Geschult, versichert, §45a-Anerkennung im Verfahren. Schnell, diskret, professionell.',
     category: 'Alltagsbegleitung',
     datePublished: '2026-03-19',
     dateModified: '2026-03-19',
@@ -385,7 +385,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     slug: 'entlastungsbetrag-45b',
     headline: 'Entlastungsbetrag §45b SGB XI — 131€/Monat für Alltagsbegleitung',
     description:
-      'Erfahren Sie wie Sie den Entlastungsbetrag nach §45b SGB XI nutzen können. 131€ monatlich für zertifizierte Alltagsbegleitung. Abrechnung mit der Pflegekasse.',
+      'Erfahren Sie wie Sie den Entlastungsbetrag nach §45b SGB XI nutzen können. 131€ monatlich für anerkannte Angebote zur Unterstützung im Alltag. Alltagsengel: §45a-Anerkennung im Verfahren.',
     category: 'Finanzierung',
     datePublished: '2026-03-19',
     dateModified: '2026-03-19',

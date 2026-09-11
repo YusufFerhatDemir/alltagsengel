@@ -52,7 +52,7 @@ export default function UnternehmensprofiltPage() {
         <Paragraph>
           AlltagsEngel stellt eine vollständig integrierte Mobile-First-Lösung bereit, die:
         </Paragraph>
-        <BulletItem>Nahtlose §45b-Abrechnung ermöglicht</BulletItem>
+        <BulletItem>§45b-Abrechnung technisch vorbereitet (Freischaltung nach §45a-Anerkennung, Verfahren läuft)</BulletItem>
         <BulletItem>Alle Begleiter zu 100% versichert sind</BulletItem>
         <BulletItem>Engel gemäß §53b verifiziert sind</BulletItem>
         <BulletItem>Echtzeit-Chat, flexible Buchung und Bewertungssystem bietet</BulletItem>
@@ -77,10 +77,10 @@ export default function UnternehmensprofiltPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(250px, 100%), 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
           <StatBox value="~50%" label="Bruttomarge (Direktabrechnung)" />
           <StatBox value="€20/Std" label="Feste Engel-Vergütung" />
-          <StatBox value="Aktiv" label="Pflegekassen-Abrechnung" />
+          <StatBox value="Im Verfahren" label="§45a-Anerkennung" />
         </div>
         <Paragraph>
-          Unser Geschäftsmodell basiert auf Direktabrechnung mit den Pflegekassen. Kunden zahlen nichts aus eigener Tasche – der §45b-Entlastungsbetrag wird direkt abgerechnet. Alltagsbegleiter erhalten eine feste Vergütung von €20/Std, die Plattform behält eine Bruttomarge von ~50% (~€65/Kunde/Monat). Kein Abo-Modell für Kunden oder Engel im Kerngeschäft.
+          Unser Geschäftsmodell basiert auf Direktabrechnung mit den Pflegekassen: Nach der Anerkennung nach §45a SGB XI (Verfahren läuft) wird der §45b-Entlastungsbetrag direkt abgerechnet. Bis dahin buchen Kunden als Selbstzahler. Alltagsbegleiter erhalten eine feste Vergütung von €20/Std, die Plattform behält eine Bruttomarge von ~50% (~€65/Kunde/Monat). Kein Abo-Modell für Kunden oder Engel im Kerngeschäft.
         </Paragraph>
         <Paragraph>
           <strong style={{color:'#C9963C'}}>Zweites Standbein – Krankentransport-Vermittlung:</strong> B2B-Plattform zur Vermittlung von Krankentransporten an Transportunternehmen. Preismodell: €99–199/Monat Abo + Vermittlungsgebühr pro Fahrt.

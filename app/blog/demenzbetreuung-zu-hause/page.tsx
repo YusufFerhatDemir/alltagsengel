@@ -37,8 +37,8 @@ const jsonLd = {
 const faqData = [
   { q: 'Kann man einen Menschen mit Demenz zu Hause betreuen?', a: 'Ja, in vielen Fällen ist das über lange Zeit möglich — besonders in frühen und mittleren Krankheitsphasen. Wichtig sind eine feste Tagesstruktur, eine sichere Wohnumgebung und regelmäßige Entlastung der pflegenden Angehörigen, etwa durch stundenweise Alltagsbegleitung oder Tagespflege. Entscheidend ist, dass die Betreuung zur jeweiligen Krankheitsphase passt und Angehörige nicht dauerhaft überlastet sind.' },
   { q: 'Welchen Pflegegrad bekommt man bei Demenz?', a: 'Das hängt vom Einzelfall ab. Seit der Pflegereform werden kognitive und kommunikative Fähigkeiten sowie Verhaltensweisen und psychische Problemlagen bei der Begutachtung ausdrücklich berücksichtigt. Menschen mit Demenz erhalten daher häufig schon früh einen Pflegegrad — oft Pflegegrad 2 oder höher, je nach Ausprägung. Bereits ab Pflegegrad 1 stehen 131 € Entlastungsbetrag pro Monat zur Verfügung.' },
-  { q: 'Wer bezahlt die Demenzbetreuung zu Hause?', a: 'Die wichtigste Finanzierungsquelle ist der Entlastungsbetrag nach §45b SGB XI: 131 € pro Monat ab Pflegegrad 1, zweckgebunden für anerkannte Angebote zur Unterstützung im Alltag wie Alltagsbegleitung. Ab Pflegegrad 2 kommen Pflegegeld und der gemeinsame Jahresbetrag für Verhinderungs- und Kurzzeitpflege (3.539 € pro Jahr) hinzu. Alltagsengel rechnet den Entlastungsbetrag direkt mit der Pflegekasse ab.' },
-  { q: 'Was ist stundenweise Demenzbetreuung?', a: 'Stundenweise Betreuung bedeutet, dass ein Alltagsbegleiter für einige Stunden pro Woche zu Ihnen nach Hause kommt: Er leistet Gesellschaft, beschäftigt den erkrankten Menschen, hilft im Haushalt oder begleitet bei Spaziergängen. In dieser Zeit können sich pflegende Angehörige erholen, eigene Termine wahrnehmen oder einfach durchatmen. Die Kosten sind über den Entlastungsbetrag von 131 € monatlich abrechenbar.' },
+  { q: 'Wer bezahlt die Demenzbetreuung zu Hause?', a: 'Die wichtigste Finanzierungsquelle ist der Entlastungsbetrag nach §45b SGB XI: 131 € pro Monat ab Pflegegrad 1, zweckgebunden für anerkannte Angebote zur Unterstützung im Alltag wie Alltagsbegleitung. Ab Pflegegrad 2 kommen Pflegegeld und der gemeinsame Jahresbetrag für Verhinderungs- und Kurzzeitpflege (3.539 € pro Jahr) hinzu. Ob der Entlastungsbetrag für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren.' },
+  { q: 'Was ist stundenweise Demenzbetreuung?', a: 'Stundenweise Betreuung bedeutet, dass ein Alltagsbegleiter für einige Stunden pro Woche zu Ihnen nach Hause kommt: Er leistet Gesellschaft, beschäftigt den erkrankten Menschen, hilft im Haushalt oder begleitet bei Spaziergängen. In dieser Zeit können sich pflegende Angehörige erholen, eigene Termine wahrnehmen oder einfach durchatmen. Bei einem nach § 45a SGB XI anerkannten Anbieter sind die Kosten über den Entlastungsbetrag von 131 € monatlich abrechenbar.' },
   { q: 'Ist Alltagsbegleitung bei Demenz medizinische Pflege?', a: 'Nein. Alltagsbegleitung ersetzt weder den Pflegedienst noch die ärztliche Behandlung. Sie umfasst Betreuung, Beschäftigung, Haushaltshilfe und Begleitung — also genau die Unterstützung, die den Alltag mit Demenz trägt. Körperbezogene Pflege wie Waschen oder Medikamentengabe bleibt Aufgabe von Pflegediensten und Angehörigen. Beides ergänzt sich und wird aus unterschiedlichen Töpfen finanziert.' },
   { q: 'Wann reicht die Betreuung zu Hause nicht mehr aus?', a: 'Warnzeichen sind unter anderem: nächtliche Unruhe mit Weglauftendenz, Selbst- oder Fremdgefährdung, starke Gewichtsabnahme sowie dauerhafte Erschöpfung der Angehörigen. Dann sollten Sie mit Hausarzt und Pflegeberatung über zusätzliche Bausteine sprechen — etwa Tagespflege, Kurzzeitpflege oder einen Pflegedienst. Ein Umzug ins Pflegeheim ist erst nötig, wenn auch diese Kombination nicht mehr trägt.' },
   { q: 'Kann ich Entlastungsbetrag und Verhinderungspflege für Demenzbetreuung kombinieren?', a: 'Ja, das sind zwei getrennte Ansprüche. Der Entlastungsbetrag (131 € pro Monat, ab Pflegegrad 1) und der gemeinsame Jahresbetrag für Verhinderungs- und Kurzzeitpflege (3.539 € pro Jahr, ab Pflegegrad 2) ergeben zusammen bis zu 5.111 € pro Jahr für Betreuung und Entlastung.' },
@@ -75,7 +75,7 @@ export default function DemenzbetreuungZuHausePage() {
             diese Aufgabe mit großer Hingabe übernehmen und dabei oft an ihre Grenzen kommen. Dieser
             Ratgeber zeigt, wie Demenzbetreuung zu Hause gelingen kann: mit Alltagsstruktur, guter
             Kommunikation, stundenweiser Entlastung durch <Link href="/alltagsbegleitung">Alltagsbegleitung</Link> und
-            einer Finanzierung, die die Pflegekasse trägt.
+            den Finanzierungswegen der Pflegeversicherung.
           </p>
 
           <h2>Die Herausforderung: Demenz-Pflege verändert den Familienalltag</h2>
@@ -214,8 +214,10 @@ export default function DemenzbetreuungZuHausePage() {
           <p>
             Entlastungsbetrag und Verhinderungspflege zusammen ergeben bis zu 5.111 € pro Jahr für
             Betreuung und Entlastung — Geld, das vielen Familien zusteht und dennoch häufig ungenutzt
-            verfällt. Bei Alltagsengel übernehmen wir die Abrechnung des Entlastungsbetrags direkt mit
-            Ihrer Pflegekasse: Sie müssen nicht in Vorleistung gehen und keine Belege einreichen.
+            verfällt. Ob der Entlastungsbetrag für ein konkretes Angebot eingesetzt werden kann, setzt
+            die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit
+            im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich. Zu Ihren
+            Finanzierungswegen beraten wir Sie vorab kostenlos.
           </p>
 
           <h2>Pflegegrad bei Demenz: Kognition und Verhalten zählen</h2>
@@ -294,7 +296,7 @@ export default function DemenzbetreuungZuHausePage() {
 
           <div className="blog-cta">
             <h2>Entlastung für Ihre Familie — mit Alltagsengel</h2>
-            <p>Stundenweise Betreuung durch feste Bezugspersonen, abgerechnet über den Entlastungsbetrag (131 €/Monat). 0 € Eigenanteil im Rahmen des Budgets.</p>
+            <p>Stundenweise Betreuung durch feste Bezugspersonen. Wir beraten Sie kostenlos zu Ihren Finanzierungswegen — die Anerkennung nach § 45a SGB XI läuft.</p>
             <Link href="/termin" className="btn-gold">KOSTENLOSES ERSTGESPRÄCH BUCHEN</Link>
           </div>
 

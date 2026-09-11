@@ -158,7 +158,7 @@ export default function AlltagshilfeSenioren() {
             <li><strong>Geprüfte Helfer:</strong> Alle registrierten Alltagsbegleiter werden überprüft</li>
             <li><strong>Transparente Preise:</strong> Sie sehen sofort, was Hilfe kostet</li>
             <li><strong>Flexible Buchung:</strong> Buchen Sie einzelne Stunden oder regelmäßige Einsätze</li>
-            <li><strong>Anbieter für Entlastungsbetrag:</strong> Viele Alltagsengel-Helfer sind zugelassen und nehmen den Entlastungsbetrag an</li>
+            <li><strong>§45a-Anerkennung im Verfahren:</strong> Ob der Entlastungsbetrag für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.</li>
             <li><strong>Schnelle Vermittlung:</strong> Keine langen Wartelisten – finden Sie zeitnah Hilfe</li>
             <li><strong>Einfache Abwicklung:</strong> Alltagsengel kümmert sich um die Verwaltung, Sie zahlen einfach über die App</li>
           </ul>
@@ -193,7 +193,7 @@ export default function AlltagshilfeSenioren() {
 
         <div className="blog-cta">
           <h3>Jetzt Alltagsengel testen</h3>
-          <p>Vereinbaren Sie jetzt einen kostenlosen Termin und finden Sie Alltagshilfe, die zu Ihnen passt und Ihren Entlastungsbetrag nutzt.</p>
+          <p>Vereinbaren Sie jetzt einen kostenlosen Termin und finden Sie Alltagshilfe, die zu Ihnen passt. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos — die Anerkennung nach § 45a SGB XI läuft.</p>
           <Link href="/termin" className="btn-gold">Jetzt Termin vereinbaren</Link>
         </div>
 

@@ -135,7 +135,7 @@ export default function EntlastungsbetragNutzenPage() {
           <ul className="blog-list">
             <li>Betreuungsgruppen für Demenzkranke</li>
             <li>Familienentlastende Dienste</li>
-            <li>Alltagsbegleiter-Dienste (wie Alltagsengel)</li>
+            <li>Alltagsbegleiter-Dienste</li>
             <li>Helferkreise und Nachbarschaftshilfen</li>
           </ul>
 
@@ -166,15 +166,15 @@ export default function EntlastungsbetragNutzenPage() {
           <p>
             Nur Leistungen von <strong>zugelassenen Anbietern</strong> werden erstattet. Bevor
             Sie jemanden beauftragen, prüfen Sie, ob der Anbieter eine Kassenanerkennung nach
-            § 45a SGB XI hat. Bei Alltagsengel sind alle Begleiter automatisch zertifiziert —
-            Sie müssen sich darum nicht kümmern.
+            § 45a SGB XI hat. Alltagsengel befindet sich derzeit im Anerkennungsverfahren —
+            bis dahin ist die Buchung als Selbstzahler möglich.
           </p>
 
           <h3>Fehler 3: Rechnungen nicht einreichen</h3>
           <p>
             Der Entlastungsbetrag wird nicht automatisch ausgezahlt. Sie müssen die
             <strong> Rechnungen bei Ihrer Pflegekasse einreichen</strong>. Die Kasse prüft
-            die Rechnung und erstattet den Betrag. Manche Anbieter (wie Alltagsengel) rechnen
+            die Rechnung und erstattet den Betrag. Manche anerkannten Anbieter rechnen
             auch direkt mit der Kasse ab — das ist der bequemste Weg.
           </p>
 
@@ -214,9 +214,10 @@ export default function EntlastungsbetragNutzenPage() {
 
           <h3>Schritt 3: Zugelassenen Anbieter finden</h3>
           <p>
-            Suchen Sie einen Anbieter, der nach § 45a SGB XI zugelassen ist. Bei Alltagsengel
-            ist das automatisch der Fall — alle Begleiter auf der Plattform sind zertifiziert
-            und kassenanerkannt.
+            Suchen Sie einen Anbieter, der nach § 45a SGB XI anerkannt ist. Ob der
+            Entlastungsbetrag für ein konkretes Angebot eingesetzt werden kann, setzt die
+            Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich
+            derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.
           </p>
 
           <h3>Schritt 4: Leistung buchen und nutzen</h3>
@@ -229,8 +230,7 @@ export default function EntlastungsbetragNutzenPage() {
           <h3>Schritt 5: Rechnung einreichen oder Direktabrechnung nutzen</h3>
           <p>
             Reichen Sie die Rechnungen bei Ihrer Pflegekasse ein oder wählen Sie einen Anbieter,
-            der direkt mit der Kasse abrechnet. Bei Alltagsengel wird die Abrechnung für Sie
-            übernommen — Sie müssen sich um nichts kümmern.
+            der direkt mit der Kasse abrechnet.
           </p>
 
           <h2>Praxisbeispiele: So setzen andere den Entlastungsbetrag ein</h2>
@@ -238,20 +238,24 @@ export default function EntlastungsbetragNutzenPage() {
           <h3>Beispiel 1: Einkaufsbegleitung für Frau M. (Pflegegrad 1)</h3>
           <p>
             Frau M., 81, lebt allein in Frankfurt-Sachsenhausen. Sie hat Pflegegrad 1 und
-            Schwierigkeiten beim Tragen schwerer Einkäufe. Über Alltagsengel bucht sie
-            einen Begleiter für <strong>1 × pro Woche, 3 Stunden</strong>. Kosten: ca. 128 €/Monat.
-            Der Entlastungsbetrag von 131 € deckt das vollständig ab —
-            <strong> Frau M. zahlt keinen Cent aus eigener Tasche</strong>.
+            Schwierigkeiten beim Tragen schwerer Einkäufe. Bei einem anerkannten Anbieter bucht sie
+            einen Begleiter für <strong>1 × pro Woche, 1 Stunde</strong> — rund 4 Stunden im Monat.
+            Bei 32 € pro Stunde sind das ca. 128 €/Monat, die der Entlastungsbetrag von 131 €
+            vollständig abdeckt.
           </p>
 
           <h3>Beispiel 2: Demenzbetreuung für Herrn K. (Pflegegrad 3)</h3>
           <p>
             Herr K., 76, hat Demenz im Frühstadium. Seine Tochter pflegt ihn, braucht aber
-            regelmäßig eine Auszeit. Sie bucht über Alltagsengel eine spezialisierte
-            Demenzbetreuung für <strong>2 × pro Woche, 2 Stunden</strong>. Kosten: ca. 280 €/Monat.
-            Davon übernimmt der Entlastungsbetrag 131 €, die restlichen 149 € werden über die
-            <Link href="/blog/verhinderungspflege-beantragen"> Verhinderungspflege</Link> finanziert.
-            <strong> Eigenanteil: 0 €</strong>.
+            regelmäßig eine Auszeit. Sie bucht bei einem anerkannten Anbieter eine spezialisierte
+            Demenzbetreuung für <strong>2 × pro Woche, 1 Stunde</strong> — rund 9 Stunden im Monat,
+            bei 32 € pro Stunde ca. 280 €/Monat. Davon übernimmt der Entlastungsbetrag 131 €, die
+            restlichen 149 € können über die
+            <Link href="/blog/verhinderungspflege-beantragen"> Verhinderungspflege</Link> finanziert werden.
+          </p>
+          <p>
+            Beide Beispiele setzen einen nach § 45a SGB XI anerkannten Anbieter voraus — Alltagsengel
+            befindet sich derzeit im Anerkennungsverfahren; bis dahin ist die Buchung als Selbstzahler möglich.
           </p>
 
           <h3>Beispiel 3: Haushaltshilfe für Ehepaar S. (Pflegegrad 2)</h3>
@@ -325,8 +329,10 @@ export default function EntlastungsbetragNutzenPage() {
           <p>
             Nutzen Sie diesen Betrag für professionelle <Link href="/blog/alltagsbegleitung-kosten">Alltagsbegleitung</Link>,
             <Link href="/blog/haushaltshilfe-frankfurt"> Haushaltshilfe</Link> oder andere anerkannte
-            Leistungen. Alltagsengel macht es Ihnen besonders einfach: Alle Begleiter sind
-            zertifiziert, die Kassenabrechnung wird übernommen und die Registrierung ist kostenlos.
+            Leistungen. Ob der Entlastungsbetrag für ein konkretes Angebot eingesetzt werden kann,
+            setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet
+            sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler
+            möglich; die Registrierung ist kostenlos.
           </p>
           <p>
             <strong>Handeln Sie jetzt</strong> — denn jeder Monat ohne Nutzung ist ein Monat, in dem
@@ -336,8 +342,9 @@ export default function EntlastungsbetragNutzenPage() {
           <div className="blog-cta">
             <h3>Entlastungsbetrag sinnvoll nutzen — mit Alltagsengel</h3>
             <p>
-              Registrieren Sie sich kostenlos und finden Sie zertifizierte Alltagsbegleiter,
-              die Ihren Entlastungsbetrag direkt mit der Pflegekasse abrechnen. Einfacher geht es nicht.
+              Registrieren Sie sich kostenlos und finden Sie geprüfte Alltagsbegleiter in Ihrer Nähe.
+              §45a-Anerkennung im Verfahren — bis dahin ist die Buchung als Selbstzahler möglich.
+              Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.
             </p>
             <Link href="/auth/register" className="cta-button">
               Jetzt kostenlos registrieren →
@@ -359,7 +366,7 @@ export default function EntlastungsbetragNutzenPage() {
         <section className="blog-related" style={{ marginTop: 40, padding: '24px 20px', background: 'rgba(201,150,60,0.06)', borderRadius: 12, border: '1px solid rgba(201,150,60,0.15)' }}>
           <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#C9963C' }}>Weiterführende Informationen</h3>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <li><Link href="/alltagsbegleitung" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alltagsbegleitung buchen — Entlastungsbetrag einsetzen</Link></li>
+            <li><Link href="/alltagsbegleitung" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alltagsbegleitung buchen — §45a-Anerkennung im Verfahren</Link></li>
             <li><Link href="/blog/entlastungsbetrag-45b" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Entlastungsbetrag 45b komplett erklärt</Link></li>
             <li><Link href="/faq" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Häufige Fragen zum Entlastungsbetrag</Link></li>
           </ul>

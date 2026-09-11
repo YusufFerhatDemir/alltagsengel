@@ -213,7 +213,7 @@ export default function PflegegradBeantragen() {
 
         <div className="blog-cta">
           <h3>Pflegegrad da? Jetzt Leistungen nutzen</h3>
-          <p>Mit einem anerkannten Pflegegrad können Sie über Alltagsengel Alltagsbegleitung und Haushaltshilfe buchen — finanziert über den Entlastungsbetrag, direkt mit der Pflegekasse abgerechnet.</p>
+          <p>Über Alltagsengel können Sie Alltagsbegleitung und Haushaltshilfe buchen. §45a-Anerkennung im Verfahren — bis dahin ist die Buchung als Selbstzahler möglich. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.</p>
           <Link href="/termin" className="btn-gold">Kostenloses Erstgespräch vereinbaren</Link>
         </div>
 

@@ -151,7 +151,7 @@ export default function MarktanalysePage() {
           <div style={{ padding: '1rem', backgroundColor: '#1a1a1a', borderRadius: '0.5rem', borderLeft: '3px solid #D4AF37' }}>
             <div style={{ color: '#D4AF37', fontWeight: '600', marginBottom: '0.5rem' }}>Direktabrechnung mit Pflegekassen</div>
             <div style={{ fontSize: '0.95rem', fontWeight: '600' }}>~€35–40/Std. Abrechnungssatz</div>
-            <div style={{ fontSize: '0.85rem', color: '#B0B0B0', marginTop: '0.5rem' }}>AlltagsEngel rechnet den vollen Betrag direkt mit den Pflegekassen ab</div>
+            <div style={{ fontSize: '0.85rem', color: '#B0B0B0', marginTop: '0.5rem' }}>Nach der §45a-Anerkennung (Verfahren läuft) rechnet AlltagsEngel den vollen Betrag direkt mit den Pflegekassen ab</div>
           </div>
           <div style={{ padding: '1rem', backgroundColor: '#1a1a1a', borderRadius: '0.5rem', borderLeft: '3px solid #D4AF37' }}>
             <div style={{ color: '#D4AF37', fontWeight: '600', marginBottom: '0.5rem' }}>Feste Engel-Vergütung</div>

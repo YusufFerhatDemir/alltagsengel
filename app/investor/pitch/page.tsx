@@ -122,7 +122,7 @@ function buildSlides(): Slide[] {
             <p style={{ fontSize: 12, color: C.ink4, marginTop: 8, letterSpacing: '0.08em' }}>PREMIUM ALLTAGSBEGLEITUNG</p>
             <div className="hero-stats" style={{ display: 'flex', justifyContent: 'center', gap: 32, marginTop: 48, flexWrap: 'wrap' as const }}>
               <StatBox value="100%" label="Versichert" />
-              <StatBox value="§45b" label="Integriert" />
+              <StatBox value="§45b" label="Vorbereitet" />
               <StatBox value="24/7" label="Verfügbar" />
             </div>
             <p style={{ fontSize: 11, color: C.ink5, marginTop: 48 }}>Investor Pitch Deck · März 2026</p>
@@ -146,7 +146,7 @@ function buildSlides(): Slide[] {
         <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, marginTop: 24 }}>
           <div>
             <FeatureRow icon={Icons.zap(20)} title="Sofortige Vermittlung" desc="Zertifizierte Alltagsbegleiter in Ihrer Nähe — Buchung in unter 2 Minuten" />
-            <FeatureRow icon={Icons.heart(20)} title="§45b Integration" desc="Direkte Abrechnung mit allen Pflegekassen. €131/Monat pro Pflegebedürftigem" />
+            <FeatureRow icon={Icons.heart(20)} title="§45b Integration" desc="Direktabrechnung mit den Pflegekassen nach §45a-Anerkennung (Verfahren läuft). €131/Monat pro Pflegebedürftigem" />
             <FeatureRow icon={Icons.star(20)} title="Qualitätsgarantie" desc="Alle Engel sind nach §53b SGB XI zertifiziert und werden bewertet" />
             <FeatureRow icon={Icons.phone(20)} title="Dual-App" desc="Eigene Oberfläche für Kunden und Engel. iOS & Android" />
           </div>
@@ -199,7 +199,7 @@ function buildSlides(): Slide[] {
               <div style={{ fontSize: 16, fontWeight: 700, color: C.ink, marginTop: 4 }}>Bruttomarge</div>
               <GoldSep />
               <div style={{ fontSize: 13, color: C.ink3, lineHeight: 1.5 }}>
-                Direktabrechnung mit Pflegekassen. Engel erhalten feste <strong style={{ color: C.gold }}>€20/Std.</strong> — Rest bleibt als Marge.
+                Direktabrechnung mit Pflegekassen (nach §45a-Anerkennung, Verfahren läuft). Engel erhalten feste <strong style={{ color: C.gold }}>€20/Std.</strong> — Rest bleibt als Marge.
               </div>
             </Card>
             <Card style={{ textAlign: 'center' }}>
@@ -214,7 +214,7 @@ function buildSlides(): Slide[] {
           <Card style={{ marginTop: 16, textAlign: 'center' }}>
             <div style={{ fontSize: 13, color: C.ink3 }}>§45b Entlastungsbudget pro Pflegebedürftigem</div>
             <div className="big-num" style={{ fontSize: 36, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif", marginTop: 4 }}>€131 / Monat</div>
-            <div style={{ fontSize: 12, color: C.ink4, marginTop: 4 }}>= €1.572 / Jahr — AlltagsEngel rechnet direkt mit der Pflegekasse ab</div>
+            <div style={{ fontSize: 12, color: C.ink4, marginTop: 4 }}>= €1.572 / Jahr — nach §45a-Anerkennung Abrechnung direkt mit der Pflegekasse (Verfahren läuft)</div>
           </Card>
           <Card style={{ marginTop: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
@@ -239,7 +239,7 @@ function buildSlides(): Slide[] {
             </div>
             <FeatureRow icon={Icons.search(20)} title="Engel finden" desc="Filter nach Service, Standort & Bewertung" />
             <FeatureRow icon={Icons.calendar(20)} title="Sofort buchen" desc="Verfügbarkeit in Echtzeit" />
-            <FeatureRow icon={Icons.creditCard(20)} title="§45b abrechnen" desc="Direkte Kassenabrechnung" />
+            <FeatureRow icon={Icons.creditCard(20)} title="§45b abrechnen" desc="Kassenabrechnung nach §45a-Anerkennung" />
             <FeatureRow icon={Icons.star(20)} title="Bewerten" desc="Transparentes Rating-System" />
           </Card>
           <Card>

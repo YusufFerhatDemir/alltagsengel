@@ -48,7 +48,7 @@ const faqItems = [
   },
   {
     frage: 'Muss ich den Entlastungsbetrag beantragen?',
-    antwort: 'Nein, ein Antrag ist nicht nötig. Sie reichen die Rechnungen anerkannter Anbieter wie Alltagsengel bei Ihrer Pflegekasse ein — oder wir rechnen per Abtretungserklärung direkt mit der Kasse ab.',
+    antwort: 'Nein, ein Antrag ist nicht nötig. Sie reichen die Rechnungen anerkannter Anbieter bei Ihrer Pflegekasse ein — oder der Anbieter rechnet per Abtretungserklärung direkt mit der Kasse ab. Alltagsengel befindet sich derzeit im Anerkennungsverfahren nach § 45a SGB XI; bis dahin ist die Buchung als Selbstzahler möglich.',
   },
 ]
 
@@ -87,7 +87,7 @@ export default function BudgetrechnerPage() {
         <BudgetRechner />
 
         <section className="info-card" style={{ marginTop: 18 }}>
-          <h3>So nutzen Sie Ihr Budget — ohne Papierkram</h3>
+          <h3>So geht es weiter</h3>
           <div className="info-steps">
             <div className="info-step">
               <div className="info-step-num">1</div>
@@ -95,11 +95,11 @@ export default function BudgetrechnerPage() {
             </div>
             <div className="info-step">
               <div className="info-step-num">2</div>
-              <div className="info-step-text">Wir klären alles mit Ihrer Pflegekasse — inkl. Abtretungserklärung</div>
+              <div className="info-step-text">Wir beraten Sie vorab kostenlos zu Ihren Finanzierungswegen — Alltagsengel befindet sich derzeit im Anerkennungsverfahren nach § 45a SGB XI</div>
             </div>
             <div className="info-step">
               <div className="info-step-num">3</div>
-              <div className="info-step-text">Ihr Engel kommt: Einkauf, Haushalt, Arztbegleitung, Gesellschaft — 0 € Eigenanteil</div>
+              <div className="info-step-text">Ihr Engel kommt: Einkauf, Haushalt, Arztbegleitung, Gesellschaft — bis zur Anerkennung als Selbstzahler</div>
             </div>
           </div>
         </section>
@@ -118,7 +118,8 @@ export default function BudgetrechnerPage() {
           <h3>Jetzt Restbudget sichern</h3>
           <p style={{ marginBottom: 16 }}>
             Wir prüfen kostenlos, wie viel Budget Ihnen wirklich zusteht — inklusive Übertrag und
-            Umwandlungsanspruch — und übernehmen die komplette Abrechnung mit der Pflegekasse.
+            Umwandlungsanspruch. Alltagsengel befindet sich derzeit im Anerkennungsverfahren nach
+            § 45a SGB XI — bis dahin ist die Buchung als Selbstzahler möglich.
           </p>
           <LeadForm defaultService="Alltagsbegleitung" source="budgetrechner" />
         </section>

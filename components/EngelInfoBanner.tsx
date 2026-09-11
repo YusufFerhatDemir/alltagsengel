@@ -83,8 +83,9 @@ export default function EngelInfoBanner() {
           <span className="step-num">3</span>
           <div>
             <strong>Einsatz &amp; Abrechnung</strong> — Nach dem Termin
-            rechnen wir §45b direkt mit der Pflegekasse ab, du bekommst deine
-            Vergütung aufs Konto.
+            rechnen wir den Einsatz ab, du bekommst deine Vergütung aufs
+            Konto. (Abrechnung über §45b erst nach unserer §45a-Anerkennung,
+            das Verfahren läuft.)
           </div>
         </li>
       </ul>

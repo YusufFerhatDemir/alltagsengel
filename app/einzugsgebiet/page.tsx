@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Service',
-  name: 'Alltagsbegleitung nach §45a SGB XI (Abrechnung über §45b)',
+  name: 'Alltagsbegleitung (Entlastungsangebot, §45a SGB XI im Anerkennungsverfahren)',
   serviceType: 'Alltagsbegleitung / häusliche Betreuung',
   provider: {
     '@type': 'Organization',
@@ -57,7 +57,7 @@ const faqItems = [
   },
   {
     frage: 'Kostet die Anfahrt extra?',
-    antwort: 'Nein. Innerhalb unseres Einzugsgebiets (Frankfurt + 30 km) fallen keine zusätzlichen Anfahrtskosten an. Die Alltagsbegleitung rechnen wir direkt über den Entlastungsbetrag (131 €/Monat, §45b SGB XI) mit Ihrer Pflegekasse ab.',
+    antwort: 'Nein. Innerhalb unseres Einzugsgebiets (Frankfurt + 30 km) fallen keine zusätzlichen Anfahrtskosten an. Pflegebedürftigen steht nach § 45b SGB XI grundsätzlich ein Entlastungsbetrag von 131 € monatlich zu; sein Einsatz für unser Angebot setzt die Anerkennung nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.',
   },
 ]
 

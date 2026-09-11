@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     default: 'Alltagsengel Frankfurt — Begleitung, Pflegebox, Krankenfahrt',
     template: '%s | Alltagsengel',
   },
-  description: 'Alltagsbegleitung (§45b, 131 €/Monat), Pflegebox (0 € Eigenanteil) & Krankenfahrten in Frankfurt & Rhein-Main. Jetzt kostenlos in der App starten.',
+  description: 'Alltagsbegleitung, Pflegebox (0 € Eigenanteil, §40 SGB XI) & Krankenfahrten in Frankfurt & Rhein-Main. Jetzt kostenlos in der App registrieren.',
   keywords: [
     'Alltagsbegleitung',
     'Alltagsbegleitung Frankfurt',
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Alltagsengel — Alltagsbegleitung, Pflegebox & Krankenfahrt',
-    description: 'Alltagsbegleitung über den Entlastungsbetrag (131 €/Monat) · Pflegebox 0 € Eigenanteil · Krankenfahrten — alles in der App.',
+    description: 'Alltagsbegleitung in Frankfurt & Rhein-Main · Pflegebox 0 € Eigenanteil (§40 SGB XI) · Krankenfahrten — alles in der App.',
     url: 'https://alltagsengel.care',
     siteName: 'Alltagsengel.care',
     locale: 'de_DE',
@@ -71,7 +71,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Alltagsengel — Alltagsbegleitung, Pflegebox & Krankenfahrt',
-    description: 'Alltagsbegleitung über den Entlastungsbetrag (131 €/Monat) · Pflegebox 0 € Eigenanteil · Krankenfahrten — alles in der App.',
+    description: 'Alltagsbegleitung in Frankfurt & Rhein-Main · Pflegebox 0 € Eigenanteil (§40 SGB XI) · Krankenfahrten — alles in der App.',
     images: ['/og-image.png'],
   },
   robots: {
@@ -222,7 +222,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   'Verhinderungspflege',
                   'Seniorenbetreuung zu Hause',
                 ],
-                slogan: 'Alltagsbegleitung, Pflegebox und Krankenfahrten — über die Pflegekasse finanziert.',
+                slogan: 'Alltagsbegleitung, Pflegebox und Krankenfahrten in Frankfurt & Rhein-Main — alles in einer App.',
               },
               {
                 '@type': 'LocalBusiness',

@@ -13,7 +13,7 @@ import assert from 'node:assert/strict'
 import { ENTLASTUNG_MONATLICH_EUR } from '@/lib/config/budget-constants'
 import {
   VORLAGEN, anredeFuer, istVorlagenKey, pruefeVorlage, rendere, textTeilAus,
-  vorlageAus, werteFuer,
+  vorlageAus, werteFuer, ANERKENNUNG_45A_LIEGT_VOR,
 } from './vorlagen'
 import type { MarketingKontakt } from './typen'
 
@@ -90,6 +90,41 @@ test('125 € als Entlastungsbetrag fällt durch', () => {
   assert.equal(befund.ok, false)
   assert.ok(befund.fehler.some((f) => f.includes('125')))
   assert.ok(befund.fehler.some((f) => f.includes(String(ENTLASTUNG_MONATLICH_EUR))))
+})
+
+// ── §45a: kein Abrechnungsversprechen vor der Anerkennung ────────────────
+
+test('Anerkennung nach §45a steht noch aus — die Sperre ist scharf', () => {
+  assert.equal(ANERKENNUNG_45A_LIEGT_VOR, false)
+})
+
+test('„wir rechnen direkt mit Ihrer Pflegekasse ab" fällt durch', () => {
+  for (const satz of [
+    'Wir rechnen direkt mit Ihrer Pflegekasse ab',
+    'Wir rechnen auf Wunsch direkt mit Ihrer Pflegekasse ab',
+    'Die Leistung wird direkt mit der Pflegekasse abgerechnet.',
+    'Sie zahlen nichts aus eigener Tasche',
+    'Keine Vorkasse, keine Zuzahlung im Rahmen des Betrags',
+    'Die Abrechnung mit der Pflegekasse übernehmen wir für Sie',
+  ]) {
+    const b = pruefeVorlage({ betreff: 'x', html: `<p>${satz}</p> {{abmeldelink}}` })
+    assert.equal(b.ok, false, satz)
+    assert.match(b.fehler.join(' '), /Anerkennungsverfahren/, satz)
+  }
+})
+
+test('der Standardsatz „im Anerkennungsverfahren" besteht', () => {
+  const b = pruefeVorlage({
+    betreff: 'Entlastungsbetrag',
+    html: '<p>Ob der Betrag eingesetzt werden kann, setzt die Anerkennung nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren.</p> {{abmeldelink}}',
+  })
+  assert.deepEqual(b.fehler, [])
+})
+
+test('KEINE Katalog-Vorlage verspricht eine Kassenabrechnung', () => {
+  for (const v of VORLAGEN) {
+    assert.doesNotMatch(v.html, /rechnen[^.<]{0,40}direkt mit (Ihrer|der) (Pflege)?kasse|nichts aus eigener Tasche/i, v.templateKey)
+  }
 })
 
 test('ein leerer Betreff fällt durch', () => {

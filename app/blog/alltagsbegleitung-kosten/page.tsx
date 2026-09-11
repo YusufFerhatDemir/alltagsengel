@@ -49,7 +49,7 @@ const faqData = [
   },
   {
     q: 'Gibt es Alltagsbegleitung auch kostenlos?',
-    a: 'Ehrenamtliche Besuchsdienste sind kostenlos, aber selten regelmäßig verfügbar. Für Personen mit Pflegegrad ist professionelle Alltagsbegleitung über den Entlastungsbetrag von 131 € monatlich de facto kostenfrei — solange Sie im Budget bleiben, entsteht kein Eigenanteil.',
+    a: 'Ehrenamtliche Besuchsdienste sind kostenlos, aber selten regelmäßig verfügbar. Für Personen mit Pflegegrad kann professionelle Alltagsbegleitung bei einem nach § 45a SGB XI anerkannten Anbieter über den Entlastungsbetrag von 131 € monatlich finanziert werden. Alltagsengel befindet sich derzeit im Anerkennungsverfahren; bis dahin ist die Buchung als Selbstzahler möglich.',
   },
   {
     q: 'Kann ich Alltagsbegleitung auch ohne Pflegegrad buchen?',
@@ -61,7 +61,7 @@ const faqData = [
   },
   {
     q: 'Muss ich bei Alltagsengel in Vorleistung gehen?',
-    a: 'Nein. Alltagsengel rechnet den Entlastungsbetrag direkt mit Ihrer Pflegekasse ab. Sie müssen weder Rechnungen vorstrecken noch Belege einreichen — im Rahmen der 131 € monatlich entsteht kein Eigenanteil.',
+    a: 'Derzeit buchen Sie bei Alltagsengel als Selbstzahler. Ob der Entlastungsbetrag für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.',
   },
   {
     q: 'Kann ich den Alltagsbegleiter wechseln, ohne dass Kosten entstehen?',
@@ -135,7 +135,7 @@ export default function AlltagsbegleitungKostenPage() {
             <li><strong>Spezialisierte Betreuung (z. B. Demenz):</strong> 35–45 €/Stunde</li>
           </ul>
           <p>
-            Der durchschnittliche Stundensatz für eine <strong>zertifizierte Alltagsbegleitung liegt bei
+            Der durchschnittliche Stundensatz für eine <strong>qualifizierte Alltagsbegleitung liegt bei
             etwa 32 €/Stunde</strong> — das ist auch der Einstiegspreis bei Alltagsengel.
           </p>
 
@@ -181,7 +181,8 @@ export default function AlltagsbegleitungKostenPage() {
               Sie buchen direkt beim Begleiter, die Plattform übernimmt Prüfung, Versicherung und
               Kassenabrechnung. Meist das beste Preis-Leistungs-Verhältnis — wichtig ist, dass der
               Anbieter nach § 45a anerkannt ist, sonst zahlt die Pflegekasse nicht. Alltagsengel
-              arbeitet nach diesem Modell.
+              arbeitet nach diesem Modell und befindet sich derzeit im Anerkennungsverfahren nach
+              § 45a SGB XI; bis dahin ist die Buchung als Selbstzahler möglich.
             </li>
             <li>
               <strong>Nachbarschaftshilfe (ca. 8–15 €/Stunde Aufwandsentschädigung):</strong> In vielen
@@ -203,7 +204,7 @@ export default function AlltagsbegleitungKostenPage() {
             (gerechnet mit 32 €/Stunde):
           </p>
           <ul className="blog-list">
-            <li><strong>1 × pro Woche, 1 Stunde:</strong> ca. 128 €/Monat — fast vollständig vom Entlastungsbetrag gedeckt</li>
+            <li><strong>1 × pro Woche, 1 Stunde:</strong> ca. 128 €/Monat — bei einem anerkannten Anbieter fast vollständig vom Entlastungsbetrag gedeckt</li>
             <li><strong>1 × pro Woche, 3 Stunden:</strong> ca. 384 €/Monat</li>
             <li><strong>2 × pro Woche, 2 Stunden:</strong> ca. 512 €/Monat</li>
             <li><strong>Täglich, 1 Stunde:</strong> ca. 960 €/Monat</li>
@@ -231,8 +232,9 @@ export default function AlltagsbegleitungKostenPage() {
           <p>
             Der Betrag wird <strong>nicht bar ausgezahlt</strong>, sondern muss zweckgebunden
             für anerkannte Leistungen eingesetzt werden. Alltagsbegleitung durch anerkannte
-            Anbieter wie Alltagsengel gehört dazu. Bei Alltagsengel läuft die Abrechnung direkt
-            mit der Pflegekasse — Sie müssen weder in Vorleistung gehen noch Belege einreichen.
+            Anbieter gehört dazu. Ob der Entlastungsbetrag für ein konkretes Angebot eingesetzt
+            werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel
+            befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.
           </p>
           <p>
             <strong>Wichtig:</strong> Nicht genutzte Beträge werden angespart und bleiben bis zum
@@ -292,7 +294,7 @@ export default function AlltagsbegleitungKostenPage() {
           </p>
           <ul className="blog-list">
             <li><strong>25 €/Stunde (günstiger Anbieter, ländliche Region):</strong> ca. 5,2 Stunden pro Monat</li>
-            <li><strong>32 €/Stunde (Durchschnitt, z. B. Alltagsengel):</strong> ca. 4 Stunden pro Monat — ein fester wöchentlicher Termin</li>
+            <li><strong>32 €/Stunde (Durchschnitt):</strong> ca. 4 Stunden pro Monat — ein fester wöchentlicher Termin</li>
             <li><strong>40 €/Stunde (Agentur im Ballungsraum):</strong> ca. 3,3 Stunden pro Monat</li>
             <li><strong>45 €/Stunde (spezialisierte Demenzbetreuung):</strong> ca. 2,9 Stunden pro Monat</li>
           </ul>
@@ -370,12 +372,12 @@ export default function AlltagsbegleitungKostenPage() {
           <h2>Was macht Alltagsengel anders?</h2>
           <p>
             Alltagsengel ist eine digitale Plattform, die Pflegebedürftige und Angehörige
-            direkt mit <strong>zertifizierten Alltagsbegleitern</strong> in ihrer Nähe verbindet.
+            direkt mit <strong>geprüften Alltagsbegleitern</strong> in ihrer Nähe verbindet.
             Das bedeutet konkret:
           </p>
           <ul className="blog-list">
             <li><strong>Transparente Preise:</strong> Stundensatz ab 32 € — Sie sehen die Preise vor der Buchung, keine versteckten Kosten</li>
-            <li><strong>Direkte Kassenabrechnung:</strong> Alle Alltagsengel-Begleiter sind nach § 45a zertifiziert; die 131 € Entlastungsbetrag rechnen wir direkt mit Ihrer Pflegekasse ab</li>
+            <li><strong>§45a-Anerkennung im Verfahren:</strong> Alltagsengel befindet sich derzeit im Anerkennungsverfahren nach § 45a SGB XI. Bis dahin ist die Buchung als Selbstzahler möglich — zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos</li>
             <li><strong>Keine Vermittlungsgebühr:</strong> Registrierung und Vermittlung sind kostenlos, keine Mindestlaufzeit</li>
             <li><strong>Flexible Buchung:</strong> Buchen Sie stundenweise, wöchentlich oder nach Bedarf — ein <Link href="/termin">Termin</Link> ist in wenigen Minuten vereinbart</li>
             <li><strong>Regionale Verfügbarkeit:</strong> Besonders stark im <Link href="/blog/alltagsbegleitung-frankfurt">Rhein-Main-Gebiet</Link> und bundesweit wachsend</li>
@@ -410,9 +412,9 @@ export default function AlltagsbegleitungKostenPage() {
           <div className="blog-cta">
             <h3>Jetzt Alltagsbegleitung finden — kostenlos & unverbindlich</h3>
             <p>
-              Registrieren Sie sich kostenlos bei Alltagsengel und finden Sie zertifizierte
-              Alltagsbegleiter in Ihrer Nähe. Transparente Preise, direkte Kassenabrechnung und
-              keine Vermittlungsgebühr.
+              Registrieren Sie sich kostenlos bei Alltagsengel und finden Sie geprüfte
+              Alltagsbegleiter in Ihrer Nähe. Transparente Preise, kostenlose Beratung zu Ihren
+              Finanzierungswegen und keine Vermittlungsgebühr — die Anerkennung nach § 45a SGB XI läuft.
             </p>
             <Link href="/auth/register" className="cta-button">
               Kostenlos registrieren →

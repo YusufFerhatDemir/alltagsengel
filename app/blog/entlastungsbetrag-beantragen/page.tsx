@@ -144,7 +144,7 @@ export default function EntlastungsbetragBeantragen() {
           <p>Rechnen Sie kurz nach: Monate seit Anerkennung des Pflegegrads mal 131 Euro, plus eventuelles Restguthaben aus dem Vorjahr (nutzbar bis zum 30. Juni). Wer seit Januar 2026 einen Pflegegrad hat und noch nichts genutzt hat, verfügt im Juli bereits über 917 Euro angespartes Budget. Einen schnellen Überblick über alle Pflegekassen-Budgets gibt der <Link href="/budgetrechner">Budgetrechner</Link>.</p>
 
           <h3>Schritt 3: Anerkannten Anbieter wählen</h3>
-          <p>Der Entlastungsbetrag darf nur bei anerkannten Anbietern eingesetzt werden. Prüfen Sie vor der ersten Buchung, ob der Dienstleister nach Landesrecht als Angebot zur Unterstützung im Alltag anerkannt ist — sonst bleibt die Rechnung an Ihnen hängen. Die Alltagsbegleiter von Alltagsengel erfüllen diese Anforderungen und sind versichert.</p>
+          <p>Der Entlastungsbetrag darf nur bei anerkannten Anbietern eingesetzt werden. Prüfen Sie vor der ersten Buchung, ob der Dienstleister nach Landesrecht als Angebot zur Unterstützung im Alltag anerkannt ist — sonst bleibt die Rechnung an Ihnen hängen. Ob der Entlastungsbetrag für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.</p>
 
           <h3>Schritt 4: Abrechnungsweg festlegen</h3>
           <p>Entscheiden Sie sich zwischen Kostenerstattung und Direktabrechnung (Details im nächsten Abschnitt). Bei der Direktabrechnung unterschreiben Sie einmalig eine Abtretungserklärung — danach läuft alles automatisch, ohne Vorleistung und ohne Belege.</p>
@@ -156,7 +156,7 @@ export default function EntlastungsbetragBeantragen() {
           <p>Für den Abruf der 131 Euro gibt es zwei Wege — und die Wahl macht im Alltag einen großen Unterschied:</p>
           <ul>
             <li><strong>Kostenerstattung:</strong> Sie bezahlen die Leistung zunächst selbst und reichen die Rechnung des anerkannten Anbieters bei Ihrer Pflegekasse ein. Die Kasse erstattet bis zu 131 Euro pro Monat. Nachteil: Sie gehen in Vorleistung, müssen Belege sammeln, Fristen im Blick behalten und auf die Bearbeitung warten. Geht eine Rechnung verloren, gibt es keine Erstattung.</li>
-            <li><strong>Direktabrechnung per Abtretungserklärung:</strong> Sie unterschreiben einmalig eine Abtretungserklärung. Danach rechnet der Anbieter direkt mit der Pflegekasse ab — kein Papierkram, keine Vorleistung, kein Risiko verlorener Belege. Diesen Weg nutzt Alltagsengel: Ihr Eigenanteil liegt bei 0 Euro.</li>
+            <li><strong>Direktabrechnung per Abtretungserklärung:</strong> Sie unterschreiben einmalig eine Abtretungserklärung. Danach rechnet der Anbieter direkt mit der Pflegekasse ab — kein Papierkram, keine Vorleistung, kein Risiko verlorener Belege. Voraussetzung ist ein nach § 45a SGB XI anerkannter Anbieter.</li>
           </ul>
           <p>Für die allermeisten Familien ist die Direktabrechnung der deutlich bequemere Weg. Die Kostenerstattung lohnt sich vor allem dann, wenn Sie gelegentlich wechselnde Anbieter nutzen, die keine Abtretung anbieten.</p>
 
@@ -183,7 +183,7 @@ export default function EntlastungsbetragBeantragen() {
           <p>Für 2026 gilt unverändert der Betrag von 131 Euro pro Monat (1.572 Euro pro Jahr). Wer den Entlastungsbetrag noch nie genutzt hat, sollte zwei Daten im Kalender markieren: den <strong>31. Dezember 2026</strong> als Ende des laufenden Ansparjahres und den <strong>30. Juni 2027</strong> als letzte Frist für das Restguthaben aus 2026. Sinnvoll ist außerdem ein Blick auf das Gesamtbudget: Neben dem Entlastungsbetrag stehen je nach Pflegegrad Verhinderungspflege, Pflegebox und der Umwandlungsanspruch aus Pflegesachleistungen bereit. Alle Beträge und Fristen im Zusammenspiel erklärt die große Übersichtsseite zum <Link href="/entlastungsbetrag">Entlastungsbetrag</Link>.</p>
 
           <h2>Wie Alltagsengel Ihnen hilft</h2>
-          <p>Die Abrechnung des Entlastungsbetrags kann kompliziert wirken, besonders wenn Sie bereits Pflegeverantwortung tragen. Alltagsengel nimmt Ihnen den kompletten Ablauf ab: Sie registrieren sich kostenlos, wählen einen Alltagsbegleiter in Ihrer Stadt und unterschreiben einmalig die Abtretungserklärung — digital, in wenigen Minuten. Ab dann rechnen wir jede Stunde direkt mit Ihrer Pflegekasse ab. Sie gehen nicht in Vorleistung, reichen keine Belege ein und behalten trotzdem jederzeit den Überblick über Ihr Budget. So nutzen Sie Ihre 131 Euro monatlich sicher, ohne sich mit bürokratischen Details zu belasten.</p>
+          <p>Die Abrechnung des Entlastungsbetrags kann kompliziert wirken, besonders wenn Sie bereits Pflegeverantwortung tragen. Bei Alltagsengel registrieren Sie sich kostenlos und wählen einen Alltagsbegleiter in Ihrer Stadt. Ob der Entlastungsbetrag für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.</p>
 
           <h2>Häufige Fragen zum Entlastungsbetrag 2026</h2>
           {faqData.map((faq) => (
@@ -196,7 +196,7 @@ export default function EntlastungsbetragBeantragen() {
 
         <div className="blog-cta">
           <h3>Jetzt Alltagsengel testen</h3>
-          <p>Vereinbaren Sie einen kostenlosen Termin und finden Sie geprüfte Alltagsbegleiter, die Ihren Entlastungsbetrag direkt mit der Pflegekasse abrechnen.</p>
+          <p>Vereinbaren Sie einen kostenlosen Beratungstermin und finden Sie geprüfte Alltagsbegleiter in Ihrer Nähe. §45a-Anerkennung im Verfahren — bis dahin ist die Buchung als Selbstzahler möglich.</p>
           <Link href="/termin" className="btn-gold">Jetzt kostenlos starten</Link>
         </div>
 

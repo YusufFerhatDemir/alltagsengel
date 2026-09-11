@@ -5,12 +5,12 @@ import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
   title: 'Entlastungsbetrag §45b SGB XI — 131€/Monat',
-  description: 'Erfahren Sie wie Sie den Entlastungsbetrag nach §45b SGB XI nutzen können. 131€ monatlich für zertifizierte Alltagsbegleitung. Abrechnung mit der Pflegekasse.',
+  description: 'Erfahren Sie wie Sie den Entlastungsbetrag nach §45b SGB XI nutzen können. 131€ monatlich für anerkannte Angebote zur Unterstützung im Alltag. Alltagsengel: §45a-Anerkennung im Verfahren.',
   keywords: ['Entlastungsbetrag', '§45b', '§45b SGB XI', 'Alltagsbegleitung', 'Pflegekasse', 'Pflegegrad', '131 Euro'],
   alternates: { canonical: 'https://alltagsengel.care/blog/entlastungsbetrag-45b' },
   openGraph: {
     title: 'Entlastungsbetrag §45b SGB XI — 131€/Monat',
-    description: 'Nutzen Sie Ihren Entlastungsbetrag für zertifizierte Alltagsbegleitung',
+    description: 'Nutzen Sie Ihren Entlastungsbetrag für anerkannte Alltagsbegleitung',
     url: 'https://alltagsengel.care/blog/entlastungsbetrag-45b',
     type: 'article',
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
@@ -22,7 +22,7 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Entlastungsbetrag §45b SGB XI — 131€/Monat für Alltagsbegleitung',
-  description: 'Erfahren Sie wie Sie den Entlastungsbetrag nach §45b SGB XI nutzen können. 131€ monatlich für zertifizierte Alltagsbegleitung. Abrechnung mit der Pflegekasse.',
+  description: 'Erfahren Sie wie Sie den Entlastungsbetrag nach §45b SGB XI nutzen können. 131€ monatlich für anerkannte Angebote zur Unterstützung im Alltag. Alltagsengel: §45a-Anerkennung im Verfahren.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
   datePublished: '2026-03-19',
@@ -46,8 +46,8 @@ export default function EntlastungsbetragPage() {
         <div className="blog-content">
           <p className="blog-intro">
             Der Entlastungsbetrag nach <strong>§45b SGB XI</strong> ist eine staatliche Leistung für alle Menschen mit anerkanntem Pflegegrad. 
-            Monatlich stehen Ihnen <strong>131 Euro</strong> zur Verfügung, um sich im Alltag professionell unterstützen zu lassen — völlig unbürokratisch 
-            und ohne Eigenanteil. Alltagsengel ermöglicht die einfache Abrechnung dieses Budgets.
+            Monatlich stehen Ihnen <strong>131 Euro</strong> zur Verfügung, um sich im Alltag durch anerkannte Angebote professionell unterstützen zu lassen. 
+            Ob der Entlastungsbetrag für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren.
           </p>
 
           <h2>Was ist der Entlastungsbetrag?</h2>
@@ -57,8 +57,8 @@ export default function EntlastungsbetragPage() {
             Alltagsbegleiter nach §45a SGB XI.
           </p>
           <p>
-            <strong>Wichtig:</strong> Das Budget verfällt am 30. Juni des Folgejahres. 
-            Ungenutztes Geld können Sie nicht ins nächste Jahr mitnehmen. Deshalb lohnt sich eine Planung im ersten Halbjahr.
+            <strong>Wichtig:</strong> Nicht genutzte Beträge werden angespart und bleiben bis zum 30. Juni des Folgejahres nutzbar — danach verfallen sie. 
+            Deshalb lohnt sich eine Planung im ersten Halbjahr.
           </p>
 
           <h2>131 Euro monatlich — Was ist möglich?</h2>
@@ -67,7 +67,7 @@ export default function EntlastungsbetragPage() {
           </p>
           <ul className="blog-list">
             <li><strong>4 Stunden Alltagsbegleitung</strong> bei 32€/Stunde</li>
-            <li><strong>Regelmäßige Arztbesuche</strong> mit zertifiziertem Begleiter</li>
+            <li><strong>Regelmäßige Arztbesuche</strong> mit geschultem Begleiter</li>
             <li><strong>Einkaufshilfe &amp; Besorgungen</strong> wöchentlich</li>
             <li><strong>Gesellschaftliche Teilhabe:</strong> Spaziergang, Museumsbesuch, kulturelle Veranstaltungen</li>
             <li><strong>Psychosoziale Betreuung</strong> bei Einsamkeit oder Trauer</li>
@@ -87,27 +87,25 @@ export default function EntlastungsbetragPage() {
             oder körperlichen Einschränkungen haben Anspruch.
           </p>
 
-          <h2>Wie funktioniert die Abrechnung mit Alltagsengel?</h2>
+          <h2>Wie funktioniert die Buchung bei Alltagsengel?</h2>
           <p>
-            Das Schöne an Alltagsengel: <strong>Wir kümmern uns um die komplette Abrechnung.</strong> So funktioniert es:
+            Ob der Entlastungsbetrag für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. <strong>Bis dahin ist die Buchung als Selbstzahler möglich.</strong> So funktioniert es:
           </p>
           <ol className="blog-list">
             <li>Sie registrieren sich kostenlos bei Alltagsengel.care</li>
             <li>Sie buchen einen Engel für Ihr gewünschtes Anliegen</li>
             <li>Nach dem Einsatz erstellen wir eine Rechnung</li>
-            <li>Wir reichen die Rechnung direkt bei Ihrer Pflegekasse ein</li>
-            <li>Die Pflegekasse überweist den Betrag — <strong>für Sie kostenlos</strong></li>
           </ol>
           <p>
-            <strong>Keine Vorauszahlung, keine versteckten Kosten.</strong> Sie zahlen nur, wenn überhaupt noch Budget offen ist.
+            <strong>Keine versteckten Kosten.</strong> Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.
           </p>
 
           <h2>Warum Alltagsengel wählen?</h2>
           <ul className="blog-list">
             <li>✓ <strong>100% Versichert:</strong> Jeder Einsatz ist haftpflichtversichert</li>
-            <li>✓ <strong>§45a zertifiziert:</strong> Alle Begleiter erfüllen die hohen Anforderungen</li>
+            <li>✓ <strong>§45a-Anerkennung im Verfahren:</strong> Alltagsengel befindet sich derzeit im Anerkennungsverfahren nach § 45a SGB XI</li>
             <li>✓ <strong>Sofort buchbar:</strong> Engel in Ihrer Nähe finden, Termin wählen, fertig</li>
-            <li>✓ <strong>Transparente Abrechnung:</strong> Wir übernehmen alles — Sie zahlen nichts</li>
+            <li>✓ <strong>Transparente Preise:</strong> ab 32 €/Stunde, kostenlose Beratung zu Ihren Finanzierungswegen</li>
           </ul>
 
           <h2>Beispiel: So sieht der Ablauf aus</h2>
@@ -117,18 +115,18 @@ export default function EntlastungsbetragPage() {
           </p>
           <p>
             Sie bucht über Alltagsengel einen Begleiter für <strong>2 × 2 Stunden/Woche = 4 Std./Woche = 16 Std./Monat</strong>. 
-            Bei 32€/Stunde = 512€/Monat. Davon zahlt sie <strong>131€ aus dem Entlastungsbetrag</strong>. Den Rest (381€) 
-            zahlt sie als Selbstzahler oder nutzt weitere Leistungen.
+            Bei 32€/Stunde = 512€/Monat. Bei einem nach § 45a SGB XI anerkannten Anbieter könnte sie davon <strong>131€ über den Entlastungsbetrag</strong> decken. 
+            Da Alltagsengel sich derzeit im Anerkennungsverfahren befindet, bucht Maria bis dahin als Selbstzahlerin.
           </p>
           <p>
             Ohne Alltagsengel hätte Maria keine praktikable Lösung. Mit Alltagsengel bekommt sie professionelle, versicherte 
-            Unterstützung — und spart durch den Entlastungsbetrag massiv.
+            Unterstützung.
           </p>
 
           <h2>Häufige Fragen</h2>
           <p>
             <strong>Kann ich den Entlastungsbetrag auch sparen?</strong><br />
-            Nein. Das Geld muss innerhalb des Jahres verwendet werden. Am 30. Juni des Folgejahres verfällt ungenutztes Budget.
+            Ja, bis zu einer Frist: Nicht genutzte Beträge können bis zum 30. Juni des Folgejahres verwendet werden. Danach verfällt ungenutztes Budget.
           </p>
           <p>
             <strong>Kann ich den Betrag auch für andere Leistungen nutzen?</strong><br />
@@ -137,14 +135,14 @@ export default function EntlastungsbetragPage() {
           </p>
           <p>
             <strong>Muss ich die Rechnung selbst bei der Kasse einreichen?</strong><br />
-            Nein, Alltagsengel macht das für Sie. Sie erhalten nur eine Kopie zur Information.
+            Bei einem anerkannten Anbieter läuft die Abrechnung entweder per Abtretung direkt über den Anbieter oder per Kostenerstattung über Sie. Alltagsengel befindet sich derzeit im Anerkennungsverfahren nach § 45a SGB XI; bis dahin ist die Buchung als Selbstzahler möglich.
           </p>
 
           <div className="blog-cta">
-            <h3>Nutzen Sie Ihren Entlastungsbetrag jetzt!</h3>
+            <h3>Jetzt Unterstützung im Alltag finden</h3>
             <p>
-              Finden Sie noch heute einen zertifizierten Alltagsbegleiter und nehmen Sie sich die Unterstützung, 
-              die Sie verdienen. Kostenlose Registrierung, sofort buchbar.
+              Finden Sie noch heute einen geprüften Alltagsbegleiter und nehmen Sie sich die Unterstützung, 
+              die Sie verdienen. Kostenlose Registrierung, sofort buchbar. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos — die Anerkennung nach § 45a SGB XI läuft.
             </p>
             <Link href="/termin" className="cta-button">
               Jetzt Engel finden →
@@ -166,7 +164,7 @@ export default function EntlastungsbetragPage() {
         <section className="blog-related" style={{ marginTop: 40, padding: '24px 20px', background: 'rgba(201,150,60,0.06)', borderRadius: 12, border: '1px solid rgba(201,150,60,0.15)' }}>
           <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#C9963C' }}>Weiterführende Informationen</h3>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <li><Link href="/alltagsbegleitung" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alltagsbegleitung buchen — 131 Euro/Monat nutzen</Link></li>
+            <li><Link href="/alltagsbegleitung" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alltagsbegleitung buchen — ab 32 Euro/Stunde</Link></li>
             <li><Link href="/hygienebox" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Pflegebox bestellen — 42 Euro/Monat von der Kasse</Link></li>
             <li><Link href="/blog/entlastungsbetrag-beantragen" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Entlastungsbetrag beantragen: Anleitung</Link></li>
           </ul>

@@ -6,7 +6,7 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 export const metadata: Metadata = {
   title: 'Über uns — Wer hinter Alltagsengel steht',
   description:
-    'Alltagsengel aus Frankfurt: Alltagsbegleitung (§45a SGB XI), Pflegebox und Krankenfahrten im Rhein-Main-Gebiet. Geprüfte Begleiter — lernen Sie uns kennen!',
+    'Alltagsengel aus Frankfurt: Alltagsbegleitung (§45a-Anerkennung im Verfahren), Pflegebox und Krankenfahrten im Rhein-Main-Gebiet. Geprüfte Begleiter — lernen Sie uns kennen!',
   alternates: { canonical: 'https://alltagsengel.care/ueber-uns' },
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
@@ -64,8 +64,8 @@ const QUALITAET = [
     text: 'Ein aktueller Erste-Hilfe-Kurs gehört zum Standard jeder Betreuungskraft.',
   },
   {
-    titel: 'Direkte Kassenabrechnung',
-    text: 'Wir rechnen den Entlastungsbetrag direkt mit der Pflegekasse ab — Kund:innen müssen nicht in Vorleistung gehen.',
+    titel: 'Anerkennung nach § 45a SGB XI läuft',
+    text: 'Den Entlastungsbetrag kann Alltagsengel erst nach Anerkennung als Angebot zur Unterstützung im Alltag nach § 45a SGB XI einsetzen — das Anerkennungsverfahren läuft. Bis dahin ist die Buchung als Selbstzahler möglich.',
   },
 ]
 
@@ -128,7 +128,7 @@ export default function UeberUnsPage() {
           <p style={{ color: '#D8D0C4', fontSize: 15, lineHeight: 1.7 }}>
             Alltagsengel macht daraus einen einfachen Weg: Begleitung im Alltag buchen,
             Pflegebox bestellen oder Krankenfahrt planen — wir kümmern uns um Qualifikation
-            der Begleiter:innen, Einsatzplanung und die Abrechnung mit der Kasse.
+            der Begleiter:innen, Einsatzplanung und bei der Pflegebox um die Abrechnung mit der Kasse.
           </p>
         </section>
 

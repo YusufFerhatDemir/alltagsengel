@@ -5,11 +5,11 @@ import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
   title: 'Alltagsbegleitung Frankfurt: Begleiter finden',
-  description: 'Finden Sie zertifizierte Alltagsbegleiter in Frankfurt. §45a qualifiziert, versichert & abrechenbar über §45b. Schnell, diskret, professionell.',
+  description: 'Finden Sie geprüfte Alltagsbegleiter in Frankfurt. Geschult, versichert, §45a-Anerkennung im Verfahren. Schnell, diskret, professionell.',
   keywords: ['Alltagsbegleitung Frankfurt', 'Alltagsbegleiter', 'Seniorenbetreuung Frankfurt', 'Pflege Frankfurt', 'Altenbetreuung', '§45a'],
   alternates: { canonical: 'https://alltagsengel.care/blog/alltagsbegleitung-frankfurt' },
   openGraph: {
-    title: 'Alltagsbegleitung in Frankfurt — Zertifizierte Begleiter',
+    title: 'Alltagsbegleitung in Frankfurt — Geprüfte Begleiter',
     description: 'Professionelle Alltagsbegleitung für Senioren in Frankfurt',
     url: 'https://alltagsengel.care/blog/alltagsbegleitung-frankfurt',
     type: 'article',
@@ -21,8 +21,8 @@ export const metadata: Metadata = {
 const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
-  headline: 'Alltagsbegleitung in Frankfurt — Zertifizierte Alltagsbegleiter finden',
-  description: 'Finden Sie zertifizierte Alltagsbegleiter in Frankfurt. §45a qualifiziert, versichert & abrechenbar über §45b. Schnell, diskret, professionell.',
+  headline: 'Alltagsbegleitung in Frankfurt — Geprüfte Alltagsbegleiter finden',
+  description: 'Finden Sie geprüfte Alltagsbegleiter in Frankfurt. Geschult, versichert, §45a-Anerkennung im Verfahren. Schnell, diskret, professionell.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
   datePublished: '2026-03-19',
@@ -39,15 +39,15 @@ export default function AlltagsbegleitungFrankfurtPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <header className="blog-header">
-          <h1>Alltagsbegleitung in Frankfurt — Zertifizierte Alltagsbegleiter finden</h1>
+          <h1>Alltagsbegleitung in Frankfurt — Geprüfte Alltagsbegleiter finden</h1>
           <p className="blog-meta">Veröffentlicht am 19. März 2026 | 7 min Lesezeit</p>
         </header>
 
         <div className="blog-content">
           <p className="blog-intro">
             Frankfurt am Main ist lebendig und dynamisch — aber nicht immer einfach für ältere Menschen, 
-            die zusätzliche Unterstützung brauchen. Mit <strong>Alltagsengel finden Sie schnell einen zertifizierten 
-            Alltagsbegleiter</strong> in Ihrem Stadtteil. Professionell, versichert und direkt über Ihre Pflegekasse abrechenbar.
+            die zusätzliche Unterstützung brauchen. Mit <strong>Alltagsengel finden Sie schnell einen geprüften 
+            Alltagsbegleiter</strong> in Ihrem Stadtteil. Professionell und versichert — die Anerkennung nach § 45a SGB XI läuft, bis dahin ist die Buchung als Selbstzahler möglich.
           </p>
 
           <h2>Warum Alltagsbegleitung in Frankfurt?</h2>
@@ -69,8 +69,8 @@ export default function AlltagsbegleitungFrankfurtPage() {
 
           <h2>Wer kann Alltagsbegleiter werden?</h2>
           <p>
-            In Frankfurt arbeiten mit Alltagsengel über <strong>150 zertifizierte Begleiter</strong>. 
-            Alle erfüllen die strengen Anforderungen nach <strong>§45a SGB XI</strong>:
+            In Frankfurt arbeiten mit Alltagsengel über <strong>150 geprüfte Begleiter</strong>. 
+            Unsere Anforderungen orientieren sich an den Qualifizierungsvorgaben nach <strong>§45a SGB XI</strong>:
           </p>
           <ul className="blog-list">
             <li>✓ Mindestens 40 Stunden Schulung</li>
@@ -103,9 +103,9 @@ export default function AlltagsbegleitungFrankfurtPage() {
             In Frankfurt können je nach Qualifikation und Zusatzleistungen auch höhere Sätze gelten.
           </p>
           <p>
-            <strong>Wichtig:</strong> Viele Frankfurter Senioren zahlen über den 
-            <Link href="/blog/entlastungsbetrag-45b"> Entlastungsbetrag §45b</Link> — das sind <strong>131€ monatlich</strong>, 
-            die die Pflegekasse automatisch bezahlt.
+            <strong>Wichtig:</strong> Mit Pflegegrad steht der 
+            <Link href="/blog/entlastungsbetrag-45b"> Entlastungsbetrag §45b</Link> zur Verfügung — das sind <strong>131€ monatlich</strong>, 
+            die die Pflegekasse für anerkannte Angebote zur Unterstützung im Alltag zahlt. Ob der Entlastungsbetrag für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.
           </p>
 
           <h2>Beispiel: So funktioniert's in Frankfurt</h2>
@@ -118,15 +118,15 @@ export default function AlltagsbegleitungFrankfurtPage() {
             Sie wählt Christine, eine 54-jährige Rentnerin, die selbst eine Mutter betreut und sehr einfühlsam mit älteren Menschen umgeht.
           </p>
           <p>
-            Christine kommt nun <strong>1 × die Woche für 4 Stunden</strong> — 128€/Monat. 
-            Das zahlt Erikas Pflegekasse über den Entlastungsbetrag. Erikas Tochter ist beruhigt, 
+            Christine kommt nun <strong>1 × die Woche für 4 Stunden</strong>. 
+            Erika bucht als Selbstzahlerin, solange die Anerkennung von Alltagsengel nach § 45a SGB XI noch im Verfahren ist. Erikas Tochter ist beruhigt, 
             und Erika fühlt sich endlich wieder sicherer im Alltag.
           </p>
 
           <h2>Die Vorteile von Alltagsengel in Frankfurt</h2>
           <ul className="blog-list">
             <li><strong>Lokal & schnell:</strong> Begleiter in Ihrer Nähe, oft innerhalb von 48h buchbar</li>
-            <li><strong>Sicher:</strong> Alle Engel sind versichert, geprüft und zertifiziert</li>
+            <li><strong>Sicher:</strong> Alle Engel sind versichert, geprüft und geschult</li>
             <li><strong>Diskret:</strong> Wir respektieren Ihre Privatsphäre vollständig</li>
             <li><strong>Digital:</strong> Einfache Buchung über App oder Webseite</li>
             <li><strong>Zuverlässig:</strong> 24/7 Support für Notfälle oder Fragen</li>
@@ -142,7 +142,7 @@ export default function AlltagsbegleitungFrankfurtPage() {
           <p>
             <strong>Was ist wenn ich mit einem Begleiter nicht zufrieden bin?</strong><br />
             Sie können jederzeit einen anderen Engel wählen. Kundenzufriedenheit ist unser höchstes Gut —
-            unsere Engel sind geprüfte und zertifizierte Profis.
+            unsere Engel sind geprüfte und geschulte Profis.
           </p>
           <p>
             <strong>Gibt es auch Begleiter für Menschen mit Demenz?</strong><br />
@@ -165,7 +165,7 @@ export default function AlltagsbegleitungFrankfurtPage() {
           <div className="blog-cta">
             <h3>Finden Sie einen Engel in Frankfurt</h3>
             <p>
-              Registrieren Sie sich kostenlos und entdecken Sie 150+ zertifizierte Begleiter in Ihrer Nähe. 
+              Registrieren Sie sich kostenlos und entdecken Sie 150+ geprüfte Begleiter in Ihrer Nähe. 
               Buchen Sie schnell, diskret und transparent.
             </p>
             <Link href="/termin" className="cta-button">
@@ -183,7 +183,7 @@ export default function AlltagsbegleitungFrankfurtPage() {
         <section className="blog-related" style={{ marginTop: 40, padding: '24px 20px', background: 'rgba(201,150,60,0.06)', borderRadius: 12, border: '1px solid rgba(201,150,60,0.15)' }}>
           <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#C9963C' }}>Weiterführende Informationen</h3>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <li><Link href="/alltagsbegleitung/frankfurt" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alltagsbegleitung in Frankfurt buchen — 131 Euro/Monat</Link></li>
+            <li><Link href="/alltagsbegleitung/frankfurt" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alltagsbegleitung in Frankfurt buchen — ab 32 Euro/Stunde</Link></li>
             <li><Link href="/engel-werden" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alltagsbegleiter werden — 20 Euro/Stunde</Link></li>
             <li><Link href="/blog/entlastungsbetrag-45b" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Entlastungsbetrag 45b nutzen</Link></li>
           </ul>

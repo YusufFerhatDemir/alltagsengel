@@ -78,9 +78,10 @@ export function finanzierungsOptionen(jahr: number = new Date().getFullYear()): 
         + `Entlastungsbetrag von ${euro(gesetz.entlastungMonatlich)} monatlich zu — `
         + `${euro(gesetz.entlastungJaehrlich)} im Jahr. Er ist für genau solche `
         + `Unterstützung im Alltag gedacht: Haushalt, Einkäufe, Begleitung, Gesellschaft. `
-        + `Sie zahlen nichts aus eigener Tasche, solange der Betrag reicht. `
         + `Nicht genutzte Beträge verfallen nicht sofort — sie laufen bis zum 30. Juni des `
-        + `Folgejahres weiter. Wir rechnen direkt mit Ihrer Pflegekasse ab.`,
+        + `Folgejahres weiter. Ob der Betrag für ein konkretes Angebot eingesetzt werden kann, `
+        + `setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet `
+        + `sich derzeit im Anerkennungsverfahren. Bis dahin rechnen wir privat ab.`,
       voraussetzung: 'Pflegegrad 1 bis 5',
     },
     {
