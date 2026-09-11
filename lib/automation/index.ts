@@ -26,6 +26,7 @@ import { pruefeMonatsabschlussVollstaendigkeit } from './monatsabschluss-pruefun
 import { pruefeVitalwerteUndMeldePdl } from './vitalwerte-pdl'
 import { pflegeFeiertagskatalog } from './feiertage-pflege'
 import { erinnereAnKommendeTermine } from './termin-erinnerung'
+import { erinnereAnLeadFollowUps } from './lead-follow-up'
 import { escaliereUeberfaellige } from '@/lib/abrechnung/fristen-manager'
 import { logger } from '@/lib/logger'
 const log = logger.child('automatisierung')
@@ -69,6 +70,9 @@ export async function fuehreTaeglicheAutomatisierungAus(
   await ketteAusfuehren(ketten, 'monatsabschluss_pruefung', () => pruefeMonatsabschlussVollstaendigkeit(supabase, organizationId, actorId))
   await ketteAusfuehren(ketten, 'vitalwerte_pdl', () => pruefeVitalwerteUndMeldePdl(supabase, organizationId, actorId))
   await ketteAusfuehren(ketten, 'termin_erinnerung', () => erinnereAnKommendeTermine(supabase, organizationId))
+  // Kette 13: Leads (Warteliste, Bewerbungen, Kundenanfragen) nach der
+  // 24/48/72-h-Leiter — Meldung nur nach innen, nie an den Lead selbst.
+  await ketteAusfuehren(ketten, 'lead_follow_up', () => erinnereAnLeadFollowUps(supabase, organizationId))
   // Katalogpflege, mandantenuebergreifend: schreibt nur Feiertagsdaten,
   // keine Zuschlagssaetze (siehe feiertage-pflege.ts).
   await ketteAusfuehren(ketten, 'feiertage_katalog', () => pflegeFeiertagskatalog(supabase))

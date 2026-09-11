@@ -9,7 +9,7 @@ import {
 } from '@/lib/admin/ops'
 import { StatusBadge, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { berechneFortschritt, stufeFuer, FORTSCHRITT_STUFEN } from '@/lib/bewerbung/fortschritt'
-import { regionLabel, WARTELISTE_STATUS } from '@/lib/warteliste/katalog'
+import { regionLabel } from '@/lib/warteliste/katalog'
 import type { BewerbungDaten } from '@/lib/bewerbung/katalog'
 import { logger } from '@/lib/logger'
 

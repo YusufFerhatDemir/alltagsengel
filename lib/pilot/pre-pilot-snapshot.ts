@@ -204,11 +204,11 @@ export const DOKUMENTIERTE_SICHERHEITSLAGE = {
  * Verifikationsskripte unter `scripts/verify-*.mjs`.
  */
 export const JUENGSTE_MIGRATIONEN = [
-  '20261101000001_rollback_email_entwuerfe.sql',
-  '20261102000000_state_waitlist_kundenfunnel.sql',
   '20261102000001_rollback_state_waitlist_kundenfunnel.sql',
   '20261103000000_marketing_content_status.sql',
   '20261103000001_rollback_marketing_content_status.sql',
+  '20261104000000_state_waitlist_stufe_termin.sql',
+  '20261104000001_rollback_state_waitlist_stufe_termin.sql',
   // HINWEIS (Track 13): die Perimeter-Migrationen stehen hier NICHT,
   // obwohl sie die zuletzt hinzugekommenen sind. Sie tragen seit dem
   // 28.08.2026 einen ECHTEN Zeitstempel (20260828180000/…0001, Regel aus

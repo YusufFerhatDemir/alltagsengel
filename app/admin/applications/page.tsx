@@ -2,11 +2,15 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
-  formatDate, timeAgo, statusMeta,
-  APPLICATION_STATUS, APPLICATION_FLOW, APPLICATION_FORTSCHRITT,
-  APPLICATION_ABGELEHNT, APPLICATION_SOURCE, BEWERBUNG_FILTER,
+  formatDate, timeAgo, APPLICATION_SOURCE, BEWERBUNG_FILTER,
 } from '@/lib/admin/ops'
-import { updateApplicationStatus, createApplication } from './actions'
+import { updateApplicationStatus, createApplication, setApplicationWiedervorlage } from './actions'
+import {
+  BEWERBER_STUFEN, BEWERBER_STUFEN_FLOW, BEWERBER_VORWAERTS, BEWERBER_ENDZUSTAENDE,
+  bewerberStufe, stufeFuerBewerbung, followUpFuerBewerbung, wiedervorlageFuerBewerbung,
+  hatFormularangaben, type PipelineVerlauf,
+} from '@/lib/bewerbung/pipeline'
+import { FOLLOW_UP_META, zaehleFollowUps, type FollowUpStufe } from '@/lib/leads/follow-up'
 import {
   qualifikationLabel, fuehrerscheinLabel, spracheLabel,
   verfuegbarkeitLabel, stundenLabel, beschaeftigungsartLabel,
@@ -54,14 +58,38 @@ interface AppRow {
   notes: string | null
   created_at: string | null
   eingereicht_am: string | null
+  updated_at: string | null
   /** Zusatzangaben aus /api/apply — bei Altbestaenden leer. */
   daten: BewerbungDaten | null
+  /** Feine Stufe (8 Stufen), aus Pipeline oder Status abgeleitet. */
+  stufe: string
+  stufeSeit: string | null
+  verlauf: PipelineVerlauf[]
+  /** lead_inquiries.follow_up_date — automatische Wiedervorlage. */
+  follow_up_date: string | null
 }
+
+/** Filter zusaetzlich zu den Stufen. */
+const FILTER_OFFEN = 'offen'
+const FILTER_NACHFASSEN = 'nachfassen'
+const FILTER_LUECKEN = 'luecken'
+
+const SORTIERUNGEN = [
+  { key: 'dringlichkeit', label: 'Dringlichkeit (empfohlen)' },
+  { key: 'wiedervorlage', label: 'Wiedervorlage (früheste zuerst)' },
+  { key: 'datum_neu', label: 'Eingang (neueste zuerst)' },
+  { key: 'datum_alt', label: 'Eingang (älteste zuerst)' },
+  { key: 'fortschritt', label: 'Vollständigkeit' },
+] as const
+type Sortierung = (typeof SORTIERUNGEN)[number]['key']
 
 export default function AdminApplicationsPage() {
   const [rows, setRows] = useState<AppRow[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState<string>(FILTER_OFFEN)
+  const [sortierung, setSortierung] = useState<Sortierung>('dringlichkeit')
+  const [busy, setBusy] = useState<string | null>(null)
+  const [jetzt, setJetzt] = useState(() => new Date())
   const [search, setSearch] = useState('')
   const [expanded, setExpanded] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -74,7 +102,7 @@ export default function AdminApplicationsPage() {
       const [appRes, cgRes] = await Promise.all([
         supabase
           .from('lead_inquiries')
-          .select('id, name, email, phone, plz, service, source, message, status, created_at, eingereicht_am, bewerbung_daten')
+          .select('id, name, email, phone, plz, service, source, message, status, created_at, updated_at, eingereicht_am, bewerbung_daten, follow_up_date')
           .or(BEWERBUNG_FILTER)
           .order('created_at', { ascending: false }),
         supabase.from('caregivers').select('id, first_name, last_name'),
@@ -84,6 +112,10 @@ export default function AdminApplicationsPage() {
       ;(cgRes.data || []).forEach((c: any) => cgMap.set(c.id, `${c.first_name} ${c.last_name}`.trim()))
       setRows((appRes.data || []).map((a: any) => {
         const empfohlenVon: string | null = a.bewerbung_daten?.empfohlen_von_caregiver_id ?? null
+        const st = stufeFuerBewerbung(a.bewerbung_daten, a.status)
+        const verlauf: PipelineVerlauf[] = Array.isArray(a.bewerbung_daten?.pipeline?.verlauf)
+          ? a.bewerbung_daten.pipeline.verlauf
+          : []
         return {
           id: a.id,
           name: a.name || '—',
@@ -98,11 +130,18 @@ export default function AdminApplicationsPage() {
           notes: a.message,
           created_at: a.created_at,
           eingereicht_am: a.eingereicht_am,
-          daten: (a.bewerbung_daten && typeof a.bewerbung_daten === 'object')
-            ? a.bewerbung_daten as BewerbungDaten
-            : null,
+          updated_at: a.updated_at ?? null,
+          // Nur echte Formularangaben (version 1) als Detailfelder zeigen —
+          // ein reiner Pipeline-Stand oder der Onboarding-Stand waere sonst
+          // eine Reihe leerer Felder, die wie fehlende Daten aussaehe.
+          daten: hatFormularangaben(a.bewerbung_daten) ? a.bewerbung_daten as BewerbungDaten : null,
+          stufe: st.stufe,
+          stufeSeit: st.seit,
+          verlauf: st.ausStatus ? [] : verlauf,
+          follow_up_date: a.follow_up_date ?? null,
         }
       }))
+      setJetzt(new Date())
     } catch (err) {
       log.errorWithException('Applications load error', err)
     } finally {
@@ -112,22 +151,62 @@ export default function AdminApplicationsPage() {
 
   useEffect(() => { load() }, [])
 
-  async function setStatus(app: AppRow, status: string) {
-    const result = await updateApplicationStatus(app.id, status)
+  // Deep-Link aus der Glocke/Tages-Mail: ?filter=nachfassen
+  useEffect(() => {
+    try {
+      const f = new URLSearchParams(window.location.search).get('filter')
+      if (f && [FILTER_OFFEN, FILTER_NACHFASSEN, FILTER_LUECKEN, 'all', ...BEWERBER_STUFEN_FLOW].includes(f)) setFilter(f)
+    } catch { /* ohne URL-Parameter bleibt der Standardfilter */ }
+  }, [])
+
+  async function setStufe(app: AppRow, stufe: string) {
+    setBusy(app.id)
+    const result = await updateApplicationStatus(app.id, stufe, app.stufe)
+    setBusy(null)
     if (!result.ok) { setError(result.error); return }
-    setRows(prev => prev.map(r => r.id === app.id ? { ...r, status } : r))
+    setError(null)
+    const jetztIso = new Date().toISOString()
+    setRows(prev => prev.map(r => r.id === app.id
+      ? {
+          ...r,
+          stufe,
+          status: bewerberStufe(stufe).dbStatus,
+          stufeSeit: jetztIso,
+          updated_at: jetztIso,
+          follow_up_date: result.followUpDate,
+          verlauf: [...r.verlauf, { stufe, am: jetztIso, von: null }],
+        }
+      : r))
   }
+
+  async function setWiedervorlage(app: AppRow, datum: string | null) {
+    setBusy(app.id)
+    const result = await setApplicationWiedervorlage(app.id, datum)
+    setBusy(null)
+    if (!result.ok) { setError(result.error); return }
+    setError(null)
+    setRows(prev => prev.map(r => r.id === app.id ? { ...r, follow_up_date: datum } : r))
+  }
+
+  const followUpVon = (r: AppRow): FollowUpStufe => followUpFuerBewerbung({
+    stufe: r.stufe, created_at: r.created_at, updated_at: r.updated_at, follow_up_date: r.follow_up_date,
+  }, jetzt)
+  const wiedervorlageVon = (r: AppRow): string | null => wiedervorlageFuerBewerbung({
+    stufe: r.stufe, created_at: r.created_at, updated_at: r.updated_at, follow_up_date: r.follow_up_date,
+  })
+
+  const followUps = useMemo(() => zaehleFollowUps(rows.map(followUpVon)), [rows, jetzt])
 
   const counts = useMemo(() => {
     const m: Record<string, number> = {}
-    rows.forEach(r => { m[r.status] = (m[r.status] || 0) + 1 })
+    rows.forEach(r => { m[r.stufe] = (m[r.stufe] || 0) + 1 })
     return m
   }, [rows])
 
   const referralCount = useMemo(() => rows.filter(r => r.referredById).length, [rows])
   // Endzustaende im Wortschatz von lead_inquiries: eingestellt oder abgesagt.
   const openCount = useMemo(
-    () => rows.filter(r => !['converted', APPLICATION_ABGELEHNT].includes(r.status)).length,
+    () => rows.filter(r => !BEWERBER_ENDZUSTAENDE.includes(r.stufe)).length,
     [rows],
   )
 
@@ -152,13 +231,17 @@ export default function AdminApplicationsPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return rows.filter(r => {
-      if (filter === 'nachfassen') {
+    const treffer = rows.filter(r => {
+      if (filter === FILTER_LUECKEN) {
         if (!erinnerungSinnvoll(
           { name: r.name, email: r.email, phone: r.phone, plz: r.plz, daten: r.daten },
           r.status,
         )) return false
-      } else if (filter !== 'all' && r.status !== filter) return false
+      } else if (filter === FILTER_NACHFASSEN) {
+        if (followUpVon(r) === 'keine') return false
+      } else if (filter === FILTER_OFFEN) {
+        if (BEWERBER_ENDZUSTAENDE.includes(r.stufe)) return false
+      } else if (filter !== 'all' && r.stufe !== filter) return false
       if (!q) return true
       // Telefon mitsuchen: bei Website-Bewerbungen ist es das einzige
       // Kontaktmerkmal — eine E-Mail fragt das Formular nicht ab.
@@ -167,7 +250,21 @@ export default function AdminApplicationsPage() {
         (r.phone || '').toLowerCase().includes(q) ||
         (r.position || '').toLowerCase().includes(q)
     })
-  }, [rows, filter, search])
+    const zeit = (iso: string | null) => (iso ? Date.parse(iso) || 0 : 0)
+    const fifo = (a: AppRow, b: AppRow) => zeit(a.created_at) - zeit(b.created_at)
+    const wv = (r: AppRow) => zeit(wiedervorlageVon(r)) || Number.MAX_SAFE_INTEGER
+    const vollst = (r: AppRow) => berechneFortschritt({ name: r.name, email: r.email, phone: r.phone, plz: r.plz, daten: r.daten }).prozent
+    const cmp: Record<Sortierung, (a: AppRow, b: AppRow) => number> = {
+      dringlichkeit: (a, b) => (FOLLOW_UP_META[followUpVon(b)].rang - FOLLOW_UP_META[followUpVon(a)].rang)
+        || (Number(BEWERBER_ENDZUSTAENDE.includes(a.stufe)) - Number(BEWERBER_ENDZUSTAENDE.includes(b.stufe)))
+        || (wv(a) - wv(b)),
+      wiedervorlage: (a, b) => wv(a) - wv(b),
+      datum_neu: (a, b) => zeit(b.created_at) - zeit(a.created_at),
+      datum_alt: () => 0,
+      fortschritt: (a, b) => vollst(b) - vollst(a),
+    }
+    return [...treffer].sort((a, b) => cmp[sortierung](a, b) || fifo(a, b))
+  }, [rows, filter, search, sortierung, jetzt])
 
   return (
     <div className="admin-page">
@@ -181,53 +278,92 @@ export default function AdminApplicationsPage() {
 
       {error && <Banner tone="danger">{error}</Banner>}
 
-      <div style={{ marginBottom: 16 }}>
+      {/* Wiedervorlage: NEU 24/48/72 h ab Eingang, spätere Stufen ab follow_up_date. */}
+      {!loading && (followUps.gesamt > 0 ? (
+        <Banner tone={followUps.dringend > 0 ? 'danger' : 'warn'}>
+          <strong>Wiedervorlage fällig:</strong>{' '}
+          {[
+            followUps.dringend ? `${followUps.dringend} dringend (>72 h)` : null,
+            followUps.eskalation ? `${followUps.eskalation} eskaliert (>48 h)` : null,
+            followUps.erinnerung ? `${followUps.erinnerung} Erinnerung (>24 h)` : null,
+          ].filter(Boolean).join(' · ')}
+          {filter !== FILTER_NACHFASSEN && (
+            <button onClick={() => setFilter(FILTER_NACHFASSEN)} style={{ ...actionBtn, marginLeft: 10 }}>
+              Nur diese zeigen
+            </button>
+          )}
+        </Banner>
+      ) : rows.length > 0 ? (
+        <Banner tone="success">Keine Wiedervorlage überfällig.</Banner>
+      ) : null)}
+
+      <div style={{ margin: '14px 0 16px' }}>
         <SearchInput value={search} onChange={setSearch} placeholder="Name, Telefon, E-Mail, Qualifikation…" />
       </div>
 
       <div className="admin-filters">
-        <button className={`admin-filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>
-          Alle ({rows.length})
+        <button className={`admin-filter-btn ${filter === FILTER_OFFEN ? 'active' : ''}`} onClick={() => setFilter(FILTER_OFFEN)}>
+          Offen ({openCount})
         </button>
-        {APPLICATION_FLOW.map(f => (
-          <button key={f} className={`admin-filter-btn ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
-            {statusMeta(APPLICATION_STATUS, f).label} ({counts[f] || 0})
+        <button className={`admin-filter-btn ${filter === FILTER_NACHFASSEN ? 'active' : ''}`} onClick={() => setFilter(FILTER_NACHFASSEN)}
+          title="NEU seit über 24 h oder Wiedervorlage erreicht">
+          Wiedervorlage fällig ({followUps.gesamt})
+        </button>
+        {BEWERBER_STUFEN.map(st => (
+          <button key={st.key} className={`admin-filter-btn ${filter === st.key ? 'active' : ''}`} onClick={() => setFilter(st.key)}>
+            {st.label} ({counts[st.key] || 0})
           </button>
         ))}
         <button
-          className={`admin-filter-btn ${filter === 'nachfassen' ? 'active' : ''}`}
-          onClick={() => setFilter('nachfassen')}
+          className={`admin-filter-btn ${filter === FILTER_LUECKEN ? 'active' : ''}`}
+          onClick={() => setFilter(FILTER_LUECKEN)}
           title="Noch offen, unter 70 % vollständig und mit E-Mail erreichbar"
         >
-          Nachfassen lohnt ({nachfassCount})
+          Angaben unvollständig ({nachfassCount})
         </button>
+        <button className={`admin-filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>
+          Alle ({rows.length})
+        </button>
+      </div>
+
+      <div style={{ margin: '12px 0 16px' }}>
+        <label style={{ fontSize: 13, color: 'var(--ink3)' }}>
+          Sortierung:{' '}
+          <select className="admin-select" value={sortierung} onChange={e => setSortierung(e.target.value as Sortierung)}>
+            {SORTIERUNGEN.map(so => <option key={so.key} value={so.key}>{so.label}</option>)}
+          </select>
+        </label>
       </div>
 
       {loading ? <p>Laden…</p> : (
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
-              <tr><th>Name</th><th>Qualifikation</th><th>Vollständig</th><th>Eingegangen</th><th>Status</th><th>Aktion</th></tr>
+              <tr><th>Name</th><th>Qualifikation</th><th>Vollständig</th><th>Eingegangen</th><th>Wiedervorlage</th><th>Stufe</th><th>Aktion</th></tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <EmptyRow colSpan={6}>{search || filter !== 'all' ? 'Keine Treffer' : 'Noch keine Bewerbungen'}</EmptyRow>
+                <EmptyRow colSpan={7}>{search || filter !== FILTER_OFFEN ? 'Keine Treffer' : 'Keine offenen Bewerbungen'}</EmptyRow>
               ) : filtered.map(a => {
-                const sm = statusMeta(APPLICATION_STATUS, a.status)
+                const sm = bewerberStufe(a.stufe)
+                const fuStufe = followUpVon(a)
+                const fu = FOLLOW_UP_META[fuStufe]
+                const wvAm = wiedervorlageVon(a)
                 const src = a.source ? (APPLICATION_SOURCE[a.source] || APPLICATION_SOURCE.sonstige) : null
                 const fortschritt = berechneFortschritt({
                   name: a.name, email: a.email, phone: a.phone, plz: a.plz, daten: a.daten,
                 })
                 const isOpen = expanded === a.id
-                // Der Vorwaertsweg endet bei „Eingestellt". Eine Absage ist
+                // Der Vorwaertsweg endet bei „Einsatzbereit". Eine Absage ist
                 // kein naechster Schritt, sondern der eigene Knopf daneben.
-                const idx = APPLICATION_FORTSCHRITT.indexOf(a.status)
-                const next = idx >= 0 && idx < APPLICATION_FORTSCHRITT.length - 1
-                  ? APPLICATION_FORTSCHRITT[idx + 1]
+                const idx = BEWERBER_VORWAERTS.indexOf(a.stufe)
+                const next = idx >= 0 && idx < BEWERBER_VORWAERTS.length - 1
+                  ? BEWERBER_VORWAERTS[idx + 1]
                   : null
                 return (
                   <Fragment key={a.id}>
-                    <tr {...klickbareZeile(() => setExpanded(isOpen ? null : a.id))} aria-expanded={isOpen} style={{ cursor: 'pointer' }}>
+                    <tr {...klickbareZeile(() => setExpanded(isOpen ? null : a.id))} aria-expanded={isOpen}
+                      style={{ cursor: 'pointer', boxShadow: fuStufe !== 'keine' ? `inset 4px 0 0 ${fu.color}` : undefined }}>
                       <td style={{ fontWeight: 600 }}>
                         {a.name}
                         {a.referredById && <span title={`Empfohlen von ${a.referredBy}`} style={{ marginLeft: 6 }}>🤝</span>}
@@ -246,26 +382,68 @@ export default function AdminApplicationsPage() {
                         </div>
                       </td>
                       <td style={{ fontSize: 13, whiteSpace: 'nowrap' }}>{timeAgo(a.created_at)}</td>
+                      <td style={{ fontSize: 13, whiteSpace: 'nowrap' }}>
+                        {a.stufe === 'neu'
+                          ? <span style={{ color: 'var(--ink5)' }}>24 h ab Eingang</span>
+                          : wvAm ? formatDate(wvAm) : '—'}
+                        {fuStufe !== 'keine' && <div><StatusBadge label={fu.label} color={fu.color} /></div>}
+                      </td>
                       <td><StatusBadge label={sm.label} color={sm.color} /></td>
                       <td onClick={e => e.stopPropagation()}>
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                           {next && (
-                            <button onClick={() => setStatus(a, next)} style={actionBtn}>
-                              → {statusMeta(APPLICATION_STATUS, next).label}
+                            <button disabled={busy === a.id} onClick={() => setStufe(a, next)} style={actionBtn}>
+                              → {bewerberStufe(next).label}
                             </button>
                           )}
                           <button onClick={() => setMailAn(a)} style={mailBtn}>
                             ✉ E-Mail
                           </button>
-                          {a.status !== APPLICATION_ABGELEHNT && a.status !== 'converted' && (
-                            <button onClick={() => setStatus(a, APPLICATION_ABGELEHNT)} style={rejectBtn}>Ablehnen</button>
+                          {!BEWERBER_ENDZUSTAENDE.includes(a.stufe) && (
+                            <button disabled={busy === a.id} onClick={() => setStufe(a, 'abgelehnt')} style={rejectBtn}>Ablehnen</button>
                           )}
                         </div>
                       </td>
                     </tr>
                     {isOpen && (
                       <tr>
-                        <td colSpan={6} style={{ background: 'var(--coal3)', padding: 16 }}>
+                        <td colSpan={7} style={{ background: 'var(--coal3)', padding: 16 }}>
+                          {/* Stufe, Aufgabe, Wiedervorlage — die Arbeitsleiste zuerst. */}
+                          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center', fontSize: 13, marginBottom: 12 }}>
+                            <span style={{ color: 'var(--ink2)' }}>
+                              <strong>{sm.label}:</strong> {sm.aufgabe}
+                              {a.stufeSeit && <span style={{ color: 'var(--ink5)' }}> · seit {formatDate(a.stufeSeit)}</span>}
+                            </span>
+                            {!BEWERBER_ENDZUSTAENDE.includes(a.stufe) && (
+                              <label style={{ color: 'var(--ink3)' }} onClick={e => e.stopPropagation()}>
+                                Wiedervorlage:{' '}
+                                <input
+                                  type="date"
+                                  className="admin-select"
+                                  disabled={busy === a.id}
+                                  value={a.follow_up_date ?? ''}
+                                  onChange={e => { if (e.target.value) setWiedervorlage(a, e.target.value) }}
+                                />
+                                {!a.follow_up_date && wvAm && (
+                                  <span style={{ color: 'var(--ink5)' }}> (automatisch: {formatDate(wvAm)})</span>
+                                )}
+                              </label>
+                            )}
+                          </div>
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }} onClick={e => e.stopPropagation()}>
+                            <span style={{ fontSize: 12, color: 'var(--ink5)', alignSelf: 'center' }}>Stufe setzen:</span>
+                            {BEWERBER_STUFEN_FLOW.filter(k => k !== a.stufe).map(k => (
+                              <button key={k} disabled={busy === a.id} onClick={() => setStufe(a, k)} style={mailBtn}>
+                                {bewerberStufe(k).label}
+                              </button>
+                            ))}
+                          </div>
+                          {a.verlauf.length > 0 && (
+                            <div style={{ fontSize: 12, color: 'var(--ink5)', marginBottom: 10 }}>
+                              Verlauf: {a.verlauf.map(v => `${bewerberStufe(v.stufe).label} (${formatDate(v.am)})`).join(' → ')}
+                            </div>
+                          )}
+
                           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 13, marginBottom: a.notes ? 10 : 0 }}>
                             {a.phone && <span style={{ color: 'var(--ink3)' }}>📞 {a.phone}</span>}
                             {a.email
