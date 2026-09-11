@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { stadtGeoMeta } from '@/lib/seo/stadt-geo'
 import LeadForm from '@/components/LeadForm'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
@@ -436,6 +437,8 @@ export async function generateMetadata(
     : `https://alltagsengel.care/haushaltshilfe/${city.slug}`
 
   return {
+    // Stadt-Geo statt der vom Layout geerbten Frankfurt-Werte (lib/seo/stadt-geo.ts)
+    other: stadtGeoMeta(stadt),
     title: `Haushaltshilfe ${city.name} — Reinigung, Wäsche, Einkauf`,
     description:
       `Haushaltshilfe in ${city.name} — auch in ${city.stadtteile[0]} & ${city.stadtteile[1]}. `

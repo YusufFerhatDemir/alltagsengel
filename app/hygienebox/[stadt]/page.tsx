@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { stadtGeoMeta } from '@/lib/seo/stadt-geo'
 import LeadForm from '@/components/LeadForm'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import SpeakableSchema from '@/components/SpeakableSchema'
@@ -301,6 +302,8 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
     : `https://alltagsengel.care/hygienebox/${city.slug}`
 
   return {
+    // Stadt-Geo statt der vom Layout geerbten Frankfurt-Werte (lib/seo/stadt-geo.ts)
+    other: stadtGeoMeta(stadt),
     title: `Pflegebox ${city.name} — 0 € Zuzahlung`,
     description: `Kostenlose Pflegebox nach ${city.name}: Handschuhe, Desinfektion, Bettschutz (§40 SGB XI). Bis 42 €/Monat von der Kasse, 0 € Zuzahlung. Jetzt bestellen!`,
     keywords: [
