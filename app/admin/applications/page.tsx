@@ -13,6 +13,7 @@ import {
   type BewerbungDaten,
 } from '@/lib/bewerbung/katalog'
 import { regionLabel } from '@/lib/warteliste/katalog'
+import { berechneFortschritt, stufeFuer, FORTSCHRITT_STUFEN } from '@/lib/bewerbung/fortschritt'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger'
 import DialogOverlay from '@/components/DialogOverlay'
@@ -173,7 +174,7 @@ export default function AdminApplicationsPage() {
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
-              <tr><th>Name</th><th>Qualifikation</th><th>Quelle</th><th>Eingegangen</th><th>Status</th><th>Aktion</th></tr>
+              <tr><th>Name</th><th>Qualifikation</th><th>Vollständig</th><th>Eingegangen</th><th>Status</th><th>Aktion</th></tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
@@ -181,6 +182,9 @@ export default function AdminApplicationsPage() {
               ) : filtered.map(a => {
                 const sm = statusMeta(APPLICATION_STATUS, a.status)
                 const src = a.source ? (APPLICATION_SOURCE[a.source] || APPLICATION_SOURCE.sonstige) : null
+                const fortschritt = berechneFortschritt({
+                  name: a.name, email: a.email, phone: a.phone, plz: a.plz, daten: a.daten,
+                })
                 const isOpen = expanded === a.id
                 // Der Vorwaertsweg endet bei „Eingestellt". Eine Absage ist
                 // kein naechster Schritt, sondern der eigene Knopf daneben.
@@ -196,7 +200,18 @@ export default function AdminApplicationsPage() {
                         {a.referredById && <span title={`Empfohlen von ${a.referredBy}`} style={{ marginLeft: 6 }}>🤝</span>}
                       </td>
                       <td style={{ fontSize: 13 }}>{a.position || '—'}</td>
-                      <td style={{ fontSize: 13 }}>{src ? `${src.emoji} ${src.label}` : '—'}</td>
+                      <td style={{ minWidth: 120 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={balkenSpur}>
+                            <div style={{
+                              width: `${fortschritt.prozent}%`, height: '100%',
+                              background: FORTSCHRITT_STUFEN[stufeFuer(fortschritt.prozent)].color,
+                              borderRadius: 5,
+                            }} />
+                          </div>
+                          <span style={{ fontSize: 12, fontWeight: 700 }}>{fortschritt.prozent}%</span>
+                        </div>
+                      </td>
                       <td style={{ fontSize: 13, whiteSpace: 'nowrap' }}>{timeAgo(a.created_at)}</td>
                       <td><StatusBadge label={sm.label} color={sm.color} /></td>
                       <td onClick={e => e.stopPropagation()}>
@@ -248,6 +263,19 @@ export default function AdminApplicationsPage() {
                             </div>
                           )}
 
+                          <div style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 10 }}>
+                            Quelle: {src ? `${src.emoji} ${src.label}` : '—'}
+                            {fortschritt.offen.length > 0 && (
+                              <> · <strong>Es fehlt:</strong>{' '}
+                                {fortschritt.offen.map(o => o.hinweis || o.label).join(' · ')}
+                              </>
+                            )}
+                            {!fortschritt.kontaktierbar && (
+                              <> · <span style={{ color: '#D04B3B', fontWeight: 600 }}>
+                                Weder Telefon noch E-Mail — keine Bearbeitung möglich
+                              </span></>
+                            )}
+                          </div>
                           {a.notes && <div style={{ fontSize: 13, color: 'var(--ink2)' }}>{a.notes}</div>}
                         </td>
                       </tr>
@@ -379,6 +407,10 @@ function Detail({ label, wert }: { label: string; wert: string }) {
   )
 }
 
+const balkenSpur: React.CSSProperties = {
+  flex: 1, minWidth: 50, height: 10, background: 'var(--coal3)',
+  borderRadius: 5, overflow: 'hidden',
+}
 const mailBtn: React.CSSProperties = {
   fontSize: 12, color: 'var(--ink2)', background: 'rgba(255,255,255,0.06)',
   border: '1px solid var(--border)', borderRadius: 6, padding: '4px 10px',
