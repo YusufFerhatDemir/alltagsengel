@@ -14,36 +14,11 @@
  * Krankenfahrten (§ 60) sind davon nicht betroffen und bleiben erlaubt.
  */
 import { describe, it, expect, vi } from 'vitest'
-import { renderToStaticMarkup } from 'react-dom/server'
+import { SEITEN, saetze, rendere } from './_seiten'
 
 vi.mock('@/components/LeadForm', () => ({ default: () => null }))
 vi.mock('@/components/EngelBewerbungForm', () => ({ default: () => null }))
 vi.mock('@/components/VisitTracker', () => ({ default: () => null }))
-
-const SEITEN: Record<string, () => Promise<any>> = {
-  '/': () => import('@/app/page'),
-  '/alltagsbegleitung': () => import('@/app/alltagsbegleitung/page'),
-  '/leistungen': () => import('@/app/leistungen/page'),
-  '/entlastungsbetrag': () => import('@/app/entlastungsbetrag/page'),
-  '/finanzierung': () => import('@/app/finanzierung/page'),
-  '/faq': () => import('@/app/faq/page'),
-  '/budgetrechner': () => import('@/app/budgetrechner/page'),
-  '/einzugsgebiet': () => import('@/app/einzugsgebiet/page'),
-  '/bewertungen': () => import('@/app/bewertungen/page'),
-  '/ueber-uns': () => import('@/app/ueber-uns/page'),
-  '/team': () => import('@/app/team/page'),
-  '/engel-werden': () => import('@/app/engel-werden/page'),
-  ...Object.fromEntries([
-    'alltagsbegleiter-werden', 'alltagsbegleitung-demenz', 'alltagsbegleitung-frankfurt',
-    'alltagsbegleitung-kosten', 'alltagsbegleitung-psychische-erkrankungen', 'alltagsbegleitung-vs-pflegedienst',
-    'alltagshilfe-senioren', 'arztbegleitung-senioren', 'demenzbetreuung-zu-hause', 'einkaufshilfe-senioren',
-    'entlastungsbetrag-45b', 'entlastungsbetrag-beantragen', 'entlastungsbetrag-nutzen',
-    'entlastungsbetrag-rueckwirkend', 'haushaltshilfe-frankfurt', 'pflegegrad-1-leistungen',
-    'pflegegrad-beantragen', 'senioren-hitze-sommer', 'seniorenbetreuung-frankfurt',
-    'seniorenbetreuung-zu-hause', 'tipps-fuer-pflegende-angehoerige', 'was-ist-alltagsbegleitung',
-    'wer-zahlt-alltagsbegleitung', 'einsamkeit-im-alter',
-  ].map(slug => [`/blog/${slug}`, () => import(`@/app/blog/${slug}/page`)])),
-}
 
 /** Satz handelt vom Entlastungsbetrag / der Alltagsbegleitung bei Alltagsengel. */
 const THEMA = /Entlastungsbetrag|§ ?45b|Alltagsbegleitung|Alltagshilfe|Haushaltshilfe|Betreuung|Begleitung/i
@@ -65,31 +40,11 @@ const ZUSAGEN: RegExp[] = [
   /Alltagsengel[^.]{0,40}(zugelassen|zertifiziert nach|nach § ?45a[^.]{0,20}(anerkannt|zertifiziert))/i,
   /nach § ?45a (SGB XI )?zertifiziert/i,
   /(vollständig|komplett) von der Pflegekasse (finanziert|bezahlt|übernommen)/i,
+  /(€|Euro)\s?\/?\s?Monat[^.]{0,10}über (den )?Entlastungsbetrag[^.]{0,30}abrechenbar/i,
 ]
 
 /** Zusage mit ausdrücklichem Vorbehalt der Anerkennung ist zulässig. */
 const VORBEHALT = /Anerkennung|Anerkennungsverfahren|im Verfahren|nach der Anerkennung|freigeschaltet/i
-
-function saetze(html: string): string[] {
-  const jsonLd = [...html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)]
-    .flatMap(m => JSON.stringify(JSON.parse(m[1])).match(/"(?:[^"\\]|\\.){20,}"/g) ?? [])
-  const text = html
-    .replace(/<script[\s\S]*?<\/script>/g, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#x27;/g, "'").replace(/&nbsp;/g, ' ')
-  return [text, ...jsonLd]
-    .join(' . ')
-    .replace(/\s+/g, ' ')
-    .split(/(?<=[.!?])\s+|\s[—–]\s(?=[A-ZÄÖÜ])|\s·\s/)
-    .map(s => s.trim())
-    .filter(Boolean)
-}
-
-async function rendere(lade: () => Promise<any>): Promise<string> {
-  const mod = await lade()
-  const el = await mod.default({ params: Promise.resolve({}), searchParams: Promise.resolve({}) })
-  return renderToStaticMarkup(el)
-}
 
 /**
  * Thema über ein Fenster aus Vorsatz, Satz und Folgesatz: „Für Personen
@@ -118,6 +73,7 @@ describe('Detektor', () => {
     ['Alle Alltagsengel-Begleiter sind nach § 45a zertifiziert; die 131 € Entlastungsbetrag rechnen wir direkt mit Ihrer Pflegekasse ab.'],
     ['Die Abrechnung über §45b übernehmen wir komplett.'],
     ['Wählen Sie einen anerkannten Anbieter wie Alltagsengel für Ihre Alltagsbegleitung.'],
+    ['131€/Monat über Entlastungsbetrag §45b SGB XI abrechenbar'],
   ])('fängt: %s', (satz) => {
     expect(befunde(['Alltagsbegleitung bei Alltagsengel.', satz])).toEqual([satz])
   })

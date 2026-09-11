@@ -48,7 +48,7 @@ const faqItems = [
   {
     frage: 'Wie oft sollte eine Alltagsbegleitung bei Demenz kommen?',
     antwort:
-      'Bewährt hat sich ein fester Rhythmus: gleicher Tag, gleiche Uhrzeit, gleiche Person — mindestens einmal pro Woche. Der Entlastungsbetrag von 131 €/Monat finanziert etwa vier Stunden monatlich; mit Umwandlungsanspruch und Verhinderungspflege sind auch mehrere Einsätze pro Woche möglich.',
+      'Bewährt hat sich ein fester Rhythmus: gleicher Tag, gleiche Uhrzeit, gleiche Person — mindestens einmal pro Woche. Wie viele Stunden der Entlastungsbetrag von 131 € im Monat abdeckt, hängt vom Stundensatz des Anbieters ab; mit Umwandlungsanspruch und Verhinderungspflege sind auch mehrere Einsätze pro Woche möglich.',
   },
   {
     frage: 'Was ist, wenn die demenzkranke Person die Hilfe ablehnt?',
@@ -158,7 +158,7 @@ export default function AlltagsbegleitungDemenzPage() {
           <p>Ein bewährtes Modell: ein fester Nachmittag pro Woche, an dem die Alltagsbegleitung übernimmt. Angehörige wissen verlässlich, wann sie frei haben — für Sport, Freunde, eigene Arzttermine oder schlicht Schlaf. Praktische Strategien für den Pflegealltag sammelt der Ratgeber <Link href="/blog/tipps-fuer-pflegende-angehoerige">Tipps für pflegende Angehörige</Link>.</p>
 
           <h2>Kosten und Finanzierung: So zahlt die Pflegekasse</h2>
-          <p>Alltagsbegleitung kostet bei Alltagsengel ab <strong>32 € pro Stunde</strong>. Bei Demenz stehen für anerkannte Angebote gleich mehrere Budgets der Pflegeversicherung bereit:</p>
+          <p>Für Alltagsbegleitung bei Alltagsengel gilt eine <strong>individuelle Preisgestaltung — Preis auf Anfrage</strong>: Die Kosten richten sich nach Umfang und Art der Unterstützung; wir erstellen Ihnen ein individuelles Angebot. Bei Demenz stehen für anerkannte Angebote gleich mehrere Budgets der Pflegeversicherung bereit:</p>
           <ul>
             <li><strong>Entlastungsbetrag (§45b SGB XI):</strong> <strong>131 € pro Monat</strong> ab Pflegegrad 1 — die Basisfinanzierung für anerkannte Alltagsbegleitung. Nicht genutzte Beträge bleiben bis zum 30. Juni des Folgejahres nutzbar. Alle Details: <Link href="/entlastungsbetrag">Entlastungsbetrag</Link>.</li>
             <li><strong>Umwandlungsanspruch (§45a Abs. 4 SGB XI):</strong> Ab Pflegegrad 2 lassen sich bis zu 40 % der ambulanten Pflegesachleistungen zusätzlich für Betreuung umwidmen — bei Pflegegrad 3 sind das mehrere hundert Euro monatlich.</li>

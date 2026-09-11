@@ -33,7 +33,7 @@ const faqItems = [
   {
     frage: 'Was kostet Alltagsbegleitung pro Stunde?',
     antwort:
-      'Je nach Region und Anbieter kostet Alltagsbegleitung etwa 25 bis 45 € pro Stunde. Bei Alltagsengel starten die Stundensätze ab 32 €. Mit Pflegegrad kann der Entlastungsbetrag von 131 € pro Monat bei einem nach §45a SGB XI anerkannten Anbieter eingesetzt werden. Alltagsengel befindet sich derzeit im Anerkennungsverfahren; bis dahin ist die Buchung als Selbstzahler möglich.',
+      'Die Stundensätze unterscheiden sich je nach Anbieter, Region und Leistung deutlich — fragen Sie konkret nach. Bei Alltagsengel richten sich die Kosten nach Umfang und Art der Unterstützung; wir erstellen Ihnen ein individuelles Angebot (Preis auf Anfrage). Mit Pflegegrad kann der Entlastungsbetrag von 131 € pro Monat bei einem nach §45a SGB XI anerkannten Anbieter eingesetzt werden. Alltagsengel befindet sich derzeit im Anerkennungsverfahren; bis dahin ist die Buchung als Selbstzahler möglich.',
   },
   {
     frage: 'Wer hat Anspruch auf Alltagsbegleitung?',
@@ -161,8 +161,8 @@ export default function WasIstAlltagsbegleitungPage() {
           </ul>
 
           <h2>Was kostet Alltagsbegleitung?</h2>
-          <p>Die Stundensätze für Alltagsbegleitung liegen in Deutschland je nach Region und Anbieter zwischen <strong>25 und 45 € pro Stunde</strong>. Bei Alltagsengel starten die Preise ab <strong>32 € pro Stunde</strong> — inklusive Versicherungsschutz und geprüfter Begleiter.</p>
-          <p>Entscheidend ist aber nicht der Stundensatz allein, sondern die Finanzierung: Mit einem anerkannten Pflegegrad steht der <strong>Entlastungsbetrag nach §45b SGB XI</strong> von monatlich <strong>131 €</strong> zur Verfügung — das entspricht etwa vier Begleitstunden pro Monat, also einem festen wöchentlichen Besuch. Ob der Entlastungsbetrag für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich. Eine detaillierte Kostenaufstellung mit Rechenbeispielen finden Sie im Ratgeber <Link href="/blog/alltagsbegleitung-kosten">Was kostet Alltagsbegleitung?</Link></p>
+          <p>Die Stundensätze für Alltagsbegleitung unterscheiden sich je nach Anbieter, Region und Leistung deutlich — fragen Sie konkret nach. Bei Alltagsengel gilt eine <strong>individuelle Preisgestaltung — Preis auf Anfrage</strong>: Die Kosten richten sich nach Umfang und Art der Unterstützung; wir erstellen Ihnen ein individuelles Angebot — inklusive Versicherungsschutz und geprüfter Begleiter.</p>
+          <p>Entscheidend ist aber nicht der Stundensatz allein, sondern die Finanzierung: Mit einem anerkannten Pflegegrad steht der <strong>Entlastungsbetrag nach §45b SGB XI</strong> von monatlich <strong>131 €</strong> zur Verfügung — wie viele Begleitstunden dieser Betrag abdeckt, hängt vom Stundensatz des Anbieters ab. Ob der Entlastungsbetrag für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich. Eine detaillierte Kostenaufstellung mit Rechenbeispielen finden Sie im Ratgeber <Link href="/blog/alltagsbegleitung-kosten">Was kostet Alltagsbegleitung?</Link></p>
 
           <h2>Wer zahlt? Alle Finanzierungswege im Überblick</h2>
           <p>Für die Finanzierung der Alltagsbegleitung gibt es mehrere Töpfe, die sich kombinieren lassen:</p>

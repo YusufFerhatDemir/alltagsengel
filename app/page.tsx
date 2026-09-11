@@ -14,7 +14,7 @@ const FAQS = [
   },
   {
     q: 'Was kostet mich die Alltagsbegleitung?',
-    a: 'Die Alltagsbegleitung kostet ab 32 € pro Stunde. Ab Pflegegrad 1 steht Pflegebedürftigen nach §45b SGB XI grundsätzlich ein Entlastungsbetrag von 131 € pro Monat (1.572 € pro Jahr) zur Verfügung. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach §45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.',
+    a: 'Die Kosten richten sich nach Umfang und Art der Unterstützung — Sie erhalten vorab ein individuelles Angebot. Ab Pflegegrad 1 steht Pflegebedürftigen nach §45b SGB XI grundsätzlich ein Entlastungsbetrag von 131 € pro Monat (1.572 € pro Jahr) zur Verfügung. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach §45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos.',
   },
   {
     q: 'Was kostet mich die Pflege-Box?',
@@ -100,10 +100,8 @@ const jsonLdServices = [
     ],
     offers: {
       '@type': 'Offer',
-      price: '32.00',
       priceCurrency: 'EUR',
-      priceSpecification: { '@type': 'UnitPriceSpecification', price: '32.00', priceCurrency: 'EUR', unitText: 'Stunde' },
-      description: 'Stundensatz 32 €. Einsatz des Entlastungsbetrags (131 €/Monat, §45b SGB XI) erst nach Anerkennung nach §45a SGB XI möglich — Anerkennungsverfahren läuft.',
+      description: 'Individuelle Preisgestaltung — Preis auf Anfrage. Einsatz des Entlastungsbetrags (131 €/Monat, §45b SGB XI) erst nach Anerkennung nach §45a SGB XI möglich — Anerkennungsverfahren läuft.',
     },
   },
 ]

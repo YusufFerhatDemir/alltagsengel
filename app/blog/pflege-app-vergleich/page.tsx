@@ -78,13 +78,13 @@ export default function PflegeAppVergleichPage() {
             <li>Spezialisiert auf niedrigschwellige Alltagshilfen – nicht nur medizinische Pflege</li>
             <li>Geprüfte und qualifizierte Helfer mit Versicherung</li>
             <li>Kostenlose Anmeldung für Senioren und Angehörige</li>
-            <li>Abrechnungsmöglichkeit über Pflegekasse (§45b)</li>
+            <li>§45a-Anerkennung im Verfahren</li>
             <li>Flexible Stundenabrechnung (auch 1–2 Stunden möglich)</li>
             <li>Persönliche Ansprechpartner bei Fragen</li>
             <li>Regional schnelle Vermittlung (in vielen Städten innerhalb 24 Stunden)</li>
           </ul>
           <p>
-            <strong>Preis:</strong> 18–22€/Stunde (je nach Region), oft abrechenbar über Pflegekasse
+            <strong>Preis:</strong> Preis auf Anfrage (individuelle Preisgestaltung), §45a-Anerkennung im Verfahren
           </p>
           <p>
             <strong>Bewertung:</strong> Beste Wahl für Alltagshilfen, vor allem für Senioren, die noch mobil sind
@@ -98,10 +98,10 @@ export default function PflegeAppVergleichPage() {
             <strong>Stärken:</strong> Gute für intensive medizinische Betreuung, auch international tätig
           </p>
           <p>
-            <strong>Schwächen:</strong> Teurer, weniger für stundenweise Alltagshilfen geeignet
+            <strong>Schwächen:</strong> Weniger für stundenweise Alltagshilfen geeignet
           </p>
           <p>
-            <strong>Preis:</strong> Ab 25€/Stunde, für 24-Stunden-Betreuung deutlich höher
+            <strong>Preis:</strong> Je nach Anbieter und Leistung
           </p>
 
           <h3>3. Care.com (Pflegeboerse)</h3>
@@ -115,7 +115,7 @@ export default function PflegeAppVergleichPage() {
             <strong>Schwächen:</strong> Weniger Qualitätskontrolle, keine garantierte Abrechnung über Pflegekasse
           </p>
           <p>
-            <strong>Preis:</strong> Variabel, oft günstiger, aber ohne Qualitätsgarantie
+            <strong>Preis:</strong> Je nach Anbieter, ohne Qualitätsgarantie
           </p>
 
           <h3>4. TK-Pflegeboerse (Krankenkasse TK)</h3>
@@ -147,15 +147,15 @@ export default function PflegeAppVergleichPage() {
                 <td>★★★★★</td>
                 <td>★★☆☆☆</td>
                 <td>★★☆☆☆</td>
-                <td>€€</td>
-                <td>★★★★★</td>
+                <td>Auf Anfrage</td>
+                <td>§45a im Verfahren</td>
               </tr>
               <tr>
                 <td>Pflegix</td>
                 <td>★★☆☆☆</td>
                 <td>★★★★★</td>
                 <td>★★★★★</td>
-                <td>€€€€</td>
+                <td>Je nach Anbieter</td>
                 <td>★★★☆☆</td>
               </tr>
               <tr>
@@ -163,7 +163,7 @@ export default function PflegeAppVergleichPage() {
                 <td>★★★☆☆</td>
                 <td>★★☆☆☆</td>
                 <td>★★☆☆☆</td>
-                <td>€€</td>
+                <td>Je nach Anbieter</td>
                 <td>★★☆☆☆</td>
               </tr>
               <tr>
@@ -182,7 +182,7 @@ export default function PflegeAppVergleichPage() {
           <p>
             <strong>Sie brauchen Alltagshilfe, Einkaufen, Arztbegleitung?</strong>
             <br />
-            ➜ Alltagsengel ist die beste Wahl. Spezialisiert, günstig, kassenabrechenbar.
+            ➜ Alltagsengel ist die beste Wahl. Spezialisiert, §45a-Anerkennung im Verfahren.
           </p>
           <p>
             <strong>Sie brauchen intensive medizinische Pflege 24 Stunden?</strong>
@@ -216,13 +216,13 @@ export default function PflegeAppVergleichPage() {
           <ul>
             <li>Senioren, die noch relativ mobil sind</li>
             <li>Familien, die Stunden-weise Unterstützung brauchen</li>
-            <li>Menschen, die Kassenleistungen nutzen möchten</li>
+            <li>Menschen, die sich zu ihren Finanzierungswegen beraten lassen möchten (§45a-Anerkennung im Verfahren)</li>
             <li>Alle, die schnell und zuverlässig Hilfe brauchen</li>
           </ul>
 
           <h2>Fazit</h2>
           <p>
-            Für <strong>Alltagshilfen, Einkaufen und Begleitung</strong> ist Alltagsengel 2026 die beste Wahl. Die App ist spezialisiert, kassenabrechenbar, fair bezahlt und hat ein starkes Qualitätskontroll-System.
+            Für <strong>Alltagshilfen, Einkaufen und Begleitung</strong> ist Alltagsengel 2026 die beste Wahl. Die App ist spezialisiert, fair bezahlt (§45a-Anerkennung im Verfahren) und hat ein starkes Qualitätskontroll-System.
           </p>
 
           <div className="blog-cta">

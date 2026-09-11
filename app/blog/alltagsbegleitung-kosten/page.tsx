@@ -5,12 +5,12 @@ import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
   title: 'Was kostet Alltagsbegleitung? Preise & Finanzierung 2026',
-  description: 'Alltagsbegleitung kostet 25–45 €/Stunde. Alle Finanzierungswege 2026: Entlastungsbetrag 131 €/Monat, Verhinderungspflege 3.539 €/Jahr, Steuerbonus §35a.',
+  description: 'Was Alltagsbegleitung kostet, hängt von Anbieter, Region und Leistung ab. Alle Finanzierungswege 2026: Entlastungsbetrag 131 €/Monat, Verhinderungspflege 3.539 €/Jahr, Steuerbonus §35a.',
   keywords: ['Alltagsbegleitung Kosten', 'was kostet Alltagsbegleitung', 'Alltagsbegleitung Preise', 'Alltagsbegleiter Stundensatz', 'Entlastungsbetrag Kosten', 'Alltagsbegleitung Finanzierung'],
   alternates: { canonical: 'https://alltagsengel.care/blog/alltagsbegleitung-kosten' },
   openGraph: {
     title: 'Was kostet Alltagsbegleitung? Preise & Finanzierung 2026',
-    description: 'Stundensätze, Preisvergleich der Anbieter-Typen und alle Finanzierungswege — von Entlastungsbetrag bis Steuerbonus.',
+    description: 'Preisfaktoren, Anbieter-Typen im Vergleich und alle Finanzierungswege — von Entlastungsbetrag bis Steuerbonus.',
     url: 'https://alltagsengel.care/blog/alltagsbegleitung-kosten',
     type: 'article',
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
@@ -22,7 +22,7 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Was kostet Alltagsbegleitung? Preise & Finanzierung 2026',
-  description: 'Alltagsbegleitung kostet 25–45 €/Stunde. Alle Finanzierungswege 2026: Entlastungsbetrag 131 €/Monat, Verhinderungspflege 3.539 €/Jahr, Steuerbonus §35a.',
+  description: 'Was Alltagsbegleitung kostet, hängt von Anbieter, Region und Leistung ab. Alle Finanzierungswege 2026: Entlastungsbetrag 131 €/Monat, Verhinderungspflege 3.539 €/Jahr, Steuerbonus §35a.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
   datePublished: '2026-06-06',
@@ -37,7 +37,7 @@ const articleJsonLd = {
 const faqData = [
   {
     q: 'Wie viele Stunden Alltagsbegleitung sind mit dem Entlastungsbetrag drin?',
-    a: 'Bei einem Stundensatz von 32 € deckt der Entlastungsbetrag von 131 € pro Monat rund 4 Stunden Alltagsbegleitung ab — genug für einen festen wöchentlichen Termin. Angesparte Restbeträge aus Vormonaten erhöhen das Budget zusätzlich.',
+    a: 'Wie viele Stunden der Entlastungsbetrag von 131 € im Monat abdeckt, hängt vom Stundensatz des Anbieters ab — fragen Sie konkret nach. Angesparte Restbeträge aus Vormonaten erhöhen das Budget zusätzlich.',
   },
   {
     q: 'Ist Alltagsbegleitung steuerlich absetzbar?',
@@ -53,7 +53,7 @@ const faqData = [
   },
   {
     q: 'Kann ich Alltagsbegleitung auch ohne Pflegegrad buchen?',
-    a: 'Ja, als Selbstzahler. Die Kosten von etwa 25–45 € pro Stunde tragen Sie dann selbst, können aber 20 % über die Steuer zurückholen. Parallel lohnt es sich, einen Pflegegrad zu beantragen — schon Pflegegrad 1 bringt 131 € monatlich.',
+    a: 'Ja, als Selbstzahler. Die Kosten tragen Sie dann selbst, können aber 20 % über die Steuer zurückholen. Parallel lohnt es sich, einen Pflegegrad zu beantragen — schon Pflegegrad 1 bringt 131 € monatlich.',
   },
   {
     q: 'Kann ich das Pflegegeld für Alltagsbegleitung verwenden?',
@@ -96,8 +96,8 @@ export default function AlltagsbegleitungKostenPage() {
             Wer für sich selbst oder einen Angehörigen eine <strong>Alltagsbegleitung</strong> sucht, stellt sich
             schnell die Frage: Was kostet das eigentlich? Die gute Nachricht: In vielen Fällen übernimmt die
             Pflegekasse einen Großteil der Kosten — über den sogenannten <strong>Entlastungsbetrag nach § 45b SGB XI</strong>.
-            In diesem Artikel erfahren Sie, mit welchen Stundensätzen Sie rechnen müssen, welche Preisfaktoren
-            eine Rolle spielen, wie sich die Anbieter-Typen im Preis unterscheiden und über welche Wege Sie
+            In diesem Artikel erfahren Sie, welche Preisfaktoren eine Rolle spielen, wie sich die
+            Anbieter-Typen unterscheiden und über welche Wege Sie
             Alltagsbegleitung finanzieren — von der Pflegekasse über die Steuer bis zur Selbstzahlung.
           </p>
 
@@ -127,35 +127,38 @@ export default function AlltagsbegleitungKostenPage() {
           <h2>Was kostet Alltagsbegleitung pro Stunde?</h2>
           <p>
             Die Kosten für Alltagsbegleitung variieren je nach Region, Anbieter und Qualifikation
-            des Begleiters. Im Durchschnitt können Sie mit folgenden <strong>Stundensätzen</strong> rechnen:
+            des Begleiters. Die <strong>Stundensätze</strong> unterscheiden sich je nach Anbieter,
+            Region und Leistung deutlich — fragen Sie konkret nach. Grob lassen sich drei
+            Leistungsstufen unterscheiden:
           </p>
           <ul className="blog-list">
-            <li><strong>Einfache Alltagsbegleitung:</strong> 25–35 €/Stunde</li>
-            <li><strong>Qualifizierte Alltagsbegleitung (§ 45a):</strong> 30–40 €/Stunde</li>
-            <li><strong>Spezialisierte Betreuung (z. B. Demenz):</strong> 35–45 €/Stunde</li>
+            <li><strong>Einfache Alltagsbegleitung:</strong> Preis je nach Anbieter</li>
+            <li><strong>Qualifizierte Alltagsbegleitung (§ 45a):</strong> Preis je nach Anbieter</li>
+            <li><strong>Spezialisierte Betreuung (z. B. Demenz):</strong> Preis je nach Anbieter</li>
           </ul>
           <p>
-            Der durchschnittliche Stundensatz für eine <strong>qualifizierte Alltagsbegleitung liegt bei
-            etwa 32 €/Stunde</strong> — das ist auch der Einstiegspreis bei Alltagsengel.
+            Bei Alltagsengel gilt eine <strong>individuelle Preisgestaltung — Preis auf Anfrage</strong>:
+            Die Kosten richten sich nach Umfang und Art der Unterstützung; wir erstellen Ihnen ein
+            individuelles Angebot.
           </p>
 
           <h3>Die drei wichtigsten Preisfaktoren</h3>
           <p>
-            Warum kostet dieselbe Leistung mal 25 € und mal 45 € pro Stunde? Drei Faktoren bestimmen
-            den Preis:
+            Warum kostet dieselbe Leistung bei verschiedenen Anbietern so unterschiedlich viel? Drei
+            Faktoren bestimmen den Preis:
           </p>
           <ul className="blog-list">
             <li>
               <strong>Region:</strong> In Ballungsräumen wie Frankfurt, München oder Hamburg liegen die
               Preise wegen höherer Lebenshaltungs- und Fahrtkosten tendenziell am oberen Ende. Auf dem
-              Land sind die Stundensätze oft 5–10 € niedriger — dafür ist die Auswahl an anerkannten
+              Land sind die Stundensätze oft niedriger — dafür ist die Auswahl an anerkannten
               Anbietern dort kleiner.
             </li>
             <li>
               <strong>Qualifikation:</strong> Ein nach § 45a geschulter und anerkannter Begleiter kostet
               mehr als eine ungelernte Hilfe — nur mit ihm ist aber die Abrechnung über die Pflegekasse
               möglich. Spezialisierungen wie Demenzbetreuung oder Erfahrung mit bestimmten Krankheitsbildern
-              schlagen mit weiteren 5–10 € pro Stunde zu Buche.
+              schlagen zusätzlich zu Buche.
             </li>
             <li>
               <strong>Anbieter-Typ:</strong> Klassische Agenturen mit Büro und festangestelltem Personal
@@ -171,13 +174,13 @@ export default function AlltagsbegleitungKostenPage() {
           </p>
           <ul className="blog-list">
             <li>
-              <strong>Klassische Agentur / Betreuungsdienst (ca. 35–45 €/Stunde):</strong> Feste
+              <strong>Klassische Agentur / Betreuungsdienst:</strong> Feste
               Mitarbeiter, planbare Vertretung bei Krankheit, aber die höchsten Preise — Verwaltung,
               Büro und Personalkosten zahlen Sie mit. Häufig gelten Mindestbuchungen von 2–3 Stunden
               und längere Vertragslaufzeiten.
             </li>
             <li>
-              <strong>Selbstständige Alltagsbegleiter über eine Plattform (ca. 25–35 €/Stunde):</strong>
+              <strong>Selbstständige Alltagsbegleiter über eine Plattform:</strong>
               Sie buchen direkt beim Begleiter, die Plattform übernimmt Prüfung, Versicherung und
               Kassenabrechnung. Meist das beste Preis-Leistungs-Verhältnis — wichtig ist, dass der
               Anbieter nach § 45a anerkannt ist, sonst zahlt die Pflegekasse nicht. Alltagsengel
@@ -185,7 +188,7 @@ export default function AlltagsbegleitungKostenPage() {
               § 45a SGB XI; bis dahin ist die Buchung als Selbstzahler möglich.
             </li>
             <li>
-              <strong>Nachbarschaftshilfe (ca. 8–15 €/Stunde Aufwandsentschädigung):</strong> In vielen
+              <strong>Nachbarschaftshilfe (meist gegen Aufwandsentschädigung):</strong> In vielen
               Bundesländern können auch registrierte Einzelpersonen aus der Nachbarschaft über den
               Entlastungsbetrag abgerechnet werden. Der Preis ist unschlagbar, dafür gibt es keine
               professionelle Schulung, keine geregelte Vertretung und die Registrierungshürden
@@ -198,17 +201,21 @@ export default function AlltagsbegleitungKostenPage() {
             mit einem anerkannten Plattform-Anbieter meist am besten.
           </p>
 
-          <h3>Kostenbeispiel: So viel kostet Alltagsbegleitung im Monat</h3>
+          <h3>Kostenbeispiel: Wovon die monatlichen Kosten abhängen</h3>
           <p>
-            Um die monatlichen Kosten besser einschätzen zu können, hier einige typische Beispiele
-            (gerechnet mit 32 €/Stunde):
+            Die monatlichen Kosten ergeben sich aus dem Stundensatz des Anbieters und dem Umfang
+            der Begleitung. Typische Buchungsmuster sind:
           </p>
           <ul className="blog-list">
-            <li><strong>1 × pro Woche, 1 Stunde:</strong> ca. 128 €/Monat — bei einem anerkannten Anbieter fast vollständig vom Entlastungsbetrag gedeckt</li>
-            <li><strong>1 × pro Woche, 3 Stunden:</strong> ca. 384 €/Monat</li>
-            <li><strong>2 × pro Woche, 2 Stunden:</strong> ca. 512 €/Monat</li>
-            <li><strong>Täglich, 1 Stunde:</strong> ca. 960 €/Monat</li>
+            <li><strong>1 × pro Woche, 1 Stunde</strong></li>
+            <li><strong>1 × pro Woche, 3 Stunden</strong></li>
+            <li><strong>2 × pro Woche, 2 Stunden</strong></li>
+            <li><strong>Täglich, 1 Stunde</strong></li>
           </ul>
+          <p>
+            Welcher Betrag daraus im Monat entsteht, hängt vom jeweiligen Anbieter ab — lassen Sie
+            sich für Ihren Bedarf ein konkretes Angebot erstellen.
+          </p>
           <p>
             Die meisten Familien starten mit <strong>einem festen wöchentlichen Termin</strong> — das
             passt gut zum Entlastungsbetrag und schafft eine verlässliche Routine.
@@ -282,31 +289,27 @@ export default function AlltagsbegleitungKostenPage() {
           <h3>6. Selbstzahlung</h3>
           <p>
             Ohne Pflegegrad — oder wenn alle Töpfe ausgeschöpft sind — zahlen Sie die Alltagsbegleitung
-            privat. Dank des Steuerbonus reduziert sich der effektive Stundensatz dann um ein Fünftel:
-            Aus 32 € werden effektiv 25,60 €. Parallel lohnt sich fast immer der Antrag auf einen
+            privat. Dank des Steuerbonus reduziert sich der effektive Stundensatz dann um ein Fünftel.
+            Parallel lohnt sich fast immer der Antrag auf einen
             Pflegegrad, denn schon Pflegegrad 1 bringt die vollen 131 € monatlich.
           </p>
 
           <h2>Beispielrechnungen: Wie viele Stunden sind mit 131 € drin?</h2>
           <p>
             Die wichtigste Rechnung für die Praxis: Wie viel Begleitung bekommen Sie für den
-            Entlastungsbetrag? Das hängt vom Stundensatz ab:
+            Entlastungsbetrag? Das hängt vom Stundensatz des Anbieters ab: Teilen Sie das Budget
+            durch den Stundensatz, den Ihnen der Anbieter nennt — so sehen Sie, wie viele
+            Begleitstunden pro Monat finanziert sind. Günstigere Anbieter im ländlichen Raum
+            ermöglichen dabei mehr Stunden als Agenturen im Ballungsraum oder spezialisierte
+            Demenzbetreuung.
           </p>
-          <ul className="blog-list">
-            <li><strong>25 €/Stunde (günstiger Anbieter, ländliche Region):</strong> ca. 5,2 Stunden pro Monat</li>
-            <li><strong>32 €/Stunde (Durchschnitt):</strong> ca. 4 Stunden pro Monat — ein fester wöchentlicher Termin</li>
-            <li><strong>40 €/Stunde (Agentur im Ballungsraum):</strong> ca. 3,3 Stunden pro Monat</li>
-            <li><strong>45 €/Stunde (spezialisierte Demenzbetreuung):</strong> ca. 2,9 Stunden pro Monat</li>
-          </ul>
           <p>
-            Dazu zwei Rechenbeispiele für den Jahresblick: Wer den Entlastungsbetrag ein halbes Jahr
-            nicht genutzt hat, verfügt über <strong>786 € Ansparguthaben</strong> — bei 32 €/Stunde
-            sind das fast 25 zusätzliche Begleitstunden, etwa für eine intensivere Betreuung nach
-            einem Krankenhausaufenthalt. Und wer ab Pflegegrad 2 den Entlastungsbetrag (1.572 €/Jahr)
-            mit dem Verhinderungspflege-Budget (3.539 €/Jahr) kombiniert, kommt auf
-            <strong> 5.111 € pro Jahr</strong> — das entspricht bei 32 €/Stunde rund
-            <strong> 160 Begleitstunden</strong>, also gut 3 Stunden pro Woche, komplett von der
-            Pflegekasse finanziert.
+            Dazu zwei Beispiele für den Jahresblick: Wer den Entlastungsbetrag ein halbes Jahr
+            nicht genutzt hat, verfügt über <strong>786 € Ansparguthaben</strong> — etwa für eine
+            intensivere Betreuung nach einem Krankenhausaufenthalt. Und wer ab Pflegegrad 2 den
+            Entlastungsbetrag (1.572 €/Jahr) mit dem Verhinderungspflege-Budget (3.539 €/Jahr)
+            kombiniert, kommt auf <strong> 5.111 € pro Jahr</strong> für Begleitung und Entlastung.
+            Wie viele Begleitstunden das ergibt, hängt vom Stundensatz des Anbieters ab.
           </p>
 
           <h2>Vergleich: Selbstzahlung vs. Pflegekasse</h2>
@@ -314,20 +317,20 @@ export default function AlltagsbegleitungKostenPage() {
             Lohnt sich die Beantragung eines Pflegegrades? In den meisten Fällen lautet die Antwort: <strong>Ja</strong>.
           </p>
           <ul className="blog-list">
-            <li><strong>Ohne Pflegegrad:</strong> Alle Kosten privat — ca. 130–500 €/Monat je nach Umfang, abzüglich 20 % Steuerbonus</li>
-            <li><strong>Mit Pflegegrad 1:</strong> 131 €/Monat über den Entlastungsbetrag — das deckt ca. 4 Stunden Alltagsbegleitung</li>
+            <li><strong>Ohne Pflegegrad:</strong> Alle Kosten privat — je nach Umfang und Anbieter, abzüglich 20 % Steuerbonus</li>
+            <li><strong>Mit Pflegegrad 1:</strong> 131 €/Monat über den Entlastungsbetrag — wie viele Stunden das deckt, hängt vom Stundensatz des Anbieters ab</li>
             <li><strong>Mit Pflegegrad 2–5:</strong> Entlastungsbetrag + Verhinderungspflege + ggf. umgewandelte Sachleistungen — bis zu 5.111 €/Jahr und mehr</li>
           </ul>
           <p>
-            Bei einem Stundensatz von 32 € deckt der Entlastungsbetrag allein schon <strong>rund 4 Stunden
-            Alltagsbegleitung pro Monat</strong> ab. In Kombination mit der Verhinderungspflege können
+            Schon der Entlastungsbetrag allein finanziert <strong>regelmäßige Alltagsbegleitung</strong>
+            bei einem anerkannten Anbieter. In Kombination mit der Verhinderungspflege können
             Sie ein Vielfaches finanzieren.
           </p>
 
           <h2>Versteckte Kosten und Vertragsfallen</h2>
           <p>Achten Sie bei der Auswahl eines Anbieters auf folgende Punkte:</p>
           <ul className="blog-list">
-            <li><strong>Anfahrtskosten:</strong> Manche Anbieter berechnen Anfahrt extra. Bei Alltagsengel ist die Anfahrt im Stundensatz enthalten.</li>
+            <li><strong>Anfahrtskosten:</strong> Manche Anbieter berechnen Anfahrt extra — fragen Sie danach. Bei Alltagsengel steht alles, was berechnet wird, vorab in Ihrem individuellen Angebot.</li>
             <li><strong>Mindestbuchungsdauer:</strong> Viele Dienste verlangen eine Mindestbuchung von 2–3 Stunden pro Termin — bei nur einer benötigten Stunde verdoppeln sich so die Kosten.</li>
             <li><strong>Feiertags- und Wochenendzuschläge:</strong> An Feiertagen und Wochenenden können Aufschläge von 25–50 % anfallen. Fragen Sie vorab nach der Zuschlagsliste.</li>
             <li><strong>Vermittlungsgebühren:</strong> Einige Plattformen verlangen eine einmalige Vermittlungsgebühr oder monatliche Grundpauschalen. Alltagsengel berechnet keine Vermittlungsgebühr.</li>
@@ -376,7 +379,7 @@ export default function AlltagsbegleitungKostenPage() {
             Das bedeutet konkret:
           </p>
           <ul className="blog-list">
-            <li><strong>Transparente Preise:</strong> Stundensatz ab 32 € — Sie sehen die Preise vor der Buchung, keine versteckten Kosten</li>
+            <li><strong>Individuelle Preisgestaltung:</strong> Preis auf Anfrage — die Kosten richten sich nach Umfang und Art der Unterstützung; wir erstellen Ihnen ein individuelles Angebot</li>
             <li><strong>§45a-Anerkennung im Verfahren:</strong> Alltagsengel befindet sich derzeit im Anerkennungsverfahren nach § 45a SGB XI. Bis dahin ist die Buchung als Selbstzahler möglich — zu Ihren Finanzierungswegen beraten wir Sie vorab kostenlos</li>
             <li><strong>Keine Vermittlungsgebühr:</strong> Registrierung und Vermittlung sind kostenlos, keine Mindestlaufzeit</li>
             <li><strong>Flexible Buchung:</strong> Buchen Sie stundenweise, wöchentlich oder nach Bedarf — ein <Link href="/termin">Termin</Link> ist in wenigen Minuten vereinbart</li>
@@ -395,10 +398,10 @@ export default function AlltagsbegleitungKostenPage() {
 
           <h2>Fazit: Alltagsbegleitung ist oft günstiger als gedacht</h2>
           <p>
-            Die Kosten für Alltagsbegleitung liegen bei <strong>25–45 € pro Stunde</strong>,
-            werden aber in vielen Fällen vollständig oder teilweise von der Pflegekasse übernommen.
-            Der <Link href="/blog/entlastungsbetrag-45b">Entlastungsbetrag von 131 €/Monat</Link> reicht
-            für etwa 4 Stunden professionelle Begleitung pro Monat — und in Kombination mit dem
+            Die Stundensätze für Alltagsbegleitung unterscheiden sich je nach Anbieter, Region und
+            Leistung deutlich. Die Kosten werden aber in vielen Fällen vollständig oder teilweise
+            von der Pflegekasse übernommen. Der <Link href="/blog/entlastungsbetrag-45b">Entlastungsbetrag von 131 €/Monat</Link>
+            finanziert regelmäßige professionelle Begleitung — und in Kombination mit dem
             Verhinderungspflege-Budget von 3.539 €/Jahr sind ab Pflegegrad 2 bis zu 5.111 € jährlich
             für Ihre Betreuung finanzierbar.
           </p>

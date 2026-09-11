@@ -175,7 +175,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     slug: 'alltagsbegleitung-kosten',
     headline: 'Was kostet Alltagsbegleitung? Preise & Finanzierung 2026',
     description:
-      'Alltagsbegleitung kostet 25–45 €/Stunde. Alle Finanzierungswege 2026: Entlastungsbetrag 131 €/Monat, Verhinderungspflege 3.539 €/Jahr, Steuerbonus §35a.',
+      'Was kostet Alltagsbegleitung? Die Stundensätze unterscheiden sich je nach Anbieter und Region. Alle Finanzierungswege 2026: Entlastungsbetrag 131 €/Monat, Verhinderungspflege 3.539 €/Jahr, Steuerbonus §35a.',
     category: 'Alltagsbegleitung',
     datePublished: '2026-06-06',
     dateModified: '2026-07-12',

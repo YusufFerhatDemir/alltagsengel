@@ -63,16 +63,16 @@ export default function AlltagshilfeSenioren() {
             <li>Einfache Reparaturen und Wartung</li>
             <li>Küche und Essensbereich sauber halten</li>
           </ul>
-          <p>Eine Haushaltshilfe kostet durchschnittlich 12-18 Euro pro Stunde. Mit 3-4 Stunden pro Woche liegen Sie bei etwa 150-250 Euro monatlich.</p>
+          <p>Was eine Haushaltshilfe im Monat kostet, hängt vom Umfang (z. B. 3-4 Stunden pro Woche) und vom Stundensatz des Anbieters ab. Die Stundensätze unterscheiden sich je nach Anbieter, Region und Leistung deutlich — fragen Sie konkret nach.</p>
 
           <h3>2. Einkaufshilfe</h3>
-          <p>Unterstützung beim Einkaufen von Lebensmitteln und notwendigen Besorgungen. Dies ist oft nicht separat verfügbar, sondern wird durch Alltagsbegleiter durchgeführt. Kosten: etwa 18-22 Euro pro Stunde für einen Alltagsbegleiter.</p>
+          <p>Unterstützung beim Einkaufen von Lebensmitteln und notwendigen Besorgungen. Dies ist oft nicht separat verfügbar, sondern wird durch Alltagsbegleiter durchgeführt. Kosten: Die Stundensätze unterscheiden sich je nach Anbieter, Region und Leistung deutlich — fragen Sie konkret nach.</p>
 
           <h3>3. Kochen und Mahlzeitenvorbereitung</h3>
-          <p>Einige Dienste bieten auch Zubereitung von Mahlzeiten an. Dies fällt unter Haushaltshilfe oder Alltagsbegleitung. Spezialisierte Angebote kosten 15-25 Euro pro Stunde.</p>
+          <p>Einige Dienste bieten auch Zubereitung von Mahlzeiten an. Dies fällt unter Haushaltshilfe oder Alltagsbegleitung. Die Kosten spezialisierter Angebote unterscheiden sich je nach Anbieter, Region und Leistung deutlich — fragen Sie konkret nach.</p>
 
           <h3>4. Gartenarbeit</h3>
-          <p>Für Personen mit Garten kann Gartenarbeitshilfe sinnvoll sein. Dies wird oft als separate Dienstleistung erbracht (20-30 Euro pro Stunde), da es spezialisierte Kenntnisse erfordert.</p>
+          <p>Für Personen mit Garten kann Gartenarbeitshilfe sinnvoll sein. Dies wird oft als separate Dienstleistung erbracht, da es spezialisierte Kenntnisse erfordert — die Preise dafür legt der jeweilige Anbieter fest.</p>
 
           <h3>5. Alltagsbegleitung</h3>
           <p>Ein Alltagsbegleiter bietet:</p>
@@ -83,7 +83,7 @@ export default function AlltagshilfeSenioren() {
             <li>Aktivitäten (Spaziergang, Kino, Museum)</li>
             <li>Unterstützung bei Gedächtnis und Orientierung (besonders wichtig bei Demenz)</li>
           </ul>
-          <p>Kosten: etwa 18-22 Euro pro Stunde, oft durch Entlastungsbetrag finanzierbar.</p>
+          <p>Kosten: Die Stundensätze unterscheiden sich je nach Anbieter, Region und Leistung deutlich — fragen Sie konkret nach. Bei einem nach § 45a SGB XI anerkannten Anbieter oft durch den Entlastungsbetrag finanzierbar.</p>
 
           <h3>6. Technische Hilfen im Haushalt</h3>
           <p>Nicht immer menschliche Hilfe notwendig – manchmal reichen technische Lösungen:</p>
@@ -119,7 +119,7 @@ export default function AlltagshilfeSenioren() {
           <p>In Ihrer Einkommensteuererklärung können Sie bis zu 4.000 Euro für Haushaltshilfen als haushaltsnahe Dienstleistungen absetzen (20% Steuergutschrift).</p>
 
           <h3>Selbstzahler</h3>
-          <p>Viele Senioren zahlen Haushaltshilfe selbst. Die Kosten sind moderat (12-25 Euro/Stunde) und für viele private Budgets tragbar. Mit 4 Stunden pro Woche investieren Sie etwa 250-400 Euro monatlich für Haushaltshilfe.</p>
+          <p>Viele Senioren zahlen Haushaltshilfe selbst. Wie hoch die monatlichen Kosten ausfallen, hängt vom Umfang und vom Stundensatz des Anbieters ab. Die Stundensätze unterscheiden sich je nach Anbieter, Region und Leistung deutlich — fragen Sie konkret nach.</p>
 
           <h2>Wie bekomme ich Alltagshilfe?</h2>
 
@@ -156,7 +156,7 @@ export default function AlltagshilfeSenioren() {
           <p>Alltagsengel vereinfacht die Suche nach Alltagshilfe erheblich. Auf der Plattform finden Sie:</p>
           <ul>
             <li><strong>Geprüfte Helfer:</strong> Alle registrierten Alltagsbegleiter werden überprüft</li>
-            <li><strong>Transparente Preise:</strong> Sie sehen sofort, was Hilfe kostet</li>
+            <li><strong>Individuelle Preisgestaltung:</strong> Preis auf Anfrage — die Kosten richten sich nach Umfang und Art der Unterstützung; wir erstellen Ihnen ein individuelles Angebot</li>
             <li><strong>Flexible Buchung:</strong> Buchen Sie einzelne Stunden oder regelmäßige Einsätze</li>
             <li><strong>§45a-Anerkennung im Verfahren:</strong> Ob der Entlastungsbetrag für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin ist die Buchung als Selbstzahler möglich.</li>
             <li><strong>Schnelle Vermittlung:</strong> Keine langen Wartelisten – finden Sie zeitnah Hilfe</li>

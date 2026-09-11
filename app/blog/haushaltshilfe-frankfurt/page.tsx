@@ -35,7 +35,7 @@ const jsonLd = {
 }
 
 const faqData = [
-  { q: 'Was kostet eine Haushaltshilfe in Frankfurt?', a: 'Mit anerkanntem Pflegegrad steht Ihnen der Entlastungsbetrag nach §45b SGB XI von 131 € monatlich zu. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin buchen Sie als Selbstzahler (ab 32 € pro Stunde) — die Preise sehen Sie transparent in der App.' },
+  { q: 'Was kostet eine Haushaltshilfe in Frankfurt?', a: 'Mit anerkanntem Pflegegrad steht Ihnen der Entlastungsbetrag nach §45b SGB XI von 131 € monatlich zu. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach § 45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren. Bis dahin buchen Sie als Selbstzahler. Die Kosten richten sich nach Umfang und Art der Unterstützung; wir erstellen Ihnen ein individuelles Angebot.' },
   { q: 'Wer hat Anspruch auf eine Haushaltshilfe?', a: 'Jeder mit Pflegegrad 1–5 hat Anspruch auf den Entlastungsbetrag (131 €/Monat). Dieser kann für Haushaltshilfe, Begleitung und Alltagsunterstützung eingesetzt werden.' },
   { q: 'Wie schnell bekomme ich eine Haushaltshilfe?', a: 'Nach der Registrierung bei Alltagsengel können Sie innerhalb weniger Tage eine Alltagsbegleitung buchen. Die Vermittlung läuft über unsere App.' },
   { q: 'Welche Aufgaben übernimmt die Haushaltshilfe?', a: 'Einkaufen, Kochen, leichte Reinigung, Wäsche, Begleitung zum Arzt, Spaziergänge, Behördengänge, Gesellschaft leisten — alles was den Alltag erleichtert.' },

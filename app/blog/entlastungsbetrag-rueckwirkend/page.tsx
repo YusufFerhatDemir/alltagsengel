@@ -168,8 +168,8 @@ export default function EntlastungsbetragRueckwirkend() {
           <h3>Schritt 3: Termine buchen</h3>
           <p>
             Buchen Sie bei einem anerkannten Anbieter Alltagsbegleitung, Haushaltshilfe oder Betreuung — so
-            viele Stunden, wie Ihr Guthaben hergibt. Bei 32 €/Stunde und 1.572 € Restguthaben
-            sind das fast <strong>50 Stunden</strong> Alltagsbegleitung!
+            viele Stunden, wie Ihr Guthaben hergibt. Wie viele Stunden Alltagsbegleitung ein
+            Restguthaben von 1.572 € abdeckt, hängt vom Stundensatz des Anbieters ab.
           </p>
 
           <h3>Schritt 4: Abrechnung klären</h3>

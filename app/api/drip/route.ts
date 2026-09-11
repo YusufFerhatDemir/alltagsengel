@@ -6,6 +6,8 @@ import { sendRawEmail } from '@/lib/notifications'
 import { logger } from '@/lib/logger'
 import { pruefeCronGeheimnis } from '@/lib/api/cron-auth'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { kundenAnrede } from '@/lib/kommunikation/anrede'
+import { DRIP_VORLAGEN as templates } from '@/lib/email/drip-vorlagen'
 const log = logger.child('api:drip')
 
 // ═══════════════════════════════════════════════════════════
@@ -17,8 +19,8 @@ const log = logger.child('api:drip')
 //
 // Tag 1: Willkommen (wird schon bei Register gesendet)
 // Tag 3: Entlastungsbetrag erklären (131 €/Monat) — ohne Abrechnungsversprechen, §45a im Anerkennungsverfahren
-// Tag 7: "Dein erster Engel wartet auf dich"
-// Tag 14: "Letzte Erinnerung + Referral-Bonus"
+// Tag 7: „Ihr erster Engel wartet auf Sie“
+// Tag 14: Entlastungsbetrag-Hinweis + Referral-Bonus
 //
 // GENAU EIN TAG JE STUFE. Die Fenster waren zwei Tage breit
 // (`>= 3 && < 5`), der Cron laeuft aber taeglich — jede Stufe ging
@@ -39,112 +41,6 @@ const supabaseAdmin = createAdminClient()
 /** Stufen der Kampagne: Tage seit Registrierung. */
 const STUFEN = { day3: 3, day7: 7, day14: 14 } as const
 
-function wrapEmail(content: string) {
-  return `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
-<body style="margin:0;padding:0;background:#F7F2EA;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
-<div style="max-width:580px;margin:0 auto;padding:24px">
-  <div style="text-align:center;padding:20px 0">
-    <img src="https://alltagsengel.care/icon-192x192.png" width="60" height="60" alt="Alltagsengel" style="border-radius:12px">
-  </div>
-  <div style="background:white;border-radius:16px;padding:32px 28px;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
-    ${content}
-  </div>
-  <div style="text-align:center;padding:20px 0;font-size:12px;color:#999">
-    Alltagsengel · Neue Mainzer Straße 66-68 · 60311 Frankfurt am Main<br>
-    <a href="https://alltagsengel.care/datenschutz" style="color:#C9963C">Datenschutz</a>
-  </div>
-</div>
-</body></html>`
-}
-
-// ═══ E-Mail Templates ═══
-const templates = {
-  day3: {
-    subject: '131 € im Monat — nutzen Sie schon Ihren Entlastungsbetrag?',
-    html: (firstName: string) => wrapEmail(`
-      <h2 style="color:#1A1612;font-size:22px;margin:0 0 16px">Hallo ${firstName},</h2>
-      <p style="color:#444;line-height:1.6;font-size:15px">
-        wussten Sie, dass Ihnen mit einem Pflegegrad <strong>131 € pro Monat</strong> für Alltagshilfe zustehen?
-        Das ist der sogenannte <strong>Entlastungsbetrag nach §45b SGB XI</strong> — und viele Menschen nutzen ihn nicht.
-      </p>
-      <p style="color:#444;line-height:1.6;font-size:15px">
-        Der Betrag ist für Unterstützung im Alltag gedacht — zum Beispiel Einkaufsbegleitung,
-        Arztbesuche, Gesellschaft oder Haushaltshilfe. Ob er für ein konkretes Angebot eingesetzt werden kann, setzt die Anerkennung des Anbieters nach §45a SGB XI voraus — Alltagsengel befindet sich derzeit im Anerkennungsverfahren.
-        Zu Ihren Finanzierungswegen beraten wir Sie gern kostenlos.
-      </p>
-      <div style="text-align:center;margin:28px 0">
-        <a href="https://alltagsengel.care/kunde/home" style="display:inline-block;background:#C9963C;color:#1A1612;padding:14px 36px;border-radius:12px;font-weight:700;text-decoration:none;font-size:16px">
-          Jetzt Engel finden
-        </a>
-      </div>
-      <p style="color:#888;font-size:13px">Liebe Grüße,<br>Ihr Alltagsengel Team</p>
-    `),
-  },
-
-  day7: {
-    subject: 'Ihr erster Engel wartet auf Sie, ${firstName}!',
-    html: (firstName: string) => wrapEmail(`
-      <h2 style="color:#1A1612;font-size:22px;margin:0 0 16px">Hallo ${firstName},</h2>
-      <p style="color:#444;line-height:1.6;font-size:15px">
-        Sie haben sich vor einer Woche bei Alltagsengel registriert — großartig!
-        Aber wir haben bemerkt, dass Sie noch keine Buchung gemacht haben.
-      </p>
-      <p style="color:#444;line-height:1.6;font-size:15px">
-        In Ihrer Region gibt es bereits <strong>geschulte und geprüfte Alltagsbegleiter</strong>, die für Sie da sein können.
-        Eine Buchung dauert nur 2 Minuten:
-      </p>
-      <ol style="color:#444;line-height:1.8;font-size:15px">
-        <li>Service wählen (Einkauf, Arzt, Gesellschaft...)</li>
-        <li>Wunschtermin angeben</li>
-        <li>Engel wird automatisch zugewiesen</li>
-      </ol>
-      <p style="color:#444;line-height:1.6;font-size:15px">
-        Die Alltagsbegleitung ist ab 32 € pro Stunde buchbar. Die Anerkennung nach §45a SGB XI
-        für die Abrechnung über den Entlastungsbetrag läuft — bis dahin rechnen wir privat ab.
-      </p>
-      <div style="text-align:center;margin:28px 0">
-        <a href="https://alltagsengel.care/kunde/buchen" style="display:inline-block;background:#C9963C;color:#1A1612;padding:14px 36px;border-radius:12px;font-weight:700;text-decoration:none;font-size:16px">
-          Erste Buchung starten
-        </a>
-      </div>
-      <p style="color:#888;font-size:13px">Liebe Grüße,<br>Ihr Alltagsengel Team</p>
-    `),
-  },
-
-  day14: {
-    subject: 'Gut zu wissen: Ihr Entlastungsbetrag von 131 €, ${firstName}',
-    html: (firstName: string, referralCode: string) => wrapEmail(`
-      <h2 style="color:#1A1612;font-size:22px;margin:0 0 16px">Hallo ${firstName},</h2>
-      <p style="color:#444;line-height:1.6;font-size:15px">
-        Ihr Entlastungsbetrag von <strong>131 € pro Monat</strong> sammelt sich an, wenn Sie ihn nicht nutzen.
-        Nicht verbrauchte Beträge eines Jahres können noch bis zum 30. Juni des Folgejahres eingesetzt
-        werden — danach verfallen sie. Für die Abrechnung über den Entlastungsbetrag läuft unsere
-        Anerkennung nach §45a SGB XI; wir beraten Sie gern kostenlos zu Ihren Finanzierungswegen.
-      </p>
-      <div style="background:#F7F2EA;border-radius:12px;padding:20px;margin:20px 0;border-left:4px solid #C9963C">
-        <p style="margin:0;color:#1A1612;font-size:15px;font-weight:600">
-          🎁 Bonus: Empfehlen Sie Alltagsengel weiter!
-        </p>
-        <p style="margin:8px 0 0;color:#444;font-size:14px">
-          Teilen Sie Ihren persönlichen Empfehlungslink und Sie erhalten <strong>20 € Guthaben</strong>,
-          wenn sich jemand registriert und die erste Buchung abschließt.
-        </p>
-        <p style="margin:12px 0 0">
-          <a href="https://alltagsengel.care/?ref=${referralCode}" style="color:#C9963C;font-weight:600;font-size:14px">
-            Ihr Link: alltagsengel.care/?ref=${referralCode}
-          </a>
-        </p>
-      </div>
-      <div style="text-align:center;margin:28px 0">
-        <a href="https://alltagsengel.care/kunde/buchen" style="display:inline-block;background:#C9963C;color:#1A1612;padding:14px 36px;border-radius:12px;font-weight:700;text-decoration:none;font-size:16px">
-          Jetzt Buchung starten
-        </a>
-      </div>
-      <p style="color:#888;font-size:13px">Liebe Grüße,<br>Ihr Alltagsengel Team</p>
-    `),
-  },
-}
 
 export const POST = withTracking(async function POST(request: Request) {
   const abweisung = pruefeCronGeheimnis(request)
@@ -162,7 +58,7 @@ export const POST = withTracking(async function POST(request: Request) {
     // Alle Kunden ohne Buchung laden
     const { data: customers, error: customersFehler } = await supabaseAdmin
       .from('profiles')
-      .select('id, email, first_name, referral_code, created_at')
+      .select('id, email, first_name, last_name, referral_code, created_at')
       .eq('role', 'kunde')
 
     if (customersFehler) {
@@ -222,11 +118,12 @@ export const POST = withTracking(async function POST(request: Request) {
         (now.getTime() - new Date(customer.created_at).getTime()) / (1000 * 60 * 60 * 24)
       )
 
-      // first_name ist vom User bei der Registrierung frei wählbar → für den
-      // Subject nur Zeilenumbrüche/Länge kappen (Header-Injection), für den
-      // HTML-Body zusätzlich HTML-escapen (Output-Encoding).
-      const firstNameSubject = (customer.first_name || 'Kunde').replace(/[\r\n]+/g, ' ').slice(0, 80)
-      const firstName = escapeHtml(firstNameSubject)
+      // Anrede nach Projektregel (lib/kommunikation/anrede.ts): „Frau/Herr“
+      // nur bei bekannter Anredeform — `profiles` fuehrt keine, also neutral
+      // „Guten Tag Vorname Nachname,“ statt „Hallo Vorname,“. Die Namen sind
+      // bei der Registrierung frei waehlbar → im HTML escapen. Der Betreff
+      // traegt bewusst KEINEN Namen mehr (kein Header-Injection-Weg).
+      const anrede = escapeHtml(kundenAnrede({ vorname: customer.first_name, nachname: customer.last_name }))
       const referralCode = escapeHtml((customer.referral_code || 'ANGEL').replace(/[\r\n]+/g, ' ').slice(0, 40))
 
       // Ergebnis wird geprueft: das Resend-SDK wirft bei einer Ablehnung
@@ -253,17 +150,9 @@ export const POST = withTracking(async function POST(request: Request) {
         }
       }
 
-      await stufe('day3', templates.day3.subject, templates.day3.html(firstName))
-      await stufe(
-        'day7',
-        templates.day7.subject.replace('${firstName}', firstNameSubject),
-        templates.day7.html(firstName)
-      )
-      await stufe(
-        'day14',
-        templates.day14.subject.replace('${firstName}', firstNameSubject),
-        templates.day14.html(firstName, referralCode)
-      )
+      await stufe('day3', templates.day3.subject, templates.day3.html(anrede))
+      await stufe('day7', templates.day7.subject, templates.day7.html(anrede))
+      await stufe('day14', templates.day14.subject, templates.day14.html(anrede, referralCode))
     }
 
     return NextResponse.json({ success: true, sent, fehlgeschlagen })

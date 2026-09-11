@@ -90,8 +90,9 @@ export default function EntlastungsbetragNutzenPage() {
             <li>Organisation des Alltags und Tagesstrukturierung</li>
           </ul>
           <p>
-            <strong>Kosten:</strong> Ca. 30–40 €/Stunde für zertifizierte Begleiter. Mit 131 € im Monat
-            können Sie also <strong>3–4 Stunden professionelle Alltagsbegleitung</strong> finanzieren.
+            <strong>Kosten:</strong> Die Stundensätze unterscheiden sich je nach Anbieter, Region und
+            Leistung deutlich — fragen Sie konkret nach. Wie viele Stunden professionelle Alltagsbegleitung
+            der Entlastungsbetrag von 131 € im Monat abdeckt, hängt vom Stundensatz des Anbieters ab.
             Mehr zu den Kosten finden Sie in unserem Artikel
             <Link href="/blog/alltagsbegleitung-kosten"> Was kostet Alltagsbegleitung?</Link>
           </p>
@@ -240,17 +241,17 @@ export default function EntlastungsbetragNutzenPage() {
             Frau M., 81, lebt allein in Frankfurt-Sachsenhausen. Sie hat Pflegegrad 1 und
             Schwierigkeiten beim Tragen schwerer Einkäufe. Bei einem anerkannten Anbieter bucht sie
             einen Begleiter für <strong>1 × pro Woche, 1 Stunde</strong> — rund 4 Stunden im Monat.
-            Bei 32 € pro Stunde sind das ca. 128 €/Monat, die der Entlastungsbetrag von 131 €
-            vollständig abdeckt.
+            Ob der Entlastungsbetrag von 131 € diese Stunden vollständig abdeckt, hängt vom
+            Stundensatz des Anbieters ab.
           </p>
 
           <h3>Beispiel 2: Demenzbetreuung für Herrn K. (Pflegegrad 3)</h3>
           <p>
             Herr K., 76, hat Demenz im Frühstadium. Seine Tochter pflegt ihn, braucht aber
             regelmäßig eine Auszeit. Sie bucht bei einem anerkannten Anbieter eine spezialisierte
-            Demenzbetreuung für <strong>2 × pro Woche, 1 Stunde</strong> — rund 9 Stunden im Monat,
-            bei 32 € pro Stunde ca. 280 €/Monat. Davon übernimmt der Entlastungsbetrag 131 €, die
-            restlichen 149 € können über die
+            Demenzbetreuung für <strong>2 × pro Woche, 1 Stunde</strong> — rund 9 Stunden im Monat.
+            Davon übernimmt der Entlastungsbetrag bis zu 131 € im Monat; ein darüber hinausgehender
+            Betrag kann — je nach Stundensatz des Anbieters — über die
             <Link href="/blog/verhinderungspflege-beantragen"> Verhinderungspflege</Link> finanziert werden.
           </p>
           <p>
@@ -263,8 +264,8 @@ export default function EntlastungsbetragNutzenPage() {
             Ehepaar S. lebt zusammen in Frankfurt-Höchst. Beide haben Pflegegrad 2. Sie nutzen
             den Entlastungsbetrag für eine wöchentliche <Link href="/blog/haushaltshilfe-frankfurt">Haushaltshilfe</Link>:
             Putzen, Wäsche, Einkaufen. Da <strong>beide</strong> einen Pflegegrad haben, stehen ihnen
-            zusammen <strong>262 € pro Monat</strong> zur Verfügung — das reicht für ca. 8–10
-            Stunden professionelle Haushaltshilfe.
+            zusammen <strong>262 € pro Monat</strong> zur Verfügung — wie viele Stunden professionelle
+            Haushaltshilfe das abdeckt, hängt vom Stundensatz des Anbieters ab.
           </p>
 
           <h2>Checkliste: Entlastungsbetrag optimal nutzen</h2>
