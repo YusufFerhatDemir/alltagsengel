@@ -13,7 +13,9 @@ import {
   type BewerbungDaten,
 } from '@/lib/bewerbung/katalog'
 import { regionLabel } from '@/lib/warteliste/katalog'
-import { berechneFortschritt, stufeFuer, FORTSCHRITT_STUFEN } from '@/lib/bewerbung/fortschritt'
+import {
+  berechneFortschritt, stufeFuer, FORTSCHRITT_STUFEN, erinnerungSinnvoll,
+} from '@/lib/bewerbung/fortschritt'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger'
 import DialogOverlay from '@/components/DialogOverlay'
@@ -129,10 +131,34 @@ export default function AdminApplicationsPage() {
     [rows],
   )
 
+  /**
+   * Bewerbungen, bei denen Nachfassen etwas bringt: noch offen, lückenhaft,
+   * und mit einer E-Mail, über die man fragen kann.
+   *
+   * Das ist bewusst eine LISTE und kein automatischer Versand. Die
+   * Bestätigung nach dem Absenden ist transaktional — eine Antwort auf eine
+   * Handlung von gerade. Eine Nachfrage zu einer Bewerbung, die Wochen
+   * liegt, ist das nicht; wer sie verschickt, schreibt Menschen
+   * unaufgefordert an. Diese Entscheidung gehört einem Menschen, und der
+   * Knopf dafür steht in der Zeile.
+   */
+  const nachfassCount = useMemo(
+    () => rows.filter(r => erinnerungSinnvoll(
+      { name: r.name, email: r.email, phone: r.phone, plz: r.plz, daten: r.daten },
+      r.status,
+    )).length,
+    [rows],
+  )
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     return rows.filter(r => {
-      if (filter !== 'all' && r.status !== filter) return false
+      if (filter === 'nachfassen') {
+        if (!erinnerungSinnvoll(
+          { name: r.name, email: r.email, phone: r.phone, plz: r.plz, daten: r.daten },
+          r.status,
+        )) return false
+      } else if (filter !== 'all' && r.status !== filter) return false
       if (!q) return true
       // Telefon mitsuchen: bei Website-Bewerbungen ist es das einzige
       // Kontaktmerkmal — eine E-Mail fragt das Formular nicht ab.
@@ -168,6 +194,13 @@ export default function AdminApplicationsPage() {
             {statusMeta(APPLICATION_STATUS, f).label} ({counts[f] || 0})
           </button>
         ))}
+        <button
+          className={`admin-filter-btn ${filter === 'nachfassen' ? 'active' : ''}`}
+          onClick={() => setFilter('nachfassen')}
+          title="Noch offen, unter 70 % vollständig und mit E-Mail erreichbar"
+        >
+          Nachfassen lohnt ({nachfassCount})
+        </button>
       </div>
 
       {loading ? <p>Laden…</p> : (
