@@ -175,6 +175,15 @@ export const ENV_REGISTER: readonly EnvEintrag[] = [
 
   // ═══ Versand-Schalter: steuern echte Post an echte Kunden ═══
   {
+    name: 'AUTO_BESTAETIGUNG_AUS',
+    geltung: 'server',
+    notwendigkeit: 'optional',
+    wann: 'immer',
+    geheim: false,
+    wirktNachAussen: true,
+    beschreibung: "NOTAUS fuer die automatischen transaktionalen Bestaetigungen (Wartelisten-Vormerkung, Bewerbungseingang). Nur '1' schaltet sie ab; jeder andere Wert und das Fehlen bedeuten: die Bestaetigung geht raus. Bewusst ein AUS- und kein Einschalter — der gewollte Zustand ist 'an', und ein vergessenes Flag darf nicht dazu fuehren, dass wochenlang niemand eine Bestaetigung bekommt. Ausgewertet in lib/email/auto-versand.ts.",
+  },
+  {
     name: 'RECHNUNGSVERSAND_AUTOMATISCH',
     geltung: 'server',
     notwendigkeit: 'optional',

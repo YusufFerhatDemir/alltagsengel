@@ -10,7 +10,7 @@ import {
   istLeistung, istRegion, istPflegegrad, WARTELISTE_MAX,
   bundeslandFuerRegion, interesseFuerPflegegrad, regionLabel,
 } from '@/lib/warteliste/katalog'
-import { entwurfAnlegenOhneAbbruch, vornameAus } from '@/lib/email/entwuerfe'
+import { sendeAutomatischeBestaetigung, vornameAus } from '@/lib/email/auto-versand'
 
 const log = logger.child('waitlist')
 
@@ -217,21 +217,21 @@ export const POST = withTracking(async function POST(request: Request) {
       return NextResponse.json({ error: 'Speicherfehler' }, { status: 500 })
     }
 
-    // ── Bestaetigung vorbereiten, NICHT senden ──────────────────────
-    // Vorgabe: keine automatisch versendeten E-Mails. Der Eintrag erzeugt
-    // deshalb einen ENTWURF, den die Verwaltung unter /admin/waitlist sieht
-    // und mit einem Klick sendet. Ohne diesen Schritt muesste sie jede
-    // Vormerkung von Hand nacharbeiten — mit ihm ist es ein Knopf.
+    // ── Bestaetigung SOFORT senden ──────────────────────────────────
+    // Transaktional: die Antwort auf eine Handlung, die der Empfaenger
+    // gerade selbst ausgeloest hat — keine Werbung, keine Einwilligung
+    // noetig, und sie darf nicht auf einen Verwaltungsklick warten.
     //
-    // Scheitert der Entwurf, laeuft die Vormerkung trotzdem durch: die
-    // Vormerkung ist das Wertvolle, der Entwurf nur die Bequemlichkeit.
-    {
-      await entwurfAnlegenOhneAbbruch({
+    // Idempotent ueber die Zustellspur, protokolliert, und ohne Abbruch
+    // des Vorgangs bei Fehlschlag: die Vormerkung ist das Wertvolle, eine
+    // Bestaetigung laesst sich nachholen.
+    if (angelegt?.id) {
+      await sendeAutomatischeBestaetigung({
         vorlageId: 'warteliste_welcome',
         empfaengerEmail: email,
         empfaengerName: name,
-        bezugTabelle: 'state_waitlist',
-        bezugId: angelegt?.id ?? null,
+        vorgangArt: 'warteliste-bestaetigung',
+        vorgangRef: angelegt.id,
         werte: { vorname: vornameAus(name) },
       })
     }
