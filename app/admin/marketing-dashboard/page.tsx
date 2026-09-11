@@ -8,6 +8,9 @@ import {
   istBewerbung,
 } from '@/lib/admin/ops'
 import { StatusBadge, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { berechneFortschritt, stufeFuer, FORTSCHRITT_STUFEN } from '@/lib/bewerbung/fortschritt'
+import { regionLabel, WARTELISTE_STATUS } from '@/lib/warteliste/katalog'
+import type { BewerbungDaten } from '@/lib/bewerbung/katalog'
 import { logger } from '@/lib/logger'
 
 const log = logger.child('admin:marketing-dashboard')
@@ -50,6 +53,24 @@ interface Lead {
   eingereicht_am: string | null
   follow_up_date: string | null
   istBewerbung: boolean
+  plzRoh: string | null
+  daten: BewerbungDaten | null
+}
+
+/** Vormerkung aus `state_waitlist` — die dritte Leadquelle. */
+interface Vormerkung {
+  id: string
+  name: string | null
+  email: string | null
+  telefon: string | null
+  ort: string | null
+  bundesland: string | null
+  plz: string | null
+  status: string
+  quelle: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  created_at: string | null
 }
 
 function tagesSchluessel(iso: string): string {
@@ -88,6 +109,7 @@ function quelleLabel(source: string | null): string {
 
 export default function MarketingDashboardPage() {
   const [leads, setLeads] = useState<Lead[]>([])
+  const [vormerkungen, setVormerkungen] = useState<Vormerkung[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [ansicht, setAnsicht] = useState<'alle' | 'anfrage' | 'bewerbung'>('alle')
@@ -99,16 +121,51 @@ export default function MarketingDashboardPage() {
         // Fehler wird destrukturiert und angezeigt. Eine leere Liste aus
         // einer gescheiterten Abfrage waere hier besonders teuer: das
         // Dashboard soll ja gerade sagen, wie viel hereinkommt.
-        const { data, error: fehler } = await supabase
-          .from('lead_inquiries')
-          .select('id, name, art, source, status, plz, service, phone, email, created_at, eingereicht_am, follow_up_date')
-          .order('created_at', { ascending: false })
-          .limit(MAX_ZEILEN)
+        // Zwei Quellen, ein Bild: `lead_inquiries` traegt Kundenanfragen und
+        // Bewerbungen, `state_waitlist` die Vormerkungen. Beide parallel —
+        // sequenziell waere der Aufbau der Seite doppelt so langsam.
+        const [leadRes, vormerkRes] = await Promise.all([
+          supabase
+            .from('lead_inquiries')
+            .select('id, name, art, source, status, plz, service, phone, email, created_at, eingereicht_am, follow_up_date, bewerbung_daten')
+            .order('created_at', { ascending: false })
+            .limit(MAX_ZEILEN),
+          supabase
+            .from('state_waitlist')
+            .select('id, name, email, telefon, ort, bundesland, plz, status, quelle, utm_medium, utm_campaign, created_at')
+            .order('created_at', { ascending: false })
+            .limit(MAX_ZEILEN),
+        ])
+
+        const { data, error: fehler } = leadRes
 
         if (fehler) {
           log.error(`lead_inquiries laden fehlgeschlagen: ${fehler.message}`)
           setError(`Die Leads konnten nicht geladen werden: ${fehler.message}`)
           return
+        }
+
+        // Die Warteliste darf einzeln scheitern, ohne die ganze Seite
+        // mitzunehmen — der Fehler wird sichtbar gemacht, der Rest zeigt
+        // weiter an, was da ist.
+        if (vormerkRes.error) {
+          log.error(`state_waitlist laden fehlgeschlagen: ${vormerkRes.error.message}`)
+          setError(`Die Warteliste konnte nicht geladen werden: ${vormerkRes.error.message}`)
+        } else {
+          setVormerkungen((vormerkRes.data || []).map((z: any) => ({
+            id: z.id,
+            name: z.name,
+            email: z.email,
+            telefon: z.telefon,
+            ort: z.ort,
+            bundesland: z.bundesland,
+            plz: z.plz,
+            status: z.status || 'neu',
+            quelle: z.quelle,
+            utm_medium: z.utm_medium,
+            utm_campaign: z.utm_campaign,
+            created_at: z.created_at,
+          })))
         }
 
         setLeads((data || []).map((z: any) => ({
@@ -125,6 +182,10 @@ export default function MarketingDashboardPage() {
           eingereicht_am: z.eingereicht_am,
           follow_up_date: z.follow_up_date,
           istBewerbung: istBewerbung(z),
+          plzRoh: (z.plz || '').trim() || null,
+          daten: (z.bewerbung_daten && typeof z.bewerbung_daten === 'object')
+            ? z.bewerbung_daten as BewerbungDaten
+            : null,
         })))
       } catch (err) {
         log.errorWithException('Marketing-Dashboard laden fehlgeschlagen', err)
@@ -211,6 +272,98 @@ export default function MarketingDashboardPage() {
 
   const ohnePlz = useMemo(() => leads.filter(l => !(l.plz || '').trim()).length, [leads])
 
+  // ── Wochenwerte ──────────────────────────────────────────────────────
+  // Tageszahlen sind bei zwei bis drei Eingaengen taeglich zu verrauscht,
+  // um einen Trend zu zeigen. Die Woche glaettet das, ohne den Zeitraum zu
+  // strecken.
+  const wochen = useMemo(() => {
+    const m = new Map<string, { start: Date; anfrage: number; bewerbung: number; vormerkung: number }>()
+    const schluessel = (d: Date) => {
+      const montag = new Date(d)
+      montag.setHours(0, 0, 0, 0)
+      // getDay(): 0 = Sonntag. Der Wochenstart ist hier der Montag.
+      montag.setDate(montag.getDate() - ((montag.getDay() + 6) % 7))
+      return { key: montag.toISOString().slice(0, 10), start: montag }
+    }
+    const zaehle = (iso: string | null, feld: 'anfrage' | 'bewerbung' | 'vormerkung') => {
+      if (!iso) return
+      const { key, start } = schluessel(new Date(iso))
+      const e = m.get(key) || { start, anfrage: 0, bewerbung: 0, vormerkung: 0 }
+      e[feld]++
+      m.set(key, e)
+    }
+    leads.forEach(l => zaehle(l.created_at, l.istBewerbung ? 'bewerbung' : 'anfrage'))
+    vormerkungen.forEach(v => zaehle(v.created_at, 'vormerkung'))
+    return [...m.entries()]
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .slice(0, 8)
+      .map(([key, e]) => ({ key, ...e, summe: e.anfrage + e.bewerbung + e.vormerkung }))
+  }, [leads, vormerkungen])
+
+  // ── Conversion ───────────────────────────────────────────────────────
+  // Bewusst zwei getrennte Quoten statt einer gemeinsamen: ein
+  // eingestellter Bewerber und eine aktivierte Vormerkung sind
+  // verschiedene Ereignisse und duerfen nicht in einen Nenner.
+  const conversion = useMemo(() => {
+    const bewerbungGesamt = bewerbungen.length
+    const bewerbungKontaktiert = bewerbungen.filter(b => b.status !== 'new').length
+    const bewerbungEingestellt = bewerbungen.filter(b => b.status === 'converted').length
+    const vormerkGesamt = vormerkungen.length
+    const vormerkAktiviert = vormerkungen.filter(v => v.status === 'aktiviert').length
+    const quote = (teil: number, ganz: number) => ganz > 0 ? Math.round((teil / ganz) * 100) : 0
+    return {
+      bewerbungGesamt, bewerbungKontaktiert, bewerbungEingestellt,
+      bewerbungKontaktQuote: quote(bewerbungKontaktiert, bewerbungGesamt),
+      bewerbungEinstellQuote: quote(bewerbungEingestellt, bewerbungGesamt),
+      vormerkGesamt, vormerkAktiviert,
+      vormerkQuote: quote(vormerkAktiviert, vormerkGesamt),
+    }
+  }, [bewerbungen, vormerkungen])
+
+  // ── Onboarding-Stand der Bewerbungen ─────────────────────────────────
+  const onboarding = useMemo(() => {
+    const eintraege = bewerbungen.map(b => ({
+      lead: b,
+      fortschritt: berechneFortschritt({
+        name: b.name, email: b.email, phone: b.phone, plz: b.plzRoh, daten: b.daten,
+      }),
+    }))
+    const nachStufe: Record<string, number> = {}
+    eintraege.forEach(e => {
+      const stufe = stufeFuer(e.fortschritt.prozent)
+      nachStufe[stufe] = (nachStufe[stufe] || 0) + 1
+    })
+    const schnitt = eintraege.length
+      ? Math.round(eintraege.reduce((sum, e) => sum + e.fortschritt.prozent, 0) / eintraege.length)
+      : 0
+    // Was fehlt am haeufigsten? Das ist die Frage, aus der eine Massnahme folgt.
+    const luecken: Record<string, number> = {}
+    eintraege.forEach(e => e.fortschritt.offen.forEach(o => {
+      luecken[o.label] = (luecken[o.label] || 0) + 1
+    }))
+    return {
+      eintraege: eintraege.sort((a, b) => a.fortschritt.prozent - b.fortschritt.prozent),
+      nachStufe,
+      schnitt,
+      luecken: Object.entries(luecken).sort((a, b) => b[1] - a[1]),
+      nichtKontaktierbar: eintraege.filter(e => !e.fortschritt.kontaktierbar).length,
+    }
+  }, [bewerbungen])
+
+  // ── Kampagnen ────────────────────────────────────────────────────────
+  // utm_medium/utm_campaign gibt es nur an der Warteliste; lead_inquiries
+  // fuehrt allein `utm_source`. Deshalb eine eigene Auswertung statt einer
+  // gemeinsamen, die fuer zwei Drittel der Zeilen leer waere.
+  const kampagnen = useMemo(() => {
+    const m = new Map<string, number>()
+    vormerkungen.forEach(v => {
+      if (!v.utm_campaign && !v.utm_medium) return
+      const key = [v.quelle, v.utm_medium, v.utm_campaign].filter(Boolean).join(' · ')
+      m.set(key, (m.get(key) || 0) + 1)
+    })
+    return [...m.entries()].sort((a, b) => b[1] - a[1])
+  }, [vormerkungen])
+
   // ── Bewerberpipeline ─────────────────────────────────────────────────
   // Nur der Vorwaertsweg: neu → kontaktiert → qualifiziert → eingestellt.
   // `lost` ist kein Trichterschritt, sondern ein Ausstieg und steht deshalb
@@ -284,8 +437,14 @@ export default function MarketingDashboardPage() {
           <div className="admin-stat-value">{bewerbungen.length}</div>
           <div className="admin-stat-label">Bewerbungen</div>
         </div>
+        <div className="admin-stat-card" style={{ borderLeft: '3px solid #5CB882' }}>
+          <div className="admin-stat-value">{vormerkungen.length}</div>
+          <div className="admin-stat-label">Vormerkungen (Warteliste)</div>
+        </div>
         <div className="admin-stat-card" style={{ borderLeft: '3px solid #E8A000' }}>
-          <div className="admin-stat-value">{leads.filter(l => l.status === 'new').length}</div>
+          <div className="admin-stat-value">
+            {leads.filter(l => l.status === 'new').length + vormerkungen.filter(v => v.status === 'neu').length}
+          </div>
           <div className="admin-stat-label">Offene Follow-ups</div>
         </div>
       </div>
@@ -346,6 +505,218 @@ export default function MarketingDashboardPage() {
           <span>{formatDate(verlauf[verlauf.length - 1]?.tag)}</span>
         </div>
       </section>
+
+      {/* ── Wochenwerte ────────────────────────────────────────────── */}
+      <section style={abschnitt}>
+        <h2 style={ueberschrift}>Eingänge pro Woche</h2>
+        <p style={hinweis}>
+          Letzte acht Kalenderwochen, Montag als Wochenstart. Tageszahlen sind bei wenigen
+          Eingängen zu verrauscht, um einen Trend zu zeigen.
+        </p>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr><th>Woche ab</th><th>Kundenanfragen</th><th>Bewerbungen</th><th>Vormerkungen</th><th>Gesamt</th></tr>
+            </thead>
+            <tbody>
+              {wochen.length === 0 ? (
+                <EmptyRow colSpan={5}>Keine Einträge im Zeitraum</EmptyRow>
+              ) : wochen.map(w => (
+                <tr key={w.key}>
+                  <td style={{ whiteSpace: 'nowrap' }}>{formatDate(w.key)}</td>
+                  <td>{w.anfrage || '—'}</td>
+                  <td>{w.bewerbung || '—'}</td>
+                  <td>{w.vormerkung || '—'}</td>
+                  <td style={{ fontWeight: 700 }}>{w.summe}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* ── Conversion ─────────────────────────────────────────────── */}
+      <section style={abschnitt}>
+        <h2 style={ueberschrift}>Conversion</h2>
+        <p style={hinweis}>
+          Zwei getrennte Quoten, bewusst nicht eine gemeinsame: ein eingestellter Bewerber und
+          eine aktivierte Vormerkung sind verschiedene Ereignisse und gehören nicht in denselben
+          Nenner.
+        </p>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead><tr><th>Strecke</th><th>Gesamt</th><th>Erreicht</th><th>Quote</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>Bewerbung → kontaktiert</td>
+                <td>{conversion.bewerbungGesamt}</td>
+                <td>{conversion.bewerbungKontaktiert}</td>
+                <td style={{ fontWeight: 700 }}>{conversion.bewerbungKontaktQuote} %</td>
+              </tr>
+              <tr>
+                <td>Bewerbung → eingestellt</td>
+                <td>{conversion.bewerbungGesamt}</td>
+                <td>{conversion.bewerbungEingestellt}</td>
+                <td style={{ fontWeight: 700 }}>{conversion.bewerbungEinstellQuote} %</td>
+              </tr>
+              <tr>
+                <td>Vormerkung → aktiviert</td>
+                <td>{conversion.vormerkGesamt}</td>
+                <td>{conversion.vormerkAktiviert}</td>
+                <td style={{ fontWeight: 700 }}>{conversion.vormerkQuote} %</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* ── Onboarding-Stand ───────────────────────────────────────── */}
+      <section style={abschnitt}>
+        <h2 style={ueberschrift}>Onboarding-Stand der Bewerbungen</h2>
+        <p style={hinweis}>
+          Durchschnittliche Vollständigkeit: <strong>{onboarding.schnitt} %</strong>.
+          {onboarding.nichtKontaktierbar > 0 && (
+            <> {onboarding.nichtKontaktierbar} Bewerbung(en) haben <strong>weder Telefon noch
+            E-Mail</strong> — dort ist keine Bearbeitung möglich.</>
+          )}
+          {' '}Das Führungszeugnis zählt hier bewusst nicht mit: es kommt als Papier in die
+          Personalakte, nicht über das Formular.
+        </p>
+
+        <div className="admin-stats-grid" style={{ marginBottom: 14 }}>
+          {(['vollstaendig', 'gut', 'luecken', 'duenn'] as const).map(stufe => (
+            <div key={stufe} className="admin-stat-card"
+              style={{ borderLeft: `3px solid ${FORTSCHRITT_STUFEN[stufe].color}` }}>
+              <div className="admin-stat-value">{onboarding.nachStufe[stufe] || 0}</div>
+              <div className="admin-stat-label">{FORTSCHRITT_STUFEN[stufe].label}</div>
+            </div>
+          ))}
+        </div>
+
+        {onboarding.luecken.length > 0 && (
+          <>
+            <h3 style={{ fontSize: 13, fontWeight: 700, margin: '0 0 6px' }}>
+              Was am häufigsten fehlt
+            </h3>
+            <div className="admin-table-wrap" style={{ marginBottom: 14 }}>
+              <table className="admin-table">
+                <thead><tr><th>Angabe</th><th>Fehlt bei</th></tr></thead>
+                <tbody>
+                  {onboarding.luecken.slice(0, 6).map(([label, anzahl]) => (
+                    <tr key={label}>
+                      <td>{label}</td>
+                      <td style={{ fontWeight: 700 }}>{anzahl} Bewerbung(en)</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        <h3 style={{ fontSize: 13, fontWeight: 700, margin: '0 0 6px' }}>
+          Unvollständigste Bewerbungen zuerst
+        </h3>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead><tr><th>Name</th><th>Fortschritt</th><th>Es fehlt</th><th>Status</th></tr></thead>
+            <tbody>
+              {onboarding.eintraege.length === 0 ? (
+                <EmptyRow colSpan={4}>Keine Bewerbungen vorhanden</EmptyRow>
+              ) : onboarding.eintraege.slice(0, 12).map(({ lead, fortschritt }) => {
+                const stufe = FORTSCHRITT_STUFEN[stufeFuer(fortschritt.prozent)]
+                return (
+                  <tr key={lead.id}>
+                    <td style={{ fontWeight: 600 }}>{lead.name || '—'}</td>
+                    <td style={{ minWidth: 150 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={balkenSpur}>
+                          <div style={{
+                            width: `${fortschritt.prozent}%`, height: '100%',
+                            background: stufe.color, borderRadius: 5,
+                          }} />
+                        </div>
+                        <span style={{ fontSize: 12, fontWeight: 700 }}>{fortschritt.prozent} %</span>
+                      </div>
+                    </td>
+                    <td style={{ fontSize: 12, color: 'var(--ink3)' }}>
+                      {fortschritt.offen.slice(0, 3).map(o => o.label).join(', ') || '—'}
+                    </td>
+                    <td>
+                      <StatusBadge
+                        label={statusMeta(APPLICATION_STATUS, lead.status).label}
+                        color={statusMeta(APPLICATION_STATUS, lead.status).color}
+                      />
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* ── Warteliste ─────────────────────────────────────────────── */}
+      <section style={abschnitt}>
+        <h2 style={ueberschrift}>Warteliste nach Region</h2>
+        <p style={hinweis}>
+          {vormerkungen.length} Vormerkungen in <code>state_waitlist</code> — dieselbe Tabelle,
+          aus der das Expansion-Modul beim Regionalstart benachrichtigt.
+        </p>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead><tr><th>Ort</th><th>Bundesland</th><th>Neu</th><th>In Arbeit</th><th>Gesamt</th></tr></thead>
+            <tbody>
+              {vormerkungen.length === 0 ? (
+                <EmptyRow colSpan={5}>Noch keine Vormerkungen eingegangen</EmptyRow>
+              ) : Object.entries(
+                vormerkungen.reduce((acc, v) => {
+                  const key = `${v.ort || '— ohne Ort'}|${v.bundesland || '—'}`
+                  acc[key] = acc[key] || { neu: 0, arbeit: 0 }
+                  if (v.status === 'neu') acc[key].neu++
+                  else acc[key].arbeit++
+                  return acc
+                }, {} as Record<string, { neu: number; arbeit: number }>),
+              )
+                .sort((a, b) => (b[1].neu + b[1].arbeit) - (a[1].neu + a[1].arbeit))
+                .map(([key, z]) => {
+                  const [ort, land] = key.split('|')
+                  return (
+                    <tr key={key}>
+                      <td style={{ fontWeight: 600 }}>{ort}</td>
+                      <td style={{ fontSize: 13, color: 'var(--ink3)' }}>{land}</td>
+                      <td>{z.neu || '—'}</td>
+                      <td>{z.arbeit || '—'}</td>
+                      <td style={{ fontWeight: 700 }}>{z.neu + z.arbeit}</td>
+                    </tr>
+                  )
+                })}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* ── Kampagnen ──────────────────────────────────────────────── */}
+      {kampagnen.length > 0 && (
+        <section style={abschnitt}>
+          <h2 style={ueberschrift}>Kampagnen</h2>
+          <p style={hinweis}>
+            Quelle · Medium · Kampagne aus der Warteliste. <code>lead_inquiries</code> führt nur
+            <code> utm_source</code> — deshalb steht hier nur, was die Warteliste kennt, statt
+            einer Tabelle, die für zwei Drittel der Zeilen leer wäre.
+          </p>
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead><tr><th>Kampagne</th><th>Vormerkungen</th></tr></thead>
+              <tbody>
+                {kampagnen.map(([key, anzahl]) => (
+                  <tr key={key}><td>{key}</td><td style={{ fontWeight: 700 }}>{anzahl}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       {/* ── Bewerberpipeline ───────────────────────────────────────── */}
       <section style={abschnitt}>
@@ -521,6 +892,10 @@ const saeuleWert: React.CSSProperties = {
 const achse: React.CSSProperties = {
   display: 'flex', justifyContent: 'space-between',
   fontSize: 11, color: 'var(--ink5)', marginTop: 6,
+}
+const balkenSpur: React.CSSProperties = {
+  flex: 1, minWidth: 60, height: 10, background: 'var(--coal3)',
+  borderRadius: 5, overflow: 'hidden',
 }
 const trichterSpur: React.CSSProperties = {
   flex: 1, minWidth: 0, height: 22, background: 'var(--coal3)',
