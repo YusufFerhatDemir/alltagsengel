@@ -107,3 +107,43 @@ sperrt `anon` gegen und meldet Exit 1, solange etwas fehlt.
 **Bis dahin ist der Marketing-Code vollständig und wirkungslos:** die
 Routen laufen in „Tabelle existiert nicht" und das Cockpit zeigt einen
 Ladefehler. Das ist der richtige Zustand — kein Versand ohne Schema.
+
+## Block 5 — Bearbeitungsstand Content (2026-09-11) — WARTET AUF ANWENDUNG
+
+| Datei | Inhalt |
+|---|---|
+| `20261103000000_marketing_content_status.sql` | Tabelle `marketing_content_status` + RLS + UNIQUE-Index + `updated_at`-Trigger |
+| `20261103000001_rollback_marketing_content_status.sql` | Rücknahme (sichert vorher nach CSV — der Stand steht nirgends sonst) |
+
+### Anwenden
+
+Über das MCP-Tool `apply_migration`, Datei `20261103000000`. Der Rollback
+wird **nicht** angewendet; er liegt für den Rückweg daneben.
+
+Danach zur Prüfung:
+
+```
+curl -s "$NEXT_PUBLIC_SUPABASE_URL/rest/v1/marketing_content_status?select=id&limit=1" \
+  -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY"
+```
+
+`[]` heißt angewendet und leer. `PGRST205` heißt: noch nicht da.
+
+**Bis dahin ist die Seite vollständig nutzbar** — `/admin/marketing-content`
+zeigt alle 54 Stücke und sagt in einem Kasten, dass der Stand noch nicht
+geführt wird; die Schreibroute antwortet 503 mit genau dieser Begründung
+statt mit einem Serverfehler. Kein stiller Ausfall.
+
+### Zum Zeitstempel
+
+`20261103000000` liegt in der Zukunft und weicht damit von der Regel oben
+ab. Der Grund ist hier **nicht** die Anwendungsreihenfolge — die Tabelle ist
+neu und hängt von keiner anderen Migration ab. Der Grund ist die bestehende
+Kette: `20261031`–`20261102` tragen dieselbe Art Nummer und sind live, und
+`JUENGSTE_MIGRATIONEN` in `lib/pilot/pre-pilot-snapshot.ts` wird gegen die
+**nach Namen** sortierten fünf letzten Dateien geprüft. Ein echter
+Zeitstempel (`20260911…`) hätte vor diesen Block sortiert und den
+Drift-Guard auf Dateien gezeigt, die älter benannt, aber schon angewendet
+sind. Die Abweichung ist also eine Folge der Altlast, keine Notwendigkeit
+der Sache — wer die Kette einmal auf echte Zeitstempel umstellt, sollte sie
+in einem Zug umstellen.
