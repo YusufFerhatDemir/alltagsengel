@@ -10,6 +10,8 @@ import {
 
 const JETZT = new Date('2026-09-12T10:00:00Z')
 const vor = (h: number) => new Date(JETZT.getTime() - h * 3600_000).toISOString()
+/** Berliner Kalendertag von JETZT — fuer follow_up_date (Typ date). */
+const HEUTE = '2026-09-12'
 
 describe('Ampel', () => {
   it.each([
@@ -98,10 +100,32 @@ describe('Kundenanfrage', () => {
     expect(e.ziel).toBe('/mis/crm')
   })
 
-  it('kontaktiert ohne Wiedervorlage: keine Uhr, aber sichtbarer Hinweis', () => {
+  // ENTSCHEIDUNG UMGEKEHRT AM 12.09.2026.
+  // Vorher galt: kontaktiert ohne Wiedervorlage → „keine Uhr, aber sichtbarer
+  // Hinweis". Der Hinweis hat nicht gereicht. Live lagen zwei Vorgänge seit
+  // 56 Tagen genau so da — Stufe „keine", Ampel grün, in keinem der sieben
+  // Arbeitskörbe, also in keiner Liste, die jemand öffnet.
+  //
+  // Wer einen Lead anfasst und keinen Termin setzt, hat ihn nicht erledigt.
+  // Die Uhr läuft deshalb ab der letzten Bearbeitung weiter. Der Hinweis
+  // bleibt — er sagt jetzt, WARUM die Uhr läuft.
+  it('kontaktiert ohne Wiedervorlage: Uhr läuft ab letzter Bearbeitung weiter', () => {
     const e = ausAnfrage({ id: 'a2', status: 'contacted', created_at: vor(300) }, JETZT)!
-    expect(e.followUp).toBe('keine')
+    expect(e.followUp).toBe('verschleppt')
     expect(e.hinweis).toMatch(/Ohne Wiedervorlage/)
+  })
+
+  it('updated_at gewinnt über created_at — eine Bearbeitung setzt die Uhr zurück', () => {
+    const e = ausAnfrage(
+      { id: 'a2b', status: 'contacted', created_at: vor(300), updated_at: vor(30) }, JETZT)!
+    expect(e.followUp).toBe('erinnerung')   // 30 h seit der Bearbeitung
+  })
+
+  it('gesetzte Wiedervorlage hat weiterhin Vorrang vor dem Rückfall', () => {
+    const e = ausAnfrage(
+      { id: 'a2c', status: 'contacted', created_at: vor(300), updated_at: vor(300),
+        follow_up_date: HEUTE }, JETZT)!
+    expect(e.followUp).toBe('erinnerung')   // am Fälligkeitstag, nicht „verschleppt"
   })
 
   it('Endzustände (converted/lost) tauchen nicht auf', () => {

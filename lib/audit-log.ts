@@ -46,6 +46,13 @@ export type AuditAction =
   | 'data_export'
   | 'admin_login'
   | 'rate_limit_reset'
+  /**
+   * Täglicher Lead-Follow-up-Lauf (Kette 13), 12.09.2026.
+   * Braucht Migration 20261105000000 — der CHECK auf `action` lehnt den Wert
+   * bis dahin ab, `logAuditEventOrWarn` meldet dann eine sichtbare
+   * AUDIT-LUECKE statt zu werfen.
+   */
+  | 'lead_follow_up_lauf'
   // Legacy MIS-Actions (für weiteren Gebrauch freigegeben)
   | 'create'
   | 'read'
@@ -67,8 +74,16 @@ export type AuditAction =
 export interface AuditLogInput {
   /** Aktions-Typ (Pflicht, synchron mit DB-CHECK). */
   action: AuditAction
-  /** Actor (wer hat's gemacht) — User-UUID aus der Session. */
-  actorId: string
+  /**
+   * Actor (wer hat's gemacht) — User-UUID aus der Session.
+   *
+   * `null` für Läufe ohne Menschen dahinter (Cron, Edge-Function). Die
+   * Spalte lässt das live zu und die bestehenden `user_hard_delete_cron`-
+   * Zeilen tragen genau das; der Typ stand nur strenger als die Wirklichkeit.
+   * Eine erfundene UUID wäre schlechter als `null` — sie behauptete einen
+   * Akteur, den es nicht gab.
+   */
+  actorId: string | null
   /** Organisation, in der die Aktion stattfand. MUSS gesetzt werden,
    *  weil service_role keinen JWT hat und current_org_id() sonst auf
    *  die Stamm-Org faellt. */

@@ -39,6 +39,7 @@ import {
 import { stufeAusDbWert, WARTELISTE_STUFEN } from '@/lib/warteliste/katalog'
 import { followUpFuer } from '@/lib/warteliste/prioritaet'
 import { stufeFuerBewerbung, followUpFuerBewerbung } from '@/lib/bewerbung/pipeline'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 import { rollentraegerDerOrg } from './org-empfaenger'
 import { logger } from '@/lib/logger'
 
@@ -194,6 +195,46 @@ function linkFuer(gesamt: FollowUpZaehlung): string {
   return '/admin/posteingang'
 }
 
+/**
+ * Protokolliert den Lauf — auch den Lauf, in dem nichts fällig war.
+ *
+ * WARUM AUCH DER LEERLAUF ZÄHLT
+ * Die Kette hinterlässt sonst nur `notifications`-Zeilen, und die entstehen
+ * nur, wenn etwas fällig WAR. „Keine Meldung" und „nicht gelaufen" sind
+ * dadurch nicht unterscheidbar — und das ist die erste Frage, die man nach
+ * einem Rückstand stellt. Am 12.09.2026 ließ sich der Lauf um 05:29 nur
+ * deshalb belegen, weil zufällig 38 Vorgänge fällig waren.
+ *
+ * FAIL-SOFT: `logAuditEventOrWarn` wirft nicht. Solange die Migration
+ * 20261105000000 nicht angewendet ist, lehnt der CHECK auf `action` den Wert
+ * ab; dann steht eine „AUDIT-LUECKE" im Log — sichtbar, und der Lauf selbst
+ * bleibt unberührt.
+ */
+async function protokolliereLauf(
+  organizationId: string,
+  tag: string,
+  ergebnis: LeadFollowUpErgebnis,
+): Promise<void> {
+  await logAuditEventOrWarn({
+    action: 'lead_follow_up_lauf',
+    entityType: 'lead_inquiries',
+    actorId: null,
+    organizationId,
+    details: {
+      tag,
+      gesamt: ergebnis.gesamt,
+      warteliste: ergebnis.warteliste,
+      bewerbungen: ergebnis.bewerbungen,
+      anfragen: ergebnis.anfragen,
+      empfaenger: ergebnis.empfaenger,
+      benachrichtigt: ergebnis.benachrichtigt,
+      bereitsHeute: ergebnis.bereitsHeute,
+      perEmail: ergebnis.perEmail,
+      fehler: ergebnis.fehler,
+    },
+  })
+}
+
 export async function erinnereAnLeadFollowUps(
   supabase: SupabaseClient,
   organizationId: string,
@@ -210,12 +251,18 @@ export async function erinnereAnLeadFollowUps(
     bereitsHeute: 0,
   }
 
-  if (gesamt.gesamt === 0) return ergebnis
+  const tagFuerProtokoll = berlinerTagPlus(jetzt, 0)
+
+  if (gesamt.gesamt === 0) {
+    await protokolliereLauf(organizationId, tagFuerProtokoll, ergebnis)
+    return ergebnis
+  }
 
   const empfaenger = await rollentraegerDerOrg(supabase, organizationId, LEAD_FOLLOW_UP_ROLLEN)
   ergebnis.empfaenger = empfaenger.length
   if (empfaenger.length === 0) {
     ergebnis.fehler.push('Keine Empfaenger mit Rolle admin/superadmin in der Organisation.')
+    await protokolliereLauf(organizationId, tagFuerProtokoll, ergebnis)
     return ergebnis
   }
 
@@ -308,5 +355,6 @@ export async function erinnereAnLeadFollowUps(
     }
   }
 
+  await protokolliereLauf(organizationId, tagFuerProtokoll, ergebnis)
   return ergebnis
 }

@@ -95,6 +95,15 @@ jobs:
         # Schritt loeschen.
         run: npm run lint:45a
 
+      - name: PII-Lint (keine neuen Personendokumente im Baum)
+        # Dieses Repository ist oeffentlich. `.gitignore` wirkt nur auf
+        # ungetrackte Dateien und `git add -f` umgeht sie; dieser Schritt
+        # prueft, was tatsaechlich getrackt IST. Der Bestand vom 12.09.2026
+        # (11 Dateien) ist in scripts/lint-pii-dateien.ts eingefroren und
+        # benannt — jede zwoelfte macht den Lauf rot.
+        # Liest nur Dateinamen, oeffnet kein Dokument.
+        run: npm run lint:pii
+
       - name: Mandanten-Lint (organization_id bei Dienstschluessel-Inserts)
         # 190 Tabellen tragen live `organization_id NOT NULL DEFAULT
         # current_org_id()`. Diese Funktion liest auth.uid(); beim

@@ -35,6 +35,15 @@ export interface FakeAufruf {
   filter: FilterEintrag[]
   /** Der bei insert/update uebergebene Datensatz. */
   payload: unknown
+  /**
+   * Zweites Argument von insert/upsert (z. B. `{ onConflict, ignoreDuplicates }`).
+   *
+   * Warum aufgezeichnet: bei einem Upsert steckt die entscheidende Aussage
+   * genau dort. `ignoreDuplicates: true` ist der Unterschied zwischen
+   * „anlegen, falls neu" und „bestehenden Endzustand zurueckstempeln" —
+   * ohne die Optionen kann ein Test das nicht auseinanderhalten.
+   */
+  optionen: unknown
   terminal: Terminal
   /** true bei `{ head: true }` — Zaehlabfrage ohne Zeilen. */
   head: boolean
@@ -172,6 +181,7 @@ export function erstelleFakeSupabase(
       spalten: null,
       filter: [],
       payload: undefined,
+      optionen: undefined,
       terminal: 'liste',
       head: false,
       zaehlmodus: null,
@@ -204,10 +214,11 @@ export function erstelleFakeSupabase(
     }
 
     for (const op of ['insert', 'update', 'upsert'] as const) {
-      kette[op] = (payload: unknown) => {
+      kette[op] = (payload: unknown, optionen?: unknown) => {
         aufruf.operation = op === 'upsert' ? 'insert' : op
         operationGesetzt = true
         aufruf.payload = payload
+        if (optionen !== undefined) aufruf.optionen = optionen
         return kette
       }
     }
