@@ -102,7 +102,7 @@ const QUELLE_PUNKTE: Array<[RegExp, number, string]> = [
 const DRINGLICH_IM_TEXT = /dringend|sofort|schnellstm|asap|entlass|krankenhaus|notfall|akut|ab morgen|diese woche/i
 
 const FOLLOW_UP_PUNKTE: Record<FollowUpStufe, number> = {
-  keine: 0, erinnerung: 25, eskalation: 40, dringend: 60,
+  keine: 0, erinnerung: 25, eskalation: 40, dringend: 60, verschleppt: 80,
 }
 
 /** Wiedervorlage einer offenen Stufe aus letzter Bearbeitung + Stufenfrist. */

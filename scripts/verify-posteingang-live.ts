@@ -28,7 +28,7 @@ async function main() {
       .select('id, name, email, telefon, status, pflegegrad, ort, bundesland, gewuenschte_leistungen, nachricht, quelle, created_at, updated_at')
       .eq('organization_id', DEFAULT_ORG_ID),
     sb.from('lead_inquiries')
-      .select('id, name, email, phone, status, created_at, updated_at, follow_up_date, bewerbung_daten')
+      .select('id, name, email, phone, status, source, created_at, updated_at, follow_up_date, bewerbung_daten')
       .eq('organization_id', DEFAULT_ORG_ID).or(BEWERBUNG_FILTER).in('status', ['new', 'contacted', 'qualified']),
     sb.from('lead_inquiries')
       .select('id, name, email, phone, status, source, created_at, updated_at, follow_up_date')
@@ -57,7 +57,12 @@ async function main() {
   const z = zaehlePosteingang(liste)
   console.log(`Lauf: ${jetzt.toISOString()}`)
   console.log(posteingangSatz(z))
-  console.log(`je Art: Warteliste ${z.jeArt.warteliste} · Bewerbungen ${z.jeArt.bewerbung} · Anfragen ${z.jeArt.anfrage}\n`)
+  console.log(`je Art: Warteliste ${z.jeArt.warteliste} · Bewerbungen ${z.jeArt.bewerbung} · Anfragen ${z.jeArt.anfrage}`)
+  console.log(
+    `Kennzahlen: >24h ${z.gelb} · >48h ${z.orange} · >72h ${z.rot} · >7 Tage ${z.schwarz} · `
+    + `ältester ${Math.floor(z.aeltesteStunden / 24)} Tage · heute fällig ${z.heuteFaellig} · `
+    + `Rückrufe ${z.rueckrufe} · Termine ${z.termine}\n`,
+  )
   console.log('Ampel  Art           Offen  Stufe           Name                      Nächster Schritt')
   for (const e of liste.slice(0, 25)) {
     console.log(

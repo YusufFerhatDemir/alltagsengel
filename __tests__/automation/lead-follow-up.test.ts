@@ -42,9 +42,9 @@ describe('zaehleLeadFollowUps', () => {
     ])
 
     const r = await zaehleLeadFollowUps(mock.client as any, ORG, JETZT)
-    expect(r.warteliste).toEqual({ erinnerung: 1, eskalation: 0, dringend: 1, gesamt: 2 })
-    expect(r.bewerbungen).toEqual({ erinnerung: 0, eskalation: 1, dringend: 1, gesamt: 2 })
-    expect(r.anfragen).toEqual({ erinnerung: 0, eskalation: 0, dringend: 1, gesamt: 1 })
+    expect(r.warteliste).toEqual({ erinnerung: 1, eskalation: 0, dringend: 1, verschleppt: 0, gesamt: 2 })
+    expect(r.bewerbungen).toEqual({ erinnerung: 0, eskalation: 1, dringend: 1, verschleppt: 0, gesamt: 2 })
+    expect(r.anfragen).toEqual({ erinnerung: 0, eskalation: 0, dringend: 1, verschleppt: 0, gesamt: 1 })
     expect(r.fehler).toEqual([])
   })
 

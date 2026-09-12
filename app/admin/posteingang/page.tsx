@@ -32,6 +32,7 @@ const log = logger.child('admin:posteingang')
 
 const AMPEL_FILTER: { key: 'alle' | Ampel; label: string }[] = [
   { key: 'alle', label: 'Alle' },
+  { key: 'schwarz', label: 'Verschleppt (>7 Tage)' },
   { key: 'rot', label: 'Dringend (>72 h)' },
   { key: 'orange', label: 'Eskaliert (>48 h)' },
   { key: 'gelb', label: 'Erinnerung (>24 h)' },
@@ -57,7 +58,7 @@ export default function AdminPosteingangPage() {
       supabase.from('state_waitlist')
         .select('id, name, email, telefon, status, pflegegrad, ort, bundesland, gewuenschte_leistungen, nachricht, quelle, created_at, updated_at'),
       supabase.from('lead_inquiries')
-        .select('id, name, email, phone, status, created_at, updated_at, follow_up_date, bewerbung_daten')
+        .select('id, name, email, phone, status, source, created_at, updated_at, follow_up_date, bewerbung_daten')
         .or(BEWERBUNG_FILTER).in('status', ['new', 'contacted', 'qualified']),
       supabase.from('lead_inquiries')
         .select('id, name, email, phone, status, source, created_at, updated_at, follow_up_date')
@@ -101,7 +102,7 @@ export default function AdminPosteingangPage() {
   useEffect(() => {
     try {
       const a = new URLSearchParams(window.location.search).get('ampel')
-      if (a && ['rot', 'orange', 'gelb', 'gruen'].includes(a)) setAmpel(a as Ampel)
+      if (a && ['schwarz', 'rot', 'orange', 'gelb', 'gruen'].includes(a)) setAmpel(a as Ampel)
     } catch { /* ohne Parameter bleibt „Alle" */ }
   }, [])
 
@@ -137,7 +138,33 @@ export default function AdminPosteingangPage() {
 
       {fehler.map(f => <Banner key={f} tone="danger">{f}</Banner>)}
 
-      {zaehlung.rot > 0 ? (
+      {/* Kennzahlen: die Fragen, die man morgens stellt — beantwortet aus
+          denselben Zeilen, die unten in der Tabelle stehen. */}
+      <div style={kachelReihe}>
+        <Kachel wert={zaehlung.jeArt.warteliste + zaehlung.jeArt.anfrage} titel="Offene Kunden" />
+        <Kachel wert={zaehlung.jeArt.bewerbung} titel="Offene Bewerber" />
+        <Kachel
+          wert={zaehlung.aeltesteStunden >= 48 ? `${Math.floor(zaehlung.aeltesteStunden / 24)} Tage` : `${zaehlung.aeltesteStunden} h`}
+          titel="Ältester Lead"
+          farbe={zaehlung.aeltesteStunden >= 168 ? AMPEL_META.schwarz.color : zaehlung.aeltesteStunden >= 72 ? AMPEL_META.rot.color : undefined}
+        />
+        <Kachel wert={zaehlung.heuteFaellig} titel="Heute fällig" />
+        <Kachel wert={zaehlung.rueckrufe} titel="Rückrufe offen" />
+        <Kachel wert={zaehlung.termine} titel="Terminwünsche" />
+      </div>
+      <div style={kachelReihe}>
+        <Kachel wert={zaehlung.gelb} titel="> 24 h" farbe={AMPEL_META.gelb.color} />
+        <Kachel wert={zaehlung.orange} titel="> 48 h" farbe={AMPEL_META.orange.color} />
+        <Kachel wert={zaehlung.rot} titel="> 72 h" farbe={AMPEL_META.rot.color} />
+        <Kachel wert={zaehlung.schwarz} titel="> 7 Tage" farbe={AMPEL_META.schwarz.color} />
+      </div>
+
+      {zaehlung.schwarz > 0 ? (
+        <Banner tone="danger">
+          <strong>{zaehlung.schwarz} Lead(s) liegen seit über sieben Tagen.</strong>{' '}
+          Das ist kein Rückstand mehr — diese Vorgänge brauchen heute eine Antwort oder eine Absage.
+        </Banner>
+      ) : zaehlung.rot > 0 ? (
         <Banner tone="danger">
           <strong>{zaehlung.rot} Lead(s) liegen seit über 72 Stunden.</strong>{' '}
           Bitte heute bearbeiten oder eine Wiedervorlage setzen.
@@ -220,6 +247,20 @@ export default function AdminPosteingangPage() {
     </div>
   )
 }
+
+function Kachel({ wert, titel, farbe }: { wert: number | string; titel: string; farbe?: string }) {
+  return (
+    <div style={{
+      flex: '1 1 120px', minWidth: 120, background: 'var(--coal3)', border: '1px solid var(--border)',
+      borderRadius: 10, padding: '10px 14px',
+    }}>
+      <div style={{ fontSize: 22, fontWeight: 700, color: farbe ?? 'var(--ink)' }}>{wert}</div>
+      <div style={{ fontSize: 12, color: 'var(--ink4)' }}>{titel}</div>
+    </div>
+  )
+}
+
+const kachelReihe: React.CSSProperties = { display: 'flex', gap: 10, flexWrap: 'wrap', margin: '12px 0' }
 
 const btnGhost: React.CSSProperties = {
   fontSize: 13, color: 'var(--ink2)', background: 'rgba(255,255,255,0.06)',
