@@ -16,12 +16,12 @@ describe('pruefeAnfrageDaten', () => {
   it('nimmt bekannte Werte an', () => {
     const r = pruefeAnfrageDaten({
       anliegen: 'angehoeriger', dringlichkeit: 'sofort',
-      kontaktweg: 'telefon', pflegegrad: '3',
+      kontaktweg: 'telefon', pflegegrad: 'grad3',
     })
     expect(r.fehler).toBeNull()
     expect(r.daten).toEqual({
       anliegen: 'angehoeriger', dringlichkeit: 'sofort',
-      kontaktweg: 'telefon', pflegegrad: '3',
+      kontaktweg: 'telefon', pflegegrad: 'grad3',
     })
   })
 
@@ -36,7 +36,7 @@ describe('pruefeAnfrageDaten', () => {
   })
 
   it('ein unbekannter Wert wird ABGEWIESEN, nicht verworfen', () => {
-    const r = pruefeAnfrageDaten({ pflegegrad: '7' })
+    const r = pruefeAnfrageDaten({ pflegegrad: 'grad7' })
     expect(r.fehler).toMatch(/pflegegrad/)
     expect(r.daten).toEqual({})
   })
@@ -114,6 +114,17 @@ describe('Kataloge', () => {
     expect(PFLEGEGRAD).toHaveProperty('kein')
     expect(PFLEGEGRAD).toHaveProperty('beantragt')
     expect(PFLEGEGRAD.beantragt).not.toBe(PFLEGEGRAD.kein)
+  })
+
+  it('kein Pflegegrad-Schlüssel ist ganzzahlig — sonst sortiert JS ihn nach vorn', () => {
+    // Der Fehler, den nur der Browser zeigte: mit '1'..'5' standen die Grade
+    // im Auswahlfeld VOR „Weiß ich nicht".
+    for (const k of Object.keys(PFLEGEGRAD)) {
+      expect(String(Number(k)), `Schlüssel ${k} ist ganzzahlig`).not.toBe(k)
+    }
+    expect(optionen(PFLEGEGRAD).map(o => o.wert)).toEqual([
+      'unbekannt', 'kein', 'beantragt', 'grad1', 'grad2', 'grad3', 'grad4', 'grad5',
+    ])
   })
 
   it('die vier Anliegen decken Kunde, Angehörige, Bewerber und Rest ab', () => {
