@@ -64,8 +64,8 @@ describe('NAV_ITEMS', () => {
   })
 
   test('Modulnamen sind eindeutig', () => {
-    const module = NAV_ITEMS.map((n) => n.module)
-    assert.equal(new Set(module).size, module.length)
+    const modulnamen = NAV_ITEMS.map((n) => n.module)
+    assert.equal(new Set(modulnamen).size, modulnamen.length)
   })
 
   test('das Dashboard ist der erste Eintrag und liegt auf /mis', () => {

@@ -183,7 +183,14 @@ function UploadBereich({ onUploadErfolg }: { onUploadErfolg: () => void }) {
       onDragOver={e => { e.preventDefault(); setDragging(true) }}
       onDragLeave={() => setDragging(false)}
       onDrop={handleDrop}
-      {...klickbar(() => inputRef.current?.click())}
+      {...klickbar(
+        // `klickbar` ruft die Closure nicht auf, sondern haengt sie in
+        // onClick/onKeyDown der zurueckgegebenen Props ein — die Ref wird
+        // erst im Event gelesen, nie im Render. Die Regel kann das nicht
+        // sehen, weil `klickbar` kein Hook ist.
+        // eslint-disable-next-line react-hooks/refs
+        () => inputRef.current?.click(),
+      )}
       aria-label="Rückläufer-Datei auswählen oder hierher ziehen"
       style={{
         border: `2px dashed ${dragging ? '#3b82f6' : 'var(--border, #d1d5db)'}`,

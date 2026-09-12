@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { stadtGeoMeta } from '@/lib/seo/stadt-geo'
+import { seitenTitel, seitenBeschreibung } from '@/lib/seo/meta-laenge'
 import EngelBewerbungForm from '@/components/EngelBewerbungForm'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
@@ -187,8 +188,24 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
   return {
     // Stadt-Geo statt der vom Layout geerbten Frankfurt-Werte (lib/seo/stadt-geo.ts)
     other: stadtGeoMeta(stadt),
-    title: `Alltagsbegleiter Job ${city.name} — 20 €/Std. Nebenjob & Minijob`,
-    description: `Alltagsbegleiter Job in ${city.name}: 20 €/Stunde, flexible Zeiten, keine Pflegeausbildung nötig. Stellenangebot als Betreuungskraft — Nebenjob oder Minijob. Jetzt bewerben!`,
+    // Der Titel bekommt ueber `title.template` im Layout automatisch
+    // „ | Alltagsengel" angehaengt (15 Zeichen). Mit dem alten Zusatz
+    // „— 20 €/Std. Nebenjob & Minijob" lag er bei bis zu 91 Zeichen und wurde
+    // im Suchergebnis abgeschnitten — der Ortsname stand dann teils nicht mehr
+    // drin, also genau das Wort, auf das die Seite zielt.
+    title: seitenTitel(
+      `Alltagsbegleiter Job ${city.name} — Nebenjob`,
+      `Alltagsbegleiter Job ${city.name}`,
+      `Alltagsbegleiter ${city.name}`,
+    ),
+    description: seitenBeschreibung(
+      `Alltagsbegleiter/in werden in ${city.name} — auch in ${city.stadtteile[0]} `
+        + `& ${city.stadtteile[1]}: 20 €/Stunde, freie Zeiteinteilung, ohne Pflegeausbildung.`,
+      `Alltagsbegleiter/in werden in ${city.name}, u. a. in ${city.stadtteile[0]}: `
+        + `20 €/Stunde, freie Zeiteinteilung, keine Pflegeausbildung nötig.`,
+      `Alltagsbegleiter/in in ${city.name} & ${city.stadtteile[0]}: 20 €/Stunde, `
+        + `freie Zeiteinteilung, ohne Pflegeausbildung.`,
+    ),
     keywords: [
       `alltagsbegleiter job ${city.name.toLowerCase()}`,
       `alltagsbegleiter werden ${city.name.toLowerCase()}`,
@@ -202,7 +219,9 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
       '20 euro stunde nebenjob',
     ],
     openGraph: {
-      title: `Alltagsbegleiter Job ${city.name} — 20 €/Stunde | Alltagsengel`,
+      // Ohne „| Alltagsengel": die Vorlage aus dem Layout greift auch fuer
+      // openGraph.title, die Marke stand sonst zweimal im selben Titel.
+      title: `Alltagsbegleiter Job ${city.name} — 20 €/Stunde`,
       description: `Flexibler Nebenjob als Alltagsbegleiter/in in ${city.name}. Keine Pflegeausbildung nötig, Quereinsteiger willkommen. Jetzt bewerben!`,
       url:
         city.slug === 'frankfurt'

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { stadtGeoMeta } from '@/lib/seo/stadt-geo'
+import { seitenTitel, seitenBeschreibung } from '@/lib/seo/meta-laenge'
 import LeadForm from '@/components/LeadForm'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import SpeakableSchema from '@/components/SpeakableSchema'
@@ -304,8 +305,25 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
   return {
     // Stadt-Geo statt der vom Layout geerbten Frankfurt-Werte (lib/seo/stadt-geo.ts)
     other: stadtGeoMeta(stadt),
-    title: `Pflegebox ${city.name} — 0 € Zuzahlung`,
-    description: `Kostenlose Pflegebox nach ${city.name}: Handschuhe, Desinfektion, Bettschutz (§40 SGB XI). Bis 42 €/Monat von der Kasse, 0 € Zuzahlung. Jetzt bestellen!`,
+    title: seitenTitel(
+      `Pflegebox ${city.name} — 0 € Zuzahlung`,
+      `Pflegebox ${city.name} — 0 €`,
+      `Pflegebox ${city.name}`,
+    ),
+    // Die Stadtteile stehen je Stadt schon in `cities` — sie machen aus einem
+    // Textskelett fuer 25 Seiten 25 unterscheidbare Beschreibungen. Vorher
+    // unterschieden sich benachbarte Staedte nur im eingesetzten Namen
+    // (Textgleichheit bis 96 %); /haushaltshilfe loest es seit jeher so.
+    description: seitenBeschreibung(
+      `Pflegebox nach ${city.name} — auch nach ${city.stadtteile[0]} & ${city.stadtteile[1]}. `
+        + `Handschuhe, Desinfektion, Bettschutz nach §40 SGB XI. `
+        + `Bis 42 €/Monat von der Pflegekasse, 0 € Zuzahlung.`,
+      `Pflegebox nach ${city.name} — auch nach ${city.stadtteile[0]}. `
+        + `Handschuhe, Desinfektion, Bettschutz nach §40 SGB XI. `
+        + `Bis 42 €/Monat, 0 € Zuzahlung.`,
+      `Pflegebox nach ${city.name} und ${city.stadtteile[0]}: `
+        + `Pflegehilfsmittel nach §40 SGB XI, bis 42 €/Monat, 0 € Zuzahlung.`,
+    ),
     keywords: [
       `Pflegebox ${city.name}`,
       `Pflegehilfsmittel ${city.name}`,

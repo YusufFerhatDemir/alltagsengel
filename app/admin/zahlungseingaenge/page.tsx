@@ -388,7 +388,14 @@ export default function ZahlungseingaengePage() {
                   const f = e.dataTransfer.files[0]
                   if (f) handlePreflight(f)
                 }}
-                {...klickbar(() => fileRef.current?.click())}
+                {...klickbar(
+                  // `klickbar` ruft die Closure nicht auf, sondern haengt sie in
+                  // onClick/onKeyDown der zurueckgegebenen Props ein — die Ref wird
+                  // erst im Event gelesen, nie im Render. Die Regel kann das nicht
+                  // sehen, weil `klickbar` kein Hook ist.
+                  // eslint-disable-next-line react-hooks/refs
+                  () => fileRef.current?.click(),
+                )}
                 aria-label="camt.053-Datei auswählen oder hierher ziehen — wird zuerst geprüft, nicht gebucht"
                 style={{
                   border: '2px dashed #c8a84e', borderRadius: 12, padding: '32px 24px',

@@ -11,9 +11,26 @@
 
 ---
 
+## 0. Korrektur zur Fassung von 04:00 Uhr
+
+Dieser Bericht wurde um 04:00 Uhr erstellt und um 11:00 Uhr in zwei Punkten
+**widerlegt**. Beide Korrekturen stehen hier, nicht versteckt weiter unten.
+
+| Aussage um 04:00 | Tatsächlich |
+|---|---|
+| „Die Follow-up-Maschine hat **noch nie gefeuert**, weil `CRON_SECRET` in Vercel nicht gesetzt ist." | **Falsch.** Die Kette ist am 12.09.2026 um **05:29:51 UTC** gelaufen und hat drei In-App-Meldungen geschrieben („Verschleppt: 37 Lead(s) liegen seit über 7 Tagen", Link `/admin/posteingang?ampel=schwarz`). `CRON_SECRET` **ist gesetzt** — die Route ist fail-closed, ohne Geheimnis hätte sie 401 geliefert und nichts geschrieben. Ein zweiter Cron ist ebenfalls belegt: `user_hard_delete_cron` um 03:28:02 UTC in `mis_audit_log`. |
+| „ESLint ist stillgelegt, 12 Fehler unbemerkt." | War richtig — **ist behoben.** Alle 12 Fehler sind beseitigt, `|| true` ist aus `ci.yml` entfernt, der Schritt blockiert jetzt. Gegenprobe gefahren. |
+
+Zur ersten Korrektur: Die Beobachtung um 04:00 („noch nie gefeuert") stimmte zu
+diesem Zeitpunkt — der Lauf kam erst 89 Minuten später. Die **Begründung** dagegen
+war eine Vermutung, die ich als Tatsache formuliert habe. Das war der Fehler; ein
+nicht gesetztes Geheimnis hätte ich messen können und habe es nicht.
+
+---
+
 ## 1. Executive Summary
 
-Drei Produkte, drei grüne Testsuiten, **14.683 Tests** ohne einen einzigen Fehlschlag. Die
+Drei Produkte, drei grüne Testsuiten, **14.701 Tests** ohne einen einzigen Fehlschlag. Die
 Technik ist nicht das Problem.
 
 Das Problem ist der Rückstand im Posteingang und die Genehmigungsmappe.
@@ -22,8 +39,8 @@ Das Problem ist der Rückstand im Posteingang und die Genehmigungsmappe.
 Darunter vier echte Kundenanfragen — Menschen, die Betreuung für Angehörige gesucht und
 keine Antwort bekommen haben. Das ist kein Softwarefehler, das ist verlorener Umsatz und
 ein Reputationsrisiko. Die Follow-up-Maschine, die genau das künftig verhindert, steht
-seit heute — sie hat aber **noch nie gefeuert**, weil `CRON_SECRET` in Vercel nicht gesetzt
-ist. Ein einzelner fehlender Wert trennt eine gebaute Funktion von einer wirkenden.
+seit heute — und sie **läuft**: erster belegter Lauf am 12.09.2026 um 05:29:51 UTC,
+drei Meldungen an die Verwaltung (siehe Abschnitt 0).
 
 Bei der §45a-Anerkennung sind seit heute zwei Dinge gesichert und eine Sache unangenehm:
 Die Mappe ist visuell Blatt für Blatt geprüft (26 Scans), die Anerkennung wird nirgends
@@ -49,8 +66,8 @@ geschrieben, aber nicht angewendet, weil DDL aus der Agent-Sitzung heraus nicht 
 | Genehmigungsmappe | Dateiliste | **26 Scans visuell geprüft, 9 Befunde** | `915509d7` |
 | Preise | widersprüchlich verstreut | **PRICE_SOURCE_OF_TRUTH.md** | `a64e28a7` |
 
-**Neu und vorher unbekannt:** ESLint läuft in CI mit `|| true` und wird damit stillgelegt
-(siehe Abschnitt 17).
+**Neu und vorher unbekannt:** ESLint lief in CI mit `|| true` und war damit stillgelegt —
+am selben Tag behoben und scharf gestellt (siehe Abschnitt 0 und 17).
 
 ---
 
@@ -59,15 +76,16 @@ geschrieben, aber nicht angewendet, weil DDL aus der Agent-Sitzung heraus nicht 
 | Prüfung | Ergebnis | Exit |
 |---|---|---|
 | `tsc --noEmit` | keine Fehler | **0** |
-| `vitest run` | 470 Dateien, **10.324 Tests** bestanden, 38 übersprungen | **0** |
+| `vitest run` | 471 Dateien, **10.342 Tests** bestanden, 38 übersprungen | **0** |
 | `npm run test:unit` (node:test) | 286 Suiten, **2.770 Tests** bestanden, 0 fehlgeschlagen | **0** |
 | `lint:forbidden` · `lint:org-id` · `lint:route-auth` | je 0 Befunde | **0** |
 | `lint:ladefehler` · `lint:leerzustand` · `lint:client-bundle` | je 0 Befunde | **0** |
 | `lint:rls-sicht` · `lint:45a` | je 0 Befunde | **0** |
-| `npm run lint` (ESLint) | **12 Fehler, 1 Warnung** | **1** |
+| `npm run lint` (ESLint) | 0 Fehler — **blockiert seit 12.09. in CI** | **0** |
 
-**Abweichung zum Auftrag:** Dort stehen 10.320 Tests — gemessen sind es **10.324**. Die
-vier zusätzlichen sind `__tests__/seo/footer-linkgraph.test.ts` aus Commit `2b708e75`.
+**Abweichung zum Auftrag:** Dort stehen 10.320 Tests — gemessen sind es **10.342**. Die 22
+zusätzlichen sind `__tests__/seo/footer-linkgraph.test.ts` (4) und
+`__tests__/seo/stadtseiten-metadaten.test.ts` (18).
 
 **Commits heute (alle auf `main`, Remote synchron):**
 
@@ -333,15 +351,18 @@ Bis dahin sind die Lücken offen — geschriebener SQL-Code ist keine Behebung.
 | Alltagsengel | vitest + node:test | **PASS** — 10.324 + 2.770 |
 | ChairMatch | vitest | **PASS** — 1.866 |
 | efy care | vitest | **PASS** — 2.493 |
-| **Summe** | | **14.683 Tests, 0 Fehlschläge** |
+| **Summe** | | **14.701 Tests, 0 Fehlschläge** |
 
 **Zwei Befunde zur CI selbst:**
 
-1. **ESLint ist stillgelegt.** `ci.yml` Zeile 65 lautet `npm run lint || true`. Lokal meldet
-   ESLint **12 Fehler** (react-hooks/refs in 6 Admin-Seiten, `no-assign-module-variable` in
-   einem Test). Alle betreffen Dateien, die zuletzt am 21.–29.08. angefasst wurden — also
-   **nicht neu**, aber seither unbemerkt. Die acht projekteigenen `lint:*`-Prüfungen laufen
-   dagegen blockierend und sind alle grün.
+1. **ESLint war stillgelegt — seit 12.09. nicht mehr.** `ci.yml` führte den Schritt als
+   `npm run lint || true`; der Exit-Code wurde verschluckt, ein Prüfschritt, der nie rot
+   werden kann. Darunter lagen **12 echte Fehler** (6× `require()`-Import in Tests, 4×
+   Ref-Zugriff im Render, 1× Deklarationsreihenfolge, 1× reservierter Bezeichner `module`),
+   alle aus dem Zeitraum 21.–29.08. Alle zwölf sind behoben, `|| true` ist entfernt, der
+   Schritt blockiert. Gegenprobe: mit gepflanztem `require()` in `lib/a11y.ts` meldet der
+   Lauf Exit 1, nach Rücknahme wieder Exit 0.
+
 2. **Die CI-Läufe zu `105b94b8` und `f6465b6f` wurden abgebrochen** (`cancelled`), weil der
    jeweils nächste Push sie verdrängt hat. Der Lauf zu `2b708e75` lief zum Redaktionsschluss
    noch. Der Beleg für diese Commits ist damit der **lokale Prüfstand**, nicht ein grünes
@@ -415,7 +436,7 @@ Gebündelt, nach Dringlichkeit. Alles hier braucht **Ihre** Hand.
 
 | # | Aktion | Warum |
 |---|---|---|
-| 1 | **`CRON_SECRET` in Vercel setzen** | Die Follow-up-Maschine hat **noch nie gefeuert**. Ohne diesen Wert laufen alle Ketten ins Leere — `Bearer undefined` gilt sonst für jeden. |
+| 1 | ~~`CRON_SECRET` in Vercel setzen~~ — **erledigt, war bereits gesetzt** | Nachgewiesen durch den Lauf um 05:29:51 UTC. Kein Handlungsbedarf. |
 | 2 | **4 Kundenanfragen anrufen** | MantheyIckenroth (34 T), Büttner (43 T), Reichert (mehrfach vergeblich), Suhe (59 T) |
 | 3 | **Claudia Adjovi anrufen** | 8 Jahre Erfahrung, Top-Kandidatin, wartet unbearbeitet |
 | 4 | **Kartenscan löschen + Karte sperren lassen** | `~/Downloads/Gescanntes Dokument 14.pdf` zeigt Kartennummer, Ablauf **und Prüfziffer**. **Nicht im Repo** (per SHA-256 über alle PDFs und die Git-Historie geprüft) — es ist also nichts aus dem Projekt zu entfernen. Eine Karte mit sichtbarer Prüfziffer gilt als kompromittiert. |
@@ -441,7 +462,7 @@ Gebündelt, nach Dringlichkeit. Alles hier braucht **Ihre** Hand.
 1. Vier Kundenanfragen abtelefonieren, Ergebnis im Posteingang festhalten
 2. Acht Rückruf-Leads klassifizieren (eine Frage genügt: Kunde oder Bewerber?)
 3. Sieben PRIO-1-Bewerber kontaktieren, beginnend mit Claudia Adjovi
-4. `CRON_SECRET` setzen und den 05:00-Lauf am Folgetag gegen `notifications` belegen
+4. ~~`CRON_SECRET` setzen~~ — erledigt; stattdessen prüfen, warum die Eskalations-Mail des Laufs nicht in `notification_delivery_log` steht
 5. Dublette Maike Reichert zusammenführen
 
 **Genehmigung (6–10)**
@@ -459,8 +480,8 @@ Gebündelt, nach Dringlichkeit. Alles hier braucht **Ihre** Hand.
 15. `marketing_content_status` befüllen, damit Veröffentlichung nachvollziehbar wird
 
 **Technische Schuld (16–20)**
-16. `|| true` bei ESLint in `ci.yml` entfernen — nachdem die 12 Fehler behoben sind
-17. Die 12 ESLint-Fehler beheben (6 Admin-Seiten, `lib/a11y.ts`, ein Test)
+16. ~~`|| true` bei ESLint entfernen~~ und ~~die 12 Fehler beheben~~ — **beides am 12.09. erledigt**
+17. Rückruf-Formular um ein Anliegen-Feld erweitern — löst die 8 unklassifizierbaren Leads dauerhaft auf
 18. Zwei offene Migrationen anwenden und **nachmessen**, nicht annehmen
 19. UTM auf dem Bewerberformular nachziehen — 25 von 35 Bewerbungen kommen ohne Quelle an
 20. efy care deployen oder ausdrücklich als „nicht deployt" im Portfolio führen — der jetzige Zustand ist ein unentschiedener Zwischenstand
