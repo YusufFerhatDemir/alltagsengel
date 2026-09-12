@@ -8,6 +8,7 @@ import {
   posteingangSatz, AMPEL_META, ART_META,
   type Ampel, type LeadArt, type PosteingangEintrag,
 } from '@/lib/leads/posteingang'
+import { KOERBE, korb, zaehleKoerbe, ohneKorb, type KorbKey } from '@/lib/leads/koerbe'
 import { StatusBadge, EmptyRow, Banner, SearchInput } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger'
 
@@ -48,6 +49,9 @@ export default function AdminPosteingangPage() {
   // Anliegen statt Herkunft: „wer wartet auf einen Rückruf" ist die Frage,
   // die morgens zuerst gestellt wird.
   const [anliegen, setAnliegen] = useState<'alle' | 'rueckruf' | 'termin'>('alle')
+  // Der Arbeitskorb ist die Hauptauswahl: „was mache ich als Naechstes".
+  // Die Ampel sagt, wie schlimm es ist — nicht, wer dran ist.
+  const [korbWahl, setKorbWahl] = useState<'alle' | KorbKey>('alle')
   const [suche, setSuche] = useState('')
   const [jetzt, setJetzt] = useState(() => new Date())
 
@@ -104,16 +108,26 @@ export default function AdminPosteingangPage() {
   // Deep-Link aus der Glocke: ?ampel=rot
   useEffect(() => {
     try {
-      const a = new URLSearchParams(window.location.search).get('ampel')
+      const p = new URLSearchParams(window.location.search)
+      const a = p.get('ampel')
       if (a && ['schwarz', 'rot', 'orange', 'gelb', 'gruen'].includes(a)) setAmpel(a as Ampel)
+      const k = p.get('korb')
+      if (k && KOERBE.some(x => x.key === k)) setKorbWahl(k as KorbKey)
     } catch { /* ohne Parameter bleibt „Alle" */ }
   }, [])
 
   const zaehlung = useMemo(() => zaehlePosteingang(rows), [rows])
+  const korbZaehlung = useMemo(() => zaehleKoerbe(rows, jetzt), [rows, jetzt])
+  // Vorgaenge, die in KEINEM Korb liegen. Genau die bleiben liegen, weil sie
+  // in keiner Arbeitsliste auftauchen — am 12.09.2026 waren es zwei, die so
+  // 56 Tage dalagen. Steht die Zahl ueber null, ist das eine Luecke im
+  // Modell und kein Randfall.
+  const luecken = useMemo(() => ohneKorb(rows, jetzt), [rows, jetzt])
 
   const gefiltert = useMemo(() => {
     const q = suche.trim().toLowerCase()
     return rows.filter(r => {
+      if (korbWahl !== 'alle' && !korb(korbWahl).passt(r, jetzt)) return false
       if (ampel !== 'alle' && r.ampel !== ampel) return false
       if (art !== 'alle' && r.art !== art) return false
       if (anliegen === 'rueckruf' && !/rueckruf|rückruf|callback/i.test(r.quelle ?? '')) return false
@@ -123,7 +137,7 @@ export default function AdminPosteingangPage() {
         || (r.kontakt || '').toLowerCase().includes(q)
         || r.stufeLabel.toLowerCase().includes(q)
     })
-  }, [rows, ampel, art, anliegen, suche])
+  }, [rows, ampel, art, anliegen, suche, korbWahl, jetzt])
 
   if (loading) return <div className="admin-page"><h1>Posteingang</h1><p>Laden…</p></div>
 
@@ -186,7 +200,44 @@ export default function AdminPosteingangPage() {
         <SearchInput value={suche} onChange={setSuche} placeholder="Name, Kontakt, Stufe…" />
       </div>
 
+      {/* Arbeitskoerbe. Sie UEBERLAPPEN mit Absicht — ein Bewerber kann
+          ueberfaellig sein. Die Summe der Zahlen ist deshalb groesser als die
+          Zahl der Vorgaenge, und das ist kein Fehler. */}
       <div className="admin-filters">
+        <button className={`admin-filter-btn ${korbWahl === 'alle' ? 'active' : ''}`}
+          onClick={() => setKorbWahl('alle')}>
+          Alle Vorgänge ({rows.length})
+        </button>
+        {KOERBE.map(k => (
+          <button
+            key={k.key}
+            className={`admin-filter-btn ${korbWahl === k.key ? 'active' : ''}`}
+            onClick={() => setKorbWahl(korbWahl === k.key ? 'alle' : k.key)}
+            title={k.bedeutung}
+            style={korbWahl === k.key ? { borderColor: k.color, color: k.color } : undefined}
+          >
+            {k.label} ({korbZaehlung[k.key]})
+          </button>
+        ))}
+      </div>
+
+      {luecken.length > 0 && (
+        <div style={{
+          margin: '10px 0', padding: '10px 12px', borderRadius: 10,
+          background: 'rgba(208,75,59,0.10)', border: '1px solid rgba(208,75,59,0.35)',
+          fontSize: 13, color: 'var(--ink2)',
+        }}>
+          <strong>{luecken.length} Vorgang/Vorgänge liegen in keinem Arbeitskorb.</strong>{' '}
+          Sie erscheinen damit in keiner Liste, die jemand öffnet — bitte melden, das ist
+          eine Lücke im Modell, kein Randfall.
+          <button className="admin-filter-btn" style={{ marginLeft: 10 }}
+            onClick={() => { setKorbWahl('alle'); setAmpel('alle'); setArt('alle'); setAnliegen('alle'); setSuche(luecken[0].name) }}>
+            Ersten anzeigen
+          </button>
+        </div>
+      )}
+
+      <div className="admin-filters" style={{ marginTop: 8 }}>
         {AMPEL_FILTER.map(f => (
           <button key={f.key} className={`admin-filter-btn ${ampel === f.key ? 'active' : ''}`} onClick={() => setAmpel(f.key)}>
             {f.label} ({f.key === 'alle' ? rows.length : rows.filter(r => r.ampel === f.key).length})
