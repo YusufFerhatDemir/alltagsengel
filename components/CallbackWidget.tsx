@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { trackContactRequest } from '@/lib/tracking'
 import { useFokusFalle } from '@/lib/a11y'
+import { useUtm } from '@/hooks/useUtm'
 
 // ═══════════════════════════════════════════════════════════
 // RÜCKRUFSERVICE-WIDGET — "Wir rufen Sie zurück!"
@@ -23,6 +24,7 @@ export default function CallbackWidget() {
   const [visible, setVisible] = useState(false)
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({ name: '', phone: '', zeit: 'Vormittags' })
+  const utm = useUtm()
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
 
   // Nach 3s einblenden (analog WhatsApp-Button), nicht sofort.
@@ -60,6 +62,9 @@ export default function CallbackWidget() {
           message: `Rückruf gewünscht — bevorzugte Zeit: ${form.zeit}`,
           service: 'Rückrufservice',
           source: 'rueckruf',
+          // Herkunft aus URL oder gespeicherter First-Touch-Attribution
+          // (lib/marketing/utm.ts) — sonst kommt jeder Rückruf ohne Kampagne an.
+          utm_source: utm.utm_source,
         }),
       })
       if (res.ok) {

@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { trackContactRequest } from '@/lib/tracking'
 import { logger } from '@/lib/logger'
@@ -8,6 +8,7 @@ import {
   QUALIFIKATIONEN, FUEHRERSCHEIN, SPRACHEN, VERFUEGBARKEIT,
   STUNDEN, BESCHAEFTIGUNGSART, BEWERBUNG_MAX,
 } from '@/lib/bewerbung/katalog'
+import { useUtm } from '@/hooks/useUtm'
 
 const log = logger.child('engel-bewerbung')
 
@@ -41,15 +42,9 @@ export default function EngelBewerbungForm() {
   const [motivation, setMotivation] = useState('')
   const [datenschutz, setDatenschutz] = useState(false)
   const [honeypot, setHoneypot] = useState('')
-  const [utmSource, setUtmSource] = useState('')
+  const utm = useUtm()
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
   const [fehler, setFehler] = useState('')
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const p = new URLSearchParams(window.location.search)
-    setUtmSource(p.get('utm_source') || p.get('source') || '')
-  }, [])
 
   function toggle(liste: string[], setzen: (w: string[]) => void, key: string) {
     setzen(liste.includes(key) ? liste.filter(k => k !== key) : [...liste, key])
@@ -71,7 +66,7 @@ export default function EngelBewerbungForm() {
         body: JSON.stringify({
           name, email, phone, plz, region, qualifikation, fuehrerschein,
           sprachen, verfuegbarkeit, stunden, beschaeftigungsart, motivation,
-          datenschutz, website: honeypot, utm_source: utmSource,
+          datenschutz, website: honeypot, utm_source: utm.utm_source,
         }),
       })
 

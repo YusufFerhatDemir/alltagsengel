@@ -1,6 +1,7 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { trackContactRequest } from '@/lib/tracking'
+import { useUtm } from '@/hooks/useUtm'
 
 // ═══════════════════════════════════════════════════════════
 // LEAD CAPTURE FORM — Kostenlose Beratung anfragen
@@ -22,14 +23,7 @@ export default function LeadForm({ defaultService, source }: LeadFormProps) {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [honeypot, setHoneypot] = useState('')
-  const [utmSource, setUtmSource] = useState('')
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const params = new URLSearchParams(window.location.search)
-    const src = params.get('utm_source') || params.get('source') || ''
-    setUtmSource(src)
-  }, [])
+  const utm = useUtm()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -43,7 +37,7 @@ export default function LeadForm({ defaultService, source }: LeadFormProps) {
           ...form,
           website: honeypot,
           source: source || 'website',
-          utm_source: utmSource,
+          utm_source: utm.utm_source,
         }),
       })
       if (res.ok) {

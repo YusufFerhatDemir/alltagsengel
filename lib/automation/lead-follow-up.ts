@@ -177,15 +177,18 @@ function zeile(titel: string, z: FollowUpZaehlung): string {
   return `${titel}: ${teile.join(', ')}`
 }
 
-/** Ziel des Links: die Liste mit dem meisten Druck. */
-function linkFuer(r: { warteliste: FollowUpZaehlung; bewerbungen: FollowUpZaehlung; anfragen: FollowUpZaehlung }): string {
-  const gewicht = (z: FollowUpZaehlung) => z.dringend * 100 + z.eskalation * 10 + z.erinnerung
-  const kandidaten: Array<[string, number]> = [
-    ['/admin/waitlist?filter=nachfassen', gewicht(r.warteliste)],
-    ['/admin/applications?filter=nachfassen', gewicht(r.bewerbungen)],
-    ['/mis/crm', gewicht(r.anfragen)],
-  ]
-  return kandidaten.sort((a, b) => b[1] - a[1])[0][0]
+/**
+ * Ziel des Links: der Posteingang, gefiltert auf die dringendste Farbe.
+ *
+ * Vorher zeigte die Meldung in EINE der drei Fachlisten — wer drei rote
+ * Bewerbungen und zwei rote Anfragen hatte, sah nach dem Klick nur die
+ * eine Hälfte. /admin/posteingang führt alle drei Quellen zusammen.
+ */
+function linkFuer(gesamt: FollowUpZaehlung): string {
+  if (gesamt.dringend > 0) return '/admin/posteingang?ampel=rot'
+  if (gesamt.eskalation > 0) return '/admin/posteingang?ampel=orange'
+  if (gesamt.erinnerung > 0) return '/admin/posteingang?ampel=gelb'
+  return '/admin/posteingang'
 }
 
 export async function erinnereAnLeadFollowUps(
@@ -225,7 +228,7 @@ export async function erinnereAnLeadFollowUps(
     zeile('Bewerbungen', gezaehlt.bewerbungen),
     zeile('Kundenanfragen', gezaehlt.anfragen),
   ]
-  const link = linkFuer(gezaehlt)
+  const link = linkFuer(gesamt)
 
   // E-Mail-Adressen nur holen, wenn eskaliert wird.
   const emails = new Map<string, { email: string; name: string }>()

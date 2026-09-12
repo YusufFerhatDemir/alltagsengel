@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { trackContactRequest } from '@/lib/tracking'
+import { useUtm } from '@/hooks/useUtm'
 
 // ═══════════════════════════════════════════════════════════
 // PFLEGEBOX-KONFIGURATOR — öffentlicher Bestell-Funnel ohne Login
@@ -63,6 +64,7 @@ export default function PflegeboxKonfigurator({ source = 'pflegebox-konfigurator
   const [produkte, setProdukte] = useState<Produkt[]>(START_PRODUKTE)
   const [pflegegrad, setPflegegrad] = useState<string>('')
   const [form, setForm] = useState({ name: '', phone: '', plz: '' })
+  const utm = useUtm()
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [honeypot, setHoneypot] = useState('')
@@ -96,6 +98,7 @@ export default function PflegeboxKonfigurator({ source = 'pflegebox-konfigurator
           website: honeypot,
           service: 'Pflege-Box',
           source,
+          utm_source: utm.utm_source,
         }),
       })
       if (res.ok) {

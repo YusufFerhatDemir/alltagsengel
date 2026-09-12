@@ -358,6 +358,10 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   // Gleiche Grenze aus dem gleichen Grund: waitlist_customers traegt genau
   // eine verwaltende Policy, „Admin full access" mit is_admin().
   '/admin/waitlist':                  { lesen: 'marketing.verwalten', schreiben: 'marketing.verwalten' },
+  // Priority Inbox: liest dieselben drei Quellen wie Warteliste und
+  // Bewerbungen und schreibt selbst nichts — gleiche Grenze wie die
+  // Fachlisten, in die sie verlinkt.
+  '/admin/posteingang':               { lesen: 'marketing.verwalten', schreiben: 'marketing.verwalten' },
   // Liest die Plaene aus docs/marketing/ und den Bearbeitungsstand dazu.
   // Dieselbe Grenze: es sind unveroeffentlichte Werbetexte.
   '/admin/marketing-content':         { lesen: 'marketing.verwalten', schreiben: 'marketing.verwalten' },
