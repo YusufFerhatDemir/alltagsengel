@@ -192,9 +192,21 @@ export function ausAnfrage(z: RohLead, jetzt: Date): PosteingangEintrag | null {
   const meta = ANFRAGE_STATUS[status]
   if (!meta) return null
   const wiedervorlage = tagAlsZeitpunkt(z.follow_up_date ?? null)
+  // ── WARUM HIER EIN RÜCKFALL STEHT ────────────────────────────────────
+  // Für einen bearbeiteten Lead läuft die Uhr ab der Wiedervorlage. Ist
+  // keine gesetzt, gab `followUpSeitWiedervorlage(null)` die Stufe „keine"
+  // zurück — und damit war der Lead aus der Leiter heraus: Ampel grün, kein
+  // Arbeitskorb, keine Eskalation, für immer unsichtbar. Am 12.09.2026 traf
+  // das zwei Vorgänge, die seit 56 Tagen so dalagen.
+  //
+  // Wer einen Lead anfasst und keinen Termin setzt, hat ihn nicht erledigt.
+  // Deshalb läuft die Uhr dann ab der letzten Bearbeitung weiter — dieselbe
+  // Regel, die `wiedervorlageFuerBewerbung` für Bewerbungen längst hat.
   const followUp = status === 'new'
     ? followUpSeitEingang(z.created_at, jetzt)
-    : followUpSeitWiedervorlage(wiedervorlage, jetzt)
+    : wiedervorlage
+      ? followUpSeitWiedervorlage(wiedervorlage, jetzt)
+      : followUpSeitEingang(z.updated_at ?? z.created_at, jetzt)
   return {
     id: z.id,
     art: 'anfrage',
