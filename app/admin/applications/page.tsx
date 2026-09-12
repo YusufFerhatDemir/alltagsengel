@@ -88,6 +88,11 @@ export default function AdminApplicationsPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>(FILTER_OFFEN)
   const [sortierung, setSortierung] = useState<Sortierung>('dringlichkeit')
+  // Drei Merkmale, nach denen die Verwaltung tatsaechlich sucht: wo wohnt
+  // die Person, was kann sie, wie viel will sie arbeiten.
+  const [region, setRegion] = useState('alle')
+  const [qualifikation, setQualifikation] = useState('alle')
+  const [modell, setModell] = useState('alle')
   const [busy, setBusy] = useState<string | null>(null)
   const [jetzt, setJetzt] = useState(() => new Date())
   const [search, setSearch] = useState('')
@@ -203,6 +208,25 @@ export default function AdminApplicationsPage() {
     return m
   }, [rows])
 
+  /**
+   * Auswahllisten aus dem BESTAND, nicht aus dem Katalog: eine Liste mit
+   * Optionen, die keine einzige Bewerbung trägt, sieht aus wie ein leeres
+   * Ergebnis — dabei gab es den Fall nie.
+   */
+  const vorhanden = useMemo(() => {
+    const sammle = (f: (r: AppRow) => string | undefined | null) => {
+      const m = new Map<string, number>()
+      rows.forEach(r => { const w = f(r); if (w) m.set(w, (m.get(w) ?? 0) + 1) })
+      return [...m.entries()].sort((a, b) => b[1] - a[1])
+    }
+    return {
+      regionen: sammle(r => r.daten?.region),
+      qualifikationen: sammle(r => r.daten?.qualifikation),
+      modelle: sammle(r => r.daten?.beschaeftigungsart),
+      ohneAngaben: rows.filter(r => !r.daten).length,
+    }
+  }, [rows])
+
   const referralCount = useMemo(() => rows.filter(r => r.referredById).length, [rows])
   // Endzustaende im Wortschatz von lead_inquiries: eingestellt oder abgesagt.
   const openCount = useMemo(
@@ -242,6 +266,9 @@ export default function AdminApplicationsPage() {
       } else if (filter === FILTER_OFFEN) {
         if (BEWERBER_ENDZUSTAENDE.includes(r.stufe)) return false
       } else if (filter !== 'all' && r.stufe !== filter) return false
+      if (region !== 'alle' && (r.daten?.region ?? '') !== region) return false
+      if (qualifikation !== 'alle' && (r.daten?.qualifikation ?? '') !== qualifikation) return false
+      if (modell !== 'alle' && (r.daten?.beschaeftigungsart ?? '') !== modell) return false
       if (!q) return true
       // Telefon mitsuchen: bei Website-Bewerbungen ist es das einzige
       // Kontaktmerkmal — eine E-Mail fragt das Formular nicht ab.
@@ -264,7 +291,7 @@ export default function AdminApplicationsPage() {
       fortschritt: (a, b) => vollst(b) - vollst(a),
     }
     return [...treffer].sort((a, b) => cmp[sortierung](a, b) || fifo(a, b))
-  }, [rows, filter, search, sortierung, jetzt])
+  }, [rows, filter, search, sortierung, jetzt, region, qualifikation, modell])
 
   return (
     <div className="admin-page">
@@ -326,13 +353,39 @@ export default function AdminApplicationsPage() {
         </button>
       </div>
 
-      <div style={{ margin: '12px 0 16px' }}>
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', margin: '12px 0 16px' }}>
         <label style={{ fontSize: 13, color: 'var(--ink3)' }}>
           Sortierung:{' '}
           <select className="admin-select" value={sortierung} onChange={e => setSortierung(e.target.value as Sortierung)}>
             {SORTIERUNGEN.map(so => <option key={so.key} value={so.key}>{so.label}</option>)}
           </select>
         </label>
+        <label style={{ fontSize: 13, color: 'var(--ink3)' }}>
+          Region:{' '}
+          <select className="admin-select" value={region} onChange={e => setRegion(e.target.value)}>
+            <option value="alle">Alle Regionen</option>
+            {vorhanden.regionen.map(([k, n]) => <option key={k} value={k}>{regionLabel(k)} ({n})</option>)}
+          </select>
+        </label>
+        <label style={{ fontSize: 13, color: 'var(--ink3)' }}>
+          Qualifikation:{' '}
+          <select className="admin-select" value={qualifikation} onChange={e => setQualifikation(e.target.value)}>
+            <option value="alle">Alle Qualifikationen</option>
+            {vorhanden.qualifikationen.map(([k, n]) => <option key={k} value={k}>{qualifikationLabel(k)} ({n})</option>)}
+          </select>
+        </label>
+        <label style={{ fontSize: 13, color: 'var(--ink3)' }}>
+          Arbeitsmodell:{' '}
+          <select className="admin-select" value={modell} onChange={e => setModell(e.target.value)}>
+            <option value="alle">Alle Modelle</option>
+            {vorhanden.modelle.map(([k, n]) => <option key={k} value={k}>{beschaeftigungsartLabel(k)} ({n})</option>)}
+          </select>
+        </label>
+        {vorhanden.ohneAngaben > 0 && (
+          <span style={{ fontSize: 12, color: 'var(--ink5)' }}>
+            {vorhanden.ohneAngaben} Bewerbung(en) ohne Zusatzangaben — die Filter greifen dort nicht.
+          </span>
+        )}
       </div>
 
       {loading ? <p>Laden…</p> : (

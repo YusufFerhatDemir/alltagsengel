@@ -1,10 +1,11 @@
 /**
  * Follow-up-Leiter für Leads — Warteliste, Bewerbungen, Kundenanfragen.
  *
- * DIE REGEL (Auftrag 11.09.2026)
- *   24 h nach Eingang ohne Statusänderung → Erinnerung
- *   48 h                                  → Eskalation
- *   72 h                                  → Dringend
+ * DIE REGEL (Auftrag 11./12.09.2026)
+ *   24 h nach Eingang ohne Statusänderung → Erinnerung (Hinweis)
+ *   48 h                                  → Eskalation (Warnung)
+ *   72 h                                  → Dringend (rot, Alarm an die Verwaltung)
+ *   7 Tage                                → Verschleppt (eigene Stufe, täglicher Alarm)
  * Kein Lead darf tagelang vergessen werden.
  *
  * ── WORAN DIE UHR LÄUFT ───────────────────────────────────────────────
@@ -28,15 +29,18 @@ export const FOLLOW_UP_SCHWELLEN_STUNDEN = {
   erinnerung: 24,
   eskalation: 48,
   dringend: 72,
+  /** Sieben Tage. Ab hier ist es kein Rückstand mehr, sondern ein liegen gelassener Vorgang. */
+  verschleppt: 24 * 7,
 } as const
 
-export type FollowUpStufe = 'keine' | 'erinnerung' | 'eskalation' | 'dringend'
+export type FollowUpStufe = 'keine' | 'erinnerung' | 'eskalation' | 'dringend' | 'verschleppt'
 
 export const FOLLOW_UP_META: Record<FollowUpStufe, { label: string; color: string; rang: number }> = {
   keine: { label: '—', color: '#8A8A8A', rang: 0 },
   erinnerung: { label: 'Erinnerung', color: '#E8A000', rang: 1 },
   eskalation: { label: 'Eskalation', color: '#FF7043', rang: 2 },
   dringend: { label: 'Dringend', color: '#D04B3B', rang: 3 },
+  verschleppt: { label: 'Verschleppt', color: '#7B1E14', rang: 4 },
 }
 
 const STUNDE_MS = 60 * 60 * 1000
@@ -52,6 +56,7 @@ export function stundenSeit(zeitpunkt: string | Date | null | undefined, jetzt: 
 /** Leiter auf eine Stundenzahl anwenden. */
 export function stufeFuerStunden(stunden: number | null): FollowUpStufe {
   if (stunden === null) return 'keine'
+  if (stunden >= FOLLOW_UP_SCHWELLEN_STUNDEN.verschleppt) return 'verschleppt'
   if (stunden >= FOLLOW_UP_SCHWELLEN_STUNDEN.dringend) return 'dringend'
   if (stunden >= FOLLOW_UP_SCHWELLEN_STUNDEN.eskalation) return 'eskalation'
   if (stunden >= FOLLOW_UP_SCHWELLEN_STUNDEN.erinnerung) return 'erinnerung'
@@ -106,11 +111,13 @@ export interface FollowUpZaehlung {
   erinnerung: number
   eskalation: number
   dringend: number
+  /** Über sieben Tage ohne Bearbeitung. */
+  verschleppt: number
   gesamt: number
 }
 
 export function zaehleFollowUps(stufen: readonly FollowUpStufe[]): FollowUpZaehlung {
-  const z: FollowUpZaehlung = { erinnerung: 0, eskalation: 0, dringend: 0, gesamt: 0 }
+  const z: FollowUpZaehlung = { erinnerung: 0, eskalation: 0, dringend: 0, verschleppt: 0, gesamt: 0 }
   for (const s of stufen) {
     if (s === 'keine') continue
     z[s]++

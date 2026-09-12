@@ -30,9 +30,10 @@ import {
   wiedervorlageFuerBewerbung,
 } from '@/lib/bewerbung/pipeline'
 
-export type Ampel = 'rot' | 'orange' | 'gelb' | 'gruen'
+export type Ampel = 'schwarz' | 'rot' | 'orange' | 'gelb' | 'gruen'
 
 export const AMPEL_META: Record<Ampel, { label: string; color: string; rang: number }> = {
+  schwarz: { label: 'Verschleppt', color: '#7B1E14', rang: 4 },
   rot: { label: 'Dringend', color: '#D04B3B', rang: 3 },
   orange: { label: 'Eskaliert', color: '#FF7043', rang: 2 },
   gelb: { label: 'Erinnerung', color: '#E8A000', rang: 1 },
@@ -40,6 +41,7 @@ export const AMPEL_META: Record<Ampel, { label: string; color: string; rang: num
 }
 
 export function ampelFuer(stufe: FollowUpStufe): Ampel {
+  if (stufe === 'verschleppt') return 'schwarz'
   if (stufe === 'dringend') return 'rot'
   if (stufe === 'eskalation') return 'orange'
   if (stufe === 'erinnerung') return 'gelb'
@@ -77,6 +79,8 @@ export interface PosteingangEintrag {
   /** Kurzhinweis, woran es hängt. */
   hinweis: string
   ziel: string
+  /** Herkunft (`state_waitlist.quelle` bzw. `lead_inquiries.source`) — trägt die Kennzahlen „Rückrufe" und „Termine". */
+  quelle: string | null
 }
 
 // ── Rohformen, wie die Seite sie liest ────────────────────────────────
@@ -135,6 +139,7 @@ export function ausWarteliste(z: RohWarteliste, jetzt: Date): PosteingangEintrag
     punkte: berechnePrioritaet(lead, jetzt).punkte,
     hinweis: stufe === 'neu' ? 'Noch nicht kontaktiert' : `Stufe „${meta.label}"`,
     ziel: ART_META.warteliste.ziel,
+    quelle: z.quelle ?? null,
   }
 }
 
@@ -165,6 +170,7 @@ export function ausBewerbung(z: RohLead, jetzt: Date): PosteingangEintrag | null
     punkte: 0,
     hinweis: meta.aufgabe,
     ziel: ART_META.bewerbung.ziel,
+    quelle: z.source ?? null,
   }
 }
 
@@ -208,6 +214,7 @@ export function ausAnfrage(z: RohLead, jetzt: Date): PosteingangEintrag | null {
       ? `Anfrage über ${z.source || 'Website'} — noch nicht bearbeitet`
       : wiedervorlage ? 'Wiedervorlage gesetzt' : 'Ohne Wiedervorlage — Termin setzen',
     ziel: ART_META.anfrage.ziel,
+    quelle: z.source ?? null,
   }
 }
 
@@ -227,22 +234,37 @@ export function sortierePosteingang(eintraege: readonly PosteingangEintrag[]): P
 export interface PosteingangZaehlung extends FollowUpZaehlung {
   gesamtOffen: number
   jeArt: Record<LeadArt, number>
+  schwarz: number
   rot: number
   orange: number
   gelb: number
+  /** Stunden, die der älteste offene Lead schon wartet. */
+  aeltesteStunden: number
+  /** Heute fällige Wiedervorlagen (Berliner Kalendertag). */
+  heuteFaellig: number
+  /** Offene Rückrufwünsche (`source='rueckruf'`). */
+  rueckrufe: number
+  /** Offene Terminwünsche (`source='terminbuchung'`). */
+  termine: number
 }
 
 export function zaehlePosteingang(eintraege: readonly PosteingangEintrag[]): PosteingangZaehlung {
   const z = zaehleFollowUps(eintraege.map(e => e.followUp))
   const jeArt: Record<LeadArt, number> = { warteliste: 0, bewerbung: 0, anfrage: 0 }
   eintraege.forEach(e => { jeArt[e.art]++ })
+  const heute = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' })
   return {
     ...z,
     gesamtOffen: eintraege.length,
     jeArt,
+    schwarz: eintraege.filter(e => e.ampel === 'schwarz').length,
     rot: eintraege.filter(e => e.ampel === 'rot').length,
     orange: eintraege.filter(e => e.ampel === 'orange').length,
     gelb: eintraege.filter(e => e.ampel === 'gelb').length,
+    aeltesteStunden: eintraege.reduce((m, e) => Math.max(m, e.stundenOffen), 0),
+    heuteFaellig: eintraege.filter(e => (e.wiedervorlage ?? '').slice(0, 10) === heute).length,
+    rueckrufe: eintraege.filter(e => /rueckruf|rückruf|callback/i.test(e.quelle ?? '')).length,
+    termine: eintraege.filter(e => /termin/i.test(e.quelle ?? '')).length,
   }
 }
 
@@ -250,6 +272,7 @@ export function zaehlePosteingang(eintraege: readonly PosteingangEintrag[]): Pos
 export function posteingangSatz(z: PosteingangZaehlung): string {
   if (z.gesamtOffen === 0) return 'Keine offenen Leads.'
   const teile = [
+    z.schwarz ? `${z.schwarz} verschleppt (>7 Tage)` : null,
     z.rot ? `${z.rot} dringend` : null,
     z.orange ? `${z.orange} eskaliert` : null,
     z.gelb ? `${z.gelb} zur Erinnerung` : null,

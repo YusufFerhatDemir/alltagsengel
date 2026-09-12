@@ -72,9 +72,10 @@ function summe(...z: FollowUpZaehlung[]): FollowUpZaehlung {
       erinnerung: a.erinnerung + b.erinnerung,
       eskalation: a.eskalation + b.eskalation,
       dringend: a.dringend + b.dringend,
+      verschleppt: a.verschleppt + b.verschleppt,
       gesamt: a.gesamt + b.gesamt,
     }),
-    { erinnerung: 0, eskalation: 0, dringend: 0, gesamt: 0 },
+    { erinnerung: 0, eskalation: 0, dringend: 0, verschleppt: 0, gesamt: 0 },
   )
 }
 
@@ -170,6 +171,7 @@ async function heuteSchonGemeldet(supabase: SupabaseClient, userId: string, tag:
 function zeile(titel: string, z: FollowUpZaehlung): string {
   if (z.gesamt === 0) return `${titel}: nichts offen`
   const teile = [
+    z.verschleppt ? `${z.verschleppt} verschleppt (>7 Tage)` : null,
     z.dringend ? `${z.dringend} dringend (>72 h)` : null,
     z.eskalation ? `${z.eskalation} eskaliert (>48 h)` : null,
     z.erinnerung ? `${z.erinnerung} Erinnerung (>24 h)` : null,
@@ -185,6 +187,7 @@ function zeile(titel: string, z: FollowUpZaehlung): string {
  * eine Hälfte. /admin/posteingang führt alle drei Quellen zusammen.
  */
 function linkFuer(gesamt: FollowUpZaehlung): string {
+  if (gesamt.verschleppt > 0) return '/admin/posteingang?ampel=schwarz'
   if (gesamt.dringend > 0) return '/admin/posteingang?ampel=rot'
   if (gesamt.eskalation > 0) return '/admin/posteingang?ampel=orange'
   if (gesamt.erinnerung > 0) return '/admin/posteingang?ampel=gelb'
@@ -217,10 +220,12 @@ export async function erinnereAnLeadFollowUps(
   }
 
   const tag = berlinerTagPlus(jetzt, 0)
-  const eskaliert = gesamt.eskalation + gesamt.dringend > 0
-  const titel = gesamt.dringend > 0
-    ? `Dringend: ${gesamt.dringend} Lead(s) seit über 72 h unbearbeitet`
-    : gesamt.eskalation > 0
+  const eskaliert = gesamt.eskalation + gesamt.dringend + gesamt.verschleppt > 0
+  const titel = gesamt.verschleppt > 0
+    ? `Verschleppt: ${gesamt.verschleppt} Lead(s) liegen seit über 7 Tagen`
+    : gesamt.dringend > 0
+      ? `Dringend: ${gesamt.dringend} Lead(s) seit über 72 h unbearbeitet`
+      : gesamt.eskalation > 0
       ? `Eskalation: ${gesamt.eskalation} Lead(s) seit über 48 h unbearbeitet`
       : `Erinnerung: ${gesamt.erinnerung} Lead(s) seit über 24 h unbearbeitet`
   const zeilen = [

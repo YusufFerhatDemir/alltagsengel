@@ -20,7 +20,9 @@ describe('Leiter ab Eingang (Stufe NEU)', () => {
     [48, 'eskalation'],
     [71.9, 'eskalation'],
     [72, 'dringend'],
-    [24 * 30, 'dringend'],
+    [167.9, 'dringend'],
+    [168, 'verschleppt'],
+    [24 * 30, 'verschleppt'],
   ])('%s h → %s', (h, erwartet) => {
     expect(followUpSeitEingang(vor(h as number), JETZT)).toBe(erwartet)
   })
@@ -43,9 +45,10 @@ describe('Leiter ab Wiedervorlage (spätere Stufen)', () => {
   it('am Fälligkeitspunkt Erinnerung — derselbe Punkt wie „24 h nach Eingang"', () => {
     expect(followUpSeitWiedervorlage(vor(0), JETZT)).toBe('erinnerung')
   })
-  it('24 h drüber Eskalation, 48 h drüber Dringend', () => {
+  it('24 h drüber Eskalation, 48 h drüber Dringend, 6 Tage drüber verschleppt', () => {
     expect(followUpSeitWiedervorlage(vor(24), JETZT)).toBe('eskalation')
     expect(followUpSeitWiedervorlage(vor(48), JETZT)).toBe('dringend')
+    expect(followUpSeitWiedervorlage(vor(144), JETZT)).toBe('verschleppt')
   })
   it('ohne Wiedervorlage keine Stufe', () => {
     expect(followUpSeitWiedervorlage(null, JETZT)).toBe('keine')
@@ -58,12 +61,13 @@ describe('Hilfsfunktionen', () => {
   })
 
   it('zählt je Stufe und gesamt, „keine" zählt nicht mit', () => {
-    expect(zaehleFollowUps(['keine', 'erinnerung', 'dringend', 'dringend', 'eskalation']))
-      .toEqual({ erinnerung: 1, eskalation: 1, dringend: 2, gesamt: 4 })
+    expect(zaehleFollowUps(['keine', 'erinnerung', 'dringend', 'dringend', 'eskalation', 'verschleppt']))
+      .toEqual({ erinnerung: 1, eskalation: 1, dringend: 2, verschleppt: 1, gesamt: 5 })
   })
 
   it('höchste Stufe', () => {
     expect(hoechsteStufe(['erinnerung', 'dringend', 'keine'])).toBe('dringend')
+    expect(hoechsteStufe(['dringend', 'verschleppt'])).toBe('verschleppt')
     expect(hoechsteStufe([])).toBe('keine')
   })
 

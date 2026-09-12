@@ -83,6 +83,15 @@ jobs:
       - name: Forbidden-strings lint
         run: npm run lint:forbidden
 
+      - name: §45a-Aussagen (keine Anerkennungs- oder Abrechnungszusage)
+        # Alltagsengel ist noch nicht nach § 45a SGB XI anerkannt. Der
+        # Renderer-Test unter __tests__/seo prueft die ausgelieferten Seiten;
+        # dieser Lauf liest den Quelltext und erwischt damit auch, was nie
+        # gerendert wird: System-Prompts der Chats, E-Mail-Ruempfe, Vorlagen.
+        # Nach dem Bescheid: ANERKENNUNG_45A_LIEGT_VOR umstellen, nicht den
+        # Schritt loeschen.
+        run: npm run lint:45a
+
       - name: Mandanten-Lint (organization_id bei Dienstschluessel-Inserts)
         # 190 Tabellen tragen live `organization_id NOT NULL DEFAULT
         # current_org_id()`. Diese Funktion liest auth.uid(); beim

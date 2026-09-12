@@ -13,13 +13,14 @@ const vor = (h: number) => new Date(JETZT.getTime() - h * 3600_000).toISOString(
 
 describe('Ampel', () => {
   it.each([
-    ['dringend', 'rot'], ['eskalation', 'orange'], ['erinnerung', 'gelb'], ['keine', 'gruen'],
+    ['verschleppt', 'schwarz'], ['dringend', 'rot'], ['eskalation', 'orange'],
+    ['erinnerung', 'gelb'], ['keine', 'gruen'],
   ] as const)('%s → %s', (fu, ampel) => {
     expect(ampelFuer(fu)).toBe(ampel)
   })
 
-  it('Rangfolge: rot > orange > gelb > grün', () => {
-    const r = (['rot', 'orange', 'gelb', 'gruen'] as const).map(a => AMPEL_META[a].rang)
+  it('Rangfolge: schwarz > rot > orange > gelb > grün', () => {
+    const r = (['schwarz', 'rot', 'orange', 'gelb', 'gruen'] as const).map(a => AMPEL_META[a].rang)
     expect(r).toEqual([...r].sort((a, b) => b - a))
   })
 })
@@ -30,6 +31,12 @@ describe('Warteliste', () => {
     gewuenschte_leistungen: ['demenzbetreuung'], nachricht: null, quelle: 'warteliste',
     name: 'Erika Müller', email: 'e@x.de', telefon: null,
   }
+
+  it('NEU seit über 7 Tagen ist SCHWARZ — eigene Stufe über „dringend"', () => {
+    const e = ausWarteliste({ ...basis, status: 'neu', created_at: vor(200), updated_at: vor(200) }, JETZT)!
+    expect(e.ampel).toBe('schwarz')
+    expect(e.followUp).toBe('verschleppt')
+  })
 
   it('NEU seit 80 h ist ROT und nennt den Grund', () => {
     const e = ausWarteliste({ ...basis, status: 'neu', created_at: vor(80), updated_at: vor(80) }, JETZT)!
@@ -107,13 +114,15 @@ describe('Sortierung und Zählung', () => {
   const e = (id: string, ampel: any, stundenOffen: number, art: any = 'bewerbung'): PosteingangEintrag => ({
     id, art, name: id, kontakt: null, stufe: 'neu', stufeLabel: 'Neu', stufeFarbe: '#000',
     eingang: null, zuletzt: null, wiedervorlage: null,
-    followUp: ampel === 'rot' ? 'dringend' : ampel === 'orange' ? 'eskalation' : ampel === 'gelb' ? 'erinnerung' : 'keine',
-    ampel, stundenOffen, punkte: 0, hinweis: '', ziel: '/x',
+    followUp: ampel === 'schwarz' ? 'verschleppt' : ampel === 'rot' ? 'dringend'
+      : ampel === 'orange' ? 'eskalation' : ampel === 'gelb' ? 'erinnerung' : 'keine',
+    ampel, stundenOffen, punkte: 0, hinweis: '', ziel: '/x', quelle: null,
   })
 
-  it('rot zuerst, innerhalb der Farbe der ältere Lead', () => {
-    const liste = [e('gruen', 'gruen', 200), e('rot-jung', 'rot', 80), e('gelb', 'gelb', 30), e('rot-alt', 'rot', 300)]
-    expect(sortierePosteingang(liste).map(x => x.id)).toEqual(['rot-alt', 'rot-jung', 'gelb', 'gruen'])
+  it('schwarz vor rot, innerhalb der Farbe der ältere Lead', () => {
+    const liste = [e('gruen', 'gruen', 200), e('rot-jung', 'rot', 80), e('gelb', 'gelb', 30),
+      e('rot-alt', 'rot', 300), e('schwarz', 'schwarz', 50)]
+    expect(sortierePosteingang(liste).map(x => x.id)).toEqual(['schwarz', 'rot-alt', 'rot-jung', 'gelb', 'gruen'])
   })
 
   it('sortiert eine Kopie', () => {
@@ -129,9 +138,23 @@ describe('Sortierung und Zählung', () => {
     expect(z.dringend).toBe(2)
   })
 
+  it('Kennzahlen: ältester Lead, Rückrufe, Terminwünsche', () => {
+    const z = zaehlePosteingang([
+      { ...e('1', 'schwarz', 400, 'anfrage'), quelle: 'rueckruf' },
+      { ...e('2', 'rot', 90, 'anfrage'), quelle: 'terminbuchung' },
+      { ...e('3', 'gelb', 30, 'warteliste'), quelle: 'warteliste' },
+    ])
+    expect(z.aeltesteStunden).toBe(400)
+    expect(z.rueckrufe).toBe(1)
+    expect(z.termine).toBe(1)
+    expect(z.schwarz).toBe(1)
+    expect(z.verschleppt).toBe(1)
+  })
+
   it('Satz für die Kopfzeile', () => {
     expect(posteingangSatz(zaehlePosteingang([]))).toBe('Keine offenen Leads.')
     expect(posteingangSatz(zaehlePosteingang([e('1', 'gruen', 1)]))).toBe('1 offen, alle im Zeitplan.')
     expect(posteingangSatz(zaehlePosteingang([e('1', 'rot', 90), e('2', 'gelb', 30)]))).toBe('2 offen — 1 dringend, 1 zur Erinnerung.')
+    expect(posteingangSatz(zaehlePosteingang([e('1', 'schwarz', 400)]))).toBe('1 offen — 1 verschleppt (>7 Tage).')
   })
 })
