@@ -6,6 +6,22 @@
 
 ---
 
+## VISUELLE PRUEFUNG 12.09.2026 — was sich geaendert hat
+
+Jede Datei wurde geoeffnet und angesehen; Belege je Zeile in
+`docs/reports/DOKUMENTENMATRIX_45a_12_09_2026.md`.
+
+| Punkt | Befund |
+|---|---|
+| Erhebungsbogen der Stadt | `Erhebungsbogen-Anbieterform-II-Frankfurt.pdf` ist **kein PDF**, sondern eine gespeicherte Cloudflare-Sperrseite. Der Download ist fehlgeschlagen — amtliches Formular fehlt. |
+| Unterschriften | Die Anlagen 00, 01, 04–09, 11–13 sind reine Textdateien **ohne jedes eingebettete Bild** — darin kann keine Unterschrift stecken. Durchsucht wurden Downloads, Desktop, Dokumente, iCloud: dort liegen unterschriebene Anschreiben fuer **12 andere Bundeslaender** (16.07.2026), aber keine unterschriebene Hessen-Anlage. Falls auf Papier unterschrieben: Scans einlegen. |
+| FZ Sabrina | 22.04.2026, „Keine Eintragung" — aber ein **einfaches**, kein erweitertes Fuehrungszeugnis (Yusufs vom 20.07.2026 ist erweitert). Kein Verfallsdatum, aber knapp 5 Monate alt. |
+| Gewerbeanmeldung | Laut Angabe online eingereicht, Bestaetigung ausstehend (SUBMITTED_AWAITING_CONFIRMATION). Auf dem Rechner kein Beleg. |
+| Betriebshaftpflicht | Verifiziert: Generali 260-FKHU-010.124.010.673, Deckung pauschal 10.000.000 EUR, Beginn 27.07.2026, Risiko „Haushaltshilfe, Betreuungsservice (nicht Pflegedienst)". Versicherungsnehmer lautet „Alltagsengel" ohne Rechtsform — klaeren. |
+| Rukiye | Kein Anerkennungsblocker; kommt in der Mappe nicht vor. |
+
+---
+
 ## STAMMDATEN-PRUEFUNG (FINALE, 10.08.2026)
 
 Alle PDFs und Markdown-Dateien wurden Dokument fuer Dokument geprueft. Ergebnis:
@@ -75,7 +91,7 @@ Das Anschreiben listet 12 Anlagen auf, aber 3 tatsaechlich beigefuegte Dokumente
 | 12 | Anlage-12-Schweigepflichterklaerung.pdf | Muster — pro MA einzeln unterschreiben lassen | ✅ fertig (Muster) |
 | 13 | Anlage-13-Einverstaendniserklaerung-Veroeffentlichung.pdf | Einverstaendnis Veroeffentlichung | ✍️ Unterschrift noetig |
 | FZ | Erweitertes-Fuehrungszeugnis-Yusuf-Ferhat-Demir-2026.pdf | Erw. FZ (BfJ, 20.07.2026) — ORIGINAL beilegen! | ✅ fertig (PAPIER-ORIGINAL beilegen!) |
-| 14 | PLATZHALTER-Gewerbeanmeldung.md | Gewerbeanmeldung nach Par. 14 GewO | 📎 noch einzufuegen |
+| 14 | PLATZHALTER-Gewerbeanmeldung.md | Gewerbeanmeldung nach Par. 14 GewO | 🕓 online eingereicht, Bestaetigung ausstehend |
 | 15 | Anlage-15-Betriebshaftpflicht-Police.pdf | Betriebshaftpflicht-Police (Generali, 10 Mio. EUR Deckung) | ✅ fertig (Kopie aus docs/genehmigung/) |
 
 **Zusammenfassung:** 5 ✅ fertig | 10 ✍️ Unterschrift/Felder noetig | 1 📎 extern fehlend (nur Gewerbeanmeldung)
