@@ -1,8 +1,8 @@
 # EINREICHUNGS-CHECKLISTE
 
-**Stand: 10.08.2026 (FINALE PRUEFUNG)**
-**Frist Nachreichung: 31.08.2026** (behoerdlich gesetzt, Rueckmeldung Fr. Krause vom 08.07.2026)
-**Verbleibende Zeit: 3 Wochen**
+**Stand: 12.09.2026 (AKTUALISIERT)**
+**Frist Nachreichung: 10.10.2026** (Verlaengerung beantragt, Original-Frist 31.08.2026 ABGELAUFEN)
+**Verbleibende Zeit: 28 Tage**
 
 ---
 
@@ -76,9 +76,9 @@ Das Anschreiben listet 12 Anlagen auf, aber 3 tatsaechlich beigefuegte Dokumente
 | 13 | Anlage-13-Einverstaendniserklaerung-Veroeffentlichung.pdf | Einverstaendnis Veroeffentlichung | ✍️ Unterschrift noetig |
 | FZ | Erweitertes-Fuehrungszeugnis-Yusuf-Ferhat-Demir-2026.pdf | Erw. FZ (BfJ, 20.07.2026) — ORIGINAL beilegen! | ✅ fertig (PAPIER-ORIGINAL beilegen!) |
 | 14 | PLATZHALTER-Gewerbeanmeldung.md | Gewerbeanmeldung nach Par. 14 GewO | 📎 noch einzufuegen |
-| 15 | PLATZHALTER-Versicherungspolice.md | Betriebshaftpflicht-Police (5 Mio. Deckung) | 📎 noch einzufuegen |
+| 15 | Anlage-15-Betriebshaftpflicht-Police.pdf | Betriebshaftpflicht-Police (Generali, 10 Mio. EUR Deckung) | ✅ fertig (Kopie aus docs/genehmigung/) |
 
-**Zusammenfassung:** 4 ✅ fertig | 10 ✍️ Unterschrift/Felder noetig | 2 📎 extern fehlend
+**Zusammenfassung:** 5 ✅ fertig | 10 ✍️ Unterschrift/Felder noetig | 1 📎 extern fehlend (nur Gewerbeanmeldung)
 
 ---
 
@@ -152,13 +152,13 @@ Das Anschreiben listet 12 Anlagen auf, aber 3 tatsaechlich beigefuegte Dokumente
 - **Einreichungsposition:** Anlage 14
 - **Dringlichkeit:** HOCH — ohne Gewerbeanmeldung wird der Antrag abgelehnt
 
-### 2. Betriebshaftpflichtversicherung (Police/Nachweis)
-- **Status:** FEHLT — Platzhalter: `PLATZHALTER-Versicherungspolice.md`
-- **Von Behoerde explizit angefordert:** JA (Rueckmeldung 08.07.2026)
-- **Rechtliche Grundlage:** Par. 1 Abs. 1 Nr. 13 PfluV — "ausreichender Versicherungsschutz"
-- **Aktion:** Police vom Versicherer anfordern und als Anlage beilegen
-- **Einreichungsposition:** Anlage 15
-- **Dringlichkeit:** HOCH
+### 2. Betriebshaftpflichtversicherung (Police/Nachweis) — ERLEDIGT
+- **Status:** ✅ VERIFIED_FILE — Generali, 10 Mio. EUR Deckung
+- **Datei:** `docs/genehmigung/07_Haftpflichtversicherung.pdf` (18 MB Scan)
+- **Kopie fuer Mappe:** `Anlage-15-Betriebshaftpflicht-Police.pdf`
+- **Von Behoerde explizit angefordert:** JA — ERLEDIGT
+- **Rechtliche Grundlage:** Par. 1 Abs. 1 Nr. 13 PfluV
+- **Hinweis:** Manuelle Sichtpruefung empfohlen (Scan-Qualitaet, korrekte Versicherungssumme)
 
 ### 3. Steuernummer — KEIN BLOCKER
 - **Status:** Nicht auf dem Mac gefunden
@@ -176,11 +176,11 @@ Das Anschreiben listet 12 Anlagen auf, aber 3 tatsaechlich beigefuegte Dokumente
 | Gewerbeanmeldung | FEHLT — muss extern beschafft werden | Platzhalter Anl. 14 |
 | ARGE-IK Bestaetigung | ERLEDIGT | Anlage-03 |
 | Konzept | ERLEDIGT | Anlage-05 |
-| Versicherungsnachweis + Police | FEHLT — Police wird nachgereicht | Platzhalter Anl. 15 |
+| Versicherungsnachweis + Police | ✅ ERLEDIGT — Generali, 10 Mio. EUR | Anlage-15 |
 | Kosten-/Leistungsuebersicht (Par. 8) | ERLEDIGT | Anlage-07 |
 | Erhebungsbogen im Original + Unterschrift | VORHANDEN — Unterschrift fehlt noch | Anlage-00 |
 
-**Ergebnis: 5 von 7 Punkten erledigt. 2 externe Dokumente fehlen noch.**
+**Ergebnis: 6 von 7 Punkten erledigt. 1 externes Dokument fehlt noch (Gewerbeanmeldung).**
 
 ---
 
@@ -195,27 +195,27 @@ Das Anschreiben listet 12 Anlagen auf, aber 3 tatsaechlich beigefuegte Dokumente
 
 ---
 
-## EINREICHUNGS-GO: NEIN
+## EINREICHUNGS-GO: NEIN (Stand 12.09.2026)
 
-### Gruende:
+### Verbleibende Blocker:
 1. **Gewerbeanmeldung fehlt** (von Behoerde explizit gefordert, Par. 9 Abs. 1 Nr. 3a PfluV)
-2. **Versicherungs-Police fehlt** (von Behoerde explizit gefordert, Par. 1 Abs. 1 Nr. 13 PfluV)
+2. ~~Versicherungs-Police fehlt~~ → **ERLEDIGT** (Generali, 10 Mio. EUR, Anlage-15)
 3. **12 Unterschriften fehlen** — 10x Yusuf + 2x Sabrina Martin (siehe Unterschriften-Liste)
 4. **4 Arbeitsvertrag-Felder unausgefuellt** (Beginn, Stunden, Verguetung, Urlaub)
 5. **5 Datum-Felder** muessen vor Unterschrift eingetragen werden
 
-### Sobald Gewerbeanmeldung + Police vorliegen:
+### Sobald Gewerbeanmeldung vorliegt:
 1. Arbeitsvertrag-Felder ausfuellen (4 Felder, siehe Tabelle oben)
 2. Datum-Felder in 5 Dokumenten eintragen
 3. ALLE 12 Unterschriften leisten (10x Yusuf, 2x Sabrina Martin — siehe Liste)
 4. Fuehrungszeugnis als PAPIER-ORIGINAL beilegen
 5. Erhebungsbogen als PAPIER-ORIGINAL einreichen
 6. Gewerbeanmeldung als Anlage-14 einsortieren (Kopie reicht)
-7. Versicherungspolice als Anlage-15 einsortieren (Kopie reicht)
+7. Versicherungspolice als Anlage-15 — BEREITS EINSORTIERT (Generali-Scan)
 8. Gesamtpaket per Post an: Hansaallee 150, 60320 Frankfurt am Main
 9. Parallel per E-Mail an: entlastungsangebote45@stadt-frankfurt.de
 
-### FRIST: 31.08.2026 — NUR NOCH 3 WOCHEN!
+### FRIST: 10.10.2026 (Verlaengerung beantragt) — 28 TAGE VERBLEIBEND
 
 ---
 
