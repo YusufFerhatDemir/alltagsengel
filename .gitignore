@@ -158,3 +158,21 @@ Gescanntes?Dokument*
 Scanned?Document*
 IMG_*.HEIC
 IMG_*.heic
+
+# ── Sensible Dokumente (Anerkennung/Genehmigung), 13.09.2026 ──────────
+# Zwoelf Dateien wurden am 13.09.2026 per `git rm --cached` aus dem Index
+# genommen (Fuehrungszeugnisse, Berufsurkunde, IK-Bestaetigung mit
+# Bankverbindung, Haftpflichtpolice). Sie lagen ueber einen Monat oeffentlich
+# abrufbar — Nachweis und Sanierungsplan in
+# docs/reports/HISTORY_CLEANUP_PLAN.md.
+#
+# ACHTUNG, BREITERE WIRKUNG ALS DIE ZWOELF: Diese Regeln erfassen JEDE PDF in
+# den beiden Ordnern, auch die unbedenklichen Konzepte. Bereits getrackte
+# Dateien bleiben getrackt (gitignore wirkt nur auf ungetrackte) — aber eine
+# NEUE Konzept-PDF wird stillschweigend ignoriert und faellt beim Commit
+# niemandem auf. Wer bewusst eine hinzufuegen will, braucht `git add -f`.
+# Das ist der Preis dafuer, dass hier nie wieder versehentlich eine Urkunde
+# landet; er ist bewusst gezahlt.
+anerkennung-hessen/*.pdf
+docs/genehmigung/**/*.pdf
+§45a-*.pdf

@@ -9,9 +9,9 @@
  * **tatsächlich getrackt** ist, und geht bei allem Neuen auf rot.
  *
  * DER BESTAND IST EINGEFROREN, NICHT ENTSCHULDIGT
- * Die elf bekannten Dateien stehen unten in `BESTAND` — mit Schwere und
+ * Die verbliebenen Dateien stehen unten in `BESTAND` — mit Schwere und
  * Grund. Sie sind damit nicht in Ordnung, sondern aktenkundig: Wer sie
- * entfernt, nimmt den Eintrag mit; wer eine zwoelfte hinzufuegt, bekommt einen
+ * entfernt, nimmt den Eintrag mit; wer eine neue hinzufuegt, bekommt einen
  * roten Lauf. Das Entfernen aus der Git-HISTORIE ist ein eigener,
  * unumkehrbarer Schritt und braucht die Entscheidung des Inhabers —
  * siehe docs/reports/SECURITY_REMEDIATION_12_09_2026.md.
@@ -71,22 +71,18 @@ const REGELN: readonly Regel[] = [
  * entfernen — sonst meldet der Lauf sie als verwaist.
  */
 const BESTAND: Readonly<Record<string, string>> = {
-  'anerkennung-hessen/Erweitertes-Fuehrungszeugnis-Yusuf-Ferhat-Demir-2026.pdf':
-    'KRITISCH — Scan, Führungszeugnis des Geschäftsführers. Im Baum seit 10.08.2026.',
-  'docs/genehmigung/06_Fuehrungszeugnis.pdf':
-    'KRITISCH — Scan, zweite Ablage desselben Führungszeugnisses. Seit 09.09.2026.',
-  'anerkennung-hessen/Anlage-02-Berufserlaubnis-Fachkraft-Sabrina-Martin.pdf':
-    'HOCH — Scan, Berufsurkunde einer Mitarbeiterin mit Name und Geburtsdatum. Seit 10.08.2026.',
-  'docs/genehmigung/17a_Berufserlaubnis_Fachkraft.pdf':
-    'HOCH — Scan, zweite Ablage derselben Urkunde. Seit 09.09.2026.',
-  'anerkennung-hessen/Anlage-15-Betriebshaftpflicht-Police.pdf':
-    'MITTEL — Scan, 13 Seiten Versicherungsschein mit Vertrags- und Zahlungsdaten. Seit 12.09.2026.',
-  'docs/genehmigung/07_Haftpflichtversicherung.pdf':
-    'MITTEL — Scan, zweite Ablage derselben Police. Seit 09.09.2026.',
-  'anerkennung-hessen/Anlage-03-ARGE-IK-Bestaetigung-460629986.pdf':
-    'MITTEL — Scan, Behördenschreiben mit Bankverbindung der Gesellschaft. Seit 10.08.2026.',
-  'docs/genehmigung/05_IK_Nachweis.pdf':
-    'MITTEL — Scan, zweite Ablage desselben Schreibens. Seit 09.09.2026.',
+  // ── Am 13.09.2026 aus dem Index genommen ────────────────────────────
+  // Acht Dokumente (vier Stück, je doppelt abgelegt) wurden per
+  // `git rm --cached` entfernt: zwei Führungszeugnisse, zwei
+  // Berufsurkunden, zwei IK-Bestätigungen mit Bankverbindung, zwei
+  // Haftpflichtpolicen. Sie stehen bewusst NICHT mehr hier — ein Bestand
+  // ist eine Liste dessen, was noch da ist, kein Gedächtnis.
+  // Ihre Einführungs-Commits und die Risikobewertung:
+  // docs/reports/HISTORY_CLEANUP_PLAN.md
+  //
+  // ACHTUNG: Sie sind weiterhin in der GIT-HISTORIE abrufbar. Dieser Lauf
+  // prüft den getrackten Baum, nicht die Historie.
+
   // Leere Vordrucke: tragen KEINE Personendaten (Namensfelder unausgefüllt,
   // am 12.09.2026 visuell geprüft). Sie stehen hier, weil ihr Dateiname die
   // Regel trifft — nicht, weil sie ein Befund wären.
