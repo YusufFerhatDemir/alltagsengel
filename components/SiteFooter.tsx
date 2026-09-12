@@ -41,6 +41,10 @@ export default function SiteFooter() {
         <Link href="/hygienebox">Pflege-Box</Link>
         <Link href="/krankenfahrten">Krankenfahrt</Link>
         <Link href="/alltagsbegleitung">Alltagsbegleitung</Link>
+        {/* Haushaltshilfe war bis 12.09.2026 komplett unverlinkt: nur die eigenen
+            Stadtseiten zeigten darauf, die Homepage nannte das Wort kein einziges Mal.
+            Ohne diese Zeile ist die gesamte Strecke faktisch eine Orphan-Insel. */}
+        <Link href="/haushaltshilfe">Haushaltshilfe</Link>
         <Link href="/entlastungsbetrag">Entlastungsbetrag</Link>
         <Link href="/verhinderungspflege">Verhinderungspflege</Link>
         <Link href="/termin">Termin buchen</Link>
@@ -58,6 +62,9 @@ export default function SiteFooter() {
         <Link href="/team">Team</Link>
         <Link href="/ueber-uns">Über uns</Link>
         <Link href="/kontakt">Kontakt</Link>
+        {/* Leistungs-Uebersicht — hatte vorher genau EINEN eingehenden Link
+            (Seitenuebersicht) und war fuer Crawler praktisch unerreichbar. */}
+        <Link href="/leistungen">Alle Leistungen</Link>
       </div>
 
       {/* Städte-Links: Stadt-Landingpages intern verlinken (Indexierung —
