@@ -60,6 +60,18 @@ describe('passtZuFiltern', () => {
     expect(passtZuFiltern(zeile(), { ...leereAuswahl(), gibtsNicht: 'x' })).toBe(true)
   })
 
+  it('Region filtert aus bewerbung_daten — seit 12.09.2026 im Modell statt handverdrahtet', () => {
+    const z = zeile({ daten: { region: 'hanau' } })
+    expect(passtZuFiltern(z, { ...leereAuswahl(), region: 'hanau' })).toBe(true)
+    expect(passtZuFiltern(z, { ...leereAuswahl(), region: 'frankfurt' })).toBe(false)
+    expect(passtZuFiltern(zeile({ daten: {} }), { ...leereAuswahl(), region: OHNE_ANGABE })).toBe(true)
+  })
+
+  it('elf Dimensionen — Region ist die elfte', () => {
+    expect(FILTER_DIMENSIONEN).toHaveLength(11)
+    expect(FILTER_DIMENSIONEN.map(d => d.key)).toContain('region')
+  })
+
   it('jede Dimension hat Werte und ein lesbares Etikett', () => {
     for (const d of FILTER_DIMENSIONEN) {
       expect(d.werte.length, d.key).toBeGreaterThan(1)
