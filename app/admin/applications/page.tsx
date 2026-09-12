@@ -99,7 +99,6 @@ export default function AdminApplicationsPage() {
   // Eine Auswahl statt eines useState je Merkmal: die Dimensionen stehen in
   // lib/bewerbung/filter.ts und werden hier nur noch gerendert. Ein neuer
   // Filter ist damit ein Eintrag in jener Liste, kein Eingriff in diese Seite.
-  const [region, setRegion] = useState('alle')
   const [auswahl, setAuswahl] = useState<FilterAuswahl>(leereAuswahl)
   const [busy, setBusy] = useState<string | null>(null)
   const [jetzt, setJetzt] = useState(() => new Date())
@@ -276,7 +275,6 @@ export default function AdminApplicationsPage() {
       } else if (filter === FILTER_OFFEN) {
         if (BEWERBER_ENDZUSTAENDE.includes(r.stufe)) return false
       } else if (filter !== 'all' && r.stufe !== filter) return false
-      if (region !== 'alle' && (r.daten?.region ?? '') !== region) return false
       if (!passtZuFiltern(
         { plz: r.plz, utm_source: r.utm_source, daten: r.daten as Record<string, unknown> | null, roh: r.roh },
         auswahl,
@@ -303,7 +301,7 @@ export default function AdminApplicationsPage() {
       fortschritt: (a, b) => vollst(b) - vollst(a),
     }
     return [...treffer].sort((a, b) => cmp[sortierung](a, b) || fifo(a, b))
-  }, [rows, filter, search, sortierung, jetzt, region, auswahl])
+  }, [rows, filter, search, sortierung, jetzt, auswahl])
 
   return (
     <div className="admin-page">
@@ -370,13 +368,6 @@ export default function AdminApplicationsPage() {
           Sortierung:{' '}
           <select className="admin-select" value={sortierung} onChange={e => setSortierung(e.target.value as Sortierung)}>
             {SORTIERUNGEN.map(so => <option key={so.key} value={so.key}>{so.label}</option>)}
-          </select>
-        </label>
-        <label style={{ fontSize: 13, color: 'var(--ink3)' }}>
-          Region:{' '}
-          <select className="admin-select" value={region} onChange={e => setRegion(e.target.value)}>
-            <option value="alle">Alle Regionen</option>
-            {vorhanden.regionen.map(([k, n]) => <option key={k} value={k}>{regionLabel(k)} ({n})</option>)}
           </select>
         </label>
         {FILTER_DIMENSIONEN.map(dim => {

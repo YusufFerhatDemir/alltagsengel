@@ -25,6 +25,7 @@ import {
   QUALIFIKATIONEN, FUEHRERSCHEIN, SPRACHEN, VERFUEGBARKEIT, STUNDEN, BESCHAEFTIGUNGSART,
 } from '@/lib/bewerbung/katalog'
 import { BEWERBER_PRIO, BEWERBER_BLOCKER, prioUndBlocker } from '@/lib/bewerbung/pipeline'
+import { WARTELISTE_REGIONEN } from '@/lib/warteliste/katalog'
 
 /** Was eine Zeile der Bewerberliste mindestens hergeben muss. */
 export interface FilterZeile {
@@ -74,6 +75,15 @@ export const PLZ_BEREICHE = [
 ] as const
 
 export const FILTER_DIMENSIONEN: readonly FilterDimension[] = [
+  // Region stand bis 12.09.2026 als einziger Filter handverdrahtet in
+  // app/admin/applications/page.tsx — eigener useState, eigene Zählung, eigene
+  // Zeile in der Auswahlbedingung. Ein Modell mit zehn deklarativen und einer
+  // handgeschriebenen Dimension ist kein Modell, sondern eine Ausnahme mit
+  // Anhang: die Abdeckungsanzeige („Ohne Angabe (34)") fehlte genau dort.
+  {
+    key: 'region', label: 'Region',
+    werte: WARTELISTE_REGIONEN, lies: ausDaten('region'),
+  },
   {
     key: 'qualifikation', label: 'Qualifikation',
     werte: QUALIFIKATIONEN, lies: ausDaten('qualifikation'),
