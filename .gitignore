@@ -101,42 +101,56 @@ middleware.ts
 # ── Personenbezogene Dokumente (12.09.2026) ───────────────────────────
 # Dieses Repository ist OEFFENTLICH. Urkunden, Ausweise und Vertraege mit
 # echten Personendaten gehoeren nicht hinein — auch nicht "kurz zum Teilen".
-# ACHTUNG: Diese Regeln verhindern das NAECHSTE Dokument. Bereits getrackte
-# Dateien bleiben getrackt; die Liste steht in
+#
+# ACHTUNG 1: Diese Regeln verhindern das NAECHSTE Dokument. Bereits
+# getrackte Dateien bleiben getrackt; die Liste steht in
 # docs/reports/SECURITY_REMEDIATION_12_09_2026.md, der Riegel dagegen in
 # scripts/lint-pii-dateien.ts (npm run lint:pii, in CI).
-*Fuehrungszeugnis*
-*Führungszeugnis*
-*fuehrungszeugnis*
-*Berufserlaubnis*
-# Quelltext darf so heissen — es ist Code, kein Dokument. Ohne diese
-# Ausnahme faellt die Onboarding-Maske unter die Regel darueber.
-!*.tsx
-!*.ts
-!*.mjs
-!*.test.ts
-*Personalausweis*
-*personalausweis*
-*Reisepass*
-*passport*
+#
+# ACHTUNG 2: Jedes Muster nennt eine DOKUMENT-Endung. Das ist kein Zierrat.
+# Die erste Fassung dieses Blocks stand ohne Endungen da ("*Fuehrungszeugnis*")
+# und brauchte deshalb Gegenausnahmen fuer Quelltext ("!*.ts", "!*.tsx").
+# Genau die haben dann ALLE vorherigen Ignore-Regeln fuer TypeScript
+# aufgehoben — next-env.d.ts (Zeile 54) tauchte wieder als ungetrackt auf.
+# Eine breite Ausnahme in .gitignore wirkt nicht lokal, sondern ab ihrer
+# Zeile auf alles. Deshalb: spezifische Muster, keine Gegenausnahmen.
+*[Ff]uehrungszeugnis*.pdf
+*[Ff]ührungszeugnis*.pdf
+*[Ff]uehrungszeugnis*.jpg
+*[Ff]uehrungszeugnis*.jpeg
+*[Ff]uehrungszeugnis*.png
+*[Ff]uehrungszeugnis*.heic
+*[Bb]erufserlaubnis*.pdf
+*[Bb]erufserlaubnis*.jpg
+*[Bb]erufserlaubnis*.png
+*[Pp]ersonalausweis*.pdf
+*[Pp]ersonalausweis*.jpg
+*[Pp]ersonalausweis*.png
+*[Pp]ersonalausweis*.heic
+*[Rr]eisepass*.pdf
+*[Rr]eisepass*.jpg
+*passport*.pdf
+*passport*.jpg
 ausweis*.pdf
 ausweis*.png
+ausweis*.jpg
 ausweis*.jpeg
-*Arbeitsvertrag*.pdf
-*Aushilfsvertrag*.pdf
-*Arbeitsvertrag*.docx
-*Schweigepflichterklaerung*.pdf
-*Haftpflicht*Police*
-*Versicherungsschein*
-*Versicherungspolice*
-*Kontoauszug*
-*kontoauszug*
-*Lohnabrechnung*
-*Gehaltsabrechnung*
-*Geburtsurkunde*
-*Heiratsurkunde*
-*Sozialversicherungsnummer*
-*Rentenversicherungsnummer*
+*[Aa]rbeitsvertrag*.pdf
+*[Aa]rbeitsvertrag*.docx
+*[Aa]ushilfsvertrag*.pdf
+*[Aa]ushilfsvertrag*.docx
+*[Ss]chweigepflichterklaerung*.pdf
+*[Hh]aftpflicht*[Pp]olice*.pdf
+*[Vv]ersicherungsschein*.pdf
+*[Vv]ersicherungspolice*.pdf
+*[Kk]ontoauszug*.pdf
+*[Kk]ontoauszug*.jpg
+*[Ll]ohnabrechnung*.pdf
+*[Gg]ehaltsabrechnung*.pdf
+*[Gg]eburtsurkunde*.pdf
+*[Hh]eiratsurkunde*.pdf
+*[Ss]ozialversicherungsnummer*.pdf
+*[Rr]entenversicherungsnummer*.pdf
 # Kamerascans tragen durchnummerierte Namen und verraten am Namen nie, was
 # drin ist — am 12.09.2026 war "Gescanntes Dokument 14.pdf" der Scan einer
 # Debitkarte samt Pruefziffer.
