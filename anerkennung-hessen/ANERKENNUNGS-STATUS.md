@@ -74,11 +74,11 @@
 - **Adresse:** Gewerbeamt Frankfurt, Kleyerstr. 86, 60326 Frankfurt
 - **Hinweis:** Fuer eine UG (haftungsbeschraenkt) ist die Gewerbeanmeldung Pflicht, da gewerbliche Taetigkeit
 
-### 2. Betriebshaftpflichtversicherung (Nachweis + Police)
-- **Status:** FEHLT - nur ein Vergleichsdokument vorhanden (Betriebshaftpflicht_Vergleich.pdf)
-- **Aktion:** Versicherung online abschliessen (z.B. ueber finanzchecks.de, finanzchef24.de oder pflegedienst-police.de)
-- **Empfehlung:** Mind. 3 Mio. EUR Deckung pauschal, ca. 80-200 EUR/Jahr
-- **Wichtig:** 24h-Deckungszusage moeglich bei Online-Abschluss
+### 2. Betriebshaftpflichtversicherung (Nachweis + Police) — ERLEDIGT
+- **Status:** ✅ VERIFIED_FILE — Generali, 10 Mio. EUR Deckung
+- **Datei:** `docs/genehmigung/07_Haftpflichtversicherung.pdf` (18 MB Scan)
+- **Kopie in Mappe:** `Anlage-15-Betriebshaftpflicht-Police.pdf`
+- **Aktualisiert:** 12.09.2026 — Police war bereits vorhanden, wurde irrtuemlicherweise als FEHLT gefuehrt
 
 ### 3. Steuernummer
 - **Status:** FEHLT - auf dem Mac nicht gefunden
@@ -107,13 +107,15 @@
 
 ### Status: ANERKENNUNG_ERWARTET (telefonisch positiv bestätigt durch Fr. Krause)
 
-### Verbleibende Blocker:
-1. Gewerbeanmeldung fehlt (von Behoerde explizit gefordert) — Sachstandsanfrage erstellt
-2. ~~Betriebshaftpflicht~~ ERLEDIGT — Generali, 10 Mio. EUR, abgelegt
-3. 14 Unterschriften fehlen (12x Yusuf + 2x Sabrina Martin)
+### Verbleibende Blocker (Stand 12.09.2026):
+1. Gewerbeanmeldung fehlt (von Behoerde explizit gefordert) — USER_ACTION_REQUIRED: Gewerbeamt Frankfurt
+2. ~~Betriebshaftpflicht~~ ERLEDIGT — Generali, 10 Mio. EUR, abgelegt als Anlage-15
+3. 12 Unterschriften fehlen (10x Yusuf + 2x Sabrina Martin)
 4. 4 Arbeitsvertrag-Felder unausgefuellt (Beginn, Stunden, Verguetung, Urlaub)
 5. Steuernummer KEIN BLOCKER (PfluV erlaubt alternativ Gewerbeanzeige)
-6. Frist 31.08.2026 ABGELAUFEN — Verlaengerung auf 10.10.2026 beantragt
+6. Frist 31.08.2026 ABGELAUFEN — Verlaengerung auf 10.10.2026 beantragt (28 Tage verbleibend)
+7. FZ Sabrina Martin EXPIRED (22.07.2026) — Neu beantragen
+8. AV + FZ Rukiye — NOT_FOUND_AFTER_FULL_SEARCH
 
 ### Sobald 1-3 vorliegen:
 - Steuernummer im Erhebungsbogen eintragen

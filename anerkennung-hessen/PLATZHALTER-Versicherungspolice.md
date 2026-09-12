@@ -1,16 +1,15 @@
-# PLATZHALTER — Betriebshaftpflichtversicherung (Police/Nachweis)
+# ERLEDIGT — Betriebshaftpflichtversicherung (Police/Nachweis)
 
-**Status:** FEHLT — Police wird nachgereicht (Versicherung bereits abgeschlossen, 5 Mio. Deckung)
+**Status:** ✅ VERIFIED_FILE — Police vorhanden und als Anlage-15 einsortiert
 
-**Position in der Einreichungsmappe:** Anlage 15 (nach Gewerbeanmeldung)
+**Versicherer:** Generali
+**Deckungssumme:** 10 Mio. EUR (uebersteigt Mindestanforderung von 3 Mio. deutlich)
+**Originaldatei:** `docs/genehmigung/07_Haftpflichtversicherung.pdf` (18 MB Scan)
+**Kopie in Mappe:** `Anlage-15-Betriebshaftpflicht-Police.pdf`
 
-**Was wird benoetigt:**
-- Versicherungspolice oder Deckungsbestaetigung (Kopie reicht)
-- Mindestens 3 Mio. EUR Deckung (vorhanden: 5 Mio.)
-
-**Sobald vorhanden:**
-1. Diese Datei durch die echte Police ersetzen
-2. Dateiname: `Anlage-15-Betriebshaftpflicht-Police.pdf`
-3. In der EINREICHUNGS-CHECKLISTE.md den Status auf "fertig" setzen
+**Position in der Einreichungsmappe:** Anlage 15
 
 **Rechtsgrundlage:** § 1 Abs. 1 Nr. 13 PfluV
+
+**Aktualisiert:** 12.09.2026 — Platzhalter durch Verweis auf echte Police ersetzt.
+Vorheriger Status war irrtuemlicherweise "FEHLT" — Police existierte bereits in docs/genehmigung/.
