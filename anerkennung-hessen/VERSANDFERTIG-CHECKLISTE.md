@@ -8,30 +8,56 @@
 
 ---
 
-## STATUS: NICHT VERSANDFERTIG — 4 BLOCKER OFFEN
+## STATUS: NICHT VERSANDFERTIG — Stand der visuellen Prüfung vom 12.09.2026
 
-### BLOCKER 1: Gewerbeanmeldung (USER_ACTION_REQUIRED)
-- [ ] Beim Gewerbeamt Frankfurt beantragen (Kleyerstr. 86 oder online frankfurt.de)
-- [ ] Kopie als `Anlage-14-Gewerbeanmeldung.pdf` in diesen Ordner legen
-- [ ] `PLATZHALTER-Gewerbeanmeldung.md` durch echte Datei ersetzen
+Jede Datei wurde geöffnet und angesehen (Scans als Bild, Textdateien über die Textebene).
+Vollständige Matrix mit Beweis je Zeile: `docs/reports/DOKUMENTENMATRIX_45a_12_09_2026.md`.
 
-### BLOCKER 2: 12 Unterschriften (USER_ACTION_REQUIRED)
+### BLOCKER 1: Amtlicher Erhebungsbogen fehlt (NEU, vorher unbemerkt)
+`Erhebungsbogen-Anbieterform-II-Frankfurt.pdf` ist kein PDF, sondern eine gespeicherte
+Cloudflare-Sperrseite („Just a moment…"). Der Download ist fehlgeschlagen.
+- [ ] Formular bei der Stadt anfordern (entlastungsangebote45@stadt-frankfurt.de) oder erneut laden
+- [ ] Datei ersetzen; bis dahin ist unklar, ob `Anlage-00` als eigene Fassung akzeptiert wird
 
-**Yusuf (10 Unterschriften):**
-- [ ] Anlage-00 Erhebungsbogen — S.3 unten, Ort+Datum+Unterschrift
-- [ ] Anlage-01 Anschreiben — S.2 unten, Unterschrift
-- [ ] Anlage-04 Arbeitsvertrag — S.3 unten LINKS, Datum+Unterschrift (GF)
-- [ ] Anlage-05 Konzept — S.8 unten, Unterschrift
-- [ ] Anlage-06 Schulungskonzept — S.4 OBERE Zeile, Unterschrift
-- [ ] Anlage-07 Kostenuebersicht — S.2 unten LINKS, Datum+Unterschrift
-- [ ] Anlage-08 Erkl. FZ — S.2 unten, Unterschrift
-- [ ] Anlage-09 Erkl. SV/ML — S.2 unten, Unterschrift
-- [ ] Anlage-11 Datenschutz — S.3 unten, Datum+Unterschrift
-- [ ] Anlage-13 Einverstaendnis — S.1 unten, Datum+Unterschrift
+### BLOCKER 2: Unterschriften — im Projekt liegen nur unsignierte Fassungen
+Sie haben angegeben, die Unterlagen seien bereits unterschrieben. Auf diesem Rechner ließ sich
+das **nicht bestätigen**: Die Anlagen 00, 01, 04–09, 11–13 sind reine Textdokumente **ohne
+jedes eingebettete Bild** — eine Tinten-Unterschrift kann darin nicht enthalten sein.
+Durchsucht wurden Downloads (225 Einträge, 26 Kamerascans einzeln geöffnet), Desktop,
+Dokumente und iCloud Drive. Gefunden wurden dort unterschriebene Anschreiben für **12 andere
+Bundesländer** (16.07.2026), aber keine unterschriebene Hessen-Anlage.
+- [ ] Falls auf Papier unterschrieben: Scans in `anerkennung-hessen/` ablegen (Dateiname mit `-signiert`)
+- [ ] Falls die Scans auf dem iPhone liegen: per AirDrop/iCloud übertragen, dann erneut prüfen lassen
 
-**Sabrina Martin (2 Unterschriften):**
-- [ ] Anlage-04 Arbeitsvertrag — S.3 unten RECHTS (Arbeitnehmerin)
-- [ ] Anlage-06 Schulungskonzept — S.4 UNTERE Zeile (Fachkraft)
+### BLOCKER 3: Arbeitsvertrag Sabrina unvollständig
+Leer sind Beginn, Wochenstunden, Vergütung und Adresse („[Adresse wird ergänzt]").
+- [ ] Felder ausfüllen, dann beidseitig unterschreiben
+
+### BLOCKER 4: Führungszeugnis Sabrina ist ein einfaches, kein erweitertes
+Ausgestellt 22.04.2026, „Keine Eintragung". Es ist nicht „abgelaufen" — Führungszeugnisse haben
+kein Verfallsdatum. Aber: Es trägt nicht den Titel „Erweitertes Führungszeugnis" (Yusufs vom
+20.07.2026 tut das), und §45a wie auch §10 des eigenen Arbeitsvertrags verlangen das erweiterte.
+Zudem ist es knapp 5 Monate alt; üblich sind höchstens 3.
+- [ ] Erweitertes Führungszeugnis beantragen (Beleg-Art „O"/„OE" über den Arbeitgeber)
+
+### KEIN BLOCKER MEHR
+
+- **Gewerbeanmeldung:** online eingereicht, Bestätigung ausstehend (SUBMITTED_AWAITING_CONFIRMATION).
+  Auf dem Rechner liegt kein Beleg; sobald die Eingangsbestätigung da ist, als `Anlage-14` ablegen.
+- **Betriebshaftpflicht:** verifiziert — Generali, Schein 260-FKHU-010.124.010.673, Deckung
+  pauschal 10.000.000 EUR, Beginn 27.07.2026, Risiko „Haushaltshilfe, Betreuungsservice".
+  Einziger Vorbehalt: Versicherungsnehmer lautet „Alltagsengel" ohne Rechtsform — beim Versicherer klären.
+- **IK-Nummer:** vergeben, 460629986 (ARGE·IK, 21.07.2026).
+- **Handelsregister:** Auszug vom 12.07.2026, HRB 140351.
+- **Rukiye:** kein Anerkennungsblocker — kommt in der Mappe nicht vor.
+
+### Nebenbefunde (nicht anerkennungsrelevant)
+
+- Mahnung der Gerichtskasse Frankfurt vom 26.05.2026 (72 HRB 140351/0 002) — Status offen.
+- 12 bereits unterschriebene Bundesländer-Anträge behaupten, Alltagsengel sei „bereits anerkannt"
+  (Hessen, Bayern, NRW, RLP, Saarland). Das trifft nicht zu und sollte richtiggestellt werden.
+- `~/Downloads/Gescanntes Dokument 14.pdf` ist ein Kartenscan mit Prüfziffer. Im Projekt liegt er
+  nicht (per SHA-256 geprüft, auch nicht in der Historie). Löschen in Downloads + Karte sperren: Ihre Entscheidung.
 
 ### BLOCKER 3: 4 Arbeitsvertrag-Felder ausfuellen (VOR Unterschrift!)
 - [ ] Beginn der Beschaeftigung (Par. 1 Abs. 1, S.1): "ab dem ___"
