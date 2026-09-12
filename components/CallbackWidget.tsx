@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { ANLIEGEN, optionen } from '@/lib/leads/anfrage-felder'
 import { usePathname } from 'next/navigation'
 import { trackContactRequest } from '@/lib/tracking'
 import { useFokusFalle } from '@/lib/a11y'
@@ -23,7 +24,11 @@ export default function CallbackWidget() {
   const pathname = usePathname()
   const [visible, setVisible] = useState(false)
   const [open, setOpen] = useState(false)
-  const [form, setForm] = useState({ name: '', phone: '', zeit: 'Vormittags' })
+  // `anliegen` ist Pflicht. Bis 12.09.2026 erfasste der Rückruf nur Name,
+  // Telefon und Wunschzeit — acht Leads lagen zwischen 2 und 51 Tagen, ohne
+  // dass jemand sagen konnte, ob dahinter eine Kundin oder ein Bewerber
+  // steckte. Ein Feld löst die ganze Kategorie auf.
+  const [form, setForm] = useState({ name: '', phone: '', zeit: 'Vormittags', anliegen: '' })
   const utm = useUtm()
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
 
@@ -60,6 +65,7 @@ export default function CallbackWidget() {
           name: form.name,
           phone: form.phone,
           message: `Rückruf gewünscht — bevorzugte Zeit: ${form.zeit}`,
+          anliegen: form.anliegen,
           service: 'Rückrufservice',
           source: 'rueckruf',
           // Herkunft aus URL oder gespeicherter First-Touch-Attribution
@@ -70,7 +76,7 @@ export default function CallbackWidget() {
       if (res.ok) {
         setStatus('sent')
         trackContactRequest('rueckruf')
-        setForm({ name: '', phone: '', zeit: 'Vormittags' })
+        setForm({ name: '', phone: '', zeit: 'Vormittags', anliegen: '' })
       } else {
         setStatus('error')
       }
@@ -214,6 +220,21 @@ export default function CallbackWidget() {
                     title="Bitte eine gültige Telefonnummer eingeben (mindestens 6 Ziffern)"
                     style={inputStyle}
                   />
+                  <div>
+                    <div style={{ color: '#B8B0A4', fontSize: 13, marginBottom: 8 }}>Worum geht es? *</div>
+                    <select
+                      required
+                      aria-label="Worum geht es?"
+                      value={form.anliegen}
+                      onChange={e => setForm({ ...form, anliegen: e.target.value })}
+                      style={{ ...inputStyle, appearance: 'auto', color: form.anliegen ? '#F5F0E8' : '#8A8279' }}
+                    >
+                      <option value="">Bitte auswählen…</option>
+                      {optionen(ANLIEGEN).map(o => (
+                        <option key={o.wert} value={o.wert}>{o.text}</option>
+                      ))}
+                    </select>
+                  </div>
                   <div>
                     <div style={{ color: '#B8B0A4', fontSize: 13, marginBottom: 8 }}>Wann passt es Ihnen am besten?</div>
                     <div style={{ display: 'flex', gap: 8 }}>

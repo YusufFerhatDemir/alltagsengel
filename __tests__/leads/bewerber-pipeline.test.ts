@@ -17,10 +17,15 @@ const JETZT = new Date('2026-09-11T10:00:00Z')
 const vor = (h: number) => new Date(JETZT.getTime() - h * 3600_000).toISOString()
 
 describe('Stufen', () => {
-  it('genau die acht beauftragten Stufen, in dieser Reihenfolge', () => {
+  // Am 12.09.2026 von acht auf elf erweitert: „kontaktiert" trennt den
+  // abgeschickten Erstkontakt vom bloßen Sichten, „vertrag" die Zusage vom
+  // unterschriebenen Papier, „archiviert" den erledigten Vorgang von der
+  // Absage an die Person. Priorität und fehlende Unterlagen sind bewusst
+  // KEINE Stufen — siehe BEWERBER_PRIO / BEWERBER_BLOCKER.
+  it('genau die elf Stufen, in dieser Reihenfolge', () => {
     expect(BEWERBER_STUFEN_FLOW).toEqual([
-      'neu', 'vorgeprueft', 'rueckfrage', 'vorstellungsgespraech',
-      'zusage', 'unterlagen', 'einsatzbereit', 'abgelehnt',
+      'neu', 'vorgeprueft', 'kontaktiert', 'rueckfrage', 'vorstellungsgespraech',
+      'zusage', 'unterlagen', 'vertrag', 'einsatzbereit', 'abgelehnt', 'archiviert',
     ])
   })
 
@@ -32,7 +37,7 @@ describe('Stufen', () => {
 
   it('Endzustände haben keine Wiedervorlage, alle offenen eine', () => {
     for (const s of BEWERBER_STUFEN) {
-      const ende = s.key === 'einsatzbereit' || s.key === 'abgelehnt'
+      const ende = s.key === 'einsatzbereit' || s.key === 'abgelehnt' || s.key === 'archiviert'
       expect(s.wiedervorlageTage === null, s.key).toBe(ende)
     }
   })

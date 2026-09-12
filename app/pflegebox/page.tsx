@@ -13,7 +13,7 @@ import PflegeboxKonfigurator from '@/components/PflegeboxKonfigurator'
 // ═══════════════════════════════════════════════════════════
 
 export const metadata: Metadata = {
-  title: 'Pflegebox bestellen — kostenlos ab Pflegegrad 1',
+  title: 'Pflegebox bestellen — ab Pflegegrad 1',
   description: 'Pflegebox in 2 Minuten bestellen: Box zusammenstellen, Pflegegrad angeben — wir übernehmen den Antrag bei der Pflegekasse. 42 €/Monat, 0 € Eigenanteil.',
   keywords: ['Pflegebox bestellen', 'Pflegebox kostenlos', 'Pflegebox Antrag', 'Pflegehilfsmittel 40 Euro', 'Pflegehilfsmittel 42 Euro', 'Pflegebox Pflegekasse', 'Pflegebox zusammenstellen', 'Pflegebox Pflegegrad 1', 'kostenlose Pflegebox beantragen'],
   openGraph: {

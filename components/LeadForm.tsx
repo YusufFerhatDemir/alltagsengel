@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { trackContactRequest } from '@/lib/tracking'
 import { useUtm } from '@/hooks/useUtm'
+import { DRINGLICHKEIT, KONTAKTWEG, PFLEGEGRAD, optionen } from '@/lib/leads/anfrage-felder'
 
 // ═══════════════════════════════════════════════════════════
 // LEAD CAPTURE FORM — Kostenlose Beratung anfragen
@@ -19,7 +20,16 @@ interface LeadFormProps {
 }
 
 export default function LeadForm({ defaultService, source }: LeadFormProps) {
-  const [form, setForm] = useState({ name: '', phone: '', plz: '', service: defaultService || '', message: '' })
+  // E-Mail steht bewusst gleich hinter dem Namen: Bis 12.09.2026 fragte das
+  // Formular sie gar nicht ab — alle 50 Leads waren reine Telefonkontakte, ein
+  // schriftlicher Weg existierte nicht. Pflicht ist sie trotzdem nicht; die
+  // Zielgruppe hat nicht durchgehend eine Adresse, und ein Pflichtfeld hier
+  // kostet mehr Anfragen, als es Kanäle gewinnt.
+  const LEER = {
+    name: '', email: '', phone: '', plz: '', service: defaultService || '', message: '',
+    pflegegrad: '', dringlichkeit: '', kontaktweg: '',
+  }
+  const [form, setForm] = useState(LEER)
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [honeypot, setHoneypot] = useState('')
@@ -42,7 +52,7 @@ export default function LeadForm({ defaultService, source }: LeadFormProps) {
       })
       if (res.ok) {
         setStatus('sent')
-        setForm({ name: '', phone: '', plz: '', service: defaultService || '', message: '' })
+        setForm(LEER)
         trackContactRequest(source || 'lead-form')
       } else {
         // Server-Fehlermeldung anzeigen (z. B. "Ungültige Postleitzahl")
@@ -121,6 +131,14 @@ export default function LeadForm({ defaultService, source }: LeadFormProps) {
           onChange={e => setForm({ ...form, name: e.target.value })}
           style={inputStyle}
         />
+        <input
+          type="email"
+          placeholder="E-Mail (optional, für schriftliche Antwort)"
+          aria-label="E-Mail-Adresse"
+          value={form.email}
+          onChange={e => setForm({ ...form, email: e.target.value })}
+          style={inputStyle}
+        />
         <div style={{ display: 'flex', gap: 12 }}>
           <input
             type="tel"
@@ -155,6 +173,41 @@ export default function LeadForm({ defaultService, source }: LeadFormProps) {
           <option value="Pflege-Box">Pflege-Box (§40)</option>
           <option value="Krankenfahrt">Krankenfahrt (§60)</option>
           <option value="Allgemein">Allgemeine Beratung</option>
+        </select>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <select
+            aria-label="Pflegegrad (optional)"
+            value={form.pflegegrad}
+            onChange={e => setForm({ ...form, pflegegrad: e.target.value })}
+            style={{ ...inputStyle, flex: '1 1 160px', appearance: 'auto', color: form.pflegegrad ? '#F5F0E8' : '#8A8279' }}
+          >
+            <option value="">Pflegegrad… (optional)</option>
+            {optionen(PFLEGEGRAD).map(o => (
+              <option key={o.wert} value={o.wert}>{o.text}</option>
+            ))}
+          </select>
+          <select
+            aria-label="Wie dringend ist es? (optional)"
+            value={form.dringlichkeit}
+            onChange={e => setForm({ ...form, dringlichkeit: e.target.value })}
+            style={{ ...inputStyle, flex: '1 1 160px', appearance: 'auto', color: form.dringlichkeit ? '#F5F0E8' : '#8A8279' }}
+          >
+            <option value="">Wie dringend? (optional)</option>
+            {optionen(DRINGLICHKEIT).map(o => (
+              <option key={o.wert} value={o.wert}>{o.text}</option>
+            ))}
+          </select>
+        </div>
+        <select
+          aria-label="Bevorzugter Kontaktweg (optional)"
+          value={form.kontaktweg}
+          onChange={e => setForm({ ...form, kontaktweg: e.target.value })}
+          style={{ ...inputStyle, appearance: 'auto', color: form.kontaktweg ? '#F5F0E8' : '#8A8279' }}
+        >
+          <option value="">Wie sollen wir Sie erreichen? (optional)</option>
+          {optionen(KONTAKTWEG).map(o => (
+            <option key={o.wert} value={o.wert}>{o.text}</option>
+          ))}
         </select>
         <textarea aria-label="Ihre Nachricht (optional)"
           placeholder="Ihre Nachricht (optional)"

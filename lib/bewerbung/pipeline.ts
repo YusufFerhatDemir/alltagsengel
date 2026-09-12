@@ -54,26 +54,72 @@ export const BEWERBER_STUFEN: readonly BewerberStufe[] = [
     aufgabe: 'Bewerbung sichten und Erstkontakt aufnehmen' },
   { key: 'vorgeprueft', label: 'Vorgeprüft', color: '#03A9F4', dbStatus: 'contacted', wiedervorlageTage: 2,
     aufgabe: 'Passt grundsätzlich — Gesprächstermin anbieten' },
+  { key: 'kontaktiert', label: 'Kontaktiert', color: '#29B6F6', dbStatus: 'contacted', wiedervorlageTage: 3,
+    aufgabe: 'Erstkontakt ist raus — Rückmeldung abwarten und nachhalten' },
   { key: 'rueckfrage', label: 'Rückfrage', color: '#E8A000', dbStatus: 'contacted', wiedervorlageTage: 3,
     aufgabe: 'Offene Angaben erfragen, Antwort nachhalten' },
-  { key: 'vorstellungsgespraech', label: 'Vorstellungsgespräch', color: '#9C27B0', dbStatus: 'qualified', wiedervorlageTage: 7,
+  { key: 'vorstellungsgespraech', label: 'Gespräch', color: '#9C27B0', dbStatus: 'qualified', wiedervorlageTage: 7,
     aufgabe: 'Gespräch führen und Entscheidung festhalten' },
   { key: 'zusage', label: 'Zusage', color: '#7E57C2', dbStatus: 'qualified', wiedervorlageTage: 3,
     aufgabe: 'Zusage mitteilen, Unterlagen anfordern' },
   { key: 'unterlagen', label: 'Unterlagen', color: '#26A69A', dbStatus: 'qualified', wiedervorlageTage: 5,
     aufgabe: 'Führungszeugnis, Nachweise und Vertrag einsammeln' },
+  { key: 'vertrag', label: 'Vertrag', color: '#00897B', dbStatus: 'qualified', wiedervorlageTage: 4,
+    aufgabe: 'Vertrag erstellen, unterschreiben lassen, gegenzeichnen' },
   { key: 'einsatzbereit', label: 'Einsatzbereit', color: '#5CB882', dbStatus: 'converted', wiedervorlageTage: null,
     aufgabe: 'Abgeschlossen — in Personal übernehmen' },
   { key: 'abgelehnt', label: 'Abgelehnt', color: '#D04B3B', dbStatus: 'lost', wiedervorlageTage: null,
     aufgabe: 'Abgeschlossen' },
+  // Archiviert ist NICHT dasselbe wie abgelehnt: abgelehnt ist eine
+  // Entscheidung über die Person, archiviert ist eine über den Vorgang
+  // (zurückgezogen, nicht erreichbar, Stelle entfallen). Beides in einen
+  // Topf zu werfen macht jede Absagequote unbrauchbar.
+  { key: 'archiviert', label: 'Archiviert', color: '#8A8A8A', dbStatus: 'lost', wiedervorlageTage: null,
+    aufgabe: 'Abgeschlossen — kein aktiver Vorgang mehr' },
 ] as const
+
+// ── Zwei weitere Dimensionen, bewusst NICHT als Stufen ─────────────────
+//
+// Priorität und fehlende Unterlagen sind keine Stationen im Ablauf. Ein
+// Bewerber ist PRIO 1 UND im Gespräch UND ohne erweitertes Führungszeugnis —
+// alles gleichzeitig. Wären das Stufen, ginge beim Weiterschalten jedes Mal
+// eine Information verloren: wer von „PRIO 1" nach „Kontaktiert" wechselt,
+// hätte keine Priorität mehr, und wer von „FZ fehlt" nach „Zusage" geht,
+// hätte das Führungszeugnis dadurch nicht.
+//
+// Deshalb drei unabhängige Angaben im selben jsonb:
+//   stufe    wo im Ablauf   (genau eine)
+//   prio     wie wichtig    (höchstens eine)
+//   blocker  was fehlt      (beliebig viele)
+
+export const BEWERBER_PRIO = {
+  '1': { label: 'PRIO 1', color: '#C0392B', bedeutung: 'Qualifiziert mit Berufserfahrung — zuerst anrufen' },
+  '2': { label: 'PRIO 2', color: '#E8A000', bedeutung: 'Gute Eignung, Quereinstieg' },
+  '3': { label: 'PRIO 3', color: '#8A8A8A', bedeutung: 'Zu wenig Angaben — nachfassen' },
+} as const
+export type BewerberPrio = keyof typeof BEWERBER_PRIO
+
+export const BEWERBER_BLOCKER = {
+  unterlagen_fehlen: { label: 'Unterlagen fehlen', frageAn: 'Welche Nachweise fehlen noch?' },
+  fz_fehlt: { label: 'Erweitertes FZ fehlt', frageAn: 'Erweitertes Führungszeugnis beantragt?' },
+  qualifikation_pruefen: { label: 'Qualifikation prüfen', frageAn: 'Nachweis nach §53b / Pflege prüfen' },
+} as const
+export type BewerberBlocker = keyof typeof BEWERBER_BLOCKER
+
+export function istPrio(wert: unknown): wert is BewerberPrio {
+  return typeof wert === 'string' && wert in BEWERBER_PRIO
+}
+export function istBlocker(wert: unknown): wert is BewerberBlocker {
+  return typeof wert === 'string' && wert in BEWERBER_BLOCKER
+}
 
 export const BEWERBER_STUFEN_FLOW: readonly string[] = BEWERBER_STUFEN.map(s => s.key)
 
 /** Vorwärtsweg ohne Ausstieg. */
-export const BEWERBER_VORWAERTS: readonly string[] = BEWERBER_STUFEN_FLOW.filter(s => s !== 'abgelehnt')
+export const BEWERBER_VORWAERTS: readonly string[] =
+  BEWERBER_STUFEN_FLOW.filter(s => s !== 'abgelehnt' && s !== 'archiviert')
 
-export const BEWERBER_ENDZUSTAENDE: readonly string[] = ['einsatzbereit', 'abgelehnt']
+export const BEWERBER_ENDZUSTAENDE: readonly string[] = ['einsatzbereit', 'abgelehnt', 'archiviert']
 
 /**
  * Grobe → feine Stufe für Bewerbungen ohne gespeicherte Pipeline
@@ -108,6 +154,10 @@ export interface PipelineStand {
   stufe: string
   seit: string
   verlauf: PipelineVerlauf[]
+  /** Höchstens eine — unabhängig von der Stufe. */
+  prio?: BewerberPrio
+  /** Beliebig viele; leer heißt „nichts offen". */
+  blocker?: BewerberBlocker[]
 }
 
 /** Höchstens so viele Verlaufseinträge im jsonb — es ist kein Audit-Log. */
@@ -123,7 +173,21 @@ function pipelineAus(daten: unknown): PipelineStand | null {
     stufe: stand.stufe,
     seit: stand.seit,
     verlauf: Array.isArray(stand.verlauf) ? stand.verlauf.filter(v => v && istBewerberStufe(v.stufe)) : [],
+    ...(istPrio(stand.prio) ? { prio: stand.prio } : {}),
+    ...(Array.isArray(stand.blocker) && stand.blocker.some(istBlocker)
+      ? { blocker: stand.blocker.filter(istBlocker) }
+      : {}),
   }
+}
+
+/**
+ * Priorität und offene Blocker einer Bewerbung. Anders als die Stufe hängen
+ * sie NICHT am `status` — es gibt keine grobe Spalte, aus der sie abzuleiten
+ * wären, also gilt schlicht das Gespeicherte.
+ */
+export function prioUndBlocker(daten: unknown): { prio: BewerberPrio | null; blocker: BewerberBlocker[] } {
+  const p = pipelineAus(daten)
+  return { prio: p?.prio ?? null, blocker: p?.blocker ?? [] }
 }
 
 /**
@@ -161,7 +225,57 @@ export function mitPipelineStufe(
   const alt = pipelineAus(daten)
   const am = jetzt.toISOString()
   const verlauf = [...(alt?.verlauf ?? []), { stufe, am, von }].slice(-VERLAUF_MAX)
-  basis.pipeline = { stufe, seit: am, verlauf } satisfies PipelineStand
+  // Priorität und Blocker ÜBERLEBEN den Stufenwechsel. Ein frisch gebautes
+  // Objekt hätte sie stillschweigend gelöscht — und dann wäre die Trennung
+  // der drei Dimensionen wertlos: wer von „Vorgeprüft" nach „Gespräch"
+  // schaltet, verlöre die PRIO-1-Einstufung und das offene Führungszeugnis.
+  basis.pipeline = {
+    stufe,
+    seit: am,
+    verlauf,
+    ...(alt?.prio ? { prio: alt.prio } : {}),
+    ...(alt?.blocker?.length ? { blocker: alt.blocker } : {}),
+  } satisfies PipelineStand
+  return basis
+}
+
+/**
+ * Priorität setzen oder entfernen (`null`). Rührt die Stufe nicht an —
+ * genau das ist der Sinn der Trennung.
+ */
+export function mitPrio(daten: unknown, prio: BewerberPrio | null): Record<string, unknown> {
+  return mitPipelineFeld(daten, p => {
+    if (prio === null) delete p.prio
+    else p.prio = prio
+  })
+}
+
+/** Blocker setzen. Doppelte werden entfernt, unbekannte abgewiesen. */
+export function mitBlockern(daten: unknown, blocker: readonly unknown[]): Record<string, unknown> {
+  const sauber = [...new Set(blocker.filter(istBlocker))]
+  return mitPipelineFeld(daten, p => {
+    if (sauber.length === 0) delete p.blocker
+    else p.blocker = sauber
+  })
+}
+
+/**
+ * Gemeinsamer Kern: ein Feld im Pipeline-Objekt ändern, ohne Stufe, Verlauf
+ * oder die Formularangaben daneben anzufassen.
+ */
+function mitPipelineFeld(
+  daten: unknown,
+  aendere: (p: Record<string, unknown>) => void,
+): Record<string, unknown> {
+  const basis: Record<string, unknown> = daten && typeof daten === 'object' && !Array.isArray(daten)
+    ? { ...(daten as Record<string, unknown>) }
+    : {}
+  const alt = pipelineAus(daten)
+  const p: Record<string, unknown> = alt
+    ? { ...alt }
+    : { stufe: 'neu', seit: new Date(0).toISOString(), verlauf: [] }
+  aendere(p)
+  basis.pipeline = p
   return basis
 }
 

@@ -6,8 +6,8 @@ import HowToSchema from '@/components/HowToSchema'
 import SpeakableSchema from '@/components/SpeakableSchema'
 
 export const metadata: Metadata = {
-  title: 'Alltagsbegleitung — Frankfurt & Rhein-Main | Entlastungsbetrag',
-  description: 'Was ist Alltagsbegleitung? Geschulte Begleiter in Frankfurt & Rhein-Main, Entlastungsbetrag 131 €/Monat (§45b) — Definition, Kosten, Ablauf & Finanzierung erklärt.',
+  title: 'Alltagsbegleitung Frankfurt & Rhein-Main',
+  description: 'Was ist Alltagsbegleitung? Geschulte Begleiter in Frankfurt & Rhein-Main, Entlastungsbetrag 131 €/Monat (§45b) — Kosten, Ablauf und Finanzierung erklärt.',
   keywords: ['Alltagsbegleitung', 'Alltagsbegleitung Frankfurt', 'Alltagsbegleiter finden', 'Alltagsbegleitung Senioren', 'Alltagsbegleitung buchen', 'Entlastungsbetrag', '§45b SGB XI', 'Alltagsbegleiter', 'Pflegegrad', 'Haushaltshilfe', '131 Euro Pflegekasse', 'Was ist Alltagsbegleitung'],
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],

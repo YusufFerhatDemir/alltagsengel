@@ -23,8 +23,8 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 const BASE = 'https://alltagsengel.care'
 
 export const metadata: Metadata = {
-  title: 'Leistungen — Alltagsbegleitung, Haushaltshilfe & Entlastung',
-  description: 'Alle Leistungen von Alltagsengel in Frankfurt & Rhein-Main: Alltagsbegleitung, Haushaltshilfe, Einkaufshilfe, Begleitung zu Terminen, Freizeitgestaltung und Entlastung pflegender Angehöriger.',
+  title: 'Leistungen — Alltagsbegleitung & Haushalt',
+  description: 'Alle Leistungen in Frankfurt & Rhein-Main: Alltagsbegleitung, Haushaltshilfe, Einkaufshilfe, Terminbegleitung und Entlastung für Angehörige.',
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Leistungen von Alltagsengel',
