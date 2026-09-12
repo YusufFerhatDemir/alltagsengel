@@ -24,8 +24,11 @@ Sie haben angegeben, die Unterlagen seien bereits unterschrieben. Auf diesem Rec
 das **nicht bestätigen**: Die Anlagen 00, 01, 04–09, 11–13 sind reine Textdokumente **ohne
 jedes eingebettete Bild** — eine Tinten-Unterschrift kann darin nicht enthalten sein.
 Durchsucht wurden Downloads (225 Einträge, 26 Kamerascans einzeln geöffnet), Desktop,
-Dokumente und iCloud Drive. Gefunden wurden dort unterschriebene Anschreiben für **12 andere
-Bundesländer** (16.07.2026), aber keine unterschriebene Hessen-Anlage.
+Dokumente und iCloud Drive. Gefunden wurden dort **11 unterschriebene Anschreiben an 10 andere
+Bundesländer** (16.07.2026, Mecklenburg-Vorpommern doppelt), aber keine unterschriebene
+Hessen-Anlage. Am 12.09.2026 zusätzlich per Spotlight-Volltextsuche über das gesamte
+Benutzerverzeichnis und die Fotos-Mediathek gesucht — ohne weiteren Fund.
+Die frühere Angabe „12 Bundesländer" war eine Zählung zu hoch.
 - [ ] Falls auf Papier unterschrieben: Scans in `anerkennung-hessen/` ablegen (Dateiname mit `-signiert`)
 - [ ] Falls die Scans auf dem iPhone liegen: per AirDrop/iCloud übertragen, dann erneut prüfen lassen
 

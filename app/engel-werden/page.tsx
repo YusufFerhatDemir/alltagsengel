@@ -4,8 +4,8 @@ import EngelBewerbungForm from '@/components/EngelBewerbungForm'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
-  title: 'Alltagsbegleiter/in werden (m/w/d) — Nebenjob & Minijob | 20€/Std. Frankfurt',
-  description: 'Stellenangebot: Alltagsbegleiter/in (m/w/d) in Frankfurt & Rhein-Main. 20€/Stunde, flexibler Nebenjob oder Minijob, keine Pflegeausbildung nötig, §45a-Qualifizierung möglich. Quereinsteiger willkommen. Jetzt bewerben!',
+  title: 'Alltagsbegleiter/in (m/w/d) — Job Frankfurt',
+  description: 'Alltagsbegleiter/in (m/w/d) in Frankfurt & Rhein-Main: 20 €/Stunde, flexibler Nebenjob oder Minijob, keine Pflegeausbildung nötig. Quereinsteiger willkommen.',
   keywords: [
     'alltagsbegleiter werden',
     'alltagsbegleiter job frankfurt',
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     'job alltagsbegleitung rhein-main',
   ],
   openGraph: {
-    title: 'Alltagsbegleiter/in werden — Nebenjob & Minijob | 20€/Stunde Frankfurt',
+    title: 'Alltagsbegleiter/in werden — 20 €/Stunde Frankfurt',
     description: 'Stellenangebot: 20€/Stunde als Alltagsbegleiter/in in Frankfurt & Rhein-Main. Flexibler Nebenjob, keine Pflegeausbildung, §45a-Qualifizierung möglich. Jetzt bewerben!',
     url: 'https://alltagsengel.care/engel-werden',
     siteName: 'Alltagsengel',

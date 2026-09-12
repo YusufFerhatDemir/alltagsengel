@@ -48,11 +48,10 @@ const STAEDTE = [
 ]
 
 export const metadata: Metadata = {
-  title: 'Haushaltshilfe im Rhein-Main-Gebiet — Reinigung, Wäsche, Einkauf',
+  title: 'Haushaltshilfe Rhein-Main — Reinigung',
   description:
-    'Haushaltshilfe in Frankfurt, Offenbach, Hanau und dem Rhein-Main-Gebiet: Reinigung, '
-    + 'Wäsche, Einkauf und Kochen durch geschulte Kräfte. Entlastungsbetrag 131 €/Monat '
-    + 'nach §45b SGB XI. Jetzt unverbindlich vormerken.',
+    'Haushaltshilfe in Frankfurt, Offenbach und Hanau: Reinigung, Wäsche, Einkauf '
+    + 'und Kochen durch geschulte Kräfte. Entlastungsbetrag 131 €/Monat nach §45b SGB XI.',
   keywords: [
     'Haushaltshilfe Frankfurt', 'Haushaltshilfe Rhein-Main', 'Haushaltshilfe Pflegegrad',
     'Putzhilfe Senioren', 'Reinigungshilfe', 'Einkaufshilfe', 'Entlastungsbetrag',

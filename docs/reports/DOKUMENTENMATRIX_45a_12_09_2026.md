@@ -117,3 +117,5 @@ eine Sachstandsanfrage (PDF, 09.09.2026). Ein Postfachzugriff war mir nicht mög
 ### 9. Rukiye
 Kein Anerkennungsblocker. In der Mappe kommt keine Rolle „Rukiye" vor; die Fachkraft nach
 PfluV ist Sabrina Martin. Die Recherchenotiz vom 09.09. behandelt eine separate Frage.
+
+> **Korrektur 12.09.2026 (spätere Zählung):** Hier steht „12 Bundesländer". Nachgezählt aus den Briefköpfen sind es **11 unterschriebene Schreiben an 10 Länder** (Mecklenburg-Vorpommern doppelt). Hamburg und Sachsen-Anhalt haben Textfassungen, aber keinen unterschriebenen Scan. Einzelnachweis je Blatt: `docs/genehmigung/RICHTIGSTELLUNG_BUNDESLAENDER_12_09_2026.md`.

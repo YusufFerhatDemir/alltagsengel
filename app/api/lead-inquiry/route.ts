@@ -6,6 +6,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
 import { DEFAULT_ORG_ID } from '@/lib/organizations/types'
+import {
+  pruefeAnfrageDaten, istEmailPlausibel, anliegenPflichtFuer,
+} from '@/lib/leads/anfrage-felder'
 const log = logger.child('lead-inquiry')
 
 // ═══════════════════════════════════════════════════════════
@@ -30,7 +33,7 @@ export const POST = withTracking(async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { name, phone, plz, message, service, source, utm_source } = body
+    const { name, phone, plz, message, service, source, utm_source, email } = body
 
     // Honeypot: unsichtbares Feld — wenn befüllt, ist es ein Bot.
     // Bewusst 201 zurückgeben, damit der Bot nichts merkt.
@@ -75,6 +78,36 @@ export const POST = withTracking(async function POST(request: Request) {
       )
     }
 
+    // E-Mail ist optional, aber wenn angegeben, dann brauchbar: eine
+    // unbrauchbare Adresse ist schlimmer als keine — sie sieht nach einem
+    // schriftlichen Kanal aus, der nicht existiert.
+    if (email !== undefined && email !== null && email !== '') {
+      if (typeof email !== 'string' || !istEmailPlausibel(email.trim())) {
+        return NextResponse.json(
+          { error: 'Bitte geben Sie eine gültige E-Mail-Adresse an' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Katalogfelder (Anliegen, Dringlichkeit, Kontaktweg, Pflegegrad).
+    // Unbekannte Werte werden ABGEWIESEN, nicht verworfen — sonst meldet das
+    // Formular Erfolg und die Angabe ist weg.
+    const { daten: anfrageDaten, fehler: datenFehler } = pruefeAnfrageDaten(body)
+    if (datenFehler) {
+      return NextResponse.json({ error: datenFehler }, { status: 400 })
+    }
+
+    // Der Rückrufweg fragt sonst nur Name, Telefon und Wunschzeit ab. Ohne
+    // Anliegen entstand ein Lead, den niemand einordnen konnte — am
+    // 12.09.2026 lagen acht davon zwischen 2 und 51 Tagen unbearbeitet.
+    if (anliegenPflichtFuer(source) && !anfrageDaten.anliegen) {
+      return NextResponse.json(
+        { error: 'Bitte geben Sie an, worum es geht' },
+        { status: 400 }
+      )
+    }
+
     const { error: dbError } = await supabaseAdmin
       .from('lead_inquiries')
       .insert({
@@ -92,6 +125,11 @@ export const POST = withTracking(async function POST(request: Request) {
         service: service?.trim() || null,
         source: source || 'website',
         utm_source: utm_source?.trim() || null,
+        email: email?.trim() || null,
+        // Katalogfelder ohne Migration: die Spalte ist jsonb und existiert
+        // bereits. `null` statt eines leeren Objekts, damit „nichts angegeben"
+        // in der Auswertung von „leer abgeschickt" unterscheidbar bleibt.
+        anfrage_daten: Object.keys(anfrageDaten).length > 0 ? anfrageDaten : null,
       })
 
     if (dbError) {

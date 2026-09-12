@@ -20,18 +20,17 @@ const HINWEIS_ANERKENNUNG =
   + 'Entlastungsbetrag nach § 45b SGB XI abrechnen.'
 
 export const metadata: Metadata = {
-  title: 'Warteliste — Alltagsbegleitung im Rhein-Main-Gebiet',
+  title: 'Warteliste — Alltagsbegleitung Rhein-Main',
   description:
-    'Lassen Sie sich unverbindlich für Alltagsbegleitung in Frankfurt, Offenbach, Hanau und '
-    + 'dem Rhein-Main-Gebiet vormerken. Kostenlos, jederzeit widerrufbar. '
-    + 'Alltagsengel ist im Anerkennungsverfahren nach §45a SGB XI.',
+    'Unverbindlich für Alltagsbegleitung in Frankfurt, Offenbach und Hanau vormerken. '
+    + 'Kostenlos, jederzeit widerrufbar. Im Anerkennungsverfahren nach §45a SGB XI.',
   keywords: [
     'Alltagsbegleitung Warteliste', 'Alltagsbegleiter Frankfurt', 'Betreuung vormerken',
     'Entlastungsbetrag', '131 Euro Pflegekasse', 'Haushaltshilfe Rhein-Main',
   ],
   alternates: { canonical: 'https://alltagsengel.care/warteliste' },
   openGraph: {
-    title: 'Warteliste — Alltagsbegleitung im Rhein-Main-Gebiet',
+    title: 'Warteliste — Alltagsbegleitung Rhein-Main',
     description:
       'Unverbindlich vormerken lassen. Wir melden uns, sobald wir in Ihrer Region starten.',
     url: 'https://alltagsengel.care/warteliste',

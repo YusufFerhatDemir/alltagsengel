@@ -116,13 +116,31 @@ const nextConfig: NextConfig = {
       './public/fonts/DejaVuSans-Bold.ttf',
     ],
   },
-  // Bild-Pipeline (CWV): AVIF zuerst (30–50 % kleiner als WebP), WebP als
-  // Fallback. Betrifft nur das Auslieferungsformat via next/image — die
-  // Quelldateien (z. B. die goldenen 3D-Icons) bleiben unverändert.
+  // Bild-Pipeline (CWV): WebP als Auslieferungsformat. Betrifft nur die
+  // Auslieferung via next/image — die Quelldateien (z. B. die goldenen
+  // 3D-Icons) bleiben unverändert.
   // minimumCacheTTL: optimierte Varianten 31 Tage cachen — Brand-Assets
   // ändern sich praktisch nie, Re-Optimierung pro Miss ist verschenkt.
+  //
+  // ── AVIF IST AM 12.09.2026 BEWUSST ABGESCHALTET ──────────────────────
+  // GHSA-2xp9-vwfh-vxw4: unauthentifizierte Remote Code Execution in der
+  // Image-Optimization-API **wenn AVIF verwendet wird**, betroffen ist
+  // next >=16.0.0 <16.3.3 — also die hier installierte 16.2.12.
+  //
+  // Der saubere Weg wäre das Upgrade auf 16.3.3+. Es wurde am 12.09.2026
+  // versucht (16.3.5) und **bricht den Produktionsbuild**: `next/font/google`
+  // kann Jost und Cormorant Garamond nicht mehr laden, obwohl
+  // fonts.googleapis.com per curl mit 200 antwortet. Gegenprobe gefahren —
+  // 16.2.12 baut in 24 s durch, 16.3.5 nicht.
+  //
+  // Bis das Upgrade gangbar ist (Fonts per `next/font/local` selbst
+  // ausliefern nimmt die Netzabhängigkeit aus dem Build), schließt diese
+  // Zeile die Lücke: ohne AVIF greift der Angriffsweg nicht. Kosten sind
+  // 30–50 % größere Bilder gegenüber AVIF — WebP bleibt.
+  //
+  // WIEDER EINSCHALTEN, sobald next >= 16.3.3 läuft und der Build grün ist.
   images: {
-    formats: ['image/avif', 'image/webp'],
+    formats: ['image/webp'],
     minimumCacheTTL: 2678400,
   },
   async redirects() {

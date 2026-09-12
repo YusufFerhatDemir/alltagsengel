@@ -104,6 +104,42 @@ describe.each(Object.keys(SILOS) as (keyof typeof SILOS)[])('Stadtseiten — /%s
   })
 })
 
+/**
+ * Die Wurzelseiten der Silos. Sie haben statische `metadata` statt
+ * `generateMetadata` und fielen deshalb durch die Prüfung oben hindurch —
+ * am 12.09.2026 lagen sechs von acht über der Grenze, `/engel-werden` mit
+ * 91 Zeichen und doppelter Marke im Titel.
+ */
+const WURZELSEITEN: Record<string, () => Promise<{ metadata?: Metadata }>> = {
+  '/leistungen': () => import('@/app/leistungen/page'),
+  '/haushaltshilfe': () => import('@/app/haushaltshilfe/page'),
+  '/warteliste': () => import('@/app/warteliste/page'),
+  '/hygienebox': () => import('@/app/hygienebox/page'),
+  '/krankenfahrten': () => import('@/app/krankenfahrten/page'),
+  '/engel-werden': () => import('@/app/engel-werden/page'),
+  '/alltagsbegleitung': () => import('@/app/alltagsbegleitung/page'),
+  '/pflegebox': () => import('@/app/pflegebox/page'),
+}
+
+describe('Wurzelseiten der Silos', () => {
+  it.each(Object.keys(WURZELSEITEN))('%s bleibt in 60/160 Zeichen', async (pfad) => {
+    const m = (await WURZELSEITEN[pfad]()).metadata
+    expect(m, `${pfad} ohne metadata`).toBeTruthy()
+    const titel = typeof m!.title === 'string' ? m!.title : ''
+    expect(titel.length, `${pfad}: Titel fehlt oder ist kein String`).toBeGreaterThan(10)
+    expect(titel.length + MARKEN_SUFFIX.length, `${pfad}: Titel zu lang`).toBeLessThanOrEqual(TITEL_MAX)
+    expect((m!.description ?? '').length, `${pfad}: Beschreibung zu lang`).toBeLessThanOrEqual(BESCHREIBUNG_MAX)
+  })
+
+  it('kein Titel trägt die Marke selbst — die Vorlage hängt sie an', async () => {
+    for (const [pfad, lade] of Object.entries(WURZELSEITEN)) {
+      const m = (await lade()).metadata
+      const titel = typeof m?.title === 'string' ? m.title : ''
+      expect(titel, `${pfad}: Marke doppelt`).not.toContain('Alltagsengel')
+    }
+  })
+})
+
 describe('Detektor — das Maß erkennt den alten Zustand wieder', () => {
   it('zwei Städte im alten Textskelett fallen auf, echte Ortsdaten nicht', () => {
     const altA = 'Kostenlose Pflegebox nach Hanau: Handschuhe, Desinfektion, Bettschutz (§40 SGB XI). Bis 42 €/Monat von der Kasse, 0 € Zuzahlung. Jetzt bestellen!'

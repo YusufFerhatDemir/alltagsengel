@@ -18,6 +18,10 @@ import {
 } from '@/lib/bewerbung/katalog'
 import { regionLabel } from '@/lib/warteliste/katalog'
 import {
+  FILTER_DIMENSIONEN, ALLE, OHNE_ANGABE, leereAuswahl, abdeckung, passtZuFiltern,
+  type FilterAuswahl,
+} from '@/lib/bewerbung/filter'
+import {
   berechneFortschritt, stufeFuer, FORTSCHRITT_STUFEN, erinnerungSinnvoll,
 } from '@/lib/bewerbung/fortschritt'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
@@ -67,6 +71,10 @@ interface AppRow {
   verlauf: PipelineVerlauf[]
   /** lead_inquiries.follow_up_date — automatische Wiedervorlage. */
   follow_up_date: string | null
+  /** Kampagnenquelle — als Filter, nicht nur als Anzeige. */
+  utm_source: string | null
+  /** Rohes bewerbung_daten: traegt Prioritaet und Blocker im Pipeline-Stand. */
+  roh: unknown
 }
 
 /** Filter zusaetzlich zu den Stufen. */
@@ -88,11 +96,11 @@ export default function AdminApplicationsPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>(FILTER_OFFEN)
   const [sortierung, setSortierung] = useState<Sortierung>('dringlichkeit')
-  // Drei Merkmale, nach denen die Verwaltung tatsaechlich sucht: wo wohnt
-  // die Person, was kann sie, wie viel will sie arbeiten.
+  // Eine Auswahl statt eines useState je Merkmal: die Dimensionen stehen in
+  // lib/bewerbung/filter.ts und werden hier nur noch gerendert. Ein neuer
+  // Filter ist damit ein Eintrag in jener Liste, kein Eingriff in diese Seite.
   const [region, setRegion] = useState('alle')
-  const [qualifikation, setQualifikation] = useState('alle')
-  const [modell, setModell] = useState('alle')
+  const [auswahl, setAuswahl] = useState<FilterAuswahl>(leereAuswahl)
   const [busy, setBusy] = useState<string | null>(null)
   const [jetzt, setJetzt] = useState(() => new Date())
   const [search, setSearch] = useState('')
@@ -107,7 +115,7 @@ export default function AdminApplicationsPage() {
       const [appRes, cgRes] = await Promise.all([
         supabase
           .from('lead_inquiries')
-          .select('id, name, email, phone, plz, service, source, message, status, created_at, updated_at, eingereicht_am, bewerbung_daten, follow_up_date')
+          .select('id, name, email, phone, plz, service, source, message, status, created_at, updated_at, eingereicht_am, bewerbung_daten, follow_up_date, utm_source')
           .or(BEWERBUNG_FILTER)
           .order('created_at', { ascending: false }),
         supabase.from('caregivers').select('id, first_name, last_name'),
@@ -140,6 +148,8 @@ export default function AdminApplicationsPage() {
           // ein reiner Pipeline-Stand oder der Onboarding-Stand waere sonst
           // eine Reihe leerer Felder, die wie fehlende Daten aussaehe.
           daten: hatFormularangaben(a.bewerbung_daten) ? a.bewerbung_daten as BewerbungDaten : null,
+          utm_source: a.utm_source ?? null,
+          roh: a.bewerbung_daten ?? null,
           stufe: st.stufe,
           stufeSeit: st.seit,
           verlauf: st.ausStatus ? [] : verlauf,
@@ -267,8 +277,10 @@ export default function AdminApplicationsPage() {
         if (BEWERBER_ENDZUSTAENDE.includes(r.stufe)) return false
       } else if (filter !== 'all' && r.stufe !== filter) return false
       if (region !== 'alle' && (r.daten?.region ?? '') !== region) return false
-      if (qualifikation !== 'alle' && (r.daten?.qualifikation ?? '') !== qualifikation) return false
-      if (modell !== 'alle' && (r.daten?.beschaeftigungsart ?? '') !== modell) return false
+      if (!passtZuFiltern(
+        { plz: r.plz, utm_source: r.utm_source, daten: r.daten as Record<string, unknown> | null, roh: r.roh },
+        auswahl,
+      )) return false
       if (!q) return true
       // Telefon mitsuchen: bei Website-Bewerbungen ist es das einzige
       // Kontaktmerkmal — eine E-Mail fragt das Formular nicht ab.
@@ -291,7 +303,7 @@ export default function AdminApplicationsPage() {
       fortschritt: (a, b) => vollst(b) - vollst(a),
     }
     return [...treffer].sort((a, b) => cmp[sortierung](a, b) || fifo(a, b))
-  }, [rows, filter, search, sortierung, jetzt, region, qualifikation, modell])
+  }, [rows, filter, search, sortierung, jetzt, region, auswahl])
 
   return (
     <div className="admin-page">
@@ -367,20 +379,29 @@ export default function AdminApplicationsPage() {
             {vorhanden.regionen.map(([k, n]) => <option key={k} value={k}>{regionLabel(k)} ({n})</option>)}
           </select>
         </label>
-        <label style={{ fontSize: 13, color: 'var(--ink3)' }}>
-          Qualifikation:{' '}
-          <select className="admin-select" value={qualifikation} onChange={e => setQualifikation(e.target.value)}>
-            <option value="alle">Alle Qualifikationen</option>
-            {vorhanden.qualifikationen.map(([k, n]) => <option key={k} value={k}>{qualifikationLabel(k)} ({n})</option>)}
-          </select>
-        </label>
-        <label style={{ fontSize: 13, color: 'var(--ink3)' }}>
-          Arbeitsmodell:{' '}
-          <select className="admin-select" value={modell} onChange={e => setModell(e.target.value)}>
-            <option value="alle">Alle Modelle</option>
-            {vorhanden.modelle.map(([k, n]) => <option key={k} value={k}>{beschaeftigungsartLabel(k)} ({n})</option>)}
-          </select>
-        </label>
+        {FILTER_DIMENSIONEN.map(dim => {
+          // Die Abdeckung steht in der Option: „ohne Angabe (34)" sagt sofort,
+          // dass der Filter hier fast nichts finden KANN, weil die Daten
+          // fehlen — und nicht, weil niemand passt.
+          const ab = abdeckung(
+            rows.map(r => ({ plz: r.plz, utm_source: r.utm_source, daten: r.daten as Record<string, unknown> | null, roh: r.roh })),
+            dim.key,
+          )
+          return (
+            <label key={dim.key} style={{ fontSize: 13, color: 'var(--ink3)' }}>
+              {dim.label}:{' '}
+              <select
+                className="admin-select"
+                value={auswahl[dim.key] ?? ALLE}
+                onChange={e => setAuswahl({ ...auswahl, [dim.key]: e.target.value })}
+              >
+                <option value={ALLE}>Alle</option>
+                {dim.werte.map(w => <option key={w.key} value={w.key}>{w.label}</option>)}
+                {ab.ohne > 0 && <option value={OHNE_ANGABE}>Ohne Angabe ({ab.ohne})</option>}
+              </select>
+            </label>
+          )
+        })}
         {vorhanden.ohneAngaben > 0 && (
           <span style={{ fontSize: 12, color: 'var(--ink5)' }}>
             {vorhanden.ohneAngaben} Bewerbung(en) ohne Zusatzangaben — die Filter greifen dort nicht.
