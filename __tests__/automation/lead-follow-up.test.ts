@@ -89,7 +89,7 @@ describe('erinnereAnLeadFollowUps', () => {
     expect(n.user_id).toBe('u-admin')
     expect(n.type).toBe('reminder')
     expect(n.title).toContain('Erinnerung')
-    expect(n.link).toBe('/admin/waitlist?filter=nachfassen')
+    expect(n.link).toBe('/admin/posteingang?ampel=gelb')
     expect(n.data.art).toBe(LEAD_FOLLOW_UP_ART)
     expect(n.data.tag).toBe('2026-09-11')
   })
@@ -112,7 +112,7 @@ describe('erinnereAnLeadFollowUps', () => {
     const [an, , betreff, html] = emailSpy.mock.calls[0] as unknown as [string, string, string, string]
     expect(an).toBe('verwaltung@example.org')
     expect(betreff).toMatch(/^\[Alltagsengel\] Dringend/)
-    expect(html).toContain('/admin/applications?filter=nachfassen')
+    expect(html).toContain('/admin/posteingang?ampel=rot')
     const n = mock.inserts.find(i => i.table === 'notifications')!.payload
     expect(n.title).toContain('Dringend')
   })

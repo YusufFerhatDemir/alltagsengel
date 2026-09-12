@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -7,6 +7,7 @@ import {
 } from '@/lib/warteliste/katalog'
 import { trackContactRequest } from '@/lib/tracking'
 import { logger } from '@/lib/logger'
+import { useUtm } from '@/hooks/useUtm'
 
 const log = logger.child('warteliste-form')
 
@@ -31,19 +32,9 @@ export default function WartelisteForm() {
   const [nachricht, setNachricht] = useState('')
   const [datenschutz, setDatenschutz] = useState(false)
   const [honeypot, setHoneypot] = useState('')
-  const [utm, setUtm] = useState<{ source?: string; medium?: string; campaign?: string }>({})
+  const utm = useUtm()
   const [status, setStatus] = useState<'idle' | 'sending'>('idle')
   const [fehler, setFehler] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const p = new URLSearchParams(window.location.search)
-    setUtm({
-      source: p.get('utm_source') || p.get('source') || undefined,
-      medium: p.get('utm_medium') || undefined,
-      campaign: p.get('utm_campaign') || undefined,
-    })
-  }, [])
 
   function toggleLeistung(key: string) {
     setLeistungen(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
@@ -73,7 +64,9 @@ export default function WartelisteForm() {
           nachricht,
           datenschutz,
           website: honeypot,
-          utm_source: utm.source, utm_medium: utm.medium, utm_campaign: utm.campaign,
+          utm_source: utm.utm_source || undefined,
+          utm_medium: utm.utm_medium || undefined,
+          utm_campaign: utm.utm_campaign || undefined,
         }),
       })
 

@@ -153,7 +153,12 @@ der Sache — wer die Kette einmal auf echte Zeitstempel umstellt, sollte sie
 in einem Zug umstellen.
 
 
-## Block 6 — Lead-Funnel: Stufe „Termin" der Warteliste (2026-09-11) — WARTET AUF ANWENDUNG
+## Block 6 — Lead-Funnel: Stufe „Termin" der Warteliste (2026-09-11) — LIVE
+
+> **Angewendet, verifiziert am 12.09.2026:** `PATCH state_waitlist SET status='termin'`
+> mit Dienstschlüssel antwortet **HTTP 204** (vorher `23514 state_waitlist_status_check`).
+> Die Stufe „Termin" der Admin-Inbox ist damit voll nutzbar; der Hinweistext in der
+> Server Action (`WARTELISTE_STUFE_MIGRATION`) bleibt als Rückfallebene stehen.
 
 | Datei | Inhalt |
 |---|---|
@@ -176,7 +181,8 @@ CHECK-konform mitgeschrieben, die Wiedervorlage in `follow_up_date` (beide Spalt
 Supabase-SQL-Editor oder MCP `apply_migration`, Datei `20261104000000`.
 PGlite-Test: `__tests__/migrations/state-waitlist-stufe-termin-pglite.test.ts`.
 
-### Bis dahin
+### Rückfallebene (bleibt)
 
-Alle anderen Stufen laufen. Ein Klick auf „→ Termin" antwortet mit einem Satz,
-der diese Dateinummer nennt — kein stiller Ausfall, keine rohe Postgres-Meldung.
+Sollte der CHECK je zurückgedreht werden, antwortet ein Klick auf „→ Termin"
+weiterhin mit einem Satz, der diese Dateinummer nennt — kein stiller Ausfall,
+keine rohe Postgres-Meldung.

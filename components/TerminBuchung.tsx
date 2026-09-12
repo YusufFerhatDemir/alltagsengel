@@ -1,6 +1,7 @@
 'use client'
 import { useMemo, useState } from 'react'
 import { trackContactRequest } from '@/lib/tracking'
+import { useUtm } from '@/hooks/useUtm'
 
 // ═══════════════════════════════════════════════════════════
 // ONLINE-TERMINBUCHUNG — 3 Schritte, ohne Registrierung
@@ -43,6 +44,7 @@ export default function TerminBuchung() {
   const [tag, setTag] = useState<Date | null>(null)
   const [fenster, setFenster] = useState('')
   const [form, setForm] = useState({ name: '', phone: '', plz: '' })
+  const utm = useUtm()
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [honeypot, setHoneypot] = useState('')
@@ -69,6 +71,7 @@ export default function TerminBuchung() {
           website: honeypot,
           service: leistung,
           source: 'terminbuchung',
+          utm_source: utm.utm_source,
           message: `ONLINE-TERMINWUNSCH: ${leistung} — ${datum}, ${fenster} (${ZEITFENSTER.find(z => z.id === fenster)?.zeit}). Bitte zur Bestätigung zurückrufen.`,
         }),
       })
