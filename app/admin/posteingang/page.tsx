@@ -45,6 +45,9 @@ export default function AdminPosteingangPage() {
   const [fehler, setFehler] = useState<string[]>([])
   const [ampel, setAmpel] = useState<'alle' | Ampel>('alle')
   const [art, setArt] = useState<'alle' | LeadArt>('alle')
+  // Anliegen statt Herkunft: „wer wartet auf einen Rückruf" ist die Frage,
+  // die morgens zuerst gestellt wird.
+  const [anliegen, setAnliegen] = useState<'alle' | 'rueckruf' | 'termin'>('alle')
   const [suche, setSuche] = useState('')
   const [jetzt, setJetzt] = useState(() => new Date())
 
@@ -113,12 +116,14 @@ export default function AdminPosteingangPage() {
     return rows.filter(r => {
       if (ampel !== 'alle' && r.ampel !== ampel) return false
       if (art !== 'alle' && r.art !== art) return false
+      if (anliegen === 'rueckruf' && !/rueckruf|rückruf|callback/i.test(r.quelle ?? '')) return false
+      if (anliegen === 'termin' && !/termin/i.test(r.quelle ?? '')) return false
       if (!q) return true
       return r.name.toLowerCase().includes(q)
         || (r.kontakt || '').toLowerCase().includes(q)
         || r.stufeLabel.toLowerCase().includes(q)
     })
-  }, [rows, ampel, art, suche])
+  }, [rows, ampel, art, anliegen, suche])
 
   if (loading) return <div className="admin-page"><h1>Posteingang</h1><p>Laden…</p></div>
 
@@ -197,6 +202,16 @@ export default function AdminPosteingangPage() {
             {ART_META[a].label} ({zaehlung.jeArt[a]})
           </button>
         ))}
+        <button className={`admin-filter-btn ${anliegen === 'rueckruf' ? 'active' : ''}`}
+          onClick={() => setAnliegen(anliegen === 'rueckruf' ? 'alle' : 'rueckruf')}
+          title="Leads, die ausdrücklich um Rückruf gebeten haben">
+          ☎ Rückrufe ({zaehlung.rueckrufe})
+        </button>
+        <button className={`admin-filter-btn ${anliegen === 'termin' ? 'active' : ''}`}
+          onClick={() => setAnliegen(anliegen === 'termin' ? 'alle' : 'termin')}
+          title="Leads mit Terminwunsch aus der Online-Buchung">
+          📅 Terminwünsche ({zaehlung.termine})
+        </button>
       </div>
 
       <div className="admin-table-wrap" style={{ marginTop: 14 }}>
