@@ -51,16 +51,24 @@ export type Kontaktweg = keyof typeof KONTAKTWEG
  * beantragter Grad ist für die Beratung etwas völlig anderes als keiner:
  * Leistungen nach §45b gibt es ab Grad 1, und wer gerade beantragt hat,
  * braucht oft zuerst Hilfe beim Verfahren.
+ *
+ * ACHTUNG bei den Schlüsseln: `grad1` statt `1`. JavaScript sortiert
+ * ganzzahlige Objektschlüssel beim Aufzählen VOR alle anderen — mit `'1'`
+ * standen im Auswahlfeld erst die Grade 1 bis 5 und danach „Weiß ich nicht",
+ * „Kein Pflegegrad" und „Beantragt". Genau verkehrt herum: Die häufigste
+ * Antwort einer Person, die sich gerade erst informiert, ist „weiß ich nicht".
+ * Am 12.09.2026 im Browser gesehen und hier behoben, solange noch keine
+ * gespeicherte Zeile die alten Schlüssel trug (live geprüft: 0 Zeilen).
  */
 export const PFLEGEGRAD = {
   unbekannt: 'Weiß ich nicht',
   kein: 'Kein Pflegegrad',
   beantragt: 'Beantragt, noch kein Bescheid',
-  '1': 'Pflegegrad 1',
-  '2': 'Pflegegrad 2',
-  '3': 'Pflegegrad 3',
-  '4': 'Pflegegrad 4',
-  '5': 'Pflegegrad 5',
+  grad1: 'Pflegegrad 1',
+  grad2: 'Pflegegrad 2',
+  grad3: 'Pflegegrad 3',
+  grad4: 'Pflegegrad 4',
+  grad5: 'Pflegegrad 5',
 } as const
 export type Pflegegrad = keyof typeof PFLEGEGRAD
 
