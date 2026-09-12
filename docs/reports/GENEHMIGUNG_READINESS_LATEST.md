@@ -153,3 +153,33 @@ Preisentscheidung.
 6. Preisentscheidung für die Kostenübersicht.
 7. Versicherungsnehmer auf die UG umschreiben.
 8. Unterschriften leisten und **scannen** — der Scan fehlt, nicht die Unterschrift.
+
+---
+
+## KORREKTUREN 13.09.2026
+
+Zwei Aussagen dieses Berichts sind überholt. Einzelnachweis:
+`docs/reports/GENEHMIGUNG_FRIST_PRIMAERQUELLE_LATEST.md`.
+
+### 1. „Erhebungsbogen MISSING" — falsch
+
+Der amtliche Bogen liegt seit 17.07.2026 als
+`~/Downloads/A2 Anbieter II - Erhebungsbogen Stand 082024.docx` vor: Anbieterform II,
+Stand 08/2024, 14 Tabellen, **41 Formularfelder**, 41 Kontrollkästchen, Schlusszeile
+„Datum, rechtsverbindliche Unterschrift" und die amtliche Checkliste.
+
+Defekt ist nur die **Repo-Kopie** `Erhebungsbogen-Anbieterform-II-Frankfurt.pdf`
+(Cloudflare-Sperrseite). **Status: MISSING → DOCUMENT_VERIFIED (vorhanden, unausgefüllt).**
+
+Damit sinkt MISSING von 1 auf **0**.
+
+### 2. „Die Frist ist seit zwölf Tagen verstrichen" — zu weit gegangen
+
+Belegt ist: die Frist im Schreiben vom 08.07.2026 lautet **31.08.2026**.
+**Nicht belegt** ist, dass sie noch die geltende Frist ist. Ein eigener Nachfass-Entwurf
+erwähnt ein Telefonat mit positiver Rückmeldung und eine abgeschickte Bitte um
+Verlängerung; beides ist `INFERRED`, kein Beleg. Eine mündliche Fristverlängerung wäre
+wirksam.
+
+**Richtig: Der aktuelle Verfahrensstand ist UNKNOWN.** Zu klären per Anruf —
+Leitfaden liegt vor.

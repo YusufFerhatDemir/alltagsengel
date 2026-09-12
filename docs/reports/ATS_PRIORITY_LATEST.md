@@ -190,3 +190,52 @@ Einsatzort nicht.
 | 4 | **E-Mail-Pflichtprüfung im Bewerberformular** | 34/36 ohne Adresse; nur Telefon |
 | 5 | **Rücklaufweg für 11880 / Telefon** | zwei bekannte Personen fehlen deshalb ganz |
 | 6 | Oberflächenprüfung `/admin/applications` | Login nötig, nicht durchgeführt |
+
+---
+
+## 8. Operative Übersicht 13.09.2026 — PRIO1 je Zeile
+
+Keine Neuklassifizierung; das ist die Einstufung aus Abschnitt 1, aufbereitet für den
+Hörer. Alle Angaben `VERIFIED_LIVE` aus `lead_inquiries`, sofern nicht anders vermerkt.
+**Niemand wurde angeschrieben.**
+
+| Name | Region (PLZ) | Qualifikation | PRIO | Fehlende Info | Nächster Schritt | Letzter Kontakt | Kanal |
+|---|---|---|---|---|---|---|---|
+| **Ziyana Filote** | 63743 Aschaffenburg | Pflegefachkraft | **1** | Erfahrung, Startdatum, FZ | Anrufen oder mailen — **einzige mit E-Mail** | nie (`new`) | Telefon **+ E-Mail** |
+| **Claudia Adjovi** | 63739 Aschaffenburg | Pflegehelfer/in, **8 Jahre** (Freitext) | **1** | Startdatum, FZ, Führerschein, Stunden | Anrufen, die 8 Jahre einordnen lassen | nie (`new`) | Telefon |
+| **Sotiris Tiropoulos** | 60326 Frankfurt | Alltagsbegleiter/in (§ 45b) | **1** | Erfahrung, Startdatum, FZ | Anrufen | nie (`new`) | Telefon |
+| **michelle Gruber** | 55124 Mainz | Pflegehelfer/in | **1** | Erfahrung, Startdatum, FZ | Anrufen | nie (`new`) | Telefon |
+| **Francesca L. Potočan** | 63457 Hanau | Betreuungskraft (§ 53b) | **1** | Erfahrung, Startdatum, FZ | Anrufen | nie (`new`) | Telefon |
+
+**Alle fünf stehen auf `status=new`** — keiner wurde je kontaktiert, keiner hat eine
+Wiedervorlage. Ziyana Filote ist die einzige mit E-Mail; sie kam über das **neue**
+Formular (11 von 16 Merkmalen belegt gegen 5/16 im Altbestand).
+
+PRIO2 (29), PRIO3 (1) und NEEDS_INFO (1) stehen vollständig in Abschnitt 1.
+
+### Die fünf Fragen, die in jedem Gespräch fehlen
+
+Identisch für alle 36, weil die Lücken strukturell sind — nicht individuell:
+Startdatum · erweitertes Führungszeugnis · Führerschein und Auto · Stundenumfang und
+Arbeitsmodell · Erreichbarkeit.
+
+## 9. Mohamed Semmami — Ursprung: Strato-Postfach
+
+| Angabe | Wert | Status |
+|---|---|---|
+| In `lead_inquiries` | **0 Treffer**, auch unter `semm*`, `mohamed`, `mohammed`, `muhamm*` | `VERIFIED_LIVE` |
+| Arbeitsbaum, `~/Downloads`, `~/Desktop`, `~/Documents` | kein Fund | `VERIFIED_LOCAL` |
+| **Genannter Ursprung** | **Strato-Postfach `info@alltagsengel.care`** | `INFERRED` — Angabe des Auftraggebers, von hier aus nicht prüfbar |
+
+**Warum nicht prüfbar:** `~/Library/Mail` enthält keine lokale Mailbox, es ist kein
+Mailclient mit Ablage installiert, und in dieser Sitzung gibt es keinen Mail-Connector.
+Strato, Gmail und iCloud sind von hier aus nicht erreichbar.
+
+**Kein Datensatz angelegt.** Eine Bewerbung, die per E-Mail kam, ist kein Formularlauf;
+sie als solchen anzulegen würde eine Herkunft behaupten, die es nicht gab. Wenn der
+Vorgang ins System soll, gehört er mit dem Vermerk „Eingang per E-Mail, Datum X" erfasst —
+und dafür braucht es die Mail, nicht eine Rekonstruktion.
+
+**Dasselbe Muster, dritter Fall:** Birgit Fritzsch (11880), Sarune Veitaite (Ursprung
+offen) und Mohamed Semmami (Strato) sind drei Personen, die das Unternehmen kennt und das
+System nicht. Gemeinsame Ursache: Kanäle ohne Rücklaufweg in `lead_inquiries`.
