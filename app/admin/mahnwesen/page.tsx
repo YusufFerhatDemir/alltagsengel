@@ -101,6 +101,31 @@ export default function MahnwesenPage() {
     }
   }, [])
 
+  // Vor `starteVersand` deklariert, weil diese Funktion sie aufruft. Stand
+  // sie darunter, konnte der React Compiler die manuelle Memoisierung nicht
+  // erhalten (react-hooks/preserve-manual-memoization) und uebersprang die
+  // Optimierung der ganzen Komponente.
+  const loadData = useCallback(async () => {
+    setLoading(true)
+    const supabase = createClient()
+    // „Keine offenen Mahnungen." ueber einer gestoerten Abfrage heisst: der
+    // Mahnlauf wird uebersprungen und Forderungen verjaehren still.
+    const { data, error: entriesErr } = await supabase
+      .from('dunning_entries')
+      .select('*, invoice:invoices(invoice_number, invoice_number_formatted, client:clients(first_name, last_name))')
+      .neq('dunning_level', 'bezahlt')
+      .order('days_overdue', { ascending: false })
+    if (entriesErr) {
+      log.error(`Mahnliste laden fehlgeschlagen: ${entriesErr.message}`)
+      setLadeFehler(true)
+      setLoading(false)
+      return
+    }
+    setLadeFehler(false)
+    setEntries((data || []) as DunningEntry[])
+    setLoading(false)
+  }, [])
+
   /**
    * Stoesst den Versand der wartenden Mahnschreiben an.
    *
@@ -133,27 +158,6 @@ export default function MahnwesenPage() {
     } catch { alert('Netzwerkfehler') }
     setVersandLoading(false)
   }
-
-  const loadData = useCallback(async () => {
-    setLoading(true)
-    const supabase = createClient()
-    // „Keine offenen Mahnungen." ueber einer gestoerten Abfrage heisst: der
-    // Mahnlauf wird uebersprungen und Forderungen verjaehren still.
-    const { data, error: entriesErr } = await supabase
-      .from('dunning_entries')
-      .select('*, invoice:invoices(invoice_number, invoice_number_formatted, client:clients(first_name, last_name))')
-      .neq('dunning_level', 'bezahlt')
-      .order('days_overdue', { ascending: false })
-    if (entriesErr) {
-      log.error(`Mahnliste laden fehlgeschlagen: ${entriesErr.message}`)
-      setLadeFehler(true)
-      setLoading(false)
-      return
-    }
-    setLadeFehler(false)
-    setEntries((data || []) as DunningEntry[])
-    setLoading(false)
-  }, [])
 
   useEffect(() => { loadData(); ladeQueue() }, [loadData, ladeQueue])
 

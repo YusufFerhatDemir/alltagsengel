@@ -212,16 +212,38 @@ E.append(tabelle(
     [0.7 * cm, B - 0.7 * cm]))
 sp(9)
 
+h1("0 · Korrektur zur Fassung von 04:00 Uhr")
+E.append(tabelle(
+    ["", "Aussage um 04:00", "Tatsächlich"],
+    [[amp("rot", ""),
+      "„Die Follow-up-Maschine hat <b>noch nie gefeuert</b>, weil "
+      "<font name='DejaVuSans'>CRON_SECRET</font> in Vercel nicht gesetzt ist.“",
+      "<b>Falsch.</b> Die Kette lief am 12.09.2026 um <b>05:29:51 UTC</b> und schrieb drei "
+      "Meldungen („Verschleppt: 37 Lead(s)…“). <font name='DejaVuSans'>CRON_SECRET</font> "
+      "<b>ist gesetzt</b> — die Route ist fail-closed, ohne Geheimnis hätte sie 401 geliefert. "
+      "Zweiter Beleg: <font name='DejaVuSans'>user_hard_delete_cron</font> um 03:28:02 UTC."],
+     [amp("gruen", ""),
+      "„ESLint ist stillgelegt, 12 Fehler unbemerkt.“",
+      "War richtig — <b>ist behoben.</b> Alle 12 Fehler beseitigt, "
+      "<font name='DejaVuSans'>|| true</font> aus <font name='DejaVuSans'>ci.yml</font> "
+      "entfernt, der Schritt blockiert. Gegenprobe gefahren."]],
+    [0.65 * cm, 5.6 * cm, 10.75 * cm],
+    {0: ROT, 1: GRUEN}))
+sp(4)
+E.append(P("Die Beobachtung um 04:00 stimmte — der Lauf kam erst 89 Minuten später. Die "
+           "<b>Begründung</b> dagegen war eine Vermutung, als Tatsache formuliert. Das war der "
+           "Fehler: ein nicht gesetztes Geheimnis hätte ich messen können und habe es nicht.", "klein"))
+sp(8)
+
 h1("1 · Executive Summary")
-p("Drei Produkte, drei grüne Testsuiten, <b>14.683 Tests</b> ohne einen einzigen Fehlschlag. "
+p("Drei Produkte, drei grüne Testsuiten, <b>14.701 Tests</b> ohne einen einzigen Fehlschlag. "
   "Die Technik ist nicht das Problem.")
 p("Das Problem ist der Rückstand im Posteingang und die Genehmigungsmappe.")
 p("<b>50 offene Leads. 37 davon liegen seit über sieben Tagen. Der älteste seit 58 Tagen.</b> "
   "Darunter vier echte Kundenanfragen — Menschen, die Betreuung für Angehörige gesucht und keine "
   "Antwort bekommen haben. Das ist kein Softwarefehler, das ist verlorener Umsatz. Die "
-  "Follow-up-Maschine, die das künftig verhindert, steht seit heute — sie hat aber <b>noch nie "
-  "gefeuert</b>, weil <font name='DejaVuSans'>CRON_SECRET</font> in Vercel nicht gesetzt ist. Ein "
-  "fehlender Wert trennt eine gebaute Funktion von einer wirkenden.")
+  "Follow-up-Maschine, die das künftig verhindert, steht seit heute — und sie <b>läuft</b>: "
+  "erster belegter Lauf am 12.09.2026 um 05:29:51 UTC (siehe Abschnitt 0).")
 p("Bei §45a ist zweierlei gesichert: Die Mappe ist Blatt für Blatt geprüft (26 Scans), und die "
   "Anerkennung wird nirgends mehr fälschlich behauptet (Scanner über 1.600 Dateien, 0 Befunde, in CI). "
   "Unangenehm ist: <b>12 bereits unterschriebene Anträge an andere Bundesländer behaupten, wir seien "
@@ -233,11 +255,11 @@ sp(6)
 h1("2 · Prüfstand — alle drei Produkte")
 E.append(tabelle(
     ["Produkt", "Suite", "Ergebnis", "Exit"],
-    [["Alltagsengel", "vitest (470 Dateien)", amp("gruen", "<b>10.324</b> bestanden, 38 übersprungen"), "0"],
+    [["Alltagsengel", "vitest (471 Dateien)", amp("gruen", "<b>10.342</b> bestanden, 38 übersprungen"), "0"],
      ["Alltagsengel", "node:test (286 Suiten)", amp("gruen", "<b>2.770</b> bestanden, 0 Fehler"), "0"],
      ["Alltagsengel", "tsc --noEmit", amp("gruen", "keine Fehler"), "0"],
      ["Alltagsengel", "8 × lint:* (projekteigen)", amp("gruen", "je 0 Befunde"), "0"],
-     ["Alltagsengel", "npm run lint (ESLint)", amp("rot", "<b>12 Fehler</b>, 1 Warnung"), "1"],
+     ["Alltagsengel", "npm run lint (ESLint)", amp("gruen", "0 Fehler — <b>blockiert jetzt in CI</b>"), "0"],
      ["ChairMatch", "vitest (99 Dateien)", amp("gruen", "<b>1.866</b> bestanden"), "0"],
      ["efy care", "vitest (93 Dateien)", amp("gruen", "<b>2.493</b> bestanden, 30 übersprungen"), "0"]],
     [2.8 * cm, 4.3 * cm, 8.1 * cm, 1.8 * cm],
@@ -411,9 +433,10 @@ E.append(P("Zur CI-Lage: die Läufe zu <font name='DejaVuSans'>105b94b8</font> u
 h1("7 · USER_ACTION_REQUIRED — sofort")
 E.append(tabelle(
     ["#", "Aktion", "Warum"],
-    [["1", "<b>CRON_SECRET in Vercel setzen</b>",
-      "Die Follow-up-Maschine hat <b>noch nie gefeuert</b>. Ohne den Wert laufen alle Ketten ins Leere — "
-      "„Bearer undefined\" gilt sonst für jeden."],
+    [["1", "<b>Eskalations-Mail des Cron-Laufs prüfen</b>",
+      "Der Lauf um 05:29 schrieb die In-App-Meldungen, aber "
+      "<font name='DejaVuSans'>notification_delivery_log</font> zeigt dazu keine Zeile. "
+      "(CRON_SECRET war bereits gesetzt — der alte Punkt 1 ist hinfällig.)"],
      ["2", "<b>Vier Kundenanfragen anrufen</b>",
       "MantheyIckenroth (34 T) · Büttner (43 T) · Reichert (mehrfach vergeblich) · Suhe (59 T)"],
      ["3", "<b>Claudia Adjovi anrufen</b>", "8 Jahre Erfahrung, Top-Kandidatin, wartet unbearbeitet"],

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { stadtGeoMeta } from '@/lib/seo/stadt-geo'
+import { seitenTitel, seitenBeschreibung } from '@/lib/seo/meta-laenge'
 import LeadForm from '@/components/LeadForm'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
@@ -298,8 +299,28 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
   return {
     // Stadt-Geo statt der vom Layout geerbten Frankfurt-Werte (lib/seo/stadt-geo.ts)
     other: stadtGeoMeta(stadt),
-    title: `Krankenfahrt ${city.name} buchen`,
-    description: `Krankenfahrt ${city.name}: Arzt-, Dialyse- & Klinikfahrten. Mit Verordnung zahlt die Kasse (§60 SGB V). Jetzt pünktliche Fahrt buchen!`,
+    title: seitenTitel(
+      `Krankenfahrt ${city.name} — Arzt, Dialyse, Klinik`,
+      `Krankenfahrt ${city.name} — Arzt & Dialyse`,
+      `Krankenfahrt ${city.name} buchen`,
+    ),
+    // `landmarks` sind die realen Kliniken und Dialysezentren des Orts. Sie
+    // stehen bereits je Stadt in `cities` und machen die Beschreibung lokal
+    // pruefbar statt austauschbar — vorher teilten sich 25 Seiten fuenf
+    // Textskelette.
+    // ZWEI Kliniken, nicht eine: Nachbarstädte teilen sich oft das nächste
+    // Haus — Maintal und Hanau haben beide „Klinikum Hanau" an erster Stelle.
+    // Mit nur `landmarks[0]` unterschieden sich ihre Beschreibungen allein im
+    // Ortsnamen (85 % Textgleichheit). Die zweite Klinik ist der Unterschied,
+    // und sie ist obendrein die wahrere Angabe.
+    description: seitenBeschreibung(
+      `Krankenfahrt in ${city.name} — z. B. zum ${city.landmarks[0]} oder ${city.landmarks[1]}. `
+        + `Arzt-, Dialyse- und Klinikfahrten. Mit Verordnung zahlt die Kasse (§60 SGB V).`,
+      `Krankenfahrt in ${city.name} — z. B. zum ${city.landmarks[0]} oder ${city.landmarks[1]}. `
+        + `Mit Verordnung zahlt die Kasse (§60 SGB V).`,
+      `Krankenfahrt ${city.name}: ${city.landmarks[0]}, ${city.landmarks[1]}. `
+        + `Mit Verordnung zahlt die Kasse (§60 SGB V).`,
+    ),
     keywords: [
       `Krankenfahrt ${city.name}`,
       `Krankenfahrten ${city.name}`,

@@ -19,6 +19,8 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import {
   KONTO_GELOESCHT_CODE,
   KONTO_GELOESCHT_TEXT,
@@ -250,8 +252,7 @@ describe('Track 11 — Angehörigenportal', () => {
 
 // ════════════════════════════════════════════════════════════════════
 describe('Track 11 — proxy.ts hält die Oberfläche zu', () => {
-  const quelle = require('node:fs').readFileSync(
-    require('node:path').join(__dirname, '..', '..', 'proxy.ts'), 'utf-8') as string
+  const quelle = readFileSync(join(__dirname, '..', '..', 'proxy.ts'), 'utf-8')
 
   it('liest deleted_at aus profiles mit', () => {
     expect(quelle).toMatch(/\.select\('role, deleted_at'\)/)
@@ -263,8 +264,8 @@ describe('Track 11 — proxy.ts hält die Oberfläche zu', () => {
   })
 
   it('die Anmeldeseite erklärt diesen Grund, statt nur „Zugriff verweigert" zu zeigen', () => {
-    const seite = require('node:fs').readFileSync(
-      require('node:path').join(__dirname, '..', '..', 'app', 'auth', 'login', 'page.tsx'), 'utf-8') as string
+    const seite = readFileSync(
+      join(__dirname, '..', '..', 'app', 'auth', 'login', 'page.tsx'), 'utf-8')
     expect(seite).toContain('KONTO_GELOESCHT_CODE')
     expect(seite).toContain('KONTO_GELOESCHT_TEXT')
   })

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { stadtGeoMeta } from '@/lib/seo/stadt-geo'
+import { seitenTitel, seitenBeschreibung } from '@/lib/seo/meta-laenge'
 import LeadForm from '@/components/LeadForm'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
@@ -439,11 +440,21 @@ export async function generateMetadata(
   return {
     // Stadt-Geo statt der vom Layout geerbten Frankfurt-Werte (lib/seo/stadt-geo.ts)
     other: stadtGeoMeta(stadt),
-    title: `Haushaltshilfe ${city.name} — Reinigung, Wäsche, Einkauf`,
-    description:
+    title: seitenTitel(
+      `Haushaltshilfe ${city.name} — Reinigung, Wäsche, Einkauf`,
+      `Haushaltshilfe ${city.name} — Reinigung & Wäsche`,
+      `Haushaltshilfe ${city.name}`,
+    ),
+    description: seitenBeschreibung(
       `Haushaltshilfe in ${city.name} — auch in ${city.stadtteile[0]} & ${city.stadtteile[1]}. `
-      + `Reinigung, Wäsche, Einkauf und Kochen durch geschulte Kräfte. `
-      + `Entlastungsbetrag 131 €/Monat nach §45b SGB XI. Jetzt unverbindlich vormerken.`,
+        + `Reinigung, Wäsche, Einkauf und Kochen durch geschulte Kräfte. `
+        + `Entlastungsbetrag 131 €/Monat nach §45b SGB XI.`,
+      `Haushaltshilfe in ${city.name} — auch in ${city.stadtteile[0]}. `
+        + `Reinigung, Wäsche, Einkauf und Kochen. `
+        + `Entlastungsbetrag 131 €/Monat nach §45b SGB XI.`,
+      `Haushaltshilfe in ${city.name} & ${city.stadtteile[0]}: Reinigung, Wäsche, `
+        + `Einkauf. Entlastungsbetrag 131 €/Monat nach §45b SGB XI.`,
+    ),
     keywords: [
       `Haushaltshilfe ${city.name}`,
       `Haushaltshilfe ${city.name} Pflegegrad`,

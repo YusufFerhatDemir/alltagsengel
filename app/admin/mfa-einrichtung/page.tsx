@@ -235,7 +235,10 @@ export default function AdminMfaEinrichtung() {
           </ol>
 
           <div style={{ marginBottom: 16 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {/* Bewusst `img` statt `next/image`: die Quelle ist eine data-URL,
+                die der Server je Einrichtung neu erzeugt — es gibt nichts zu
+                optimieren oder zu cachen. (Der frühere eslint-disable dafür
+                war wirkungslos geworden und ist deshalb entfernt.) */}
             <img
               src={einrichtung.qrCode}
               alt="QR-Code zum Einrichten des zweiten Faktors"

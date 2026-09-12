@@ -23,6 +23,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
+import { execSync } from 'node:child_process'
 import { join } from 'node:path'
 import { erstelleFakeSupabase, hatFilter, type FakeAufruf } from '@/__tests__/helpers/supabase-fake'
 import {
@@ -94,7 +95,6 @@ describe('B1 — Rollenentscheidung liest beide Quellen', () => {
     // Der Fehler ist per Konstruktion eine WEGLASSUNG (die zweite Quelle
     // fehlt). Ein funktionaler Test faengt nur die Route, die er anfaehrt —
     // deshalb hier der Zaun ueber alle 411 Routen.
-    const { execSync } = require('node:child_process') as typeof import('node:child_process')
     const dateien = execSync('find app/api -name "route.ts"', { cwd: WURZEL, encoding: 'utf-8' })
       .trim().split('\n')
     const treffer = dateien.flatMap(d => pruefeRollenquelle(lies(d), d))

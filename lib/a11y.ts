@@ -150,8 +150,15 @@ export function useFokusFalle<T extends HTMLElement>(
   const fangen = optionen?.fangen ?? true
   const ref = useRef<T | null>(null)
   // Der Handler darf sich zwischen Renders ändern, ohne die Falle neu aufzubauen.
+  //
+  // Die Zuweisung gehört in einen Effekt, nicht in den Render-Durchlauf: React
+  // darf einen Render verwerfen und neu beginnen (Concurrent Rendering). Eine
+  // im Render geschriebene Ref trüge dann den Wert eines Durchlaufs, den es
+  // nie gab. Im Effekt läuft sie erst, wenn der Render committet ist.
   const onCloseRef = useRef(onClose)
-  onCloseRef.current = onClose
+  useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
 
   useEffect(() => {
     const node = ref.current

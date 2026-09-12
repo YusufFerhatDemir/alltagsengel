@@ -111,7 +111,14 @@ export default function AktenUpload({ clientId, caregiverId, defaultKategorie, d
         onDragOver={e => { e.preventDefault(); setDragOver(true) }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
-        {...klickbar(() => inputRef.current?.click())}
+        {...klickbar(
+          // `klickbar` ruft die Closure nicht auf, sondern haengt sie in
+          // onClick/onKeyDown der zurueckgegebenen Props ein — die Ref wird
+          // erst im Event gelesen, nie im Render. Die Regel kann das nicht
+          // sehen, weil `klickbar` kein Hook ist.
+          // eslint-disable-next-line react-hooks/refs
+          () => inputRef.current?.click(),
+        )}
         aria-label="Datei auswählen oder hierher ziehen"
         style={{
           border: `2px dashed ${dragOver ? 'var(--gold)' : 'var(--border)'}`,

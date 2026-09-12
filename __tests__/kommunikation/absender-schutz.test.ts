@@ -18,7 +18,7 @@
 // Geschaeftsbriefen.
 
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import {
   schuetzeAbsender,
@@ -123,7 +123,6 @@ describe('Zaun: jeder kundengerichtete KI-Kanal filtert', () => {
     // Findet alle Endpunkte, die ein Sprachmodell aufrufen.
     const gefunden: string[] = []
     const suche = (verzeichnis: string) => {
-      const { readdirSync, statSync } = require('node:fs') as typeof import('node:fs')
       for (const name of readdirSync(verzeichnis)) {
         const pfad = join(verzeichnis, name)
         if (statSync(pfad).isDirectory()) suche(pfad)

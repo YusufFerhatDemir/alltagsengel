@@ -54,15 +54,18 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Lint (informativ — blockiert nicht)
-        # ~1.100 bestehende no-explicit-any-Fehler, v. a. weil es keine
-        # generierten Supabase-DB-Typen gibt (kein `supabase gen types`
-        # im Workflow). Ein Voll-Fix ist riskant für den Vercel-Build
-        # (siehe Projekt-Memory) und nicht Teil dieses Branches — Lint
-        # bleibt sichtbar, blockiert Merges aber bewusst nicht, bis das
-        # geklärt ist. Neue Lint-Fehler in eigenen PRs sollten trotzdem
-        # im Log auffallen und im Review angesprochen werden.
-        run: npm run lint || true
+      - name: Lint (blockierend)
+        # Bis 12.09.2026 lief dieser Schritt als `npm run lint || true`. Die
+        # Begründung war einmal richtig (rund 1.100 no-explicit-any-Fehler
+        # ohne generierte Supabase-Typen) und inzwischen überholt: `eslint.config.mjs`
+        # führt `no-explicit-any` längst als `warn`. Übrig blieben zwölf echte
+        # Fehler, die niemand sah, weil `|| true` den Exit-Code verschluckt hat
+        # — ein Prüfschritt, der nie rot werden kann, ist kein Prüfschritt.
+        #
+        # Alle zwölf sind am 12.09.2026 behoben (require()-Importe, eine
+        # Ref-Zuweisung im Render, eine Deklarationsreihenfolge, ein
+        # reservierter Bezeichner). Ab jetzt blockiert der Schritt.
+        run: npm run lint
 
       - name: Unit tests (vitest)
         env:
