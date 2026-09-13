@@ -239,6 +239,11 @@ describe('pruefeUndVerarbeitePipeline — Auto-Freigabe', () => {
         if (hatFilter(a, 'is', 'lauf_id', null)) return { data: optionen.offeneRuecklaeufer ?? [] }
         return { data: optionen.abgelehnteRl ?? [] }
       }
+      // PostgREST gibt bei `update().select()` die getroffenen Zeilen
+      // zurueck. Die Zaehler im Pruefling zaehlen jetzt genau diese.
+      if (a.tabelle === 'dta_ruecklaeufer' && a.operation === 'update') {
+        return { data: [{ id: 'rl-1' }] }
+      }
       if (a.tabelle === 'dta_korrekturlaeufe') return { data: optionen.bestehendeKorrektur ?? null }
       return { data: null }
     })
@@ -338,6 +343,11 @@ describe('pruefeUndVerarbeitePipeline — Ruecklaeufer-Zuordnung', () => {
         if (hatFilter(a, 'is', 'lauf_id', null)) return { data: optionen.offeneRuecklaeufer ?? [] }
         return { data: optionen.abgelehnteRl ?? [] }
       }
+      // PostgREST gibt bei `update().select()` die getroffenen Zeilen
+      // zurueck. Die Zaehler im Pruefling zaehlen jetzt genau diese.
+      if (a.tabelle === 'dta_ruecklaeufer' && a.operation === 'update') {
+        return { data: [{ id: 'rl-1' }] }
+      }
       if (a.tabelle === 'dta_korrekturlaeufe') return { data: optionen.bestehendeKorrektur ?? null }
       return { data: null }
     })
@@ -398,6 +408,12 @@ describe('pruefeUndVerarbeitePipeline — Korrekturvorschlaege', () => {
         if (hatFilter(a, 'is', 'lauf_id', null)) return { data: [] }
         return { data: abgelehnteRl }
       }
+      // PostgREST gibt bei `update().select()` die getroffenen Zeilen
+      // zurueck. Der Zaehler im Pruefling zaehlt jetzt genau diese — ohne
+      // sie meldete ein Lauf Vorschlaege, die es nicht gibt.
+      if (a.tabelle === 'dta_ruecklaeufer' && a.operation === 'update') {
+        return { data: [{ id: 'rl-1' }] }
+      }
       if (a.tabelle === 'dta_korrekturlaeufe') return { data: bestehendeKorrektur }
       return { data: null }
     })
@@ -430,5 +446,57 @@ describe('pruefeUndVerarbeitePipeline — Korrekturvorschlaege', () => {
     const f = fake([{ id: 'rl-1', lauf_id: null }])
     const r = await pruefeUndVerarbeitePipeline(f.client, ORG, ACTOR)
     expect(r.korrekturVorschlaegeErstellt).toBe(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Zaehler duerfen nur zaehlen, was angekommen ist
+// ---------------------------------------------------------------------------
+
+/**
+ * Beide Schreibwege dieses Moduls standen als nacktes `await` da, und
+ * direkt dahinter stand je ein `++`. PostgREST meldet bei null getroffenen
+ * Zeilen keinen Fehler — der Lauf meldete also „zugeordnet" und
+ * „Korrekturvorschlag erstellt", waehrend die Rueckläufer unveraendert in
+ * der Arbeitsliste stehen blieben.
+ *
+ * Die Zahl ist das, was der Betrieb liest. Stimmt sie nicht, sucht niemand
+ * nach den Faellen.
+ */
+describe('Zaehler und Datenbank duerfen nicht auseinanderlaufen', () => {
+  it('zaehlt keinen Korrekturvorschlag, wenn der Vermerk keine Zeile trifft', async () => {
+    const f = erstelleFakeSupabase((a: FakeAufruf) => {
+      if (a.tabelle === 'abrechnungslaeufe') {
+        return { data: a.operation === 'select' && !hatFilter(a, 'eq', 'kostentraeger_ik') ? [] : null }
+      }
+      if (a.tabelle === 'dta_ruecklaeufer' && a.operation === 'select') {
+        if (hatFilter(a, 'is', 'lauf_id', null)) return { data: [] }
+        return { data: [{ id: 'rl-1', lauf_id: 'l-1' }] }
+      }
+      if (a.tabelle === 'dta_ruecklaeufer' && a.operation === 'update') return { data: [] }
+      return { data: null }
+    })
+
+    const r = await pruefeUndVerarbeitePipeline(f.client, ORG, ACTOR)
+    expect(r.korrekturVorschlaegeErstellt).toBe(0)
+  })
+
+  it('zaehlt keine Zuordnung, wenn der Vermerk keine Zeile trifft', async () => {
+    const f = erstelleFakeSupabase((a: FakeAufruf) => {
+      if (a.tabelle === 'dta_ruecklaeufer' && a.operation === 'select') {
+        if (hatFilter(a, 'is', 'lauf_id', null)) {
+          return { data: [{ id: 'rl-1', kostentraeger_ik: '109519005', created_at: '2026-06-02T08:00:00Z' }] }
+        }
+        return { data: [] }
+      }
+      if (a.tabelle === 'dta_ruecklaeufer' && a.operation === 'update') return { data: [] }
+      if (a.tabelle === 'abrechnungslaeufe' && a.operation === 'select') {
+        return { data: hatFilter(a, 'eq', 'kostentraeger_ik', '109519005') ? { id: 'l-9' } : [] }
+      }
+      return { data: null }
+    })
+
+    const r = await pruefeUndVerarbeitePipeline(f.client, ORG, ACTOR)
+    expect(r.ruecklaeuferZugeordnet).toBe(0)
   })
 })

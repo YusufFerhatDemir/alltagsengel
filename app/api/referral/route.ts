@@ -135,11 +135,31 @@ export const POST = withTracking(async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Fehler beim Speichern' }, { status: 500 })
     }
 
-    // referred_by im Profil setzen
-    await supabaseAdmin
+    // referred_by im Profil setzen.
+    //
+    // Direkt darunter bekommt der Nutzer „Empfehlung angenommen" zu lesen
+    // — und spaeter haengt der Bonus an genau diesem Feld. Ging der
+    // Schreibvorgang ins Leere (kein Profil, fremde Kennung), stand die
+    // Zusage im Browser und die Verbindung nirgends.
+    //
+    // `.is('referred_by', null)` ist zugleich der Riegel: eine einmal
+    // gesetzte Empfehlung wird nicht ueberschrieben.
+    const { data: verknuepft, error: verknuepfFehler } = await supabaseAdmin
       .from('profiles')
       .update({ referred_by: referrer.id })
       .eq('id', referred_user_id)
+      .is('referred_by', null)
+      .select('id')
+
+    if (verknuepfFehler) {
+      return safeApiError(verknuepfFehler, request)
+    }
+    if (!verknuepft || verknuepft.length === 0) {
+      return NextResponse.json(
+        { error: 'Die Empfehlung konnte nicht hinterlegt werden — möglicherweise ist bereits eine eingetragen.' },
+        { status: 409 },
+      )
+    }
 
     return NextResponse.json({
       success: true,

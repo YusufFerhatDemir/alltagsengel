@@ -134,8 +134,15 @@ describe('createCreditNote — CAS-Schutz gegen Doppel-Gutschrift', () => {
           single: vi.fn().mockResolvedValue({ data: { id: 'corr-1' }, error: null }),
         }),
       })
+      // PostgREST gibt nach `.eq()` einen Builder zurueck, der awaitbar ist
+      // UND `.select()` kennt. Die Ruecknahme der Gutschrift liest jetzt
+      // ihren eigenen Fehler — ein Doppelgaenger ohne `.select()` laesst
+      // genau diese Pruefung aussehen wie einen Bug.
       obj.delete = vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ error: null }),
+        eq: vi.fn().mockReturnValue({
+          select: vi.fn().mockResolvedValue({ data: [{ id: 'corr-1' }], error: null }),
+          then: (aufloesen: (w: unknown) => void) => aufloesen({ data: [{ id: 'corr-1' }], error: null }),
+        }),
       })
       obj.single = vi.fn().mockResolvedValue({ data: { id: 'corr-1' }, error: null })
       obj.maybeSingle = vi.fn().mockResolvedValue({ data: { id: 'seq-1', last_number: 5 }, error: null })

@@ -444,7 +444,12 @@ export async function zurueckInDieWarteschlange(
       hinweis = `Auftrag steht auf "${auftrag.status}" — er ist bereits bei der Annahmestelle. `
         + 'Es wurde nichts zurückgesetzt; für eine erneute Lieferung einen Korrekturlauf anlegen.'
     } else {
-      await supabase
+      // `zurueckgesetzt` ist eine Aussage ueber die Datenbank, und der
+      // Hinweis daneben sagt dem Menschen, er koenne den Versand jetzt
+      // erneut ausloesen. Beides darf nur stehen, wenn wirklich eine Zeile
+      // umgestellt wurde — sonst versucht jemand einen Versand, den der
+      // Auftragsstatus gar nicht zulaesst.
+      const { data: zurueck, error: zuruecksetzFehler } = await supabase
         .from('dta_dakota_auftraege')
         .update({
           status: 'bereit_zur_uebermittlung',
@@ -454,10 +459,17 @@ export async function zurueckInDieWarteschlange(
         })
         .eq('id', auftrag.id)
         .eq('organization_id', params.organizationId)
+        .select('id')
 
-      zurueckgesetzt = true
-      hinweis = 'Auftrag steht wieder auf "bereit_zur_uebermittlung". '
-        + 'Der Versand wird nicht automatisch gestartet — bewusst erneut auslösen.'
+      if (zuruecksetzFehler || (zurueck?.length ?? 0) === 0) {
+        hinweis = `Auftrag konnte NICHT zurueckgesetzt werden `
+          + `(${zuruecksetzFehler?.message ?? 'keine Zeile getroffen'}) — `
+          + 'er steht unveraendert. Bitte den Auftragsstatus pruefen.'
+      } else {
+        zurueckgesetzt = true
+        hinweis = 'Auftrag steht wieder auf "bereit_zur_uebermittlung". '
+          + 'Der Versand wird nicht automatisch gestartet — bewusst erneut auslösen.'
+      }
     }
   }
 

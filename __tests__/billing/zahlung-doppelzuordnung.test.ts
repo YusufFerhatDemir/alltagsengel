@@ -105,7 +105,18 @@ function makeStub() {
         return { insert: async () => ({ error: null }) } as never
       }
 
-      return { insert: async () => ({ error: null }), update: () => ({ eq: async () => ({}) }) } as never
+      // Der Auffangzweig muss sich wie PostgREST verhalten: nach `.eq()`
+      // ist das Ergebnis awaitbar und kennt `.select()`.
+      const leer = { data: [], error: null }
+      return {
+        insert: async () => ({ error: null }),
+        update: () => ({
+          eq: () => ({
+            select: async () => leer,
+            then: (aufloesen: (w: unknown) => void) => aufloesen(leer),
+          }),
+        }),
+      } as never
     },
     rpc: vi.fn(async () => ({ data: null, error: null })),
   }

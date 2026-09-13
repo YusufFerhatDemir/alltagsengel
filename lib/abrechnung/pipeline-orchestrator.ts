@@ -13,6 +13,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { logBillingAction } from '../billing/core/audit'
 import type { LaufStatus } from './kassenabrechnung-engine'
+import { logger } from '@/lib/logger'
+
+const log = logger.child('pipeline-orchestrator')
 
 // ── Types ───────────────────────────────────────────────────────
 
@@ -260,7 +263,14 @@ async function ordneRuecklaeuferAutomatischZu(
       .maybeSingle()
 
     if (lauf) {
-      await supabase
+      // `zugeordnet` ist die Zahl, die der Betrieb hinterher liest. Sie darf
+      // nur zaehlen, was wirklich geschrieben wurde — sonst meldet der Lauf
+      // „14 zugeordnet", waehrend die Rückläufer weiter offen in der
+      // Arbeitsliste stehen.
+      //
+      // Geworfen wird nicht: das ist eine Schleife ueber viele Zeilen, und
+      // eine davon darf den ganzen Lauf nicht abbrechen.
+      const { data: markiert, error: markFehler } = await supabase
         .from('dta_ruecklaeufer')
         .update({
           lauf_id: lauf.id,
@@ -270,6 +280,15 @@ async function ordneRuecklaeuferAutomatischZu(
         })
         .eq('id', rl.id)
         .eq('organization_id', organizationId)
+        .select('id')
+
+      if (markFehler || (markiert?.length ?? 0) === 0) {
+        log.error('Rückläufer nicht als zugeordnet vermerkt — er bleibt offen', {
+          ruecklaeuferId: rl.id, laufId: lauf.id, organizationId,
+          errorMessage: markFehler?.message ?? 'keine Zeile getroffen',
+        })
+        continue
+      }
 
       zugeordnet++
     }
@@ -396,12 +415,22 @@ export async function pruefeUndVerarbeitePipeline(
       .maybeSingle()
 
     if (!bestehendeKorrektur) {
-      // Markiere den Rückläufer als korrektur_erforderlich
-      await supabase
+      // Markiere den Rückläufer als korrektur_erforderlich. Auch hier gilt:
+      // gezaehlt wird nur, was angekommen ist.
+      const { data: markiert, error: markFehler } = await supabase
         .from('dta_ruecklaeufer')
         .update({ status: 'korrektur_erforderlich' })
         .eq('id', rl.id)
         .eq('organization_id', organizationId)
+        .select('id')
+
+      if (markFehler || (markiert?.length ?? 0) === 0) {
+        log.error('Rückläufer nicht als korrekturbedürftig vermerkt', {
+          ruecklaeuferId: rl.id, organizationId,
+          errorMessage: markFehler?.message ?? 'keine Zeile getroffen',
+        })
+        continue
+      }
 
       korrekturVorschlaegeErstellt++
     }

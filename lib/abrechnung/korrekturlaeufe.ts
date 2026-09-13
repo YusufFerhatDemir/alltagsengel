@@ -118,9 +118,15 @@ export async function erstelleKorrekturlauf(
     { status: 'korrigiert' },
     { schritt: 'Originallauf als korrigiert markieren', organizationId: params.organizationId })
 
-  // Rückläufer als korrektur_erstellt markieren
+  // Rückläufer als korrektur_erstellt markieren.
+  //
+  // Dieser Vermerk ist die einzige Verbindung zwischen dem Rückläufer der
+  // Kasse und der Korrektur, die ihn beantwortet. Bleibt er aus, taucht
+  // derselbe Rückläufer in der Liste der unbearbeiteten wieder auf und
+  // bekommt eine zweite Korrektur — zwei Korrekturabrechnungen für
+  // denselben Fall.
   if (params.ruecklaeuferId) {
-    await supabase
+    const { data: vermerkt, error: vermerkErr } = await supabase
       .from('dta_ruecklaeufer')
       .update({
         status: 'korrektur_erstellt',
@@ -128,11 +134,24 @@ export async function erstelleKorrekturlauf(
       })
       .eq('id', params.ruecklaeuferId)
       .eq('organization_id', params.organizationId)
+      .select('id')
+
+    if (vermerkErr || (vermerkt?.length ?? 0) === 0) {
+      throw new Error(
+        `Rückläufer ${params.ruecklaeuferId} konnte nicht als korrigiert vermerkt werden `
+        + `(${vermerkErr?.message ?? 'keine Zeile getroffen'}) — er würde erneut zur Korrektur anstehen.`,
+      )
+    }
   }
 
-  // Fehler als korrigiert markieren
+  // Fehler als korrigiert markieren.
+  //
+  // Ein Fehler, der als „korrigiert" gilt, ohne es zu sein, verschwindet
+  // aus der Arbeitsliste. Getroffen werden müssen ALLE übergebenen Zeilen
+  // — bleibt eine übrig, ist die Korrektur unvollständig, und das muss
+  // auffallen, bevor sie an die Kasse geht.
   if (params.fehlerIds?.length) {
-    await supabase
+    const { data: markiert, error: markErr } = await supabase
       .from('dta_fehlerprotokoll')
       .update({
         bearbeitungsstatus: 'korrigiert',
@@ -141,6 +160,15 @@ export async function erstelleKorrekturlauf(
       })
       .in('id', params.fehlerIds)
       .eq('organization_id', params.organizationId)
+      .select('id')
+
+    if (markErr || (markiert?.length ?? 0) !== params.fehlerIds.length) {
+      throw new Error(
+        `Fehlerprotokoll unvollständig fortgeschrieben `
+        + `(${markErr?.message ?? `${markiert?.length ?? 0} von ${params.fehlerIds.length} Zeilen`}) `
+        + `— die verbliebenen Fehler stünden weiter als offen, obwohl eine Korrektur läuft.`,
+      )
+    }
   }
 
   // Audit
@@ -186,11 +214,20 @@ export async function fuehreKorrekturAus(
     throw new Error(`Korrektur im Status "${korrektur.status}" kann nicht ausgeführt werden`)
   }
 
-  // Status → in_bearbeitung
-  await supabase
-    .from('dta_korrekturlaeufe')
-    .update({ status: 'in_bearbeitung' })
-    .eq('id', korrekturId)
+  // Status → in_bearbeitung.
+  //
+  // Mit `vonStatus` ist das zugleich der Riegel gegen den zweiten
+  // gleichzeitigen Aufruf: die oben gelesene Prüfung („angelegt" oder
+  // „in_bearbeitung") ist ein Blick in die Vergangenheit — erst diese
+  // Bedingung im UPDATE entscheidet.
+  await aktualisiereLauf(supabase, korrekturId,
+    { status: 'in_bearbeitung' },
+    {
+      schritt: 'Korrekturlauf in Bearbeitung nehmen',
+      tabelle: 'dta_korrekturlaeufe',
+      organizationId: korrektur.organization_id,
+      vonStatus: korrektur.status,
+    })
 
   const original = korrektur.original_lauf
   if (!original) throw new Error('Original-Lauf nicht aufgelöst')
@@ -215,22 +252,33 @@ export async function fuehreKorrekturAus(
     actorId,
   })
 
-  // Korrektur-Lauf verknüpfen
+  // Korrektur-Lauf verknüpfen.
+  //
+  // Geht diese Verknüpfung verloren, existiert der neue Abrechnungslauf,
+  // aber die Korrektur weiß nichts von ihm: sie bliebe auf
+  // „in_bearbeitung" stehen und ein zweiter Anlauf legte einen zweiten
+  // Lauf für dieselbe Korrektur an.
   if (laufErgebnis.laufId) {
-    await supabase
-      .from('dta_korrekturlaeufe')
-      .update({
+    await aktualisiereLauf(supabase, korrekturId,
+      {
         korrektur_lauf_id: laufErgebnis.laufId,
         status: 'validiert',
         betroffene_rechnungen: laufErgebnis.rechnungenAnzahl,
         differenz_cent: laufErgebnis.gesamtbetragCent,
+      },
+      {
+        schritt: 'Korrekturlauf mit Abrechnungslauf verknüpfen',
+        tabelle: 'dta_korrekturlaeufe',
+        organizationId: korrektur.organization_id,
       })
-      .eq('id', korrekturId)
   } else {
-    await supabase
-      .from('dta_korrekturlaeufe')
-      .update({ status: 'abgebrochen' })
-      .eq('id', korrekturId)
+    await aktualisiereLauf(supabase, korrekturId,
+      { status: 'abgebrochen' },
+      {
+        schritt: 'Korrekturlauf abbrechen',
+        tabelle: 'dta_korrekturlaeufe',
+        organizationId: korrektur.organization_id,
+      })
   }
 
   await logBillingAction(supabase, {

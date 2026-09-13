@@ -861,3 +861,143 @@ describe('Pruefpfad', () => {
     expect(eintrag.checksum).toBeTruthy()
   })
 })
+
+// ═════════════════════════════════════════════════════════════════════
+/**
+ * Ein Fehlschlag mitten im Vorgang muss im Ergebnis stehen.
+ *
+ * ── WARUM DIESE SUITE ─────────────────────────────────────────────────
+ * `verarbeiteRuecklastschrift()` schreibt an sieben Stellen. Fuenf davon
+ * standen als blankes `await` ohne Ergebnispruefung da: Lastschriftposten,
+ * Zahlung, Rechnung, Mandat, Mahnstufe. PostgREST meldet keinen Fehler,
+ * wenn ein UPDATE null Zeilen trifft, und ein echter Fehler wurde ohnehin
+ * verworfen.
+ *
+ * Die Wirkung davon ist nicht „ein Feld fehlt". Sie ist: die Bankbuchung
+ * gilt als verarbeitet, der Import zaehlt sie ab, und der Kunde hat sein
+ * Geld zurueck, waehrend die Rechnung weiter als bezahlt gefuehrt wird.
+ * Niemand bekommt den Fall auf den Tisch.
+ *
+ * Geprueft wird deshalb nicht, dass es klappt, sondern dass ein
+ * Fehlschlag ANKOMMT. Die Fehler werden mit echten Postgres-Triggern
+ * erzwungen — eine Fake-DB koennte das nicht.
+ */
+describe('Fehlschlag mitten im Vorgang', () => {
+  /** Laesst jedes UPDATE auf `tabelle` scheitern, solange `fn` laeuft. */
+  async function mitSchreibsperre<T>(tabelle: string, fn: () => Promise<T>): Promise<T> {
+    const name = `t_sperre_${tabelle}`
+    await db.exec(`
+      CREATE OR REPLACE FUNCTION ${name}() RETURNS trigger LANGUAGE plpgsql AS $$
+      BEGIN RAISE EXCEPTION 'Schreibsperre im Test'; END; $$;
+      CREATE TRIGGER ${name} BEFORE UPDATE ON public.${tabelle}
+        FOR EACH ROW EXECUTE FUNCTION ${name}();
+    `)
+    try {
+      return await fn()
+    } finally {
+      await db.exec(`DROP TRIGGER IF EXISTS ${name} ON public.${tabelle};`)
+    }
+  }
+
+  it('meldet es, wenn die Rechnung NICHT wieder geöffnet werden konnte', async () => {
+    // Der teuerste Fall: das Geld ist zurueck, die Rechnung sagt bezahlt.
+    const a = await baueEingezogenenPosten({
+      org: ORG_A, klient: KLIENT_A, nummer: 'RE-2026-6001',
+      betragCent: 12000, mandatsReferenz: 'AE-A-0001-F1', endToEndId: 'AE-RE-2026-6001',
+    })
+
+    const r = await mitSchreibsperre('invoices', () => verarbeiteRuecklastschrift(
+      admin, buchung({ betragCent: -12000, endToEndId: 'AE-RE-2026-6001' }),
+      'e0000000-0000-4000-8000-000000006001', ORG_A, ADMIN_A,
+    ))
+
+    expect(r.fehler).toBeTruthy()
+    expect(r.fehler).toMatch(/Rechnung NICHT wieder geöffnet/)
+
+    // Und die Meldung ist wahr: die Rechnung steht wirklich noch auf bezahlt.
+    const [inv] = await zeilen<{ status: string; bezahlt: boolean }>(
+      `SELECT status, bezahlt FROM public.invoices WHERE id = '${a.invoiceId}'`,
+    )
+    expect(inv.status).toBe('bezahlt')
+    expect(inv.bezahlt).toBe(true)
+  })
+
+  it('meldet es, wenn die Zahlung nicht zurückgesetzt werden konnte', async () => {
+    await baueEingezogenenPosten({
+      org: ORG_A, klient: KLIENT_A, nummer: 'RE-2026-6002',
+      betragCent: 12000, mandatsReferenz: 'AE-A-0001-F2', endToEndId: 'AE-RE-2026-6002',
+    })
+
+    const r = await mitSchreibsperre('payments', () => verarbeiteRuecklastschrift(
+      admin, buchung({ betragCent: -12000, endToEndId: 'AE-RE-2026-6002' }),
+      'e0000000-0000-4000-8000-000000006002', ORG_A, ADMIN_A,
+    ))
+
+    expect(r.fehler).toMatch(/Zahlung nicht zurückgesetzt/)
+  })
+
+  it('meldet es, wenn der Lastschriftposten nicht vermerkt werden konnte', async () => {
+    // Ohne den Vermerk zaehlt Schritt 6 diesen Vorgang nicht mit — ein
+    // Mandat, das gesperrt gehoerte, bliebe offen.
+    await baueEingezogenenPosten({
+      org: ORG_A, klient: KLIENT_A, nummer: 'RE-2026-6003',
+      betragCent: 12000, mandatsReferenz: 'AE-A-0001-F3', endToEndId: 'AE-RE-2026-6003',
+    })
+
+    const r = await mitSchreibsperre('sepa_batch_items', () => verarbeiteRuecklastschrift(
+      admin, buchung({ betragCent: -12000, endToEndId: 'AE-RE-2026-6003' }),
+      'e0000000-0000-4000-8000-000000006003', ORG_A, ADMIN_A,
+    ))
+
+    expect(r.fehler).toMatch(/nicht als Rücklastschrift vermerkt/)
+    expect(r.fehler).toMatch(/Mandatszählung/)
+  })
+
+  it('behauptet keine Mandatssperre, die es nicht gegeben hat', async () => {
+    // `mandatGesperrt` ist eine Aussage ueber die Datenbank. Steht das
+    // Mandat schon auf widerrufen, hat DIESER Lauf nichts gesperrt — und
+    // darf es auch nicht melden.
+    const a = await baueEingezogenenPosten({
+      org: ORG_A, klient: KLIENT_A, nummer: 'RE-2026-6004',
+      betragCent: 12000, mandatsReferenz: 'AE-A-0001-F4', endToEndId: 'AE-RE-2026-6004',
+    })
+    // Zweite Ruecklastschrift auf demselben Mandat -> Schritt 6 greift.
+    await db.query(
+      `INSERT INTO public.sepa_batch_items
+         (id, organization_id, batch_id, invoice_id, mandate_id, amount_cents,
+          end_to_end_id, status)
+       SELECT $1, organization_id, batch_id, invoice_id, mandate_id, amount_cents,
+              'AE-ALT-6004', 'ruecklastschrift'
+         FROM public.sepa_batch_items WHERE id = $2`,
+      [neueId('b0000000'), a.batchItemId] as never[],
+    )
+    await db.query(
+      `UPDATE public.sepa_mandates SET status = 'widerrufen' WHERE id = $1`,
+      [a.mandateId] as never[],
+    )
+
+    const r = await verarbeiteRuecklastschrift(
+      admin, buchung({ betragCent: -12000, endToEndId: 'AE-RE-2026-6004' }),
+      'e0000000-0000-4000-8000-000000006004', ORG_A, ADMIN_A,
+    )
+
+    expect(r.mandatGesperrt).toBe(false)
+  })
+
+  it('sammelt mehrere Fehlschläge, statt nur den letzten zu zeigen', async () => {
+    await baueEingezogenenPosten({
+      org: ORG_A, klient: KLIENT_A, nummer: 'RE-2026-6005',
+      betragCent: 12000, mandatsReferenz: 'AE-A-0001-F5', endToEndId: 'AE-RE-2026-6005',
+      mitMahnzeile: true,
+    })
+
+    const r = await mitSchreibsperre('invoices', () => mitSchreibsperre('payments',
+      () => verarbeiteRuecklastschrift(
+        admin, buchung({ betragCent: -12000, endToEndId: 'AE-RE-2026-6005' }),
+        'e0000000-0000-4000-8000-000000006005', ORG_A, ADMIN_A,
+      )))
+
+    expect(r.fehler).toMatch(/Zahlung nicht zurückgesetzt/)
+    expect(r.fehler).toMatch(/Rechnung NICHT wieder geöffnet/)
+  })
+})

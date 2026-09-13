@@ -70,6 +70,18 @@ describe('erstelleKorrekturlauf — nur ablehnende Zustaende sind korrigierbar',
       if (a.tabelle === 'abrechnungslaeufe') return { data: lauf }
       if (a.tabelle === 'dta_lauf_rechnungen') return { data: null, count: 3 }
       if (a.tabelle === 'dta_korrekturlaeufe' && a.operation === 'insert') return { data: { id: KORREKTUR } }
+      // PostgREST gibt bei `update().select()` die GETROFFENEN Zeilen
+      // zurueck — eine leere Liste heisst „nichts geaendert". Der
+      // Doppelgaenger muss das nachbilden, sonst sieht ein Pruefling, der
+      // genau darauf achtet, ueberall einen Fehlschlag.
+      if (a.operation === 'update' || a.operation === 'delete') {
+        // Ein `.in('id', [...])` trifft so viele Zeilen, wie Kennungen
+        // uebergeben wurden — ein Pruefling, der die Zahl vergleicht,
+        // braucht genau das.
+        const mengenFilter = a.filter.find(x => Array.isArray(x.wert))
+        const anzahl = Array.isArray(mengenFilter?.wert) ? mengenFilter.wert.length : 1
+        return { data: Array.from({ length: anzahl }, (_, i) => ({ id: `${a.tabelle}-${i}` })) }
+      }
       return (extra as Record<string, { data?: unknown }>)[a.tabelle] ?? { data: null }
     })
   }
@@ -141,6 +153,18 @@ describe('erstelleKorrekturlauf — Betraege, Zaehlung, Folgemarkierungen', () =
         return { data: (ueberschreibung.ruecklaeufer ?? { betrag_differenz_cent: 48250 }) }
       }
       if (a.tabelle === 'dta_korrekturlaeufe' && a.operation === 'insert') return { data: { id: KORREKTUR } }
+      // PostgREST gibt bei `update().select()` die GETROFFENEN Zeilen
+      // zurueck — eine leere Liste heisst „nichts geaendert". Der
+      // Doppelgaenger muss das nachbilden, sonst sieht ein Pruefling, der
+      // genau darauf achtet, ueberall einen Fehlschlag.
+      if (a.operation === 'update' || a.operation === 'delete') {
+        // Ein `.in('id', [...])` trifft so viele Zeilen, wie Kennungen
+        // uebergeben wurden — ein Pruefling, der die Zahl vergleicht,
+        // braucht genau das.
+        const mengenFilter = a.filter.find(x => Array.isArray(x.wert))
+        const anzahl = Array.isArray(mengenFilter?.wert) ? mengenFilter.wert.length : 1
+        return { data: Array.from({ length: anzahl }, (_, i) => ({ id: `${a.tabelle}-${i}` })) }
+      }
       return { data: null }
     })
   }
@@ -254,6 +278,18 @@ describe('fuehreKorrekturAus', () => {
   function fake(korrektur: unknown) {
     return erstelleFakeSupabase((a: FakeAufruf) => {
       if (a.tabelle === 'dta_korrekturlaeufe' && a.operation === 'select') return { data: korrektur }
+      // PostgREST gibt bei `update().select()` die GETROFFENEN Zeilen
+      // zurueck — eine leere Liste heisst „nichts geaendert". Der
+      // Doppelgaenger muss das nachbilden, sonst sieht ein Pruefling, der
+      // genau darauf achtet, ueberall einen Fehlschlag.
+      if (a.operation === 'update' || a.operation === 'delete') {
+        // Ein `.in('id', [...])` trifft so viele Zeilen, wie Kennungen
+        // uebergeben wurden — ein Pruefling, der die Zahl vergleicht,
+        // braucht genau das.
+        const mengenFilter = a.filter.find(x => Array.isArray(x.wert))
+        const anzahl = Array.isArray(mengenFilter?.wert) ? mengenFilter.wert.length : 1
+        return { data: Array.from({ length: anzahl }, (_, i) => ({ id: `${a.tabelle}-${i}` })) }
+      }
       return { data: null }
     })
   }
@@ -491,4 +527,95 @@ describe('ladeKorrekturHistorie', () => {
       ).toBe(true)
     }
   })
+})
+
+// ---------------------------------------------------------------------------
+// 4 — Folgemarkierungen, die ins Leere laufen
+// ---------------------------------------------------------------------------
+
+/**
+ * Am 14.09.2026 gezaehlt: fuenf Schreibvorgaenge in diesem Modul standen
+ * als nacktes `await supabase…` da — Ruecklaeufer, Fehlerprotokoll und
+ * drei Zustandswechsel des Korrekturlaufs.
+ *
+ * Die Wirkung ist bei jedem eine andere, aber immer dieselbe Art Schaden:
+ * der Vorgang laeuft weiter, als waere der Schritt geschehen. Ein
+ * Ruecklaeufer ohne Vermerk steht in der naechsten Arbeitsliste wieder
+ * drin und bekommt eine ZWEITE Korrektur fuer denselben Fall — zwei
+ * Korrekturabrechnungen an dieselbe Kasse.
+ *
+ * PostgREST meldet bei null getroffenen Zeilen keinen Fehler. Ohne
+ * `.select()` sieht dieser Fall aus wie Erfolg.
+ */
+describe('Folgemarkierungen muessen ankommen', () => {
+  /** Wie `fake()` oben, aber ausgewaehlte Schreibwege treffen nichts. */
+  function fakeMitLeerlauf(leerlaufTabellen: string[]) {
+    return erstelleFakeSupabase((a: FakeAufruf) => {
+      if (a.tabelle === 'abrechnungslaeufe' && a.operation === 'select') return { data: originalLauf() }
+      if (a.tabelle === 'dta_lauf_rechnungen') return { data: null, count: 7 }
+      if (a.tabelle === 'dta_ruecklaeufer' && a.operation === 'select') {
+        return { data: { betrag_differenz_cent: 48250 } }
+      }
+      if (a.tabelle === 'dta_korrekturlaeufe' && a.operation === 'insert') return { data: { id: KORREKTUR } }
+      if (a.operation === 'update') {
+        if (leerlaufTabellen.includes(a.tabelle)) return { data: [] }
+        const mengenFilter = a.filter.find(x => Array.isArray(x.wert))
+        const anzahl = Array.isArray(mengenFilter?.wert) ? mengenFilter.wert.length : 1
+        return { data: Array.from({ length: anzahl }, (_, i) => ({ id: `${a.tabelle}-${i}` })) }
+      }
+      return { data: null }
+    })
+  }
+
+  it('wirft, wenn der Ruecklaeufer nicht als korrigiert vermerkt werden konnte', async () => {
+    const f = fakeMitLeerlauf(['dta_ruecklaeufer'])
+    await expect(erstelleKorrekturlauf(f.client, {
+      organizationId: ORG, originalLaufId: LAUF, ruecklaeuferId: 'rl-1',
+      korrekturTyp: 'korrekturabrechnung', korrekturGrund: 'x', actorId: ACTOR,
+    })).rejects.toThrow(/erneut zur Korrektur anstehen/)
+  })
+
+  it('wirft, wenn nicht ALLE Fehlerzeilen fortgeschrieben wurden', async () => {
+    // Die Zahl ist der Punkt: zwei Kennungen uebergeben, eine getroffen.
+    // Der uebrige Fehler bliebe als offen stehen, waehrend die Korrektur
+    // laeuft.
+    const f = erstelleFakeSupabase((a: FakeAufruf) => {
+      if (a.tabelle === 'abrechnungslaeufe' && a.operation === 'select') return { data: originalLauf() }
+      if (a.tabelle === 'dta_lauf_rechnungen') return { data: null, count: 7 }
+      if (a.tabelle === 'dta_korrekturlaeufe' && a.operation === 'insert') return { data: { id: KORREKTUR } }
+      if (a.tabelle === 'dta_fehlerprotokoll' && a.operation === 'update') return { data: [{ id: 'f-1' }] }
+      if (a.operation === 'update') return { data: [{ id: a.tabelle }] }
+      return { data: null }
+    })
+    await expect(erstelleKorrekturlauf(f.client, {
+      organizationId: ORG, originalLaufId: LAUF, fehlerIds: ['f-1', 'f-2'],
+      korrekturTyp: 'korrekturabrechnung', korrekturGrund: 'x', actorId: ACTOR,
+    })).rejects.toThrow(/Fehlerprotokoll unvollständig/)
+  })
+
+  it('wirft, wenn der Korrekturlauf nicht in Bearbeitung genommen werden konnte', async () => {
+    // Zugleich der Riegel gegen den zweiten gleichzeitigen Aufruf: der
+    // Uebergang greift nur, solange der Lauf noch im gelesenen Status
+    // steht.
+    const f = erstelleFakeSupabase((a: FakeAufruf) => {
+      if (a.tabelle === 'dta_korrekturlaeufe' && a.operation === 'select') {
+        return { data: korrekturZeileFuerLeerlauf() }
+      }
+      if (a.tabelle === 'dta_korrekturlaeufe' && a.operation === 'update') return { data: [] }
+      return { data: null }
+    })
+    await expect(fuehreKorrekturAus(f.client, KORREKTUR, ACTOR))
+      .rejects.toThrow(/Korrekturlauf in Bearbeitung nehmen ohne Wirkung/)
+  })
+
+  function korrekturZeileFuerLeerlauf() {
+    return {
+      id: KORREKTUR,
+      organization_id: ORG,
+      status: 'angelegt',
+      korrektur_typ: 'korrekturabrechnung',
+      original_lauf_id: LAUF,
+      original_lauf: originalLauf(),
+    }
+  }
 })

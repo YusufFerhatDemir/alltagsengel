@@ -81,13 +81,24 @@ export const POST = withTracking(async function POST(
 
     validateTransition(current, target as InvoiceStatus)
 
-    const { error: updError } = await admin
+    const { data: gewechselt, error: updError } = await admin
       .from('invoices')
       .update({ status: target })
       .eq('id', id)
       .eq('status', current) // Race-Schutz: nur vom erwarteten Ausgangsstatus
+      .select('id')
     if (updError) {
       return safeApiError(updError)
+    }
+    // Der Race-Schutz stand bisher nur im UPDATE — ob er gegriffen hat,
+    // wurde nicht nachgesehen. PostgREST meldet bei null getroffenen Zeilen
+    // keinen Fehler: die Route schrieb dann einen Pruefeintrag ueber einen
+    // Statuswechsel, der nicht stattgefunden hat, und meldete Erfolg.
+    if (!gewechselt || gewechselt.length === 0) {
+      return NextResponse.json(
+        { error: `Die Rechnung steht nicht mehr auf „${current}" — es wurde nichts geändert. Bitte neu laden.` },
+        { status: 409 },
+      )
     }
 
     await logBillingAction(admin, {

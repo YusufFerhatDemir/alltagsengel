@@ -9,6 +9,9 @@ import { pruefeGlaeubigerIdOderWerfe } from './glaeubiger-id'
 import { logBillingAction } from '../core/audit'
 import { heuteBerlin } from '@/lib/utils/timezone';
 import { euroZuCent } from '@/lib/geld'
+import { logger } from '@/lib/logger'
+
+const log = logger.child('sepa-service')
 
 // ---------------------------------------------------------------------------
 // Types
@@ -459,8 +462,20 @@ export async function createSepaBatch(
   // Nachweis wird deshalb wie ein verlorener behandelt: ganzer Lauf
   // zurueck, nichts eingezogen.
   if (nachPostenErr) {
-    await supabase.from('sepa_batch_items').delete().eq('batch_id', batch.id)
-    await supabase.from('sepa_batches').delete().eq('id', batch.id)
+    // Die Ruecknahme darf nicht werfen — wir werfen gleich ohnehin, und ein
+    // Fehler hier wuerde die eigentliche Ursache verdecken. Stumm bleiben
+    // darf sie aber auch nicht: scheitert sie, steht ein Sammelauftrag mit
+    // Posten in der Tabelle, den niemand mehr zuordnen kann.
+    const [postenWeg, auftragWeg] = await Promise.all([
+      supabase.from('sepa_batch_items').delete().eq('batch_id', batch.id).select('id'),
+      supabase.from('sepa_batches').delete().eq('id', batch.id).select('id'),
+    ])
+    if (postenWeg.error || auftragWeg.error) {
+      log.error('SEPA-Ruecknahme fehlgeschlagen — verwaister Sammelauftrag', {
+        batchId: batch.id,
+        errorMessage: postenWeg.error?.message ?? auftragWeg.error?.message,
+      })
+    }
     throw new Error(
       'Es konnte nicht nachgeprüft werden, ob dieselben Rechnungen zeitgleich in einen anderen '
       + 'Sammelauftrag gelangt sind. Dieser Lauf wurde vollständig zurückgenommen — es wurde '

@@ -418,15 +418,35 @@ export async function matchBuchung(
         actorId: 'system',
       });
 
-      // Zahlungseingang verknuepfen
-      await supabase
+      // Zahlungseingang verknuepfen.
+      //
+      // Dieser Vermerk ist der einzige Beleg dafuer, dass diese Bankbuchung
+      // schon verarbeitet ist. Bleibt er aus, gilt sie weiter als offen —
+      // und der naechste CAMT-Lauf legt fuer dasselbe Geld eine ZWEITE
+      // Zahlung an und ordnet sie derselben Rechnung zu.
+      //
+      // Deshalb wird hier geworfen: der Fang unten macht daraus einen
+      // Klaerfall, und das ist der richtige Ausgang. Die bereits angelegte
+      // Zahlung steht in der Meldung, damit derjenige, der den Klaerfall
+      // bearbeitet, sie nicht ein zweites Mal bucht.
+      const { data: verknuepft, error: verknuepfFehler } = await supabase
         .from('zahlungseingaenge')
         .update({
           zuordnungs_status: 'automatisch',
           zuordnungs_confidence: best.confidence,
           payment_id: payment.id,
         })
-        .eq('id', zahlungseingangsId);
+        .eq('id', zahlungseingangsId)
+        .select('id');
+
+      if (verknuepfFehler || (verknuepft?.length ?? 0) === 0) {
+        throw new Error(
+          `Zahlungseingang ${zahlungseingangsId} konnte nicht als zugeordnet vermerkt werden `
+          + `(${verknuepfFehler?.message ?? 'keine Zeile getroffen'}). `
+          + `ACHTUNG: Zahlung ${payment.id} wurde bereits angelegt und der Rechnung `
+          + `${best.invoiceId} zugeordnet — bitte vor einer erneuten Buchung pruefen.`
+        );
+      }
 
       await logBillingAction(supabase, {
         entityType: 'zahlungseingang',

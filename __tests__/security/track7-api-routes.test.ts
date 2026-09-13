@@ -146,8 +146,11 @@ describe('B2 — Empfehlungsbonus wird tatsaechlich gebucht', () => {
   })
 
   it('schreibeGutschrift addiert auf den bestehenden Stand', async () => {
+    // PostgREST gibt bei `update().select()` die getroffene Zeile zurueck.
     const fake = erstelleFakeSupabase((a: FakeAufruf) =>
-      a.operation === 'select' ? { data: { referral_credit: 12.5 } } : { data: null },
+      a.operation === 'select'
+        ? { data: { referral_credit: 12.5 } }
+        : { data: [{ id: 'u1' }] },
     )
     const e = await schreibeGutschrift(fake.client, 'u1', 20)
     expect(e.ok).toBe(true)
@@ -155,6 +158,35 @@ describe('B2 — Empfehlungsbonus wird tatsaechlich gebucht', () => {
     const update = fake.auf('profiles').find(a => a.operation === 'update')
     expect(update?.payload).toEqual({ referral_credit: 32.5 })
     expect(hatFilter(update, 'eq', 'id', 'u1')).toBe(true)
+    // Die Vergleichsbedingung auf den GELESENEN Stand: ohne sie
+    // ueberschriebe eine zweite gleichzeitige Gutschrift die erste.
+    expect(hatFilter(update, 'eq', 'referral_credit', 12.5)).toBe(true)
+  })
+
+  it('FAIL-CLOSED: bucht nicht, wenn der Stand sich zwischenzeitlich bewegt hat', async () => {
+    // Der Schreibvorgang trifft keine Zeile — eine zweite Gutschrift war
+    // schneller. Vorher meldete die Funktion `ok: true` mit einem
+    // `neuerStand`, der nirgends steht.
+    const fake = erstelleFakeSupabase((a: FakeAufruf) =>
+      a.operation === 'select' ? { data: { referral_credit: 12.5 } } : { data: [] },
+    )
+    const e = await schreibeGutschrift(fake.client, 'u1', 20)
+    expect(e.ok).toBe(false)
+    expect(e.fehler).toMatch(/zwischenzeitlich veraendert|nichts gebucht/)
+  })
+
+  it('vergleicht bei leerem Guthaben mit `is`, nicht mit `eq`', async () => {
+    // `referral_credit` ist nullable. `.eq(spalte, null)` trifft in
+    // Postgres NICHTS — die erste Gutschrift auf ein frisches Konto liefe
+    // sonst immer ins Leere.
+    const fake = erstelleFakeSupabase((a: FakeAufruf) =>
+      a.operation === 'select' ? { data: { referral_credit: null } } : { data: [{ id: 'u1' }] },
+    )
+    const e = await schreibeGutschrift(fake.client, 'u1', 20)
+    expect(e.ok).toBe(true)
+    expect(e.neuerStand).toBe(20)
+    const update = fake.auf('profiles').find(a => a.operation === 'update')
+    expect(hatFilter(update, 'is', 'referral_credit', null)).toBe(true)
   })
 
   it('FAIL-CLOSED: ein nicht lesbarer Stand ist ein Fehler, keine Buchung von 0', async () => {

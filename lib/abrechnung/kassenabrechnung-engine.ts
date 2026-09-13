@@ -1145,7 +1145,22 @@ export async function storniereLauf(
     })
     .eq('id', laufId)
   if (organizationId) stornoUpdate = stornoUpdate.eq('organization_id', organizationId)
-  await stornoUpdate
+
+  // Direkt darunter steht der Pruefeintrag „lauf_storniert". Ohne
+  // `.select()` war das ein Protokoll ueber eine Stornierung, die nicht
+  // stattgefunden haben musste: ein Aufruf mit fremder organizationId
+  // traf keine Zeile, PostgREST meldete keinen Fehler, und der Lauf blieb
+  // exportierbar. Dasselbe Muster wie in gibLaufFrei() weiter oben.
+  const { data: storniert, error: stornoFehler } = await stornoUpdate.select('id')
+
+  if (stornoFehler) {
+    throw new Error(`Lauf ${laufId} konnte nicht storniert werden: ${stornoFehler.message}`)
+  }
+  if (!storniert || storniert.length === 0) {
+    throw new Error(
+      `Lauf ${laufId} nicht gefunden oder kein Zugriff — er wurde NICHT storniert.`
+    )
+  }
 
   await logBillingAction(supabase, {
     entityType: 'dta_lauf',

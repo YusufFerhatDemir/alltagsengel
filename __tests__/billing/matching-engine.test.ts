@@ -107,7 +107,16 @@ function schreibwegOk(rechnungen: Array<ReturnType<typeof rechnung>>) {
     },
     payment_allocations: () => ({ data: { id: 'alloc-1' } }),
     dunning_entries: () => ({ data: [] }),
-    zahlungseingaenge: () => ({ data: null }),
+    zahlungseingaenge: a => {
+      // Der Vermerk „schon verarbeitet" auf der Bankbuchung. Er wird jetzt
+      // geprueft: ohne ihn legte der naechste CAMT-Lauf fuer dasselbe Geld
+      // eine zweite Zahlung an.
+      if (a.operation === 'update') {
+        const id = a.filter.find(f => f.methode === 'eq' && f.spalte === 'id')?.wert
+        return { data: [{ id }] }
+      }
+      return { data: null }
+    },
     billing_audit_trail: () => ({ data: null }),
     invoice_status_history: () => ({ data: null }),
   })
@@ -651,5 +660,56 @@ describe('Mehrdeutigkeit', () => {
 
     expect(ergebnis.kandidaten[0].invoiceId).toBe('inv-b')
     expect(ergebnis.kandidaten[0].confidence).toBeGreaterThan(ergebnis.kandidaten[1].confidence)
+  })
+})
+
+// ───────────────────────────────────────────────────────────────
+// Der Vermerk „schon verarbeitet"
+// ───────────────────────────────────────────────────────────────
+
+describe('Zahlungseingang als verarbeitet vermerken', () => {
+  /**
+   * Der Vermerk auf `zahlungseingaenge` stand als nacktes `await` ohne
+   * Ergebnispruefung da. Er ist der EINZIGE Beleg dafuer, dass diese
+   * Bankbuchung schon verarbeitet ist.
+   *
+   * Bleibt er aus, gilt die Buchung weiter als offen — und der naechste
+   * CAMT-Lauf legt fuer dasselbe Geld eine zweite Zahlung an und ordnet
+   * sie derselben Rechnung zu. Genau dieses Muster (ueberlappende
+   * Auszuege, doppelte Zuordnung) ist hier schon einmal aufgetreten.
+   *
+   * PostgREST meldet bei null getroffenen Zeilen keinen Fehler.
+   */
+  test('geht in den Klaerfall, wenn der Vermerk keine Zeile trifft', async () => {
+    const fake = erstelleFakeSupabase(a => {
+      if (a.tabelle === 'zahlungseingaenge' && a.operation === 'update') return { data: [] }
+      return schreibwegOk([rechnung()])(a)
+    })
+
+    const ergebnis = await matchBuchung(
+      fake.client, buchung({ verwendungszweck: 'RE-2026-0042' }), EINGANG, ORG,
+    )
+
+    expect(ergebnis.status).toBe('klaerfall')
+    // Die Zahlung IST angelegt. Wer den Klaerfall bearbeitet, muss das
+    // erfahren — sonst bucht er sie ein zweites Mal.
+    expect(ergebnis.klaerfallGrund).toMatch(/bereits angelegt/)
+    expect(ergebnis.klaerfallGrund).toMatch(/pay-1/)
+  })
+
+  test('meldet auch einen echten Fehler als Klaerfall, nicht als Erfolg', async () => {
+    const fake = erstelleFakeSupabase(a => {
+      if (a.tabelle === 'zahlungseingaenge' && a.operation === 'update') {
+        return { data: null, error: { message: 'Verbindung weg' } }
+      }
+      return schreibwegOk([rechnung()])(a)
+    })
+
+    const ergebnis = await matchBuchung(
+      fake.client, buchung({ verwendungszweck: 'RE-2026-0042' }), EINGANG, ORG,
+    )
+
+    expect(ergebnis.status).toBe('klaerfall')
+    expect(ergebnis.klaerfallGrund).toMatch(/Verbindung weg/)
   })
 })

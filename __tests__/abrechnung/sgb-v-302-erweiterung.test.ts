@@ -5,7 +5,8 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { erzeugePruefExport, pruefExportAlsCsv, pruefExportAlsJson, PRUEF_EXPORT_HINWEIS } from '@/lib/abrechnung/sgb-v/export-generator'
-import { MockAdapter, DakotaAdapter, KimAdapter, FileExportAdapter } from '@/lib/abrechnung/sgb-v/transport-adapter'
+import { MockAdapter, DakotaAdapter, KimAdapter, FileExportAdapter, verarbeiteEintrag } from '@/lib/abrechnung/sgb-v/transport-adapter'
+import { erstelleFakeSupabase, hatFilter, hatOrgFence, type FakeAufruf } from '../helpers/supabase-fake'
 import { SGB_V_LEISTUNGSARTEN } from '@/lib/abrechnung/sgb-v/leistungsnachweis-service'
 import { pruefeRegelwerk } from '@/lib/abrechnung/sgb-v/validierung'
 import type { HkpAufbereitung, HkpFall } from '@/lib/abrechnung/sgb-v/positionen'
@@ -187,5 +188,86 @@ describe('validierung — pruefeRegelwerk', () => {
     expect(ergebnis.hinweise.some(h => h.includes('Pflegegrad'))).toBe(true)
     // Pflegegrad ist § 302 kein Blocker — nur die fehlende Verordnung ist einer.
     expect(ergebnis.blocker.every(b => !b.includes('Pflegegrad'))).toBe(true)
+  })
+})
+
+// ═════════════════════════════════════════════════════════════════════
+/**
+ * `verarbeiteEintrag` ist der Punkt, an dem ein § 302-Datensatz die
+ * Datenannahmestelle erreicht. Drumherum standen ZWEI Schreibvorgaenge als
+ * nacktes `await` ohne Ergebnispruefung:
+ *
+ *   davor  — der Eintrag wird auf 'in_bearbeitung' gesetzt
+ *   danach — das Ergebnis der Uebertragung wird festgehalten
+ *
+ * Faellt der erste aus, kann ein zweiter gleichzeitiger Lauf denselben
+ * Datensatz an dieselbe Kasse schicken. Faellt der zweite aus, steht der
+ * Eintrag weiter auf 'in_bearbeitung' und der Wiederholungslauf sendet ihn
+ * erneut. Beides sind Doppeluebermittlungen an einen Kostentraeger.
+ *
+ * PostgREST meldet bei null getroffenen Zeilen keinen Fehler.
+ */
+describe('transport-adapter — Warteschlange uebernehmen und quittieren', () => {
+  const ORG = '00000000-0000-4000-8000-000460629986'
+  const QUEUE = 'q1111111-1111-4111-8111-111111111111'
+  const ACTOR = '22222222-2222-4222-8222-222222222222'
+
+  function exp() {
+    return erzeugePruefExport('lauf-1', '2026-08', aufbereitung([fall()]), '2026-08-15T10:00:00.000Z')
+  }
+
+  /** @param treffer Zeilen je UPDATE-Aufruf, in Reihenfolge. */
+  function fake(treffer: unknown[][]) {
+    let n = 0
+    return erstelleFakeSupabase((a: FakeAufruf) => {
+      if (a.tabelle === 'sgb_v_uebertragungsqueue' && a.operation === 'select') {
+        return { data: { id: QUEUE, adapter_typ: 'mock', versuch_zaehler: 0 } }
+      }
+      if (a.tabelle === 'sgb_v_uebertragungsqueue' && a.operation === 'update') {
+        return { data: treffer[n++] ?? [] }
+      }
+      return { data: null }
+    })
+  }
+
+  it('uebernimmt den Eintrag nur aus „wartend" oder „fehlgeschlagen"', async () => {
+    const f = fake([[{ id: QUEUE }], [{ id: QUEUE }]])
+    await verarbeiteEintrag(f.client, ORG, QUEUE, exp(), ACTOR)
+
+    const uebernahme = f.auf('sgb_v_uebertragungsqueue').filter(a => a.operation === 'update')[0]
+    expect((uebernahme.payload as Record<string, unknown>).status).toBe('in_bearbeitung')
+    expect(hatFilter(uebernahme, 'in', 'status', ['wartend', 'fehlgeschlagen'])).toBe(true)
+    expect(hatOrgFence(uebernahme, ORG)).toBe(true)
+  })
+
+  it('sendet NICHTS, wenn der Eintrag schon jemand anders bearbeitet', async () => {
+    // Erster UPDATE trifft keine Zeile: ein anderer Lauf war schneller.
+    const f = fake([[]])
+    await expect(verarbeiteEintrag(f.client, ORG, QUEUE, exp(), ACTOR))
+      .rejects.toThrow(/Es wurde NICHTS gesendet/)
+
+    // Entscheidend: es darf keinen zweiten Schreibvorgang gegeben haben —
+    // also auch keine Quittung ueber eine Uebertragung, die nicht lief.
+    expect(f.auf('sgb_v_uebertragungsqueue').filter(a => a.operation === 'update')).toHaveLength(1)
+  })
+
+  it('meldet es laut, wenn das Ergebnis nicht festgehalten werden konnte', async () => {
+    // Uebernahme klappt, Quittung trifft keine Zeile: gesendet wurde, der
+    // Eintrag steht aber weiter auf 'in_bearbeitung'.
+    const f = fake([[{ id: QUEUE }], []])
+    await expect(verarbeiteEintrag(f.client, ORG, QUEUE, exp(), ACTOR))
+      .rejects.toThrow(/wurde uebertragen/)
+  })
+
+  it('haelt Erfolg mit Zielreferenz fest', async () => {
+    const f = fake([[{ id: QUEUE }], [{ id: QUEUE }]])
+    const ergebnis = await verarbeiteEintrag(f.client, ORG, QUEUE, exp(), ACTOR)
+
+    expect(ergebnis.erfolg).toBe(true)
+    const quittung = f.auf('sgb_v_uebertragungsqueue').filter(a => a.operation === 'update')[1]
+    const p = quittung.payload as Record<string, unknown>
+    expect(p.status).toBe('erfolgreich')
+    expect(p.ziel_referenz).toBe('mock:lauf-1')
+    expect(p.letzter_fehler).toBeNull()
   })
 })

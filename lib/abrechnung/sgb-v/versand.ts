@@ -33,12 +33,15 @@ import { dateiindikatorFuer } from '../betriebsmodus'
 import { erzeugeSgbVDatei, exportImplementiert, SgbVSpecFehltError } from './generator'
 import { aktuelleVersion, monatsStichtag, type SgbVFormat } from './versionen'
 import { ladeRouting, findeRouting } from './routing'
+import { logger } from '@/lib/logger'
 import { pruefeAufbereitungTarife, type TarifBefund } from './validierung'
 import { ohneStornierte } from '@/lib/leistungsnachweis/status-sync'
 import {
   bereiteHkpVor, HKP_VERORDNUNG_TYPE,
   type HkpAufbereitung, type HkpLeistung, type HkpVerordnung, type HkpKlient,
 } from './positionen'
+
+const log = logger.child('sgb-v-versand')
 
 const KANAL = 'sftp_302' as const
 
@@ -240,11 +243,25 @@ export async function erzeugeUndVersendeSgbV(
     const status = art === 'daten' || art === 'tarif' || art === 'stammdaten'
       ? 'validierung_fehlgeschlagen'
       : 'gesperrt_extern'
-    await supabase
+    // Das IST die Sperre. Bleibt sie aus, steht der Lauf weiter auf einem
+    // Status, aus dem heraus exportiert werden darf — waehrend das
+    // Versandprotokoll darunter „gestoppt" meldet. Geworfen wird hier
+    // nicht: der Aufrufer bekommt ohnehin ein Stopp-Ergebnis, und eine
+    // Ausnahme wuerde den urspruenglichen Grund verdecken. Der Ausfall
+    // muss aber laut sein.
+    const { data: gesperrt, error: sperrFehler } = await supabase
       .from('sgb_v_laeufe')
       .update({ status, sperr_grund: grund })
       .eq('id', laufId)
       .eq('organization_id', organizationId)
+      .select('id')
+
+    if (sperrFehler || (gesperrt?.length ?? 0) === 0) {
+      log.error('§ 302-Lauf NICHT gesperrt — er steht weiter auf einem exportierbaren Status', {
+        laufId, organizationId, zielStatus: status, grund,
+        errorMessage: sperrFehler?.message ?? 'keine Zeile getroffen',
+      })
+    }
 
     await protokolliereVersand(supabase, {
       organizationId,
@@ -339,11 +356,23 @@ export async function erzeugeUndVersendeSgbV(
     )
   }
 
-  await supabase
+  // Formatversion und TA-Version gehoeren zur Datei, die gleich an die
+  // Datenannahmestelle geht. Geht der Vermerk verloren, laesst sich
+  // hinterher nicht mehr sagen, nach welcher Fassung uebermittelt wurde —
+  // und genau das fragt die Kasse bei einer Ablehnung.
+  const { data: versionVermerkt, error: versionFehler } = await supabase
     .from('sgb_v_laeufe')
     .update({ formatversion_id: version.version.id, ta_version: version.version.ta_version })
     .eq('id', laufId)
     .eq('organization_id', organizationId)
+    .select('id')
+
+  if (versionFehler || (versionVermerkt?.length ?? 0) === 0) {
+    throw new Error(
+      `Formatversion konnte am § 302-Lauf ${laufId} nicht vermerkt werden `
+      + `(${versionFehler?.message ?? 'keine Zeile getroffen'}) — es wird nicht uebermittelt.`
+    )
+  }
 
   // ── Routing ──────────────────────────────────────────────────
   const routingEintraege = await ladeRouting(supabase, organizationId)
@@ -373,7 +402,9 @@ export async function erzeugeUndVersendeSgbV(
     )
   }
 
-  await supabase
+  // Die Datenannahmestelle ist der EMPFAENGER. Steht sie nicht am Lauf,
+  // ist hinterher nicht belegbar, wohin uebermittelt wurde.
+  const { data: stelleVermerkt, error: stelleFehler } = await supabase
     .from('sgb_v_laeufe')
     .update({
       datenannahmestelle_ik: datenannahmestelleIk,
@@ -381,6 +412,14 @@ export async function erzeugeUndVersendeSgbV(
     })
     .eq('id', laufId)
     .eq('organization_id', organizationId)
+    .select('id')
+
+  if (stelleFehler || (stelleVermerkt?.length ?? 0) === 0) {
+    throw new Error(
+      `Datenannahmestelle konnte am § 302-Lauf ${laufId} nicht vermerkt werden `
+      + `(${stelleFehler?.message ?? 'keine Zeile getroffen'}) — es wird nicht uebermittelt.`
+    )
+  }
 
   // ── GATE ─────────────────────────────────────────────────────
   try {

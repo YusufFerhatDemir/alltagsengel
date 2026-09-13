@@ -44,6 +44,22 @@ const RUECKLASTSCHRIFT_GEBUEHR_CENT = 500; // 5,00 EUR
 const MAX_RUECKLASTSCHRIFTEN_BEVOR_SPERRE = 2;
 
 // ---------------------------------------------------------------------------
+// Fehlermeldungen
+// ---------------------------------------------------------------------------
+
+/**
+ * Haengt einen Fehlschlag an `result.fehler` an, statt ihn zu ersetzen.
+ *
+ * Der Vorgang hat sieben schreibende Schritte. Faellt einer aus, laufen die
+ * uebrigen weiter — abbrechen waere schlimmer, weil die Ruecklastschrift
+ * dann halb gebucht liegen bliebe. Der Aufrufer muss aber JEDEN Ausfall
+ * sehen, nicht nur den letzten.
+ */
+function meldeFehler(result: RuecklastschriftResult, text: string): void {
+  result.fehler = [result.fehler, text].filter(Boolean).join(' | ');
+}
+
+// ---------------------------------------------------------------------------
 // Handler
 // ---------------------------------------------------------------------------
 
@@ -159,13 +175,22 @@ export async function verarbeiteRuecklastschrift(
     result.mandateId = sepaItem.mandate_id;
 
     // 2. SEPA-Batch-Item auf Ruecklastschrift setzen
-    await supabase
+    //
+    // Diese Zeile ist nicht nur ein Vermerk: Schritt 6 ZAEHLT die Posten
+    // mit status='ruecklastschrift', um zu entscheiden, ob das Mandat
+    // gesperrt wird. Bleibt der Vermerk aus, zaehlt der Vorgang nicht mit
+    // und ein Mandat, das gesperrt gehoerte, bleibt offen.
+    const { data: vermerkt, error: vermerkErr } = await supabase
       .from('sepa_batch_items')
       .update({
         status: 'ruecklastschrift',
         error_reason: `Rücklastschrift vom ${buchung.buchungsdatum}`,
       })
-      .eq('id', sepaItem.id);
+      .eq('id', sepaItem.id)
+      .select('id');
+    if (vermerkErr || (vermerkt?.length ?? 0) === 0) {
+      meldeFehler(result, `Lastschriftposten nicht als Rücklastschrift vermerkt (${vermerkErr?.message ?? 'keine Zeile getroffen'}) — die Mandatszählung übergeht diesen Vorgang.`);
+    }
 
     // 3. Zugehoerige Zahlung finden und stornieren
     const { data: payAllocs } = await supabase
@@ -219,13 +244,25 @@ export async function verarbeiteRuecklastschrift(
 
       if (payment) {
         const newAllocated = Math.max(0, (payment.allocated_cents || 0) - alloc.amount_cents);
-        await supabase
+        // Gelesen wurde oben, geschrieben wird hier — dazwischen kann die
+        // Zahlung erneut zugeordnet worden sein. Ohne Vergleichsbedingung
+        // wuerde dieser Aufruf den fremden Zwischenstand ueberschreiben und
+        // Geld doppelt freigeben.
+        const abgleich = supabase
           .from('payments')
           .update({
             allocated_cents: newAllocated,
             matching_status: 'nicht_zugeordnet',
           })
           .eq('id', payment.id);
+        const { data: reduziert, error: reduzErr } = await (
+          payment.allocated_cents == null
+            ? abgleich.is('allocated_cents', null)
+            : abgleich.eq('allocated_cents', payment.allocated_cents)
+        ).select('id');
+        if (reduzErr || (reduziert?.length ?? 0) === 0) {
+          meldeFehler(result, `Zahlung nicht zurückgesetzt (${reduzErr?.message ?? 'Zwischenstand verändert'}) — allocated_cents steht weiter auf dem alten Wert.`);
+        }
       }
     }
 
@@ -242,7 +279,12 @@ export async function verarbeiteRuecklastschrift(
       const betragRueck = Math.abs(buchung.betragCent);
       const newPaidCents = Math.max(0, paidCents - betragRueck);
 
-      await supabase
+      // Der teuerste Schritt des Vorgangs. Faellt er aus, ist das Geld
+      // zurueckgegangen und die Rechnung behauptet weiter, sie sei bezahlt:
+      // keine Mahnung, keine offene Position, kein Klaerfall. Deshalb wird
+      // hier sowohl der Fehler gelesen als auch gegen den gelesenen Stand
+      // verglichen — eine zwischenzeitliche Zahlung darf nicht verschwinden.
+      const oeffnen = supabase
         .from('invoices')
         .update({
           paid_amount: newPaidCents / 100,
@@ -251,6 +293,14 @@ export async function verarbeiteRuecklastschrift(
           bezahlt_am: null,
         })
         .eq('id', sepaItem.invoice_id);
+      const { data: geoeffnet, error: oeffnenErr } = await (
+        invoice.paid_amount == null
+          ? oeffnen.is('paid_amount', null)
+          : oeffnen.eq('paid_amount', invoice.paid_amount)
+      ).select('id');
+      if (oeffnenErr || (geoeffnet?.length ?? 0) === 0) {
+        meldeFehler(result, `Rechnung NICHT wieder geöffnet (${oeffnenErr?.message ?? 'Zahlstand zwischenzeitlich verändert'}) — sie gilt weiter als bezahlt, obwohl das Geld zurück ist.`);
+      }
     }
 
     // 5. Ruecklastschriftgebuehr — als payment_difference buchen
@@ -300,15 +350,25 @@ export async function verarbeiteRuecklastschrift(
       .eq('status', 'ruecklastschrift');
 
     if ((rlCount ?? 0) >= MAX_RUECKLASTSCHRIFTEN_BEVOR_SPERRE) {
-      await supabase
+      const { data: gesperrt, error: sperrErr } = await supabase
         .from('sepa_mandates')
         .update({
           status: 'widerrufen',
           revoked_at: new Date().toISOString(),
           revoke_reason: `Automatisch gesperrt nach ${rlCount} Rücklastschriften`,
         })
-        .eq('id', sepaItem.mandate_id);
-      result.mandatGesperrt = true;
+        .eq('id', sepaItem.mandate_id)
+        .neq('status', 'widerrufen')
+        .select('id');
+      // `mandatGesperrt` ist eine Tatsachenbehauptung ueber die Datenbank.
+      // Sie darf nur stehen, wenn dort wirklich eine Zeile umgestellt wurde
+      // — sonst zoege der naechste Lastschriftlauf erneut von einem Konto
+      // ein, das zweimal zurueckgegangen ist.
+      if (sperrErr) {
+        meldeFehler(result, `Mandat NICHT gesperrt (${sperrErr.message}) — der nächste Lastschriftlauf zieht erneut ein.`);
+      } else {
+        result.mandatGesperrt = (gesperrt?.length ?? 0) > 0;
+      }
 
       await logBillingAction(supabase, {
         entityType: 'sepa_mandate',
@@ -359,22 +419,34 @@ export async function verarbeiteRuecklastschrift(
       const newIdx = Math.max(currentIdx + 1, 2);
       const newLevel = ESCALATION_LEVELS[Math.min(newIdx, ESCALATION_LEVELS.length - 1)];
 
-      await supabase
+      // Die Stufe steht an ZWEI Stellen. Gelingt nur eine, widersprechen
+      // sich Mahnvorgang und Rechnung, und welche der beiden der Mahnlauf
+      // liest, entscheidet dann ueber den Brief an den Kunden.
+      const { data: stufeGesetzt, error: stufeErr } = await supabase
         .from('dunning_entries')
         .update({
           dunning_level: newLevel,
           last_dunning_at: new Date().toISOString(),
         })
         .eq('id', dunning.id)
-        .eq('organization_id', organizationId);
+        .eq('organization_id', organizationId)
+        .eq('dunning_level', dunning.dunning_level ?? 'offen')
+        .select('id');
 
-      await supabase
-        .from('invoices')
-        .update({ dunning_level: newLevel })
-        .eq('id', sepaItem.invoice_id)
-        .eq('organization_id', organizationId);
-
-      result.neueMahnstufe = newLevel;
+      if (stufeErr || (stufeGesetzt?.length ?? 0) === 0) {
+        meldeFehler(result, `Mahnstufe nicht erhöht (${stufeErr?.message ?? 'Stufe zwischenzeitlich verändert'}) — Mahnvorgang unverändert.`);
+      } else {
+        const { error: rechnungStufeErr } = await supabase
+          .from('invoices')
+          .update({ dunning_level: newLevel })
+          .eq('id', sepaItem.invoice_id)
+          .eq('organization_id', organizationId)
+          .select('id');
+        if (rechnungStufeErr) {
+          meldeFehler(result, `Mahnstufe an der Rechnung nicht nachgezogen (${rechnungStufeErr.message}) — Mahnvorgang und Rechnung stehen auf verschiedenen Stufen.`);
+        }
+        result.neueMahnstufe = newLevel;
+      }
     } else {
       result.mahnstufeUebersprungen = 'Kein Mahnvorgang zu dieser Rechnung — Stufe nicht gesetzt.';
     }

@@ -89,8 +89,15 @@ describe('allocatePayment — OCC (P0-15)', () => {
         }
         if (table === 'dunning_entries') {
           return {
+            // PostgREST gibt nach `.eq()` einen Builder zurueck, der sowohl
+            // awaitbar ist als auch `.select()` kennt. Ein Doppelgaenger,
+            // der nur das eine kann, macht eine Fehlerpruefung im Code
+            // unmoeglich — und genau die fehlte hier.
             update: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ error: null }),
+              eq: vi.fn().mockReturnValue({
+                select: vi.fn().mockResolvedValue({ data: [{ id: 'dun-1' }], error: null }),
+                then: (aufloesen: (w: unknown) => void) => aufloesen({ data: [{ id: 'dun-1' }], error: null }),
+              }),
             }),
           }
         }
@@ -160,7 +167,10 @@ describe('allocatePayment — OCC (P0-15)', () => {
         if (table === 'dunning_entries') {
           return {
             update: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ error: null }),
+              eq: vi.fn().mockReturnValue({
+                select: vi.fn().mockResolvedValue({ data: [{ id: 'dun-1' }], error: null }),
+                then: (aufloesen: (w: unknown) => void) => aufloesen({ data: [{ id: 'dun-1' }], error: null }),
+              }),
             }),
           }
         }

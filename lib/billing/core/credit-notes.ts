@@ -218,7 +218,7 @@ export async function releaseCreditNote(
     });
   }
 
-  const { error: updError } = await supabase
+  const { data: freigegeben, error: updError } = await supabase
     .from('invoice_corrections')
     .update({
       status: 'freigegeben',
@@ -226,10 +226,22 @@ export async function releaseCreditNote(
       approved_by: actorId,
     })
     .eq('id', correctionId)
-    .eq('status', 'entwurf'); // Race-Schutz: nur aus dem Entwurf heraus
+    .eq('status', 'entwurf') // Race-Schutz: nur aus dem Entwurf heraus
+    .select('id');
 
   if (updError) {
     throw new Error(`Freigabe fehlgeschlagen: ${updError.message}`);
+  }
+  // Der Race-Schutz oben war bisher nur halb da: die Bedingung stand im
+  // UPDATE, aber ob sie gegriffen hat, wurde nicht nachgesehen. PostgREST
+  // meldet bei null Zeilen keinen Fehler — ein zweiter Aufruf lief also
+  // durch, schrieb einen zweiten Pruefeintrag „freigegeben" und meldete
+  // Erfolg, ohne dass er irgendetwas freigegeben haette.
+  if (!freigegeben || freigegeben.length === 0) {
+    throw new Error(
+      `Gutschrift ${correctionId} steht nicht mehr im Entwurf — sie wurde zwischenzeitlich `
+      + `freigegeben oder verworfen. Es wurde nichts geaendert.`
+    );
   }
 
   await logBillingAction(supabase, {
@@ -306,14 +318,20 @@ export async function discardCreditNote(
     }
   }
 
-  const { error: delError } = await supabase
+  const { data: verworfen, error: delError } = await supabase
     .from('invoice_corrections')
     .update({ deleted_at: now })
     .eq('id', correctionId)
-    .is('deleted_at', null);
+    .is('deleted_at', null)
+    .select('id');
 
   if (delError) {
     throw new Error(`Verwerfen fehlgeschlagen: ${delError.message}`);
+  }
+  if (!verworfen || verworfen.length === 0) {
+    throw new Error(
+      `Gutschrift ${correctionId} war bereits verworfen — es wurde nichts geaendert.`
+    );
   }
 
   await logBillingAction(supabase, {

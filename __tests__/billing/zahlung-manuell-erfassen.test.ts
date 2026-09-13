@@ -44,7 +44,12 @@ describe('parseBetragZuCent', () => {
  * `rechnung.paid_amount` wandert echt mit, sonst laesst sich Teil- vs.
  * Vollzahlung nicht auseinanderhalten.
  */
-function makeStub(rechnungGesamtEuro: number, bereitsBezahltEuro = 0) {
+function makeStub(
+  rechnungGesamtEuro: number,
+  bereitsBezahltEuro = 0,
+  /** Laesst das UPDATE auf `dunning_entries` scheitern. */
+  mahnstandFehler: string | null = null,
+) {
   const zahlung = { id: 'pay-1', amount_cents: 0, allocated_cents: 0, organization_id: ORG }
   const rechnung = {
     id: INV,
@@ -113,7 +118,18 @@ function makeStub(rechnungGesamtEuro: number, bereitsBezahltEuro = 0) {
         return {
           update: (werte: Record<string, unknown>) => {
             protokoll.dunningUpdates.push(werte)
-            return { eq: async () => ({ error: null }) }
+            // Awaitbar UND mit `.select()` — so verhaelt sich der echte
+            // Builder. Ein Doppelgaenger, der nur eins davon kann, laesst
+            // eine Fehlerpruefung im Code aussehen wie einen Bug.
+            const ergebnis = mahnstandFehler
+              ? { data: null, error: { message: mahnstandFehler } }
+              : { data: [{ id: 'dun-1' }], error: null }
+            return {
+              eq: () => ({
+                select: async () => ergebnis,
+                then: (aufloesen: (w: unknown) => void) => aufloesen(ergebnis),
+              }),
+            }
           },
         } as never
       }
@@ -236,5 +252,34 @@ describe('Zahlung auf eine Rechnung buchen', () => {
       allocations: [{ invoiceId: INV, amountCents: 20000 }],
       actorId: ACTOR,
     })).rejects.toThrow(/uebersteigt offenen Betrag/)
+  })
+})
+
+// ═════════════════════════════════════════════════════════════════════
+describe('Zahlstand im Mahnvorgang', () => {
+  /**
+   * Der Mahnvorgang fuehrt den bezahlten Betrag ein zweites Mal. Das
+   * UPDATE darauf stand als blankes `await` ohne Fehlerpruefung da.
+   *
+   * Die Wirkung eines stillen Fehlschlags ist nicht „ein Feld fehlt": der
+   * naechste Mahnlauf liest den alten Stand und schickt eine Mahnung fuer
+   * eine Rechnung, die bezahlt ist. Dieser Brief laesst sich nicht
+   * zurueckholen.
+   */
+  it('bricht ab, wenn der Zahlstand im Mahnvorgang nicht nachgezogen werden konnte', async () => {
+    const { stub } = makeStub(100, 0, 'dunning_entries: Verbindung weg')
+
+    await expect(bucheAufRechnung(stub, 10000, 10000))
+      .rejects.toThrow(/Mahnvorgang.*nicht nachgezogen/)
+  })
+
+  it('zieht den Zahlstand im Normalfall nach', async () => {
+    const { stub, protokoll } = makeStub(100, 0)
+    await bucheAufRechnung(stub, 10000, 10000)
+
+    expect(protokoll.dunningUpdates).toHaveLength(1)
+    expect(protokoll.dunningUpdates[0]).toMatchObject({
+      dunning_level: 'bezahlt', amount_paid_cents: 10000,
+    })
   })
 })

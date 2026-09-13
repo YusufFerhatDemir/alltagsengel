@@ -9,6 +9,9 @@ import { safeApiError } from '@/lib/api/error-sanitizer';
 import { camtImportModus } from '@/lib/billing/camt/camt-modus';
 import { camtPreflight } from '@/lib/billing/camt/camt-preflight';
 import { withTracking } from '@/lib/monitoring/tracker'
+import { logger } from '@/lib/logger'
+
+const log = logger.child('camt-import')
 
 const MAX_CAMT_BYTES = 20 * 1024 * 1024;
 
@@ -358,7 +361,7 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     }
 
     // Import-Statistik aktualisieren
-    await supabase
+    const { data: statistikGeschrieben, error: statistikFehler } = await supabase
       .from('camt_imports')
       .update({
         zugeordnet_anzahl: zugeordnet,
@@ -370,7 +373,20 @@ export const POST = withTracking(async function POST(req: NextRequest) {
         // ein neuer Wert waere still an 23514 gescheitert.
         status: nichtGespeichert.length > 0 ? 'fehler' : 'verarbeitet',
       })
-      .eq('id', camtImport.id);
+      .eq('id', camtImport.id)
+      .select('id');
+
+    // Der Endstand des Imports. Bleibt er aus, steht der Import weiter auf
+    // 'importiert' und sieht in jeder Uebersicht aus wie einer, der noch
+    // laeuft — obwohl die Zuordnung durch ist. Der Pruefeintrag darunter
+    // behauptete bisher trotzdem 'imported' mit allen Zahlen.
+    if (statistikFehler || (statistikGeschrieben?.length ?? 0) === 0) {
+      log.error('Import-Statistik nicht geschrieben — der Import bleibt unfertig', {
+        importId: camtImport.id,
+        organizationId,
+        errorMessage: statistikFehler?.message ?? 'keine Zeile getroffen',
+      });
+    }
 
     await logBillingAction(supabase, {
       entityType: 'camt_import',

@@ -323,11 +323,26 @@ export async function escaliereUeberfaellige(
         if (aufgabe) {
           const neuePrio = PRIORITAET_ESKALATION[aufgabe.prioritaet] || 'kritisch'
           if (neuePrio !== aufgabe.prioritaet) {
-            await supabase
+            // Die Aufgabe ist das, was ein Mensch zu sehen bekommt. Bleibt
+            // die Hochstufung aus, steht eine eskalierte Frist weiter mit
+            // ihrer alten Dringlichkeit in der Liste — und wird
+            // entsprechend spaet angefasst.
+            const { data: hochgestuft, error: prioFehler } = await supabase
               .from('ops_aufgaben')
               .update({ prioritaet: neuePrio })
               .eq('id', aufgabe.id)
               .eq('organization_id', organizationId)
+              .select('id')
+
+            if (prioFehler || (hochgestuft?.length ?? 0) === 0) {
+              log.error('Aufgabenprioritaet nicht hochgestuft — eskalierte Frist bleibt unauffaellig', {
+                aufgabeId: aufgabe.id,
+                organizationId,
+                vonPrioritaet: aufgabe.prioritaet,
+                nachPrioritaet: neuePrio,
+                errorMessage: prioFehler?.message ?? 'keine Zeile getroffen',
+              })
+            }
           }
         }
       }
@@ -362,11 +377,24 @@ export async function markiereFristErledigt(
   organizationId: string,
   actorId: string,
 ): Promise<void> {
-  await supabase
+  // Direkt danach wird „erledigt" protokolliert. Ein Protokoll ueber eine
+  // Erledigung, die nicht stattgefunden hat, ist schlimmer als gar keines:
+  // die Frist laeuft weiter, der Pruefpfad sagt, sie sei abgehakt.
+  const { data: erledigt, error: erledigtFehler } = await supabase
     .from('billing_fristen')
     .update({ status: 'erledigt' })
     .eq('id', fristId)
     .eq('organization_id', organizationId)
+    .select('id')
+
+  if (erledigtFehler) {
+    throw new Error(`Frist ${fristId} konnte nicht als erledigt vermerkt werden: ${erledigtFehler.message}`)
+  }
+  if (!erledigt || erledigt.length === 0) {
+    throw new Error(
+      `Frist ${fristId} nicht gefunden oder kein Zugriff — sie wurde NICHT als erledigt vermerkt.`
+    )
+  }
 
   await logBillingAction(supabase, {
     entityType: 'billing_fristen',

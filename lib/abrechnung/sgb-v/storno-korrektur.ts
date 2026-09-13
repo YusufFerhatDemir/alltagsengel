@@ -19,6 +19,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { UserFacingError } from '../../api/user-facing-error'
 import { logBillingAction } from '../../billing/core/audit'
+import { logger } from '@/lib/logger'
+
+const log = logger.child('sgb-v-storno-korrektur')
 
 export type SgbVKorrekturTyp = 'storno' | 'teilstorno' | 'korrekturabrechnung'
 export type SgbVKorrekturStatus = 'angelegt' | 'in_bearbeitung' | 'ausgefuehrt' | 'abgebrochen'
@@ -253,26 +256,61 @@ export async function fuehreSgbVKorrekturAus(
     // stehen, ohne dass je ein Korrekturlauf entstanden ist — und die
     // Teilsperre uq_sgb_v_korrektur_offen lässt dann auch keinen neuen
     // Versuch mehr zu.
-    await supabase
+    const { data: zurueckgegeben, error: rueckgabeFehler } = await supabase
       .from('sgb_v_korrekturlaeufe')
       .update({ status: korrektur.status, ausgefuehrt_am: null, ausgefuehrt_von: null })
       .eq('id', korrekturId)
       .eq('organization_id', organizationId)
+      .select('id')
+
+    // Die Ruecknahme darf nicht werfen — wir werfen gleich ohnehin, und ein
+    // Fehler hier wuerde die eigentliche Ursache verdecken. Stumm bleiben
+    // darf sie aber auch nicht: scheitert sie, bleibt der Vorgang auf
+    // „ausgefuehrt" stehen, die Teilsperre uq_sgb_v_korrektur_offen laesst
+    // keinen neuen Versuch zu, und niemand weiss davon.
+    if (rueckgabeFehler || (zurueckgegeben?.length ?? 0) === 0) {
+      log.error('Anspruch auf den Korrekturlauf NICHT zurueckgegeben — der Vorgang bleibt blockiert', {
+        korrekturId, organizationId,
+        zielStatus: korrektur.status,
+        errorMessage: rueckgabeFehler?.message ?? 'keine Zeile getroffen',
+      })
+    }
     throw new Error(`sgb_v_laeufe insert (Korrekturlauf) fehlgeschlagen: ${laufFehler?.message}`)
   }
 
-  await supabase
+  // Ohne diese Verknuepfung existiert der neue Lauf, aber die Korrektur
+  // weiss nichts von ihm — und ein zweiter Anlauf legte einen zweiten Lauf
+  // fuer denselben Fall an.
+  const { data: verknuepft, error: verknuepfFehler } = await supabase
     .from('sgb_v_korrekturlaeufe')
     .update({ korrektur_lauf_id: neuerLauf.id })
     .eq('id', korrekturId)
     .eq('organization_id', organizationId)
+    .select('id')
 
+  if (verknuepfFehler || (verknuepft?.length ?? 0) === 0) {
+    throw new Error(
+      `Korrekturlauf ${neuerLauf.id} konnte dem Vorgang ${korrekturId} nicht zugeordnet werden `
+      + `(${verknuepfFehler?.message ?? 'keine Zeile getroffen'}).`
+    )
+  }
+
+  // Der Originallauf muss den Storno- bzw. Korrekturvermerk tragen. Fehlt
+  // er, steht ein ersetzter Lauf weiter als gueltig in der Uebersicht.
   const neuerOriginalStatus = korrektur.korrektur_typ === 'korrekturabrechnung' ? 'korrigiert' : 'storniert'
-  await supabase
+  const { data: originalGesetzt, error: originalFehler } = await supabase
     .from('sgb_v_laeufe')
     .update({ status: neuerOriginalStatus, storno_grund: korrektur.korrektur_grund })
     .eq('id', korrektur.original_lauf_id)
     .eq('organization_id', organizationId)
+    .select('id')
+
+  if (originalFehler || (originalGesetzt?.length ?? 0) === 0) {
+    throw new Error(
+      `Originallauf ${korrektur.original_lauf_id} konnte nicht auf „${neuerOriginalStatus}" gesetzt werden `
+      + `(${originalFehler?.message ?? 'keine Zeile getroffen'}) — er gilt weiter als gueltig.`
+    )
+  }
 
   await logBillingAction(supabase, {
     entityType: 'sgb_v_korrekturlauf',

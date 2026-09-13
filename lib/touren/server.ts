@@ -249,11 +249,23 @@ export async function storniereGeloesteAssignments(
   const frei = ids.filter(id => !nochGenutzt.has(id))
   if (frei.length === 0) return
 
-  await admin
+  // Ein Fehler hier bliebe sonst unsichtbar: die Einsaetze stuenden weiter
+  // auf ihrem alten Status, waehrend der Aufrufer die Tour als aufgeloest
+  // behandelt.
+  //
+  // WENIGER Treffer als `frei` ist KEIN Fehler: die Erlaubnisliste
+  // (NICHT_MEHR_STORNIERBAR) laesst beendete oder bereits stornierte
+  // Einsaetze bewusst stehen.
+  const { error: stornoFehler } = await admin
     .from('assignments')
     .update({ status: 'STORNIERT' })
     .in('id', frei)
     .not('status', 'in', `(${NICHT_MEHR_STORNIERBAR.join(',')})`)
+    .select('id')
+
+  if (stornoFehler) {
+    throw new Error(`Einsaetze konnten nicht storniert werden: ${stornoFehler.message}`)
+  }
 }
 
 export interface VerfuegbarkeitsBefund {

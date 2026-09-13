@@ -32,6 +32,15 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 export interface LaufSchreibOptionen {
   /** Wird in die Fehlermeldung übernommen — z. B. „Validierung gestartet". */
   schritt: string
+  /**
+   * Die Lauftabelle. Voreinstellung `abrechnungslaeufe`.
+   *
+   * Die Korrekturläufe (`dta_korrekturlaeufe`) sind dieselbe Art von
+   * Zustandsmaschine mit denselben Übergängen und derselben Falle: dort
+   * standen fünf weitere Wechsel als nacktes `await` da. Ein zweiter
+   * Helfer wäre eine zweite Gelegenheit, es unterschiedlich zu schreiben.
+   */
+  tabelle?: 'abrechnungslaeufe' | 'dta_korrekturlaeufe'
   /** Mandantenfilter, wo der Aufrufer ihn kennt. */
   organizationId?: string
   /**
@@ -62,7 +71,7 @@ export async function aktualisiereLauf(
   }
 
   let abfrage = supabase
-    .from('abrechnungslaeufe')
+    .from(optionen.tabelle ?? 'abrechnungslaeufe')
     .update(patch)
     .eq('id', laufId)
 

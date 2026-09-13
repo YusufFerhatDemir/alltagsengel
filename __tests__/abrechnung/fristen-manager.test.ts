@@ -433,8 +433,20 @@ describe('escaliereUeberfaellige', () => {
 // ---------------------------------------------------------------------------
 
 describe('markiereFristErledigt', () => {
+  /**
+   * PostgREST gibt bei `update().select()` die getroffenen Zeilen zurueck.
+   * Der Gutfall trifft eine — der Doppelgaenger muss das liefern, sonst
+   * sieht der neue Wirkungsnachweis im Pruefling aus wie ein Fehlschlag.
+   */
+  function fakeErledigt(getroffen: unknown[] = [{ id: 'f-1' }]) {
+    return erstelleFakeSupabase((a: FakeAufruf) =>
+      a.tabelle === 'billing_fristen' && a.operation === 'update'
+        ? { data: getroffen }
+        : { data: null })
+  }
+
   it('setzt den Status auf erledigt — mit Mandanten-Fence', async () => {
-    const f = erstelleFakeSupabase(() => ({ data: null }))
+    const f = fakeErledigt()
     await markiereFristErledigt(f.client, 'f-1', ORG, ACTOR)
     const a = f.auf('billing_fristen').find(x => x.operation === 'update')
     expect((a?.payload as Record<string, unknown>).status).toBe('erledigt')
@@ -443,10 +455,33 @@ describe('markiereFristErledigt', () => {
   })
 
   it('schreibt einen Audit-Eintrag', async () => {
-    const f = erstelleFakeSupabase(() => ({ data: null }))
+    const f = fakeErledigt()
     await markiereFristErledigt(f.client, 'f-1', ORG, ACTOR)
     const audit = f.ersterAuf('billing_audit_trail', 'insert')?.payload as Record<string, unknown>
     expect(audit.action).toBe('frist_erledigt')
     expect(audit.entity_id).toBe('f-1')
+  })
+
+  /**
+   * Der Pruefeintrag steht DIREKT hinter dem Schreibvorgang. Trifft der
+   * keine Zeile — fremder Mandant, geloeschte Frist —, meldete der
+   * Pruefpfad bisher „frist_erledigt", waehrend die Frist unveraendert
+   * weiterlief. Ein Protokoll ueber eine Erledigung, die nicht
+   * stattgefunden hat, ist schlimmer als gar keines.
+   */
+  it('wirft, wenn die Frist nicht getroffen wurde — und protokolliert NICHTS', async () => {
+    const f = fakeErledigt([])
+    await expect(markiereFristErledigt(f.client, 'f-1', ORG, ACTOR))
+      .rejects.toThrow(/NICHT als erledigt vermerkt/)
+    expect(f.auf('billing_audit_trail')).toHaveLength(0)
+  })
+
+  it('unterscheidet einen Fehler von „nicht gefunden"', async () => {
+    const f = erstelleFakeSupabase((a: FakeAufruf) =>
+      a.tabelle === 'billing_fristen' && a.operation === 'update'
+        ? { data: null, error: { message: 'Verbindung weg' } }
+        : { data: null })
+    await expect(markiereFristErledigt(f.client, 'f-1', ORG, ACTOR))
+      .rejects.toThrow(/Verbindung weg/)
   })
 })

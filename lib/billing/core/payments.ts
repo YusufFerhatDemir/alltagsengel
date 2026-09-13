@@ -472,16 +472,27 @@ export async function allocatePayment(
       }
     }
 
-    if (newPaidCents < totalCents && totalCents - newPaidCents > 0) {
-      await supabase
-        .from('dunning_entries')
-        .update({ amount_paid_cents: newPaidCents })
-        .eq('invoice_id', alloc.invoiceId)
-    } else {
-      await supabase
-        .from('dunning_entries')
-        .update({ dunning_level: 'bezahlt', amount_paid_cents: newPaidCents })
-        .eq('invoice_id', alloc.invoiceId)
+    // Der Mahnvorgang fuehrt den bezahlten Betrag ein zweites Mal. Bleibt
+    // er stehen, mahnt der naechste Lauf eine Rechnung an, die bezahlt ist
+    // — ein Brief an den Kunden, den niemand zurueckholen kann.
+    //
+    // KEIN Treffer ist hier KEIN Fehler: zu vielen Rechnungen gibt es gar
+    // keinen Mahnvorgang. Ein FEHLER dagegen schon, und der wurde bisher
+    // verworfen.
+    const mahnstand = newPaidCents < totalCents && totalCents - newPaidCents > 0
+      ? { amount_paid_cents: newPaidCents }
+      : { dunning_level: 'bezahlt', amount_paid_cents: newPaidCents }
+
+    const { error: mahnFehler } = await supabase
+      .from('dunning_entries')
+      .update(mahnstand)
+      .eq('invoice_id', alloc.invoiceId)
+      .select('id')
+
+    if (mahnFehler) {
+      throw new Error(
+        `Zahlstand im Mahnvorgang zu Rechnung ${alloc.invoiceId} nicht nachgezogen: ${mahnFehler.message}`,
+      )
     }
 
     await logBillingAction(supabase, {
@@ -504,13 +515,19 @@ export async function allocatePayment(
     : 'teilweise_zugeordnet'
 
   // OCC: only update if allocated_cents hasn't changed since we read it
-  const { data: updatedPayment } = await supabase
+  const { data: updatedPayment, error: paymentFehler } = await supabase
     .from('payments')
     .update({ allocated_cents: newAllocated, matching_status: matchingStatus })
     .eq('id', paymentId)
     .eq('allocated_cents', payment.allocated_cents ?? 0)
     .select('id')
 
+  // „Konkurrierender Zugriff" ist eine Diagnose. Sie darf nicht auch dann
+  // herauskommen, wenn die Abfrage schlicht gescheitert ist — sonst sucht
+  // jemand nach einem Wettlauf, wo ein Schemafehler steht.
+  if (paymentFehler) {
+    throw new Error(`Zahlung ${paymentId} konnte nicht fortgeschrieben werden: ${paymentFehler.message}`)
+  }
   if (!updatedPayment?.length) {
     throw new Error(
       `Konkurrierender Zugriff auf Zahlung ${paymentId} — bitte erneut versuchen.`

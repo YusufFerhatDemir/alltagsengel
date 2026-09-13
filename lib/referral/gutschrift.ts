@@ -89,13 +89,35 @@ export async function schreibeGutschrift(
   const alt = typeof profil.referral_credit === 'number' ? profil.referral_credit : 0
   const neu = aufCent(alt + betrag)
 
-  const { error: schreibFehler } = await admin
+  // Gelesen wurde oben, geschrieben wird hier. Dazwischen kann eine zweite
+  // Gutschrift auf dasselbe Konto gelaufen sein — ohne Vergleichsbedingung
+  // wuerde dieser Aufruf sie ueberschreiben, und das Guthaben des Kunden
+  // waere um den fremden Betrag kleiner.
+  //
+  // `referral_credit` ist nullable; `.eq(spalte, null)` trifft in Postgres
+  // NICHTS (NULL = NULL ist NULL). Der NULL-Fall braucht `is`.
+  const schreibAbfrage = admin
     .from('profiles')
     .update({ referral_credit: neu })
     .eq('id', userId)
 
+  const { data: gebucht, error: schreibFehler } = await (
+    profil.referral_credit === null || profil.referral_credit === undefined
+      ? schreibAbfrage.is('referral_credit', null)
+      : schreibAbfrage.eq('referral_credit', profil.referral_credit)
+  ).select('id')
+
   if (schreibFehler) {
     return { ok: false, fehler: `Guthaben nicht schreibbar (${schreibFehler.code ?? 'unbekannt'}).` }
+  }
+  // Ohne diese Pruefung meldete die Funktion `ok: true` mit einem
+  // `neuerStand`, der nirgends steht: PostgREST gibt bei null getroffenen
+  // Zeilen keinen Fehler zurueck.
+  if (!gebucht || gebucht.length === 0) {
+    return {
+      ok: false,
+      fehler: 'Guthaben wurde zwischenzeitlich veraendert — es wurde nichts gebucht. Bitte erneut versuchen.',
+    }
   }
 
   return { ok: true, neuerStand: neu }

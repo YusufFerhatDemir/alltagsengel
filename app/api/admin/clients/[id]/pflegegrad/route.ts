@@ -102,14 +102,27 @@ export const PATCH = withTracking(async function PATCH(
     }
     if (seit) updateData.care_level_since = seit
 
-    const { error: updateError } = await admin
+    const { data: geaendert, error: updateError } = await admin
       .from('clients')
       .update(updateData)
       .eq('id', id)
       .eq('organization_id', organizationId)
+      .select('id')
 
     if (updateError) {
       return safeApiError(updateError)
+    }
+    // Direkt darunter steht der Pruefeintrag „Pflegegrad von X nach Y", und
+    // unmittelbar danach werden die Budgets neu bewertet. Beides haengt
+    // daran, dass der Pflegegrad wirklich steht. PostgREST meldet bei null
+    // getroffenen Zeilen keinen Fehler — der Klient haette dann seinen
+    // alten Grad, der Pruefpfad den neuen, und die Budgets kaemen aus einer
+    // Annahme, die nicht stimmt.
+    if (!geaendert || geaendert.length === 0) {
+      return NextResponse.json(
+        { error: 'Klient nicht gefunden oder kein Zugriff — der Pflegegrad wurde NICHT geändert.' },
+        { status: 404 },
+      )
     }
 
     await logAuditEvent({

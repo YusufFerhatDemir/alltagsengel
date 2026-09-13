@@ -75,11 +75,17 @@ function ausfuehrungsGeber(opts: {
     }
     if (a.tabelle === 'sgb_v_korrekturlaeufe' && a.operation === 'update') {
       const istCas = hatFilter(a, 'in', 'status')
-      if (!istCas) return { data: null }
+      // Die Verknuepfung und die Ruecknahme sind keine CAS-Schreibwege,
+      // treffen aber sehr wohl eine Zeile. PostgREST gibt sie zurueck —
+      // ohne das saehe jede dieser Pruefungen nach Fehlschlag aus.
+      if (!istCas) return { data: [{ id: KORREKTUR }] }
       return { data: casTreffer ? [{ id: KORREKTUR }] : [] }
     }
     if (a.tabelle === 'sgb_v_laeufe' && a.operation === 'select') {
       return { data: opts.original ?? lauf() }
+    }
+    if (a.tabelle === 'sgb_v_laeufe' && a.operation === 'update') {
+      return { data: [{ id: LAUF }] }
     }
     if (a.tabelle === 'sgb_v_laeufe' && a.operation === 'insert') {
       if (opts.laufInsertFehler) return { data: null, error: opts.laufInsertFehler }

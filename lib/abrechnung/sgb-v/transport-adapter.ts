@@ -212,14 +212,48 @@ export async function verarbeiteEintrag(
   const adapter = adapterFuer(eintrag.adapter_typ as AdapterTyp, speichern)
   const jetzt = new Date().toISOString()
 
-  await supabase
+  // ── Den Eintrag UEBERNEHMEN, bevor gesendet wird ──────────────────
+  //
+  // Hier stand ein blankes `await` ohne Ergebnispruefung. Dahinter liegt
+  // `adapter.send()` — der tatsaechliche Versand an die
+  // Datenannahmestelle.
+  //
+  // `.in('status', ['wartend', 'fehlgeschlagen'])` macht daraus eine
+  // Uebernahme: nur wer den Eintrag aus einem dieser beiden Zustaende
+  // heraus auf 'in_bearbeitung' ziehen kann, darf senden. Ohne diese
+  // Bedingung koennten zwei gleichzeitige Laeufe denselben Datensatz an
+  // dieselbe Kasse schicken — und ein 'erfolgreich' erneut uebertragen.
+  //
+  // Der Mandantenfilter steht hier ein zweites Mal. Die Kennung kommt zwar
+  // aus der gefencten Abfrage oben, aber eine Sperre, die nur ueber die
+  // Herkunft einer Variablen gilt, haelt keine Umbauten aus.
+  const { data: uebernommen, error: uebernahmeFehler } = await supabase
     .from('sgb_v_uebertragungsqueue')
     .update({ status: 'in_bearbeitung', versuch_zaehler: eintrag.versuch_zaehler + 1, letzter_versuch_am: jetzt })
     .eq('id', queueId)
+    .eq('organization_id', organizationId)
+    .in('status', ['wartend', 'fehlgeschlagen'])
+    .select('id')
+
+  if (uebernahmeFehler) {
+    throw new Error(`Warteschlangeneintrag ${queueId} konnte nicht uebernommen werden: ${uebernahmeFehler.message}`)
+  }
+  if (!uebernommen || uebernommen.length === 0) {
+    throw new Error(
+      `Warteschlangeneintrag ${queueId} steht nicht mehr auf „wartend" oder „fehlgeschlagen" — `
+      + `er wird gerade bearbeitet oder ist bereits uebertragen. Es wurde NICHTS gesendet.`
+    )
+  }
 
   const ergebnis = await adapter.send(datensatz)
 
-  await supabase
+  // ── Und das Ergebnis festhalten ───────────────────────────────────
+  //
+  // Dieser Vermerk ist der einzige Beleg dafuer, dass die Uebertragung
+  // stattgefunden hat. Bleibt er aus, steht der Eintrag weiter auf
+  // 'in_bearbeitung' — und der Wiederholungslauf schickt denselben
+  // Datensatz ein zweites Mal an die Kasse.
+  const { data: festgehalten, error: ergebnisFehler } = await supabase
     .from('sgb_v_uebertragungsqueue')
     .update({
       status: ergebnis.erfolg ? 'erfolgreich' : 'fehlgeschlagen',
@@ -227,6 +261,18 @@ export async function verarbeiteEintrag(
       ziel_referenz: ergebnis.zielReferenz,
     })
     .eq('id', queueId)
+    .eq('organization_id', organizationId)
+    .select('id')
+
+  if (ergebnisFehler || (festgehalten?.length ?? 0) === 0) {
+    throw new Error(
+      `ACHTUNG: Der Datensatz wurde uebertragen (${ergebnis.erfolg ? 'erfolgreich' : 'fehlgeschlagen'}), `
+      + `aber das Ergebnis konnte am Warteschlangeneintrag ${queueId} nicht vermerkt werden `
+      + `(${ergebnisFehler?.message ?? 'keine Zeile getroffen'}). `
+      + `Der Eintrag steht weiter auf „in_bearbeitung" und darf NICHT erneut gesendet werden, `
+      + `bevor der Versand geprueft ist.`
+    )
+  }
 
   await logBillingAction(supabase, {
     entityType: 'sgb_v_uebertragung',

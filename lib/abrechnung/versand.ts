@@ -566,11 +566,29 @@ export async function versendeDakotaAuftrag(
   }
 
   // ── 10. Übertragung ──────────────────────────────────────────
-  await supabase
+  //
+  // Der Statuswechsel VOR dem Versand ist eine Uebernahme, keine Notiz:
+  // `.neq('status', 'uebermittlung_laeuft')` sorgt dafuer, dass zwei
+  // gleichzeitige Laeufe nicht dieselbe Auftragsdatei an die
+  // Annahmestelle schicken. Bisher stand hier ein blankes `await` — und
+  // PostgREST meldet keinen Fehler, wenn nichts getroffen wird.
+  const { data: uebernommen, error: uebernahmeFehler } = await supabase
     .from('dta_dakota_auftraege')
     .update({ status: 'uebermittlung_laeuft', updated_at: jetzt() })
     .eq('id', auftragId)
     .eq('organization_id', organizationId)
+    .neq('status', 'uebermittlung_laeuft')
+    .select('id')
+
+  if (uebernahmeFehler) {
+    throw new Error(`DAKOTA-Auftrag ${auftragId} konnte nicht uebernommen werden: ${uebernahmeFehler.message}`)
+  }
+  if (!uebernommen || uebernommen.length === 0) {
+    throw new Error(
+      `DAKOTA-Auftrag ${auftragId} steht bereits auf „uebermittlung_laeuft" oder wurde nicht gefunden `
+      + '— es wurde NICHTS uebertragen.'
+    )
+  }
 
   // Wiederholversuche mit wachsendem Abstand — aber nur, solange eine
   // Wiederholung folgenlos ist. Sobald die Auftragsdatei oben liegt, kann die

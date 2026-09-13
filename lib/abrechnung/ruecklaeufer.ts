@@ -238,21 +238,52 @@ export async function importiereRuecklaeufer(
 
     if (sgbVLauf) {
       zugeordnet = true
+      // Die Antwort der Kasse auf den SGB-V-Lauf.
+      //
+      // Beides sind Zustandswechsel einer Abrechnung an einen
+      // Kostentraeger, und beide standen als nacktes `await` da. Geht der
+      // Wechsel verloren, steht der Lauf weiter auf „uebermittelt",
+      // waehrend die Kasse laengst geantwortet hat — die Wiedervorlage
+      // meldet ihn dann als offen, und niemand bearbeitet die Ablehnung.
+      //
+      // Geworfen wird NICHT: der Ruecklaeufer selbst ist zu diesem
+      // Zeitpunkt schon erfasst, und ein Abbruch hier wuerde ihn
+      // verwerfen. Der Ausfall gehoert ins Protokoll, nicht ins Nichts.
       const laufAntwortStatus = mapRuecklaeuferZuLaufStatus(status)
       if (laufAntwortStatus) {
-        await supabase
+        const { data: antwortGesetzt, error: antwortFehler } = await supabase
           .from('sgb_v_laeufe')
           .update({ antwort_status: laufAntwortStatus, antwort_am: new Date().toISOString() })
           .eq('id', params.sgbVLaufId)
           .eq('organization_id', params.organizationId)
+          .select('id')
+
+        if (antwortFehler || (antwortGesetzt?.length ?? 0) === 0) {
+          log.error('Antwortstatus am SGB-V-Lauf nicht gesetzt — der Lauf gilt weiter als unbeantwortet', {
+            laufId: params.sgbVLaufId,
+            organizationId: params.organizationId,
+            antwortStatus: laufAntwortStatus,
+            errorMessage: antwortFehler?.message ?? 'keine Zeile getroffen',
+          })
+        }
 
         const neuerLaufStatus = mapAntwortZuSgbVLaufStatus(laufAntwortStatus)
         if (neuerLaufStatus) {
-          await supabase
+          const { data: statusGesetzt, error: statusFehler } = await supabase
             .from('sgb_v_laeufe')
             .update({ status: neuerLaufStatus })
             .eq('id', params.sgbVLaufId)
             .eq('organization_id', params.organizationId)
+            .select('id')
+
+          if (statusFehler || (statusGesetzt?.length ?? 0) === 0) {
+            log.error('Laufstatus nach Kassenantwort nicht nachgezogen', {
+              laufId: params.sgbVLaufId,
+              organizationId: params.organizationId,
+              neuerStatus: neuerLaufStatus,
+              errorMessage: statusFehler?.message ?? 'keine Zeile getroffen',
+            })
+          }
         }
       }
     }
@@ -414,7 +445,12 @@ export async function ordneRuecklaeuferZu(
     .maybeSingle()
   if (!lauf) throw new Error('Abrechnungslauf nicht gefunden oder gehört zu einer anderen Organisation')
 
-  await supabase
+  // Dasselbe Muster wie in `markiereRuecklaeuferErledigt` weiter unten:
+  // ohne Rueckgabe bliebe ein Update, das keine Zeile trifft, ein stiller
+  // No-Op — und der Pruefeintrag darunter meldete trotzdem „zugeordnet".
+  // Ein Protokoll ueber eine Zuordnung, die nicht stattgefunden hat, ist
+  // schlimmer als gar keines.
+  const { data: zugeordnet, error: zuordnungsFehler } = await supabase
     .from('dta_ruecklaeufer')
     .update({
       lauf_id: laufId,
@@ -423,6 +459,14 @@ export async function ordneRuecklaeuferZu(
       bearbeitet_am: new Date().toISOString(),
     })
     .eq('id', ruecklaeuferId)
+    .select('id')
+
+  if (zuordnungsFehler || (zugeordnet?.length ?? 0) === 0) {
+    throw new Error(
+      `Rückläufer ${ruecklaeuferId} konnte dem Lauf ${laufId} nicht zugeordnet werden `
+      + `(${zuordnungsFehler?.message ?? 'keine Zeile getroffen'}).`
+    )
+  }
 
   await logBillingAction(supabase, {
     entityType: 'dta_ruecklaeufer',

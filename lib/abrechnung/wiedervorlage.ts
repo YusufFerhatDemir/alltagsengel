@@ -535,7 +535,15 @@ export async function reicheKorrigierteEin(
     hinweis = `Korrekturlauf angelegt, Ausführung offen: ${(err as Error).message}`
   }
 
-  await supabase
+  // Mengenmarkierung: entweder ALLE Eintraege dieses Vorgangs tragen den
+  // Vermerk, oder die Liste ist danach halb. Ein uebriggebliebener Eintrag
+  // steht weiter als offen in der Wiedervorlage und bekaeme einen zweiten
+  // Korrekturlauf fuer denselben Fall.
+  //
+  // Der Pruefeintrag darunter meldet „wiedervorlage_eingereicht" mit der
+  // Zahl der Eintraege. Diese Zahl muss stimmen.
+  const eintragsIds = eintraege.map(e => e.id)
+  const { data: eingereicht, error: einreichFehler } = await supabase
     .from('dta_wiedervorlage')
     .update({
       status: 'eingereicht',
@@ -544,8 +552,18 @@ export async function reicheKorrigierteEin(
       bearbeitet_von: actorId,
       bearbeitet_am: new Date().toISOString(),
     })
-    .in('id', eintraege.map(e => e.id))
+    .in('id', eintragsIds)
     .eq('organization_id', organizationId)
+    .select('id')
+
+  if (einreichFehler || (eingereicht?.length ?? 0) !== eintragsIds.length) {
+    throw new Error(
+      `Wiedervorlage unvollstaendig fortgeschrieben `
+      + `(${einreichFehler?.message ?? `${eingereicht?.length ?? 0} von ${eintragsIds.length} Eintraegen`}) `
+      + `— der Korrekturlauf ${korrekturLaufId ?? korrektur.korrekturId} ist angelegt, aber nicht alle `
+      + `Eintraege sind als eingereicht vermerkt.`
+    )
+  }
 
   await logBillingAction(supabase, {
     entityType: 'dta_wiedervorlage',

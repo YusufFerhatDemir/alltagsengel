@@ -1583,8 +1583,22 @@ export async function createCreditNote(
   // Ein nicht durchfuehrbarer Nachweis wird wie ein fehlgeschlagener
   // behandelt: die eben angelegte Gutschrift wird zurueckgenommen.
   if (allCreditsErr || totalCreditedAfter > originalAmountCents) {
-    await supabase.from('invoice_corrections').delete().eq('id', correction.id);
-    await supabase.from('invoices').delete().eq('id', creditInvoice.id);
+    // Die Ruecknahme darf nicht werfen — wir werfen gleich ohnehin, und ein
+    // Fehler hier wuerde die eigentliche Ursache verdecken. Stumm bleiben
+    // darf sie aber auch nicht: scheitert sie, steht eine Gutschrift ohne
+    // Gegenstueck in der Tabelle und mindert den offenen Betrag, ohne dass
+    // jemand davon weiss. Dasselbe Muster wie im Storno-Rollback oben.
+    const [korrekturWeg, gutschriftWeg] = await Promise.all([
+      supabase.from('invoice_corrections').delete().eq('id', correction.id).select('id'),
+      supabase.from('invoices').delete().eq('id', creditInvoice.id).select('id'),
+    ]);
+    if (korrekturWeg.error || gutschriftWeg.error) {
+      log.error('Gutschrift-Ruecknahme fehlgeschlagen — verwaiste Gutschrift', {
+        correctionId: correction.id,
+        creditInvoiceId: creditInvoice.id,
+        errorMessage: korrekturWeg.error?.message ?? gutschriftWeg.error?.message,
+      });
+    }
     throw new Error(
       allCreditsErr
         ? 'Gutschrift abgelehnt: Die Gesamtsumme der Gutschriften konnte nicht nachgeprueft werden — '
@@ -1697,7 +1711,13 @@ export async function writeOffInvoice(
     .select('id')
     .maybeSingle();
 
-  if (updateError || !updated) {
+  // „Paralleler Zugriff" ist eine Diagnose. Sie darf nicht auch dann
+  // herauskommen, wenn die Abfrage schlicht gescheitert ist — sonst sucht
+  // jemand nach einem Wettlauf, wo ein Schemafehler steht.
+  if (updateError) {
+    throw new Error(`Abschreibung konnte nicht gesetzt werden: ${updateError.message}`);
+  }
+  if (!updated) {
     throw new Error('Rechnung wurde zwischenzeitlich geaendert (paralleler Zugriff) — bitte erneut versuchen.');
   }
 

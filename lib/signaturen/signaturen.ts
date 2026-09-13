@@ -80,6 +80,9 @@ import {
 import { UserFacingError } from '@/lib/api/user-facing-error'
 import { MAX_BILD_BYTES } from './unterschrift-bild'
 import { createHash } from 'crypto'
+import { logger } from '@/lib/logger'
+
+const log = logger.child('signaturen')
 
 // ── Hash-Hilfsfunktionen ────────────────────────────────────────
 
@@ -622,7 +625,7 @@ async function rolleSignaturZurueck(
   orgId: string,
   signaturId: string,
 ): Promise<void> {
-  await dienst
+  const { data: zurueckgenommen, error: ruecknahmeFehler } = await dienst
     .from('signaturen')
     .update({
       status: 'offen' as SignaturStatus,
@@ -638,6 +641,21 @@ async function rolleSignaturZurueck(
     })
     .eq('id', signaturId)
     .eq('organization_id', orgId)
+    .select('id')
+
+  // Diese Ruecknahme IST der fail-closed-Teil: sie raeumt einen
+  // beanspruchten, aber nicht belegten Statuswechsel ab. Geht sie ins
+  // Leere, bleibt genau der Zustand stehen, den sie verhindern soll — eine
+  // Unterschrift ohne Nachweis.
+  //
+  // Geworfen wird nicht: der Aufrufer ist bereits auf dem Fehlerweg, und
+  // eine Ausnahme hier wuerde die urspruengliche Ursache verdecken.
+  if (ruecknahmeFehler || (zurueckgenommen?.length ?? 0) === 0) {
+    log.error('Signatur-Ruecknahme ging ins Leere — Unterschrift steht ohne Nachweis', {
+      signaturId, orgId,
+      errorMessage: ruecknahmeFehler?.message ?? 'keine Zeile getroffen',
+    })
+  }
 }
 
 // ── Verifikation ────────────────────────────────────────────────

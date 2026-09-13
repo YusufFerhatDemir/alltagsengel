@@ -126,13 +126,29 @@ export async function beendeZugang(bestellungId: string, sofort: boolean): Promi
   const gestern = new Date(`${heute}T00:00:00Z`)
   gestern.setUTCDate(gestern.getUTCDate() - 1)
 
-  await db
+  // Das hier NIMMT einen Zugang WEG. Ging der Schreibvorgang ins Leere,
+  // blieb der Kunde freigeschaltet, waehrend der Aufrufer den Widerruf als
+  // erledigt meldete — bei `sofort` ist das ein Vertrag, der als nie
+  // geschlossen gilt, und trotzdem offener Zugang.
+  //
+  // PostgREST meldet bei null getroffenen Zeilen keinen Fehler.
+  const { data: beendet, error: beendenFehler } = await db
     .from('coach_freischaltungen')
     .update({
       status: sofort ? 'widerrufen' : 'abgelaufen',
       gueltig_bis: sofort ? gestern.toISOString().slice(0, 10) : heute,
     })
     .eq('bestellung_id', bestellungId)
+    .select('id')
+
+  if (beendenFehler) {
+    throw new Error(`Zugang zu Bestellung ${bestellungId} konnte nicht beendet werden: ${beendenFehler.message}`)
+  }
+  if (!beendet || beendet.length === 0) {
+    throw new Error(
+      `Keine Freischaltung zu Bestellung ${bestellungId} gefunden — der Zugang wurde NICHT beendet.`
+    )
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -202,10 +218,21 @@ export async function setzeStatus(
   status: BestellStatus,
   weitere: Record<string, unknown> = {}
 ): Promise<void> {
-  await admin()
+  // Jeder Zustandswechsel der Bestellung laeuft hier durch — auch der auf
+  // 'bezahlt', an dem die Freischaltung haengt. Ein stiller Fehlschlag
+  // liesse eine bezahlte Bestellung als offen stehen.
+  const { data: gesetzt, error: statusFehler } = await admin()
     .from('coach_bestellungen')
     .update({ status, ...weitere })
     .eq('id', bestellungId)
+    .select('id')
+
+  if (statusFehler) {
+    throw new Error(`Bestellung ${bestellungId} konnte nicht auf „${status}" gesetzt werden: ${statusFehler.message}`)
+  }
+  if (!gesetzt || gesetzt.length === 0) {
+    throw new Error(`Bestellung ${bestellungId} nicht gefunden — Status „${status}" wurde NICHT gesetzt.`)
+  }
 }
 
 /**
