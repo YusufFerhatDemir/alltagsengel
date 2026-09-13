@@ -27,6 +27,7 @@ import {
   CLIENT_PIPELINE, LEAD_STATUS, CLIENT_PIPELINE_KEYS, LEAD_STATUS_KEYS,
   istClientPipelineStatus, istLeadStatus, statusLabel,
   deckungsgleichMitApplicationFlow,
+  AKTIVITAET_TYPEN_KEYS, AKTIVITAET_MAX_LEN, istAktivitaetsTyp, pruefeAktivitaet,
 } from '@/lib/admin/crm-katalog'
 import { APPLICATION_FLOW } from '@/lib/admin/ops'
 import { erstelleFakeSupabase, hatOrgFence, type FakeSupabase, type FakeAufruf } from '../helpers/supabase-fake'
@@ -188,5 +189,105 @@ describe('updateLeadStatus', () => {
     await (await laden())(ID, 'converted')
     expect(audit).toHaveLength(1)
     expect(audit[0].details).toMatchObject({ von: 'new', neuer_status: 'converted' })
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════
+// Aktivitäten (13.09.2026)
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('Aktivitätsarten gegen die Datenbank', () => {
+  it('AKTIVITAET_TYPEN deckt sich mit dem CHECK auf activity_type', () => {
+    const sql = readFileSync(
+      join(process.cwd(), 'supabase/migrations', '20260705000000_crm_module_tables.sql'), 'utf8')
+    const m = sql.match(/activity_type\s+text\s+NOT NULL\s+CHECK\s*\(\s*activity_type\s+IN\s*\(([^)]+)\)/i)
+    expect(m, 'CHECK für activity_type nicht gefunden').toBeTruthy()
+    const ausDb = m![1].split(',').map(t => t.trim().replace(/^'|'$/g, ''))
+    expect([...AKTIVITAET_TYPEN_KEYS].sort()).toEqual([...ausDb].sort())
+  })
+
+  it('weist unbekannte Arten ab', () => {
+    expect(istAktivitaetsTyp('call')).toBe(true)
+    expect(istAktivitaetsTyp('anruf')).toBe(false)
+    expect(istAktivitaetsTyp('toString')).toBe(false)
+    expect(istAktivitaetsTyp(null)).toBe(false)
+  })
+})
+
+describe('pruefeAktivitaet', () => {
+  const gut = { activity_type: 'call', title: 'Rückruf', lead_id: ID }
+
+  it('nimmt eine gültige Aktivität an', () => {
+    const r = pruefeAktivitaet({ ...gut, description: 'Erreicht, Termin vereinbart' })
+    expect(r.fehler).toBeNull()
+    expect(r.aktivitaet).toMatchObject({ activity_type: 'call', lead_id: ID })
+  })
+
+  it('verlangt genau EINEN Bezug', () => {
+    // Ohne Bezug haengt die Zeile an nichts und steht in keiner
+    // Verlaufsliste; mit beiden behauptet sie, derselbe Vorgang sei
+    // Kunde UND Anfrage.
+    expect(pruefeAktivitaet({ activity_type: 'call', title: 'x' }).fehler).toMatch(/ohne Bezug/)
+    expect(pruefeAktivitaet({ ...gut, client_id: 'c1' }).fehler).toMatch(/nicht zu Kunde UND Anfrage/)
+  })
+
+  it('verlangt einen Titel', () => {
+    expect(pruefeAktivitaet({ ...gut, title: '  ' }).fehler).toMatch(/title/)
+  })
+
+  it('weist zu langen Text ab', () => {
+    expect(pruefeAktivitaet({ ...gut, title: 'x'.repeat(AKTIVITAET_MAX_LEN.title + 1) }).fehler).toMatch(/zu lang/)
+    expect(pruefeAktivitaet({ ...gut, description: 'x'.repeat(AKTIVITAET_MAX_LEN.description + 1) }).fehler).toMatch(/zu lang/)
+  })
+
+  it('weist eine unbekannte Art ab', () => {
+    expect(pruefeAktivitaet({ ...gut, activity_type: 'brieftaube' }).fehler).toMatch(/Aktivitätsart/)
+  })
+})
+
+describe('createActivity', () => {
+  const laden = async () => (await import('@/app/mis/crm/actions')).createActivity
+
+  function fakeMitBezug(bezugGefunden: boolean) {
+    const f = erstelleFakeSupabase((a: FakeAufruf) => {
+      if (a.tabelle === 'profiles') return { data: { role: 'admin', first_name: 'Vera', last_name: 'Verwaltung' }, error: null }
+      if ((a.tabelle === 'clients' || a.tabelle === 'lead_inquiries') && a.operation === 'select') {
+        return { data: bezugGefunden ? { id: ID } : null, error: null }
+      }
+      if (a.tabelle === 'mis_crm_activities' && a.operation === 'insert') {
+        return { data: { id: 'a1' }, error: null }
+      }
+      return undefined
+    })
+    ;(f.client as any).auth = { getUser: async () => ({ data: { user: { id: NUTZER } }, error: null }) }
+    return f
+  }
+
+  it('traegt den ANGEMELDETEN Nutzer als Urheber ein, nicht die Eingabe', async () => {
+    // Bis 13.09.2026 kam `performed_by` aus dem Formular: in einem
+    // Verlauf, den spaeter jemand als Beleg liest, konnte sich damit jeder
+    // als beliebige Person eintragen.
+    fake = fakeMitBezug(true)
+    const r = await (await laden())({
+      activity_type: 'note', title: 'Notiz', lead_id: ID,
+      // absichtlich untergeschoben:
+      performed_by: 'Jemand ganz anderes',
+    } as any)
+    expect(r.ok).toBe(true)
+    const ins = fake.aufrufe.find(a => a.tabelle === 'mis_crm_activities' && a.operation === 'insert')
+    expect((ins!.payload as any).performed_by).toBe('Vera Verwaltung')
+  })
+
+  it('weist einen Bezug aus einer fremden Organisation ab', async () => {
+    fake = fakeMitBezug(false)
+    const r = await (await laden())({ activity_type: 'note', title: 'x', lead_id: ID })
+    expect(r.ok).toBe(false)
+    expect(fake.aufrufe.find(a => a.tabelle === 'mis_crm_activities' && a.operation === 'insert')).toBeUndefined()
+  })
+
+  it('das Protokoll traegt den Freitext NICHT', async () => {
+    fake = fakeMitBezug(true)
+    await (await laden())({ activity_type: 'note', title: 'Wirkte bedrückt', lead_id: ID })
+    expect(JSON.stringify(audit[0])).not.toContain('bedrückt')
   })
 })

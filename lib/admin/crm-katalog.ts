@@ -107,3 +107,105 @@ export function deckungsgleichMitApplicationFlow(): boolean {
   return LEAD_STATUS_KEYS.length === APPLICATION_FLOW.length
     && LEAD_STATUS_KEYS.every(k => APPLICATION_FLOW.includes(k))
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// Aktivitätsarten
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * `mis_crm_activities.activity_type`.
+ *
+ * Spiegelt den CHECK aus Migration `20260705000000_crm_module_tables.sql`.
+ * Ein Test hält die Liste an die Migration — dieselbe Regel wie bei
+ * `CLIENT_PIPELINE`.
+ */
+export const AKTIVITAET_TYPEN: Record<string, StatusEintrag> = {
+  call: { label: 'Telefonat', color: '#3B82F6' },
+  email: { label: 'E-Mail', color: '#8B5CF6' },
+  visit: { label: 'Besuch', color: '#22C55E' },
+  note: { label: 'Notiz', color: '#8A8278' },
+  follow_up: { label: 'Wiedervorlage', color: '#F59E0B' },
+  status_change: { label: 'Statuswechsel', color: '#C9A961' },
+}
+
+export const AKTIVITAET_TYPEN_KEYS = Object.keys(AKTIVITAET_TYPEN)
+
+export function istAktivitaetsTyp(wert: unknown): wert is string {
+  return typeof wert === 'string' && Object.prototype.hasOwnProperty.call(AKTIVITAET_TYPEN, wert)
+}
+
+/**
+ * Längengrenzen einer Aktivität.
+ *
+ * `title` steht in der Verlaufsliste und muss dort lesbar bleiben;
+ * `description` trägt den Freitext.
+ */
+export const AKTIVITAET_MAX_LEN = { title: 200, description: 4000 } as const
+
+export interface AktivitaetEingabe {
+  activity_type: string
+  title: string
+  description?: string
+  client_id?: string
+  lead_id?: string
+}
+
+export interface AktivitaetPruefErgebnis {
+  aktivitaet: AktivitaetEingabe | null
+  fehler: string | null
+}
+
+/**
+ * Prüft eine von Hand angelegte Aktivität.
+ *
+ * ── GENAU EIN BEZUG ───────────────────────────────────────────────────
+ * Eine Aktivität ohne `client_id` und ohne `lead_id` hängt an nichts: sie
+ * steht in keiner Verlaufsliste und ist nur noch über einen direkten
+ * Tabellenblick auffindbar. Eine mit beidem behauptet, derselbe Vorgang
+ * sei ein Kunde UND eine Anfrage. Beides wird abgewiesen.
+ *
+ * `performed_by` kommt bewusst NICHT aus der Eingabe — siehe
+ * `createActivity`.
+ */
+export function pruefeAktivitaet(roh: Record<string, unknown>): AktivitaetPruefErgebnis {
+  if (!roh || typeof roh !== 'object' || Array.isArray(roh)) {
+    return { aktivitaet: null, fehler: 'Keine Angaben übergeben.' }
+  }
+  if (!istAktivitaetsTyp(roh.activity_type)) {
+    return { aktivitaet: null, fehler: `Unbekannte Aktivitätsart: ${String(roh.activity_type)}` }
+  }
+
+  const text = (k: 'title' | 'description', pflicht: boolean): string | { fehler: string } => {
+    const w = roh[k]
+    if (w === undefined || w === null || w === '') {
+      return pflicht ? { fehler: `${k} fehlt.` } : ''
+    }
+    if (typeof w !== 'string') return { fehler: `Ungültige Angabe: ${k}` }
+    const t = w.trim()
+    if (!t && pflicht) return { fehler: `${k} fehlt.` }
+    if (t.length > AKTIVITAET_MAX_LEN[k]) {
+      return { fehler: `${k} ist zu lang (max. ${AKTIVITAET_MAX_LEN[k]} Zeichen)` }
+    }
+    return t
+  }
+
+  const title = text('title', true)
+  if (typeof title !== 'string') return { aktivitaet: null, fehler: title.fehler }
+  const description = text('description', false)
+  if (typeof description !== 'string') return { aktivitaet: null, fehler: description.fehler }
+
+  const client = typeof roh.client_id === 'string' && roh.client_id ? roh.client_id : undefined
+  const lead = typeof roh.lead_id === 'string' && roh.lead_id ? roh.lead_id : undefined
+  if (!client && !lead) {
+    return { aktivitaet: null, fehler: 'Aktivität ohne Bezug — Kunde oder Anfrage angeben.' }
+  }
+  if (client && lead) {
+    return { aktivitaet: null, fehler: 'Aktivität kann nicht zu Kunde UND Anfrage gehören.' }
+  }
+
+  return {
+    aktivitaet: { activity_type: roh.activity_type, title, description: description || undefined, client_id: client, lead_id: lead },
+    fehler: null,
+  }
+}
+

@@ -155,7 +155,8 @@ export default function CrmPage() {
   // Forms
   const [leadForm, setLeadForm] = useState({ name: '', phone: '', plz: '', message: '', source: '', service: '' })
   const [partnerForm, setPartnerForm] = useState({ name: '', type: 'pflegedienst', city: '', phone: '', email: '', contact_person: '' })
-  const [activityForm, setActivityForm] = useState({ activity_type: 'call', title: '', description: '', performed_by: '' })
+  // Kein `performed_by` mehr: wer etwas getan hat, bestimmt die Anmeldung.
+  const [activityForm, setActivityForm] = useState({ activity_type: 'call', title: '', description: '' })
 
   const loadData = useCallback(async () => {
     try {
@@ -223,16 +224,27 @@ export default function CrmPage() {
   }
 
   async function handleAddActivity() {
+    // Genau EIN Bezug. Waren vorher beide gesetzt, behauptete die Aktivitaet,
+    // derselbe Vorgang sei Kunde UND Anfrage; die Server Action weist das
+    // jetzt ab, also entscheidet die Oberflaeche hier sichtbar.
+    const bezug = selectedClient
+      ? { client_id: selectedClient.id }
+      : selectedLead
+        ? { lead_id: selectedLead.id }
+        : null
+    if (!bezug) { setAktionsFehler('Kein Kunde und keine Anfrage ausgewählt.'); return }
+
     const result = await createActivity({
-      activity_type: activityForm.activity_type, title: activityForm.title,
-      description: activityForm.description, performed_by: activityForm.performed_by,
-      client_id: selectedClient?.id, lead_id: selectedLead?.id,
+      activity_type: activityForm.activity_type,
+      title: activityForm.title,
+      description: activityForm.description,
+      ...bezug,
     })
-    if (result.ok) {
-      setAddActivityOpen(false)
-      setActivityForm({ activity_type: 'call', title: '', description: '', performed_by: '' })
-      loadData()
-    }
+    if (!result.ok) { setAktionsFehler(result.error); return }
+    setAktionsFehler(null)
+    setAddActivityOpen(false)
+    setActivityForm({ activity_type: 'call', title: '', description: '' })
+    loadData()
   }
 
   // ===== KPIs =====
@@ -919,10 +931,11 @@ export default function CrmPage() {
               <label htmlFor="crm-beschreibung" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Beschreibung</label>
               <textarea id="crm-beschreibung" style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} value={activityForm.description} onChange={e => setActivityForm({ ...activityForm, description: e.target.value })} placeholder="Details..." />
             </div>
-            <div>
-              <label htmlFor="crm-durchgefuehrt-von" style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Durchgeführt von</label>
-              <input id="crm-durchgefuehrt-von" style={inputStyle} value={activityForm.performed_by} onChange={e => setActivityForm({ ...activityForm, performed_by: e.target.value })} placeholder="Name" />
-            </div>
+            {/* „Durchgeführt von" war ein freies Textfeld. In einem Verlauf,
+                den später jemand als Beleg liest, kann sich damit jeder als
+                beliebige Person eintragen. Der Name kommt jetzt aus der
+                Anmeldung — ein Feld, das nichts mehr bewirkt, wäre
+                irreführend, deshalb ist es weg. */}
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
               <MisButton variant="secondary" onClick={() => setAddActivityOpen(false)}>Abbrechen</MisButton>
               <MisButton icon="plus" onClick={handleAddActivity} disabled={!activityForm.title}>Speichern</MisButton>

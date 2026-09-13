@@ -5,6 +5,7 @@ import { getActiveOrgId } from '@/lib/organizations/server'
 import { logAuditEventOrWarn } from '@/lib/audit-log'
 import {
   CLIENT_PIPELINE, LEAD_STATUS, istClientPipelineStatus, istLeadStatus, statusLabel,
+  pruefeAktivitaet,
 } from '@/lib/admin/crm-katalog'
 import { pruefeNeuerLead } from '@/lib/leads/anfrage-felder'
 import { logger } from '@/lib/logger'
@@ -286,24 +287,44 @@ export async function createPartner(data: {
 export async function createActivity(data: {
   activity_type: string
   title: string
-  description: string
-  performed_by: string
+  description?: string
   client_id?: string
   lead_id?: string
 }): Promise<{ ok: true; data?: any } | { ok: false; error: string }> {
   try {
     const { supabase, userId, organizationId, role, name: actorName } = await requireMISAdmin()
 
-    const row: Record<string, any> = {
-      activity_type: data.activity_type,
-      title: data.title,
-      description: data.description,
-      performed_by: data.performed_by,
-      organization_id: organizationId,
+    const { aktivitaet, fehler } = pruefeAktivitaet(data as unknown as Record<string, unknown>)
+    if (fehler || !aktivitaet) return { ok: false, error: fehler ?? 'Eingabe unvollstaendig.' }
+
+    // Der Bezug muss zur eigenen Organisation gehoeren. Die Fremdschluessel
+    // erzwingen nur, DASS es die Zeile gibt — nicht, wem sie gehoert. Ohne
+    // diese Pruefung koennte eine Aktivitaet an einem fremden Vorgang
+    // haengen und dort im Verlauf auftauchen.
+    if (aktivitaet.client_id) {
+      const { data: k } = await supabase.from('clients').select('id')
+        .eq('id', aktivitaet.client_id).eq('organization_id', organizationId).maybeSingle()
+      if (!k) return { ok: false, error: 'Kunde nicht gefunden oder kein Zugriff.' }
+    }
+    if (aktivitaet.lead_id) {
+      const { data: l } = await supabase.from('lead_inquiries').select('id')
+        .eq('id', aktivitaet.lead_id).eq('organization_id', organizationId).maybeSingle()
+      if (!l) return { ok: false, error: 'Anfrage nicht gefunden oder kein Zugriff.' }
     }
 
-    if (data.client_id) row.client_id = data.client_id
-    if (data.lead_id) row.lead_id = data.lead_id
+    const row: Record<string, any> = {
+      activity_type: aktivitaet.activity_type,
+      title: aktivitaet.title,
+      description: aktivitaet.description ?? null,
+      // WER etwas getan hat, bestimmt die Anmeldung — nicht der Aufrufer.
+      // Bis zum 13.09.2026 kam `performed_by` aus dem Formular: in einem
+      // Verlaufsprotokoll konnte sich damit jeder als beliebige Person
+      // eintragen, und der Verlauf war als Beleg wertlos.
+      performed_by: actorName,
+      organization_id: organizationId,
+    }
+    if (aktivitaet.client_id) row.client_id = aktivitaet.client_id
+    if (aktivitaet.lead_id) row.lead_id = aktivitaet.lead_id
 
     const { data: inserted, error } = await supabase
       .from('mis_crm_activities')
@@ -321,7 +342,9 @@ export async function createActivity(data: {
       organizationId,
       entityType: 'mis_crm_activities',
       entityId: inserted?.id ?? 'unknown',
-      details: { aktion: 'aktivitaet_erstellt', title: data.title, activity_type: data.activity_type },
+      // Kein `title`: der Freitext kann Angaben ueber eine Person tragen,
+      // und das Protokoll ist nicht der Ort dafuer.
+      details: { aktion: 'aktivitaet_erstellt', activity_type: aktivitaet.activity_type },
     })
 
     return { ok: true, data: inserted }
