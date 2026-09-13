@@ -7,7 +7,7 @@ import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
 import { DEFAULT_ORG_ID } from '@/lib/organizations/types'
 import {
-  pruefeAnfrageDaten, istEmailPlausibel, anliegenPflichtFuer,
+  pruefeAnfrageDaten, istEmailPlausibel, anliegenPflichtFuer, LEAD_MAX_LEN,
 } from '@/lib/leads/anfrage-felder'
 const log = logger.child('lead-inquiry')
 
@@ -20,7 +20,10 @@ const log = logger.child('lead-inquiry')
 
 const supabaseAdmin = createAdminClient()
 
-const MAX_LEN = { name: 120, phone: 40, message: 2000, service: 60, source: 60, utm_source: 120 }
+// Eine Quelle fuer beide Wege — den oeffentlichen hier und den ueber das
+// CRM (createLead). Zwei Kopien derselben Grenze laufen auseinander, und
+// dann ist unklar, welche gilt.
+const MAX_LEN = LEAD_MAX_LEN
 
 export const POST = withTracking(async function POST(request: Request) {
   try {

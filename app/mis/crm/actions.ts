@@ -6,6 +6,7 @@ import { logAuditEventOrWarn } from '@/lib/audit-log'
 import {
   CLIENT_PIPELINE, LEAD_STATUS, istClientPipelineStatus, istLeadStatus, statusLabel,
 } from '@/lib/admin/crm-katalog'
+import { pruefeNeuerLead } from '@/lib/leads/anfrage-felder'
 import { logger } from '@/lib/logger'
 const log = logger.child('mis:crm')
 
@@ -183,14 +184,26 @@ export async function createLead(data: {
   try {
     const { supabase, userId, organizationId, role, name: actorName } = await requireMISAdmin()
 
+    // Der oeffentliche Weg (app/api/lead-inquiry/route.ts) prueft Laengen
+    // und Telefonnummer seit jeher; dieser Weg pruefte NICHTS. Ein
+    // Admin-Login macht unbegrenzten Text nicht in Ordnung, nur seltener.
+    //
+    // Wichtigste Einzelpruefung: `source`. Mit 'engel-bewerbung' waere die
+    // Zeile nach der Regel in lib/admin/ops.ts eine BEWERBUNG — sie
+    // verschwaende aus dem Anfragen-Posteingang und taucht in der
+    // Bewerberliste auf, ohne dass jemand das getippt haette.
+    const { lead, fehler } = pruefeNeuerLead(data as unknown as Record<string, unknown>)
+    if (fehler || !lead) return { ok: false, error: fehler ?? 'Eingabe unvollstaendig.' }
+
     const row = {
-      name: data.name,
-      phone: data.phone,
-      plz: data.plz,
-      message: data.message,
-      source: data.source,
-      service: data.service,
+      name: lead.name,
+      phone: lead.phone,
+      plz: lead.plz ?? null,
+      message: lead.message ?? null,
+      source: lead.source,
+      service: lead.service ?? null,
       status: 'new',
+      art: 'anfrage',
       organization_id: organizationId,
     }
 
@@ -210,7 +223,7 @@ export async function createLead(data: {
       organizationId,
       entityType: 'lead_inquiries',
       entityId: inserted?.id ?? 'unknown',
-      details: { aktion: 'lead_erstellt', name: data.name, source: data.source },
+      details: { aktion: 'lead_erstellt', name: lead.name, source: lead.source },
     })
 
     return { ok: true, data: inserted }

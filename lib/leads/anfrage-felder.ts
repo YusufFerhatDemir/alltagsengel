@@ -142,3 +142,113 @@ export function istEmailPlausibel(wert: string): boolean {
 export function anliegenPflichtFuer(source: string | undefined): boolean {
   return source === 'rueckruf'
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// Grenzen und Prüfung für NEU ANGELEGTE Anfragen
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * Längengrenzen der Freitextfelder.
+ *
+ * Standen bis zum 13.09.2026 als lokale Konstante in
+ * `app/api/lead-inquiry/route.ts` — dem öffentlichen Weg. Der Weg über das
+ * CRM (`createLead` in app/mis/crm/actions.ts) prüfte **gar nichts**: die
+ * abgeschlossene Tür war die von außen, die offene die von innen.
+ *
+ * Ein Admin-Login macht unbegrenzten Text nicht in Ordnung. Es macht ihn
+ * nur unwahrscheinlicher.
+ */
+export const LEAD_MAX_LEN = {
+  name: 120,
+  phone: 40,
+  plz: 10,
+  message: 2000,
+  service: 60,
+  source: 60,
+  utm_source: 120,
+} as const
+
+/**
+ * Quellen, die eine Zeile zur BEWERBUNG machen.
+ *
+ * `lib/admin/ops.ts` erkennt Bewerbungen an `art='bewerbung'` ODER
+ * `source='engel-bewerbung'`. Wer über das CRM eine „Kundenanfrage" mit
+ * dieser Quelle anlegt, erzeugt damit stillschweigend eine Bewerbung: sie
+ * verschwindet aus dem Anfragen-Posteingang und taucht in der
+ * Bewerberliste auf. Niemand hat das getippt, und niemand sieht, warum.
+ */
+export const QUELLEN_NUR_BEWERBUNG: readonly string[] = ['engel-bewerbung']
+
+export interface NeuerLead {
+  name: string
+  phone: string
+  plz?: string
+  message?: string
+  source: string
+  service?: string
+}
+
+export interface LeadPruefErgebnis {
+  lead: NeuerLead | null
+  fehler: string | null
+}
+
+/** Mindestens sechs Ziffern — dieselbe Regel wie auf dem öffentlichen Weg. */
+export function istTelefonPlausibel(wert: string): boolean {
+  return (wert.match(/[0-9]/g) || []).length >= 6
+}
+
+/**
+ * Prüft eine von Hand angelegte Anfrage.
+ *
+ * Weist ab statt zu kürzen: ein stillschweigend auf 120 Zeichen
+ * abgeschnittener Name ist ein falscher Name, und die Person, die ihn
+ * eingetippt hat, erfährt nie davon.
+ */
+export function pruefeNeuerLead(roh: Record<string, unknown>): LeadPruefErgebnis {
+  const text = (k: keyof typeof LEAD_MAX_LEN): string | { fehler: string } => {
+    const w = roh[k]
+    if (w === undefined || w === null) return ''
+    if (typeof w !== 'string') return { fehler: `Ungültige Angabe: ${k}` }
+    const t = w.trim()
+    if (t.length > LEAD_MAX_LEN[k]) {
+      return { fehler: `${k} ist zu lang (max. ${LEAD_MAX_LEN[k]} Zeichen)` }
+    }
+    return t
+  }
+
+  const felder: Record<string, string> = {}
+  for (const k of ['name', 'phone', 'plz', 'message', 'source', 'service'] as const) {
+    const w = text(k)
+    if (typeof w !== 'string') return { lead: null, fehler: w.fehler }
+    felder[k] = w
+  }
+
+  if (!felder.name) return { lead: null, fehler: 'Name fehlt.' }
+  if (!felder.phone) return { lead: null, fehler: 'Telefonnummer fehlt.' }
+  if (!istTelefonPlausibel(felder.phone)) {
+    return { lead: null, fehler: 'Telefonnummer sieht nicht nach einer Nummer aus.' }
+  }
+  if (felder.plz && !/^\d{4,5}$/.test(felder.plz)) {
+    return { lead: null, fehler: 'PLZ besteht aus vier oder fünf Ziffern.' }
+  }
+  if (QUELLEN_NUR_BEWERBUNG.includes(felder.source)) {
+    return {
+      lead: null,
+      fehler: `Die Quelle „${felder.source}" kennzeichnet Bewerbungen — eine Kundenanfrage bekommt sie nicht.`,
+    }
+  }
+
+  return {
+    lead: {
+      name: felder.name,
+      phone: felder.phone,
+      plz: felder.plz || undefined,
+      message: felder.message || undefined,
+      source: felder.source || 'crm',
+      service: felder.service || undefined,
+    },
+    fehler: null,
+  }
+}
+

@@ -10,7 +10,9 @@ import { describe, it, expect } from 'vitest'
 import {
   ANLIEGEN, DRINGLICHKEIT, KONTAKTWEG, PFLEGEGRAD, ANFRAGE_FELDER,
   pruefeAnfrageDaten, istEmailPlausibel, anliegenPflichtFuer, optionen,
+  pruefeNeuerLead, LEAD_MAX_LEN,
 } from '@/lib/leads/anfrage-felder'
+import { istBewerbung } from '@/lib/admin/ops'
 
 describe('pruefeAnfrageDaten', () => {
   it('nimmt bekannte Werte an', () => {
@@ -129,5 +131,65 @@ describe('Kataloge', () => {
 
   it('die vier Anliegen decken Kunde, Angehörige, Bewerber und Rest ab', () => {
     expect(Object.keys(ANLIEGEN)).toEqual(['kunde', 'angehoeriger', 'bewerber', 'sonstiges'])
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════
+// Neu angelegte Anfragen (13.09.2026)
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('pruefeNeuerLead', () => {
+  const gut = { name: 'Erika Müller', phone: '06181 123456', source: 'telefon' }
+
+  it('nimmt eine vollständige Anfrage an', () => {
+    const r = pruefeNeuerLead({ ...gut, plz: '63450', message: 'Ruft zurück', service: 'Alltagsbegleitung' })
+    expect(r.fehler).toBeNull()
+    expect(r.lead).toMatchObject({ name: 'Erika Müller', plz: '63450' })
+  })
+
+  it('verlangt Name und Telefon', () => {
+    expect(pruefeNeuerLead({ ...gut, name: '   ' }).fehler).toMatch(/Name/)
+    expect(pruefeNeuerLead({ ...gut, phone: '' }).fehler).toMatch(/Telefon/)
+  })
+
+  it('verlangt eine Nummer, die nach einer Nummer aussieht', () => {
+    expect(pruefeNeuerLead({ ...gut, phone: 'ruft an' }).fehler).toMatch(/Nummer/)
+    expect(pruefeNeuerLead({ ...gut, phone: '12345' }).fehler).toMatch(/Nummer/)
+    expect(pruefeNeuerLead({ ...gut, phone: '123456' }).fehler).toBeNull()
+  })
+
+  it('weist die Bewerbungs-Quelle ab — sonst entsteht still eine Bewerbung', () => {
+    // Mit source='engel-bewerbung' waere die Zeile nach der Regel in
+    // lib/admin/ops.ts eine Bewerbung: weg aus dem Anfragen-Posteingang,
+    // auf in die Bewerberliste. Niemand hat das gewollt.
+    const r = pruefeNeuerLead({ ...gut, source: 'engel-bewerbung' })
+    expect(r.fehler).toMatch(/Bewerbung/)
+    expect(r.lead).toBeNull()
+    expect(istBewerbung({ art: 'anfrage', source: 'engel-bewerbung' })).toBe(true)   // der Grund
+  })
+
+  it('weist zu langen Text AB, statt ihn zu kürzen', () => {
+    // Ein stillschweigend abgeschnittener Name ist ein falscher Name, und
+    // wer ihn eingetippt hat, erfaehrt es nie.
+    const r = pruefeNeuerLead({ ...gut, name: 'x'.repeat(LEAD_MAX_LEN.name + 1) })
+    expect(r.fehler).toMatch(/zu lang/)
+    expect(r.lead).toBeNull()
+    expect(pruefeNeuerLead({ ...gut, name: 'x'.repeat(LEAD_MAX_LEN.name) }).fehler).toBeNull()
+  })
+
+  it('prüft die PLZ auf vier oder fünf Ziffern', () => {
+    expect(pruefeNeuerLead({ ...gut, plz: '634' }).fehler).toMatch(/PLZ/)
+    expect(pruefeNeuerLead({ ...gut, plz: 'ABCDE' }).fehler).toMatch(/PLZ/)
+    expect(pruefeNeuerLead({ ...gut, plz: '63450' }).fehler).toBeNull()
+    expect(pruefeNeuerLead({ ...gut, plz: '' }).fehler).toBeNull()
+  })
+
+  it('weist Nicht-Zeichenketten ab', () => {
+    expect(pruefeNeuerLead({ ...gut, message: { $ne: null } }).fehler).toMatch(/Ungültige Angabe/)
+    expect(pruefeNeuerLead({ ...gut, name: 42 }).fehler).toMatch(/Ungültige Angabe/)
+  })
+
+  it('setzt eine Ersatzquelle, statt leer zu lassen', () => {
+    expect(pruefeNeuerLead({ ...gut, source: '' }).lead?.source).toBe('crm')
   })
 })
