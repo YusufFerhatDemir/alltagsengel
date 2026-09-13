@@ -10,6 +10,7 @@ import {
 } from '@/lib/leads/posteingang'
 import { KOERBE, korb, zaehleKoerbe, ohneKorb, type KorbKey } from '@/lib/leads/koerbe'
 import { PRIORITAET_META } from '@/lib/leads/alterung'
+import { findeDubletten, betroffeneZeilen, MERKMAL_META } from '@/lib/leads/dubletten'
 import { StatusBadge, EmptyRow, Banner, SearchInput } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger'
 
@@ -124,6 +125,13 @@ export default function AdminPosteingangPage() {
   // 56 Tage dalagen. Steht die Zahl ueber null, ist das eine Luecke im
   // Modell und kein Randfall.
   const luecken = useMemo(() => ohneKorb(rows, jetzt), [rows, jetzt])
+  // `kontakt` fuehrt E-Mail ODER Telefon in einem Feld — am @ unterscheidbar.
+  const dubletten = useMemo(() => findeDubletten(rows.map(e => ({
+    id: `${e.art}-${e.id}`,
+    name: e.name,
+    email: e.kontakt?.includes('@') ? e.kontakt : null,
+    telefon: e.kontakt && !e.kontakt.includes('@') ? e.kontakt : null,
+  }))), [rows])
 
   const gefiltert = useMemo(() => {
     const q = suche.trim().toLowerCase()
@@ -235,6 +243,22 @@ export default function AdminPosteingangPage() {
             onClick={() => { setKorbWahl('alle'); setAmpel('alle'); setArt('alle'); setAnliegen('alle'); setSuche(luecken[0].name) }}>
             Ersten anzeigen
           </button>
+        </div>
+      )}
+
+      {dubletten.length > 0 && (
+        <div style={{
+          margin: '10px 0', padding: '10px 12px', borderRadius: 10,
+          background: 'rgba(232,160,0,0.10)', border: '1px solid rgba(232,160,0,0.35)',
+          fontSize: 13, color: 'var(--ink2)',
+        }}>
+          <strong>{betroffeneZeilen(dubletten)} Vorgänge stehen unter Dublettenverdacht.</strong>{' '}
+          {/* Absichtlich kein Knopf „zusammenführen": zwei Zeilen mit derselben
+              Nummer können Mutter und Tochter an einem Anschluss sein. Das
+              Zusammenlegen waere unumkehrbar und traefe im Zweifel die
+              falsche Person — die Verwaltung entscheidet, nicht die Liste. */}
+          Erkannt an: {[...new Set(dubletten.map(d => MERKMAL_META[d.merkmal].label))].join(', ')}.
+          Nicht automatisch zusammengeführt — bitte einzeln prüfen.
         </div>
       )}
 

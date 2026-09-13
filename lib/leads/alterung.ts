@@ -179,7 +179,13 @@ export function bewerteAlterung(z: AlterungsZeile, jetzt: Date = new Date()): Al
     }
   }
 
-  const ausKontakt = tageSeit(z.letzterKontakt, jetzt)
+  // Ein Kontakt in der ZUKUNFT ist ein Tippfehler, keine Angabe. Ungeprueft
+  // ergaebe er negative Tage und damit die Stufe „normal" — ein 74 Tage
+  // alter Vorgang saehe frisch aus und verschwaende aus jeder Arbeitsliste.
+  // Genau dagegen ist dieses Modul gebaut, also faellt er wie ein
+  // unlesbarer Wert auf den Eingang zurueck.
+  const roh = tageSeit(z.letzterKontakt, jetzt)
+  const ausKontakt = roh !== null && roh >= 0 ? roh : null
   const ausEingang = tageSeit(z.eingang, jetzt)
   const tage = ausKontakt ?? ausEingang
   const quelle: Alterung['quelle'] =

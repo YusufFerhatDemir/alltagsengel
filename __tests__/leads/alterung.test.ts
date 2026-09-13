@@ -71,6 +71,29 @@ describe('bewerteAlterung — welche Uhr läuft', () => {
     expect(a.automatisch).toBe('erhoeht')
   })
 
+  it('ein Kontakt in der ZUKUNFT ist ein Tippfehler und zählt nicht', () => {
+    // Ohne diesen Riegel: tageSeitKontakt = -5, Stufe „normal" — ein seit
+    // 74 Tagen stiller Vorgang sähe frisch aus.
+    const morgen = new Date(JETZT.getTime() + 5 * 86_400_000).toISOString()
+    const a = bewerteAlterung({ letzterKontakt: morgen, eingang: vor(74), offen: true }, JETZT)
+    expect(a.tageSeitKontakt).toBe(74)
+    expect(a.quelle).toBe('eingang')
+    expect(a.effektiv).toBe('kritisch')
+  })
+
+  it('ein unlesbarer Kontaktwert fällt ebenso auf den Eingang zurück', () => {
+    const a = bewerteAlterung({ letzterKontakt: 'kein Datum', eingang: vor(74), offen: true }, JETZT)
+    expect(a.quelle).toBe('eingang')
+    expect(a.tageSeitKontakt).toBe(74)
+  })
+
+  it('ein Kontakt von heute ist gültig — die Grenze liegt bei null, nicht darüber', () => {
+    const a = bewerteAlterung({ letzterKontakt: vor(0), eingang: vor(74), offen: true }, JETZT)
+    expect(a.quelle).toBe('letzter_kontakt')
+    expect(a.tageSeitKontakt).toBe(0)
+    expect(a.effektiv).toBe('normal')
+  })
+
   it('nennt die Quelle „keine", statt ein Alter zu behaupten', () => {
     const a = bewerteAlterung({ offen: true }, JETZT)
     expect(a.tageSeitKontakt).toBeNull()
