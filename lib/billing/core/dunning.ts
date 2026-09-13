@@ -109,11 +109,21 @@ export async function ensureDunningEntry(
       (existing.amount_paid_cents ?? 0) !== paidCents
 
     if (abweichend) {
-      await supabase
+      // Die Betraege fuehren die Mahnung. Laufen sie der Rechnung
+      // hinterher, mahnt der naechste Lauf die falsche Summe an.
+      const { data: angeglichen, error: angleichFehler } = await supabase
         .from('dunning_entries')
         .update({ amount_due_cents: totalCents, amount_paid_cents: paidCents })
         .eq('id', existing.id)
         .eq('organization_id', organizationId)
+        .select('id')
+
+      if (angleichFehler) {
+        throw new Error(`Mahnbetraege konnten nicht angeglichen werden: ${angleichFehler.message}`)
+      }
+      if (!angeglichen || angeglichen.length === 0) {
+        throw new Error(`Mahneintrag ${existing.id} nicht gefunden — Betraege NICHT angeglichen.`)
+      }
     }
     return existing.id
   }
@@ -384,11 +394,22 @@ export async function advanceDunning(
     throw new MahnstufeBereitsEskaliertError(invoiceId, entry.dunning_level as DunningLevel, newLevel)
   }
 
-  await supabase
+  // Direkt danach wird die Eskalation protokolliert — und der Aufrufer
+  // verschickt auf dieser Grundlage eine Mahnung. Bleibt die Stufe in der
+  // Datenbank stehen, mahnt der naechste Lauf dieselbe Stufe erneut.
+  const { data: stufeGesetzt, error: eskalationsFehler } = await supabase
     .from('invoices')
     .update({ dunning_level: newLevel })
     .eq('id', invoiceId)
     .eq('organization_id', organizationId)
+    .select('id')
+
+  if (eskalationsFehler) {
+    throw new Error(`Mahnstufe konnte nicht gesetzt werden: ${eskalationsFehler.message}`)
+  }
+  if (!stufeGesetzt || stufeGesetzt.length === 0) {
+    throw new Error(`Rechnung ${invoiceId} nicht gefunden — Mahnstufe NICHT gesetzt.`)
+  }
 
   await logBillingAction(supabase, {
     entityType: 'dunning',

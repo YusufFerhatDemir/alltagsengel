@@ -945,8 +945,19 @@ export async function cancelInvoice(
     .maybeSingle();
 
   if (statusError || !updated) {
-    // Storno-Rechnung zurueckrollen, da Original bereits storniert
-    await supabase.from('invoices').delete().eq('id', stornoInvoice.id);
+    // Storno-Rechnung zurueckrollen, da Original bereits storniert.
+    //
+    // Der Rollback darf NICHT werfen — wir werfen gleich ohnehin, und ein
+    // Fehler hier wuerde die eigentliche Ursache verdecken. Er darf aber
+    // auch nicht stumm bleiben: scheitert er, bleibt eine Storno-Rechnung
+    // ohne Gegenstueck in der Tabelle stehen, und niemand weiss davon.
+    const { error: rollbackFehler } = await supabase
+      .from('invoices').delete().eq('id', stornoInvoice.id).select('id');
+    if (rollbackFehler) {
+      log.error('Storno-Rollback fehlgeschlagen — verwaiste Storno-Rechnung', {
+        invoiceId: stornoInvoice.id, errorMessage: rollbackFehler.message,
+      });
+    }
     throw new Error('Rechnung wurde bereits storniert (paralleler Zugriff).');
   }
 
@@ -1320,9 +1331,21 @@ export async function correctInvoice(
     .maybeSingle();
 
   if (!casCheck) {
-    await supabase.from('invoice_corrections').delete().eq('id', correction.id);
-    await supabase.from('invoice_items').delete().eq('invoice_id', korrInvoice.id);
-    await supabase.from('invoices').delete().eq('id', korrInvoice.id);
+    // Dreiteiliger Rollback. Wie oben: nicht werfen, aber auch nicht
+    // schweigen — bleibt eines der drei stehen, liegt eine halbe
+    // Korrekturrechnung in den Buechern.
+    const rollbacks = await Promise.all([
+      supabase.from('invoice_corrections').delete().eq('id', correction.id).select('id'),
+      supabase.from('invoice_items').delete().eq('invoice_id', korrInvoice.id).select('id'),
+      supabase.from('invoices').delete().eq('id', korrInvoice.id).select('id'),
+    ]);
+    const gescheitert = rollbacks.filter(r => r.error);
+    if (gescheitert.length > 0) {
+      log.error('Korrektur-Rollback unvollstaendig — halbe Korrekturrechnung', {
+        korrInvoiceId: korrInvoice.id,
+        fehler: gescheitert.map(r => r.error?.message).join('; '),
+      });
+    }
     throw new Error('Rechnung wurde zwischenzeitlich geaendert (paralleler Zugriff) — bitte erneut versuchen.');
   }
 

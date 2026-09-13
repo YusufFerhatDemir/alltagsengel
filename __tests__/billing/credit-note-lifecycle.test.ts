@@ -34,7 +34,14 @@ function makeDb(rows: Record<string, unknown>) {
 
     const result = () => {
       if (op === 'select') return { data: rows[table] ?? null, error: null };
-      return { data: null, error: null };
+      // PostgREST gibt bei `update().select()` die BETROFFENEN Zeilen
+      // zurueck — und bei null Treffern eine leere Liste, ohne Fehler.
+      // Der Doppelgaenger lieferte bis zum 13.09.2026 immer `null` und
+      // konnte den Unterschied zwischen „geschrieben" und „nichts
+      // getroffen" gar nicht ausdruecken. Genau den prueft der
+      // Gutschrift-Weg inzwischen (Festschreibung ist ein CAS).
+      const betroffen = rows[table];
+      return { data: betroffen ? [betroffen] : [], error: null };
     };
 
     const chain: any = {

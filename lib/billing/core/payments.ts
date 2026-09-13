@@ -248,10 +248,22 @@ async function autoMatchPayment(
     }
   }
 
-  await supabase
+  // Der Rueckgabewert dieser Funktion BEHAUPTET den Status, den sie hier
+  // schreibt. Geht der Schreibvorgang ins Leere, bekommt der Aufrufer
+  // „zuordnung_vorschlag" zurueck, waehrend in der Datenbank etwas anderes
+  // steht — und handelt danach.
+  const { data: vorgemerkt, error: vormerkFehler } = await supabase
     .from('payments')
     .update({ matching_status: 'zuordnung_vorschlag' })
     .eq('id', paymentId)
+    .select('id')
+
+  if (vormerkFehler) {
+    throw new Error(`Zuordnungsvorschlag konnte nicht vermerkt werden: ${vormerkFehler.message}`)
+  }
+  if (!vorgemerkt || vorgemerkt.length === 0) {
+    throw new Error(`Zahlung ${paymentId} nicht gefunden — Zuordnungsvorschlag NICHT vermerkt.`)
+  }
 
   return {
     matchingStatus: 'zuordnung_vorschlag',
@@ -569,10 +581,21 @@ export async function recordPaymentDifference(
     throw new Error(`Differenz konnte nicht erfasst werden: ${error?.message}`)
   }
 
-  await supabase
+  // Direkt danach wird die Kuerzung protokolliert. Ein Protokoll ueber
+  // eine Statusaenderung, die nicht stattgefunden hat, ist schlimmer als
+  // gar keines.
+  const { data: gekuerzt, error: kuerzFehler } = await supabase
     .from('invoices')
     .update({ status: 'gekuerzt' })
     .eq('id', invoiceId)
+    .select('id')
+
+  if (kuerzFehler) {
+    throw new Error(`Kuerzung konnte nicht gesetzt werden: ${kuerzFehler.message}`)
+  }
+  if (!gekuerzt || gekuerzt.length === 0) {
+    throw new Error(`Rechnung ${invoiceId} nicht gefunden — Kuerzung NICHT gesetzt.`)
+  }
 
   await logBillingAction(supabase, {
     entityType: 'payment_difference',

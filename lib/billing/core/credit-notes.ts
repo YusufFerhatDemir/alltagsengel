@@ -169,12 +169,28 @@ export async function releaseCreditNote(
 
     await raiseInvoiceToFreigegeben(supabase, creditInvoice.id, creditInvoice.status as string);
 
-    // Festschreiben: ab jetzt unveraenderlich
-    await supabase
+    // Festschreiben: ab jetzt unveraenderlich.
+    //
+    // `.is('frozen_at', null)` ist bereits ein Compare-and-Swap — nur war
+    // sein Ergebnis nie abgefragt. Trifft er keine Zeile, war die Rechnung
+    // schon festgeschrieben, und der Ablauf lief weiter, als haette er sie
+    // eben versiegelt. Bei einer Gutschrift haengt an der Festschreibung,
+    // ab wann sie nicht mehr geaendert werden darf.
+    const { data: festgeschrieben, error: frostFehler } = await supabase
       .from('invoices')
       .update({ frozen_at: frozenAt })
       .eq('id', creditInvoice.id)
-      .is('frozen_at', null);
+      .is('frozen_at', null)
+      .select('id');
+
+    if (frostFehler) {
+      throw new Error(`Festschreibung fehlgeschlagen: ${frostFehler.message}`);
+    }
+    if (!festgeschrieben || festgeschrieben.length === 0) {
+      throw new Error(
+        `Gutschrift ${creditInvoice.id} war bereits festgeschrieben — kein zweites Mal.`,
+      );
+    }
 
     // Freigabe-Snapshot. Version 1 gehoert der Erzeugung (createCreditNote),
     // die Freigabe ist Version 2.
