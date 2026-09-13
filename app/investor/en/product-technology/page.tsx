@@ -1,5 +1,3 @@
-'use client';
-
 import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, GoldSep, SectionLabel, Icons } from '../../docs/shared';
 
 export default function ProductTechnologyPage() {

@@ -1,5 +1,3 @@
-'use client';
-
 import { Icons } from '../docs/shared';
 import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, StatBox, Badge, GoldSep, SectionLabel } from '../docs/shared';
 
