@@ -77,6 +77,14 @@ jobs:
       - name: Unit tests (node:test)
         run: npm run test:unit
 
+      - name: deploy.sh Nebenlauf-Riegel
+        # Mutex, Fremderkennung, HEAD-Wacht, Lock-Aufloesung nach Absturz.
+        # Laeuft in einem Wegwerf-Repo unter TMPDIR, fasst den Checkout
+        # nicht an. Der Test loest die Riegel AUS deploy.sh heraus — wer das
+        # Skript umbaut, bekommt hier einen roten Lauf statt einer stillen
+        # Regression wie bei 4df676cf.
+        run: npm run test:deploy-guard
+
       - name: Secret scan
         run: bash scripts/ci-secret-scan.sh
 

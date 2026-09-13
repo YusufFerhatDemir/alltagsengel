@@ -2,6 +2,9 @@
 # deploy.sh — die EINE Pipeline, die Agents (und Yusuf) zum Pushen nutzen.
 #
 # Was sie macht:
+#   0. Mutex (.git/deploy.lock, PID-basiert) — nur EIN Lauf je Arbeitsbaum.
+#      Verwaiste Locks nach einem Absturz werden uebernommen, laufende
+#      nicht. Trap gibt den Lock auch bei Strg-C/TERM frei.
 #   1. Stale-Lock-Cleanup (xlsx-Locks, .git/index.lock, .next.stale.*)
 #   2. Typecheck (BLOCKIERT bei Fehlern; SKIP_TYPECHECK=1 als Notausstieg)
 #   3. precommit-guard (BLOCKIERT bei Secrets/.env/node_modules/etc.)
@@ -18,6 +21,7 @@
 #   GUARD_BYPASS=1   ./deploy.sh "msg"       # Notfall: precommit-guard ignorieren
 #   DEPLOY_PATHS="lib/x app/y" ./deploy.sh "msg"  # NUR diese Pfade stagen
 #   DEPLOY_ALL=1     ./deploy.sh "msg"       # `git add -A` bewusst gewollt
+#   DEPLOY_LOCK=…    ./deploy.sh "msg"       # anderer Lock-Ort (fuer Tests)
 #
 # DEPLOY_PATHS ist für parallele Sessions gedacht: laufen zwei Agents
 # gleichzeitig im selben Working Tree, würde `git add -A` die halbfertigen
@@ -26,11 +30,15 @@
 #
 # OHNE DEPLOY_PATHS staged der Lauf weiterhin alles — aber nicht mehr
 # stillschweigend: Schritt 3 listet auf, was eingesammelt wird, und bricht
-# ab, wenn eine Datei WAEHREND des Laufs geschrieben wurde. Genau so ging am
+# ab, wenn eine Datei waehrend des Laufs NEU DAZUKAM (Snapshot-Vergleich)
+# oder VERAENDERT wurde (mtime). Genau so ging am
 # 13.09.2026 Commit 4df676cf schief: ein Lauf zog die halbfertigen Dateien
 # einer parallelen Sitzung mit hinein (fremde Commit-Nachricht) und liess
 # die zugehoerige Registrierung zurueck (CI rot). DEPLOY_ALL=1 sagt
 # ausdruecklich „alles einsammeln ist gewollt" und hebt den Abbruch auf.
+#
+# Ausserdem bricht der Lauf ab, wenn sich HEAD oder Branch waehrenddessen
+# aendern, und er pusht unter keinen Umstaenden mit --force.
 #
 # Worktree-Branches (claude/*, worktree/*) pushen automatisch auf main.
 
@@ -61,6 +69,92 @@ step() { echo ""; echo "${BLUE}${BOLD}▶ $*${RESET}"; }
 ok()   { echo "${GREEN}  ✓ $*${RESET}"; }
 warn() { echo "${YELLOW}  ⚠ $*${RESET}"; }
 die()  { echo "${RED}  ✗ $*${RESET}" >&2; exit 1; }
+
+# ══════════════════════════════════════════════════════════════════════
+# MUTEX — nur ein deploy.sh je Arbeitsbaum
+#
+# Warum ein Verzeichnis und kein `flock`: macOS liefert bash 3.2 und kein
+# flock(1). `mkdir` ist auf jedem POSIX-Dateisystem atomar — entweder es
+# gelegt, oder jemand anders war schneller. Genau die Eigenschaft, die ein
+# Mutex braucht.
+#
+# Warum unter .git/: dort landet nichts je in einem Commit, und der Ort
+# gehoert zum Arbeitsbaum, nicht zum Dateisystem. Zwei Klone auf derselben
+# Maschine sperren sich damit nicht gegenseitig aus.
+#
+# NACH EINEM ABSTURZ: der Lock traegt die PID. Lebt der Prozess nicht mehr
+# (`kill -0` schlaegt fehl), ist der Lock verwaist und wird uebernommen.
+# Ein Lock, der nur nach Alter verfaellt, ist entweder zu frueh weg (langer
+# Typecheck) oder zu lange da (Absturz nach zwei Sekunden).
+# ══════════════════════════════════════════════════════════════════════
+DEPLOY_LOCK="${DEPLOY_LOCK:-.git/deploy.lock}"
+DEPLOY_LOCK_GEHALTEN=0
+
+lock_freigeben() {
+  # NUR den eigenen Lock loesen. Sonst raeumt ein Lauf, der am fremden Lock
+  # gescheitert ist, beim Beenden genau den Lock weg, der ihn ausgesperrt hat.
+  if [ "$DEPLOY_LOCK_GEHALTEN" = "1" ] && [ -d "$DEPLOY_LOCK" ]; then
+    if [ "$(cat "$DEPLOY_LOCK/pid" 2>/dev/null || echo '')" = "$$" ]; then
+      rm -rf "$DEPLOY_LOCK"
+    fi
+  fi
+}
+
+# Aufraeumen bei Abbruch (Strg-C, kill) UND bei jedem regulaeren Ende.
+trap 'lock_freigeben' EXIT
+trap 'echo ""; warn "Abgebrochen — Lock wird freigegeben."; lock_freigeben; exit 130' INT
+trap 'echo ""; warn "Beendet (TERM) — Lock wird freigegeben."; lock_freigeben; exit 143' TERM
+
+lock_holen() {
+  if mkdir "$DEPLOY_LOCK" 2>/dev/null; then
+    DEPLOY_LOCK_GEHALTEN=1
+    echo "$$" > "$DEPLOY_LOCK/pid"
+    date +%s > "$DEPLOY_LOCK/seit"
+    return 0
+  fi
+  return 1
+}
+
+if ! lock_holen; then
+  fremd_pid="$(cat "$DEPLOY_LOCK/pid" 2>/dev/null || echo '')"
+  fremd_seit="$(cat "$DEPLOY_LOCK/seit" 2>/dev/null || echo '0')"
+  alter=$(( $(date +%s) - fremd_seit ))
+  if [ -n "$fremd_pid" ] && kill -0 "$fremd_pid" 2>/dev/null; then
+    die "Ein anderer deploy.sh laeuft bereits (PID ${fremd_pid}, seit ${alter}s).
+      Warten, bis er fertig ist. Zwei gleichzeitige Laeufe committen sich
+      gegenseitig halbfertige Arbeit — genau so entstand 4df676cf."
+  fi
+  warn "Verwaister Lock von PID ${fremd_pid:-?} (${alter}s alt, Prozess lebt nicht mehr) — uebernommen."
+  rm -rf "$DEPLOY_LOCK"
+  lock_holen || die "Lock liess sich nicht uebernehmen: $DEPLOY_LOCK"
+fi
+
+# ── Zustand beim Start festhalten ─────────────────────────────────────
+# Der Bezugspunkt fuer alle Riegel weiter unten. Was jetzt da ist, gehoert
+# zu diesem Lauf; was spaeter dazukommt, gehoert jemand anderem.
+DEPLOY_START_HEAD="$(git rev-parse HEAD 2>/dev/null || echo '')"
+DEPLOY_START_BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')"
+DEPLOY_SNAPSHOT="$(mktemp -t deploy-snapshot)"
+git status --porcelain 2>/dev/null | sed 's/^...//' | sed 's/^.* -> //' | sort > "$DEPLOY_SNAPSHOT" || true
+trap 'rm -f "$DEPLOY_SNAPSHOT"; lock_freigeben' EXIT
+
+# Bricht ab, wenn jemand anders waehrend des Laufs den Branch gewechselt
+# oder committet hat. Ein Commit auf einem HEAD, den man nicht mehr kennt,
+# ist kein Commit mehr, sondern ein Ratespiel.
+pruefe_head() {
+  local jetzt_head jetzt_branch
+  jetzt_head="$(git rev-parse HEAD 2>/dev/null || echo '')"
+  jetzt_branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')"
+  if [ "$jetzt_branch" != "$DEPLOY_START_BRANCH" ]; then
+    die "Branch hat sich waehrend des Laufs geaendert: ${DEPLOY_START_BRANCH} → ${jetzt_branch}.
+      Abgebrochen, ohne zu schreiben."
+  fi
+  if [ "$jetzt_head" != "$DEPLOY_START_HEAD" ]; then
+    die "HEAD hat sich waehrend des Laufs geaendert: ${DEPLOY_START_HEAD:0:8} → ${jetzt_head:0:8}.
+      Da hat jemand anders committet. Abgebrochen, ohne zu schreiben —
+      erneut aufrufen, dann steht der neue Stand fest."
+  fi
+}
 
 cd "$(dirname "$0")"
 
@@ -179,9 +273,18 @@ else
   # eingesammelt wird; dann wird geprueft, ob etwas WAEHREND dieses Laufs
   # geschrieben wurde. Das ist das verlaessliche Zeichen: eigene Aenderungen
   # sind vor dem Aufruf fertig, fremde entstehen waehrenddessen weiter.
+  # ── FREMDERKENNUNG ueber den Startzustand ───────────────────────────
+  # Zwei unabhaengige Zeugen, weil jeder allein Luecken hat:
+  #
+  #   1. SNAPSHOT — was beim Start nicht im Arbeitsbaum stand, aber jetzt
+  #      drin ist, kann nicht zu diesem Lauf gehoeren. Exakt, erwischt aber
+  #      keine Datei, die schon vorher geaendert war und weiter waechst.
+  #   2. MTIME — was waehrend des Laufs geschrieben wurde. Erwischt genau
+  #      diesen Fall, ist dafuer nur sekundengenau (daher die Karenz oben).
+  #
   # macOS liefert bash 3.2 — kein `mapfile`, deshalb while-read. Und kein
   # `[ … ] && echo` als letzter Ausdruck: unter `set -e` beendet der
-  # Rueckgabewert 1 sonst still den ganzen Lauf (dieselbe Falle wie oben).
+  # Rueckgabewert 1 sonst still den ganzen Lauf.
   zu_stagen=()
   while IFS= read -r zeile; do
     [ -n "$zeile" ] && zu_stagen+=("$zeile")
@@ -189,22 +292,27 @@ else
 
   anzahl="${#zu_stagen[@]}"
   if [ "$anzahl" -gt 0 ]; then
-    warn "DEPLOY_PATHS nicht gesetzt — ${anzahl} Datei(en) werden eingesammelt:"
+    warn "DEPLOY_PATHS nicht gesetzt — ${anzahl} Datei(en) kaemen in den Commit:"
     printf '%s\n' "${zu_stagen[@]}" | head -20 | sed 's/^/      /'
     if [ "$anzahl" -gt 20 ]; then echo "      … und $((anzahl - 20)) weitere"; fi
-    echo "${DIM}      Gezielt stagen: DEPLOY_PATHS=\"pfad1 pfad2\" ./deploy.sh \"msg\"${RESET}"
 
-    frisch=()
+    fremd=()
     for f in "${zu_stagen[@]}"; do
-      [ -f "$f" ] || continue
-      mt="$(stat -f %m "$f" 2>/dev/null || stat -c %Y "$f" 2>/dev/null || echo 0)"
-      if [ "$mt" -gt "$DEPLOY_FREMD_AB" ]; then frisch+=("$f"); fi
+      neu_dazu=0
+      grep -qxF "$f" "$DEPLOY_SNAPSHOT" 2>/dev/null || neu_dazu=1
+      frisch=0
+      if [ -f "$f" ]; then
+        mt="$(stat -f %m "$f" 2>/dev/null || stat -c %Y "$f" 2>/dev/null || echo 0)"
+        if [ "$mt" -gt "$DEPLOY_FREMD_AB" ]; then frisch=1; fi
+      fi
+      if [ "$neu_dazu" = "1" ] || [ "$frisch" = "1" ]; then fremd+=("$f"); fi
     done
-    if [ "${#frisch[@]}" -gt 0 ] && [ -z "${DEPLOY_ALL:-}" ]; then
+
+    if [ "${#fremd[@]}" -gt 0 ] && [ -z "${DEPLOY_ALL:-}" ]; then
       echo ""
-      warn "Waehrend dieses Laufs geschrieben:"
-      printf '%s\n' "${frisch[@]}" | sed 's/^/      /'
-      die "Da arbeitet eine andere Sitzung im selben Baum.
+      warn "Waehrend dieses Laufs entstanden oder veraendert:"
+      printf '%s\n' "${fremd[@]}" | sed 's/^/      /'
+      die "Da arbeitet eine andere Sitzung im selben Baum. Nichts wurde gestaget.
       Gezielt stagen: DEPLOY_PATHS=\"…\" ./deploy.sh \"msg\"
       Oder wenn das Einsammeln gewollt ist: DEPLOY_ALL=1 ./deploy.sh \"msg\""
     fi
@@ -215,6 +323,7 @@ bash scripts/precommit-guard.sh || die "Guard hat Commit blockiert. Fix oder GUA
 
 # ──────────────────────────────────────────────────────────────────────
 step "4/7  Commit"
+pruefe_head
 if git diff --cached --quiet; then
   warn "Nichts zu committen (working tree clean)"
   SKIP_COMMIT=1
@@ -232,6 +341,8 @@ fi
 
 # ──────────────────────────────────────────────────────────────────────
 step "5/7  Push"
+# HEAD darf sich seit dem Commit nur durch UNSEREN Commit veraendert haben.
+if [ "${SKIP_COMMIT:-0}" = "1" ]; then pruefe_head; fi
 branch="$(git rev-parse --abbrev-ref HEAD)"
 [ -z "$branch" ] || [ "$branch" = "HEAD" ] && die "Detached HEAD — kein Push möglich."
 
@@ -245,8 +356,16 @@ if [ -z "$remote_ref" ]; then
 fi
 remote_branch_short="${remote_ref#refs/heads/}"
 
-# Schutz: niemals Force-Push auf main
+# Schutz: niemals Force-Push — und zwar nachpruefbar, nicht nur behauptet.
+# Die Zusicherung steht hier, weil ein spaeteres `push_args+=(…)` sonst
+# unbemerkt ein --force einschleusen koennte.
 push_args=(origin "${branch}:${remote_branch_short}")
+for arg in "${push_args[@]}"; do
+  case "$arg" in
+    --force|-f|--force-with-lease|--force-if-includes)
+      die "Force-Push ist in deploy.sh nicht vorgesehen (Argument: $arg)." ;;
+  esac
+done
 
 # Falls Remote vorgewandert: erst rebasen, dann push (kein force).
 git fetch origin "$remote_branch_short" --quiet 2>/dev/null || true

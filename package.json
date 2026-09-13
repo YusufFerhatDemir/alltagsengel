@@ -41,6 +41,7 @@
     "cap:build:android": "npx cap sync android && cd android && ./gradlew bundleRelease",
     "cap:sync:all": "npx cap sync",
     "test:unit": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx --test $(find lib -name '*.test.ts')",
+    "test:deploy-guard": "bash scripts/test-deploy-nebenlauf.sh",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:install": "playwright install --with-deps chromium webkit",
