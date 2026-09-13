@@ -44,6 +44,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { aktualisiereLauf } from './lauf-schreiben'
 import { computeContentHash } from '../billing/core/audit'
 import { ExternGesperrtError, istFreigegeben, pruefeFreigabe } from './externe-freigaben'
 import { pruefeVersandbereitschaft, VersandGesperrtError } from './versand-guard'
@@ -183,19 +184,15 @@ export async function aktualisiereLaufStatus(
   const offen = alle.filter(a => a.status !== 'uebermittelt' && a.status !== 'quittiert')
 
   if (alle.length > 0 && offen.length === 0) {
-    await supabase
-      .from('abrechnungslaeufe')
-      .update({ status: 'uebermittelt', uebermittelt_am: jetzt() })
-      .eq('id', laufId)
-      .eq('organization_id', organizationId)
+    await aktualisiereLauf(supabase, laufId,
+      { status: 'uebermittelt', uebermittelt_am: jetzt() },
+      { schritt: 'Uebermittlung abgeschlossen', organizationId: organizationId })
     return 'uebermittelt'
   }
 
-  await supabase
-    .from('abrechnungslaeufe')
-    .update({ status: 'uebermittlung_laeuft' })
-    .eq('id', laufId)
-    .eq('organization_id', organizationId)
+  await aktualisiereLauf(supabase, laufId,
+    { status: 'uebermittlung_laeuft' },
+    { schritt: 'Uebermittlung gestartet', organizationId: organizationId })
   return 'unvollstaendig'
 }
 

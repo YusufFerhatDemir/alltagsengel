@@ -14,6 +14,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { aktualisiereLauf } from './lauf-schreiben'
 import { logBillingAction } from '../billing/core/audit'
 import { erstelleAbrechnungslauf, type LaufTyp } from './kassenabrechnung-engine'
 
@@ -113,11 +114,9 @@ export async function erstelleKorrekturlauf(
   }
 
   // Original-Lauf als korrigiert markieren (org_id-Fence)
-  await supabase
-    .from('abrechnungslaeufe')
-    .update({ status: 'korrigiert' })
-    .eq('id', params.originalLaufId)
-    .eq('organization_id', params.organizationId)
+  await aktualisiereLauf(supabase, params.originalLaufId,
+    { status: 'korrigiert' },
+    { schritt: 'Originallauf als korrigiert markieren', organizationId: params.organizationId })
 
   // Rückläufer als korrektur_erstellt markieren
   if (params.ruecklaeuferId) {

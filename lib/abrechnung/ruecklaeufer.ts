@@ -13,6 +13,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { aktualisiereLauf } from './lauf-schreiben'
 import { logBillingAction, computeContentHash } from '../billing/core/audit'
 import { erstelleRuecklaeuferAufgabe, AUFGABEN_AUSLOESENDE_STATUS } from './ruecklaeufer-aufgaben'
 import { klassifiziereFehlercode, type Abrechnungsverfahren } from './ruecklaeufer-fehlercodes'
@@ -206,23 +207,19 @@ export async function importiereRuecklaeufer(
       zugeordnet = true
       const laufAntwortStatus = mapRuecklaeuferZuLaufStatus(status)
       if (laufAntwortStatus) {
-        await supabase
-          .from('abrechnungslaeufe')
-          .update({
+        await aktualisiereLauf(supabase, params.laufId,
+          {
             antwort_status: laufAntwortStatus,
             antwort_am: new Date().toISOString(),
             antwort_datei_url: params.quelldateiUrl || null,
-          })
-          .eq('id', params.laufId)
-          .eq('organization_id', params.organizationId)
+          },
+          { schritt: 'Antwort vermerken', organizationId: params.organizationId })
 
         const neuerLaufStatus = mapAntwortZuLaufStatus(laufAntwortStatus)
         if (neuerLaufStatus) {
-          await supabase
-            .from('abrechnungslaeufe')
-            .update({ status: neuerLaufStatus })
-            .eq('id', params.laufId)
-            .eq('organization_id', params.organizationId)
+          await aktualisiereLauf(supabase, params.laufId,
+            { status: neuerLaufStatus },
+            { schritt: 'Lauf-Status nach Antwort', organizationId: params.organizationId })
         }
       }
     }

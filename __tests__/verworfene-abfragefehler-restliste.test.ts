@@ -325,10 +325,13 @@ describe('Lauf-Status: unbekannt ist nicht unvollstaendig', () => {
 
   it('Gegenprobe: sind alle Auftraege draussen, gilt der Lauf als uebermittelt', async () => {
     const { aktualisiereLaufStatus } = await import('@/lib/abrechnung/versand')
+    // Der Lauf-Schreibvorgang liefert seine betroffene Zeile zurueck —
+     // das tut PostgREST bei `.select()` auch. Ein Doppelgaenger, der hier
+     // `[]` gibt, behauptet „nichts getroffen", und aktualisiereLauf wirft.
     const fake = erstelleFakeSupabase((a: FakeAufruf) =>
       a.tabelle === AUFTRAEGE
         ? { data: [{ id: 'auf-1', status: 'uebermittelt' }] }
-        : { data: [] })
+        : { data: [{ id: 'lauf-1' }] })
     expect(await aktualisiereLaufStatus(fake.client as never, 'lauf-1', ORG)).toBe('uebermittelt')
     expect(fake.ersterAuf(LAEUFE, 'update')?.payload).toMatchObject({ status: 'uebermittelt' })
   })
@@ -343,7 +346,7 @@ describe('Lauf-Status: unbekannt ist nicht unvollstaendig', () => {
             { id: 'auf-1', status: 'uebermittelt' },
             { id: 'auf-2', status: 'offen' },
           ] }
-        : { data: [] })
+        : { data: [{ id: 'lauf-1' }] })
     expect(await aktualisiereLaufStatus(fake.client as never, 'lauf-1', ORG)).toBe('unvollstaendig')
     expect(fake.ersterAuf(LAEUFE, 'update')?.payload).toMatchObject({ status: 'uebermittlung_laeuft' })
   })

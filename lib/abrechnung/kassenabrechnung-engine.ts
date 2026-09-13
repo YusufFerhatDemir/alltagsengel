@@ -14,6 +14,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { aktualisiereLauf } from './lauf-schreiben'
 import { logBillingAction, computeContentHash } from '../billing/core/audit'
 import { pflegegradVon } from '../clients/pflegegrad'
 import { euroZuCent, centRunden } from '@/lib/geld'
@@ -605,10 +606,9 @@ export async function erstelleAbrechnungslauf(
     .is('deleted_at', null)
 
   if ((concurrentCount ?? 0) > 1) {
-    await supabase
-      .from('abrechnungslaeufe')
-      .update({ status: 'storniert', storno_grund: 'Duplikat durch parallelen Request' })
-      .eq('id', lauf.id)
+    await aktualisiereLauf(supabase, lauf.id,
+      { status: 'storniert', storno_grund: 'Duplikat durch parallelen Request' },
+      { schritt: 'Duplikat stornieren' })
     throw new Error(
       `Doppelter Abrechnungslauf erkannt — paralleler Request hat bereits einen Lauf erstellt. Dieser wurde storniert.`
     )
@@ -640,19 +640,17 @@ export async function erstelleAbrechnungslauf(
   })
 
   // Status → geprueft
-  await supabase
-    .from('abrechnungslaeufe')
-    .update({ status: 'validierung_laeuft' })
-    .eq('id', lauf.id)
+  await aktualisiereLauf(supabase, lauf.id,
+    { status: 'validierung_laeuft' },
+    { schritt: 'Validierung gestartet' })
 
-  await supabase
-    .from('abrechnungslaeufe')
-    .update({
+  await aktualisiereLauf(supabase, lauf.id,
+    {
       status: 'geprueft',
       validierung_bestanden: true,
       validierung_ergebnis: validierung.alle,
-    })
-    .eq('id', lauf.id)
+    },
+    { schritt: 'Validierung bestanden' })
 
   // Audit
   await logBillingAction(supabase, {
@@ -737,10 +735,9 @@ export async function exportiereLauf(
   }
 
   // Status → export_laeuft
-  await supabase
-    .from('abrechnungslaeufe')
-    .update({ status: 'export_laeuft' })
-    .eq('id', laufId)
+  await aktualisiereLauf(supabase, laufId,
+    { status: 'export_laeuft' },
+    { schritt: 'Export gestartet' })
 
   // Rechnungen + Kunden + Leistungen laden
   const { data: laufRechnungen } = await supabase
@@ -946,10 +943,9 @@ export async function exportiereLauf(
     dateien = generateAlleDateien(faelle, absenderIk, optionen)
   } catch (err) {
     // Status zurück auf Fehler
-    await supabase
-      .from('abrechnungslaeufe')
-      .update({ status: 'validierung_fehlgeschlagen' })
-      .eq('id', laufId)
+    await aktualisiereLauf(supabase, laufId,
+      { status: 'validierung_fehlgeschlagen' },
+      { schritt: 'Validierung fehlgeschlagen vermerken' })
 
     await supabase.from('dta_fehlerprotokoll').insert({
       organization_id: lauf.organization_id,
@@ -976,10 +972,9 @@ export async function exportiereLauf(
         schweregrad: 'kritisch',
       })
 
-      await supabase
-        .from('abrechnungslaeufe')
-        .update({ status: 'validierung_fehlgeschlagen' })
-        .eq('id', laufId)
+      await aktualisiereLauf(supabase, laufId,
+        { status: 'validierung_fehlgeschlagen' },
+        { schritt: 'Validierung fehlgeschlagen vermerken' })
 
       throw new Error(`EDIFACT-Validierungsfehler: ${validierung.fehler[0]?.meldung}`)
     }
@@ -1073,16 +1068,13 @@ export async function exportiereLauf(
     ? 'exportiert'
     : 'validierung_fehlgeschlagen'
 
-  await supabase
-    .from('abrechnungslaeufe')
-    .update({
-      status: 'bereit_zum_export',
-    })
-    .eq('id', laufId)
+  // Der Zwischenschritt auf „bereit_zum_export" wurde von der
+  // naechsten Anweisung ohne Unterbrechung ueberschrieben und war
+  // damit nie beobachtbar — nur ein zweiter Schreibvorgang auf
+  // dieselbe Zeile. Ersatzlos entfallen.
 
-  await supabase
-    .from('abrechnungslaeufe')
-    .update({
+  await aktualisiereLauf(supabase, laufId,
+    {
       status: finalStatus,
       edifact_datei_url: dateiUrls[0] || null,
       auftragsdatei_url: dakotaAuftraege.length > 0 ? `${dakotaAuftraege.length} Aufträge erstellt` : null,
@@ -1090,8 +1082,8 @@ export async function exportiereLauf(
       pruefsumme: contentHash,
       anzahl_positionen: dateien.reduce((s, d) => s + d.rechnungen.reduce((rs, r) => rs + r.faelle.length, 0), 0),
       dakota_auftrag_id: dakotaAuftraege[0] || null,
-    })
-    .eq('id', laufId)
+    },
+    { schritt: 'Export abgeschlossen' })
 
   // Audit
   await logBillingAction(supabase, {
