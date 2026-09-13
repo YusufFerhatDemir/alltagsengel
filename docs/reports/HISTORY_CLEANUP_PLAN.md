@@ -1,9 +1,25 @@
-# Historien-Bereinigung — Plan, nicht Ausführung
+# Historien-Bereinigung — ERLEDIGT
 
 **Stand:** 13.09.2026
-**Ausgeführt:** `git rm --cached` für zwölf Dateien · `.gitignore` erweitert
-**NICHT ausgeführt:** kein `force push`, kein `git filter-repo`, kein BFG.
-Beides bleibt ohne ausdrückliche Freigabe liegen.
+**Phase 1 (12–13.09.2026):** `git rm --cached` für zwölf Dateien · `.gitignore` erweitert
+**Phase 2 (13.09.2026):** `git filter-repo` für alle 17 PII-Dateien · Force-Push auf GitHub · Vollständige Verifikation
+
+## Ergebnis
+
+| Schritt | Status |
+|---|---|
+| Backup (Bundle 631 MB + 17 Dateien) | ✅ `/Users/work/alltagsengel-pii-backup-2026-09-13/` |
+| `git filter-repo` — 17 Dateien aus 1748 Commits entfernt | ✅ |
+| Force-Push main + alle Branches + Tag `v6-baseline` | ✅ |
+| `git log --all` für jede Datei = leer | ✅ |
+| Dateinamen-Suche in kompletter History = nur `Schritt09Fuehrungszeugnis.tsx` (UI) | ✅ |
+| Secret Scan = keine echten Secrets, nur `role=anon` | ✅ |
+| Raw-GitHub-URLs = alle 404 | ✅ |
+| `.gitignore` dauerhaft gesichert | ✅ |
+| Dateien auf Festplatte erhalten (nicht gelöscht) | ✅ |
+| GitHub Cache Purge | Nicht nötig (Repo ist PRIVATE) |
+
+**Neuer main-Commit:** `4a922056fa68484e524d4b0ce674d7184056f1c7`
 
 ---
 
