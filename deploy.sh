@@ -134,7 +134,10 @@ fi
 # zu diesem Lauf; was spaeter dazukommt, gehoert jemand anderem.
 DEPLOY_START_HEAD="$(git rev-parse HEAD 2>/dev/null || echo '')"
 DEPLOY_START_BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')"
-DEPLOY_SNAPSHOT="$(mktemp -t deploy-snapshot)"
+# Portabel: GNU-mktemp verlangt XXXXXX im Template, BSD/macOS nicht.
+# Ohne das X-Muster bricht der Aufruf unter Linux ab — und damit jeder
+# Lauf in der CI.
+DEPLOY_SNAPSHOT="$(mktemp "${TMPDIR:-/tmp}/deploy-snapshot.XXXXXX")"
 git status --porcelain 2>/dev/null | sed 's/^...//' | sed 's/^.* -> //' | sort > "$DEPLOY_SNAPSHOT" || true
 trap 'rm -f "$DEPLOY_SNAPSHOT"; lock_freigeben' EXIT
 

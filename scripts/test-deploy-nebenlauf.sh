@@ -20,7 +20,7 @@ set -uo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DEPLOY="$REPO/deploy.sh"
-ARBEIT="$(mktemp -d -t deploy-nebenlauf)"
+ARBEIT="$(mktemp -d "${TMPDIR:-/tmp}/deploy-nebenlauf.XXXXXX")"
 trap 'rm -rf "$ARBEIT"' EXIT
 
 GRUEN=$'\033[32m'; ROT=$'\033[31m'; DIM=$'\033[2m'; AUS=$'\033[0m'
