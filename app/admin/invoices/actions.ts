@@ -65,12 +65,22 @@ export async function advanceInvoiceSimple(
     extra.sent_at = new Date().toISOString()
   }
 
-  const { error } = await supabase
+  // `.select('id')` ist hier nicht Zierde: ohne sie meldet PostgREST bei
+  // NULL getroffenen Zeilen keinen Fehler. Der Lauf ginge weiter, schriebe
+  // einen Audit-Eintrag ueber einen Statuswechsel, den es nicht gab, und
+  // die Oberflaeche zeigte den neuen Status. Bei Rechnungen ist das ein
+  // Protokoll, das die Unwahrheit sagt.
+  const { data: geaendert, error } = await supabase
     .from('invoices')
     .update({ status: advance.to, ...extra })
     .eq('id', invoiceId)
+    .eq('organization_id', organizationId)
+    .select('id')
 
   if (error) throw new Error(`Status-Update fehlgeschlagen: ${error.message}`)
+  if (!geaendert || geaendert.length === 0) {
+    throw new Error('Rechnung nicht gefunden oder kein Zugriff — bitte Seite neu laden.')
+  }
 
   await logAuditEventOrWarn({
     action: 'update',
@@ -107,13 +117,16 @@ export async function recordInvoicePayment(
   const fullyPaid = paidAmount >= totalAmount
   const isGerman = ['quittiert', 'teilweise_bezahlt', 'strittig'].includes(currentStatus)
 
-  const { error } = await supabase.from('invoices').update({
+  const { data: gebucht, error } = await supabase.from('invoices').update({
     status: fullyPaid ? (isGerman ? 'bezahlt' : 'paid') : (isGerman ? 'teilweise_bezahlt' : 'partial'),
     paid_amount: paidAmount,
     paid_at: new Date().toISOString(),
-  }).eq('id', invoiceId)
+  }).eq('id', invoiceId).eq('organization_id', organizationId).select('id')
 
   if (error) throw new Error(`Zahlungserfassung fehlgeschlagen: ${error.message}`)
+  if (!gebucht || gebucht.length === 0) {
+    throw new Error('Rechnung nicht gefunden oder kein Zugriff — Zahlung NICHT gebucht.')
+  }
 
   await logAuditEventOrWarn({
     action: 'update',
@@ -182,11 +195,14 @@ export async function decideInvoiceKuerzung(
   }
 
   const newStatus = accept ? 'akzeptiert' : 'korrektur_erforderlich'
-  const { error } = await supabase.from('invoices').update({
+  const { data: entschieden, error } = await supabase.from('invoices').update({
     status: newStatus,
-  }).eq('id', invoiceId)
+  }).eq('id', invoiceId).eq('organization_id', organizationId).select('id')
 
   if (error) throw new Error(`Entscheidung fehlgeschlagen: ${error.message}`)
+  if (!entschieden || entschieden.length === 0) {
+    throw new Error('Rechnung nicht gefunden oder kein Zugriff — bitte Seite neu laden.')
+  }
 
   await logAuditEventOrWarn({
     action: 'update',

@@ -85,6 +85,16 @@ jobs:
         # Regression wie bei 4df676cf.
         run: npm run test:deploy-guard
 
+      - name: Stille Schreibwege (update/delete ohne select)
+        # PostgREST meldet bei NULL getroffenen Zeilen KEINEN Fehler. Wer nur
+        # `error` prueft, gibt der Oberflaeche ein „gespeichert" zurueck,
+        # waehrend die Datenbank den alten Stand behaelt — am 13.09.2026
+        # dreimal gefunden, einmal davon im Rechnungsweg samt Audit-Eintrag
+        # ueber eine Aenderung, die es nicht gab.
+        # Der Bestand in scripts/lint-stilles-update.ts ist eingefroren, KEINE
+        # Freigabe: neue Faelle machen den Lauf rot.
+        run: npm run lint:stilles-update
+
       - name: Secret scan
         run: bash scripts/ci-secret-scan.sh
 
