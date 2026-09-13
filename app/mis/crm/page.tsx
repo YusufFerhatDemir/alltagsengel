@@ -6,26 +6,16 @@ import { SectionHeader, Card, DataTable, MisButton, SearchInput, Badge, Tabs, Em
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
 import { updateClientPipeline as updateClientPipelineAction, updateLeadStatus as updateLeadStatusAction, createLead, createPartner, createActivity } from './actions'
+// Ein Katalog fuer Seite und Server Action. Bis 13.09.2026 standen hier
+// eigene Kopien, die mit der Action auseinandergelaufen waren — und die
+// Liste der Action widersprach sogar dem CHECK der Datenbank.
+import {
+  CLIENT_PIPELINE as PIPELINE_STATUS, LEAD_STATUS,
+} from '@/lib/admin/crm-katalog'
 import { logger } from '@/lib/logger'
 const log = logger.child('mis:crm')
 
 // ===== Pipeline Status =====
-const PIPELINE_STATUS: Record<string, { label: string; color: string; icon: string }> = {
-  lead: { label: 'Lead', color: '#3B82F6', icon: 'inbox' },
-  erstgespraech: { label: 'Erstgespräch', color: '#F59E0B', icon: 'messageCircle' },
-  active: { label: 'Aktiv', color: '#22C55E', icon: 'check' },
-  paused: { label: 'Pausiert', color: '#8A8278', icon: 'clock' },
-  ended: { label: 'Beendet', color: '#EF4444', icon: 'x' },
-}
-
-const LEAD_STATUS: Record<string, { label: string; color: string }> = {
-  new: { label: 'Neu', color: '#3B82F6' },
-  contacted: { label: 'Kontaktiert', color: '#F59E0B' },
-  qualified: { label: 'Qualifiziert', color: '#22C55E' },
-  converted: { label: 'Konvertiert', color: BRAND.gold },
-  lost: { label: 'Verloren', color: '#EF4444' },
-}
-
 const PARTNER_TYPES: Record<string, string> = {
   pflegedienst: 'Pflegedienst',
   arztpraxis: 'Arztpraxis',
@@ -142,6 +132,9 @@ export default function CrmPage() {
   const [activeTab, setActiveTab] = useState('pipeline')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
+  // Ein fehlgeschlagener Statuswechsel sah bisher wie Erfolg aus: das
+  // Ergebnis der Server Action wurde weggeworfen. Jetzt steht der Grund da.
+  const [aktionsFehler, setAktionsFehler] = useState<string | null>(null)
 
   // Data
   const [clients, setClients] = useState<Client[]>([])
@@ -189,13 +182,17 @@ export default function CrmPage() {
 
   // ===== ACTIONS =====
   async function updateClientPipeline(id: string, newStatus: string) {
-    await updateClientPipelineAction(id, newStatus)
+    const r = await updateClientPipelineAction(id, newStatus)
+    if (!r.ok) { setAktionsFehler(r.error); return }
+    setAktionsFehler(null)
     setSelectedClient(null)
     loadData()
   }
 
   async function updateLeadStatus(id: string, newStatus: string) {
-    await updateLeadStatusAction(id, newStatus)
+    const r = await updateLeadStatusAction(id, newStatus)
+    if (!r.ok) { setAktionsFehler(r.error); return }
+    setAktionsFehler(null)
     setSelectedLead(null)
     loadData()
   }
@@ -317,6 +314,16 @@ export default function CrmPage() {
       </div>
 
       <Tabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
+
+      {aktionsFehler && (
+        <div role="alert" style={{
+          margin: '10px 0', padding: '10px 12px', borderRadius: 10,
+          background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.35)',
+          fontSize: 13, color: BRAND.text,
+        }}>
+          {aktionsFehler}
+        </div>
+      )}
 
       {/* ===== TAB: PIPELINE ===== */}
       {activeTab === 'pipeline' && (

@@ -3,6 +3,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logAuditEventOrWarn } from '@/lib/audit-log'
+import {
+  CLIENT_PIPELINE, LEAD_STATUS, istClientPipelineStatus, istLeadStatus, statusLabel,
+} from '@/lib/admin/crm-katalog'
 import { logger } from '@/lib/logger'
 const log = logger.child('mis:crm')
 
@@ -39,39 +42,43 @@ export async function updateClientPipeline(id: string, newStatus: string): Promi
   try {
     const { supabase, userId, organizationId, role, name } = await requireMISAdmin()
 
+    // Erlaubnisliste vor der Datenbank: ein unbekannter Wert liefe sonst
+    // entweder in einen CHECK-Fehler oder — schlimmer — in eine Spalte
+    // ohne CHECK und bliebe dort stehen.
+    if (!istClientPipelineStatus(newStatus)) {
+      return { ok: false, error: `Unbekannte Pipeline-Stufe: ${String(newStatus)}` }
+    }
+    if (!id || typeof id !== 'string') return { ok: false, error: 'Ungueltige Kunden-ID.' }
+
     const now = new Date().toISOString()
 
-    const { error: updateErr } = await supabase
+    // `.select('id')` ist Pflicht, nicht Zierde: ohne sie meldet PostgREST
+    // bei NULL getroffenen Zeilen keinen Fehler. Die Oberflaeche zeigte dann
+    // den neuen Status an, waehrend in der Datenbank der alte steht.
+    const { data: geaendert, error: updateErr } = await supabase
       .from('clients')
       .update({ pipeline_status: newStatus, updated_at: now })
       .eq('id', id)
+      .eq('organization_id', organizationId)
+      .select('id')
 
     if (updateErr) return { ok: false, error: updateErr.message }
-
-    // Status-Label fuer die Aktivitaet
-    const statusLabels: Record<string, string> = {
-      new: 'Neu',
-      contact: 'Kontaktiert',
-      consultation: 'Beratung',
-      trial: 'Probeeinsatz',
-      active: 'Aktiv',
-      paused: 'Pausiert',
-      churned: 'Abgesprungen',
+    if (!geaendert || geaendert.length === 0) {
+      return { ok: false, error: 'Kunde nicht gefunden oder kein Zugriff — bitte Seite neu laden.' }
     }
-    const label = statusLabels[newStatus] || newStatus
 
     const { error: activityErr } = await supabase
       .from('mis_crm_activities')
       .insert({
         client_id: id,
         activity_type: 'status_change',
-        title: `Status → ${label}`,
-        performed_by: 'System',
+        title: `Status → ${statusLabel(CLIENT_PIPELINE, newStatus)}`,
+        performed_by: name,
         organization_id: organizationId,
       })
 
     if (activityErr) {
-      // Aktivitaet ist sekundaer — Pipeline-Update war erfolgreich
+      // Aktivitaet ist sekundaer — das Pipeline-Update ist bereits geschrieben.
       log.error('Aktivitaet konnte nicht erstellt werden', { errorMessage: activityErr.message })
     }
 
@@ -98,14 +105,53 @@ export async function updateLeadStatus(id: string, newStatus: string): Promise<{
   try {
     const { supabase, userId, organizationId, role, name } = await requireMISAdmin()
 
+    if (!istLeadStatus(newStatus)) {
+      return { ok: false, error: `Unbekannter Lead-Status: ${String(newStatus)}` }
+    }
+    if (!id || typeof id !== 'string') return { ok: false, error: 'Ungueltige Lead-ID.' }
+
     const now = new Date().toISOString()
 
-    const { error } = await supabase
+    // Vorher lesen, damit der Verlauf den WECHSEL nennen kann und nicht nur
+    // das Ziel. „Kontaktiert → Qualifiziert" sagt jemandem, der die Zeile
+    // spaeter liest, etwas; „Status → Qualifiziert" sagt ihm nicht, woher.
+    const { data: vorher } = await supabase
+      .from('lead_inquiries')
+      .select('status')
+      .eq('id', id)
+      .eq('organization_id', organizationId)
+      .maybeSingle()
+
+    const { data: geaendert, error } = await supabase
       .from('lead_inquiries')
       .update({ status: newStatus, updated_at: now })
       .eq('id', id)
+      .eq('organization_id', organizationId)
+      .select('id')
 
     if (error) return { ok: false, error: error.message }
+    if (!geaendert || geaendert.length === 0) {
+      return { ok: false, error: 'Lead nicht gefunden oder kein Zugriff — bitte Seite neu laden.' }
+    }
+
+    // Bis zum 13.09.2026 hat ein Lead-Statuswechsel KEINE Aktivitaet
+    // geschrieben, waehrend der Kunden-Wechsel eine schrieb. Live trug
+    // deshalb kein einziger der 50 Leads eine Bearbeitungsspur — der
+    // Verlauf, an dem man ablesen koennte, was mit einer Anfrage geschehen
+    // ist, existierte fuer Leads schlicht nicht.
+    const von = vorher?.status ? statusLabel(LEAD_STATUS, vorher.status) : 'unbekannt'
+    const { error: activityErr } = await supabase
+      .from('mis_crm_activities')
+      .insert({
+        lead_id: id,
+        activity_type: 'status_change',
+        title: `${von} → ${statusLabel(LEAD_STATUS, newStatus)}`,
+        performed_by: name,
+        organization_id: organizationId,
+      })
+    if (activityErr) {
+      log.error('Lead-Aktivitaet konnte nicht erstellt werden', { errorMessage: activityErr.message })
+    }
 
     await logAuditEventOrWarn({
       action: 'update',
@@ -115,7 +161,7 @@ export async function updateLeadStatus(id: string, newStatus: string): Promise<{
       organizationId,
       entityType: 'lead_inquiries',
       entityId: id,
-      details: { aktion: 'lead_status_aktualisiert', neuer_status: newStatus },
+      details: { aktion: 'lead_status_aktualisiert', von: vorher?.status ?? null, neuer_status: newStatus },
     })
 
     return { ok: true }
