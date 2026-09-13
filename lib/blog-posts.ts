@@ -155,7 +155,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     slug: 'senioren-hitze-sommer',
     headline: 'Senioren & Hitze: 7 Tipps, wie Sie Ihre Angehörigen im Sommer schützen',
     description:
-      'Hitze ist für Senioren gefährlich: 7 praktische Tipps gegen Dehydration und Hitzschlag. Plus: Alltagsbegleitung für 131 €/Monat über die Pflegekasse sichern.',
+      'Hitze ist für Senioren gefährlich: 7 praktische Tipps gegen Dehydration und Hitzschlag. Plus: wie Alltagsbegleitung im Sommer entlastet.',
     category: 'Ratgeber',
     datePublished: '2026-07-02',
     dateModified: '2026-07-02',
@@ -175,7 +175,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     slug: 'alltagsbegleitung-kosten',
     headline: 'Was kostet Alltagsbegleitung? Preise & Finanzierung 2026',
     description:
-      'Was kostet Alltagsbegleitung? Die Stundensätze unterscheiden sich je nach Anbieter und Region. Alle Finanzierungswege 2026: Entlastungsbetrag 131 €/Monat, Verhinderungspflege 3.539 €/Jahr, Steuerbonus §35a.',
+      'Was Alltagsbegleitung kostet, hängt von Anbieter, Region und Leistung ab. Finanzierungswege 2026: Entlastungsbetrag 131 €/Monat, Steuerbonus §35a.',
     category: 'Alltagsbegleitung',
     datePublished: '2026-06-06',
     dateModified: '2026-07-12',
@@ -233,9 +233,9 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   },
   {
     slug: 'haushaltshilfe-frankfurt',
-    headline: 'Haushaltshilfe Frankfurt — Jetzt über die Pflegekasse buchen',
+    headline: 'Haushaltshilfe Frankfurt — Jetzt buchen',
     description:
-      'Haushaltshilfe in Frankfurt am Main und Rhein-Main-Gebiet: Einkaufen, Kochen, Putzen, Begleitung. Kostenübernahme über Pflegekasse möglich. Jetzt buchen.',
+      'Haushaltshilfe in Frankfurt am Main und Rhein-Main-Gebiet: Einkaufen, Kochen, Putzen, Begleitung. §45a-Anerkennung im Verfahren. Jetzt buchen.',
     category: 'Alltagsbegleitung',
     datePublished: '2026-06-04',
     dateModified: '2026-06-04',
@@ -335,7 +335,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     slug: 'einsamkeit-im-alter',
     headline: 'Einsamkeit im Alter: So helfen Alltagsbegleiter gegen Isolation',
     description:
-      'Einsamkeit im Alter schadet der Gesundheit wie Rauchen. Erfahren Sie, wie Alltagsbegleiter helfen und wie der Entlastungsbetrag (131 €/Monat) greift. Jetzt informieren.',
+      'Einsamkeit im Alter schadet der Gesundheit wie Rauchen. Wie Alltagsbegleiter helfen und wie der Entlastungsbetrag (131 €/Monat) greift.',
     category: 'Alltagsbegleitung',
     datePublished: '2026-04-01',
     dateModified: '2026-04-01',
@@ -385,7 +385,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     slug: 'entlastungsbetrag-45b',
     headline: 'Entlastungsbetrag §45b SGB XI — 131€/Monat für Alltagsbegleitung',
     description:
-      'Erfahren Sie wie Sie den Entlastungsbetrag nach §45b SGB XI nutzen können. 131€ monatlich für anerkannte Angebote zur Unterstützung im Alltag. Alltagsengel: §45a-Anerkennung im Verfahren.',
+      'So nutzen Sie den Entlastungsbetrag nach §45b SGB XI: 131 € monatlich für anerkannte Angebote im Alltag. Alltagsengel: §45a-Anerkennung im Verfahren.',
     category: 'Finanzierung',
     datePublished: '2026-03-19',
     dateModified: '2026-03-19',

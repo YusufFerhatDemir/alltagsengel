@@ -48,6 +48,16 @@ const REGELN: Regel[] = [
     grund: 'Zusage der Direktabrechnung durch Alltagsengel.',
   },
   {
+    // 13.09.2026: „Haushaltshilfe Frankfurt — Jetzt ueber die Pflegekasse
+    // buchen" stand als headline in lib/blog-posts.ts und wurde damit auf
+    // /blog dreimal ausgeliefert. Die Regel darueber traf nicht: sie sucht
+    // nach ABRECHNEN, hier stand BUCHEN. Wer ueber die Kasse buchen kann,
+    // dem ist die Anerkennung zugesagt — dieselbe Behauptung, anderes Verb.
+    id: 'buchung-ueber-kasse',
+    muster: /(über|ueber|via|per)\s+(die|Ihre)\s+(Pflege)?[Kk]asse\s+(buchen|bestellen|beauftragen)|auf\s+Kassenkosten\s+buchen/i,
+    grund: 'Sagt eine Buchung zulasten der Pflegekasse zu — setzt die §45a-Anerkennung voraus.',
+  },
+  {
     id: 'veralteter-betrag',
     muster: /125\s?(€|EUR|Euro)/i,
     grund: `Veralteter Entlastungsbetrag. Gültig sind ${ENTLASTUNG_MONATLICH_EUR} €.`,

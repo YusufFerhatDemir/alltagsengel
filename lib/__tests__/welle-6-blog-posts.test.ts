@@ -122,3 +122,91 @@ describe('getBlogPost', () => {
     assert.equal(getBlogPost(`${slug}/`), undefined)
   })
 })
+
+// ═══════════════════════════════════════════════════════════════
+// Die dokumentierten Regeln des Moduls — bis 13.09.2026 ungeprüft
+// ═══════════════════════════════════════════════════════════════
+//
+// Der Kopf von lib/blog-posts.ts sagt seit jeher:
+//   „headline MUSS exakt der <h1> des Posts entsprechen,
+//    description = Meta-Description der Seite."
+// Geprüft hat das niemand. Am 13.09.2026 liefen fünf Beschreibungen und
+// eine headline auseinander — darunter „Haushaltshilfe Frankfurt — Jetzt
+// über die Pflegekasse buchen", während der H1 der Seite längst auf
+// „Jetzt buchen" bereinigt war. BLOG_POSTS speist die Index-Karten, also
+// stand die alte Zusage dreimal live auf /blog.
+//
+// Eine Regel, die im Kommentar steht und nirgends geprüft wird, ist eine
+// Absichtserklärung.
+
+import { readFileSync } from 'node:fs'
+
+/** &amp; im JSX ist dasselbe Zeichen wie & im String. */
+function entschluesselt(s: string): string {
+  // `&amp;` MUSS zuletzt stehen: sonst macht es aus `&amp;apos;` erst
+  // `&apos;` und die naechste Regel daraus ein Apostroph — aus einem
+  // literalen „&apos;" im Text wuerde stillschweigend ein Zeichen.
+  return s.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+}
+
+function seitenQuelle(slug: string): string | null {
+  const f = join(APP_BLOG, slug, 'page.tsx')
+  return existsSync(f) ? readFileSync(f, 'utf8') : null
+}
+
+function h1Von(quelle: string): string | null {
+  const m = quelle.match(/<h1[^>]*>([\s\S]*?)<\/h1>/)
+  if (!m) return null
+  return entschluesselt(m[1].replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ').trim()
+}
+
+function metaBeschreibungVon(quelle: string): string | null {
+  const i = quelle.indexOf('export const metadata')
+  if (i < 0) return null
+  const j = quelle.indexOf('\n};', i)
+  const block = quelle.slice(i, j < 0 ? undefined : j)
+  const m = block.match(/\n\s*description:\s*'((?:[^'\\]|\\.)*)'/)
+  return m ? m[1] : null
+}
+
+describe('Regeln aus dem Modulkopf', () => {
+  test('headline entspricht exakt dem <h1> der Seite', () => {
+    const abweichend: string[] = []
+    for (const p of BLOG_POSTS) {
+      const q = seitenQuelle(p.slug)
+      if (!q) continue
+      const h1 = h1Von(q)
+      if (h1 === null) continue
+      if (h1 !== entschluesselt(p.headline)) {
+        abweichend.push(`${p.slug}\n    headline: ${p.headline}\n    h1      : ${h1}`)
+      }
+    }
+    assert.deepEqual(abweichend, [], `headline weicht vom H1 ab:\n  ${abweichend.join('\n  ')}`)
+  })
+
+  test('description entspricht der Meta-Description der Seite', () => {
+    const abweichend: string[] = []
+    for (const p of BLOG_POSTS) {
+      const q = seitenQuelle(p.slug)
+      if (!q) continue
+      const meta = metaBeschreibungVon(q)
+      if (meta === null) continue
+      if (meta !== p.description) {
+        abweichend.push(`${p.slug} (Modul ${p.description.length} / Seite ${meta.length} Zeichen)`)
+      }
+    }
+    assert.deepEqual(abweichend, [], `description weicht ab:\n  ${abweichend.join('\n  ')}`)
+  })
+
+  test('keine Kassen-Zusage in headline oder description', () => {
+    // BLOG_POSTS wird auf /blog gerendert. Was hier steht, ist eine
+    // Aussage der Seite — und §45a ist nicht anerkannt.
+    const verboten = /(über|via|per)\s+(die|Ihre)\s+(Pflege)?[Kk]asse\s+(buchen|bestellen)|rechnen\s+direkt\s+mit\s+(der|Ihrer)\s+(Pflege)?[Kk]asse/i
+    const treffer = BLOG_POSTS
+      .filter(p => verboten.test(p.headline) || verboten.test(p.description))
+      .map(p => p.slug)
+    assert.deepEqual(treffer, [], `Kassen-Zusage in BLOG_POSTS: ${treffer.join(', ')}`)
+  })
+})
