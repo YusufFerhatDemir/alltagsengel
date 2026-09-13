@@ -176,3 +176,13 @@ IMG_*.heic
 anerkennung-hessen/*.pdf
 docs/genehmigung/**/*.pdf
 §45a-*.pdf
+
+# ── Handelsregister + SCHUFA (13.09.2026, Nachtrag) ───────────────────
+# Fuenf weitere PII-Dateien: drei Handelsregisterauszuege und zwei
+# SCHUFA-Dokumente. `git rm --cached` nimmt sie aus dem Index; diese
+# Regeln verhindern erneutes Tracken.
+*[Hh]andelsregister*.pdf
+HRB-*.pdf
+*SCHUFA*.docx
+*SCHUFA*.pdf
+*SCHUFA*.md
