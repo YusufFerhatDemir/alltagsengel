@@ -141,13 +141,20 @@ export async function deleteSignatureRequest(
   try {
     const { supabase, userId, organizationId, role, name } = await requireMISAdmin()
 
-    const { error } = await supabase
+    const { data: geloescht, error } = await supabase
       .from('mis_signature_requests')
       .delete()
-      .eq('id', id)
+      .eq('id', id).select('id')
 
     if (error) {
       return { ok: false, error: error.message }
+    }
+
+    if (!geloescht || geloescht.length === 0) {
+      // Ein „geloescht" ueber eine Zeile, die noch steht, ist die
+      // gefaehrlichste Rueckmeldung von allen. PostgREST meldet bei
+      // NULL getroffenen Zeilen keinen Fehler.
+      return { ok: false, error: 'Signaturanfrage nicht gefunden oder kein Zugriff — nichts geloescht.' }
     }
 
     await logAuditEventOrWarn({

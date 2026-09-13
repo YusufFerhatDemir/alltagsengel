@@ -109,8 +109,16 @@ export async function removeDatenannahmestelle(id: string): Promise<{ ok: true }
     .eq('id', id)
     .maybeSingle()
 
-  const { error: e } = await supabase.from('datenannahmestellen').delete().eq('id', id)
+  const { data: geloescht, error: e } = await supabase.from('datenannahmestellen').delete().eq('id', id).select('id')
   if (e) throw new Error(`Loeschen fehlgeschlagen: ${e.message}`)
+
+  if (!geloescht || geloescht.length === 0) {
+    // Ein „geloescht" ueber eine Zeile, die noch steht, ist die
+    // gefaehrlichste Rueckmeldung von allen. PostgREST meldet bei NULL
+    // getroffenen Zeilen keinen Fehler. Diese Aktion wirft (statt
+    // `{ ok: false }` zurueckzugeben) — das ist der Stil der Datei.
+    throw new Error('Datenannahmestelle nicht gefunden oder kein Zugriff — nichts geloescht.')
+  }
 
   await logAuditEventOrWarn({
     action: 'delete',

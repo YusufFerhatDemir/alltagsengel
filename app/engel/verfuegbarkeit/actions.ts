@@ -132,13 +132,20 @@ export async function deleteAvailabilitySlot(
       return { ok: false, error: 'Zugriff verweigert.' }
     }
 
-    const { error: dbError } = await supabase
+    const { data: geloescht, error: dbError } = await supabase
       .from('angel_availability')
       .delete()
-      .eq('id', slotId)
+      .eq('id', slotId).select('id')
 
     if (dbError) {
       return { ok: false, error: 'Das Zeitfenster konnte nicht geloescht werden.' }
+    }
+
+    if (!geloescht || geloescht.length === 0) {
+      // Ein „geloescht" ueber eine Zeile, die noch steht, ist die
+      // gefaehrlichste Rueckmeldung von allen. PostgREST meldet bei
+      // NULL getroffenen Zeilen keinen Fehler.
+      return { ok: false, error: 'Zeitfenster nicht gefunden oder kein Zugriff — nichts geloescht.' }
     }
 
     await logAuditEventOrWarn({

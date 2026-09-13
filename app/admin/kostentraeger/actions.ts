@@ -105,8 +105,15 @@ export async function deleteKostentraeger(
       return { ok: false, error: 'Ungueltige ID.' }
     }
 
-    const { error: dbError } = await supabase.from('kostentraeger_kontakte').delete().eq('id', id)
+    const { data: geloescht, error: dbError } = await supabase.from('kostentraeger_kontakte').delete().eq('id', id).select('id')
     if (dbError) return { ok: false, error: `Loeschen fehlgeschlagen: ${dbError.message}` }
+
+    if (!geloescht || geloescht.length === 0) {
+      // Ein „geloescht" ueber eine Zeile, die noch steht, ist die
+      // gefaehrlichste Rueckmeldung von allen. PostgREST meldet bei
+      // NULL getroffenen Zeilen keinen Fehler.
+      return { ok: false, error: 'Kontakt nicht gefunden oder kein Zugriff — nichts geloescht.' }
+    }
 
     await logAuditEventOrWarn({
       action: 'delete',

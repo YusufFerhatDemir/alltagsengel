@@ -293,8 +293,15 @@ export async function removeAssignmentAction(
 
     if (!id || typeof id !== 'string') return { ok: false, error: 'Ungueltige Einsatz-ID.' }
 
-    const { error: e } = await supabase.from('assignments').delete().eq('id', id)
+    const { data: geloescht, error: e } = await supabase.from('assignments').delete().eq('id', id).select('id')
     if (e) return { ok: false, error: `Entfernen fehlgeschlagen: ${e.message}` }
+
+    if (!geloescht || geloescht.length === 0) {
+      // Ein „geloescht" ueber eine Zeile, die noch steht, ist die
+      // gefaehrlichste Rueckmeldung von allen. PostgREST meldet bei
+      // NULL getroffenen Zeilen keinen Fehler.
+      return { ok: false, error: 'Zuordnung nicht gefunden oder kein Zugriff — nichts geloescht.' }
+    }
 
     await logAuditEventOrWarn({
       action: 'delete',
@@ -581,8 +588,15 @@ export async function removeAbsageAction(
 
     if (!id || typeof id !== 'string') return { ok: false, error: 'Ungueltige Absage-ID.' }
 
-    const { error: e } = await supabase.from('einsatz_absagen').delete().eq('id', id)
+    const { data: geloescht, error: e } = await supabase.from('einsatz_absagen').delete().eq('id', id).select('id')
     if (e) return { ok: false, error: `Loeschen fehlgeschlagen: ${e.message}` }
+
+    if (!geloescht || geloescht.length === 0) {
+      // Ein „geloescht" ueber eine Zeile, die noch steht, ist die
+      // gefaehrlichste Rueckmeldung von allen. PostgREST meldet bei
+      // NULL getroffenen Zeilen keinen Fehler.
+      return { ok: false, error: 'Absage nicht gefunden oder kein Zugriff — nichts geloescht.' }
+    }
 
     await logAuditEventOrWarn({
       action: 'delete',
