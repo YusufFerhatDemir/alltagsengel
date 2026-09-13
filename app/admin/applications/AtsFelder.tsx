@@ -25,7 +25,10 @@ import {
 import {
   QUALIFIKATIONEN, FUEHRERSCHEIN, SPRACHEN, VERFUEGBARKEIT,
 } from '@/lib/bewerbung/katalog'
-import { setApplicationAtsFelder } from './actions'
+import {
+  setApplicationAtsFelder, addApplicationNotiz, ladeApplicationNotizen,
+  type BewerbungsNotiz,
+} from './actions'
 
 /** Schlüssel → Anzeigetext aus einem Katalog; unbekannt bleibt der Schlüssel. */
 function ausKatalog(katalog: readonly { key: string; label: string }[], wert: unknown): string {
@@ -57,6 +60,31 @@ export function AtsPanel({
   const [busy, setBusy] = useState<string | null>(null)
   const [fehler, setFehler] = useState<string | null>(null)
   const [gespeichert, setGespeichert] = useState<string | null>(null)
+
+  // ── Notizverlauf ───────────────────────────────────────────────────
+  // Erst auf Klick geladen: die Liste steht in einer aufgeklappten Zeile,
+  // und alle Verläufe im Voraus zu holen hiesse, für jede Bewerbung eine
+  // Abfrage abzusetzen, die fast nie jemand ansieht.
+  const [notizen, setNotizen] = useState<BewerbungsNotiz[] | null>(null)
+  const [notizText, setNotizText] = useState('')
+  const [notizBusy, setNotizBusy] = useState(false)
+
+  async function verlaufLaden() {
+    const r = await ladeApplicationNotizen(applicationId)
+    if (!r.ok) { setFehler(r.error); return }
+    setNotizen(r.notizen)
+  }
+
+  async function notizSpeichern() {
+    if (!notizText.trim()) return
+    setNotizBusy(true)
+    const r = await addApplicationNotiz(applicationId, notizText)
+    setNotizBusy(false)
+    if (!r.ok) { setFehler(r.error); return }
+    setFehler(null)
+    setNotizText('')
+    await verlaufLaden()
+  }
 
   async function speichere(feld: keyof AtsFelder, wert: unknown) {
     setBusy(feld)
@@ -182,6 +210,58 @@ export function AtsPanel({
           onBlur={e => { if (e.target.value !== (felder.notizen ?? '')) speichere('notizen', e.target.value) }}
         />
       </label>
+
+      {/* ── Notizverlauf ─────────────────────────────────────────────
+          Getrennt vom Feld „Notizen" darüber, und das mit Absicht: dort
+          steht der STAND (woran hängt es gerade), hier der VERLAUF (was ist
+          bisher passiert). Beides in ein Feld zu zwingen hiesse, sich für
+          eines von beiden zu entscheiden, ohne es zu merken. */}
+      <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed var(--coal4)' }}>
+        <div style={{ ...labelStil, marginBottom: 6 }}>Verlauf — jede Notiz bleibt stehen</div>
+
+        <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+          <input
+            style={{ ...feldStil, flex: 1 }}
+            disabled={notizBusy}
+            value={notizText}
+            placeholder="Was ist passiert? (z. B. Telefonat, Rückmeldung)"
+            onChange={e => setNotizText(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); notizSpeichern() } }}
+          />
+          <button
+            type="button"
+            disabled={notizBusy || !notizText.trim()}
+            onClick={notizSpeichern}
+            style={{
+              ...feldStil, width: 'auto', padding: '5px 12px', cursor: 'pointer',
+              opacity: notizBusy || !notizText.trim() ? 0.5 : 1,
+            }}
+          >
+            {notizBusy ? '…' : 'Eintragen'}
+          </button>
+        </div>
+
+        {notizen === null ? (
+          <button type="button" onClick={verlaufLaden}
+            style={{ ...feldStil, width: 'auto', padding: '4px 10px', fontSize: 12, cursor: 'pointer' }}>
+            Verlauf anzeigen
+          </button>
+        ) : notizen.length === 0 ? (
+          <div style={{ fontSize: 12, color: 'var(--ink5)' }}>Noch kein Eintrag.</div>
+        ) : (
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 6 }}>
+            {notizen.map(n => (
+              <li key={n.id} style={{ fontSize: 12.5, borderLeft: '2px solid var(--coal4)', paddingLeft: 8 }}>
+                <div style={{ whiteSpace: 'pre-wrap' }}>{n.text}</div>
+                <div style={{ color: 'var(--ink5)', fontSize: 11 }}>
+                  {n.von || 'Verwaltung'}
+                  {n.am && ` · ${new Date(n.am).toLocaleString('de-DE')}`}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       {/* Die vier Felder aus dem Bewerbungsformular. Sie stehen hier, damit
           alle fuenfzehn Arbeitsfelder an EINER Stelle zu sehen sind — aber

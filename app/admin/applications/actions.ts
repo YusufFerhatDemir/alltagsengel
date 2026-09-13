@@ -11,6 +11,7 @@ import {
   BEWERBER_ENDZUSTAENDE,
 } from '@/lib/bewerbung/pipeline'
 import { pruefeAtsEingabe, atsFelderAus, mitAtsFeldern } from '@/lib/bewerbung/ats-felder'
+import { AKTIVITAET_MAX_LEN } from '@/lib/admin/crm-katalog'
 import { logger } from '@/lib/logger'
 
 const log = logger.child('applications:actions')
@@ -355,6 +356,129 @@ export async function setApplicationAtsFelder(
     })
 
     return { ok: true }
+  } catch (err: any) {
+    return { ok: false, error: err.message || 'Unerwarteter Fehler.' }
+  }
+}
+
+// ── Notizen mit Verlauf ──────────────────────────────────────────
+
+/**
+ * Hängt eine Notiz an eine Bewerbung — als EIGENEN Eintrag, nicht als
+ * Überschreibung.
+ *
+ * ── WARUM NEBEN `ats.notizen` ─────────────────────────────────────────
+ * `ats.notizen` ist ein einziges Feld. Wer es zum zweiten Mal beschreibt,
+ * löscht das erste Telefonat. Für den Stand („woran hängt es gerade") ist
+ * das richtig — für den Verlauf („was ist bisher passiert") ist es
+ * unbrauchbar. Beides in ein Feld zu zwingen hiesse, sich für eines der
+ * beiden zu entscheiden, ohne es zu merken.
+ *
+ * ── WARUM `mis_crm_activities` UND KEINE NEUE TABELLE ─────────────────
+ * Die Tabelle führt bereits `lead_id` mit Fremdschlüssel auf
+ * `lead_inquiries` — und Bewerbungen SIND Zeilen in `lead_inquiries`. Eine
+ * eigene Tabelle bräuchte DDL, und DDL ist aus der Agentensitzung mit
+ * 42501 gesperrt. Der Verlauf einer Bewerbung und der einer Kundenanfrage
+ * liegen damit am selben Ort, was sie ohnehin sollten.
+ */
+export async function addApplicationNotiz(
+  applicationId: string,
+  text: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const { supabase, userId, organizationId, role, name } = await requireAdmin()
+
+    if (!applicationId || typeof applicationId !== 'string') {
+      return { ok: false, error: 'Ungueltige Bewerbungs-ID.' }
+    }
+    if (typeof text !== 'string' || !text.trim()) {
+      return { ok: false, error: 'Die Notiz ist leer.' }
+    }
+    const sauber = text.trim()
+    if (sauber.length > AKTIVITAET_MAX_LEN.description) {
+      return { ok: false, error: `Die Notiz ist zu lang (max. ${AKTIVITAET_MAX_LEN.description} Zeichen).` }
+    }
+
+    // Gehoert die Bewerbung uns? Der Fremdschluessel erzwingt nur, DASS die
+    // Zeile existiert, nicht wem sie gehoert.
+    const { data: bewerbung } = await supabase
+      .from('lead_inquiries')
+      .select('id')
+      .eq('id', applicationId)
+      .eq('organization_id', organizationId)
+      .or(BEWERBUNG_FILTER)
+      .maybeSingle()
+    if (!bewerbung) return { ok: false, error: 'Bewerbung nicht gefunden oder kein Zugriff.' }
+
+    const { error } = await supabase
+      .from('mis_crm_activities')
+      .insert({
+        lead_id: applicationId,
+        activity_type: 'note',
+        // Der Titel steht in der Liste; die erste Zeile der Notiz ist dort
+        // brauchbarer als ein generisches „Notiz".
+        title: sauber.split('\n')[0].slice(0, 120),
+        description: sauber,
+        // Urheber aus der Anmeldung, nie aus der Eingabe.
+        performed_by: name,
+        organization_id: organizationId,
+      })
+    if (error) return { ok: false, error: `Notiz konnte nicht gespeichert werden: ${error.message}` }
+
+    await logAuditEventOrWarn({
+      action: 'create',
+      actorId: userId,
+      actorRole: role,
+      actorName: name,
+      organizationId,
+      entityType: 'application',
+      entityId: applicationId,
+      // Ohne den Wortlaut: eine Notiz ueber eine Bewerberin gehoert nicht
+      // ins Protokoll.
+      details: { aktion: 'notiz_angelegt', laenge: sauber.length },
+    })
+
+    return { ok: true }
+  } catch (err: any) {
+    return { ok: false, error: err.message || 'Unerwarteter Fehler.' }
+  }
+}
+
+export interface BewerbungsNotiz {
+  id: string
+  text: string
+  von: string | null
+  am: string | null
+}
+
+/** Liest den Notizverlauf einer Bewerbung, neueste zuerst. */
+export async function ladeApplicationNotizen(
+  applicationId: string,
+): Promise<{ ok: true; notizen: BewerbungsNotiz[] } | { ok: false; error: string }> {
+  try {
+    const { supabase, organizationId } = await requireAdmin()
+    if (!applicationId || typeof applicationId !== 'string') {
+      return { ok: false, error: 'Ungueltige Bewerbungs-ID.' }
+    }
+
+    const { data, error } = await supabase
+      .from('mis_crm_activities')
+      .select('id, title, description, performed_by, created_at')
+      .eq('lead_id', applicationId)
+      .eq('organization_id', organizationId)
+      .order('created_at', { ascending: false })
+      .limit(100)
+    if (error) return { ok: false, error: error.message }
+
+    return {
+      ok: true,
+      notizen: (data ?? []).map(z => ({
+        id: z.id,
+        text: z.description || z.title || '',
+        von: z.performed_by ?? null,
+        am: z.created_at ?? null,
+      })),
+    }
   } catch (err: any) {
     return { ok: false, error: err.message || 'Unerwarteter Fehler.' }
   }

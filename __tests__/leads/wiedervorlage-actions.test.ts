@@ -197,3 +197,102 @@ describe('setApplicationAtsFelder — Bewerbungen', () => {
     expect(r.ok).toBe(false)
   })
 })
+
+// ═══════════════════════════════════════════════════════════════════════
+// Notizverlauf einer Bewerbung (13.09.2026)
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('addApplicationNotiz', () => {
+  const laden = async () => (await import('@/app/admin/applications/actions')).addApplicationNotiz
+
+  function fakeMitBewerbung(gefunden: boolean) {
+    const f = erstelleFakeSupabase((a: FakeAufruf) => {
+      if (a.tabelle === 'profiles') return { data: { role: 'admin', first_name: 'Vera', last_name: 'Verwaltung' }, error: null }
+      if (a.tabelle === 'lead_inquiries' && a.operation === 'select') {
+        return { data: gefunden ? { id: LEAD } : null, error: null }
+      }
+      if (a.tabelle === 'mis_crm_activities') return { data: { id: 'n1' }, error: null }
+      return undefined
+    })
+    ;(f.client as any).auth = { getUser: async () => ({ data: { user: { id: NUTZER } }, error: null }) }
+    return f
+  }
+
+  const notizInsert = () => fake.aufrufe.find(a => a.tabelle === 'mis_crm_activities' && a.operation === 'insert')
+
+  it('haengt einen EIGENEN Eintrag an, statt zu ueberschreiben', async () => {
+    fake = fakeMitBewerbung(true)
+    const r = await (await laden())(LEAD, 'Telefonat: meldet sich Montag')
+    expect(r).toEqual({ ok: true })
+    const p = notizInsert()!.payload as any
+    expect(p.lead_id).toBe(LEAD)
+    expect(p.activity_type).toBe('note')
+    expect(p.description).toBe('Telefonat: meldet sich Montag')
+    // Kein Update auf bewerbung_daten — ats.notizen bleibt unberuehrt.
+    expect(fake.aufrufe.find(a => a.operation === 'update')).toBeUndefined()
+  })
+
+  it('traegt den angemeldeten Nutzer als Urheber ein', async () => {
+    fake = fakeMitBewerbung(true)
+    await (await laden())(LEAD, 'x')
+    expect((notizInsert()!.payload as any).performed_by).toBe('Vera Verwaltung')
+  })
+
+  it('nimmt die erste Zeile als Titel', async () => {
+    fake = fakeMitBewerbung(true)
+    await (await laden())(LEAD, 'Kurz erreicht\nDetails folgen')
+    expect((notizInsert()!.payload as any).title).toBe('Kurz erreicht')
+  })
+
+  it.each([[''], ['   '], ['\n\n']])('weist die leere Notiz %j ab', async (t) => {
+    fake = fakeMitBewerbung(true)
+    const r = await (await laden())(LEAD, t)
+    expect(r.ok).toBe(false)
+    expect(notizInsert()).toBeUndefined()
+  })
+
+  it('weist eine zu lange Notiz ab', async () => {
+    fake = fakeMitBewerbung(true)
+    const r = await (await laden())(LEAD, 'x'.repeat(4001))
+    expect(r.ok).toBe(false)
+    expect(notizInsert()).toBeUndefined()
+  })
+
+  it('weist eine fremde Bewerbung ab', async () => {
+    fake = fakeMitBewerbung(false)
+    const r = await (await laden())(LEAD, 'x')
+    expect(r.ok).toBe(false)
+    expect(notizInsert()).toBeUndefined()
+  })
+
+  it('das Protokoll traegt den Wortlaut NICHT', async () => {
+    fake = fakeMitBewerbung(true)
+    await (await laden())(LEAD, 'Wirkte am Telefon unsicher')
+    expect(JSON.stringify(auditEintraege[0])).not.toContain('unsicher')
+    expect(auditEintraege[0].details).toMatchObject({ aktion: 'notiz_angelegt' })
+  })
+})
+
+describe('ladeApplicationNotizen', () => {
+  const laden = async () => (await import('@/app/admin/applications/actions')).ladeApplicationNotizen
+
+  it('liest mit Mandantenfilter und gibt den Verlauf zurueck', async () => {
+    fake = erstelleFakeSupabase((a: FakeAufruf) => {
+      if (a.tabelle === 'profiles') return { data: { role: 'admin', first_name: 'V', last_name: null }, error: null }
+      if (a.tabelle === 'mis_crm_activities') {
+        return {
+          data: [{ id: 'n1', title: 'Kurz erreicht', description: 'Kurz erreicht', performed_by: 'Vera', created_at: '2026-09-13T10:00:00Z' }],
+          error: null,
+        }
+      }
+      return undefined
+    })
+    ;(fake.client as any).auth = { getUser: async () => ({ data: { user: { id: NUTZER } }, error: null }) }
+    const r = await (await laden())(LEAD)
+    expect(r.ok).toBe(true)
+    expect((r as any).notizen).toHaveLength(1)
+    expect((r as any).notizen[0]).toMatchObject({ text: 'Kurz erreicht', von: 'Vera' })
+    const sel = fake.aufrufe.find(a => a.tabelle === 'mis_crm_activities' && a.operation === 'select')
+    expect(hatOrgFence(sel, ORG)).toBe(true)
+  })
+})
