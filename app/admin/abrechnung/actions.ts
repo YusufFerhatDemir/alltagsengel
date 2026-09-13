@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { istLaufStatus } from '@/lib/abrechnung/lauf-status'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logAuditEvent } from '@/lib/audit-log'
 import { logger } from '@/lib/logger'
@@ -78,12 +79,34 @@ export async function speichereLauf(input: {
 export async function setzeLaufStatusAction(laufId: string, status: string): Promise<{ ok: true }> {
   const { supabase, userId, organizationId, role, name } = await requireAbrechnungAdmin()
 
+  if (!laufId || typeof laufId !== 'string') throw new Error('Ungueltige Lauf-ID.')
+
+  // `abrechnungslaeufe.status` hat KEINEN CHECK (Migration 20260101000000):
+  // die Datenbank nimmt jede Zeichenkette an. Diese Erlaubnisliste ist
+  // damit die einzige Schranke. Ein unbekannter Zustand auf einem
+  // Abrechnungslauf faellt nirgends auf — die Liste zeigt ihn als grauen
+  // Rohtext, und keine Auswertung kennt ihn.
+  if (!istLaufStatus(status)) {
+    throw new Error(`Unbekannter Lauf-Status: ${String(status)}`)
+  }
+
   const patch: Record<string, unknown> = { status }
   if (status === 'uebermittelt') patch.uebermittelt_am = new Date().toISOString()
   if (['akzeptiert', 'teilweise_abgelehnt', 'abgelehnt'].includes(status)) patch.antwort_am = new Date().toISOString()
 
-  const { error } = await supabase.from('abrechnungslaeufe').update(patch).eq('id', laufId)
+  // Ohne `.select('id')` meldet PostgREST bei NULL getroffenen Zeilen
+  // keinen Fehler: der Lauf schriebe danach einen Audit-Eintrag ueber
+  // einen Statuswechsel, den es nicht gab.
+  const { data: geaendert, error } = await supabase
+    .from('abrechnungslaeufe')
+    .update(patch)
+    .eq('id', laufId)
+    .eq('organization_id', organizationId)
+    .select('id')
   if (error) throw new Error(`Status-Update fehlgeschlagen: ${error.message}`)
+  if (!geaendert || geaendert.length === 0) {
+    throw new Error('Abrechnungslauf nicht gefunden oder kein Zugriff — bitte Seite neu laden.')
+  }
 
   await logAuditEvent({
     action: 'update',

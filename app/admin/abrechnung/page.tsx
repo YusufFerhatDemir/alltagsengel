@@ -13,6 +13,7 @@
 // schlüsselt werden — s. lib/abrechnung/edifact-generator.ts (Phase 2).
 // ═══════════════════════════════════════════════════════════════
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { LAUF_STATUS, laufStatusLabel } from '@/lib/abrechnung/lauf-status'
 import { createClient } from '@/lib/supabase/client'
 import { getOrgIK } from '@/lib/config/org-config'
 import { euro } from '@/lib/admin/ops'
@@ -116,16 +117,9 @@ interface PruefErgebnis {
   datenprobleme: string[]
 }
 
-const LAUF_STATUS: Record<string, { label: string; color: string }> = {
-  erstellt: { label: 'Erstellt', color: '#999' },
-  geprueft: { label: 'Geprüft', color: '#2196F3' },
-  exportiert: { label: 'Exportiert', color: '#5C6BC0' },
-  uebermittelt: { label: 'Übermittelt', color: '#E8A000' },
-  akzeptiert: { label: 'Akzeptiert', color: '#5CB882' },
-  teilweise_abgelehnt: { label: 'Teilw. abgelehnt', color: '#FF7043' },
-  abgelehnt: { label: 'Abgelehnt', color: '#D04B3B' },
-  bezahlt: { label: 'Bezahlt', color: '#C9963C' },
-}
+// Katalog liegt in lib/abrechnung/lauf-status.ts — dieselbe Liste, die
+// setzeLaufStatusAction als Erlaubnisliste benutzt. Zwei Kopien liefen
+// auseinander: die Aktion kannte gar keine.
 
 // abrechenbare Leistungsnachweis-Status
 const ABRECHENBARE_STATUS = ['complete', 'signed', 'invoiced']
@@ -603,7 +597,7 @@ export default function AbrechnungPage() {
         <tbody>
           {laeufe.length === 0 && <EmptyRow colSpan={8}>Noch kein Abrechnungslauf für diesen Monat.</EmptyRow>}
           {laeufe.map(lauf => {
-            const meta = LAUF_STATUS[lauf.status] || { label: lauf.status, color: '#999' }
+            const meta = laufStatusLabel(lauf.status)
             return (
               <tr key={lauf.id}>
                 <td>

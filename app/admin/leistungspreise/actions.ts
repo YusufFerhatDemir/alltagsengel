@@ -63,11 +63,27 @@ export async function upsertLeistungspreis(
       gueltig_bis: payload.gueltig_bis,
     }
 
-    const { error: dbError } = editingId
-      ? await supabase.from('leistungspreise').update(row).eq('id', editingId)
-      : await supabase.from('leistungspreise').insert(row)
+    // Nur die Fehlerbehandlung: kein Preiswert wird hier veraendert.
+    //
+    // Beim UPDATE ist `.select('id')` noetig, weil PostgREST bei NULL
+    // getroffenen Zeilen keinen Fehler meldet — die Maske zeigte danach
+    // den neuen Preis, waehrend in der Tabelle der alte steht. Bei einem
+    // Preis ist das der Unterschied zwischen richtiger und falscher
+    // Rechnungsstellung.
+    //
+    // Der INSERT bleibt ohne Mandantenfilter: `organization_id` traegt den
+    // Default `current_org_id()`, und dieser Client ist an die Sitzung
+    // gebunden. Das ist der dokumentierte Weg, deshalb steht die Tabelle
+    // auch in scripts/org-default-tables.json.
+    const { data: gespeichert, error: dbError } = editingId
+      ? await supabase.from('leistungspreise').update(row)
+          .eq('id', editingId).eq('organization_id', organizationId).select('id')
+      : await supabase.from('leistungspreise').insert(row).select('id')
 
     if (dbError) return { ok: false, error: `Speichern fehlgeschlagen: ${dbError.message}` }
+    if (!gespeichert || gespeichert.length === 0) {
+      return { ok: false, error: 'Preiszeile nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
 
     await logAuditEventOrWarn({
       action: editingId ? 'update' : 'create',
@@ -98,8 +114,15 @@ export async function deleteLeistungspreis(
       return { ok: false, error: 'Ungueltige ID.' }
     }
 
-    const { error: dbError } = await supabase.from('leistungspreise').delete().eq('id', id)
+    const { data: geloescht, error: dbError } = await supabase
+      .from('leistungspreise').delete()
+      .eq('id', id).eq('organization_id', organizationId).select('id')
     if (dbError) return { ok: false, error: `Loeschen fehlgeschlagen: ${dbError.message}` }
+    if (!geloescht || geloescht.length === 0) {
+      // Ein „geloescht" ueber eine Zeile, die noch steht, ist die
+      // gefaehrlichste Rueckmeldung von allen: der Preis gilt weiter.
+      return { ok: false, error: 'Preiszeile nicht gefunden oder kein Zugriff — nichts geloescht.' }
+    }
 
     await logAuditEventOrWarn({
       action: 'delete',

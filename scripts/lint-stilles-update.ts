@@ -134,7 +134,6 @@ function pruefe(datei: string): Befund[] {
  * Fall in derselben Datei macht den Lauf trotzdem rot.
  */
 const BESTAND: { datei: string; tabelle: string; operation: string }[] = [
-  { datei: 'app/admin/abrechnung/actions.ts', tabelle: 'abrechnungslaeufe', operation: 'update' },
   { datei: 'app/admin/abrechnung/einstellungen/actions.ts', tabelle: 'datenannahmestellen', operation: 'delete' },
   { datei: 'app/admin/abrechnung/einstellungen/actions.ts', tabelle: 'datenannahmestellen', operation: 'update' },
   { datei: 'app/admin/annahmestellen/actions.ts', tabelle: 'datenannahmestellen', operation: 'update' },
@@ -142,8 +141,6 @@ const BESTAND: { datei: string; tabelle: string; operation: string }[] = [
   { datei: 'app/admin/caregivers/[id]/actions.ts', tabelle: 'caregivers', operation: 'update' },
   { datei: 'app/admin/kostentraeger/actions.ts', tabelle: 'kostentraeger_kontakte', operation: 'delete' },
   { datei: 'app/admin/kostentraeger/actions.ts', tabelle: 'kostentraeger_kontakte', operation: 'update' },
-  { datei: 'app/admin/leistungspreise/actions.ts', tabelle: 'leistungspreise', operation: 'delete' },
-  { datei: 'app/admin/leistungspreise/actions.ts', tabelle: 'leistungspreise', operation: 'update' },
   { datei: 'app/admin/pruefprotokoll/actions.ts', tabelle: 'review_errors', operation: 'update' },
   { datei: 'app/admin/records/new/actions.ts', tabelle: 'service_records', operation: 'update' },
   { datei: 'app/admin/schedule/actions.ts', tabelle: 'substitution_requests', operation: 'update' },
