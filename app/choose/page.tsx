@@ -19,7 +19,10 @@ export default function ChoosePage() {
             <Icon3D size={64} />
           </div>
         </Link>
-        <div className="ch-title">Wie möchten Sie<br/>Alltagsengel nutzen?</div>
+        {/* <h1>, nicht <div>: die Seite ist indexierbar und war bis zum
+            13.09.2026 die einzige oeffentliche Seite ohne Ueberschrift.
+            Die Klasse traegt die Gestaltung, das Element die Bedeutung. */}
+        <h1 className="ch-title">Wie möchten Sie<br/>Alltagsengel nutzen?</h1>
         <div className="ch-sub">Wählen Sie Ihre Rolle, um<br/>die passende Erfahrung zu erhalten.</div>
 
         <Link href="/auth/register?role=kunde" style={{ textDecoration: 'none' }}>

@@ -31,6 +31,9 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/pflegebox', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/krankenfahrten', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/leistungen', changeFrequency: 'monthly', priority: 0.9 },
+  // Indexierbar mit Self-Canonical, stand aber nicht in der Sitemap —
+  // eine Seite, die Google finden DARF, aber nicht genannt bekommt.
+  { url: '/choose', changeFrequency: 'monthly', priority: 0.5 },
   { url: '/alltagsbegleitung', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/haushaltshilfe', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/entlastungsbetrag', changeFrequency: 'weekly', priority: 0.9 },
