@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { chatZusammenfassung, uhrzeit } from '@/lib/chat/uebersicht'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { IconChat, IconWings } from '@/components/Icons'
@@ -46,41 +47,29 @@ export default function KundeChatPage() {
         return 
       }
 
-      const chatList: ChatPartner[] = []
-      for (const b of bookings) {
+      // Zwei Abfragen insgesamt statt zwei JE BUCHUNG — siehe
+      // lib/chat/uebersicht.ts. Vorher lief hier eine Schleife mit je
+      // einer Abfrage fuer die letzte Nachricht und einer fuer den
+      // Ungelesen-Zaehler, nacheinander.
+      const { letzte, ungelesen } = await chatZusammenfassung(
+        supabase, bookings.map(b => b.id), user.id,
+      )
+
+      const chatList: ChatPartner[] = bookings.map(b => {
         const angel = one(b.angels) as Angel | null
         const angelProfil = one(angel?.profiles)
         const name = angelProfil ? `${angelProfil.first_name} ${angelProfil.last_name?.[0]}.` : 'Engel'
-
-        const { data: msgs, error: msgsErr } = await supabase
-          .from('messages')
-          .select('content, created_at, read, sender_id')
-          .eq('booking_id', b.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-
-        if (msgsErr) throw new Error('Nachrichten konnten nicht geladen werden')
-
-        const lastMsg = msgs?.[0]
-        const { count, error: countErr } = await supabase
-          .from('messages')
-          .select('*', { count: 'exact', head: true })
-          .eq('booking_id', b.id)
-          .eq('receiver_id', user.id)
-          .eq('read', false)
-
-        if (countErr) throw new Error('Nachrichtenzähler konnte nicht geladen werden')
-
-        chatList.push({
+        const lastMsg = letzte.get(b.id)
+        return {
           id: b.angel_id!,
           name,
           lastMessage: lastMsg?.content || b.service,
-          lastTime: lastMsg ? new Date(lastMsg.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : '',
-          unread: count || 0,
+          lastTime: uhrzeit(lastMsg?.created_at),
+          unread: ungelesen.get(b.id) ?? 0,
           bookingId: b.id,
           isAngel: true,
-        })
-      }
+        }
+      })
       setChats(chatList)
       setLoading(false)
     } catch (err: any) {

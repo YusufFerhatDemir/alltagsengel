@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { chatZusammenfassung, uhrzeit } from '@/lib/chat/uebersicht'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { IconChat, IconUser } from '@/components/Icons'
@@ -31,39 +32,28 @@ export default function EngelChatPage() {
       if (bookingsErr) throw bookingsErr
       if (!bookings || bookings.length === 0) { setLoading(false); return }
 
-      const chatList: any[] = []
-      for (const b of bookings) {
-        // Überspringe Buchungen ohne Kunden-Profil (Profil gelöscht → customer_id = NULL)
-        if (!b.customer_id) continue
+      // Zwei Abfragen insgesamt statt zwei JE BUCHUNG — siehe
+      // lib/chat/uebersicht.ts.
+      const mitKunde = bookings.filter(b => b.customer_id)
+      const { letzte, ungelesen } = await chatZusammenfassung(
+        supabase, mitKunde.map(b => b.id), user.id,
+      )
+
+      const chatList: any[] = mitKunde.map(b => {
+        // Buchungen ohne Kunden-Profil (Profil geloescht -> customer_id
+        // = NULL) sind oben schon herausgefallen.
         const customer = one(b.profiles) as Profile | null
         const name = customer ? `${customer.first_name} ${customer.last_name?.[0] || ''}.` : 'Ehem. Kunde'
-
-        const { data: msgs, error: msgsErr } = await supabase
-          .from('messages')
-          .select('content, created_at, read, sender_id')
-          .eq('booking_id', b.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-
-        if (msgsErr) throw msgsErr
-        const lastMsg = msgs?.[0]
-        const { count, error: countErr } = await supabase
-          .from('messages')
-          .select('*', { count: 'exact', head: true })
-          .eq('booking_id', b.id)
-          .eq('receiver_id', user.id)
-          .eq('read', false)
-
-        if (countErr) throw countErr
-        chatList.push({
+        const lastMsg = letzte.get(b.id)
+        return {
           id: b.customer_id,
           name,
           lastMessage: lastMsg?.content || b.service,
-          lastTime: lastMsg ? new Date(lastMsg.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : '',
-          unread: count || 0,
+          lastTime: uhrzeit(lastMsg?.created_at),
+          unread: ungelesen.get(b.id) ?? 0,
           bookingId: b.id,
-        })
-      }
+        }
+      })
       setChats(chatList)
     } catch (err) {
       log.errorWithException('Engel chat load error', err)
