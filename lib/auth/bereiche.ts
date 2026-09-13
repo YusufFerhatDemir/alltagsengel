@@ -418,11 +418,35 @@ function passt(pfad: string, praefix: string): boolean {
   return pfad === praefix || pfad.startsWith(praefix + '/')
 }
 
+/**
+ * Bereiche, deren Regel NUR fuer sich selbst gilt — nicht fuer alles
+ * darunter.
+ *
+ * ── WARUM DAS NOETIG IST ──────────────────────────────────────────────
+ * `darfPfad` ist fail-closed: ein Pfad ohne Regel bleibt der
+ * Administration vorbehalten. Unter `/admin` greift das, weil es dort
+ * keine Regel fuer den blossen Praefix gibt.
+ *
+ * Fuer `/mis` gab es eine: `{ lesen: 'berichte.lesen' }` — das Recht, das
+ * JEDE Fachrolle hat. Damit war die Regel zugleich eine Auffangregel fuer
+ * alles darunter, und ein neu angelegtes Modul unter `/mis` war ab der
+ * ersten Minute fuer PDL, QM und Buchhaltung lesbar, ohne dass jemand das
+ * entschieden haette. Der Kommentar an der Regel warnt selbst davor:
+ * „'/mis' allein waere zu grob: darunter liegen Finanzen, Personalakten".
+ *
+ * Geprueft am 13.09.2026: von 22 Seiten unter `/mis` haengt KEINE an der
+ * Auffangregel — alle 21 Unterseiten haben eine eigene. Die Einschraenkung
+ * aendert also nichts am Bestand und schliesst die Luecke fuer das
+ * naechste Modul.
+ */
+const NUR_EXAKT: ReadonlySet<string> = new Set(['/mis'])
+
 /** Laengster passender Bereichs-Praefix, oder null. */
 export function bereichFuerPfad(pfad: string): string | null {
   let treffer: string | null = null
   for (const praefix of Object.keys(BEREICHE)) {
-    if (passt(pfad, praefix) && (treffer === null || praefix.length > treffer.length)) {
+    const passend = NUR_EXAKT.has(praefix) ? pfad === praefix : passt(pfad, praefix)
+    if (passend && (treffer === null || praefix.length > treffer.length)) {
       treffer = praefix
     }
   }
