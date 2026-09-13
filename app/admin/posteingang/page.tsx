@@ -11,6 +11,8 @@ import {
 import { KOERBE, korb, zaehleKoerbe, ohneKorb, type KorbKey } from '@/lib/leads/koerbe'
 import { PRIORITAET_META } from '@/lib/leads/alterung'
 import { findeDubletten, betroffeneZeilen, MERKMAL_META } from '@/lib/leads/dubletten'
+import { setLeadWiedervorlage } from './actions'
+import { berlinerTagPlus } from '@/lib/leads/follow-up'
 import { StatusBadge, EmptyRow, Banner, SearchInput } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger'
 
@@ -125,6 +127,23 @@ export default function AdminPosteingangPage() {
   // 56 Tage dalagen. Steht die Zahl ueber null, ist das eine Luecke im
   // Modell und kein Randfall.
   const luecken = useMemo(() => ohneKorb(rows, jetzt), [rows, jetzt])
+  const [wvBusy, setWvBusy] = useState<string | null>(null)
+  const [wvFehler, setWvFehler] = useState<string | null>(null)
+
+  async function setzeWiedervorlage(e: PosteingangEintrag, datum: string) {
+    if (!datum) return
+    setWvBusy(e.id)
+    const r = await setLeadWiedervorlage(e.id, datum)
+    setWvBusy(null)
+    if (!r.ok) { setWvFehler(r.error); return }
+    setWvFehler(null)
+    // Die Zeile neu rechnen statt die ganze Liste zu laden: ein Neuladen
+    // wuerde die Sortierung unter der Hand veraendern, waehrend jemand
+    // gerade Termine setzt.
+    setRows(prev => prev.map(r2 => r2.id === e.id
+      ? { ...r2, wiedervorlage: `${datum}T00:00:00.000Z` }
+      : r2))
+  }
   // `kontakt` fuehrt E-Mail ODER Telefon in einem Feld — am @ unterscheidbar.
   const dubletten = useMemo(() => findeDubletten(rows.map(e => ({
     id: `${e.art}-${e.id}`,
@@ -246,6 +265,16 @@ export default function AdminPosteingangPage() {
         </div>
       )}
 
+      {wvFehler && (
+        <div style={{
+          margin: '10px 0', padding: '10px 12px', borderRadius: 10,
+          background: 'rgba(208,75,59,0.10)', border: '1px solid rgba(208,75,59,0.35)',
+          fontSize: 13, color: 'var(--ink2)',
+        }}>
+          {wvFehler}
+        </div>
+      )}
+
       {dubletten.length > 0 && (
         <div style={{
           margin: '10px 0', padding: '10px 12px', borderRadius: 10,
@@ -334,7 +363,22 @@ export default function AdminPosteingangPage() {
                   <td><StatusBadge label={e.stufeLabel} color={e.stufeFarbe} /></td>
                   <td style={{ fontSize: 13, color: 'var(--ink3)' }}>{e.hinweis}</td>
                   <td style={{ fontSize: 13, whiteSpace: 'nowrap' }}>
-                    {e.wiedervorlage ? formatDate(e.wiedervorlage) : <span style={{ color: 'var(--ink5)' }}>—</span>}
+                    {/* Nur Kundenanfragen: Bewerbungen laufen ueber
+                        /admin/applications, die Warteliste fuehrt gar keine
+                        Wiedervorlage-Spalte. Ein Feld, das nichts schreiben
+                        kann, waere schlimmer als keines. */}
+                    {e.art === 'anfrage' ? (
+                      <input
+                        type="date"
+                        className="admin-select"
+                        style={{ fontSize: 12 }}
+                        disabled={wvBusy === e.id}
+                        min={berlinerTagPlus(jetzt, 0)}
+                        value={e.wiedervorlage ? e.wiedervorlage.slice(0, 10) : ''}
+                        onClick={ev => ev.stopPropagation()}
+                        onChange={ev => { ev.stopPropagation(); setzeWiedervorlage(e, ev.target.value) }}
+                      />
+                    ) : e.wiedervorlage ? formatDate(e.wiedervorlage) : <span style={{ color: 'var(--ink5)' }}>—</span>}
                   </td>
                   <td>
                     <Link href={e.ziel} style={linkBtn}>Bearbeiten →</Link>

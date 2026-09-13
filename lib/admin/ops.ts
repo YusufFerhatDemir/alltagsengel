@@ -674,6 +674,23 @@ export function istBewerbung(zeile: { art?: string | null; source?: string | nul
 }
 
 /**
+ * PostgREST-Bedingung fuer Kundenanfragen — das genaue Gegenstueck zu
+ * BEWERBUNG_FILTER.
+ *
+ * Steht hier NEBEN dem anderen Filter, weil die beiden nur zusammen Sinn
+ * ergeben: was der eine nicht nimmt, muss der andere nehmen. Lebten sie in
+ * zwei Dateien, koennte einer geaendert werden und der andere nicht — und
+ * dann faellt eine Zeile entweder durch beide Raster oder in beide.
+ */
+export const ANFRAGE_FILTER_ART = 'anfrage'
+export const ANFRAGE_FILTER_NICHT_SOURCE = 'engel-bewerbung'
+
+/** Gegenstueck fuer den Anwendungscode. Exakt `!istBewerbung`. */
+export function istKundenanfrage(zeile: { art?: string | null; source?: string | null }): boolean {
+  return !istBewerbung(zeile)
+}
+
+/**
  * Der Vorwaertsweg. `lost` steht bewusst NICHT drin: eine Absage ist kein
  * naechster Schritt, den man versehentlich anklickt, sondern eine eigene
  * Entscheidung mit eigenem Knopf.
