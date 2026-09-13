@@ -572,24 +572,55 @@ export async function manuellZuordnen(
     actorId,
   });
 
-  // Klaerfall + Zahlungseingang aktualisieren
-  await supabase
+  // Klaerfall + Zahlungseingang aktualisieren.
+  //
+  // Dieselbe Stelle wie im automatischen Weg oben, nur von Hand ausgeloest:
+  // der Vermerk auf `zahlungseingaenge` ist der einzige Beleg, dass diese
+  // Bankbuchung verarbeitet ist. Bleibt er aus, legt der naechste CAMT-Lauf
+  // fuer dasselbe Geld eine zweite Zahlung an. Und ein Klaerfall, der offen
+  // bleibt, kommt einem zweiten Bearbeiter erneut auf den Tisch.
+  //
+  // `.eq('status', 'offen')` ist zugleich der Riegel gegen genau das: nur
+  // wer den Klaerfall aus dem offenen Zustand heraus schliesst, hat ihn
+  // bearbeitet.
+  const { data: geschlossen, error: klaerfallFehler } = await supabase
     .from('klaerfaelle')
     .update({
       status: 'zugeordnet',
       bearbeitet_von: actorId,
       bearbeitet_am: new Date().toISOString(),
     })
-    .eq('id', klaerfallId);
+    .eq('id', klaerfallId)
+    .eq('status', 'offen')
+    .select('id');
 
-  await supabase
+  if (klaerfallFehler || (geschlossen?.length ?? 0) === 0) {
+    throw new Error(
+      `Klaerfall ${klaerfallId} konnte nicht geschlossen werden `
+      + `(${klaerfallFehler?.message ?? 'nicht mehr offen'}). `
+      + `ACHTUNG: Zahlung ${payment.id} wurde bereits angelegt und der Rechnung ${invoiceId} `
+      + `zugeordnet — bitte vor einer erneuten Buchung pruefen.`
+    );
+  }
+
+  const { data: verknuepft, error: verknuepfFehler } = await supabase
     .from('zahlungseingaenge')
     .update({
       zuordnungs_status: 'zugeordnet',
       zuordnungs_confidence: 100,
       payment_id: payment.id,
     })
-    .eq('id', ze.id);
+    .eq('id', ze.id)
+    .select('id');
+
+  if (verknuepfFehler || (verknuepft?.length ?? 0) === 0) {
+    throw new Error(
+      `Zahlungseingang ${ze.id} konnte nicht als zugeordnet vermerkt werden `
+      + `(${verknuepfFehler?.message ?? 'keine Zeile getroffen'}). `
+      + `ACHTUNG: Zahlung ${payment.id} ist gebucht und der Klaerfall geschlossen — `
+      + `die Buchung darf NICHT wiederholt werden.`
+    );
+  }
 
   await logBillingAction(supabase, {
     entityType: 'klaerfall',

@@ -189,10 +189,23 @@ export const POST = withTracking(async function POST(request: NextRequest, conte
     } else {
       fehlgeschlagen.push(e.email)
       // Markierung zurücknehmen, damit ein späterer Lauf es erneut versucht.
-      await admin
+      //
+      // Bleibt die Rücknahme aus, gilt die Person als benachrichtigt, ohne
+      // je eine Mail bekommen zu haben — und kein späterer Lauf holt das
+      // nach. Der Mailversand ist hier schon gescheitert; abgebrochen wird
+      // deshalb nicht, aber sichtbar muss es sein.
+      const { data: zurueck, error: ruecknahmeFehler } = await admin
         .from('state_waitlist')
         .update({ notified_at: null })
         .eq('id', e.id)
+        .select('id')
+
+      if (ruecknahmeFehler || (zurueck?.length ?? 0) === 0) {
+        log.error('Warteliste: Markierung nicht zurueckgenommen — die Person bleibt ohne Benachrichtigung', {
+          eintragId: e.id,
+          errorMessage: ruecknahmeFehler?.message ?? 'keine Zeile getroffen',
+        })
+      }
     }
   }
 

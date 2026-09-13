@@ -64,12 +64,22 @@ export const DELETE = withTracking(async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Endpoint fehlt' }, { status: 400 })
     }
 
-    await supabase.from('push_subscriptions')
+    // Das ist eine Abmeldung. Ging sie ins Leere, bekaeme der Nutzer weiter
+    // Push-Nachrichten, waehrend ihm „abgemeldet" gemeldet wird. PostgREST
+    // liefert bei null getroffenen Zeilen keinen Fehler.
+    const { data: abgemeldet, error: abmeldeFehler } = await supabase
+      .from('push_subscriptions')
       .delete()
       .eq('user_id', user.id)
       .eq('endpoint', endpoint)
+      .select('id')
 
-    return NextResponse.json({ success: true })
+    if (abmeldeFehler) {
+      return safeApiError(abmeldeFehler, request)
+    }
+    // Kein Treffer heisst hier: es gab nichts abzumelden. Das ist das
+    // gewuenschte Ergebnis, kein Fehler — gemeldet wird es trotzdem ehrlich.
+    return NextResponse.json({ success: true, entfernt: abgemeldet?.length ?? 0 })
   } catch (err) {
     return safeApiError(err, request)
   }

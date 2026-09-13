@@ -596,7 +596,15 @@ export async function fuehreVersandAus(
 
     if (ergebnis.ok) {
       gesendet += 1
-      await supabase
+      // Diese Zeile IST der Beleg, dass die Mail hinausgegangen ist. Bleibt
+      // sie aus, steht der Eintrag weiter als offen — und ein
+      // Wiederholungslauf schickt derselben Person dieselbe Mail noch
+      // einmal. Der Idempotenzschluessel oben faengt nur die Wiederholung
+      // INNERHALB desselben Vorgangs ab, nicht den naechsten Lauf.
+      //
+      // Abgebrochen wird nicht: die Mail ist weg, und die uebrigen
+      // Empfaenger sollen ihre bekommen. Aber es muss auffallen.
+      const { data: vermerkt, error: vermerkFehler } = await supabase
         .from('email_campaign_logs')
         .update({
           status: 'gesendet',
@@ -604,12 +612,30 @@ export async function fuehreVersandAus(
           provider_id: ergebnis.messageId,
         })
         .eq('id', eintrag.id)
+        .select('id')
+
+      if (vermerkFehler || (vermerkt?.length ?? 0) === 0) {
+        log.error('Mail versendet, aber NICHT protokolliert — ein Folgelauf wuerde sie erneut schicken', {
+          kampagne: kampagne.id,
+          logEintrag: eintrag.id,
+          providerId: ergebnis.messageId,
+          errorMessage: vermerkFehler?.message ?? 'keine Zeile getroffen',
+        })
+      }
     } else {
       fehlgeschlagen += 1
-      await supabase
+      const { error: fehlerVermerkFehler } = await supabase
         .from('email_campaign_logs')
         .update({ status: 'fehler', fehler_text: ergebnis.grund })
         .eq('id', eintrag.id)
+        .select('id')
+
+      if (fehlerVermerkFehler) {
+        log.error('Versandfehler nicht protokolliert', {
+          kampagne: kampagne.id, logEintrag: eintrag.id,
+          errorMessage: fehlerVermerkFehler.message,
+        })
+      }
     }
   }
 

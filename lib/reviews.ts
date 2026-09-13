@@ -227,10 +227,21 @@ export async function aktualisiereEngelDurchschnitt(angelId: string): Promise<vo
   if (error || !data || data.length === 0) return
 
   const schnitt = data.reduce((summe, r) => summe + (r.rating || 0), 0) / data.length
-  await admin
+  // Die Bewertung steht auf der oeffentlichen Engel-Seite. Kommt die
+  // Neuberechnung nicht an, zeigt sie dauerhaft einen alten Schnitt — ohne
+  // dass irgendwo etwas fehlschlaegt.
+  const { data: gesetzt, error: schnittFehler } = await admin
     .from('angels')
     .update({ rating: Math.round(schnitt * 10) / 10 })
     .eq('id', angelId)
+    .select('id')
+
+  if (schnittFehler || (gesetzt?.length ?? 0) === 0) {
+    logger.child('reviews').error('Bewertungsschnitt nicht aktualisiert — die Engel-Seite zeigt den alten Wert', {
+      angelId, schnitt,
+      errorMessage: schnittFehler?.message ?? 'keine Zeile getroffen',
+    })
+  }
 }
 
 /** true, wenn der User Admin/Superadmin ist. Fail-closed bei Fehlern. */

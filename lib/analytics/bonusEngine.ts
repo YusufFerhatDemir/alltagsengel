@@ -10,6 +10,9 @@ import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { abwesenheitBlockiert } from '@/lib/touren/server'
 import { ohneStornierte } from '@/lib/leistungsnachweis/status-sync'
+import { logger } from '@/lib/logger'
+
+const log = logger.child('bonus-engine')
 
 export type BonusKriteriumTyp =
   | 'keine_ausfaelle'
@@ -629,12 +632,27 @@ export async function freigebenBerechnung(
     // Rueckabwicklung: ohne Nachweiszeile darf der Vorgang nicht als
     // entschieden gelten — sonst waere er entschieden, ohne dass irgendwo
     // steht von wem.
-    await supabase
+    const { data: zurueckgenommen, error: ruecknahmeFehler } = await supabase
       .from('bonus_berechnungen')
       .update({ status: 'berechnet' })
       .eq('id', params.berechnungId)
       .eq('organization_id', params.organizationId)
       .eq('status', params.entscheidung)
+      .select('id')
+
+    // Die Ruecknahme darf nicht werfen — wir werfen gleich ohnehin, und eine
+    // Ausnahme wuerde die eigentliche Ursache verdecken. Scheitert sie,
+    // steht die Berechnung auf der Entscheidung, obwohl die Freigabe nicht
+    // gespeichert werden konnte: der Fehlertext unten behauptet dann etwas,
+    // das nicht stimmt.
+    if (ruecknahmeFehler || (zurueckgenommen?.length ?? 0) === 0) {
+      log.error('Bonus-Entscheidung NICHT zurueckgenommen — Status und Freigabe stehen auseinander', {
+        berechnungId: params.berechnungId,
+        organizationId: params.organizationId,
+        entscheidung: params.entscheidung,
+        errorMessage: ruecknahmeFehler?.message ?? 'keine Zeile getroffen',
+      })
+    }
     throw new Error(
       `Freigabe konnte nicht gespeichert werden: ${freigabeErr.message}. `
       + 'Die Entscheidung wurde zurückgenommen.',

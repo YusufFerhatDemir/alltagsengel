@@ -98,11 +98,31 @@ export const GET = withTracking(async function GET(request: NextRequest) {
       }
     }
 
-    // 4) Token verbrennen
-    await adminClient
+    // 4) Token verbrennen.
+    //
+    // „Verbrennen" ist woertlich gemeint: ohne diesen Vermerk bleibt der
+    // Widerrufslink gueltig und laesst sich erneut aufrufen. Hier stand ein
+    // blankes `await` — und PostgREST meldet keinen Fehler, wenn null
+    // Zeilen getroffen werden.
+    //
+    // `.is('confirmed_at', null)` ist zugleich der Riegel gegen den
+    // zweiten, gleichzeitigen Aufruf desselben Links.
+    const { data: verbrannt, error: verbrennFehler } = await adminClient
       .from('account_deletion_tokens')
       .update({ confirmed_at: new Date().toISOString() })
       .eq('user_id', userId)
+      .is('confirmed_at', null)
+      .select('id')
+
+    if (verbrennFehler || (verbrannt?.length ?? 0) === 0) {
+      // Die Ruecknahme der Loeschung ist an dieser Stelle bereits erfolgt —
+      // das ist das Wichtigere und bleibt stehen. Ein Link, der gueltig
+      // bleibt, muss aber auffallen.
+      log.error('Widerrufs-Token NICHT verbrannt — der Link bleibt gueltig', {
+        userId,
+        errorMessage: verbrennFehler?.message ?? 'keine Zeile getroffen',
+      })
+    }
 
     // 5) Org fuer Audit-Log
     const { data: undoMembership } = await adminClient

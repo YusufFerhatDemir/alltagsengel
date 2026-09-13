@@ -9,6 +9,9 @@ import { ACTIVE_ORG_COOKIE, PLAN_FEATURES } from '@/lib/organizations/types'
 import { eindeutigesBundeslandFuerPlz, normalizeBundesland } from '@/lib/expansion/plz-bundesland'
 import { BUNDESLAND_NAMEN } from '@/lib/expansion/types'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { logger } from '@/lib/logger'
+
+const log = logger.child('organizations')
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -126,7 +129,18 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     .from('organization_members')
     .insert({ organization_id: org.id, user_id: user.id, role: 'owner' })
   if (memberErr) {
-    await admin.from('organizations').delete().eq('id', org.id)
+    // Die Rücknahme darf nicht werfen — wir antworten gleich ohnehin mit
+    // einem Fehler, und eine Ausnahme hier würde die eigentliche Ursache
+    // verdecken. Stumm bleiben darf sie aber auch nicht: scheitert sie,
+    // steht eine Organisation ohne einen einzigen Eigentümer in der
+    // Tabelle, an die niemand mehr herankommt.
+    const { error: ruecknahmeFehler } = await admin
+      .from('organizations').delete().eq('id', org.id).select('id')
+    if (ruecknahmeFehler) {
+      log.error('Organisation nach fehlgeschlagener Mitgliedsanlage NICHT entfernt', {
+        orgId: org.id, errorMessage: ruecknahmeFehler.message,
+      })
+    }
     return safeApiError(memberErr, req)
   }
 

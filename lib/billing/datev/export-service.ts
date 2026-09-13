@@ -18,6 +18,9 @@ import {
   type DatevPruefErgebnis,
 } from './datev-validator';
 import { logBillingAction } from '../core/audit';
+import { logger } from '@/lib/logger'
+
+const log = logger.child('datev-export')
 
 /**
  * Ein Buchungsstapel, der die Pruefung nicht besteht, wird nicht erzeugt.
@@ -342,12 +345,25 @@ export async function downloadDatevExport(
     ? new Uint8Array(await protoData.arrayBuffer())
     : new TextEncoder().encode('Kein Protokoll vorhanden.');
 
-  // Status auf "heruntergeladen" setzen
-  await supabase
+  // Status auf "heruntergeladen" setzen.
+  //
+  // KEIN Treffer ist hier kein Fehler: ein zweiter Download desselben
+  // Exports findet den Status nicht mehr auf 'erstellt'. Ein FEHLER wuerde
+  // aber bedeuten, dass der Vermerk ueberhaupt nicht ankommt — dann sieht
+  // ein laengst an die Kanzlei gegangener Export in der Uebersicht ewig aus
+  // wie einer, den noch niemand geholt hat.
+  const { error: vermerkFehler } = await supabase
     .from('datev_exports')
     .update({ status: 'heruntergeladen' })
     .eq('id', exportId)
-    .eq('status', 'erstellt');
+    .eq('status', 'erstellt')
+    .select('id');
+
+  if (vermerkFehler) {
+    log.error('DATEV-Export nicht als heruntergeladen vermerkt', {
+      exportId, errorMessage: vermerkFehler.message,
+    });
+  }
 
   return {
     csv: csvBytes,

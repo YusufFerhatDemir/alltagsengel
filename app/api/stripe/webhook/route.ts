@@ -4,6 +4,9 @@ import { stripe } from '@/lib/stripe/client'
 import { syncSubscriptionToDb, downgradeToFree } from '@/lib/stripe/helpers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { logger } from '@/lib/logger'
+
+const log = logger.child('stripe-webhook')
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -58,10 +61,23 @@ export const POST = withTracking(async function POST(req: NextRequest) {
       const orgId = subDetails?.metadata?.orgId
       if (orgId) {
         const admin = createAdminClient()
-        await admin
+        // Ohne Ergebnispruefung bliebe eine Organisation nach einer
+        // gescheiterten Zahlung auf 'aktiv' stehen — voller Zugang trotz
+        // offener Rechnung, und niemand erfaehrt davon. Ein Webhook darf
+        // nicht abbrechen (Stripe wiederholt sonst endlos), aber der
+        // Ausfall gehoert ins Protokoll.
+        const { data: gesetzt, error: statusFehler } = await admin
           .from('organization_subscriptions')
           .update({ status: 'past_due' })
           .eq('organization_id', orgId)
+          .select('organization_id')
+
+        if (statusFehler || (gesetzt?.length ?? 0) === 0) {
+          log.error('Abo NICHT auf past_due gesetzt — Organisation behaelt vollen Zugang', {
+            orgId,
+            errorMessage: statusFehler?.message ?? 'keine Zeile getroffen',
+          })
+        }
       }
       break
     }

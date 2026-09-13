@@ -513,7 +513,22 @@ export async function createSepaBatch(
     .upload(storagePath, new Blob([xmlContent], { type: 'application/xml' }), { upsert: true })
 
   if (!uploadErr) {
-    await supabase.from('sepa_batches').update({ xml_storage_path: storagePath }).eq('id', batch.id)
+    // Ohne diesen Vermerk liegt die SEPA-Datei zwar im Speicher, aber der
+    // Sammelauftrag weiss nicht, wo — und sie ist spaeter nicht mehr
+    // auffindbar. Der Einzug selbst ist zu diesem Zeitpunkt vorbereitet;
+    // abgebrochen wird deshalb nicht, sichtbar gemacht schon.
+    const { data: pfadVermerkt, error: pfadFehler } = await supabase
+      .from('sepa_batches')
+      .update({ xml_storage_path: storagePath })
+      .eq('id', batch.id)
+      .select('id')
+
+    if (pfadFehler || (pfadVermerkt?.length ?? 0) === 0) {
+      log.error('SEPA-Datei abgelegt, aber der Pfad steht nicht am Sammelauftrag', {
+        batchId: batch.id, storagePath,
+        errorMessage: pfadFehler?.message ?? 'keine Zeile getroffen',
+      })
+    }
   }
 
   // Mandate auf RCUR setzen (nach erstem Einzug)

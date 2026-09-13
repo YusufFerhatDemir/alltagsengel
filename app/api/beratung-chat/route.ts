@@ -123,12 +123,22 @@ async function dailyLlmCapReached(): Promise<boolean> {
     }
     const attempts = data?.attempts ?? 0
     if (attempts >= MAX_LLM_CALLS_PER_DAY) return true
-    await supabase
+    // Der Schreibvorgang stand ohne Ergebnispruefung da. Das Fail-open beim
+    // LESEN ist Absicht (Kommentar oben). Ein stilles Scheitern beim
+    // SCHREIBEN ist etwas anderes: dann zaehlt der Deckel nicht „minimal
+    // unter", sondern ueberhaupt nicht mehr — er wuerde nie greifen, und
+    // niemand saehe es.
+    const { error: zaehlFehler } = await supabase
       .from('login_rate_limits')
       .upsert(
         { key, attempts: attempts + 1, updated_at: new Date().toISOString() },
         { onConflict: 'key' }
       )
+    if (zaehlFehler) {
+      log.error('Tages-Cap zaehlt NICHT — der Kostendeckel greift nicht', {
+        key, errorMessage: zaehlFehler.message,
+      })
+    }
     return false
   } catch (e) {
     log.warn('Tages-Cap-Check fehlgeschlagen (fail-open)', { errorMessage: e instanceof Error ? e.message : e })

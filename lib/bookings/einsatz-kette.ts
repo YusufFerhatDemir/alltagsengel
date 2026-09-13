@@ -472,7 +472,18 @@ export async function erzeugeEinsatzUndNachweis(
     // Kompensation: ohne Nachweis ist der Einsatz die halbe Kette.
     // Loeschen statt stehenlassen — er ist Sekunden alt und hat noch
     // keinen Bezug ausserhalb dieser Funktion.
-    await admin.from('assignments').delete().eq('id', assignment.id).eq('organization_id', organizationId)
+    const { error: ruecknahmeFehler } = await admin
+      .from('assignments').delete().eq('id', assignment.id).eq('organization_id', organizationId).select('id')
+    // Die Kompensation darf nicht werfen — wir werfen gleich ohnehin, und
+    // eine Ausnahme wuerde die eigentliche Ursache verdecken. Scheitert sie,
+    // bleibt genau das stehen, was sie verhindern soll: ein Einsatz ohne
+    // Nachweis, also die halbe Kette.
+    if (ruecknahmeFehler) {
+      log.error('Einsatz-Ruecknahme fehlgeschlagen — Einsatz ohne Nachweis bleibt stehen', {
+        assignmentId: assignment.id, organizationId,
+        errorMessage: ruecknahmeFehler.message,
+      })
+    }
     throw new EinsatzKetteFehler(
       'NACHWEIS_FEHLGESCHLAGEN',
       'Der Leistungsnachweis-Entwurf konnte nicht angelegt werden; der Einsatz wurde zurückgenommen.',

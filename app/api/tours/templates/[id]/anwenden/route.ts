@@ -6,6 +6,9 @@ import { fahrtZwischenPlz } from '@/lib/touren/fahrtzeit'
 import { pruefeVorlagenStops } from '@/lib/touren/planung'
 import { POST as erstelleTour } from '@/app/api/tours/route'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { logger } from '@/lib/logger'
+
+const log = logger.child('tour-vorlage')
 
 // ── POST /api/tours/templates/[id]/anwenden ──────────────────────
 // body: { tour_date, caregiver_id? } — materialisiert die Vorlage
@@ -141,8 +144,21 @@ export const POST = withTracking(async function POST(
   // Herkunft an der Tour vermerken
   const tour = await antwort.json()
   if (tour?.id) {
-    await admin.from('tours').update({ template_id: template.id }).eq('id', tour.id)
-    tour.template_id = template.id
+    // Die Antwort behauptet gleich `template_id` — das darf sie nur, wenn
+    // der Vermerk auch in der Datenbank steht. Die Tour selbst ist angelegt
+    // und bleibt es; ein fehlender Herkunftsvermerk ist kein Grund, sie zu
+    // verwerfen, aber er gehoert ins Protokoll.
+    const { data: vermerkt, error: vermerkFehler } = await admin
+      .from('tours').update({ template_id: template.id }).eq('id', tour.id).select('id')
+
+    if (vermerkFehler || (vermerkt?.length ?? 0) === 0) {
+      log.error('Tour ohne Vorlagen-Herkunft angelegt', {
+        tourId: tour.id, templateId: template.id,
+        errorMessage: vermerkFehler?.message ?? 'keine Zeile getroffen',
+      })
+    } else {
+      tour.template_id = template.id
+    }
   }
   return NextResponse.json(tour, { status: 201 })
 })
