@@ -163,12 +163,11 @@ const BESTAND: { datei: string; tabelle: string; operation: string }[] = [
   { datei: 'app/fahrer/profil/actions.ts', tabelle: 'krankenfahrt_providers', operation: 'update' },
   { datei: 'app/fahrer/profil/actions.ts', tabelle: 'profiles', operation: 'update' },
   { datei: 'app/fahrer/register/actions.ts', tabelle: 'profiles', operation: 'update' },
-  { datei: 'app/kunde/buchen/[id]/actions.ts', tabelle: 'profiles', operation: 'update' },
+  // BEGRUENDET: markiert ungelesene Nachrichten als gelesen
+  // (.eq('read', false)). NULL getroffene Zeilen heisst: es gab nichts
+  // Ungelesenes. Das ist der haeufigste Fall ueberhaupt und kein Fehler —
+  // eine Leerpruefung wuerde hier bei jedem zweiten Aufruf Alarm schlagen.
   { datei: 'app/kunde/chat/[id]/actions.ts', tabelle: 'messages', operation: 'update' },
-  { datei: 'app/kunde/home/actions.ts', tabelle: 'profiles', operation: 'update' },
-  { datei: 'app/kunde/notfall/actions.ts', tabelle: 'medikamentenplan', operation: 'update' },
-  { datei: 'app/kunde/notfall/actions.ts', tabelle: 'notfall_info', operation: 'update' },
-  { datei: 'app/kunde/profil/actions.ts', tabelle: 'profiles', operation: 'update' },
   { datei: 'app/mis/complaints/actions.ts', tabelle: 'mis_complaints', operation: 'update' },
   { datei: 'app/mis/contracts/actions.ts', tabelle: 'mis_contracts', operation: 'update' },
   { datei: 'app/mis/documents/actions.ts', tabelle: 'mis_documents', operation: 'update' },

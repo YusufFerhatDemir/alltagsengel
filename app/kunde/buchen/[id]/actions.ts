@@ -47,6 +47,7 @@ export async function savePlzAction(
       .from('profiles')
       .update({ postal_code: input.plz })
       .eq('id', userId)
+      .select('id')
 
     if (dbError) return { ok: false, error: `PLZ-Update fehlgeschlagen: ${dbError.message}` }
 

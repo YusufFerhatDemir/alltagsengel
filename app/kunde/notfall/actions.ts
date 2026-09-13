@@ -84,14 +84,22 @@ export async function saveMedicationAction(
 
     if (input.id) {
       // Update — Ownership-Check via WHERE
-      const { error: updateError } = await supabase
+      // `.select('id')` mit Leerpruefung: PostgREST meldet bei NULL
+      // getroffenen Zeilen keinen Fehler. Die Maske zeigte danach den
+      // geaenderten Medikamentenplan, waehrend in der Datenbank der alte
+      // steht — bei Medikamenten ist das kein Anzeigefehler.
+      const { data: geaendert, error: updateError } = await supabase
         .from('medikamentenplan')
         .update(payload)
         .eq('id', input.id)
         .eq('user_id', userId)
+        .select('id')
 
       if (updateError) {
         return { ok: false, error: updateError.message }
+      }
+      if (!geaendert || geaendert.length === 0) {
+        return { ok: false, error: 'Eintrag nicht gefunden — bitte Seite neu laden.' }
       }
 
       await logAuditEventOrWarn({
@@ -146,14 +154,20 @@ export async function deleteMedicationAction(
       return { ok: false, error: 'Medikamenten-ID fehlt.' }
     }
 
-    const { error: updateError } = await supabase
+    // Weiches Loeschen. Ohne die Pruefung meldete die Maske „entfernt"
+    // ueber ein Medikament, das weiter im Plan steht.
+    const { data: deaktiviert, error: updateError } = await supabase
       .from('medikamentenplan')
       .update({ aktiv: false })
       .eq('id', input.id)
       .eq('user_id', userId)
+      .select('id')
 
     if (updateError) {
       return { ok: false, error: updateError.message }
+    }
+    if (!deaktiviert || deaktiviert.length === 0) {
+      return { ok: false, error: 'Eintrag nicht gefunden — bitte Seite neu laden.' }
     }
 
     await logAuditEventOrWarn({
@@ -223,13 +237,20 @@ export async function saveNotfallInfoAction(
 
     if (existing) {
       // Update
-      const { error: updateError } = await supabase
+      const { data: gespeichert, error: updateError } = await supabase
         .from('notfall_info')
         .update(payload)
         .eq('user_id', userId)
+        .select('user_id')
 
       if (updateError) {
         return { ok: false, error: updateError.message }
+      }
+      if (!gespeichert || gespeichert.length === 0) {
+        // Der Lesevorgang darueber hat die Zeile eben noch gefunden. Ist
+        // sie beim Schreiben weg, hat sich etwas geaendert, das die Maske
+        // nicht kennt — dann ist Nachfragen richtig und Schweigen falsch.
+        return { ok: false, error: 'Notfallinfo nicht gefunden — bitte Seite neu laden.' }
       }
 
       await logAuditEventOrWarn({

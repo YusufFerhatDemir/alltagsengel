@@ -48,6 +48,7 @@ export async function updateLocationAction(
       .from('profiles')
       .update({ location })
       .eq('id', userId)
+      .select('id')
 
     if (dbError) {
       return { ok: false, error: dbError.message }
