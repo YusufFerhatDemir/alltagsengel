@@ -170,28 +170,40 @@ export default function ZahlungseingaengePage() {
   // wirklich nachgesehen wurde.
   const [kuerzungen, setKuerzungen] = useState<Kuerzung[] | null>(null)
   const [kuerzungFehler, setKuerzungFehler] = useState<string | null>(null)
+  // Je Abschnitt ein eigener Fehlerzustand. „Leer" und „nicht geladen" sind
+  // verschiedene Aussagen, und an dieser Seite haengen Geld und Fristen:
+  // „Keine offenen Posten" heisst fuer den Leser „alles bezahlt".
+  const [importFehler, setImportFehler] = useState<string | null>(null)
+  const [oposFehler, setOposFehler] = useState<string | null>(null)
+  const [klaerfallFehler, setKlaerfallFehler] = useState<string | null>(null)
   const [kuerzungLaeuft, setKuerzungLaeuft] = useState(false)
   const [nurOffeneKuerzungen, setNurOffeneKuerzungen] = useState(true)
   const fileRef = useRef<HTMLInputElement>(null)
 
   // ─── Daten laden ───
   const loadImports = useCallback(async () => {
+    setImportFehler(null)
     try {
       const res = await fetch('/api/billing/camt/imports')
-      if (res.ok) {
-        const data = await res.json()
-        setImports(data.imports || [])
-      }
-    } catch { /* */ }
+      if (!res.ok) throw new Error('Import-Historie konnte nicht geladen werden.')
+      const data = await res.json()
+      setImports(data.imports || [])
+    } catch (e) {
+      setImportFehler(e instanceof Error ? e.message : 'Import-Historie konnte nicht geladen werden.')
+    }
   }, [])
 
   const loadOpos = useCallback(async () => {
+    setOposFehler(null)
     try {
       const params = new URLSearchParams()
       if (oposFilter !== 'alle') params.set('status', oposFilter)
       const res = await fetch(`/api/billing/opos?${params}`)
-      if (res.ok) setOposData(await res.json())
-    } catch { /* */ }
+      if (!res.ok) throw new Error('Offene Posten konnten nicht geladen werden.')
+      setOposData(await res.json())
+    } catch (e) {
+      setOposFehler(e instanceof Error ? e.message : 'Offene Posten konnten nicht geladen werden.')
+    }
   }, [oposFilter])
 
   const loadKuerzungen = useCallback(async () => {
@@ -226,10 +238,14 @@ export default function ZahlungseingaengePage() {
   }, [loadKuerzungen])
 
   const loadKlaerfaelle = useCallback(async () => {
+    setKlaerfallFehler(null)
     try {
       const res = await fetch('/api/billing/klaerfaelle')
-      if (res.ok) setKlaerfaelle(await res.json())
-    } catch { /* */ }
+      if (!res.ok) throw new Error('Klärfälle konnten nicht geladen werden.')
+      setKlaerfaelle(await res.json())
+    } catch (e) {
+      setKlaerfallFehler(e instanceof Error ? e.message : 'Klärfälle konnten nicht geladen werden.')
+    }
   }, [])
 
   useEffect(() => {
@@ -550,7 +566,12 @@ export default function ZahlungseingaengePage() {
 
               {/* Import-Historie */}
               <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Import-Historie</h3>
-              {imports.length === 0 ? (
+              {importFehler && (
+                <div style={{ padding: '10px 16px', borderRadius: 8, marginBottom: 16, fontSize: 14, background: '#fee2e2', color: '#991b1b' }}>
+                  {importFehler}
+                </div>
+              )}
+              {!importFehler && imports.length === 0 ? (
                 <p style={{ color: '#888', fontSize: 14 }}>Noch keine Imports vorhanden.</p>
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
@@ -652,7 +673,12 @@ export default function ZahlungseingaengePage() {
                   ))}
                 </tbody>
               </table>
-              {oposData.offenePosten.length === 0 && (
+              {oposFehler && (
+                <div style={{ padding: '10px 16px', borderRadius: 8, marginTop: 16, fontSize: 14, background: '#fee2e2', color: '#991b1b' }}>
+                  {oposFehler}
+                </div>
+              )}
+              {!oposFehler && oposData.offenePosten.length === 0 && (
                 <p style={{ textAlign: 'center', color: '#888', marginTop: 24 }}>Keine offenen Posten.</p>
               )}
             </div>
@@ -661,7 +687,12 @@ export default function ZahlungseingaengePage() {
           {/* ─── Tab: Klärfälle ─── */}
           {tab === 'klaerfaelle' && (
             <div>
-              {klaerfaelle.length === 0 ? (
+              {klaerfallFehler && (
+                <div style={{ padding: '10px 16px', borderRadius: 8, marginBottom: 16, fontSize: 14, background: '#fee2e2', color: '#991b1b' }}>
+                  {klaerfallFehler}
+                </div>
+              )}
+              {!klaerfallFehler && klaerfaelle.length === 0 ? (
                 <p style={{ color: '#888', fontSize: 14, textAlign: 'center', marginTop: 32 }}>
                   Keine offenen Klärfälle vorhanden.
                 </p>

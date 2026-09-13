@@ -104,15 +104,34 @@ fi
 # „keine Daten"; genau so waren Budget-Anlage, Mahnungsversand und
 # DATEV-Export monatelang still tot.
 #
-# BLOCKIERT NICHT. Schema-Drift ist P2 und der Check braucht Netz; ein
-# Aussetzer darf keinen Commit verhindern. Er läuft nur, wenn überhaupt
-# .ts/.tsx unter app/ oder lib/ gestaged sind, und lässt sich mit
-# SKIP_SCHEMA_DRIFT=1 abschalten.
+# BLOCKIERT NUR IM SCHREIBWEG. Schema-Drift in einer LESE-Abfrage ist P2:
+# die Oberfläche zeigt „keine Daten", ärgerlich, aber sichtbar. In einem
+# Schreibweg ist es etwas anderes — die unbekannte Spalte lässt das UPDATE
+# komplett scheitern, der Vorgang findet nicht statt, und der Code läuft
+# weiter, als wäre er geschehen.
+#
+# Am 14.09.2026 hat genau das den Widerrufslink zur Kontolöschung
+# ausgehebelt (`.select('id')` auf eine Tabelle ohne id-Spalte). Der Lauf
+# hier hat den Befund gemeldet — warn-only, und er ging im Protokoll unter.
+#
+# Der Check braucht Netz; ein Aussetzer darf keinen Commit verhindern.
+# Deshalb unterscheidet `--block-writes` per Ausgangscode: 2 = Befund im
+# Schreibweg (blockiert), alles andere = Check lief nicht (blockiert nicht).
+# Er läuft nur, wenn .ts/.tsx unter app/ oder lib/ gestaged sind;
+# SKIP_SCHEMA_DRIFT=1 schaltet ihn ab.
 if [ "${SKIP_SCHEMA_DRIFT:-0}" != "1" ]; then
   relevante="$(echo "$files" | grep -E '^(app|lib)/.*\.tsx?$' || true)"
   if [ -n "$relevante" ]; then
-    echo "${DIM}precommit-guard: Schema-Drift-Check (warn-only) …${RESET}"
-    if ! node "$(dirname "${BASH_SOURCE[0]}")/schema-drift-check.mjs" --warn-only; then
+    echo "${DIM}precommit-guard: Schema-Drift-Check …${RESET}"
+    # `|| drift_code=$?` statt eines nackten Aufrufs: unter `set -e` wuerde
+    # ein Ausgangscode != 0 das Skript sofort beenden, und die Auswertung
+    # darunter kaeme nie zum Zug.
+    drift_code=0
+    node "$(dirname "${BASH_SOURCE[0]}")/schema-drift-check.mjs" --warn-only --block-writes || drift_code=$?
+    if [ "$drift_code" -eq 2 ]; then
+      echo "${RED}precommit-guard: Schema-Drift in einem Schreibweg — Commit blockiert.${RESET}" >&2
+      violations=$((violations + 1))
+    elif [ "$drift_code" -ne 0 ]; then
       echo "${YELLOW}⚠ Schema-Drift-Check nicht durchgelaufen — Commit geht trotzdem durch.${RESET}" >&2
     fi
   fi

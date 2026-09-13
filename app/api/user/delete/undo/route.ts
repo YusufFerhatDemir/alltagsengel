@@ -107,12 +107,18 @@ export const GET = withTracking(async function GET(request: NextRequest) {
     //
     // `.is('confirmed_at', null)` ist zugleich der Riegel gegen den
     // zweiten, gleichzeitigen Aufruf desselben Links.
+    //
+    // `.select('user_id')`, NICHT `.select('id')`: diese Tabelle hat keine
+    // id-Spalte, ihr Primaerschluessel IST `user_id` (Migration
+    // 20260419000100). Eine unbekannte Spalte laesst die ganze Abfrage mit
+    // 42703 scheitern — der Token waere dann gar nicht mehr verbrannt
+    // worden, also genau das Gegenteil dessen, was diese Pruefung soll.
     const { data: verbrannt, error: verbrennFehler } = await adminClient
       .from('account_deletion_tokens')
       .update({ confirmed_at: new Date().toISOString() })
       .eq('user_id', userId)
       .is('confirmed_at', null)
-      .select('id')
+      .select('user_id')
 
     if (verbrennFehler || (verbrannt?.length ?? 0) === 0) {
       // Die Ruecknahme der Loeschung ist an dieser Stelle bereits erfolgt —

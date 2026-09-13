@@ -314,17 +314,35 @@ export default function RuecklaeuferPage() {
 
   const ladeDaten = useCallback(() => {
     setLoading(true)
+    setError(null)
+    // Die beiden `.catch(() => ({ … }))` hier waren keine Absicherung gegen
+    // einen nicht-JSON-Body, sondern gingen um den Fehlerpfad herum: ein
+    // gescheiterter Abruf wurde zu „keine Fristen" bzw. „keine aktiven
+    // Laeufe". An Fristen haengen Widerspruchs- und Nachreichfristen; an der
+    // Pipeline haengt die Frage, ob gerade jemand anders einen Lauf faehrt.
+    // „Leer" ist hier die beruhigendste aller falschen Antworten.
+    const hole = async (pfad: string, was: string) => {
+      const r = await fetch(pfad)
+      if (!r.ok) throw new Error(`${was} konnten nicht geladen werden (HTTP ${r.status}).`)
+      return r.json()
+    }
+
     Promise.all([
-      fetch('/api/billing/dta/ruecklaeufer').then(r => r.json()),
-      fetch('/api/billing/dta/fristen').then(r => r.json()).catch(() => ({ fristen: [] })),
-      fetch('/api/billing/dta/pipeline').then(r => r.json()).catch(() => ({ laeufe: [] })),
+      hole('/api/billing/dta/ruecklaeufer', 'Rückläufer'),
+      hole('/api/billing/dta/fristen', 'Fristen'),
+      hole('/api/billing/dta/pipeline', 'Abrechnungsläufe'),
     ]).then(([rl, fr, pl]) => {
       setItems(Array.isArray(rl) ? rl : [])
       setFristen(Array.isArray(fr.fristen) ? fr.fristen : [])
       setPipeline(Array.isArray(pl.laeufe) ? pl.laeufe : [])
       setLoading(false)
     }).catch(e => {
-      setError(e.message)
+      // Fail-closed in der Anzeige: lieber gar keine Liste als eine leere,
+      // die wie „nichts zu tun" aussieht.
+      setItems([])
+      setFristen([])
+      setPipeline([])
+      setError(e instanceof Error ? e.message : String(e))
       setLoading(false)
     })
   }, [])

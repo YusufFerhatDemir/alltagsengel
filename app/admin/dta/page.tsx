@@ -4,12 +4,22 @@ import { useEffect, useState } from 'react'
 export default function DtaPage() {
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  // Ohne Fehlerzustand verschwand der ganze Kachelblock — inklusive des
+  // Zaehlers „Fehler" — kommentarlos, wenn der Abruf scheiterte. Kein
+  // Ladehinweis, keine Meldung, nur eine Seite ohne Zahlen.
+  const [fehler, setFehler] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/billing/dta/dashboard')
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(`Übersicht konnte nicht geladen werden (HTTP ${r.status}).`)
+        return r.json()
+      })
       .then(d => { setStats(d); setLoading(false) })
-      .catch(() => setLoading(false))
+      .catch(e => {
+        setFehler(e instanceof Error ? e.message : 'Übersicht konnte nicht geladen werden.')
+        setLoading(false)
+      })
   }, [])
 
   return (
@@ -18,6 +28,12 @@ export default function DtaPage() {
       <p style={{ color: 'var(--muted)', marginBottom: 24 }}>
         Elektronischer Datenaustausch mit Kostenträgern nach § 105 SGB XI.
       </p>
+
+      {fehler && (
+        <div style={{ padding: '10px 16px', borderRadius: 8, marginBottom: 24, fontSize: 14, background: '#fee2e2', color: '#991b1b' }}>
+          {fehler}
+        </div>
+      )}
 
       {loading ? <p>Lade…</p> : stats && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 32 }}>

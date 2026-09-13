@@ -48,10 +48,15 @@ export default function EskalationenPage() {
   async function load() {
     try {
       const res = await fetch('/api/ops/eskalationsregeln')
-      if (!res.ok) { setLoading(false); return }
+      // „Leer" und „nicht geladen" sind verschiedene Aussagen. Auf
+      // dieser Seite heisst eine leere Liste „nichts offen" — ein
+      // gescheiterter Abruf darf nicht so aussehen.
+      if (!res.ok) throw new Error(`Eskalationsregeln konnten nicht geladen werden (HTTP ${res.status}).`)
       const data = await res.json()
       setRows(data)
-    } catch { /* ignore */ } finally { setLoading(false) }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Laden fehlgeschlagen.')
+    } finally { setLoading(false) }
   }
 
   useEffect(() => { load() }, [])

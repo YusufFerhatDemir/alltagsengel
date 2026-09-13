@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { statusMeta, formatDate, WF_AUDIT_TYP } from '@/lib/admin/ops'
-import { StatusBadge, EmptyRow } from '@/components/admin/OpsUI'
+import { StatusBadge, EmptyRow, Banner } from '@/components/admin/OpsUI'
 
 interface AuditRow {
   id: string
@@ -24,6 +24,10 @@ export default function WorkflowAuditPage() {
   const [rows, setRows] = useState<AuditRow[]>([])
   const [loading, setLoading] = useState(true)
   const [filterTyp, setFilterTyp] = useState('all')
+  // Ein Audit-Log, das bei einem gescheiterten Abruf als leer erscheint,
+  // behauptet, es sei nichts passiert. Das ist die revisionsrelevanteste
+  // Falschaussage, die diese Seite machen kann.
+  const [fehler, setFehler] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -31,12 +35,16 @@ export default function WorkflowAuditPage() {
         const params = new URLSearchParams({ limit: '100' })
         if (filterTyp !== 'all') params.set('typ', filterTyp)
         const res = await fetch(`/api/ops/workflow/audit?${params.toString()}`)
-        if (!res.ok) { setLoading(false); return }
+        if (!res.ok) throw new Error(`Audit-Log konnte nicht geladen werden (HTTP ${res.status}).`)
         const data = await res.json()
         setRows(data)
-      } catch { /* ignore */ } finally { setLoading(false) }
+      } catch (e) {
+        setRows([])
+        setFehler(e instanceof Error ? e.message : 'Audit-Log konnte nicht geladen werden.')
+      } finally { setLoading(false) }
     }
     setLoading(true)
+    setFehler(null)
     load()
   }, [filterTyp])
 
@@ -45,10 +53,14 @@ export default function WorkflowAuditPage() {
       <div className="admin-page-header">
         <div>
           <h1>Workflow-Audit-Log</h1>
-          <p className="admin-subtitle">{rows.length} Einträge &middot; unveränderlich</p>
+          <p className="admin-subtitle">
+            {fehler ? 'Anzahl unbekannt' : `${rows.length} Einträge`} &middot; unveränderlich
+          </p>
         </div>
         <Link href="/admin/workflow" style={{ fontSize: 13, color: 'var(--gold)' }}>← Dashboard</Link>
       </div>
+
+      {fehler && <Banner tone="danger">{fehler}</Banner>}
 
       <div style={{ marginBottom: 16 }}>
         <select style={selectStyle} value={filterTyp} onChange={e => setFilterTyp(e.target.value)}>

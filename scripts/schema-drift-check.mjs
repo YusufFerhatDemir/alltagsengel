@@ -56,6 +56,21 @@ for (const datei of ['.env.local', '.env']) {
  * nicht durchgeführter Check ein Fehler, kein Erfolg.
  */
 const WARN_ONLY = process.argv.includes('--warn-only')
+/**
+ * `--block-writes`: Befunde in einem SCHREIB-Weg blockieren trotzdem.
+ *
+ * Schema-Drift ist als P2 eingestuft, weil eine tote LESE-Abfrage „keine
+ * Daten" zeigt — aergerlich, aber sichtbar. In einem Schreibweg ist es
+ * etwas anderes: die unbekannte Spalte laesst das UPDATE komplett
+ * scheitern, der Vorgang findet nicht statt, und der Code laeuft weiter,
+ * als waere er geschehen.
+ *
+ * Am 14.09.2026 hat genau das den Widerrufslink zur Kontoloeschung
+ * ausgehebelt: `.select('id')` auf `account_deletion_tokens` (die Tabelle
+ * hat keine id-Spalte) — der Token wurde nie verbrannt. Der Pre-Commit-Lauf
+ * hat den Befund gemeldet, aber warn-only, und er ging im Protokoll unter.
+ */
+const BLOCK_WRITES = process.argv.includes('--block-writes')
 
 const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL
 const KEY = secretKey()
@@ -82,6 +97,11 @@ const AUSNAHMEN = new Set([
   'app/api/bookings/respond/route.ts:profiles.status',
   // Falsch zugeordnet: der Filter gehört zu setzeFaelligkeitFallsLeer auf invoices.
   'lib/billing/core/invoice-engine.ts:clients.due_date',
+  // Falsch zugeordnet: `.from(t)` laeuft ueber eine Variable
+  // (TABELLEN = client_budgets | service_records | invoices). Alle drei
+  // fuehren client_id; der Rueckfall auf das naechstgelegene literale
+  // .from('profiles') trifft die falsche Tabelle.
+  'app/kunde/nachrichten/page.tsx:profiles.client_id',
   // ECHT, aber nur per Migration lösbar: diesen Tabellen fehlt live die
   // organization_id. Den Org-Fence ersatzlos zu streichen wäre ein
   // Mandantenleck — deshalb bleibt der Code fail-closed stehen, bis die
@@ -180,41 +200,58 @@ function dateien(dir, out = []) {
   return out
 }
 
-const SELECT = /\.from\(\s*'([a-z0-9_]+)'\s*\)\s*(?:\r?\n\s*)?\.select\(\s*([`'])([\s\S]*?)\2/g
+// `.select(...)` IRGENDWO in der Kette — nicht nur direkt hinter `.from()`.
+//
+// Bis zum 14.09.2026 verlangte das Muster hier, dass `.select()` unmittelbar
+// auf `.from()` folgt. Damit war `update().select('id')` unsichtbar — und
+// genau dort ist der Fehler teuer: eine unbekannte Spalte laesst nicht nur
+// das Lesen scheitern, sondern das ganze UPDATE. Gefunden an
+// `account_deletion_tokens.id` (die Tabelle hat keine id-Spalte, ihr
+// Schluessel ist user_id); der Token wurde dadurch nie verbrannt, der
+// Widerrufslink blieb gueltig. Aufgefallen ist es erst in der CI.
+const SELECT = /\.select\(\s*([`'])([\s\S]*?)\1/g
 const FILTER = /\.(eq|neq|gt|gte|lt|lte|in|is|like|ilike|contains|order|not)\(\s*'([a-z0-9_]+)'/g
 const FROM = /\.from\(\s*'([a-z0-9_]+)'\s*\)/g
 
 const befunde = []
-function melde(datei, zeile, tabelle, spalte, art) {
+const schreibBefunde = []
+function melde(datei, zeile, tabelle, spalte, art, imSchreibweg = false) {
   const rel = datei.replace(ROOT + '/', '')
   if (AUSNAHMEN.has(`${rel}:${tabelle}.${spalte}`)) return
-  befunde.push(`${rel}:${zeile}  ${tabelle}.${spalte}  (${art})`)
+  const zeileText = `${rel}:${zeile}  ${tabelle}.${spalte}  (${art})${imSchreibweg ? '  ← SCHREIBWEG' : ''}`
+  befunde.push(zeileText)
+  if (imSchreibweg) schreibBefunde.push(zeileText)
 }
 
 const quellen = [...dateien(join(ROOT, 'app')), ...dateien(join(ROOT, 'lib'))]
 
+/**
+ * Entfernt Kommentare, laesst aber jedes Zeichen an seiner Stelle.
+ *
+ * Ohne das liest der Abgleich Kommentare als Code: ein erklaerender Satz,
+ * der `.select('id')` oder `.eq('status', …)` ZITIERT, landet im Fenster
+ * der davorstehenden Tabelle und erzeugt einen Befund, den es nicht gibt.
+ * Genau daran sind am 14.09.2026 vier von sechs Befunden gehangen.
+ *
+ * Ersetzt wird durch Leerzeichen statt geloescht — sonst verschoeben sich
+ * alle Zeilennummern in der Meldung.
+ */
+function ohneKommentare(text) {
+  return text
+    // Blockkommentare, Zeilenumbrueche bleiben erhalten.
+    .replace(/\/\*[\s\S]*?\*\//g, m => m.replace(/[^\n]/g, ' '))
+    // Zeilenkommentare nur, wenn die Zeile damit BEGINNT — so bleiben
+    // URLs (https://…) in Zeichenketten unangetastet.
+    .replace(/^([ \t]*)\/\/.*$/gm, (m, einzug) => einzug + ' '.repeat(m.length - einzug.length))
+}
+
 for (const datei of quellen) {
-  const text = readFileSync(datei, 'utf8')
+  const text = ohneKommentare(readFileSync(datei, 'utf8'))
 
-  // ── 1. Spaltenlisten in .select() ────────────────────────────────
-  for (const m of text.matchAll(SELECT)) {
-    const [, tabelle, , spaltenRoh] = m
-    const spalten = schema.get(tabelle)
-    if (!spalten) continue
-    // Eingebettete Ressourcen (client:clients(…)) hier nicht auflösen.
-    const flach = spaltenRoh
-      .replace(/\w+\s*:\s*\w+\s*\([^)]*\)/g, '')
-      .replace(/\w+\s*\([^)]*\)/g, '')
-    for (let s of flach.split(',')) {
-      const name = s.trim().split(/\s/)[0]
-      if (!name || name === '*' || !/^[a-z0-9_]+$/.test(name)) continue
-      if (!spalten.has(name)) {
-        melde(datei, text.slice(0, m.index).split('\n').length, tabelle, name, 'select')
-      }
-    }
-  }
-
-  // ── 2. Filter- und Sortierspalten ────────────────────────────────
+  // ── Spaltenlisten UND Filter, je Kette ───────────────────────────
+  //
+  // Ein Fenster reicht von einem `.from('…')` bis zum naechsten. Alles
+  // darin gehoert zu dieser Tabelle — Spaltenlisten wie Filter.
   const stellen = [...text.matchAll(FROM)]
   for (let i = 0; i < stellen.length; i++) {
     const tabelle = stellen[i][1]
@@ -222,10 +259,28 @@ for (const datei of quellen) {
     if (!spalten) continue
     const start = stellen[i].index
     const ende = i + 1 < stellen.length ? stellen[i + 1].index : text.length
-    for (const f of text.slice(start, ende).matchAll(FILTER)) {
+    const fenster = text.slice(start, ende)
+    // Enthaelt die Kette einen Schreibvorgang? Dann kostet eine unbekannte
+    // Spalte nicht nur die Anzeige, sondern den Vorgang selbst.
+    const imSchreibweg = /\.(update|insert|upsert|delete)\s*\(/.test(fenster)
+
+    for (const m of fenster.matchAll(SELECT)) {
+      // Eingebettete Ressourcen (client:clients(…)) hier nicht auflösen.
+      const flach = m[2]
+        .replace(/\w+\s*:\s*\w+\s*\([^)]*\)/g, '')
+        .replace(/\w+\s*\([^)]*\)/g, '')
+      for (const roh of flach.split(',')) {
+        const name = roh.trim().split(/\s/)[0]
+        if (!name || name === '*' || !/^[a-z0-9_]+$/.test(name)) continue
+        if (spalten.has(name)) continue
+        melde(datei, text.slice(0, start + m.index).split('\n').length, tabelle, name, 'select', imSchreibweg)
+      }
+    }
+
+    for (const f of fenster.matchAll(FILTER)) {
       const name = f[2]
       if (name.includes('.') || spalten.has(name)) continue
-      melde(datei, text.slice(0, start + f.index).split('\n').length, tabelle, name, `.${f[1]}`)
+      melde(datei, text.slice(0, start + f.index).split('\n').length, tabelle, name, `.${f[1]}`, imSchreibweg)
     }
   }
 }
@@ -241,6 +296,14 @@ console.error(`\n${befunde.length} Befund(e). Jeder davon lässt die ganze Abfra
 console.error('Entweder den Spaltennamen korrigieren, die Migration anwenden — oder,')
 console.error('wenn der Befund nachweislich falsch zugeordnet ist, in AUSNAHMEN begründen.')
 if (WARN_ONLY) {
+  if (BLOCK_WRITES && schreibBefunde.length > 0) {
+    console.error(`\n${schreibBefunde.length} davon in einem SCHREIB-Weg — dort faellt nicht nur die`)
+    console.error('Anzeige aus, sondern der Vorgang selbst. Das blockiert, auch mit --warn-only.')
+    // Eigener Ausgangscode: der Aufrufer muss „Befund im Schreibweg" von
+    // „Check konnte nicht laufen" (Netz, fehlende Schluessel) unterscheiden
+    // koennen — sonst blockt ein Netzaussetzer den Commit.
+    process.exit(2)
+  }
   console.error('\n(--warn-only: Befunde gemeldet, Lauf endet trotzdem mit Exit 0.)')
   process.exit(0)
 }

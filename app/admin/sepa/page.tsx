@@ -43,19 +43,28 @@ export default function SepaPage() {
   const [mandates, setMandates] = useState<Mandate[]>([])
   const [batches, setBatches] = useState<Batch[]>([])
   const [loading, setLoading] = useState(true)
+  // „Keine Mandate vorhanden" laedt zum Neuanlegen eines Mandats ein, das
+  // es laengst gibt — und „noch keine Sammelauftraege" verdeckt einen Lauf,
+  // der gerade faehrt. Ein gescheiterter Abruf darf nicht so aussehen.
+  const [ladeFehler, setLadeFehler] = useState<string | null>(null)
   const [showNewMandate, setShowNewMandate] = useState(false)
   const [showNewBatch, setShowNewBatch] = useState(false)
 
   const loadData = useCallback(async () => {
     setLoading(true)
+    setLadeFehler(null)
     try {
       const [mRes, bRes] = await Promise.all([
         fetch('/api/billing/sepa/mandates'),
         fetch('/api/billing/sepa/batches'),
       ])
-      if (mRes.ok) setMandates(await mRes.json())
-      if (bRes.ok) setBatches(await bRes.json())
-    } catch { /* */ }
+      if (!mRes.ok) throw new Error(`Lastschriftmandate konnten nicht geladen werden (HTTP ${mRes.status}).`)
+      if (!bRes.ok) throw new Error(`Sammelaufträge konnten nicht geladen werden (HTTP ${bRes.status}).`)
+      setMandates(await mRes.json())
+      setBatches(await bRes.json())
+    } catch (e) {
+      setLadeFehler(e instanceof Error ? e.message : 'Daten konnten nicht geladen werden.')
+    }
     setLoading(false)
   }, [])
 
@@ -136,7 +145,12 @@ export default function SepaPage() {
                   </td>
                 </tr>
               ))}
-              {mandates.length === 0 && (
+              {ladeFehler && (
+                <tr><td colSpan={7} style={{ ...tdStyle, textAlign: 'center', color: '#991b1b', background: '#fee2e2' }}>
+                  {ladeFehler}
+                </td></tr>
+              )}
+              {!ladeFehler && mandates.length === 0 && (
                 <tr><td colSpan={7} style={{ ...tdStyle, textAlign: 'center', color: '#999' }}>
                   Keine Mandate vorhanden. Erstellen Sie ein neues Mandat.
                 </td></tr>
@@ -189,7 +203,12 @@ export default function SepaPage() {
                   </td>
                 </tr>
               ))}
-              {batches.length === 0 && (
+              {ladeFehler && (
+                <tr><td colSpan={7} style={{ ...tdStyle, textAlign: 'center', color: '#991b1b', background: '#fee2e2' }}>
+                  {ladeFehler}
+                </td></tr>
+              )}
+              {!ladeFehler && batches.length === 0 && (
                 <tr><td colSpan={7} style={{ ...tdStyle, textAlign: 'center', color: '#999' }}>
                   Noch keine Sammelaufträge erstellt.
                 </td></tr>

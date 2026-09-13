@@ -158,6 +158,46 @@ describe('aktualisiereFahrtzeiten', () => {
     await aktualisiereFahrtzeiten(fakeDb(state), 't1', '60311')
     expect(state.tour_stops[0].fahrzeit_minuten).toBeNull()
   })
+
+  it('schreibt weiter, wenn ein einzelner Halt scheitert — und meldet es', async () => {
+    // Fahrzeit und Distanz sind Anzeigewerte. Ein Fehlschlag darf die Tour
+    // nicht unbrauchbar machen, aber er darf auch nicht dazu fuehren, dass
+    // sie stillschweigend veraltete Werte zeigt. Vorher wurde der
+    // Rueckgabewert gar nicht gelesen — und die Schreibvorgaenge liefen
+    // nacheinander.
+    const versucht: string[] = []
+    const halte = [
+      { id: 's1', tour_id: 't1', position: 1, plz: '60311', status: 'GEPLANT' },
+      { id: 's2', tour_id: 't1', position: 2, plz: '60594', status: 'GEPLANT' },
+      { id: 's3', tour_id: 't1', position: 3, plz: '61348', status: 'GEPLANT' },
+    ]
+
+    function kette() {
+      let op: 'select' | 'update' = 'select'
+      let id: string | null = null
+      const antwort = () => (op === 'update'
+        // s2 trifft keine Zeile — genau der Fall, den PostgREST NICHT meldet.
+        ? { data: id === 's2' ? [] : [{ id }], error: null }
+        : { data: halte, error: null })
+      const k: Record<string, unknown> = {
+        select: () => k,
+        update: () => { op = 'update'; return k },
+        eq: (feld: string, wert: string) => {
+          if (feld === 'id' && op === 'update') { id = wert; versucht.push(wert) }
+          return k
+        },
+        in: () => k,
+        order: () => k,
+        then: (aufloesen: (w: unknown) => unknown) => Promise.resolve(aufloesen(antwort())),
+      }
+      return k
+    }
+
+    await aktualisiereFahrtzeiten({ from: () => kette() } as never, 't1', '60311')
+
+    // Alle drei wurden geschrieben — der Leerlauf bei s2 haelt s3 nicht auf.
+    expect(versucht.sort()).toEqual(['s1', 's2', 's3'])
+  })
 })
 
 // ── aufloeseStops: Datumsprüfung beim Anhängen ─────────────────

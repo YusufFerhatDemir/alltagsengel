@@ -12,6 +12,9 @@ import { fahrtZwischenPlz } from './fahrtzeit'
 import { assertStopZeiten } from './stops'
 import { UserFacingError } from '@/lib/api/user-facing-error'
 import { istVerfuegbar, zeitZuMinuten, type Zeitfenster } from '@/lib/availability'
+import { logger } from '@/lib/logger'
+
+const log = logger.child('touren')
 
 export interface StopInput {
   /** vorhandenen Einsatz anhängen … */
@@ -195,20 +198,46 @@ export async function aktualisiereFahrtzeiten(
     .order('position', { ascending: true })
   if (!stops) return
 
+  // Je Halt ein eigener Wert, also ein Schreibvorgang je Halt — das laesst
+  // sich nicht zu einem UPDATE zusammenziehen. Nacheinander war es aber
+  // auch nicht noetig: bei zwoelf Halten waren das zwoelf serialisierte
+  // Rundreisen, bevor die Tour ihre Fahrzeiten hatte.
   const aktive = stops.filter(s => s.status !== 'AUSGEFALLEN')
-  for (const s of reichereFahrtzeitenAn(aktive, startPlz)) {
-    await admin
+  const angereichert = reichereFahrtzeitenAn(aktive, startPlz)
+  const ergebnisse = await Promise.all(
+    angereichert.map(s => admin
       .from('tour_stops')
       .update({ fahrzeit_minuten: s.fahrzeit_minuten, distanz_km: s.distanz_km })
       .eq('id', s.id)
+      .select('id')),
+  )
+
+  // Fahrzeit und Distanz sind Anzeigewerte — ein Fehlschlag macht die Tour
+  // nicht unbrauchbar, aber sie zeigt dann stillschweigend veraltete oder
+  // gar keine Werte an. Gesammelt gemeldet, nicht geworfen.
+  const misslungen = ergebnisse.filter(r => r.error || (r.data?.length ?? 0) === 0).length
+  if (misslungen > 0) {
+    log.error('Fahrzeiten nicht vollstaendig geschrieben — die Tour zeigt veraltete Werte', {
+      tourId,
+      betroffen: misslungen,
+      vonInsgesamt: angereichert.length,
+      errorMessage: ergebnisse.find(r => r.error)?.error?.message ?? 'keine Zeile getroffen',
+    })
   }
 
   const entfallen = stops.filter(s => s.status === 'AUSGEFALLEN').map(s => s.id)
   if (entfallen.length > 0) {
-    await admin
+    const { error: leerenFehler } = await admin
       .from('tour_stops')
       .update({ fahrzeit_minuten: null, distanz_km: null })
       .in('id', entfallen)
+      .select('id')
+
+    if (leerenFehler) {
+      log.error('Fahrzeiten ausgefallener Halte nicht zurueckgesetzt', {
+        tourId, betroffen: entfallen.length, errorMessage: leerenFehler.message,
+      })
+    }
   }
 }
 

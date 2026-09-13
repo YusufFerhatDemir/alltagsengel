@@ -133,20 +133,27 @@ export default function SammelrechnungPage() {
   const [fehler, setFehler] = useState<string | null>(null)
   const [hinweis, setHinweis] = useState<string | null>(null)
   const [laeufe, setLaeufe] = useState<LaufKopf[]>([])
+  const [laufListeFehler, setLaufListeFehler] = useState<string | null>(null)
 
   // Läufe des Monats. Sie stehen bewusst neben der Vorschau und nicht in
   // ihr: die Vorschau sagt, was abrechenbar WÄRE, die Laufliste sagt, was
   // tatsächlich passiert ist — inklusive der Läufe, die jemand anderes
   // gestartet hat.
   const ladeLaeufe = useCallback(async () => {
+    setLaufListeFehler(null)
     try {
       const res = await fetch(`/api/billing/sammelrechnung/laeufe?month=${encodeURIComponent(month)}&limit=20`)
-      if (!res.ok) return
+      if (!res.ok) throw new Error(`Laufliste konnte nicht geladen werden (HTTP ${res.status}).`)
       const json = await res.json()
       setLaeufe(Array.isArray(json.laeufe) ? json.laeufe : [])
-    } catch {
-      // Die Laufliste ist Betriebsinformation, kein Arbeitsschritt.
-      // Fällt sie aus, bleibt der Rest der Seite benutzbar.
+    } catch (e) {
+      // Die Laufliste ist Betriebsinformation, kein Arbeitsschritt — der
+      // Rest der Seite bleibt benutzbar. Still bleiben darf sie trotzdem
+      // nicht: sie ist genau die Liste, die sagt, ob jemand anderes den Lauf
+      // fuer diesen Monat schon gestartet hat. „Noch kein Lauf gestartet"
+      // ist die Einladung, ihn ein zweites Mal zu fahren.
+      setLaeufe([])
+      setLaufListeFehler(e instanceof Error ? e.message : 'Laufliste konnte nicht geladen werden.')
     }
   }, [month])
 
@@ -424,7 +431,12 @@ export default function SammelrechnungPage() {
             </tr>
           </thead>
           <tbody>
-            {laeufe.length === 0 && (
+            {laufListeFehler && (
+              <EmptyRow colSpan={7}>
+                {laufListeFehler} — ob für {month} bereits ein Lauf läuft, ist damit UNBEKANNT.
+              </EmptyRow>
+            )}
+            {!laufListeFehler && laeufe.length === 0 && (
               <EmptyRow colSpan={7}>Für {month} wurde noch kein Lauf gestartet.</EmptyRow>
             )}
             {laeufe.map(l => (
