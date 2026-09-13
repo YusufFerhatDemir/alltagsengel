@@ -4,13 +4,13 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: "Verhinderungspflege beantragen: So geht's richtig",
+  title: "Verhinderungspflege beantragen",
   description: 'Verhinderungspflege beantragen: Formular, Nachweise, Fristen und Beispielrechnung. Schritt für Schritt zur Erstattung – bis zu 3.539 € pro Jahr sichern.',
   keywords: 'Verhinderungspflege, Verhinderungspflege beantragen, Antrag Verhinderungspflege, 3539 Euro, gemeinsamer Jahresbetrag, Pflegegeld, Ersatzpflege, Widerspruch Pflegekasse',
   alternates: { canonical: 'https://alltagsengel.care/blog/verhinderungspflege-beantragen' },
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
-    title: "Verhinderungspflege beantragen: So geht's richtig",
+    title: "Verhinderungspflege beantragen",
     description: 'Vollständiger Antrags-Leitfaden: Formular, Nachweise, Fristen, Stundenlohn-Angabe, Widerspruch – Schritt für Schritt zu bis zu 3.539 € pro Jahr.',
     type: 'article',
     publishedTime: '2026-03-15',

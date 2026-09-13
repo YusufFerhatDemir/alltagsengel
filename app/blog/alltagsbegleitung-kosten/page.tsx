@@ -4,12 +4,12 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Was kostet Alltagsbegleitung? Preise & Finanzierung 2026',
-  description: 'Was Alltagsbegleitung kostet, hängt von Anbieter, Region und Leistung ab. Alle Finanzierungswege 2026: Entlastungsbetrag 131 €/Monat, Verhinderungspflege 3.539 €/Jahr, Steuerbonus §35a.',
+  title: 'Was kostet Alltagsbegleitung? Preise 2026',
+  description: 'Was Alltagsbegleitung kostet, hängt von Anbieter, Region und Leistung ab. Finanzierungswege 2026: Entlastungsbetrag 131 €/Monat, Steuerbonus §35a.',
   keywords: ['Alltagsbegleitung Kosten', 'was kostet Alltagsbegleitung', 'Alltagsbegleitung Preise', 'Alltagsbegleiter Stundensatz', 'Entlastungsbetrag Kosten', 'Alltagsbegleitung Finanzierung'],
   alternates: { canonical: 'https://alltagsengel.care/blog/alltagsbegleitung-kosten' },
   openGraph: {
-    title: 'Was kostet Alltagsbegleitung? Preise & Finanzierung 2026',
+    title: 'Was kostet Alltagsbegleitung? Preise 2026',
     description: 'Preisfaktoren, Anbieter-Typen im Vergleich und alle Finanzierungswege — von Entlastungsbetrag bis Steuerbonus.',
     url: 'https://alltagsengel.care/blog/alltagsbegleitung-kosten',
     type: 'article',

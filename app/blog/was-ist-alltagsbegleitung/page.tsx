@@ -6,13 +6,13 @@ import SpeakableSchema from '@/components/SpeakableSchema'
 import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Was ist Alltagsbegleitung? Der komplette Guide 2026',
+  title: 'Was ist Alltagsbegleitung? Guide 2026',
   description: 'Was ist Alltagsbegleitung? Definition, Aufgaben, Kosten & Anspruch einfach erklärt. Plus: Alltagsbegleitung beantragen und über 131 €/Monat (§45b) finanzieren.',
   keywords: 'Was ist Alltagsbegleitung, Alltagsbegleitung Definition, Alltagsbegleitung beantragen, Alltagsbegleiter finden, Alltagsbegleitung Kosten, Alltagsbegleitung Aufgaben, §45a SGB XI, Entlastungsbetrag',
   alternates: { canonical: 'https://alltagsengel.care/blog/was-ist-alltagsbegleitung' },
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
-    title: 'Was ist Alltagsbegleitung? Der komplette Guide 2026',
+    title: 'Was ist Alltagsbegleitung? Guide 2026',
     description: 'Definition, Aufgaben, Anspruch, Kosten und Beantragung der Alltagsbegleitung — verständlich erklärt, mit allen Finanzierungswegen.',
   },
 };

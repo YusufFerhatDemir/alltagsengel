@@ -4,9 +4,9 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import RelatedContent from '@/components/RelatedContent'
 
 export const metadata: Metadata = {
-  title: 'Finanzierung: Alltagsbegleitung bis 5.111 €/Jahr',
+  title: 'Alltagsbegleitung finanzieren: 5.111 €/Jahr',
   description:
-    'Entlastungsbetrag 131 €/Monat plus Verhinderungs-/Kurzzeitpflege 3.539 €/Jahr — bis zu 5.111 €/Jahr kombinierbar. Alltagsengel: §45a-Anerkennung im Verfahren. Jetzt kostenlos beraten lassen!',
+    'Entlastungsbetrag 131 €/Monat plus Verhinderungs- und Kurzzeitpflege 3.539 €/Jahr — bis 5.111 €/Jahr kombinierbar. §45a-Anerkennung im Verfahren.',
   alternates: { canonical: 'https://alltagsengel.care/finanzierung' },
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],

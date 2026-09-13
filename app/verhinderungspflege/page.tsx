@@ -15,7 +15,7 @@ import SpeakableSchema from '@/components/SpeakableSchema'
 export const metadata: Metadata = {
   title: 'Verhinderungspflege: 3.539 €/Jahr nutzen',
   description:
-    'Verhinderungspflege §39 SGB XI: 3.539 €/Jahr gemeinsamer Jahresbetrag (seit 01.07.2025), ab Pflegegrad 2, ohne Vorpflegezeit. Wir übernehmen die Ersatzpflege & Abrechnung.',
+    'Verhinderungspflege §39 SGB XI: 3.539 €/Jahr gemeinsamer Jahresbetrag, ab Pflegegrad 2, ohne Vorpflegezeit. Wir übernehmen Ersatzpflege und Abrechnung.',
   keywords: [
     'Verhinderungspflege',
     'Verhinderungspflege 3539 Euro',

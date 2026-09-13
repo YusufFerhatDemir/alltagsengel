@@ -4,7 +4,7 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Arztbegleitung für Senioren: Sicher zum Termin',
+  title: 'Arztbegleitung für Senioren',
   description: 'Arztbegleitung für Senioren: Was ein Begleiter beim Arzttermin übernimmt, was es kostet und wie die Pflegekasse zahlt. Jetzt Begleitung finden!',
   keywords: 'Arztbegleitung Senioren, Arzt Begleitung, Alltagsbegleiter, Pflege, Seniorenbetreuung',
   alternates: { canonical: 'https://alltagsengel.care/blog/arztbegleitung-senioren' },

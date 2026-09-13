@@ -6,13 +6,13 @@ import SpeakableSchema from '@/components/SpeakableSchema'
 import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Alltagsbegleitung für Demenz-Patienten: Der Ratgeber',
+  title: 'Alltagsbegleitung bei Demenz: Ratgeber',
   description: 'Alltagsbegleitung bei Demenz: Wie geschulte Begleiter Struktur, Aktivierung und Entlastung bringen — Aufgaben, Kosten und Finanzierung über 131 €/Monat (§45b).',
   keywords: 'Alltagsbegleitung Demenz, Demenzbetreuung, Alltagsbegleiter Demenz, Betreuung Demenzkranke zu Hause, Demenz Entlastung Angehörige, stundenweise Betreuung Demenz, Entlastungsbetrag Demenz',
   alternates: { canonical: 'https://alltagsengel.care/blog/alltagsbegleitung-demenz' },
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
-    title: 'Alltagsbegleitung für Demenz-Patienten: Der Ratgeber',
+    title: 'Alltagsbegleitung bei Demenz: Ratgeber',
     description: 'Wie Alltagsbegleiter Menschen mit Demenz Struktur und Teilhabe geben — und Angehörige spürbar entlasten. Mit allen Finanzierungswegen.',
   },
 };

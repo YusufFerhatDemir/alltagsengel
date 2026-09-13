@@ -4,7 +4,7 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Pflegegrad 1 Leistungen 2026: Was steht Ihnen zu?',
+  title: 'Pflegegrad 1: Leistungen 2026',
   description: 'Alle Leistungen bei Pflegegrad 1: Entlastungsbetrag 131€, Pflegehilfsmittel 42€, Wohnraumanpassung, Beratung. Was die Pflegekasse wirklich zahlt.',
   keywords: [
     'Pflegegrad 1 Leistungen',

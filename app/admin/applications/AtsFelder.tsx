@@ -22,7 +22,21 @@ import {
   FZ_STATUS, MOBILITAET, PRIORITAET_MIN, PRIORITAET_MAX,
   atsFelderAus, darfAlsVerifiziertGelten, type AtsFelder,
 } from '@/lib/bewerbung/ats-felder'
+import {
+  QUALIFIKATIONEN, FUEHRERSCHEIN, SPRACHEN, VERFUEGBARKEIT,
+} from '@/lib/bewerbung/katalog'
 import { setApplicationAtsFelder } from './actions'
+
+/** Schlüssel → Anzeigetext aus einem Katalog; unbekannt bleibt der Schlüssel. */
+function ausKatalog(katalog: readonly { key: string; label: string }[], wert: unknown): string {
+  if (typeof wert !== 'string' || !wert) return '—'
+  return katalog.find(k => k.key === wert)?.label ?? wert
+}
+
+function listeAusKatalog(katalog: readonly { key: string; label: string }[], wert: unknown): string {
+  if (!Array.isArray(wert) || wert.length === 0) return '—'
+  return wert.map(w => ausKatalog(katalog, w)).join(', ')
+}
 
 const feldStil: React.CSSProperties = {
   width: '100%', background: 'var(--coal2)', border: '1px solid var(--coal4)',
@@ -31,10 +45,12 @@ const feldStil: React.CSSProperties = {
 const labelStil: React.CSSProperties = { fontSize: 11, color: 'var(--ink5)', display: 'block', marginBottom: 3 }
 
 export function AtsPanel({
-  applicationId, roh, onGespeichert,
+  applicationId, roh, daten, onGespeichert,
 }: {
   applicationId: string
   roh: unknown
+  /** Formularangaben der Bewerberin — hier nur Anzeige, nie Eingabe. */
+  daten: Record<string, unknown> | null
   onGespeichert: (neu: Record<string, unknown>) => void
 }) {
   const [felder, setFelder] = useState<AtsFelder>(() => atsFelderAus(roh))
@@ -166,6 +182,29 @@ export function AtsPanel({
           onBlur={e => { if (e.target.value !== (felder.notizen ?? '')) speichere('notizen', e.target.value) }}
         />
       </label>
+
+      {/* Die vier Felder aus dem Bewerbungsformular. Sie stehen hier, damit
+          alle fuenfzehn Arbeitsfelder an EINER Stelle zu sehen sind — aber
+          ohne Eingabe: das ist die Selbstauskunft der Bewerberin. Wer sie
+          hier ueberschreiben koennte, erzeugte einen zweiten Ort fuer
+          dieselbe Angabe, und der laeuft auseinander. */}
+      <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed var(--coal4)' }}>
+        <div style={{ ...labelStil, marginBottom: 6 }}>
+          Aus dem Bewerbungsformular — Angaben der Bewerberin, hier nicht änderbar
+        </div>
+        {daten ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: '6px 16px', fontSize: 12.5 }}>
+            <div><span style={{ color: 'var(--ink5)' }}>Qualifikation:</span> {ausKatalog(QUALIFIKATIONEN, daten.qualifikation)}</div>
+            <div><span style={{ color: 'var(--ink5)' }}>Führerschein:</span> {ausKatalog(FUEHRERSCHEIN, daten.fuehrerschein)}</div>
+            <div><span style={{ color: 'var(--ink5)' }}>Sprachen:</span> {listeAusKatalog(SPRACHEN, daten.sprachen)}</div>
+            <div><span style={{ color: 'var(--ink5)' }}>Verfügbarkeit:</span> {listeAusKatalog(VERFUEGBARKEIT, daten.verfuegbarkeit)}</div>
+          </div>
+        ) : (
+          <div style={{ fontSize: 12, color: 'var(--ink5)' }}>
+            Über das frühere Kurzformular eingegangen — diese vier Angaben fehlen.
+          </div>
+        )}
+      </div>
 
       {/* Der Satz steht bewusst an der Maske, nicht nur im Quelltext: die
           Stelle, an der jemand „Liegt vor" auswaehlt, ist die Stelle, an der

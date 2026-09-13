@@ -6,13 +6,13 @@ import SpeakableSchema from '@/components/SpeakableSchema'
 import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Alltagsbegleitung bei psychischen Erkrankungen',
+  title: 'Alltagsbegleitung bei psychischer Erkrankung',
   description: 'Alltagsbegleitung bei Depression, Angststörung & Co.: Was Begleiter leisten, wo die Grenzen zur Therapie liegen und wie die Pflegekasse mit 131 €/Monat zahlt.',
   keywords: 'Alltagsbegleitung psychische Erkrankungen, Alltagsbegleitung Depression, Alltagshilfe psychisch krank, Pflegegrad psychische Erkrankung, Betreuung Depression zu Hause, Entlastungsbetrag psychische Erkrankung',
   alternates: { canonical: 'https://alltagsengel.care/blog/alltagsbegleitung-psychische-erkrankungen' },
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
-    title: 'Alltagsbegleitung bei psychischen Erkrankungen',
+    title: 'Alltagsbegleitung bei psychischer Erkrankung',
     description: 'Wie Alltagsbegleitung Menschen mit Depression, Angststörung oder anderen psychischen Erkrankungen im Alltag stützt — und wer die Kosten übernimmt.',
   },
 };

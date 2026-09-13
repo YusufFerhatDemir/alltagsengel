@@ -4,7 +4,7 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Seniorenbetreuung Frankfurt: Angebote & Kosten',
+  title: 'Seniorenbetreuung Frankfurt: Kosten',
   description: 'Seniorenbetreuung in Frankfurt: Angebote, Kosten & Anbieter im Überblick — von Alltagsbegleitung bis Demenzbetreuung. Jetzt passende Betreuung finden!',
   keywords: ['Seniorenbetreuung Frankfurt', 'Seniorenhilfe Frankfurt', 'Betreuung Senioren Frankfurt', 'Alltagsbegleitung Frankfurt', 'Seniorenbetreuung Rhein-Main'],
   alternates: { canonical: 'https://alltagsengel.care/blog/seniorenbetreuung-frankfurt' },

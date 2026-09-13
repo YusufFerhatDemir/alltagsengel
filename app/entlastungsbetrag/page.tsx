@@ -15,7 +15,7 @@ import SpeakableSchema from '@/components/SpeakableSchema'
 export const metadata: Metadata = {
   title: 'Entlastungsbetrag 131 € nutzen — §45b SGB XI',
   description:
-    'Entlastungsbetrag §45b SGB XI: 131 €/Monat für anerkannte Angebote wie Alltagsbegleitung & Haushaltshilfe — ab Pflegegrad 1. Alltagsengel: §45a-Anerkennung im Verfahren, Buchung als Selbstzahler möglich.',
+    'Entlastungsbetrag §45b SGB XI: 131 €/Monat für anerkannte Angebote, ab Pflegegrad 1. Alltagsengel: §45a-Anerkennung im Verfahren, Buchung als Selbstzahler.',
   keywords: [
     'Entlastungsbetrag',
     'Entlastungsbetrag 131 Euro',

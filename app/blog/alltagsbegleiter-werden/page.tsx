@@ -5,13 +5,13 @@ import SpeakableSchema from '@/components/SpeakableSchema'
 import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Alltagsbegleiter werden: Ausbildung, Gehalt & Voraussetzungen',
+  title: 'Alltagsbegleiter werden: Ausbildung & Gehalt',
   description: 'Alltagsbegleiter werden 2026: Qualifizierung nach §45a SGB XI, Gehalt von 18–24 €/Stunde, Voraussetzungen und Bewerbung — der komplette Weg in den Beruf.',
   keywords: 'Alltagsbegleiter werden, Alltagsbegleiter Ausbildung, Alltagsbegleiter Gehalt, Alltagsbegleiter Voraussetzungen, Alltagsbegleiter Qualifizierung, Betreuungskraft werden, Nebenjob Betreuung',
   alternates: { canonical: 'https://alltagsengel.care/blog/alltagsbegleiter-werden' },
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
-    title: 'Alltagsbegleiter werden: Ausbildung, Gehalt & Voraussetzungen',
+    title: 'Alltagsbegleiter werden: Ausbildung & Gehalt',
     description: 'Der komplette Weg in den Beruf: Qualifizierung, Verdienst, Voraussetzungen und Bewerbung als Alltagsbegleiter — verständlich erklärt.',
   },
 };

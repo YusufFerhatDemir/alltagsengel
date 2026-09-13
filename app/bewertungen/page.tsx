@@ -4,7 +4,7 @@ import GoogleReviews from '@/components/GoogleReviews'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
-  title: 'Bewertungen & Erfahrungen — Familien berichten',
+  title: 'Bewertungen: Familien berichten',
   description: 'Echte Google-Bewertungen zu Alltagsengel: Alltagsbegleitung in Frankfurt & Rhein-Main, §45a-Anerkennung im Verfahren. Überzeugen Sie sich selbst!',
   keywords: ['Alltagsengel Bewertungen', 'Alltagsengel Erfahrungen', 'Alltagsbegleitung Frankfurt Bewertung', 'Betreuungsdienst Frankfurt Erfahrungen'],
   openGraph: {

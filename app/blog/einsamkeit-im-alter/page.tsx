@@ -4,8 +4,8 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Einsamkeit im Alter: So helfen Alltagsbegleiter',
-  description: 'Einsamkeit im Alter schadet der Gesundheit wie Rauchen. Erfahren Sie, wie Alltagsbegleiter helfen und wie der Entlastungsbetrag (131 €/Monat) greift. Jetzt informieren.',
+  title: 'Einsamkeit im Alter: Was hilft',
+  description: 'Einsamkeit im Alter schadet der Gesundheit wie Rauchen. Wie Alltagsbegleiter helfen und wie der Entlastungsbetrag (131 €/Monat) greift.',
   keywords: 'Einsamkeit im Alter, Isolation, Seniorenhilfe, Alltagsbegleiter, Seniorenbetreuung',
   alternates: { canonical: 'https://alltagsengel.care/blog/einsamkeit-im-alter' },
   openGraph: {

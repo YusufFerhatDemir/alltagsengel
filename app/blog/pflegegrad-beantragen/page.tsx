@@ -4,13 +4,13 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Pflegegrad beantragen: Komplette Anleitung 2026',
+  title: 'Pflegegrad beantragen: Anleitung 2026',
   description: 'Pflegegrad beantragen 2026: Antrag bei der Pflegekasse, MD-Begutachtung mit Punktesystem, Pflegetagebuch, Fristen und Widerspruch — die komplette Anleitung.',
   keywords: 'Pflegegrad beantragen, Pflegekasse, MD Begutachtung, Medizinischer Dienst, Pflegetagebuch, Punktesystem Pflegegrad, Widerspruch Pflegegrad',
   alternates: { canonical: 'https://alltagsengel.care/blog/pflegegrad-beantragen' },
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
-    title: 'Pflegegrad beantragen: Komplette Anleitung 2026',
+    title: 'Pflegegrad beantragen: Anleitung 2026',
     description: 'Antrag, MD-Begutachtung, Punktesystem, Fristen, Widerspruch: Schritt für Schritt zum richtigen Pflegegrad.',
   },
 };

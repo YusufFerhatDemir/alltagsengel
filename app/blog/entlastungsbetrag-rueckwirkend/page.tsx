@@ -4,7 +4,7 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Entlastungsbetrag rückwirkend: 3.144 € sichern',
+  title: 'Entlastungsbetrag rückwirkend sichern',
   description: 'Nicht genutzten Entlastungsbetrag rückwirkend einsetzen: Fristen, Beantragung und wie Sie bis zu 3.144€ aus 2 Jahren nachholen. Aktuell: 131€/Monat seit 2025.',
   keywords: [
     'Entlastungsbetrag rückwirkend',

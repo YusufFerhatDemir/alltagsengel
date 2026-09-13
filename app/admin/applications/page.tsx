@@ -556,6 +556,7 @@ export default function AdminApplicationsPage() {
                           <AtsPanel
                             applicationId={a.id}
                             roh={a.roh}
+                            daten={a.daten as Record<string, unknown> | null}
                             onGespeichert={neuRoh => setRows(prev => prev.map(r => r.id === a.id ? { ...r, roh: neuRoh } : r))}
                           />
 

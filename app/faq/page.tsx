@@ -6,7 +6,7 @@ import RelatedContent from '@/components/RelatedContent'
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://alltagsengel.care/faq' },
-  title: 'FAQ: Entlastungsbetrag, Pflegegrad & Alltagsbegleitung',
+  title: 'FAQ: Entlastungsbetrag & Pflegegrad',
   description: 'Antworten auf häufige Fragen zu Entlastungsbetrag (131 €/Monat), Pflegehilfsmitteln (42 €/Monat), Pflegegrad und Alltagsbegleitung. Jetzt informieren!',
   keywords: [
     'FAQ Alltagsbegleitung',

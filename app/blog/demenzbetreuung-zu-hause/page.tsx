@@ -4,12 +4,12 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Demenzbetreuung zu Hause — Unterstützung für Familien',
+  title: 'Demenzbetreuung zu Hause',
   description: 'Demenzbetreuung zu Hause: Wie Familien den Alltag mit Demenz meistern — Tipps zu Kommunikation, Alltagsstruktur und Finanzierung über 131 € Entlastungsbetrag.',
   keywords: ['Demenzbetreuung zu Hause', 'Demenz Betreuung', 'Demenz Angehörige', 'Demenz Pflege zu Hause', 'Betreuung Demenzkranke', 'Entlastungsbetrag Demenz', 'Alltagsbegleitung Demenz', 'stundenweise Betreuung Demenz'],
   alternates: { canonical: 'https://alltagsengel.care/blog/demenzbetreuung-zu-hause' },
   openGraph: {
-    title: 'Demenzbetreuung zu Hause — Unterstützung für Familien',
+    title: 'Demenzbetreuung zu Hause',
     description: 'Demenzbetreuung zu Hause organisieren: Alltagsstruktur, Kommunikation, stundenweise Betreuung und Finanzierung über die Pflegekasse — verständlich erklärt.',
     url: 'https://alltagsengel.care/blog/demenzbetreuung-zu-hause',
     type: 'article',

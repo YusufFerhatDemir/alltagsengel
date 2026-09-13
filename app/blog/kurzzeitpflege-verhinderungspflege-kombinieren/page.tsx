@@ -4,12 +4,12 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Kurzzeitpflege & Verhinderungspflege kombinieren',
+  title: 'Kurzzeit- & Verhinderungspflege kombinieren',
   description: 'Kurzzeitpflege und Verhinderungspflege kombinieren: Seit 01.07.2025 gilt der gemeinsame Jahresbetrag von 3.539 €. So teilen Sie das Budget klug auf.',
   keywords: ['Kurzzeitpflege Verhinderungspflege kombinieren', 'gemeinsamer Jahresbetrag', 'Kurzzeitpflege', 'Verhinderungspflege', '3539 Euro Pflegekasse', 'Verhinderungspflege stundenweise', 'Entlastungsbetrag kombinieren', 'Pflegekasse Budget'],
   alternates: { canonical: 'https://alltagsengel.care/blog/kurzzeitpflege-verhinderungspflege-kombinieren' },
   openGraph: {
-    title: 'Kurzzeitpflege & Verhinderungspflege kombinieren',
+    title: 'Kurzzeit- & Verhinderungspflege kombinieren',
     description: 'Seit 01.07.2025: ein gemeinsamer Jahresbetrag von 3.539 € für beide Leistungen. So teilen Familien das Budget klug auf und sparen bares Geld.',
     url: 'https://alltagsengel.care/blog/kurzzeitpflege-verhinderungspflege-kombinieren',
     type: 'article',

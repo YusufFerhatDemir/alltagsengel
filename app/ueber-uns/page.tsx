@@ -6,7 +6,7 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 export const metadata: Metadata = {
   title: 'Über uns — Wer hinter Alltagsengel steht',
   description:
-    'Alltagsengel aus Frankfurt: Alltagsbegleitung (§45a-Anerkennung im Verfahren), Pflegebox und Krankenfahrten im Rhein-Main-Gebiet. Geprüfte Begleiter — lernen Sie uns kennen!',
+    'Alltagsengel aus Frankfurt: Alltagsbegleitung (§45a-Anerkennung im Verfahren), Pflegebox und Krankenfahrten im Rhein-Main-Gebiet. Lernen Sie uns kennen.',
   alternates: { canonical: 'https://alltagsengel.care/ueber-uns' },
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],

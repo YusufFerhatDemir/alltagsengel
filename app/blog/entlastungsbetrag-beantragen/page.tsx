@@ -4,7 +4,7 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Entlastungsbetrag 2026: Anspruch, Antrag & Nutzung (131 €)',
+  title: 'Entlastungsbetrag 2026: Antrag & Nutzung',
   description: 'Entlastungsbetrag 2026: 131 €/Monat ab Pflegegrad 1 nach §45b SGB XI. Der Praxis-Guide zu Anspruch, Abrechnung, Fristen, Beispielrechnungen und Fehlern.',
   keywords: 'Entlastungsbetrag 2026, § 45b, Pflegekasse, Pflegegrad, Entlastungsbetrag beantragen, 131 Euro',
   alternates: { canonical: 'https://alltagsengel.care/blog/entlastungsbetrag-beantragen' },

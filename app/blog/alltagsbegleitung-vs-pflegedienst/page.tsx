@@ -6,12 +6,12 @@ import SpeakableSchema from '@/components/SpeakableSchema'
 import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Alltagsbegleitung vs. Pflegedienst — der Unterschied',
+  title: 'Alltagsbegleitung oder Pflegedienst?',
   description: 'Alltagsbegleitung oder Pflegedienst? Aufgaben, Kosten und Finanzierung im Vergleich — wann Sie was brauchen und wie sich beide Leistungen kombinieren lassen.',
   keywords: ['Alltagsbegleitung vs Pflegedienst', 'Unterschied Alltagsbegleitung Pflegedienst', 'Alltagsbegleitung oder Pflegedienst', 'ambulanter Pflegedienst', 'Betreuungsdienst Unterschied', 'Entlastungsbetrag', 'Pflegesachleistungen', 'Grundpflege Behandlungspflege'],
   alternates: { canonical: 'https://alltagsengel.care/blog/alltagsbegleitung-vs-pflegedienst' },
   openGraph: {
-    title: 'Alltagsbegleitung vs. Pflegedienst — der Unterschied',
+    title: 'Alltagsbegleitung oder Pflegedienst?',
     description: 'Aufgaben, Kosten und Finanzierung im Vergleich: Was Alltagsbegleitung leistet, was der Pflegedienst übernimmt — und wie sich beides kombinieren lässt.',
     url: 'https://alltagsengel.care/blog/alltagsbegleitung-vs-pflegedienst',
     type: 'article',
