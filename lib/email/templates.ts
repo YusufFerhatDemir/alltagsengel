@@ -394,13 +394,41 @@ export interface GerenderteMail {
  * Stelle eingesetzt. Eine Einladung ohne Termin wäre sonst eine Mail, die
  * beim Empfänger eine Lücke hinterlässt — und niemand merkt es vorher.
  */
+/**
+ * Eine Betreffzeile ist EINE Zeile.
+ *
+ * ── WARUM DER RIEGEL HIER STEHT UND NICHT BEIM VERSENDER ──────────────
+ * Am 13.09.2026 nachgemessen: ein Zeilenumbruch in einem Vorlagenfeld
+ * landete unverändert im Betreff. Aus dem Vornamen „Anna" plus Umbruch
+ * plus „Bcc: …" wurde ein Betreff mit einem Umbruch mittendrin.
+ *
+ * Ob daraus beim Versand ein eigener Header wird, entscheidet dann die
+ * Bibliothek des Anbieters. Genau das ist der Punkt: ein Riegel, der davon
+ * abhängt, wie ein fremdes SDK seine Eingaben kodiert, ist keiner. Und ein
+ * mehrzeiliger Betreff ist auch ohne Angriff schon kaputt.
+ *
+ * Nur der Betreff wird einzeilig gemacht. Rumpffelder dürfen Umbrüche
+ * behalten — eine Kurzvorstellung mit zwei Absätzen ist erwünscht, und im
+ * HTML sind Umbrüche harmlos (escaped wird dort ohnehin).
+ */
+export function einzeiligerBetreff(wert: string): string {
+  return wert
+    .replace(/[\r\n\t\f\v\u0085\u2028\u2029]+/g, ' ')
+    .replace(/ {2,}/g, ' ')
+    .trim()
+}
+
 export function vorlageRendern(
   vorlage: EmailVorlage,
   werte: Record<string, string>,
 ): GerenderteMail {
   const sauber: Record<string, string> = {}
   for (const [k, v] of Object.entries(werte)) {
-    if (typeof v === 'string') sauber[k] = v.trim()
+    // Steuerzeichen ausserhalb von Tab und Umbruch entstehen in keiner
+    // Eingabe absichtlich — weder im Betreff noch im Rumpf.
+    if (typeof v === 'string') {
+      sauber[k] = v.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').trim()
+    }
   }
 
   const fehlendeFelder = vorlage.felder
@@ -408,7 +436,7 @@ export function vorlageRendern(
     .map(f => f.label)
 
   return {
-    betreff: vorlage.betreff(sauber),
+    betreff: einzeiligerBetreff(vorlage.betreff(sauber)),
     rumpfHtml: vorlage.rumpf(sauber),
     fehlendeFelder,
   }
