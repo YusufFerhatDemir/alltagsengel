@@ -95,6 +95,7 @@ DECLARE
   v_locked      boolean;
   v_status      text;
   v_pstatus     text;
+  v_bstatus     text;
   v_res         jsonb;
   v_invoice     uuid;
   v_nummer      text;
@@ -225,15 +226,53 @@ BEGIN
     -- wird zusaetzlich, dass Hash und Sperre den Wechsel UEBERLEBT haben —
     -- ein Abrechnen, das den Unterschriftsbeleg abraeumt, waere schlimmer
     -- als eines, das blockiert.
-    SELECT status, proof_status, is_locked, signature_hash
-      INTO v_status, v_pstatus, v_locked, v_hash2
+    SELECT status, proof_status, billing_status, is_locked, signature_hash
+      INTO v_status, v_pstatus, v_bstatus, v_locked, v_hash2
       FROM public.service_records WHERE id = v_sr;
 
     IF v_status = 'invoiced' AND v_locked AND v_hash2 = v_hash THEN
-      b := b || format('OK|abgerechnet|Nachweis steht auf invoiced, is_locked=true, signature_hash unveraendert (proof_status=%s)', v_pstatus) || chr(10);
+      b := b || format('OK|abgerechnet|Nachweis steht auf invoiced, is_locked=true, signature_hash unveraendert', v_pstatus) || chr(10);
     ELSE
       b := b || format('ROT|abgerechnet|status=%s locked=%s hash_gleich=%s', v_status, v_locked, (v_hash2 = v_hash)) || chr(10);
     END IF;
+
+    -- ── Station 5b: die ZWEITE Statusspalte ────────────────────
+    -- Bis zum 13.09.2026 hat die Kette proof_status hier nur ANGEZEIGT.
+    -- Sie konnte damit durchlaufen, waehrend die zweite Spalte beliebig
+    -- danebenlag.
+    --
+    -- Geprueft wird NICHT auf 'ABGERECHNET'. Eine Probe am 14.09.2026 hat
+    -- gezeigt, dass dieser Wert unerreichbar ist: auf der gesperrten Zeile
+    -- weist prevent_locked_record_change jeden Schreibversuch auf
+    -- proof_status oder billing_status mit P0001 ab. Die Sperre laesst beim
+    -- Abrechnen NUR den Statuswechsel durch, bei sonst unveraenderter
+    -- Zeile — proof_status ist eine andere Spalte.
+    --
+    -- Der richtige Anspruch ist deshalb: proof_status darf nicht HINTER
+    -- der Unterschrift stehen. Steht dort ENTWURF, ist ein Nachweis
+    -- abgerechnet worden, der nie unterschrieben war.
+    IF v_pstatus = 'UNTERSCHRIEBEN' THEN
+      b := b || format('OK|nachweis_proof|proof_status=UNTERSCHRIEBEN — die Unterschrift steht, der Abrechnungsvermerk liegt in status') || chr(10);
+    ELSE
+      b := b || format('ROT|nachweis_proof|status=invoiced, aber proof_status=%s — abgerechnet ohne Unterschriftsstand', coalesce(v_pstatus, 'NULL')) || chr(10);
+    END IF;
+
+    -- ── Station 5c: die Sperre deckt auch die Statusspalten ────────
+    -- Das ist der Grund, warum 5b nicht mehr verlangt. Wer die Sperre
+    -- lockert, faellt hier auf — und muss dann auch 5b neu beantworten.
+    BEGIN
+      UPDATE public.service_records SET proof_status = 'ABGERECHNET' WHERE id = v_sr;
+      b := b || 'ROT|sperre_statusspalten|proof_status liess sich am gesperrten Nachweis weiterschreiben' || chr(10);
+    EXCEPTION WHEN OTHERS THEN
+      b := b || format('OK|sperre_statusspalten|proof_status am gesperrten Nachweis abgewiesen: %s', left(SQLERRM, 70)) || chr(10);
+    END;
+
+    BEGIN
+      UPDATE public.service_records SET billing_status = 'ABGERECHNET' WHERE id = v_sr;
+      b := b || 'ROT|sperre_billing|billing_status liess sich am gesperrten Nachweis weiterschreiben' || chr(10);
+    EXCEPTION WHEN OTHERS THEN
+      b := b || format('OK|sperre_billing|billing_status am gesperrten Nachweis abgewiesen: %s', left(SQLERRM, 70)) || chr(10);
+    END;
 
     -- ── Station 6: Rueckweg ist zu ─────────────────────────────────────
     BEGIN

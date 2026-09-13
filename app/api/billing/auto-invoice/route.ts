@@ -270,8 +270,42 @@ export const POST = withTracking(async function POST(request: Request) {
     const billable = signed.filter(r => !billedIds.has(r.id))
 
     if (billable.length === 0) {
-      // Records hängen schon an einer Rechnung — Status nachziehen
-      await admin.from('service_records').update({ status: 'invoiced' }).in('id', signedIds)
+      // Records haengen schon an einer Rechnung — Status nachziehen.
+      //
+      // Hier stand ein blankes `await` ohne Ergebnispruefung. PostgREST
+      // meldet KEINEN Fehler, wenn ein UPDATE null Zeilen trifft, und der
+      // Fehlerfall wurde ohnehin verworfen. Die Route antwortete also
+      // „alles zugeordnet", waehrend die Nachweise auf 'signed' stehen
+      // blieben — die Rechnung existiert, der Nachweis weiss nichts davon.
+      //
+      // `.eq('status','signed')` ist die Vergleichsbedingung: zwischen dem
+      // Lesen oben und diesem Schreiben kann die Zeile sich bewegt haben
+      // (Storno, zweiter Lauf). Ohne sie wuerde dieser Aufruf einen
+      // fremden Zwischenstand ueberschreiben.
+      //
+      // Ein Fehlschlag bricht die Antwort NICHT ab: die Auskunft „diese
+      // Einsaetze haengen bereits an einer Rechnung" bleibt richtig. Er
+      // darf nur nicht unsichtbar bleiben.
+      const { data: nachgezogen, error: nachziehErr } = await admin
+        .from('service_records')
+        .update({ status: 'invoiced' })
+        .in('id', signedIds)
+        .eq('status', 'signed')
+        .select('id')
+      if (nachziehErr) {
+        log.error('Abrechnungsvermerk konnte nicht nachgezogen werden', {
+          clientId: resolvedClientId, month: resolvedMonth,
+          anzahl: signedIds.length, errorMessage: nachziehErr.message,
+        })
+      } else if ((nachgezogen?.length ?? 0) < signedIds.length) {
+        // Kein Fehler, aber nicht jede Zeile getroffen: entweder stand sie
+        // schon auf 'invoiced' (harmlos) oder sie hat sich inzwischen
+        // bewegt. Beides gehoert protokolliert, statt gezaehlt zu werden.
+        log.info('Abrechnungsvermerk teilweise nachgezogen', {
+          clientId: resolvedClientId, month: resolvedMonth,
+          erwartet: signedIds.length, geschrieben: nachgezogen?.length ?? 0,
+        })
+      }
       return NextResponse.json({
         ready: true,
         reason: 'Alle unterschriebenen Einsätze sind bereits einer Rechnung zugeordnet',
