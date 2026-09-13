@@ -328,14 +328,25 @@ if git diff --cached --quiet; then
   warn "Nichts zu committen (working tree clean)"
   SKIP_COMMIT=1
 else
-  # Commit mit HEREDOC, Co-Author wird vom Agent-Caller per Env angehängt
-  CO_AUTHOR_LINE="${DEPLOY_CO_AUTHOR:-Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>}"
-  git commit -m "$(cat <<EOF
+  # Commit mit HEREDOC, Co-Author wird vom Agent-Caller per Env angehängt.
+  #
+  # NUR WENN DIE NACHRICHT KEINE TRAEGT. Bringt der Aufrufer seine eigene
+  # Co-Author-Zeile mit — was Agenten tun, die ihr Modell selbst kennen —,
+  # entstanden hier bis zum 13.09.2026 zwei Zeilen: die eigene und diese
+  # Vorgabe. Sechs Commits dieser Sitzung tragen den Doppel, sichtbar erst
+  # im Nachhinein. Das laesst sich nicht mehr geraderuecken (Rewrite plus
+  # Force-Push), aber ab hier nicht mehr wiederholen.
+  CO_AUTHOR_LINE="${DEPLOY_CO_AUTHOR:-Co-Authored-By: Claude <noreply@anthropic.com>}"
+  if printf '%s' "$COMMIT_MSG" | grep -qi '^Co-Authored-By:'; then
+    git commit -m "$COMMIT_MSG" || die "git commit fehlgeschlagen"
+  else
+    git commit -m "$(cat <<EOF
 ${COMMIT_MSG}
 
 ${CO_AUTHOR_LINE}
 EOF
 )" || die "git commit fehlgeschlagen"
+  fi
   ok "Commit erstellt: $(git --no-pager log -1 --oneline)"
 fi
 

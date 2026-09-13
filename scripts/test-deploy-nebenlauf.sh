@@ -207,6 +207,26 @@ else
 fi
 
 echo ""
+echo "═══ 9. Co-Author-Zeile wird nicht verdoppelt ═══"
+neues_repo fall9
+export COMMIT_MSG_TEST=1
+mit_zeile="$(printf 'Test\n\nCo-Authored-By: Claude X <noreply@anthropic.com>')"
+ohne_zeile="Test ohne Zeile"
+# Dieselbe Bedingung wie in deploy.sh, aus dem Skript gelesen statt getippt.
+bedingung="$(grep -n "printf '%s' \"\$COMMIT_MSG\" | grep -qi" "$DEPLOY" | head -1)"
+if [ -z "$bedingung" ]; then
+  echo "${ROT}  ✗${AUS} Dedup-Bedingung fehlt in deploy.sh"
+  durchgefallen=$((durchgefallen + 1))
+else
+  COMMIT_MSG="$mit_zeile"
+  if printf '%s' "$COMMIT_MSG" | grep -qi '^Co-Authored-By:'; then trifft=1; else trifft=0; fi
+  pruefe "Nachricht MIT Co-Author wird erkannt" 1 "$trifft"
+  COMMIT_MSG="$ohne_zeile"
+  if printf '%s' "$COMMIT_MSG" | grep -qi '^Co-Authored-By:'; then trifft=1; else trifft=0; fi
+  pruefe "Nachricht OHNE Co-Author bekommt eine" 0 "$trifft"
+fi
+
+echo ""
 echo "──────────────────────────────────────────────"
 echo "  bestanden: $bestanden   durchgefallen: $durchgefallen"
 [ "$durchgefallen" = "0" ] || exit 1
