@@ -154,15 +154,19 @@ export async function toggleVehicleActive(
     }
 
     // Update status
-    const { error: updateError } = await supabase
+    const { data: geschrieben, error: updateError } = await supabase
       .from('fahrzeuge')
       .update({ is_active: newStatus })
       .eq('id', vehicleId)
       .eq('provider_id', provider.id)
-
+      .select('id')
     if (updateError) {
       return { ok: false, error: 'Fehler beim Aktualisieren des Fahrzeug-Status.' }
     }
+    if (!geschrieben || geschrieben.length === 0) {
+      return { ok: false, error: 'Fahrzeug nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
+
 
     await logAuditEventOrWarn({
       action: 'update',

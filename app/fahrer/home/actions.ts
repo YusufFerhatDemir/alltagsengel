@@ -54,13 +54,17 @@ export async function updateProviderCity(providerId: string, city: string) {
       return { ok: false, error: 'Zugriff verweigert.' }
     }
 
-    const { error: updateError } = await supabase
+    const { data: gespeichert, error: updateError } = await supabase
       .from('krankenfahrt_providers')
       .update({ city: city.trim() })
       .eq('id', providerId)
+      .select('id')
 
     if (updateError) {
       return { ok: false, error: 'Stadt konnte nicht aktualisiert werden.' }
+    }
+    if (!gespeichert || gespeichert.length === 0) {
+      return { ok: false, error: 'Fahrer-Profil nicht gefunden — bitte neu anmelden.' }
     }
 
     await logAuditEventOrWarn({
@@ -120,13 +124,22 @@ export async function claimRide(rideId: string) {
       return { ok: false, error: 'Fahrt wurde bereits zugewiesen.' }
     }
 
-    const { error: updateError } = await supabase
+    // Wie in app/fahrer/auftraege: die Bedingungen gehoeren ins UPDATE.
+    // Lesen-pruefen-schreiben laesst zwei Fahrer dieselbe Fahrt uebernehmen,
+    // und beide bekommen „uebernommen" zurueck.
+    const { data: uebernommen, error: updateError } = await supabase
       .from('krankenfahrten')
       .update({ provider_id: provider.id, status: 'confirmed' })
       .eq('id', rideId)
+      .eq('status', 'pending')
+      .is('provider_id', null)
+      .select('id')
 
     if (updateError) {
       return { ok: false, error: 'Fahrt konnte nicht uebernommen werden.' }
+    }
+    if (!uebernommen || uebernommen.length === 0) {
+      return { ok: false, error: 'Die Fahrt wurde gerade von jemand anderem uebernommen.' }
     }
 
     await logAuditEventOrWarn({
@@ -186,13 +199,19 @@ export async function startRide(rideId: string) {
       return { ok: false, error: 'Fahrt muss im Status "bestaetigt" sein.' }
     }
 
-    const { error: updateError } = await supabase
+    const { data: gestartet, error: updateError } = await supabase
       .from('krankenfahrten')
       .update({ status: 'in_progress' })
       .eq('id', rideId)
+      .eq('status', 'confirmed')
+      .eq('provider_id', provider.id)
+      .select('id')
 
     if (updateError) {
       return { ok: false, error: 'Fahrt konnte nicht gestartet werden.' }
+    }
+    if (!gestartet || gestartet.length === 0) {
+      return { ok: false, error: 'Die Fahrt ist nicht mehr im Status „bestaetigt" — bitte Liste neu laden.' }
     }
 
     await logAuditEventOrWarn({
@@ -252,13 +271,19 @@ export async function completeRide(rideId: string) {
       return { ok: false, error: 'Fahrt muss im Status "unterwegs" sein.' }
     }
 
-    const { error: updateError } = await supabase
+    const { data: abgeschlossen, error: updateError } = await supabase
       .from('krankenfahrten')
       .update({ status: 'completed' })
       .eq('id', rideId)
+      .eq('status', 'in_progress')
+      .eq('provider_id', provider.id)
+      .select('id')
 
     if (updateError) {
       return { ok: false, error: 'Fahrt konnte nicht abgeschlossen werden.' }
+    }
+    if (!abgeschlossen || abgeschlossen.length === 0) {
+      return { ok: false, error: 'Die Fahrt ist nicht mehr im Status „unterwegs" — bitte Liste neu laden.' }
     }
 
     await logAuditEventOrWarn({

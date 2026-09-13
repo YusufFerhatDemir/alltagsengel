@@ -36,9 +36,16 @@ function baueChain(tabelle: string) {
 
   const anwenden = () => {
     if (updateFehler[tabelle]) return { data: null, error: updateFehler[tabelle] }
-    for (const z of treffer()) Object.assign(z, patch)
+    // PostgREST gibt bei einem `update().select()` die BETROFFENEN Zeilen
+    // zurueck — und bei null Treffern eine leere Liste, ohne Fehler. Der
+    // Doppelgaenger lieferte bis zum 13.09.2026 immer `data: null` und
+    // konnte den Unterschied zwischen „geschrieben" und „nichts getroffen"
+    // deshalb gar nicht ausdruecken. Genau diesen Unterschied pruefen die
+    // Server Actions inzwischen.
+    const betroffen = treffer()
+    for (const z of betroffen) Object.assign(z, patch)
     updates.push({ tabelle, patch: patch! })
-    return { data: null, error: null }
+    return { data: betroffen.map(z => ({ ...z })), error: null }
   }
 
   const chain: any = {

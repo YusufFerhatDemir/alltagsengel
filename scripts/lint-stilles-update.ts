@@ -153,19 +153,10 @@ const BESTAND: { datei: string; tabelle: string; operation: string }[] = [
   // der Normalfall bei einer frisch angelegten Verordnung, kein Fehler.
   { datei: 'app/admin/verordnungen/actions.ts', tabelle: 'verordnung_leistungen', operation: 'delete' },
   { datei: 'app/admin/verordnungen/actions.ts', tabelle: 'verordnungen', operation: 'update' },
-  { datei: 'app/engel/aufgaben/actions.ts', tabelle: 'ops_aufgaben', operation: 'update' },
+  // BEGRUENDET: markiert Nachrichten einer Buchung als gelesen. NULL
+  // getroffene Zeilen heisst: es gab nichts zu markieren. Haeufigster
+  // Fall, kein Fehler — wie in app/kunde/chat.
   { datei: 'app/engel/chat/[id]/actions.ts', tabelle: 'messages', operation: 'update' },
-  { datei: 'app/engel/home/actions.ts', tabelle: 'angels', operation: 'update' },
-  { datei: 'app/engel/home/actions.ts', tabelle: 'profiles', operation: 'update' },
-  { datei: 'app/engel/register/actions.ts', tabelle: 'angels', operation: 'update' },
-  { datei: 'app/engel/register/actions.ts', tabelle: 'profiles', operation: 'update' },
-  { datei: 'app/fahrer/auftraege/actions.ts', tabelle: 'krankenfahrten', operation: 'update' },
-  { datei: 'app/fahrer/fahrzeuge/actions.ts', tabelle: 'fahrzeuge', operation: 'update' },
-  { datei: 'app/fahrer/home/actions.ts', tabelle: 'krankenfahrt_providers', operation: 'update' },
-  { datei: 'app/fahrer/home/actions.ts', tabelle: 'krankenfahrten', operation: 'update' },
-  { datei: 'app/fahrer/profil/actions.ts', tabelle: 'krankenfahrt_providers', operation: 'update' },
-  { datei: 'app/fahrer/profil/actions.ts', tabelle: 'profiles', operation: 'update' },
-  { datei: 'app/fahrer/register/actions.ts', tabelle: 'profiles', operation: 'update' },
   // BEGRUENDET: markiert ungelesene Nachrichten als gelesen
   // (.eq('read', false)). NULL getroffene Zeilen heisst: es gab nichts
   // Ungelesenes. Das ist der haeufigste Fall ueberhaupt und kein Fehler —
@@ -185,9 +176,6 @@ const BESTAND: { datei: string; tabelle: string; operation: string }[] = [
   { datei: 'app/mis/team/actions.ts', tabelle: 'profiles', operation: 'update' },
   { datei: 'app/mis/training/actions.ts', tabelle: 'mis_training_records', operation: 'update' },
   { datei: 'app/mis/vehicles/actions.ts', tabelle: 'mis_vehicles', operation: 'update' },
-  { datei: 'app/onboarding/actions.ts', tabelle: 'care_recipients', operation: 'update' },
-  { datei: 'app/onboarding/actions.ts', tabelle: 'clients', operation: 'update' },
-  { datei: 'app/onboarding/actions.ts', tabelle: 'profiles', operation: 'update' },
 ]
 
 function passtZumBestand(b: Befund): boolean {

@@ -139,12 +139,18 @@ export async function registerAsEngel(data: {
       is_online: true,
     }
 
-    const { error: angelError } = bestand
-      ? await admin.from('angels').update(selbstgepflegt).eq('id', userId)
-      : await admin.from('angels').insert({ id: userId, ...erstanlage, ...selbstgepflegt })
+    const { data: engelZeile, error: angelError } = bestand
+      ? await admin.from('angels').update(selbstgepflegt).eq('id', userId).select('id')
+      : await admin.from('angels').insert({ id: userId, ...erstanlage, ...selbstgepflegt }).select('id')
 
     if (angelError) {
       return { ok: false, error: angelError.message }
+    }
+    if (!engelZeile || engelZeile.length === 0) {
+      // Beim Aendern eines Bestands-Datensatzes meldet PostgREST ohne
+      // getroffene Zeile keinen Fehler. Die Registrierung liefe weiter,
+      // als waeren die Angaben gespeichert.
+      return { ok: false, error: 'Engel-Profil konnte nicht gespeichert werden — bitte neu anmelden.' }
     }
 
     // --- 2. Update profile with personal data ---
@@ -165,14 +171,18 @@ export async function registerAsEngel(data: {
       }
     }
     if (Object.keys(profileUpdate).length > 0) {
-      const { error: profileError } = await supabase
+      const { data: geschrieben, error: profileError } = await supabase
         .from('profiles')
         .update(profileUpdate)
         .eq('id', userId)
-
+        .select('id')
       if (profileError) {
         return { ok: false, error: profileError.message }
       }
+      if (!geschrieben || geschrieben.length === 0) {
+        return { ok: false, error: 'Profil nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+      }
+
     }
 
     // --- 3. Audit log (fail-soft) ---

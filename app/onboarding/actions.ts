@@ -67,13 +67,20 @@ export async function completeOnboardingAction(
     const updates: Record<string, unknown> = { onboarding_completed: true }
     if (plz) updates.postal_code = plz
 
-    const { error: profilFehler } = await supabase
+    const { data: profilGespeichert, error: profilFehler } = await supabase
       .from('profiles')
       .update(updates)
       .eq('id', user.id)
+      .select('id')
 
     if (profilFehler) {
       return { ok: false, error: profilFehler.message }
+    }
+    if (!profilGespeichert || profilGespeichert.length === 0) {
+      // Ohne diese Pruefung bliebe `onboarding_completed` still auf false:
+      // der Ablauf meldete „fertig", und beim naechsten Aufruf staende die
+      // Person wieder am Anfang, ohne je einen Grund zu sehen.
+      return { ok: false, error: 'Profil konnte nicht gespeichert werden — bitte neu anmelden.' }
     }
 
     if (pflegegrad !== null) {
@@ -86,11 +93,18 @@ export async function completeOnboardingAction(
         .maybeSingle()
 
       if (existing) {
-        const { error } = await supabase
+        const { data: aktualisiert, error } = await supabase
           .from('care_recipients')
           .update({ pflegegrad })
           .eq('id', existing.id)
+          .select('id')
         if (error) return { ok: false, error: error.message }
+        if (!aktualisiert || aktualisiert.length === 0) {
+          // Die Zeile wurde eine Anweisung darueber gelesen. Ist sie beim
+          // Schreiben weg, stimmt die Annahme nicht mehr, auf der dieser
+          // Zweig beruht.
+          return { ok: false, error: 'Pflegegrad konnte nicht gespeichert werden — bitte Seite neu laden.' }
+        }
       } else {
         const { error } = await supabase.from('care_recipients').insert({
           profile_id: user.id,
@@ -114,15 +128,25 @@ export async function completeOnboardingAction(
         .maybeSingle()
 
       if (klient && klient.care_level !== pflegegrad) {
-        const { error } = await supabase
+        const { data: synchronisiert, error } = await supabase
           .from('clients')
           .update({ care_level: pflegegrad })
           .eq('id', klient.id)
+          .select('id')
         // Fehlschlag ist hier nicht fatal (RLS kann dem Kunden das
         // Schreiben auf clients verwehren) — aber er darf nicht
         // unbemerkt bleiben, sonst driften die beiden Spalten wieder.
+        //
+        // GENAU DAS WAR DER FALL: verweigert RLS den Schreibzugriff, gibt
+        // PostgREST KEINEN Fehler zurueck, sondern null getroffene Zeilen.
+        // Die Pruefung auf `error` allein hat also nie ausgeloest — der
+        // haeufigste Fehlschlag war zugleich der einzige unsichtbare.
         if (error) {
           log.error('clients.care_level-Sync fehlgeschlagen', { errorMessage: error.message })
+        } else if (!synchronisiert || synchronisiert.length === 0) {
+          log.error('clients.care_level-Sync ohne Wirkung (vermutlich RLS)', {
+            klientId: klient.id,
+          })
         }
       }
     }

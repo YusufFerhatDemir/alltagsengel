@@ -65,14 +65,18 @@ export async function saveFahrerProfile(
     }
 
     // 3. Update profile phone (ownership: id = userId)
-    const { error: profileError } = await supabase
+    const { data: geschrieben, error: profileError } = await supabase
       .from('profiles')
       .update({ phone })
       .eq('id', userId)
-
+      .select('id')
     if (profileError) {
       return { ok: false, error: 'Profil konnte nicht gespeichert werden.' }
     }
+    if (!geschrieben || geschrieben.length === 0) {
+      return { ok: false, error: 'Profil nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
+
 
     // 4. Look up provider for this user
     const { data: provider, error: providerLookupError } = await supabase
@@ -86,7 +90,7 @@ export async function saveFahrerProfile(
     }
 
     // 5. Update provider record (ownership: user_id = userId)
-    const { error: providerError } = await supabase
+    const { data: anbieter, error: providerError } = await supabase
       .from('krankenfahrt_providers')
       .update({
         company_name: companyName,
@@ -95,9 +99,13 @@ export async function saveFahrerProfile(
         license_number: licenseNumber,
       })
       .eq('user_id', userId)
+      .select('id')
 
     if (providerError) {
       return { ok: false, error: 'Anbieterdaten konnten nicht gespeichert werden.' }
+    }
+    if (!anbieter || anbieter.length === 0) {
+      return { ok: false, error: 'Anbieterdaten nicht gefunden — bitte Seite neu laden.' }
     }
 
     // 6. Audit log (fail-soft)

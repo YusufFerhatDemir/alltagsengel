@@ -42,14 +42,18 @@ export async function updateEngelLocation(
 
     const { supabase, userId, organizationId, role, name } = await requireEngel()
 
-    const { error: dbError } = await supabase
+    const { data: geschrieben, error: dbError } = await supabase
       .from('profiles')
       .update({ location: city.trim() })
       .eq('id', userId)
-
+      .select('id')
     if (dbError) {
       return { ok: false, error: 'Standort konnte nicht aktualisiert werden.' }
     }
+    if (!geschrieben || geschrieben.length === 0) {
+      return { ok: false, error: 'Profil nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
+
 
     await logAuditEventOrWarn({
       action: 'update',
@@ -82,14 +86,18 @@ export async function toggleEngelOnline(
 
     const { supabase, userId, organizationId, role, name } = await requireEngel()
 
-    const { error: dbError } = await supabase
+    const { data: geschrieben, error: dbError } = await supabase
       .from('angels')
       .update({ is_online: isOnline })
       .eq('id', userId)
-
+      .select('id')
     if (dbError) {
       return { ok: false, error: 'Online-Status konnte nicht aktualisiert werden.' }
     }
+    if (!geschrieben || geschrieben.length === 0) {
+      return { ok: false, error: 'Engel-Profil nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
+
 
     await logAuditEventOrWarn({
       action: 'update',

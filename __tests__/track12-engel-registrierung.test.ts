@@ -69,6 +69,11 @@ function baueFakes() {
     if (aufruf.tabelle === 'angels' && aufruf.operation === 'select') {
       return { data: bereitsRegistriert ? { id: USER } : null }
     }
+    // Schreibvorgaenge liefern die betroffene Zeile zurueck — das tut
+    // PostgREST bei `.select()` auch. Ein Doppelgaenger, der hier `null`
+    // gibt, behauptet „nichts getroffen" und laesst die Leerpruefung der
+    // Server Action ausloesen, obwohl geschrieben wurde.
+    if (aufruf.tabelle === 'angels') return { data: [{ id: USER }] }
     return { data: null }
   })
 }

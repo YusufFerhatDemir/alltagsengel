@@ -62,7 +62,7 @@ export async function registerFahrerProfile(
     }
 
     // ── 1. Update profile with fahrer role ──
-    const { error: profileError } = await supabase
+    const { data: profilGeschrieben, error: profileError } = await supabase
       .from('profiles')
       .update({
         role: 'fahrer',
@@ -76,9 +76,16 @@ export async function registerFahrerProfile(
             : null,
       })
       .eq('id', userId)
+      .select('id')
 
     if (profileError) {
       return { ok: false, error: `Profil-Update fehlgeschlagen: ${profileError.message}` }
+    }
+    if (!profilGeschrieben || profilGeschrieben.length === 0) {
+      // Ohne die Pruefung liefe die Registrierung weiter und legte einen
+      // Anbieter-Datensatz an, waehrend die Rolle `fahrer` nie gesetzt
+      // wurde — die Person haette danach ein Profil ohne Zugang.
+      return { ok: false, error: 'Profil konnte nicht gespeichert werden — bitte neu anmelden.' }
     }
 
     // ── 2. Insert krankenfahrt_providers entry ──

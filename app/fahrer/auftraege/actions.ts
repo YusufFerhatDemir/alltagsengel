@@ -72,13 +72,26 @@ export async function claimRide(rideId: string): Promise<{ ok: true } | { ok: fa
       return { ok: false, error: 'Fahrt wurde bereits zugewiesen.' }
     }
 
-    const { error: updateError } = await supabase
+    // ── DIE BEDINGUNGEN GEHOEREN INS UPDATE, NICHT NUR DAVOR ──────────
+    // Die drei Pruefungen oben lesen den Stand und entscheiden danach.
+    // Zwischen Lesen und Schreiben kann ein zweiter Fahrer dieselbe Fahrt
+    // annehmen — beide Lesevorgaenge sahen `pending`, beide schrieben,
+    // der zweite ueberschrieb den ersten, und BEIDE bekamen „angenommen"
+    // zurueck. Gegen Gleichzeitigkeit hilft nur die Bedingung in der
+    // Schreibanweisung selbst.
+    const { data: angenommen, error: updateError } = await supabase
       .from('krankenfahrten')
       .update({ provider_id: provider.id, status: 'confirmed' })
       .eq('id', rideId)
+      .eq('status', 'pending')
+      .is('provider_id', null)
+      .select('id')
 
     if (updateError) {
       return { ok: false, error: 'Fehler beim Annehmen der Fahrt.' }
+    }
+    if (!angenommen || angenommen.length === 0) {
+      return { ok: false, error: 'Die Fahrt wurde gerade von jemand anderem angenommen.' }
     }
 
     await logAuditEventOrWarn({
@@ -131,11 +144,19 @@ export async function startRide(rideId: string): Promise<{ ok: true } | { ok: fa
       return { ok: false, error: 'Fahrt muss im Status "bestaetigt" sein.' }
     }
 
-    const { error: updateError } = await supabase
+    // Auch hier die Bedingung mitschreiben: sonst startet ein zweiter
+    // Klick eine Fahrt, die inzwischen storniert oder uebergeben wurde.
+    const { data: gestartet, error: updateError } = await supabase
       .from('krankenfahrten')
       .update({ status: 'in_progress' })
       .eq('id', rideId)
+      .eq('status', 'confirmed')
+      .eq('provider_id', provider.id)
+      .select('id')
 
+    if (!updateError && (!gestartet || gestartet.length === 0)) {
+      return { ok: false, error: 'Die Fahrt ist nicht mehr im Status „bestaetigt" — bitte Liste neu laden.' }
+    }
     if (updateError) {
       return { ok: false, error: 'Fehler beim Starten der Fahrt.' }
     }
@@ -190,13 +211,19 @@ export async function completeRide(rideId: string): Promise<{ ok: true } | { ok:
       return { ok: false, error: 'Fahrt muss im Status "unterwegs" sein.' }
     }
 
-    const { error: updateError } = await supabase
+    const { data: abgeschlossen, error: updateError } = await supabase
       .from('krankenfahrten')
       .update({ status: 'completed' })
       .eq('id', rideId)
+      .eq('status', 'in_progress')
+      .eq('provider_id', provider.id)
+      .select('id')
 
     if (updateError) {
       return { ok: false, error: 'Fehler beim Abschliessen der Fahrt.' }
+    }
+    if (!abgeschlossen || abgeschlossen.length === 0) {
+      return { ok: false, error: 'Die Fahrt ist nicht mehr im Status „unterwegs" — bitte Liste neu laden.' }
     }
 
     await logAuditEventOrWarn({
