@@ -25,7 +25,7 @@ import type { PosteingangEintrag } from '@/lib/leads/posteingang'
 
 export type KorbKey =
   | 'heute' | 'ueberfaellig' | 'dringend' | 'neu'
-  | 'terminwuensche' | 'rueckrufe' | 'bewerber'
+  | 'terminwuensche' | 'rueckrufe' | 'bewerber' | 'kalt'
 
 export interface Korb {
   key: KorbKey
@@ -89,6 +89,17 @@ export const KOERBE: readonly Korb[] = [
     key: 'bewerber', label: 'Bewerber', color: '#26A69A',
     bedeutung: 'Bewerbung als Alltagsbegleiter/in',
     passt: e => e.art === 'bewerbung',
+  },
+  {
+    // Achter Korb, 13.09.2026. Die sieben davor fragen alle „was ist zu
+    // spaet". Dieser fragt „mit wem hat lange niemand gesprochen" — ein
+    // Vorgang kann voellig termingerecht sein und trotzdem seit Wochen
+    // still liegen. Schwelle ist die kritische Stufe (ueber 30 Tage), nicht
+    // die erhoehte: bei sieben Tagen laege hier fast der ganze Bestand drin
+    // und der Korb saegte sich selbst ab.
+    key: 'kalt', label: 'Lange kein Kontakt', color: '#7B1E14',
+    bedeutung: 'Seit über 30 Tagen kein Kontakt — unabhängig davon, ob etwas überfällig ist',
+    passt: e => e.alterung.effektiv === 'kritisch',
   },
 ] as const
 

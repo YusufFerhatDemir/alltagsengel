@@ -9,6 +9,7 @@ import {
   type Ampel, type LeadArt, type PosteingangEintrag,
 } from '@/lib/leads/posteingang'
 import { KOERBE, korb, zaehleKoerbe, ohneKorb, type KorbKey } from '@/lib/leads/koerbe'
+import { PRIORITAET_META } from '@/lib/leads/alterung'
 import { StatusBadge, EmptyRow, Banner, SearchInput } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger'
 
@@ -270,12 +271,12 @@ export default function AdminPosteingangPage() {
           <thead>
             <tr>
               <th>Ampel</th><th>Art</th><th>Name</th><th>Kontakt</th>
-              <th>Offen seit</th><th>Stufe</th><th>Nächster Schritt</th><th>Wiedervorlage</th><th></th>
+              <th>Offen seit</th><th>Kontakt</th><th>Stufe</th><th>Nächster Schritt</th><th>Wiedervorlage</th><th></th>
             </tr>
           </thead>
           <tbody>
             {gefiltert.length === 0 ? (
-              <EmptyRow colSpan={9}>
+              <EmptyRow colSpan={10}>
                 {rows.length === 0 ? 'Keine offenen Leads — alles bearbeitet.' : 'Keine Treffer für diesen Filter.'}
               </EmptyRow>
             ) : gefiltert.map(e => {
@@ -289,6 +290,22 @@ export default function AdminPosteingangPage() {
                   <td style={{ fontSize: 13, whiteSpace: 'nowrap' }}>
                     {timeAgo(e.eingang)}
                     <div style={{ color: 'var(--ink5)', fontSize: 11 }}>{e.stundenOffen} h</div>
+                  </td>
+                  <td style={{ fontSize: 13, whiteSpace: 'nowrap' }}>
+                    {e.alterung.tageSeitKontakt === null ? (
+                      <span style={{ color: 'var(--ink5)' }}>—</span>
+                    ) : (
+                      <>
+                        <StatusBadge
+                          label={`${e.alterung.tageSeitKontakt} Tage`}
+                          color={PRIORITAET_META[e.alterung.effektiv].color}
+                        />
+                        <div style={{ color: 'var(--ink5)', fontSize: 11 }}>
+                          {e.alterung.quelle === 'letzter_kontakt' ? 'seit Gespräch' : 'seit Eingang'}
+                          {e.alterung.eskalation > 0 && ` · Eskalation ${e.alterung.eskalation}`}
+                        </div>
+                      </>
+                    )}
                   </td>
                   <td><StatusBadge label={e.stufeLabel} color={e.stufeFarbe} /></td>
                   <td style={{ fontSize: 13, color: 'var(--ink3)' }}>{e.hinweis}</td>

@@ -30,6 +30,9 @@ import {
   wiedervorlageFuerBewerbung,
 } from '@/lib/bewerbung/pipeline'
 
+import { atsFelderAus } from '@/lib/bewerbung/ats-felder'
+import { bewerteAlterung, type Alterung } from '@/lib/leads/alterung'
+
 export type Ampel = 'schwarz' | 'rot' | 'orange' | 'gelb' | 'gruen'
 
 export const AMPEL_META: Record<Ampel, { label: string; color: string; rang: number }> = {
@@ -81,6 +84,18 @@ export interface PosteingangEintrag {
   ziel: string
   /** Herkunft (`state_waitlist.quelle` bzw. `lead_inquiries.source`) — trägt die Kennzahlen „Rückrufe" und „Termine". */
   quelle: string | null
+  /**
+   * Letzter **echter** Kontakt, falls die Quelle ihn führt.
+   *
+   * Nicht `updated_at`: ein Trigger oder Backfill setzt den neu, ohne dass
+   * jemand mit der Person gesprochen hätte. Bisher führt nur die Bewerbung
+   * einen solchen Zeitpunkt (`bewerbung_daten.ats.letzterKontakt`, von Hand
+   * eingetragen). Wo er fehlt, steht hier `null` und die Alterung läuft
+   * sichtbar ab Eingang.
+   */
+  letzterKontakt: string | null
+  /** Kontaktalter, Priorität und Eskalation — siehe lib/leads/alterung.ts. */
+  alterung: Alterung
 }
 
 // ── Rohformen, wie die Seite sie liest ────────────────────────────────
@@ -140,6 +155,12 @@ export function ausWarteliste(z: RohWarteliste, jetzt: Date): PosteingangEintrag
     hinweis: stufe === 'neu' ? 'Noch nicht kontaktiert' : `Stufe „${meta.label}"`,
     ziel: ART_META.warteliste.ziel,
     quelle: z.quelle ?? null,
+    letzterKontakt: null,
+    alterung: bewerteAlterung({
+      eingang: z.created_at,
+      wiedervorlage: stufe === 'neu' ? null : wiedervorlageFuer(lead),
+      offen: true,
+    }, jetzt),
   }
 }
 
@@ -153,6 +174,9 @@ export function ausBewerbung(z: RohLead, jetzt: Date): PosteingangEintrag | null
   }
   const followUp = followUpFuerBewerbung(eingabe, jetzt)
   const meta = bewerberStufe(stufe)
+  // Einziger Zeitpunkt im Datenbestand, der ein Gespraech belegt statt
+  // ein Datenbank-Update: von Hand in die ATS-Maske eingetragen.
+  const kontaktZeitpunkt = atsFelderAus(z.bewerbung_daten).letzterKontakt ?? null
   return {
     id: z.id,
     art: 'bewerbung',
@@ -171,6 +195,13 @@ export function ausBewerbung(z: RohLead, jetzt: Date): PosteingangEintrag | null
     hinweis: meta.aufgabe,
     ziel: ART_META.bewerbung.ziel,
     quelle: z.source ?? null,
+    letzterKontakt: kontaktZeitpunkt,
+    alterung: bewerteAlterung({
+      letzterKontakt: kontaktZeitpunkt,
+      eingang: z.created_at,
+      wiedervorlage: stufe === 'neu' ? null : wiedervorlageFuerBewerbung(eingabe),
+      offen: true,
+    }, jetzt),
   }
 }
 
@@ -227,6 +258,12 @@ export function ausAnfrage(z: RohLead, jetzt: Date): PosteingangEintrag | null {
       : wiedervorlage ? 'Wiedervorlage gesetzt' : 'Ohne Wiedervorlage — Termin setzen',
     ziel: ART_META.anfrage.ziel,
     quelle: z.source ?? null,
+    letzterKontakt: null,
+    alterung: bewerteAlterung({
+      eingang: z.created_at,
+      wiedervorlage: status === 'new' ? null : wiedervorlage,
+      offen: true,
+    }, jetzt),
   }
 }
 

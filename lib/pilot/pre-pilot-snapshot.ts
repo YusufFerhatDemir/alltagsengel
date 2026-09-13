@@ -204,8 +204,6 @@ export const DOKUMENTIERTE_SICHERHEITSLAGE = {
  * Verifikationsskripte unter `scripts/verify-*.mjs`.
  */
 export const JUENGSTE_MIGRATIONEN = [
-  '20261103000001_rollback_marketing_content_status.sql',
-  '20261104000000_state_waitlist_stufe_termin.sql',
   '20261104000001_rollback_state_waitlist_stufe_termin.sql',
   // 12.09.2026: erlaubt `action = 'lead_follow_up_lauf'` in mis_audit_log,
   // damit die Tages-Kette ihren eigenen Lauf protokollieren kann — auch den
@@ -213,6 +211,13 @@ export const JUENGSTE_MIGRATIONEN = [
   // SQL-Editor); bis dahin meldet logAuditEventOrWarn eine AUDIT-LUECKE.
   '20261105000000_audit_action_lead_follow_up.sql',
   '20261105000001_rollback_audit_action_lead_follow_up.sql',
+  // 13.09.2026: ATS-Arbeitsfelder als echte Spalten (`ats_*`) auf
+  // lead_inquiries, mit denselben CHECKs, die lib/bewerbung/ats-felder.ts
+  // im Code prueft. NICHT angewendet — bis dahin ist
+  // `bewerbung_daten.ats` (jsonb) die Wahrheit und die Migration der
+  // dokumentierte Umzugsweg, nicht der aktuelle Zustand.
+  '20261106000000_bewerbung_ats_felder.sql',
+  '20261106000001_rollback_bewerbung_ats_felder.sql',
   // HINWEIS (Track 13): die Perimeter-Migrationen stehen hier NICHT,
   // obwohl sie die zuletzt hinzugekommenen sind. Sie tragen seit dem
   // 28.08.2026 einen ECHTEN Zeitstempel (20260828180000/…0001, Regel aus

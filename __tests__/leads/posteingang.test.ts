@@ -182,3 +182,49 @@ describe('Sortierung und Zählung', () => {
     expect(posteingangSatz(zaehlePosteingang([e('1', 'schwarz', 400)]))).toBe('1 offen — 1 verschleppt (>7 Tage).')
   })
 })
+
+// ═══════════════════════════════════════════════════════════════════════
+// Alterung in der Zeile (Phase 5, 13.09.2026)
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('Alterung je Zeile', () => {
+  it('eine Bewerbung nimmt den von Hand gesetzten Kontaktzeitpunkt', () => {
+    const e = ausBewerbung({
+      id: 'b9', status: 'contacted', created_at: vor(24 * 200),
+      bewerbung_daten: { ats: { letzterKontakt: vor(24 * 3) } },
+    }, JETZT)!
+    expect(e.letzterKontakt).not.toBeNull()
+    expect(e.alterung.quelle).toBe('letzter_kontakt')
+    expect(e.alterung.tageSeitKontakt).toBe(3)
+    // 200 Tage alt, aber vor drei Tagen gesprochen: nicht kritisch.
+    expect(e.alterung.effektiv).toBe('normal')
+  })
+
+  it('ohne Kontaktzeitpunkt läuft die Uhr sichtbar ab Eingang', () => {
+    const e = ausBewerbung({ id: 'b10', status: 'contacted', created_at: vor(24 * 60) }, JETZT)!
+    expect(e.letzterKontakt).toBeNull()
+    expect(e.alterung.quelle).toBe('eingang')
+    expect(e.alterung.effektiv).toBe('kritisch')
+  })
+
+  it('`updated_at` gilt NICHT als Kontakt', () => {
+    // Sonst machte jeder Trigger-Lauf einen vergessenen Vorgang wieder jung.
+    const e = ausAnfrage({
+      id: 'a9', status: 'contacted', created_at: vor(24 * 90),
+      updated_at: vor(1), follow_up_date: HEUTE,
+    }, JETZT)!
+    expect(e.letzterKontakt).toBeNull()
+    expect(e.alterung.effektiv).toBe('kritisch')
+  })
+
+  it('Wartelistenzeilen tragen ebenfalls eine Bewertung', () => {
+    const e = ausWarteliste({
+      id: 'w9', pflegegrad: '3', region: 'Hanau', bundesland: 'hessen',
+      gewuenschte_leistungen: [], nachricht: null, quelle: 'warteliste',
+      name: 'Erika Müller', email: 'e@x.de', telefon: null,
+      status: 'neu', created_at: vor(24 * 40), updated_at: vor(24 * 40),
+    }, JETZT)!
+    expect(e.alterung.quelle).toBe('eingang')
+    expect(e.alterung.effektiv).toBe('kritisch')
+  })
+})
