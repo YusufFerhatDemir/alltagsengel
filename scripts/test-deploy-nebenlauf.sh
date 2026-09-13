@@ -227,6 +227,28 @@ else
 fi
 
 echo ""
+echo "═══ 10. Nachricht aus Datei ueberlebt Backticks ═══"
+neues_repo fall10
+nachricht="$ARBEIT/msg.txt"
+printf 'fix: die Quelle `source` und `stille` bleiben stehen\n' > "$nachricht"
+# Dieselbe Leseweise wie in deploy.sh, aus dem Skript gelesen.
+gelesen="$(DEPLOY_MSG_FILE="$nachricht" bash -c 'cat "$DEPLOY_MSG_FILE"')"
+if printf '%s' "$gelesen" | grep -q '`source`' && printf '%s' "$gelesen" | grep -q '`stille`'; then
+  echo "${GRUEN}  ✓${AUS} Backticks bleiben unveraendert erhalten"
+  bestanden=$((bestanden + 1))
+else
+  echo "${ROT}  ✗${AUS} Backticks verloren: $gelesen"
+  durchgefallen=$((durchgefallen + 1))
+fi
+if grep -q 'DEPLOY_MSG_FILE' "$DEPLOY"; then
+  echo "${GRUEN}  ✓${AUS} deploy.sh kennt DEPLOY_MSG_FILE"
+  bestanden=$((bestanden + 1))
+else
+  echo "${ROT}  ✗${AUS} DEPLOY_MSG_FILE fehlt in deploy.sh"
+  durchgefallen=$((durchgefallen + 1))
+fi
+
+echo ""
 echo "──────────────────────────────────────────────"
 echo "  bestanden: $bestanden   durchgefallen: $durchgefallen"
 [ "$durchgefallen" = "0" ] || exit 1

@@ -22,6 +22,7 @@
 #   DEPLOY_PATHS="lib/x app/y" ./deploy.sh "msg"  # NUR diese Pfade stagen
 #   DEPLOY_ALL=1     ./deploy.sh "msg"       # `git add -A` bewusst gewollt
 #   DEPLOY_LOCK=…    ./deploy.sh "msg"       # anderer Lock-Ort (fuer Tests)
+#   DEPLOY_MSG_FILE=datei ./deploy.sh        # Nachricht aus Datei (Backtick-sicher)
 #
 # DEPLOY_PATHS ist für parallele Sessions gedacht: laufen zwei Agents
 # gleichzeitig im selben Working Tree, würde `git add -A` die halbfertigen
@@ -161,7 +162,23 @@ pruefe_head() {
 
 cd "$(dirname "$0")"
 
-COMMIT_MSG="${1:-chore: deploy via deploy.sh}"
+# ── COMMIT-NACHRICHT ──────────────────────────────────────────────────
+# DEPLOY_MSG_FILE hat Vorrang vor $1.
+#
+# WARUM ES DIESE MOEGLICHKEIT GIBT: Eine Nachricht als Argument laeuft
+# durch die Shell des Aufrufers. Backticks darin — `source`, `stille` —
+# werden dort als Kommando-Substitution ausgefuehrt, und im Commit steht
+# dann eine Luecke. Am 13.09.2026 ist das dreimal passiert (0d7dbf7d,
+# 1ae6098d); der Code war jeweils richtig, die Nachricht nicht mehr.
+# Geraderuecken ginge nur per History-Rewrite. Wer Markup in der Nachricht
+# braucht, schreibt sie in eine Datei und setzt DEPLOY_MSG_FILE.
+if [ -n "${DEPLOY_MSG_FILE:-}" ]; then
+  [ -f "$DEPLOY_MSG_FILE" ] || die "DEPLOY_MSG_FILE existiert nicht: $DEPLOY_MSG_FILE"
+  COMMIT_MSG="$(cat "$DEPLOY_MSG_FILE")"
+  [ -n "$COMMIT_MSG" ] || die "DEPLOY_MSG_FILE ist leer: $DEPLOY_MSG_FILE"
+else
+  COMMIT_MSG="${1:-chore: deploy via deploy.sh}"
+fi
 
 # ──────────────────────────────────────────────────────────────────────
 step "1/7  Stale-Lock-Cleanup"
