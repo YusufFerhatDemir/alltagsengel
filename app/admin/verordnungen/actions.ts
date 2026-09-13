@@ -122,11 +122,15 @@ export async function softDeleteVerordnung(
 
     if (!id || typeof id !== 'string') return { ok: false, error: 'Ungueltige Verordnungs-ID.' }
 
-    const { error: e } = await supabase
+    const { data: geschrieben0, error: e } = await supabase
       .from('verordnungen')
       .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
       .eq('id', id)
+      .select('id')
     if (e) return { ok: false, error: `Loeschen fehlgeschlagen: ${e.message}` }
+    if (!geschrieben0 || geschrieben0.length === 0) {
+      return { ok: false, error: 'Verordnung nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
 
     await logAuditEventOrWarn({
       action: 'delete',
@@ -156,11 +160,15 @@ export async function toggleNeuantragAction(
 
     if (!id || typeof id !== 'string') return { ok: false, error: 'Ungueltige Verordnungs-ID.' }
 
-    const { error: e } = await supabase
+    const { data: geschrieben1, error: e } = await supabase
       .from('verordnungen')
       .update({ neuantrag_erforderlich: !currentValue })
       .eq('id', id)
+      .select('id')
     if (e) return { ok: false, error: `Update fehlgeschlagen: ${e.message}` }
+    if (!geschrieben1 || geschrieben1.length === 0) {
+      return { ok: false, error: 'Verordnung nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
 
     await logAuditEventOrWarn({
       action: 'update',
@@ -189,14 +197,18 @@ export async function beantragenVerordnung(
 
     if (!id || typeof id !== 'string') return { ok: false, error: 'Ungueltige Verordnungs-ID.' }
 
-    const { error: e } = await supabase
+    const { data: geschrieben2, error: e } = await supabase
       .from('verordnungen')
       .update({
         genehmigung_status: 'beantragt',
         kassengenehmigung_beantragt_am: new Date().toISOString(),
       })
       .eq('id', id)
+      .select('id')
     if (e) return { ok: false, error: `Antrag fehlgeschlagen: ${e.message}` }
+    if (!geschrieben2 || geschrieben2.length === 0) {
+      return { ok: false, error: 'Verordnung nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
 
     await logAuditEventOrWarn({
       action: 'update',
@@ -251,7 +263,7 @@ export async function saveKassenantwort(
       }
     }
 
-    const { error: e } = await supabase
+    const { data: geschrieben3, error: e } = await supabase
       .from('verordnungen')
       .update({
         genehmigung_status: antwort.ergebnis,
@@ -264,7 +276,11 @@ export async function saveKassenantwort(
         genehmigung_abweichung: abweichung,
       })
       .eq('id', id)
+      .select('id')
     if (e) return { ok: false, error: `Speichern fehlgeschlagen: ${e.message}` }
+    if (!geschrieben3 || geschrieben3.length === 0) {
+      return { ok: false, error: 'Verordnung nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
 
     await logAuditEventOrWarn({
       action: 'update',
@@ -331,11 +347,15 @@ export async function setAbrechnungsStatusAction(
 
     if (!id || typeof id !== 'string') return { ok: false, error: 'Ungueltige Verordnungs-ID.' }
 
-    const { error: e } = await supabase
+    const { data: geschrieben4, error: e } = await supabase
       .from('verordnungen')
       .update({ abrechnungs_status: status })
       .eq('id', id)
+      .select('id')
     if (e) return { ok: false, error: `Update fehlgeschlagen: ${e.message}` }
+    if (!geschrieben4 || geschrieben4.length === 0) {
+      return { ok: false, error: 'Verordnung nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
 
     await logAuditEventOrWarn({
       action: 'update',
@@ -555,11 +575,16 @@ export async function setAbsageErsatz(
 
     if (!id || typeof id !== 'string') return { ok: false, error: 'Ungueltige Absage-ID.' }
 
-    const { error: e } = await supabase
+    const { data: gesetzt, error: e } = await supabase
       .from('einsatz_absagen')
       .update({ ersatz_mitarbeiterin_id: caregiverId || null, ersatz_gefunden: !!caregiverId })
       .eq('id', id)
+      .eq('organization_id', organizationId)
+      .select('id')
     if (e) return { ok: false, error: `Update fehlgeschlagen: ${e.message}` }
+    if (!gesetzt || gesetzt.length === 0) {
+      return { ok: false, error: 'Absage nicht gefunden oder kein Zugriff — Ersatz NICHT gesetzt.' }
+    }
 
     await logAuditEventOrWarn({
       action: 'update',

@@ -140,12 +140,17 @@ export async function updateApplicantStatus(
   try {
     const { supabase, userId, organizationId, role, name } = await requireMISAdmin()
 
-    const { error } = await supabase
+    const { data: geschrieben, error } = await supabase
       .from('mis_applicants')
       .update({ status, updated_at: new Date().toISOString() })
       .eq('id', id)
+      .select('id')
 
     if (error) return { ok: false, error: error.message }
+    if (!geschrieben || geschrieben.length === 0) {
+      return { ok: false, error: 'Bewerbung nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
+
 
     await logAuditEventOrWarn({
       action: 'update',
@@ -173,12 +178,17 @@ export async function updateApplicantRating(
   try {
     const { supabase, userId, organizationId, role, name } = await requireMISAdmin()
 
-    const { error } = await supabase
+    const { data: geschrieben, error } = await supabase
       .from('mis_applicants')
       .update({ rating })
       .eq('id', id)
+      .select('id')
 
     if (error) return { ok: false, error: error.message }
+    if (!geschrieben || geschrieben.length === 0) {
+      return { ok: false, error: 'Bewerbung nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
+
 
     await logAuditEventOrWarn({
       action: 'update',
@@ -245,12 +255,16 @@ export async function updatePostingStatus(
   try {
     const { supabase, userId, organizationId, role, name } = await requireMISAdmin()
 
-    const { error } = await supabase
+    const { data: geschrieben, error } = await supabase
       .from('mis_job_postings')
       .update({ status, updated_at: new Date().toISOString() })
       .eq('id', id)
-
+      .select('id')
     if (error) return { ok: false, error: error.message }
+    if (!geschrieben || geschrieben.length === 0) {
+      return { ok: false, error: 'Stellenanzeige nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
+
 
     await logAuditEventOrWarn({
       action: 'update',

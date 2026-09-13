@@ -45,12 +45,18 @@ export async function enableDemoAccess(): Promise<{ ok: true; expiresAt: string 
     const now = new Date().toISOString()
 
     const [r1, r2] = await Promise.all([
-      supabase.from('app_settings').update({ value: true, updated_at: now, updated_by: userId }).eq('key', 'demo_enabled'),
-      supabase.from('app_settings').update({ value: expiresAt, updated_at: now, updated_by: userId }).eq('key', 'demo_expires_at'),
+      supabase.from('app_settings').update({ value: true, updated_at: now, updated_by: userId }).eq('key', 'demo_enabled').select('key'),
+      supabase.from('app_settings').update({ value: expiresAt, updated_at: now, updated_by: userId }).eq('key', 'demo_expires_at').select('key'),
     ])
 
     if (r1.error || r2.error) {
       return { ok: false, error: r1.error?.message || r2.error?.message || 'Unbekannter Fehler' }
+    }
+    // Fehlt eine der beiden Zeilen in app_settings, waere der Demo-Zugang
+    // halb geschaltet: aktiv ohne Ablauf oder umgekehrt. PostgREST meldet
+    // das ohne Leerpruefung nicht.
+    if (!r1.data?.length || !r2.data?.length) {
+      return { ok: false, error: 'Demo-Einstellungen nicht gefunden — Zugang NICHT geschaltet.' }
     }
 
     await logAuditEventOrWarn({
@@ -81,10 +87,14 @@ export async function disableDemoAccess(): Promise<{ ok: true } | { ok: false; e
     }
 
     const now = new Date().toISOString()
-    const { error } = await supabase.from('app_settings').update({ value: false, updated_at: now, updated_by: userId }).eq('key', 'demo_enabled')
+    const { data: aus1, error } = await supabase.from('app_settings').update({ value: false, updated_at: now, updated_by: userId }).eq('key', 'demo_enabled').select('key')
 
     if (error) {
       return { ok: false, error: error.message }
+
+    if (!aus1?.length) {
+      return { ok: false, error: 'Demo-Einstellung nicht gefunden — Zugang NICHT abgeschaltet.' }
+    }
     }
 
     await logAuditEventOrWarn({
@@ -112,10 +122,14 @@ export async function autoDisableExpiredDemo(): Promise<{ ok: true } | { ok: fal
     const { data: { user }, error: authErr } = await supabase.auth.getUser()
     if (authErr || !user) return { ok: false, error: 'Nicht autorisiert.' }
 
-    const { error } = await supabase.from('app_settings').update({ value: false }).eq('key', 'demo_enabled')
+    const { data: aus2, error } = await supabase.from('app_settings').update({ value: false }).eq('key', 'demo_enabled').select('key')
 
     if (error) {
       return { ok: false, error: error.message }
+
+    if (!aus2?.length) {
+      return { ok: false, error: 'Demo-Einstellung nicht gefunden — Zugang NICHT abgeschaltet.' }
+    }
     }
 
     return { ok: true }
@@ -139,10 +153,14 @@ export async function saveDemoPassword(password: string): Promise<{ ok: true } |
     }
 
     const now = new Date().toISOString()
-    const { error } = await supabase.from('app_settings').update({ value: password, updated_at: now, updated_by: userId }).eq('key', 'demo_password')
+    const { data: pw, error } = await supabase.from('app_settings').update({ value: password, updated_at: now, updated_by: userId }).eq('key', 'demo_password').select('key')
 
     if (error) {
       return { ok: false, error: error.message }
+
+    if (!pw?.length) {
+      return { ok: false, error: 'Demo-Einstellung nicht gefunden — Passwort NICHT gesetzt.' }
+    }
     }
 
     await logAuditEventOrWarn({

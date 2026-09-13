@@ -104,14 +104,19 @@ export async function updateVehicleStatus(
     const { supabase, userId, organizationId, role, name } = await requireMISAdmin()
 
     const now = new Date().toISOString()
-    const { error } = await supabase
+    const { data: geschrieben, error } = await supabase
       .from('mis_vehicles')
       .update({ status: newStatus, updated_at: now })
       .eq('id', id)
+      .select('id')
 
     if (error) {
       return { ok: false, error: error.message }
     }
+    if (!geschrieben || geschrieben.length === 0) {
+      return { ok: false, error: 'Fahrzeug nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
+
 
     await logAuditEventOrWarn({
       action: 'update',
@@ -140,14 +145,19 @@ export async function updateVehicleKm(
     const { supabase, userId, organizationId, role, name } = await requireMISAdmin()
 
     const now = new Date().toISOString()
-    const { error } = await supabase
+    const { data: geschrieben, error } = await supabase
       .from('mis_vehicles')
       .update({ current_km: km, updated_at: now })
       .eq('id', id)
+      .select('id')
 
     if (error) {
       return { ok: false, error: error.message }
     }
+    if (!geschrieben || geschrieben.length === 0) {
+      return { ok: false, error: 'Fahrzeug nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
+
 
     await logAuditEventOrWarn({
       action: 'update',

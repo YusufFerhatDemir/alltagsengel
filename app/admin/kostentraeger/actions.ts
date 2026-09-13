@@ -70,11 +70,14 @@ export async function upsertKostentraeger(
       notes: payload.notes,
     }
 
-    const { error: dbError } = editingId
-      ? await supabase.from('kostentraeger_kontakte').update(row).eq('id', editingId)
-      : await supabase.from('kostentraeger_kontakte').insert(row)
+    const { data: gespeichert, error: dbError } = editingId
+      ? await supabase.from('kostentraeger_kontakte').update(row).eq('id', editingId).select('id')
+      : await supabase.from('kostentraeger_kontakte').insert(row).select('id')
 
     if (dbError) return { ok: false, error: `Speichern fehlgeschlagen: ${dbError.message}` }
+    if (!gespeichert || gespeichert.length === 0) {
+      return { ok: false, error: 'Kontakt nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
 
     await logAuditEventOrWarn({
       action: editingId ? 'update' : 'create',

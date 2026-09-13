@@ -90,7 +90,7 @@ export async function updateProfile(
   try {
     const { supabase, userId, organizationId, role, name } = await requireMISAdmin()
 
-    const { error } = await supabase
+    const { data: geschrieben, error } = await supabase
       .from('profiles')
       .update({
         first_name: data.first_name,
@@ -100,8 +100,13 @@ export async function updateProfile(
         location: data.location,
       })
       .eq('id', profileId)
+      .select('id')
 
     if (error) return { ok: false, error: error.message }
+    if (!geschrieben || geschrieben.length === 0) {
+      return { ok: false, error: 'Profil nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
+
 
     await logAuditEventOrWarn({
       action: 'update',

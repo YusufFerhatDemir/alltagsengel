@@ -43,7 +43,7 @@ export async function resolveReviewErrorAction(
       return { ok: false, error: 'Fehler-ID fehlt.' }
     }
 
-    const { error } = await supabase
+    const { data: geschrieben, error } = await supabase
       .from('review_errors')
       .update({
         resolved: true,
@@ -51,10 +51,15 @@ export async function resolveReviewErrorAction(
         resolved_at: new Date().toISOString(),
       })
       .eq('id', errorId)
+      .select('id')
 
     if (error) {
       return { ok: false, error: `Update fehlgeschlagen: ${error.message}` }
     }
+    if (!geschrieben || geschrieben.length === 0) {
+      return { ok: false, error: 'Pruefeintrag nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
+
 
     // Audit-Log (fail-soft)
     await logAuditEventOrWarn({

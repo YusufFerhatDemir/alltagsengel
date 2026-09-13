@@ -4,6 +4,9 @@ import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logAuditEventOrWarn } from '@/lib/audit-log'
 import { saveServiceRecord, type ServiceRecordInput } from '@/lib/admin/service-records'
+import { logger } from '@/lib/logger'
+
+const log = logger.child('records:new')
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer Leistungsnachweis-Neuanlage
@@ -98,10 +101,18 @@ export async function createServiceRecordAction(input: {
 
     // GPS nachtragen, falls erfasst — nicht Teil des Pflicht-Inserts.
     if (id && input.gps) {
-      await supabase
+      // Nachtrag, kein Pflichtfeld — der Leistungsnachweis steht bereits.
+      // Ein Fehlschlag darf den Vorgang deshalb NICHT abbrechen, war aber
+      // bisher auch nicht sichtbar: das Ergebnis wurde gar nicht
+      // ausgewertet. Jetzt landet er wenigstens im Log.
+      const { error: gpsFehler } = await supabase
         .from('service_records')
         .update({ gps_lat: input.gps.lat, gps_lng: input.gps.lng })
         .eq('id', id)
+        .select('id')
+      if (gpsFehler) {
+        log.warn('GPS-Nachtrag fehlgeschlagen', { recordId: id, errorMessage: gpsFehler.message })
+      }
     }
 
     // Audit-Log (fail-soft)

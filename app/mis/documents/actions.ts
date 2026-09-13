@@ -111,12 +111,17 @@ export async function updateDocumentStatus(
       updateData.approved_at = new Date().toISOString()
     }
 
-    const { error } = await supabase
+    const { data: geschrieben, error } = await supabase
       .from('mis_documents')
       .update(updateData)
       .eq('id', docId)
+      .select('id')
 
     if (error) return { ok: false, error: error.message }
+    if (!geschrieben || geschrieben.length === 0) {
+      return { ok: false, error: 'Dokument nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
+
 
     await logAuditEventOrWarn({
       action: newStatus === 'approved' ? 'approve' : 'update',
@@ -156,12 +161,16 @@ export async function incrementDownloadCount(
 
     const newCount = (doc.download_count || 0) + 1
 
-    const { error } = await supabase
+    const { data: geschrieben0, error } = await supabase
       .from('mis_documents')
       .update({ download_count: newCount })
       .eq('id', docId)
+      .select('id')
 
     if (error) return { ok: false, error: error.message }
+    if (!geschrieben0 || geschrieben0.length === 0) {
+      return { ok: false, error: 'Dokument nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
 
     await logAuditEventOrWarn({
       action: 'download',

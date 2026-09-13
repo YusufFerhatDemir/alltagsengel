@@ -107,14 +107,18 @@ export async function updateSignatureRequestStatus(
       updateData.signed_at = now
     }
 
-    const { error } = await supabase
+    const { data: geschrieben, error } = await supabase
       .from('mis_signature_requests')
       .update(updateData)
       .eq('id', id)
-
+      .select('id')
     if (error) {
       return { ok: false, error: error.message }
     }
+    if (!geschrieben || geschrieben.length === 0) {
+      return { ok: false, error: 'Signaturanfrage nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
+
 
     await logAuditEventOrWarn({
       action: 'update',

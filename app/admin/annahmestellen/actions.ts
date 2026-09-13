@@ -44,15 +44,20 @@ export async function updateVerbindungStatus(
       return { ok: false, error: 'Ungueltige Annahmestellen-ID.' }
     }
 
-    const { error: dbError } = await supabase
+    const { data: geschrieben, error: dbError } = await supabase
       .from('datenannahmestellen')
       .update({
         verbindung_status: success ? 'erfolgreich' : 'fehlgeschlagen',
         letzte_verbindung_am: new Date().toISOString(),
       })
       .eq('id', id)
+      .select('id')
 
     if (dbError) return { ok: false, error: `Status-Update fehlgeschlagen: ${dbError.message}` }
+    if (!geschrieben || geschrieben.length === 0) {
+      return { ok: false, error: 'Datenannahmestelle nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
+
 
     await logAuditEventOrWarn({
       action: 'update',

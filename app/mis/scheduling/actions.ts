@@ -88,12 +88,17 @@ export async function assignShift(id: string, engel_name: string): Promise<{ ok:
   try {
     const { supabase, userId, organizationId, role, name } = await requireMISAdmin()
 
-    const { error } = await supabase
+    const { data: geschrieben, error } = await supabase
       .from('mis_shifts')
       .update({ engel_name, status: 'zugewiesen' })
       .eq('id', id)
+      .select('id')
 
     if (error) return { ok: false, error: error.message }
+    if (!geschrieben || geschrieben.length === 0) {
+      return { ok: false, error: 'Schicht nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
+
 
     await logAuditEventOrWarn({
       action: 'update',
@@ -118,12 +123,17 @@ export async function updateShiftStatus(id: string, status: string): Promise<{ o
   try {
     const { supabase, userId, organizationId, role, name } = await requireMISAdmin()
 
-    const { error } = await supabase
+    const { data: geschrieben, error } = await supabase
       .from('mis_shifts')
       .update({ status })
       .eq('id', id)
+      .select('id')
 
     if (error) return { ok: false, error: error.message }
+    if (!geschrieben || geschrieben.length === 0) {
+      return { ok: false, error: 'Schicht nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
+
 
     await logAuditEventOrWarn({
       action: 'update',

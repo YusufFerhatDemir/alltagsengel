@@ -234,7 +234,7 @@ export async function revokePrivacyConsent(
   try {
     const { supabase, userId, organizationId, role, name } = await requireMISAdmin()
 
-    const { error } = await supabase
+    const { data: geschrieben, error } = await supabase
       .from('mis_privacy_consents')
       .update({
         status: 'widerrufen',
@@ -242,8 +242,13 @@ export async function revokePrivacyConsent(
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
+      .select('id')
 
     if (error) return { ok: false, error: error.message }
+    if (!geschrieben || geschrieben.length === 0) {
+      return { ok: false, error: 'Einwilligung nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
+
 
     await logPrivacyAudit({
       organizationId,
@@ -345,12 +350,16 @@ export async function updatePrivacyRequestStatus(
       updateData.completed_at = new Date().toISOString()
     }
 
-    const { error } = await supabase
+    const { data: geschrieben, error } = await supabase
       .from('mis_privacy_requests')
       .update(updateData)
       .eq('id', id)
-
+      .select('id')
     if (error) return { ok: false, error: error.message }
+    if (!geschrieben || geschrieben.length === 0) {
+      return { ok: false, error: 'Datenschutzanfrage nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
+
 
     await logPrivacyAudit({
       organizationId,

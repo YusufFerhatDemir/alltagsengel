@@ -73,11 +73,14 @@ export async function saveDatenannahmestelle(
 
   const isUpdate = dasEditId && typeof dasEditId === 'string'
 
-  const { error: e } = isUpdate
-    ? await supabase.from('datenannahmestellen').update(dbPayload).eq('id', dasEditId)
-    : await supabase.from('datenannahmestellen').insert(dbPayload)
+  const { data: gespeichert, error: e } = isUpdate
+    ? await supabase.from('datenannahmestellen').update(dbPayload).eq('id', dasEditId).select('id')
+    : await supabase.from('datenannahmestellen').insert(dbPayload).select('id')
 
   if (e) throw new Error(`Speichern fehlgeschlagen: ${e.message}`)
+  if (!gespeichert || gespeichert.length === 0) {
+    throw new Error('Datenannahmestelle nicht gefunden oder kein Zugriff — nichts gespeichert.')
+  }
 
   await logAuditEventOrWarn({
     action: isUpdate ? 'update' : 'create',

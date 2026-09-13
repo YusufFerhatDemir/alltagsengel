@@ -40,10 +40,15 @@ export async function escalateRequest(requestId: string, currentLevel: number): 
   const { supabase, userId, organizationId, role, name } = await requireScheduleAdmin()
   const newLevel = Math.min((currentLevel ?? 0) + 1, 2)
   const newStatus = newLevel >= 2 ? 'external' : 'escalated'
-  const { error } = await supabase.from('substitution_requests')
+  const { data: eskaliert, error } = await supabase.from('substitution_requests')
     .update({ escalation_level: newLevel, status: newStatus })
     .eq('id', requestId)
+    .eq('organization_id', organizationId)
+    .select('id')
   if (error) throw new Error(`Eskalation fehlgeschlagen: ${error.message}`)
+  if (!eskaliert || eskaliert.length === 0) {
+    throw new Error('Vertretungsanfrage nicht gefunden oder kein Zugriff — nicht eskaliert.')
+  }
 
   await logAuditEvent({
     action: 'update',
@@ -63,10 +68,15 @@ export async function escalateRequest(requestId: string, currentLevel: number): 
 
 export async function markRequestFailed(requestId: string): Promise<{ ok: true }> {
   const { supabase, userId, organizationId, role, name } = await requireScheduleAdmin()
-  const { error } = await supabase.from('substitution_requests')
+  const { data: gesetzt, error } = await supabase.from('substitution_requests')
     .update({ status: 'failed' })
     .eq('id', requestId)
+    .eq('organization_id', organizationId)
+    .select('id')
   if (error) throw new Error(`Status-Update fehlgeschlagen: ${error.message}`)
+  if (!gesetzt || gesetzt.length === 0) {
+    throw new Error('Vertretungsanfrage nicht gefunden oder kein Zugriff — Status NICHT gesetzt.')
+  }
 
   await logAuditEvent({
     action: 'update',
@@ -86,10 +96,20 @@ export async function markRequestFailed(requestId: string): Promise<{ ok: true }
 
 export async function toggleClientNotified(requestId: string, currentNotified: boolean): Promise<{ ok: true }> {
   const { supabase, userId, organizationId, role, name } = await requireScheduleAdmin()
-  const { error } = await supabase.from('substitution_requests')
+  // Umschalter: geschrieben wird der Gegenwert dessen, was die
+  // Oberflaeche gesehen hat. Die Bedingung auf denselben Wert laesst nur
+  // den ersten Klick durch — sonst kippt ein zweiter Tab die Markierung
+  // „Klient informiert" stillschweigend zurueck.
+  const { data: umgeschaltet, error } = await supabase.from('substitution_requests')
     .update({ client_notified: !currentNotified })
     .eq('id', requestId)
+    .eq('organization_id', organizationId)
+    .eq('client_notified', currentNotified)
+    .select('id')
   if (error) throw new Error(`Klient-Info Update fehlgeschlagen: ${error.message}`)
+  if (!umgeschaltet || umgeschaltet.length === 0) {
+    throw new Error('Der Stand hat sich inzwischen geaendert — bitte Seite neu laden.')
+  }
 
   await logAuditEvent({
     action: 'update',
@@ -109,14 +129,22 @@ export async function toggleClientNotified(requestId: string, currentNotified: b
 
 export async function assignSubstitute(requestId: string, caregiverId: string): Promise<{ ok: true }> {
   const { supabase, userId, organizationId, role, name } = await requireScheduleAdmin()
-  const { error } = await supabase.from('substitution_requests')
+  // Nur besetzen, solange die Anfrage noch offen ist: sonst ueberschreibt
+  // ein zweiter Klick die bereits eingetragene Vertretung.
+  const { data: besetzt, error } = await supabase.from('substitution_requests')
     .update({
       substitute_caregiver_id: caregiverId,
       status: 'filled',
       resolved_at: new Date().toISOString(),
     })
     .eq('id', requestId)
+    .eq('organization_id', organizationId)
+    .neq('status', 'filled')
+    .select('id')
   if (error) throw new Error(`Zuweisung fehlgeschlagen: ${error.message}`)
+  if (!besetzt || besetzt.length === 0) {
+    throw new Error('Vertretungsanfrage nicht gefunden oder bereits besetzt — bitte Seite neu laden.')
+  }
 
   await logAuditEvent({
     action: 'update',

@@ -42,12 +42,16 @@ export async function updateKrankenfahrt(
 
     const { supabase, userId, organizationId, role, name } = await requireMISAdmin()
 
-    const { error } = await supabase
+    const { data: geschrieben, error } = await supabase
       .from('krankenfahrten')
       .update(updates)
       .eq('id', id)
-
+      .select('id')
     if (error) return { ok: false, error: error.message }
+    if (!geschrieben || geschrieben.length === 0) {
+      return { ok: false, error: 'Fahrt nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
+
 
     await logAuditEventOrWarn({
       action: 'update',
@@ -77,12 +81,16 @@ export async function updateKrankenfahrtProvider(
 
     const { supabase, userId, organizationId, role, name } = await requireMISAdmin()
 
-    const { error } = await supabase
+    const { data: geschrieben, error } = await supabase
       .from('krankenfahrt_providers')
       .update(updates)
       .eq('id', id)
-
+      .select('id')
     if (error) return { ok: false, error: error.message }
+    if (!geschrieben || geschrieben.length === 0) {
+      return { ok: false, error: 'Anbieter nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
+
 
     await logAuditEventOrWarn({
       action: 'update',

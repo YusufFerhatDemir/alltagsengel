@@ -134,25 +134,16 @@ function pruefe(datei: string): Befund[] {
  * Fall in derselben Datei macht den Lauf trotzdem rot.
  */
 const BESTAND: { datei: string; tabelle: string; operation: string }[] = [
-  { datei: 'app/admin/abrechnung/einstellungen/actions.ts', tabelle: 'datenannahmestellen', operation: 'update' },
-  { datei: 'app/admin/annahmestellen/actions.ts', tabelle: 'datenannahmestellen', operation: 'update' },
   // BEGRUENDET: schliesst den bisher offenen Handzeichen-Eintrag
   // (.is('valid_until', null)). Beim ERSTEN Handzeichen gibt es noch
   // keinen offenen Eintrag — NULL Zeilen sind dort der Normalfall. Der
   // Fehlerfall wird seit 13.09.2026 geprueft, die Trefferzahl bewusst nicht.
   { datei: 'app/admin/caregivers/[id]/actions.ts', tabelle: 'caregiver_initials_history', operation: 'update' },
-  { datei: 'app/admin/kostentraeger/actions.ts', tabelle: 'kostentraeger_kontakte', operation: 'update' },
-  { datei: 'app/admin/pruefprotokoll/actions.ts', tabelle: 'review_errors', operation: 'update' },
-  { datei: 'app/admin/records/new/actions.ts', tabelle: 'service_records', operation: 'update' },
-  { datei: 'app/admin/schedule/actions.ts', tabelle: 'substitution_requests', operation: 'update' },
-  { datei: 'app/admin/settings/actions.ts', tabelle: 'app_settings', operation: 'update' },
-  { datei: 'app/admin/verordnungen/actions.ts', tabelle: 'einsatz_absagen', operation: 'update' },
   // BEGRUENDET: loescht nach `verordnung_id` als erster Schritt eines
   // Ersetzungsvorgangs (alle Positionen weg, dann die neuen rein). NULL
   // getroffene Zeilen heisst hier: es gab noch keine Positionen. Das ist
   // der Normalfall bei einer frisch angelegten Verordnung, kein Fehler.
   { datei: 'app/admin/verordnungen/actions.ts', tabelle: 'verordnung_leistungen', operation: 'delete' },
-  { datei: 'app/admin/verordnungen/actions.ts', tabelle: 'verordnungen', operation: 'update' },
   // BEGRUENDET: markiert Nachrichten einer Buchung als gelesen. NULL
   // getroffene Zeilen heisst: es gab nichts zu markieren. Haeufigster
   // Fall, kein Fehler — wie in app/kunde/chat.
@@ -162,20 +153,6 @@ const BESTAND: { datei: string; tabelle: string; operation: string }[] = [
   // Ungelesenes. Das ist der haeufigste Fall ueberhaupt und kein Fehler —
   // eine Leerpruefung wuerde hier bei jedem zweiten Aufruf Alarm schlagen.
   { datei: 'app/kunde/chat/[id]/actions.ts', tabelle: 'messages', operation: 'update' },
-  { datei: 'app/mis/complaints/actions.ts', tabelle: 'mis_complaints', operation: 'update' },
-  { datei: 'app/mis/contracts/actions.ts', tabelle: 'mis_contracts', operation: 'update' },
-  { datei: 'app/mis/documents/actions.ts', tabelle: 'mis_documents', operation: 'update' },
-  { datei: 'app/mis/krankenfahrten/actions.ts', tabelle: 'krankenfahrt_providers', operation: 'update' },
-  { datei: 'app/mis/krankenfahrten/actions.ts', tabelle: 'krankenfahrten', operation: 'update' },
-  { datei: 'app/mis/privacy/actions.ts', tabelle: 'mis_privacy_consents', operation: 'update' },
-  { datei: 'app/mis/privacy/actions.ts', tabelle: 'mis_privacy_requests', operation: 'update' },
-  { datei: 'app/mis/recruiting/actions.ts', tabelle: 'mis_applicants', operation: 'update' },
-  { datei: 'app/mis/recruiting/actions.ts', tabelle: 'mis_job_postings', operation: 'update' },
-  { datei: 'app/mis/scheduling/actions.ts', tabelle: 'mis_shifts', operation: 'update' },
-  { datei: 'app/mis/signatures/actions.ts', tabelle: 'mis_signature_requests', operation: 'update' },
-  { datei: 'app/mis/team/actions.ts', tabelle: 'profiles', operation: 'update' },
-  { datei: 'app/mis/training/actions.ts', tabelle: 'mis_training_records', operation: 'update' },
-  { datei: 'app/mis/vehicles/actions.ts', tabelle: 'mis_vehicles', operation: 'update' },
 ]
 
 function passtZumBestand(b: Befund): boolean {

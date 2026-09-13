@@ -255,12 +255,16 @@ export async function updateTrainingRecordStatus(id: string, status: string): Pr
   try {
     const { supabase, userId, organizationId, role, name } = await requireMISAdmin()
 
-    const { error } = await supabase
+    const { data: geschrieben, error } = await supabase
       .from('mis_training_records')
       .update({ status })
       .eq('id', id)
-
+      .select('id')
     if (error) return { ok: false, error: error.message }
+    if (!geschrieben || geschrieben.length === 0) {
+      return { ok: false, error: 'Schulungsnachweis nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
+
 
     await logAuditEventOrWarn({
       action: 'update',
