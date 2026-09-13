@@ -186,6 +186,52 @@ export function pruefeAtsFelder(roh: Record<string, unknown>): PruefErgebnis {
   return { felder: f as AtsFelder, fehler: null }
 }
 
+/**
+ * Torwaechter fuer alles, was von aussen kommt (Maske, Server Action).
+ *
+ * `pruefeAtsFelder` prueft **Werte**. Diese Funktion prueft davor die
+ * **Schluessel** — und zwar so, dass beide Verwechslungsarten einen Fehler
+ * ergeben statt eines stillen Nichts:
+ *
+ *   1. Ein Feld aus dem Formularkatalog (`AUS_FORMULAR`) wuerde von
+ *      `pruefeAtsFelder` kommentarlos fallen gelassen. Die Oberflaeche
+ *      meldete „gespeichert", und die Angabe waere weg.
+ *   2. Ein voellig unbekannter Schluessel ebenso.
+ *
+ * Steht hier und nicht in der Server Action, damit jeder weitere Schreibweg
+ * (Import, Massenpflege, API) dieselbe Regel bekommt — eine zweite Kopie
+ * der Bedingung driftet sonst ab.
+ */
+export function pruefeAtsEingabe(roh: Record<string, unknown>): PruefErgebnis {
+  if (!roh || typeof roh !== 'object' || Array.isArray(roh)) {
+    return { felder: {}, fehler: 'Keine Felder uebergeben.' }
+  }
+  const schluessel = Object.keys(roh)
+
+  const gesperrt = schluessel.filter(k => (AUS_FORMULAR as readonly string[]).includes(k))
+  if (gesperrt.length > 0) {
+    return {
+      felder: {},
+      fehler: `Aus dem Bewerbungsformular, hier nicht änderbar: ${gesperrt.join(', ')}`,
+    }
+  }
+
+  const unbekannt = schluessel.filter(k => !(ATS_FELDER as readonly string[]).includes(k))
+  if (unbekannt.length > 0) {
+    return { felder: {}, fehler: `Unbekannte Felder: ${unbekannt.join(', ')}` }
+  }
+
+  const { felder, fehler } = pruefeAtsFelder(roh)
+  if (fehler) return { felder: {}, fehler }
+
+  // Nur die uebergebenen Schluessel zurueckgeben. Ein Feld, das die Maske
+  // gar nicht geschickt hat, darf spaeter nicht als „geloescht" ankommen —
+  // sonst raeumt ein Teilformular die Angaben eines anderen weg.
+  const nur: Record<string, unknown> = {}
+  for (const k of schluessel) nur[k] = (felder as Record<string, unknown>)[k]
+  return { felder: nur as AtsFelder, fehler: null }
+}
+
 /** Liest die Arbeitsfelder aus `bewerbung_daten`. */
 export function atsFelderAus(daten: unknown): AtsFelder {
   if (!daten || typeof daten !== 'object') return {}

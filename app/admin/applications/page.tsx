@@ -5,6 +5,8 @@ import {
   formatDate, timeAgo, APPLICATION_SOURCE, BEWERBUNG_FILTER,
 } from '@/lib/admin/ops'
 import { updateApplicationStatus, createApplication, setApplicationWiedervorlage } from './actions'
+import { AtsPanel } from './AtsFelder'
+import { atsFelderAus, PRIORITAET_MAX } from '@/lib/bewerbung/ats-felder'
 import {
   BEWERBER_STUFEN, BEWERBER_STUFEN_FLOW, BEWERBER_VORWAERTS, BEWERBER_ENDZUSTAENDE,
   bewerberStufe, stufeFuerBewerbung, followUpFuerBewerbung, wiedervorlageFuerBewerbung,
@@ -88,6 +90,8 @@ const SORTIERUNGEN = [
   { key: 'datum_neu', label: 'Eingang (neueste zuerst)' },
   { key: 'datum_alt', label: 'Eingang (älteste zuerst)' },
   { key: 'fortschritt', label: 'Vollständigkeit' },
+  { key: 'ats_prio', label: 'Priorität (Verwaltung)' },
+  { key: 'kontaktalter', label: 'Längster Funkstille zuerst' },
 ] as const
 type Sortierung = (typeof SORTIERUNGEN)[number]['key']
 
@@ -291,6 +295,10 @@ export default function AdminApplicationsPage() {
     const fifo = (a: AppRow, b: AppRow) => zeit(a.created_at) - zeit(b.created_at)
     const wv = (r: AppRow) => zeit(wiedervorlageVon(r)) || Number.MAX_SAFE_INTEGER
     const vollst = (r: AppRow) => berechneFortschritt({ name: r.name, email: r.email, phone: r.phone, plz: r.plz, daten: r.daten }).prozent
+    const atsPrio = (r: AppRow) => atsFelderAus(r.roh).prioritaet ?? PRIORITAET_MAX - 0.5
+    // Aeltester Kontakt zuerst: der von Hand gesetzte Zeitpunkt, sonst der
+    // Eingang. `updated_at` bleibt aussen vor — ein Trigger ist kein Gespraech.
+    const kontaktZeit = (r: AppRow) => zeit(atsFelderAus(r.roh).letzterKontakt ?? r.created_at) || 0
     const cmp: Record<Sortierung, (a: AppRow, b: AppRow) => number> = {
       dringlichkeit: (a, b) => (FOLLOW_UP_META[followUpVon(b)].rang - FOLLOW_UP_META[followUpVon(a)].rang)
         || (Number(BEWERBER_ENDZUSTAENDE.includes(a.stufe)) - Number(BEWERBER_ENDZUSTAENDE.includes(b.stufe)))
@@ -299,6 +307,12 @@ export default function AdminApplicationsPage() {
       datum_neu: (a, b) => zeit(b.created_at) - zeit(a.created_at),
       datum_alt: () => 0,
       fortschritt: (a, b) => vollst(b) - vollst(a),
+      // Nicht gesetzt heisst NICHT „nachrangig": eine Bewerbung ohne
+      // Prioritaet hat noch niemand bewertet. Sie landet deshalb hinter den
+      // bewerteten, aber vor den ausdruecklich als 5 eingestuften — sonst
+      // verschwindet genau der unbearbeitete Fall ans Listenende.
+      ats_prio: (a, b) => atsPrio(a) - atsPrio(b),
+      kontaktalter: (a, b) => kontaktZeit(a) - kontaktZeit(b),
     }
     return [...treffer].sort((a, b) => cmp[sortierung](a, b) || fifo(a, b))
   }, [rows, filter, search, sortierung, jetzt, auswahl])
@@ -538,6 +552,12 @@ export default function AdminApplicationsPage() {
                               Über das frühere Kurzformular eingegangen — keine Zusatzangaben vorhanden.
                             </div>
                           )}
+
+                          <AtsPanel
+                            applicationId={a.id}
+                            roh={a.roh}
+                            onGespeichert={neuRoh => setRows(prev => prev.map(r => r.id === a.id ? { ...r, roh: neuRoh } : r))}
+                          />
 
                           <div style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 10 }}>
                             Quelle: {src ? `${src.emoji} ${src.label}` : '—'}

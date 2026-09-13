@@ -17,15 +17,37 @@
 #   SKIP_TYPECHECK=1 ./deploy.sh "msg"       # typecheck überspringen (Notausstieg)
 #   GUARD_BYPASS=1   ./deploy.sh "msg"       # Notfall: precommit-guard ignorieren
 #   DEPLOY_PATHS="lib/x app/y" ./deploy.sh "msg"  # NUR diese Pfade stagen
+#   DEPLOY_ALL=1     ./deploy.sh "msg"       # `git add -A` bewusst gewollt
 #
 # DEPLOY_PATHS ist für parallele Sessions gedacht: laufen zwei Agents
 # gleichzeitig im selben Working Tree, würde `git add -A` die halbfertigen
 # Dateien des anderen Agents mitcommitten. Mit DEPLOY_PATHS staged der Lauf
 # nur die eigenen Pfade; der Guard prüft weiterhin genau das, was staged ist.
 #
+# OHNE DEPLOY_PATHS staged der Lauf weiterhin alles — aber nicht mehr
+# stillschweigend: Schritt 3 listet auf, was eingesammelt wird, und bricht
+# ab, wenn eine Datei WAEHREND des Laufs geschrieben wurde. Genau so ging am
+# 13.09.2026 Commit 4df676cf schief: ein Lauf zog die halbfertigen Dateien
+# einer parallelen Sitzung mit hinein (fremde Commit-Nachricht) und liess
+# die zugehoerige Registrierung zurueck (CI rot). DEPLOY_ALL=1 sagt
+# ausdruecklich „alles einsammeln ist gewollt" und hebt den Abbruch auf.
+#
 # Worktree-Branches (claude/*, worktree/*) pushen automatisch auf main.
 
 set -euo pipefail
+
+# Startzeit des Laufs. Dient dem Nebenlaeufer-Riegel in Schritt 3: eine
+# Datei, die WAEHREND dieses Laufs geschrieben wird, kann nicht zu ihm
+# gehoeren — da schreibt jemand anders.
+#
+# KARENZ: `date +%s` loest nur auf Sekunden auf. Wer eine Datei schreibt und
+# sofort deploy.sh aufruft, traefe sonst denselben Sekundenwert und wuerde
+# faelschlich als Fremdsitzung geblockt — der haeufigste Fall ueberhaupt.
+# Fuenf Sekunden Luft kosten nichts: zwischen Start und Schritt 3 liegt der
+# Typecheck (~30-60 s), eine wirklich parallele Sitzung schreibt also weit
+# jenseits dieser Grenze.
+DEPLOY_START_TS="$(date +%s)"
+DEPLOY_FREMD_AB=$((DEPLOY_START_TS + 5))
 
 RED=$'\033[31m'
 GREEN=$'\033[32m'
@@ -147,6 +169,46 @@ if [ -n "${DEPLOY_PATHS:-}" ]; then
     warn "${unstaged_rest} Datei(en) bleiben ungestaged (andere Session?)"
   fi
 else
+  # ── NEBENLAEUFER-RIEGEL (13.09.2026) ────────────────────────────────
+  # `git add -A` nimmt alles, was im Baum liegt — auch die halbfertige
+  # Arbeit einer parallelen Sitzung. Das ist kein theoretischer Fall:
+  # Commit 4df676cf hat genau so fremde Dateien unter falscher Nachricht
+  # eingesammelt und die CI rot gemacht.
+  #
+  # Blind bleibt es trotzdem nicht mehr. Erst wird aufgelistet, was
+  # eingesammelt wird; dann wird geprueft, ob etwas WAEHREND dieses Laufs
+  # geschrieben wurde. Das ist das verlaessliche Zeichen: eigene Aenderungen
+  # sind vor dem Aufruf fertig, fremde entstehen waehrenddessen weiter.
+  # macOS liefert bash 3.2 — kein `mapfile`, deshalb while-read. Und kein
+  # `[ … ] && echo` als letzter Ausdruck: unter `set -e` beendet der
+  # Rueckgabewert 1 sonst still den ganzen Lauf (dieselbe Falle wie oben).
+  zu_stagen=()
+  while IFS= read -r zeile; do
+    [ -n "$zeile" ] && zu_stagen+=("$zeile")
+  done < <(git status --porcelain | sed 's/^...//' | sed 's/^.* -> //')
+
+  anzahl="${#zu_stagen[@]}"
+  if [ "$anzahl" -gt 0 ]; then
+    warn "DEPLOY_PATHS nicht gesetzt — ${anzahl} Datei(en) werden eingesammelt:"
+    printf '%s\n' "${zu_stagen[@]}" | head -20 | sed 's/^/      /'
+    if [ "$anzahl" -gt 20 ]; then echo "      … und $((anzahl - 20)) weitere"; fi
+    echo "${DIM}      Gezielt stagen: DEPLOY_PATHS=\"pfad1 pfad2\" ./deploy.sh \"msg\"${RESET}"
+
+    frisch=()
+    for f in "${zu_stagen[@]}"; do
+      [ -f "$f" ] || continue
+      mt="$(stat -f %m "$f" 2>/dev/null || stat -c %Y "$f" 2>/dev/null || echo 0)"
+      if [ "$mt" -gt "$DEPLOY_FREMD_AB" ]; then frisch+=("$f"); fi
+    done
+    if [ "${#frisch[@]}" -gt 0 ] && [ -z "${DEPLOY_ALL:-}" ]; then
+      echo ""
+      warn "Waehrend dieses Laufs geschrieben:"
+      printf '%s\n' "${frisch[@]}" | sed 's/^/      /'
+      die "Da arbeitet eine andere Sitzung im selben Baum.
+      Gezielt stagen: DEPLOY_PATHS=\"…\" ./deploy.sh \"msg\"
+      Oder wenn das Einsammeln gewollt ist: DEPLOY_ALL=1 ./deploy.sh \"msg\""
+    fi
+  fi
   git add -A
 fi
 bash scripts/precommit-guard.sh || die "Guard hat Commit blockiert. Fix oder GUARD_BYPASS=1 als Override."

@@ -10,6 +10,7 @@ import {
   istBewerberStufe, bewerberStufe, stufeFuerBewerbung, mitPipelineStufe, naechsteWiedervorlage,
   BEWERBER_ENDZUSTAENDE,
 } from '@/lib/bewerbung/pipeline'
+import { pruefeAtsEingabe, atsFelderAus, mitAtsFeldern } from '@/lib/bewerbung/ats-felder'
 import { logger } from '@/lib/logger'
 
 const log = logger.child('applications:actions')
@@ -269,6 +270,88 @@ export async function setApplicationWiedervorlage(
       entityType: 'application',
       entityId: applicationId,
       details: { wiedervorlage: datum, stufe },
+    })
+
+    return { ok: true }
+  } catch (err: any) {
+    return { ok: false, error: err.message || 'Unerwarteter Fehler.' }
+  }
+}
+
+// ── ATS-Arbeitsfelder schreiben ──────────────────────────────────
+
+/**
+ * Setzt die Arbeitsfelder einer Bewerbung (lib/bewerbung/ats-felder.ts).
+ *
+ * ── WAS HIER NICHT PASSIERT ───────────────────────────────────────────
+ * Diese Aktion aendert **weder `status` noch `follow_up_date` noch die
+ * Pipeline-Stufe**. Eine Notiz ist kein Stufenwechsel. Wer beides in einen
+ * Schreibvorgang legt, bekommt Stufenwechsel, die niemand ausgeloest hat,
+ * weil jemand eine Telefonnummer korrigiert hat.
+ *
+ * ── WARUM DIE VIER FORMULARFELDER ABGEWIESEN WERDEN ───────────────────
+ * `qualifikation`, `fuehrerschein`, `verfuegbarkeit` und `sprachen` stehen
+ * im Formularkatalog und gehoeren der Bewerberin. Sie hier zu ueberschreiben
+ * hiesse, ihre Selbstauskunft durch eine Verwaltungsnotiz zu ersetzen — und
+ * zwar an einem zweiten Ort, der dann auseinanderlaeuft. `pruefeAtsFelder`
+ * wuerde sie stillschweigend fallen lassen; genau das ist das Muster, das
+ * ein gruenes „Gespeichert" ohne Speicherung erzeugt. Deshalb hier ein
+ * ausdruecklicher Fehler.
+ */
+export async function setApplicationAtsFelder(
+  applicationId: string,
+  felder: Record<string, unknown>,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const { supabase, userId, organizationId, role, name } = await requireAdmin()
+
+    if (!applicationId || typeof applicationId !== 'string') {
+      return { ok: false, error: 'Ungueltige Bewerbungs-ID.' }
+    }
+    if (!felder || typeof felder !== 'object' || Array.isArray(felder)) {
+      return { ok: false, error: 'Keine Felder uebergeben.' }
+    }
+
+    const { felder: geprueft, fehler } = pruefeAtsEingabe(felder)
+    if (fehler) return { ok: false, error: fehler }
+
+    const { data: bewerbung, error: lesenFehler } = await supabase
+      .from('lead_inquiries')
+      .select('bewerbung_daten')
+      .eq('id', applicationId)
+      .eq('organization_id', organizationId)
+      .or(BEWERBUNG_FILTER)
+      .single()
+    if (lesenFehler || !bewerbung) {
+      return { ok: false, error: `Bewerbung nicht gefunden: ${lesenFehler?.message ?? 'keine Zeile'}` }
+    }
+
+    const vorher = atsFelderAus(bewerbung.bewerbung_daten)
+    const nutzlast = mitAtsFeldern(bewerbung.bewerbung_daten, geprueft)
+
+    const { data: geaendert, error: dbError } = await supabase
+      .from('lead_inquiries')
+      .update({ bewerbung_daten: nutzlast })
+      .eq('id', applicationId)
+      .eq('organization_id', organizationId)
+      .or(BEWERBUNG_FILTER)
+      .select('id')
+    if (dbError) return { ok: false, error: `Speichern fehlgeschlagen: ${dbError.message}` }
+    if (!geaendert || geaendert.length === 0) {
+      return { ok: false, error: 'Bewerbung nicht mehr vorhanden — bitte Seite neu laden.' }
+    }
+
+    await logAuditEventOrWarn({
+      action: 'update',
+      actorId: userId,
+      actorRole: role,
+      actorName: name,
+      organizationId,
+      entityType: 'application',
+      entityId: applicationId,
+      // Nur die Feldnamen, nicht die Werte: im Protokoll stehen sonst
+      // Freitextnotizen ueber Bewerberinnen, die dort nicht hingehoeren.
+      details: { ats_felder: Object.keys(geprueft), vorher_gesetzt: Object.keys(vorher) },
     })
 
     return { ok: true }

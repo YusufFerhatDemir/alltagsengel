@@ -11,7 +11,7 @@ import { describe, it, expect } from 'vitest'
 import {
   ATS_FELDER, AUS_FORMULAR, FZ_STATUS, MOBILITAET,
   PRIORITAET_MIN, PRIORITAET_MAX,
-  pruefeAtsFelder, atsFelderAus, mitAtsFeldern, darfAlsVerifiziertGelten,
+  pruefeAtsFelder, pruefeAtsEingabe, atsFelderAus, mitAtsFeldern, darfAlsVerifiziertGelten,
   type AtsFelder,
 } from '@/lib/bewerbung/ats-felder'
 import { mitPipelineStufe, mitPrio, prioUndBlocker, stufeFuerBewerbung } from '@/lib/bewerbung/pipeline'
@@ -194,5 +194,53 @@ describe('Grenzen', () => {
     expect(pruefeAtsFelder({ stundenProWoche: 1 }).fehler).toBeNull()
     expect(pruefeAtsFelder({ stundenProWoche: 60 }).fehler).toBeNull()
     expect(pruefeAtsFelder({ stundenProWoche: 61 }).fehler).not.toBeNull()
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════
+// Torwaechter fuer Eingaben von aussen (13.09.2026)
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('pruefeAtsEingabe', () => {
+  it('weist Formularfelder ausdrücklich ab, statt sie fallen zu lassen', () => {
+    // pruefeAtsFelder allein wuerde hier klaglos {} liefern — und die
+    // Oberflaeche meldete „gespeichert", obwohl nichts gespeichert wurde.
+    for (const feld of AUS_FORMULAR) {
+      const r = pruefeAtsEingabe({ [feld]: 'irgendwas' })
+      expect(r.fehler, feld).toMatch(/Bewerbungsformular/)
+      expect(r.felder).toEqual({})
+    }
+    expect(pruefeAtsFelder({ qualifikation: 'x' }).fehler).toBeNull()   // der Unterschied
+  })
+
+  it('weist unbekannte Schlüssel ab', () => {
+    const r = pruefeAtsEingabe({ prioritaet: 1, organization_id: 'fremd' })
+    expect(r.fehler).toMatch(/Unbekannte Felder: organization_id/)
+    expect(r.felder).toEqual({})
+  })
+
+  it('reicht Wertfehler unverändert durch', () => {
+    expect(pruefeAtsEingabe({ prioritaet: 99 }).fehler).toMatch(/prioritaet/)
+  })
+
+  it('gibt NUR die übergebenen Schlüssel zurück — ein Teilformular löscht nichts', () => {
+    const r = pruefeAtsEingabe({ notizen: 'nur die Notiz' })
+    expect(r.fehler).toBeNull()
+    expect(Object.keys(r.felder)).toEqual(['notizen'])
+  })
+
+  it('ein leeres Feld bleibt als undefined erhalten und löscht gezielt', () => {
+    const r = pruefeAtsEingabe({ notizen: '' })
+    expect(r.fehler).toBeNull()
+    expect(Object.keys(r.felder)).toEqual(['notizen'])
+    expect(r.felder.notizen).toBeUndefined()
+    // und wirkt damit im jsonb als Loeschung genau dieses einen Feldes
+    const daten = mitAtsFeldern(mitAtsFeldern(null, { notizen: 'alt', prioritaet: 2 }), r.felder)
+    expect(atsFelderAus(daten)).toEqual({ prioritaet: 2 })
+  })
+
+  it('weist Unfug als Eingabe ab', () => {
+    expect(pruefeAtsEingabe(null as never).fehler).toBeTruthy()
+    expect(pruefeAtsEingabe([] as never).fehler).toBeTruthy()
   })
 })
