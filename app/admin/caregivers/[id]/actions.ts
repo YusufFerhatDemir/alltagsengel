@@ -173,12 +173,28 @@ export async function changeCaregiverInitials(
 
     const now = new Date().toISOString()
 
-    // Bisheriges aktives Handzeichen in der Historie abschliessen
-    await supabase
+    // Bisheriges aktives Handzeichen in der Historie abschliessen.
+    //
+    // Das Ergebnis wurde bis zum 13.09.2026 gar nicht ausgewertet — kein
+    // `error`-Check, kein `await`-Ergebnis. Schlaegt dieser Schritt fehl,
+    // legt der naechste trotzdem einen zweiten offenen Eintrag an, und die
+    // Historie fuehrt danach ZWEI gleichzeitig gueltige Handzeichen. Wer
+    // spaeter fragt, welches zu einem Zeitpunkt galt, bekommt keine
+    // Antwort mehr.
+    //
+    // Auf die Trefferzahl wird NICHT geprueft: beim ersten Handzeichen
+    // gibt es noch keinen offenen Eintrag, NULL Zeilen sind hier der
+    // Normalfall.
+    const { error: histSchliessErr } = await supabase
       .from('caregiver_initials_history')
       .update({ valid_until: now })
       .eq('caregiver_id', payload.caregiverId)
+      .eq('organization_id', organizationId)
       .is('valid_until', null)
+
+    if (histSchliessErr) {
+      return { ok: false, error: `Historie konnte nicht abgeschlossen werden: ${histSchliessErr.message}` }
+    }
 
     // Neues Handzeichen in die Historie einfuegen
     const { data: historyRow, error: histErr } = await supabase
@@ -196,12 +212,20 @@ export async function changeCaregiverInitials(
     if (histErr) return { ok: false, error: `Historie-Eintrag fehlgeschlagen: ${histErr.message}` }
 
     // Aktuelles Handzeichen auf dem Caregiver-Datensatz aktualisieren
-    const { error: updateErr } = await supabase
+    const { data: aktualisiert, error: updateErr } = await supabase
       .from('caregivers')
       .update({ initials: payload.initials })
       .eq('id', payload.caregiverId)
+      .eq('organization_id', organizationId)
+      .select('id')
 
     if (updateErr) return { ok: false, error: `Handzeichen-Update fehlgeschlagen: ${updateErr.message}` }
+    if (!aktualisiert || aktualisiert.length === 0) {
+      // Der Historieneintrag steht an dieser Stelle bereits. Bliebe der
+      // Datensatz unveraendert, wuerden Historie und Stammdatensatz
+      // verschiedene Handzeichen fuehren — und niemand erfuehre davon.
+      return { ok: false, error: 'Betreuungskraft nicht gefunden oder kein Zugriff — Handzeichen NICHT gesetzt.' }
+    }
 
     await logAuditEventOrWarn({
       action: 'update',
@@ -299,7 +323,7 @@ export async function updateCaregiverRegistration(
       return { ok: false, error: 'Ungueltige Betreuungskraft-ID.' }
     }
 
-    const { error: dbError } = await supabase
+    const { data: gespeichert, error: dbError } = await supabase
       .from('caregivers')
       .update({
         lifetime_registration_number: payload.lifetimeRegistrationNumber,
@@ -307,8 +331,13 @@ export async function updateCaregiverRegistration(
         qualification_level: payload.qualificationLevel,
       })
       .eq('id', payload.caregiverId)
+      .eq('organization_id', organizationId)
+      .select('id')
 
     if (dbError) return { ok: false, error: `Speichern fehlgeschlagen: ${dbError.message}` }
+    if (!gespeichert || gespeichert.length === 0) {
+      return { ok: false, error: 'Betreuungskraft nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
 
     await logAuditEventOrWarn({
       action: 'update',

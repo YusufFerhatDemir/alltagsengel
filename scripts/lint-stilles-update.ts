@@ -136,8 +136,11 @@ function pruefe(datei: string): Befund[] {
 const BESTAND: { datei: string; tabelle: string; operation: string }[] = [
   { datei: 'app/admin/abrechnung/einstellungen/actions.ts', tabelle: 'datenannahmestellen', operation: 'update' },
   { datei: 'app/admin/annahmestellen/actions.ts', tabelle: 'datenannahmestellen', operation: 'update' },
+  // BEGRUENDET: schliesst den bisher offenen Handzeichen-Eintrag
+  // (.is('valid_until', null)). Beim ERSTEN Handzeichen gibt es noch
+  // keinen offenen Eintrag — NULL Zeilen sind dort der Normalfall. Der
+  // Fehlerfall wird seit 13.09.2026 geprueft, die Trefferzahl bewusst nicht.
   { datei: 'app/admin/caregivers/[id]/actions.ts', tabelle: 'caregiver_initials_history', operation: 'update' },
-  { datei: 'app/admin/caregivers/[id]/actions.ts', tabelle: 'caregivers', operation: 'update' },
   { datei: 'app/admin/kostentraeger/actions.ts', tabelle: 'kostentraeger_kontakte', operation: 'update' },
   { datei: 'app/admin/pruefprotokoll/actions.ts', tabelle: 'review_errors', operation: 'update' },
   { datei: 'app/admin/records/new/actions.ts', tabelle: 'service_records', operation: 'update' },
