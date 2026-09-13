@@ -36,6 +36,8 @@ import {
   followUpSeitEingang, followUpSeitWiedervorlage, tagAlsZeitpunkt, zaehleFollowUps, berlinerTagPlus,
   type FollowUpStufe, type FollowUpZaehlung,
 } from '@/lib/leads/follow-up'
+import { bewerteAlterung } from '@/lib/leads/alterung'
+import { atsFelderAus } from '@/lib/bewerbung/ats-felder'
 import { stufeAusDbWert, WARTELISTE_STUFEN } from '@/lib/warteliste/katalog'
 import { followUpFuer } from '@/lib/warteliste/prioritaet'
 import { stufeFuerBewerbung, followUpFuerBewerbung } from '@/lib/bewerbung/pipeline'
@@ -56,6 +58,16 @@ const WARTELISTE_OFFEN_DB = WARTELISTE_STUFEN
   .map(s => s.dbWert)
 
 export interface LeadFollowUpErgebnis {
+  /**
+   * Vorgaenge ohne Kontakt seit ueber 30 Tagen (lib/leads/alterung.ts).
+   *
+   * Zaehlt eine ANDERE Frage als die Stufen darunter: die Leiter misst
+   * Rueckstand — etwas ist zu spaet. Diese Zahl misst Stille — mit
+   * niemandem wurde gesprochen, obwohl gar nichts faellig war. Am
+   * 13.09.2026 traf das 21 von 50 Vorgaengen, von denen die Leiter keinen
+   * einzigen gemeldet haette.
+   */
+  stille: number
   warteliste: FollowUpZaehlung
   bewerbungen: FollowUpZaehlung
   anfragen: FollowUpZaehlung
@@ -88,8 +100,14 @@ export async function zaehleLeadFollowUps(
   supabase: SupabaseClient,
   organizationId: string,
   jetzt: Date = new Date(),
-): Promise<{ warteliste: FollowUpZaehlung; bewerbungen: FollowUpZaehlung; anfragen: FollowUpZaehlung; fehler: string[] }> {
+): Promise<{ warteliste: FollowUpZaehlung; bewerbungen: FollowUpZaehlung; anfragen: FollowUpZaehlung; stille: number; fehler: string[] }> {
   const fehler: string[] = []
+  // Kontaktalter laeuft neben der Leiter her, nicht in ihr.
+  let stille = 0
+  const zaehleStille = (z: { letzterKontakt?: string | null; created_at: string | null }) => {
+    const a = bewerteAlterung({ letzterKontakt: z.letzterKontakt ?? null, eingang: z.created_at, offen: true }, jetzt)
+    if (a.effektiv === 'kritisch') stille++
+  }
 
   // ── 1. Warteliste ──────────────────────────────────────────────────
   const wl: FollowUpStufe[] = []
@@ -102,6 +120,7 @@ export async function zaehleLeadFollowUps(
     if (error) fehler.push(`state_waitlist: ${error.message}`)
     for (const z of data ?? []) {
       wl.push(followUpFuer({ stufe: stufeAusDbWert(z.status), created_at: z.created_at, updated_at: z.updated_at }, jetzt))
+      zaehleStille({ created_at: z.created_at })
     }
   }
 
@@ -120,6 +139,9 @@ export async function zaehleLeadFollowUps(
       bw.push(followUpFuerBewerbung({
         stufe, created_at: z.created_at, updated_at: z.updated_at, follow_up_date: z.follow_up_date,
       }, jetzt))
+      // Nur die Bewerbung fuehrt einen von Hand gesetzten Kontaktzeitpunkt.
+      // `updated_at` waere keiner — ein Trigger ist kein Gespraech.
+      zaehleStille({ letzterKontakt: atsFelderAus(z.bewerbung_daten).letzterKontakt ?? null, created_at: z.created_at })
     }
   }
 
@@ -139,6 +161,7 @@ export async function zaehleLeadFollowUps(
     for (const z of data ?? []) {
       if (z.status === 'new') an.push(followUpSeitEingang(z.created_at, jetzt))
       else an.push(followUpSeitWiedervorlage(tagAlsZeitpunkt(z.follow_up_date), jetzt))
+      zaehleStille({ created_at: z.created_at })
     }
   }
 
@@ -146,6 +169,7 @@ export async function zaehleLeadFollowUps(
     warteliste: zaehleFollowUps(wl),
     bewerbungen: zaehleFollowUps(bw),
     anfragen: zaehleFollowUps(an),
+    stille,
     fehler,
   }
 }
@@ -253,7 +277,10 @@ export async function erinnereAnLeadFollowUps(
 
   const tagFuerProtokoll = berlinerTagPlus(jetzt, 0)
 
-  if (gesamt.gesamt === 0) {
+  // Stille zaehlt mit: ein Bestand ohne faellige Frist, in dem seit
+  // Wochen niemand angerufen hat, ist nicht „nichts zu tun". Ohne diese
+  // Bedingung schwiege die Kette genau in dem Fall, fuer den sie da ist.
+  if (gesamt.gesamt === 0 && gezaehlt.stille === 0) {
     await protokolliereLauf(organizationId, tagFuerProtokoll, ergebnis)
     return ergebnis
   }
@@ -268,7 +295,9 @@ export async function erinnereAnLeadFollowUps(
 
   const tag = berlinerTagPlus(jetzt, 0)
   const eskaliert = gesamt.eskalation + gesamt.dringend + gesamt.verschleppt > 0
-  const titel = gesamt.verschleppt > 0
+  const titel = gesamt.gesamt === 0
+    ? `Funkstille: ${gezaehlt.stille} Vorgang/Vorgänge ohne Kontakt seit über 30 Tagen`
+    : gesamt.verschleppt > 0
     ? `Verschleppt: ${gesamt.verschleppt} Lead(s) liegen seit über 7 Tagen`
     : gesamt.dringend > 0
       ? `Dringend: ${gesamt.dringend} Lead(s) seit über 72 h unbearbeitet`
@@ -280,6 +309,9 @@ export async function erinnereAnLeadFollowUps(
     zeile('Bewerbungen', gezaehlt.bewerbungen),
     zeile('Kundenanfragen', gezaehlt.anfragen),
   ]
+  if (gezaehlt.stille > 0) {
+    zeilen.push(`Ohne Kontakt seit über 30 Tagen: ${gezaehlt.stille}`)
+  }
   const link = linkFuer(gesamt)
 
   // E-Mail-Adressen nur holen, wenn eskaliert wird.

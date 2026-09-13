@@ -139,3 +139,80 @@ describe('erinnereAnLeadFollowUps', () => {
     expect(r.fehler.join()).toContain('Keine Empfaenger')
   })
 })
+
+// ═══════════════════════════════════════════════════════════════════════
+// Funkstille — Kontaktalter neben der Leiter (13.09.2026)
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('Funkstille', () => {
+  const alt = (tage: number) => new Date(JETZT.getTime() - tage * 86_400_000).toISOString()
+
+  it('zählt Vorgänge ohne Kontakt seit über 30 Tagen quellenübergreifend', async () => {
+    const mock = createAutomationMock()
+    mock.setzeAntwort('state_waitlist', 'select', [
+      { id: 'w1', status: 'neu', created_at: alt(40), updated_at: alt(1) },   // still
+      { id: 'w2', status: 'neu', created_at: alt(5), updated_at: alt(5) },    // frisch
+    ])
+    mock.setzeAntwort('lead_inquiries', 'select', [
+      { id: 'b1', status: 'new', created_at: alt(90), updated_at: alt(1), follow_up_date: null, bewerbung_daten: null },
+    ])
+    mock.setzeAntwort('lead_inquiries', 'select', [
+      { id: 'a1', status: 'new', created_at: alt(60), follow_up_date: null, source: 'rueckruf' },
+    ])
+    const r = await zaehleLeadFollowUps(mock.client as any, ORG, JETZT)
+    expect(r.stille).toBe(3)
+  })
+
+  it('ein von Hand gesetzter Kontakt macht eine alte Bewerbung wieder still-frei', async () => {
+    const mock = createAutomationMock()
+    mock.setzeAntwort('state_waitlist', 'select', [])
+    mock.setzeAntwort('lead_inquiries', 'select', [
+      // 200 Tage alt, aber vor drei Tagen gesprochen.
+      { id: 'b1', status: 'contacted', created_at: alt(200), updated_at: alt(1), follow_up_date: null,
+        bewerbung_daten: { ats: { letzterKontakt: alt(3) } } },
+    ])
+    mock.setzeAntwort('lead_inquiries', 'select', [])
+    const r = await zaehleLeadFollowUps(mock.client as any, ORG, JETZT)
+    expect(r.stille).toBe(0)
+  })
+
+  it('`updated_at` macht einen vergessenen Vorgang NICHT wieder jung', async () => {
+    // Sonst setzt jeder Trigger-Lauf die Uhr zurück und die Zahl ist wertlos.
+    const mock = createAutomationMock()
+    mock.setzeAntwort('state_waitlist', 'select', [])
+    mock.setzeAntwort('lead_inquiries', 'select', [
+      { id: 'b1', status: 'contacted', created_at: alt(90), updated_at: alt(0), follow_up_date: null, bewerbung_daten: null },
+    ])
+    mock.setzeAntwort('lead_inquiries', 'select', [])
+    const r = await zaehleLeadFollowUps(mock.client as any, ORG, JETZT)
+    expect(r.stille).toBe(1)
+  })
+
+  it('meldet auch dann, wenn die Leiter nichts hat — sonst schweigt die Kette genau hier', async () => {
+    const mock = createAutomationMock()
+    mitEmpfaenger(mock)
+    mock.setzeAntwort('state_waitlist', 'select', [])
+    mock.setzeAntwort('lead_inquiries', 'select', [
+      // 40 Tage alt, aber Wiedervorlage liegt in der Zukunft: Leiter = keine.
+      { id: 'b1', status: 'contacted', created_at: alt(40), updated_at: alt(40),
+        follow_up_date: '2026-12-01', bewerbung_daten: null },
+    ])
+    mock.setzeAntwort('lead_inquiries', 'select', [])
+    const r = await erinnereAnLeadFollowUps(mock.client as any, ORG, JETZT)
+    expect(r.gesamt.gesamt).toBe(0)
+    expect(r.stille).toBe(1)
+    expect(r.benachrichtigt).toBeGreaterThan(0)
+  })
+
+  it('schweigt, wenn wirklich nichts da ist', async () => {
+    const mock = createAutomationMock()
+    mitEmpfaenger(mock)
+    mock.setzeAntwort('state_waitlist', 'select', [])
+    mock.setzeAntwort('lead_inquiries', 'select', [])
+    mock.setzeAntwort('lead_inquiries', 'select', [])
+    const r = await erinnereAnLeadFollowUps(mock.client as any, ORG, JETZT)
+    expect(r.gesamt.gesamt).toBe(0)
+    expect(r.stille).toBe(0)
+    expect(r.benachrichtigt).toBe(0)
+  })
+})
