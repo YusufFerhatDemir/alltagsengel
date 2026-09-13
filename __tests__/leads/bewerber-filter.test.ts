@@ -67,9 +67,20 @@ describe('passtZuFiltern', () => {
     expect(passtZuFiltern(zeile({ daten: {} }), { ...leereAuswahl(), region: OHNE_ANGABE })).toBe(true)
   })
 
-  it('elf Dimensionen — Region ist die elfte', () => {
-    expect(FILTER_DIMENSIONEN).toHaveLength(11)
+  it('vierzehn Dimensionen — drei davon Arbeitsfelder der Verwaltung', () => {
+    expect(FILTER_DIMENSIONEN).toHaveLength(14)
     expect(FILTER_DIMENSIONEN.map(d => d.key)).toContain('region')
+    for (const k of ['fzStatus', 'atsPrioritaet', 'mobilitaet']) {
+      expect(FILTER_DIMENSIONEN.map(d => d.key), k).toContain(k)
+    }
+  })
+
+  it('Pipeline-Priorität und Verwaltungs-Priorität bleiben getrennt', () => {
+    // Zwei verschiedene Fragen: die eine folgt aus dem Bearbeitungsstand,
+    // die andere hat ein Mensch vergeben. Zusammengelegt ginge eine verloren.
+    const keys = FILTER_DIMENSIONEN.map(d => d.key)
+    expect(keys).toContain('prio')
+    expect(keys).toContain('atsPrioritaet')
   })
 
   it('jede Dimension hat Werte und ein lesbares Etikett', () => {
@@ -145,5 +156,50 @@ describe('Stufenmodell', () => {
     // Beide melden lost an die CRM-Spalte — der Unterschied lebt in der feinen Stufe.
     expect(bewerberStufe('archiviert').dbStatus).toBe('lost')
     expect(bewerberStufe('abgelehnt').dbStatus).toBe('lost')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════
+// Arbeitsfelder als Filterdimension (13.09.2026)
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('ATS-Dimensionen', () => {
+  const mitAts = (ats: Record<string, unknown>) => zeile({ roh: { ats } })
+
+  it('filtert nach Führungszeugnis-Stand', () => {
+    const z = mitAts({ fzStatus: 'beantragt' })
+    expect(passtZuFiltern(z, { ...leereAuswahl(), fzStatus: 'beantragt' })).toBe(true)
+    expect(passtZuFiltern(z, { ...leereAuswahl(), fzStatus: 'eingetroffen' })).toBe(false)
+  })
+
+  it('„ohne Angabe" trifft genau die, bei denen nichts erhoben wurde', () => {
+    // Der wichtigste Fall: 36 Bewerbungen ohne jeden FZ-Stand sollen als
+    // solche auffindbar sein, nicht in „alle" verschwinden.
+    expect(passtZuFiltern(zeile({ roh: null }), { ...leereAuswahl(), fzStatus: OHNE_ANGABE })).toBe(true)
+    expect(passtZuFiltern(mitAts({ fzStatus: 'beantragt' }), { ...leereAuswahl(), fzStatus: OHNE_ANGABE })).toBe(false)
+  })
+
+  it('filtert nach Verwaltungs-Priorität, Zahl als Schlüssel', () => {
+    const z = mitAts({ prioritaet: 1 })
+    expect(passtZuFiltern(z, { ...leereAuswahl(), atsPrioritaet: '1' })).toBe(true)
+    expect(passtZuFiltern(z, { ...leereAuswahl(), atsPrioritaet: '3' })).toBe(false)
+  })
+
+  it('filtert nach Mobilität', () => {
+    const z = mitAts({ mobilitaet: 'eigenes_auto' })
+    expect(passtZuFiltern(z, { ...leereAuswahl(), mobilitaet: 'eigenes_auto' })).toBe(true)
+    expect(passtZuFiltern(z, { ...leereAuswahl(), mobilitaet: 'oepnv' })).toBe(false)
+  })
+
+  it('ein kaputter ats-Zweig wirft nicht, sondern zählt als „ohne Angabe"', () => {
+    for (const kaputt of [{ ats: 'kein Objekt' }, { ats: ['Liste'] }, {}]) {
+      expect(passtZuFiltern(zeile({ roh: kaputt }), { ...leereAuswahl(), fzStatus: OHNE_ANGABE })).toBe(true)
+    }
+  })
+
+  it('greift nicht in die Formularangaben — `daten` bleibt unberührt', () => {
+    const z = zeile({ daten: { qualifikation: 'pflegefachkraft' }, roh: { ats: { prioritaet: 2 } } })
+    expect(passtZuFiltern(z, { ...leereAuswahl(), qualifikation: 'pflegefachkraft' })).toBe(true)
+    expect(passtZuFiltern(z, { ...leereAuswahl(), atsPrioritaet: '2' })).toBe(true)
   })
 })

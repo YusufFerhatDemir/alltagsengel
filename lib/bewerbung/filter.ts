@@ -26,6 +26,9 @@ import {
 } from '@/lib/bewerbung/katalog'
 import { BEWERBER_PRIO, BEWERBER_BLOCKER, prioUndBlocker } from '@/lib/bewerbung/pipeline'
 import { WARTELISTE_REGIONEN } from '@/lib/warteliste/katalog'
+import {
+  FZ_STATUS, MOBILITAET, PRIORITAET_MIN, PRIORITAET_MAX, atsFelderAus,
+} from '@/lib/bewerbung/ats-felder'
 
 /** Was eine Zeile der Bewerberliste mindestens hergeben muss. */
 export interface FilterZeile {
@@ -125,6 +128,48 @@ export const FILTER_DIMENSIONEN: readonly FilterDimension[] = [
     key: 'blocker', label: 'Was fehlt',
     werte: Object.entries(BEWERBER_BLOCKER).map(([key, v]) => ({ key, label: v.label })),
     lies: z => prioUndBlocker(z.roh).blocker,
+  },
+  // ── Arbeitsfelder der Verwaltung (13.09.2026) ───────────────────────
+  // Lesen aus `roh.ats`, nicht aus `daten`: das sind Notizen der
+  // Verwaltung, keine Angaben der Bewerberin. Sie stehen trotzdem in
+  // derselben Liste, weil die Frage dieselbe ist — „wen zeige ich mir an".
+  {
+    key: 'fzStatus', label: 'Führungszeugnis',
+    werte: Object.entries(FZ_STATUS).map(([key, label]) => ({ key, label })),
+    lies: z => {
+      const w = atsFelderAus(z.roh).fzStatus
+      return w ? [w] : []
+    },
+  },
+  {
+    key: 'atsPrioritaet', label: 'Priorität (Verwaltung)',
+    // Eigene Dimension neben `prio` (Pipeline-Priorität). Zwei Fragen: die
+    // eine kommt aus dem Bearbeitungsstand, die andere hat ein Mensch
+    // vergeben. Sie zusammenzulegen hiesse, eine von beiden zu verlieren.
+    werte: Array.from(
+      { length: PRIORITAET_MAX - PRIORITAET_MIN + 1 },
+      (_, i) => {
+        const p = PRIORITAET_MIN + i
+        return {
+          key: String(p),
+          label: p === PRIORITAET_MIN ? `${p} — dringendst`
+            : p === PRIORITAET_MAX ? `${p} — nachrangig`
+            : String(p),
+        }
+      },
+    ),
+    lies: z => {
+      const w = atsFelderAus(z.roh).prioritaet
+      return typeof w === 'number' ? [String(w)] : []
+    },
+  },
+  {
+    key: 'mobilitaet', label: 'Mobilität',
+    werte: Object.entries(MOBILITAET).map(([key, label]) => ({ key, label })),
+    lies: z => {
+      const w = atsFelderAus(z.roh).mobilitaet
+      return w ? [w] : []
+    },
   },
   {
     key: 'quelle', label: 'Quelle',
