@@ -225,9 +225,17 @@ export function zaehlePrioritaeten(bewertungen: readonly Alterung[]): Prioritaet
  * Sortierschlüssel: erst Eskalation, dann Priorität, dann Alter.
  * Größer = dringender, damit `sort((a, b) => rang(b) - rang(a))` reicht.
  */
-export function dringlichkeitsRang(a: Alterung): number {
+export function dringlichkeitsRang(a: Alterung | null | undefined): number {
+  // Fehlt die Bewertung, ist das Ergebnis 0 — nicht ein Absturz.
+  //
+  // Diese Funktion sitzt in der Vergleichsfunktion des Posteingangs. Wirft
+  // sie, wirft `Array.sort`, und die Arbeitsliste bleibt LEER. Ausgerechnet
+  // dieses Modul ist dafuer da, dass kein Vorgang unsichtbar wird; es waere
+  // absurd, wenn eine unvollstaendige Zeile die ganze Liste verschwinden
+  // liesse. Die Zeile sortiert dann ans Ende und faellt dort auf.
+  if (!a) return 0
   return a.eskalation * 1_000_000
-    + PRIORITAET_META[a.effektiv].rang * 100_000
+    + (PRIORITAET_META[a.effektiv]?.rang ?? 0) * 100_000
     + Math.min(a.tageSeitKontakt ?? 0, 99_999)
 }
 

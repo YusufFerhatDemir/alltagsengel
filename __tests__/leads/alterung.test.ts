@@ -209,6 +209,15 @@ describe('Zählung und Reihenfolge', () => {
     expect(sortiert[1].effektiv).toBe('kritisch')
   })
 
+  it('eine fehlende Bewertung ergibt 0, keinen Absturz', () => {
+    // Die Funktion sitzt in einer Vergleichsfunktion: wirft sie, bleibt die
+    // ganze Arbeitsliste leer — genau das Verschwinden, gegen das dieses
+    // Modul gebaut ist.
+    expect(dringlichkeitsRang(undefined)).toBe(0)
+    expect(dringlichkeitsRang(null)).toBe(0)
+    expect(dringlichkeitsRang({ effektiv: 'unbekannt' } as never)).toBeTypeOf('number')
+  })
+
   it('bei gleicher Stufe entscheidet das Alter', () => {
     const alt = bewerteAlterung({ letzterKontakt: vor(300), offen: true }, JETZT)
     const juenger = bewerteAlterung({ letzterKontakt: vor(31), offen: true }, JETZT)

@@ -7,6 +7,7 @@ import {
   ausWarteliste, ausBewerbung, ausAnfrage, ampelFuer, sortierePosteingang,
   zaehlePosteingang, posteingangSatz, AMPEL_META, type PosteingangEintrag,
 } from '@/lib/leads/posteingang'
+import { bewerteAlterung } from '@/lib/leads/alterung'
 
 const JETZT = new Date('2026-09-12T10:00:00Z')
 const vor = (h: number) => new Date(JETZT.getTime() - h * 3600_000).toISOString()
@@ -141,6 +142,11 @@ describe('Sortierung und Zählung', () => {
     followUp: ampel === 'schwarz' ? 'verschleppt' : ampel === 'rot' ? 'dringend'
       : ampel === 'orange' ? 'eskalation' : ampel === 'gelb' ? 'erinnerung' : 'keine',
     ampel, stundenOffen, punkte: 0, hinweis: '', ziel: '/x', quelle: null,
+    // Kein Eingang, kein Kontakt: die Alterung ist fuer alle gleich (Rang 0),
+    // damit dieser Test weiter genau das misst, was er messen will —
+    // Ampel, dann Wartezeit.
+    letzterKontakt: null,
+    alterung: bewerteAlterung({ offen: true }, JETZT),
   })
 
   it('schwarz vor rot, innerhalb der Farbe der ältere Lead', () => {
@@ -226,5 +232,57 @@ describe('Alterung je Zeile', () => {
     }, JETZT)!
     expect(e.alterung.quelle).toBe('eingang')
     expect(e.alterung.effektiv).toBe('kritisch')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════
+// Reihenfolge: Ampel zuerst, dann Dringlichkeit (13.09.2026)
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('sortierePosteingang mit Alterung', () => {
+  const zeile = (t: Partial<PosteingangEintrag>): PosteingangEintrag => ({
+    id: 'x', art: 'anfrage', name: 'Test', kontakt: null,
+    stufe: 'neu', stufeLabel: 'Neu', stufeFarbe: '#000',
+    eingang: vor(2), zuletzt: null, wiedervorlage: null,
+    followUp: 'keine', ampel: 'gruen', stundenOffen: 2, punkte: 0,
+    hinweis: '', ziel: '/mis/crm', quelle: null,
+    letzterKontakt: null,
+    alterung: bewerteAlterung({ eingang: vor(2), offen: true }, JETZT),
+    ...t,
+  })
+
+  it('eine gerissene Frist schlägt lange Stille', () => {
+    // Ein verpasster Termin ist ein gebrochenes Versprechen, ein stiller
+    // Vorgang ein vergessener. Das Erste wiegt schwerer.
+    const still = zeile({ id: 'still', ampel: 'gruen',
+      alterung: bewerteAlterung({ eingang: vor(24 * 90), offen: true }, JETZT) })
+    const ueberfaellig = zeile({ id: 'frist', ampel: 'rot', followUp: 'dringend' })
+    expect(sortierePosteingang([still, ueberfaellig])[0].id).toBe('frist')
+  })
+
+  it('bei gleicher Ampel steht der stillere Vorgang vorn', () => {
+    const jung = zeile({ id: 'jung',
+      alterung: bewerteAlterung({ eingang: vor(24 * 2), offen: true }, JETZT) })
+    const alt = zeile({ id: 'alt',
+      alterung: bewerteAlterung({ eingang: vor(24 * 90), offen: true }, JETZT) })
+    expect(sortierePosteingang([jung, alt])[0].id).toBe('alt')
+  })
+
+  it('ein gestriges Gespräch zieht einen alten Vorgang nach hinten', () => {
+    // Genau der Fall, den `stundenOffen` allein nicht sieht: beide sind
+    // seit 90 Tagen offen, aber mit einem hat gestern jemand telefoniert.
+    const gesprochen = zeile({ id: 'gesprochen', eingang: vor(24 * 90), stundenOffen: 24 * 90,
+      alterung: bewerteAlterung({ letzterKontakt: vor(24), eingang: vor(24 * 90), offen: true }, JETZT) })
+    const still = zeile({ id: 'still', eingang: vor(24 * 90), stundenOffen: 24 * 90,
+      alterung: bewerteAlterung({ eingang: vor(24 * 90), offen: true }, JETZT) })
+    expect(sortierePosteingang([gesprochen, still])[0].id).toBe('still')
+  })
+
+  it('eine überfällige Wiedervorlage schlägt reines Alter', () => {
+    const nurAlt = zeile({ id: 'alt',
+      alterung: bewerteAlterung({ eingang: vor(24 * 200), offen: true }, JETZT) })
+    const eskaliert = zeile({ id: 'eskaliert',
+      alterung: bewerteAlterung({ letzterKontakt: vor(24), wiedervorlage: vor(24 * 10), offen: true }, JETZT) })
+    expect(sortierePosteingang([nurAlt, eskaliert])[0].id).toBe('eskaliert')
   })
 })

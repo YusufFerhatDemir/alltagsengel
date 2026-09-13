@@ -31,7 +31,7 @@ import {
 } from '@/lib/bewerbung/pipeline'
 
 import { atsFelderAus } from '@/lib/bewerbung/ats-felder'
-import { bewerteAlterung, type Alterung } from '@/lib/leads/alterung'
+import { bewerteAlterung, dringlichkeitsRang, type Alterung } from '@/lib/leads/alterung'
 
 export type Ampel = 'schwarz' | 'rot' | 'orange' | 'gelb' | 'gruen'
 
@@ -268,13 +268,25 @@ export function ausAnfrage(z: RohLead, jetzt: Date): PosteingangEintrag | null {
 }
 
 /**
- * Sortierung des Posteingangs: erst die Ampel, dann die Wartezeit.
- * Bei gleicher Lage gewinnt der ältere Lead — wer länger wartet, kommt
- * zuerst dran. Die Priorität der Warteliste entscheidet erst danach.
+ * Sortierung des Posteingangs: erst die Ampel, dann die Dringlichkeit.
+ *
+ * ── WARUM DIE AMPEL WEITER ZUERST KOMMT ───────────────────────────────
+ * Die Ampel misst eine gerissene Frist. Das wiegt schwerer als Stille:
+ * ein verpasster Termin ist ein gebrochenes Versprechen, ein stiller
+ * Vorgang „nur" ein vergessener. Die Reihenfolge der beiden zu tauschen
+ * würde die Leiter entwerten, für die es die Ampel überhaupt gibt.
+ *
+ * ── WARUM NICHT MEHR `stundenOffen` ALS ZWEITES ───────────────────────
+ * `stundenOffen` zählt seit dem Eingang — auch bei einem Vorgang, mit dem
+ * gestern jemand telefoniert hat. `dringlichkeitsRang` (lib/leads/alterung.ts)
+ * kennt dieselbe Wartezeit, bezieht aber Eskalationsstufe und Priorität mit
+ * ein und rechnet ab dem letzten echten Kontakt, wo es einen gibt. Es ist
+ * dieselbe Frage, nur besser beantwortet.
  */
 export function sortierePosteingang(eintraege: readonly PosteingangEintrag[]): PosteingangEintrag[] {
   return [...eintraege].sort((a, b) =>
     AMPEL_META[b.ampel].rang - AMPEL_META[a.ampel].rang
+    || dringlichkeitsRang(b.alterung) - dringlichkeitsRang(a.alterung)
     || b.stundenOffen - a.stundenOffen
     || b.punkte - a.punkte
     || a.name.localeCompare(b.name, 'de'))
