@@ -361,7 +361,12 @@ export async function saveVerordnungInvoiceEdit(
 
     if (!id || typeof id !== 'string') return { ok: false, error: 'Ungueltige Rechnungs-ID.' }
 
-    const { error: e } = await supabase
+    // `.select('id')` mit Leerpruefung: ohne sie meldet PostgREST bei NULL
+    // getroffenen Zeilen keinen Fehler. Der Lauf schriebe dann einen
+    // Audit-Eintrag ueber eine Betragsaenderung, die nicht stattgefunden
+    // hat — bei Geld ist ein Protokoll, das die Unwahrheit sagt, schlimmer
+    // als gar keines.
+    const { data: gespeichert, error: e } = await supabase
       .from('invoices')
       .update({
         soll_betrag_cent: euroToCent(soll),
@@ -370,7 +375,12 @@ export async function saveVerordnungInvoiceEdit(
         kuerzung_grund: kuerzungGrund || null,
       })
       .eq('id', id)
+      .eq('organization_id', organizationId)
+      .select('id')
     if (e) return { ok: false, error: `Speichern fehlgeschlagen: ${e.message}` }
+    if (!gespeichert || gespeichert.length === 0) {
+      return { ok: false, error: 'Rechnung nicht gefunden oder kein Zugriff — nichts gespeichert.' }
+    }
 
     await logAuditEventOrWarn({
       action: 'update',
@@ -400,14 +410,26 @@ export async function toggleInvoiceBezahlt(
 
     if (!id || typeof id !== 'string') return { ok: false, error: 'Ungueltige Rechnungs-ID.' }
 
-    const { error: e } = await supabase
+    // ── CAS auf `bezahlt` ────────────────────────────────────────────
+    // Geschrieben wird `!currentBezahlt` — also der Gegenwert dessen, was
+    // die aufrufende Oberflaeche GESEHEN hat. Ohne die Bedingung
+    // `.eq('bezahlt', currentBezahlt)` kippt ein zweiter Klick aus einem
+    // zweiten Tab den Wert zurueck, und beide Male meldet die Anwendung
+    // Erfolg. Mit ihr trifft der zweite Klick keine Zeile und sagt das.
+    const { data: umgeschaltet, error: e } = await supabase
       .from('invoices')
       .update({
         bezahlt: !currentBezahlt,
         bezahlt_am: !currentBezahlt ? heuteBerlin() : null,
       })
       .eq('id', id)
+      .eq('organization_id', organizationId)
+      .eq('bezahlt', currentBezahlt)
+      .select('id')
     if (e) return { ok: false, error: `Update fehlgeschlagen: ${e.message}` }
+    if (!umgeschaltet || umgeschaltet.length === 0) {
+      return { ok: false, error: 'Der Zahlungsstand hat sich inzwischen geändert — bitte Seite neu laden.' }
+    }
 
     await logAuditEventOrWarn({
       action: 'update',
@@ -441,11 +463,21 @@ export async function toggleInvoiceVersand(
       return { ok: false, error: 'Ungueltiges Feld.' }
     }
 
-    const { error: e } = await supabase
+    // Wie beim Bezahlt-Umschalter: geschrieben wird der Gegenwert dessen,
+    // was die Oberflaeche gesehen hat. Die CAS-Bedingung auf demselben Feld
+    // laesst nur den ersten Klick durch; ein zweiter aus einem zweiten Tab
+    // trifft keine Zeile und bekommt das gesagt, statt still zurueckzukippen.
+    const { data: umgeschaltet, error: e } = await supabase
       .from('invoices')
       .update({ [field]: !currentValue })
       .eq('id', id)
+      .eq('organization_id', organizationId)
+      .eq(field, currentValue)
+      .select('id')
     if (e) return { ok: false, error: `Update fehlgeschlagen: ${e.message}` }
+    if (!umgeschaltet || umgeschaltet.length === 0) {
+      return { ok: false, error: 'Der Versandstand hat sich inzwischen geändert — bitte Seite neu laden.' }
+    }
 
     await logAuditEventOrWarn({
       action: 'update',

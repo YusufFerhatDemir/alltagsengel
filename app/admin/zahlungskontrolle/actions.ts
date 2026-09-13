@@ -46,12 +46,25 @@ export async function sendPaymentReminder(
     throw new Error('Ungueltiger Mahnungszaehler.')
   }
 
-  const { error } = await supabase.from('payment_status').update({
+  // ── CAS auf den Zaehler ──────────────────────────────────────────
+  // `currentReminderCount + 1` rechnet auf dem Stand, den die Oberflaeche
+  // gesehen hat. Klicken zwei Personen gleichzeitig, schreiben beide
+  // denselben Wert — eine Mahnung verschwindet aus der Zaehlung, und die
+  // Mahnstufe stimmt danach nicht mehr. Die Bedingung laesst nur den
+  // ersten Schreibvorgang durch.
+  const { data: gemahnt, error } = await supabase.from('payment_status').update({
     reminder_count: currentReminderCount + 1,
     last_reminder_at: new Date().toISOString(),
-  }).eq('id', paymentId)
+  })
+    .eq('id', paymentId)
+    .eq('organization_id', organizationId)
+    .eq('reminder_count', currentReminderCount)
+    .select('id')
 
   if (error) throw new Error(`Mahnung fehlgeschlagen: ${error.message}`)
+  if (!gemahnt || gemahnt.length === 0) {
+    throw new Error('Der Mahnstand hat sich inzwischen geändert — bitte Seite neu laden.')
+  }
 
   await logAuditEventOrWarn({
     action: 'update',
@@ -93,14 +106,20 @@ export async function recordPayment(
 
   const newStatus = amountPaid >= amountDue ? 'bezahlt' : 'teilbezahlt'
 
-  const { error } = await supabase.from('payment_status').update({
+  const { data: gebucht, error } = await supabase.from('payment_status').update({
     amount_paid: amountPaid,
     paid_date: paidDate,
     payment_method: paymentMethod,
     status: newStatus,
-  }).eq('id', paymentId)
+  })
+    .eq('id', paymentId)
+    .eq('organization_id', organizationId)
+    .select('id')
 
   if (error) throw new Error(`Zahlung konnte nicht gespeichert werden: ${error.message}`)
+  if (!gebucht || gebucht.length === 0) {
+    throw new Error('Zahlung nicht gefunden oder kein Zugriff — NICHTS gebucht.')
+  }
 
   await logAuditEventOrWarn({
     action: 'update',
