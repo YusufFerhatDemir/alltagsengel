@@ -7,6 +7,11 @@
  *   1. Schreibt der Code einen WERT, den der CHECK nicht zulaesst? (23514)
  *   2. Schreibt er auf eine SPALTE, die es nicht gibt?          (42703)
  *   3. LIEST er eine Spalte, die es nicht gibt?                  (42703)
+ *   4. Ruft er eine FUNKTION oder ein ARGUMENT auf, das es nicht gibt?
+ *
+ * Die vierte ist die tueckischste: `supabase.rpc()` WIRFT NICHT. Ein
+ * `try/catch` darum herum ist toter Code, und wer `error` nicht ansieht,
+ * merkt nichts.
  *
  * Die dritte ist die tueckischste: ein fehlgeschlagenes SELECT wird in
  * aller Regel verschluckt, die Liste kommt leer zurueck, und die
@@ -35,6 +40,7 @@ import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Vokabelbefund } from '../lib/schema/vokabular'
 import type { Spaltenbefund, LeseBefund } from '../lib/schema/spalten'
+import type { RpcBefund } from '../lib/schema/rpc'
 
 for (const datei of ['.env.local', '.env']) {
   if (!existsSync(datei)) continue
@@ -73,6 +79,7 @@ async function main(): Promise<void> {
   const { apiHeaders, secretKey, envWert } = await import('./lib/supabase-keys.mjs')
   const { ladeWertelisten, pruefeQuelle, schluessel } = await import('../lib/schema/vokabular')
   const { pruefeSpalten, pruefeLeseSpalten, spaltenAusOpenApi } = await import('../lib/schema/spalten')
+  const { pruefeRpc, ladeFunktionen } = await import('../lib/schema/rpc')
 
   const url = envWert('NEXT_PUBLIC_SUPABASE_URL')
 
@@ -114,13 +121,18 @@ async function main(): Promise<void> {
 
   const alle: Vokabelbefund[] = []
   const spaltenBefunde: Spaltenbefund[] = []
+  const funktionen = await ladeFunktionen(leseSql)
+  console.log(`  Funktionen in public  : ${funktionen.size}`)
+
   const leseBefunde: LeseBefund[] = []
+  const rpcBefunde: RpcBefund[] = []
   for (const datei of dateien) {
     const kurz = datei.replace(process.cwd() + '/', '')
     const quelle = readFileSync(datei, 'utf8')
     alle.push(...pruefeQuelle(kurz, quelle, erlaubt))
     spaltenBefunde.push(...pruefeSpalten(kurz, quelle, spalten))
     leseBefunde.push(...pruefeLeseSpalten(kurz, quelle, spalten))
+    rpcBefunde.push(...pruefeRpc(kurz, quelle, funktionen))
   }
 
   const bekannt = alle.filter(b => BEKANNT.has(schluessel(b.tabelle, b.spalte)))
@@ -168,11 +180,24 @@ async function main(): Promise<void> {
     console.log()
   }
 
-  const gesamtNeu = neu.length + spaltenBefunde.length + leseBefunde.length
+  if (rpcBefunde.length > 0) {
+    console.log('✗  NEUER BEFUND — diese RPC gibt es so nicht:')
+    for (const b of rpcBefunde) {
+      console.log(`     ${b.datei}:${b.zeile}`)
+      console.log(b.argument === null
+        ? `        Funktion '${b.funktion}' existiert nicht in public`
+        : `        ${b.funktion}(${b.argument}) — erlaubt: ${b.erlaubt.join(', ') || '(keine Argumente)'}`)
+      console.log('        rpc() WIRFT NICHT — ohne Blick auf `error` merkt das niemand.')
+    }
+    console.log()
+  }
+
+  const gesamtNeu = neu.length + spaltenBefunde.length + leseBefunde.length + rpcBefunde.length
   console.log(` bekannte Befunde      : ${bekannt.length}`)
   console.log(` NEU: verbotener Wert  : ${neu.length}`)
   console.log(` NEU: fehlende Spalte  : ${spaltenBefunde.length}`)
   console.log(` NEU: gelesene Spalte  : ${leseBefunde.length}`)
+  console.log(` NEU: RPC-Abweichung   : ${rpcBefunde.length}`)
   console.log(gesamtNeu === 0
     ? ' ✅ Kein Schreibvorgang, der nie gelingen kann.'
     : ' ❌ Mindestens ein Schreibvorgang kann nie gelingen.')

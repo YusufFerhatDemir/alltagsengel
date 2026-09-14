@@ -127,22 +127,31 @@ async function checkSupabase(): Promise<CheckResult> {
     const { createAdminClient } = await import('@/lib/supabase/admin')
     const supabase = createAdminClient()
 
-    const { error } = await supabase.rpc('version' as any)
+    // Frueher lief hier zuerst `supabase.rpc('version')` und erst bei
+    // dessen Fehler ein Select als Rueckfall. Der Rueckfall war aber kein
+    // Sonderfall, sondern der Normalfall: `version()` liegt in
+    // `pg_catalog`, und PostgREST exponiert ausschliesslich `public`. Der
+    // Aufruf beantwortete JEDEN Health-Check mit
+    //
+    //     HTTP 404  PGRST202  Could not find the function public.version
+    //
+    // (live geprueft, Block 40). Das Ergebnis war richtig — der Rueckfall
+    // trug die Pruefung —, aber jeder Lauf kostete einen zusaetzlichen
+    // Rundlauf und hinterliess einen Fehler im Supabase-Protokoll. Wer
+    // dort nach echten Stoerungen sucht, filtert ihn seitdem weg.
+    //
+    // Der Select ist die Pruefung, die ohnehin traegt: er beweist
+    // Verbindung UND Lesbarkeit.
+    const { error: selectError } = await supabase
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
 
-    // Fallback: manche Supabase-Instanzen haben keine version()-RPC.
-    // In dem Fall machen wir einen einfachen Select.
-    if (error) {
-      const { error: selectError } = await supabase
-        .from('profiles')
-        .select('id', { count: 'exact', head: true })
-
-      if (selectError) {
-        return {
-          name: 'database',
-          status: 'fail',
-          durationMs: Math.round(performance.now() - start),
-          message: 'Datenbankverbindung fehlgeschlagen',
-        }
+    if (selectError) {
+      return {
+        name: 'database',
+        status: 'fail',
+        durationMs: Math.round(performance.now() - start),
+        message: 'Datenbankverbindung fehlgeschlagen',
       }
     }
 
