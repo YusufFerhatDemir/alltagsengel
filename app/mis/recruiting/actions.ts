@@ -61,7 +61,11 @@ export async function createApplicant(data: {
         rating: 0,
         documents: [],
         organization_id: organizationId,
-        created_by: userId,
+        // `created_by` gibt es in dieser Tabelle NICHT. Bis Block 38 stand
+        // es hier und liess den ganzen Schreibvorgang mit 42703
+        // scheitern — eine unbekannte Spalte reisst die komplette Abfrage
+        // mit. Die Urheberschaft steht ohnehin im mis_audit_log
+        // (logAuditEventOrWarn mit actorId), und dort gehoert sie hin.
       })
       .select()
       .single()
@@ -107,7 +111,11 @@ export async function createJobPosting(data: {
         channels: data.channels,
         status: 'active',
         organization_id: organizationId,
-        created_by: userId,
+        // `created_by` gibt es in dieser Tabelle NICHT. Bis Block 38 stand
+        // es hier und liess den ganzen Schreibvorgang mit 42703
+        // scheitern — eine unbekannte Spalte reisst die komplette Abfrage
+        // mit. Die Urheberschaft steht ohnehin im mis_audit_log
+        // (logAuditEventOrWarn mit actorId), und dort gehoert sie hin.
       })
       .select()
       .single()

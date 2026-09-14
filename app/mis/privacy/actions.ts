@@ -91,7 +91,11 @@ export async function createPrivacyRecord(data: {
         notes: data.notes,
         status: 'active',
         organization_id: organizationId,
-        created_by: userId,
+        // `created_by` gibt es in dieser Tabelle NICHT. Bis Block 38 stand
+        // es hier und liess den ganzen Schreibvorgang mit 42703
+        // scheitern — eine unbekannte Spalte reisst die komplette Abfrage
+        // mit. Die Urheberschaft steht ohnehin im mis_audit_log
+        // (logAuditEventOrWarn mit actorId), und dort gehoert sie hin.
       })
       .select()
       .single()
@@ -193,7 +197,11 @@ export async function createPrivacyConsent(data: {
         notes: data.notes,
         status: 'erteilt',
         organization_id: organizationId,
-        created_by: userId,
+        // `created_by` gibt es in dieser Tabelle NICHT. Bis Block 38 stand
+        // es hier und liess den ganzen Schreibvorgang mit 42703
+        // scheitern — eine unbekannte Spalte reisst die komplette Abfrage
+        // mit. Die Urheberschaft steht ohnehin im mis_audit_log
+        // (logAuditEventOrWarn mit actorId), und dort gehoert sie hin.
       })
       .select()
       .single()
@@ -239,7 +247,9 @@ export async function revokePrivacyConsent(
       .update({
         status: 'widerrufen',
         revoked_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        // `updated_at` gibt es in mis_privacy_consents NICHT (die Tabelle
+        // fuehrt nur created_at). Mit dem Feld scheiterte der Widerruf
+        // einer Einwilligung mit 42703 — er war nie moeglich (Block 38).
       })
       .eq('id', id)
       .select('id')
@@ -299,7 +309,11 @@ export async function createPrivacyRequest(data: {
         status: 'offen',
         due_date: dueDate.toISOString(),
         organization_id: organizationId,
-        created_by: userId,
+        // `created_by` gibt es in dieser Tabelle NICHT. Bis Block 38 stand
+        // es hier und liess den ganzen Schreibvorgang mit 42703
+        // scheitern — eine unbekannte Spalte reisst die komplette Abfrage
+        // mit. Die Urheberschaft steht ohnehin im mis_audit_log
+        // (logAuditEventOrWarn mit actorId), und dort gehoert sie hin.
       })
       .select()
       .single()

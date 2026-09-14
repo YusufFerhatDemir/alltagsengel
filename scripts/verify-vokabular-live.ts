@@ -2,8 +2,15 @@
 /**
  * verify-vokabular-live.ts
  * ------------------------
- * Beantwortet EINE Frage gegen die Produktion: schreibt der Code
- * irgendwo einen Wert, den der CHECK der Spalte gar nicht zulaesst?
+ * Beantwortet ZWEI Fragen gegen die Produktion:
+ *
+ *   1. Schreibt der Code einen WERT, den der CHECK nicht zulaesst? (23514)
+ *   2. Schreibt er auf eine SPALTE, die es nicht gibt?          (42703)
+ *
+ * Beide Achsen sind noetig, und die erste Messung zeigte warum: die
+ * Referral-Benachrichtigung trug BEIDE Fehler in einer Anweisung. Nach
+ * der Behebung des Wertes meldete die Wert-Pruefung sie als sauber — die
+ * Benachrichtigung kam trotzdem nicht an.
  *
  * Ein solcher Schreibvorgang scheitert IMMER (23514) — die Funktion
  * dahinter ist vollstaendig tot, und je nach Fehlerbehandlung merkt es
@@ -22,6 +29,7 @@
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Vokabelbefund } from '../lib/schema/vokabular'
+import type { Spaltenbefund } from '../lib/schema/spalten'
 
 for (const datei of ['.env.local', '.env']) {
   if (!existsSync(datei)) continue
@@ -59,6 +67,7 @@ function dateienUnter(verzeichnis: string): string[] {
 async function main(): Promise<void> {
   const { apiHeaders, secretKey, envWert } = await import('./lib/supabase-keys.mjs')
   const { ladeWertelisten, pruefeQuelle, schluessel } = await import('../lib/schema/vokabular')
+  const { pruefeSpalten, spaltenAusOpenApi } = await import('../lib/schema/spalten')
 
   const url = envWert('NEXT_PUBLIC_SUPABASE_URL')
 
@@ -94,10 +103,17 @@ async function main(): Promise<void> {
   ]
   console.log(`  Quelldateien geprueft : ${dateien.length}\n`)
 
+  const spec = await (await fetch(`${url}/rest/v1/`, { headers: apiHeaders(secretKey()) })).json()
+  const spalten = spaltenAusOpenApi(spec)
+  console.log(`  Tabellen in der API   : ${spalten.size}`)
+
   const alle: Vokabelbefund[] = []
+  const spaltenBefunde: Spaltenbefund[] = []
   for (const datei of dateien) {
     const kurz = datei.replace(process.cwd() + '/', '')
-    alle.push(...pruefeQuelle(kurz, readFileSync(datei, 'utf8'), erlaubt))
+    const quelle = readFileSync(datei, 'utf8')
+    alle.push(...pruefeQuelle(kurz, quelle, erlaubt))
+    spaltenBefunde.push(...pruefeSpalten(kurz, quelle, spalten))
   }
 
   const bekannt = alle.filter(b => BEKANNT.has(schluessel(b.tabelle, b.spalte)))
@@ -123,13 +139,26 @@ async function main(): Promise<void> {
   }
 
   console.log('═══════════════════════════════════════════════════════════════════')
-  console.log(` bekannte Befunde : ${bekannt.length}`)
-  console.log(` NEUE BEFUNDE     : ${neu.length}`)
-  console.log(neu.length === 0
-    ? ' ✅ Kein Schreibvorgang gegen eine verbotene Werteliste.'
+  if (spaltenBefunde.length > 0) {
+    console.log('✗  NEUER BEFUND — diese Spalte gibt es nicht (42703):')
+    for (const b of spaltenBefunde) {
+      console.log(`     ${b.datei}:${b.zeile}`)
+      console.log(`        ${b.tabelle}.${b.spalte}`)
+      console.log('        Postgres weist eine unbekannte Spalte nicht einzeln ab —')
+      console.log('        sie laesst die GANZE Abfrage scheitern.')
+    }
+    console.log()
+  }
+
+  const gesamtNeu = neu.length + spaltenBefunde.length
+  console.log(` bekannte Befunde      : ${bekannt.length}`)
+  console.log(` NEU: verbotener Wert  : ${neu.length}`)
+  console.log(` NEU: fehlende Spalte  : ${spaltenBefunde.length}`)
+  console.log(gesamtNeu === 0
+    ? ' ✅ Kein Schreibvorgang, der nie gelingen kann.'
     : ' ❌ Mindestens ein Schreibvorgang kann nie gelingen.')
   console.log('═══════════════════════════════════════════════════════════════════')
-  process.exit(neu.length === 0 ? 0 : 1)
+  process.exit(gesamtNeu === 0 ? 0 : 1)
 }
 
 main().catch(err => { console.error(err); process.exit(1) })

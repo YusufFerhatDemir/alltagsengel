@@ -160,7 +160,14 @@ export const POST = withTracking(async function POST(request: NextRequest) {
     const { error: hinweisFehler } = await supabaseAdmin.from('notifications').insert({
       user_id: referral.referrer_id,
       title: 'Empfehlungsbonus erhalten!',
-      message: `Deine Empfehlung hat die erste Buchung abgeschlossen. Du hast ${bonus} € Guthaben erhalten!`,
+      // `body`, nicht `message`: die Spalte heisst so
+      // (id, user_id, type, title, body, data, link, is_read, email_sent).
+      // BEFUND (Block 38): mit `message` scheiterte der Insert mit 42703 —
+      // eine unbekannte Spalte reisst die GANZE Abfrage mit. Der Befund
+      // aus Block 37 (type: 'referral' gegen den CHECK) war damit nur die
+      // halbe Ursache; die Benachrichtigung kam auch nach seiner Behebung
+      // nicht an. Zwei tote Gruende in einer Anweisung.
+      body: `Deine Empfehlung hat die erste Buchung abgeschlossen. Du hast ${bonus} € Guthaben erhalten!`,
       type: 'payment',
     })
     // Der Hinweis ist Beiwerk: das Geld ist gebucht, ein fehlgeschlagener
