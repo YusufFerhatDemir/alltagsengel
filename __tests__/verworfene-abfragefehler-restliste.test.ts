@@ -174,7 +174,16 @@ function nachweisFake(kaputt: string | null) {
       case 'organizations':
         // Ohne eigene IK bricht getOrgIK ab, bevor die Gegenprobe etwas
         // ueber die Unterschriften aussagen kann.
-        return { data: { ik_nummer: '123456789', name: 'Alltagsengel' } }
+        //
+        // Anschrift seit Block 71: der Leistungserbringer eines FREMDEN
+        // Mandanten wird nicht mehr aus der Stamm-Organisation ergaenzt.
+        // Ein Mandant ohne Anschrift ist genau der Fall, den die
+        // Nachweis-Erstellung jetzt abweist — als Ausgangslage fuer eine
+        // Frage nach Unterschriften waere er unrealistisch.
+        return { data: {
+          ik_nummer: '123456789', name: 'Alltagsengel',
+          address: { strasse: 'Teststrasse 1', plz: '60311', ort: 'Frankfurt am Main' },
+        } }
       case 'leistungspreise':
       case 'billing_tariffs':
         return { data: [{

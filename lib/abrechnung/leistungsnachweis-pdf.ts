@@ -26,6 +26,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { getOrgIK } from '@/lib/config/org-config'
+import { DEFAULT_ORG_ID } from '@/lib/organizations/types'
 import { ohneStornierte } from '@/lib/leistungsnachweis/status-sync'
 import { dejaVuFontFaceCss, PDF_SCHRIFT_FAMILIE } from '@/lib/pdf/schrift-css'
 
@@ -49,29 +50,86 @@ export interface LeistungserbringerInfo {
   email: string
 }
 
+/**
+ * Der Leistungserbringer, der auf dem Nachweis steht.
+ *
+ * BEFUND (Block 71): diese Funktion fiel auf `LEISTUNGSERBRINGER` zurueck,
+ * sobald irgendetwas nicht klappte — der verworfene Lesefehler, ein Konto
+ * ohne Namen, eine leere Adresse. Fuer die Stamm-Organisation ist das
+ * richtig: die Konstante SIND ihre eigenen Daten. Fuer jeden anderen
+ * Mandanten ist es keine Ersatzangabe, sondern ein FREMDER Name: der
+ * Nachweis haette „Alltagsengel UG" samt Frankfurter Anschrift als
+ * Leistungserbringer ausgewiesen — gegenueber dem Klienten, der ihn
+ * unterschreibt, und gegenueber der Pflegekasse, bei der er die Leistung
+ * belegt.
+ *
+ * Dasselbe galt feldweise: `addr.strasse || LEISTUNGSERBRINGER.strasse`
+ * setzte einem fremden Mandanten die Neue Mainzer Strasse ein.
+ *
+ * Deshalb: die Konstante nur noch fuer die Stamm-Organisation. Fuer jeden
+ * anderen Mandanten bricht die Erstellung ab und sagt, was fehlt. Ein
+ * Nachweis mit dem falschen Leistungserbringer ist schlechter als keiner —
+ * er ist nicht als falsch zu erkennen.
+ *
+ * Live gemessen: sechs Organisationen, davon eine echte. Der Befund ist
+ * heute ohne Schaden im Bestand und beim siebten Eintrag keiner mehr.
+ */
 export async function getLeistungserbringer(
   supabase: SupabaseClient,
   organizationId: string,
 ): Promise<LeistungserbringerInfo> {
-  try {
-    const { data } = await supabase
-      .from('organizations')
-      .select('name, address, settings')
-      .eq('id', organizationId)
-      .single()
-    if (data?.name) {
-      const addr = (data.address as Record<string, string>) || {}
-      const settings = (data.settings as Record<string, string>) || {}
-      return {
-        name: data.name,
-        kurz: settings.kurzname || data.name.replace(/ UG.*$| GmbH.*$| e\.V\..*$/i, '').trim(),
-        strasse: addr.strasse || LEISTUNGSERBRINGER.strasse,
-        ort: addr.plz && addr.ort ? `${addr.plz} ${addr.ort}` : LEISTUNGSERBRINGER.ort,
-        email: settings.email || LEISTUNGSERBRINGER.email,
-      }
-    }
-  } catch { /* DB nicht verfuegbar, Fallback */ }
-  return { ...LEISTUNGSERBRINGER }
+  const istStammOrg = organizationId === DEFAULT_ORG_ID
+
+  const { data, error } = await supabase
+    .from('organizations')
+    .select('name, address, settings')
+    .eq('id', organizationId)
+    .maybeSingle()
+
+  if (error) {
+    if (istStammOrg) return { ...LEISTUNGSERBRINGER }
+    throw new Error(
+      'Die Stammdaten des Leistungserbringers konnten nicht geladen werden. '
+      + 'Der Nachweis wird nicht erstellt, weil er sonst einen fremden Leistungserbringer ausweisen würde.',
+    )
+  }
+
+  if (!data?.name) {
+    if (istStammOrg) return { ...LEISTUNGSERBRINGER }
+    throw new Error(
+      'Für diese Organisation ist kein Name hinterlegt. '
+      + 'Der Leistungserbringer ist eine Pflichtangabe des Nachweises.',
+    )
+  }
+
+  const addr = (data.address as Record<string, string>) || {}
+  const settings = (data.settings as Record<string, string>) || {}
+
+  // Feldweise Ersatzangaben: erlaubt, solange es die eigenen sind.
+  const strasse = addr.strasse || (istStammOrg ? LEISTUNGSERBRINGER.strasse : '')
+  const ort = addr.plz && addr.ort
+    ? `${addr.plz} ${addr.ort}`
+    : (istStammOrg ? LEISTUNGSERBRINGER.ort : '')
+  const email = settings.email || (istStammOrg ? LEISTUNGSERBRINGER.email : '')
+
+  const fehlend = [
+    !strasse && 'Straße',
+    !ort && 'PLZ und Ort',
+  ].filter(Boolean) as string[]
+  if (fehlend.length > 0) {
+    throw new Error(
+      `Die Anschrift des Leistungserbringers ist unvollständig (${fehlend.join(', ')}). `
+      + 'Sie steht als Pflichtangabe auf dem Nachweis und wird nicht durch fremde Daten ersetzt.',
+    )
+  }
+
+  return {
+    name: data.name,
+    kurz: settings.kurzname || data.name.replace(/ UG.*$| GmbH.*$| e\.V\..*$/i, '').trim(),
+    strasse,
+    ort,
+    email,
+  }
 }
 
 const GOLD = '#C9963C'
@@ -391,9 +449,17 @@ export async function loadLeistungsnachweis(params: {
   const monatLabel = new Date(jahr, monatNum - 1, 1).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', month: 'long',
     year: 'numeric', })
 
-  const le = effectiveOrgId
-    ? await getLeistungserbringer(supabase, effectiveOrgId)
-    : { ...LEISTUNGSERBRINGER }
+  // Ohne Organisation laesst sich nicht sagen, WER die Leistung erbracht
+  // hat. Vorher stand dann die Stamm-Organisation auf dem Nachweis — das
+  // ist keine Vorgabe, sondern eine Behauptung. `clients.organization_id`
+  // ist live NOT NULL, dieser Zweig also die Ausnahme und kein Regelfall.
+  if (!effectiveOrgId) {
+    throw new Error(
+      'Der Klient ist keiner Organisation zugeordnet — ohne sie steht kein '
+      + 'Leistungserbringer fest, und der Nachweis wird nicht erstellt.',
+    )
+  }
+  const le = await getLeistungserbringer(supabase, effectiveOrgId)
 
   return {
     monat,
