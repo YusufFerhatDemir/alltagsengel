@@ -47,6 +47,9 @@ for (const datei of ['.env.local', '.env']) {
 import { createClient } from '@supabase/supabase-js'
 import { apiHeaders, envWert, secretKey } from './lib/supabase-keys.mjs'
 import { unterschriftBelegt, belegLuecke } from '../lib/billing/nachweis-beleg.ts'
+import {
+  bewerteAltbestand, istBefund, altbestandsMeldung,
+} from '../lib/unterschrift/altbestand.ts'
 
 const URL_BASIS = envWert('NEXT_PUBLIC_SUPABASE_URL')
 const SERVICE = secretKey()
@@ -392,13 +395,25 @@ try {
   //
   // Kein Schreibvorgang, eine Feststellung: was von den 30 Bestandszeilen
   // waere nach heutiger Regel abrechenbar.
-  pruefe('U10', 'Altbestand: keine abgerechnete Zeile ohne Unterschriftsbeleg',
-    abgerechnetOhneBeleg.length === 0,
+  // Gegen die GRUNDLINIE, nicht gegen Null.
+  //
+  // Bis Block 49 war diese Station dauerhaft OFFEN — wegen genau einer
+  // Bestandszeile, die niemand mehr beheben wird (ein Nachtragen des
+  // Hashes waere eine Faelschung; der Zeitpunkt der Unterschrift ist
+  // unbekannt, und der Hash bildet ihn mit ab). Der ganze Lauf endete
+  // deshalb immer mit exit 1, und ein Prueflauf, der immer rot ist, wird
+  // nicht mehr gelesen: eine NEUE abgerechnete Zeile ohne Beleg — also
+  // genau das, was hier bewacht werden soll — waere in derselben roten
+  // Meldung untergegangen.
+  //
+  // Jetzt zaehlt nur noch das NEUE. Die bekannte Zeile steht namentlich
+  // in lib/unterschrift/altbestand.ts, mit Datum und Grund.
+  const altbestand = bewerteAltbestand(abgerechnetOhneBeleg.map(r => r.id))
+  pruefe('U10', 'Keine NEUE abgerechnete Zeile ohne Unterschriftsbeleg',
+    !istBefund(altbestand),
     `${alle.length} Nachweise im Bestand, davon ${ohneHash.length} ohne Hash.\n`
     + `${abgerechnetOhneBeleg.length} tragen status='invoiced' OHNE Unterschriftsbeleg.\n`
-    + 'Ein Nachziehen des Hashes waere hier eine Faelschung: der Zeitpunkt der\n'
-    + 'Unterschrift ist unbekannt, und der Hash bildet ihn mit ab. Siehe\n'
-    + 'docs/UNTERSCHRIFT_ALTBESTAND_2026-08-31.md.')
+    + altbestandsMeldung(altbestand))
 } catch (err) {
   console.error(`\n❌ ABBRUCH: ${err instanceof Error ? err.message : String(err)}`)
   ergebnisse.push({ id: 'ABBRUCH', bestanden: false })
