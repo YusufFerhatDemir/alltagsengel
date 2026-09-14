@@ -167,16 +167,27 @@ export interface AufbewahrungsClient {
         not(spalte: string, operator: string, wert: null): PromiseLike<{ count?: number | null; error: DbFehler | null }>
       } & PromiseLike<{ count?: number | null; error: DbFehler | null }>
     }
-    update(werte: Record<string, unknown>): {
+    /**
+     * `count: 'exact'` ist hier NICHT optional-aus-Bequemlichkeit,
+     * sondern der Grund, warum diese Signatur seit Block 101 so
+     * aussieht: `data` traegt nur die zurueckgegebene DARSTELLUNG, und
+     * die ist bei PostgREST gedeckelt. Der Zaehler kommt ueber den
+     * Content-Range-Kanal.
+     */
+    update(werte: Record<string, unknown>, optionen?: { count?: 'exact' }): {
       lt(spalte: string, wert: string): {
         not(spalte: string, operator: string, wert: null): {
-          select(spalten: string): PromiseLike<{ data: unknown[] | null; error: DbFehler | null }>
+          select(spalten: string): PromiseLike<{
+            data: unknown[] | null; count?: number | null; error: DbFehler | null
+          }>
         }
       }
     }
-    delete(): {
+    delete(optionen?: { count?: 'exact' }): {
       lt(spalte: string, wert: string): {
-        select(spalten: string): PromiseLike<{ data: unknown[] | null; error: DbFehler | null }>
+        select(spalten: string): PromiseLike<{
+          data: unknown[] | null; count?: number | null; error: DbFehler | null
+        }>
       }
     }
   }
@@ -243,14 +254,29 @@ export async function fuehreAufbewahrungAus(
           // `.select()` ist der Wirkungsnachweis: PostgREST meldet keinen
           // Fehler, wenn NULL Zeilen getroffen wurden. Ohne ihn koennte
           // dieser Lauf jahrelang „erfolgreich" nichts tun.
-          const { data, error } = await client
+          //
+          // GEZAEHLT wird aber NICHT ueber `data.length` (Block 101).
+          // PostgREST deckelt die zurueckgegebene Darstellung — live am
+          // 14.09.2026 gemessen: ein `select` auf page_views (10 357
+          // Zeilen) liefert ohne `limit` genau 1000, ohne Fehler, und
+          // meldet die Wahrheit nur im Content-Range. Ueber 1000
+          // betroffenen Zeilen haette dieser Lauf seine eigene Wirkung
+          // untertrieben — und der Trockenlauf daneben, der mit
+          // `count: 'exact'` zaehlt, haette eine hoehere Zahl gemeldet
+          // als der scharfe Lauf. Ein Loeschbericht, der zu wenig
+          // ausweist, ist der eine Fehler, den man einer Loeschung nicht
+          // ansieht.
+          //
+          // `count: 'exact'` faehrt den Zaehler ueber den
+          // Content-Range-Kanal und ist von der Obergrenze unberuehrt.
+          const { count, error } = await client
             .from(eintrag.tabelle)
-            .update({ [eintrag.ipSpalte]: null })
+            .update({ [eintrag.ipSpalte]: null }, { count: 'exact' })
             .lt(eintrag.zeitSpalte, grenze)
             .not(eintrag.ipSpalte, 'is', null)
             .select('id')
           if (error) throw new Error(`IP-Kuerzung fehlgeschlagen: ${error.message}`)
-          ergebnis.ipGekuerzt = data?.length ?? 0
+          ergebnis.ipGekuerzt = count ?? 0
         }
       }
 
@@ -264,13 +290,15 @@ export async function fuehreAufbewahrungAus(
         if (error) throw new Error(`Zaehlen (Loeschung) fehlgeschlagen: ${error.message}`)
         ergebnis.geloescht = count ?? 0
       } else {
-        const { data, error } = await client
+        // Wie oben: gezaehlt wird ueber `count`, nicht ueber die Laenge
+        // der zurueckgegebenen Darstellung (Block 101).
+        const { count, error } = await client
           .from(eintrag.tabelle)
-          .delete()
+          .delete({ count: 'exact' })
           .lt(eintrag.zeitSpalte, loeschGrenze)
           .select('id')
         if (error) throw new Error(`Loeschung fehlgeschlagen: ${error.message}`)
-        ergebnis.geloescht = data?.length ?? 0
+        ergebnis.geloescht = count ?? 0
       }
     } catch (err) {
       ergebnis.fehler = err instanceof Error ? err.message : String(err)

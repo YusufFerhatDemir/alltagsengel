@@ -167,10 +167,65 @@ describe('Scharfer Lauf', () => {
   })
 
   it('zaehlt die tatsaechlich getroffenen Zeilen, nicht die erhofften', async () => {
-    const { client } = fake(a => (a.operation === 'delete' ? { data: [{ id: '1' }] } : { data: [] }))
+    const { client } = fake(a =>
+      a.operation === 'delete' ? { data: [{ id: '1' }], count: 1 } : { data: [], count: 0 })
     const e = await fuehreAufbewahrungAus(client, { jetzt: JETZT, trockenlauf: false })
     expect(e.ipGekuerztGesamt).toBe(0)
     expect(e.geloeschtGesamt).toBe(AUFBEWAHRUNG.length)
+  })
+
+  it('verlangt den Zaehler ueber count, nicht ueber die Zeilenliste (Block 101)', async () => {
+    // BEFUND: gezaehlt wurde `data.length`. PostgREST deckelt aber die
+    // zurueckgegebene DARSTELLUNG — live am 14.09.2026 gemessen: ein
+    // `select` auf page_views (10 357 Zeilen) liefert ohne `limit` genau
+    // 1000, ohne Fehler, und nennt die Wahrheit nur im Content-Range.
+    //
+    // Live faellig sind heute 2 835 page_views, 2 553 visitors und
+    // 2 511 visitor_locations — jede dieser Zahlen liegt ueber 1000. Der
+    // scharfe Lauf haette also weniger gemeldet als der Trockenlauf
+    // daneben, der schon immer mit `count: 'exact'` zaehlt.
+    //
+    // Der Doppelgaenger bildet genau das ab: 1000 Zeilen Darstellung,
+    // 2835 betroffen.
+    const { f, client } = fake(a =>
+      a.operation === 'delete'
+        ? { data: Array.from({ length: 1000 }, (_, i) => ({ id: String(i) })), count: 2835 }
+        : { data: [], count: 0 })
+
+    const e = await fuehreAufbewahrungAus(client, { jetzt: JETZT, trockenlauf: false })
+
+    expect(e.geloeschtGesamt).toBe(AUFBEWAHRUNG.length * 2835)
+    // Und der Zaehler wurde ueberhaupt angefordert — ohne
+    // `count: 'exact'` bliebe er leer.
+    for (const a of f.aufrufe.filter(x => x.operation === 'delete')) {
+      expect(a.zaehlmodus, `${a.tabelle}: Loeschung ohne count`).toBe('exact')
+    }
+  })
+
+  it('auch die IP-Kuerzung zaehlt ueber count', async () => {
+    const { f, client } = fake(a =>
+      a.operation === 'update'
+        ? { data: Array.from({ length: 1000 }, (_, i) => ({ id: String(i) })), count: 6632 }
+        : { data: [], count: 0 })
+
+    const e = await fuehreAufbewahrungAus(client, { jetzt: JETZT, trockenlauf: false })
+
+    const mitIp = AUFBEWAHRUNG.filter(x => x.ipSpalte).length
+    expect(e.ipGekuerztGesamt).toBe(mitIp * 6632)
+    for (const a of f.aufrufe.filter(x => x.operation === 'update')) {
+      expect(a.zaehlmodus, `${a.tabelle}: IP-Kuerzung ohne count`).toBe('exact')
+    }
+  })
+
+  it('der Wirkungsnachweis bleibt: select(id) steht weiter in der Kette', async () => {
+    // `count` ersetzt ihn NICHT. Ohne `.select()` gaebe PostgREST gar
+    // keine Darstellung zurueck, und die Kette liesse sich nicht mehr
+    // daran ablesen, dass hier ueberhaupt etwas zurueckkommen soll.
+    const { f, client } = fake(() => ({ data: [], count: 0 }))
+    await fuehreAufbewahrungAus(client, { jetzt: JETZT, trockenlauf: false })
+    for (const a of f.aufrufe.filter(x => x.operation !== 'select')) {
+      expect(a.spalten, `${a.tabelle}/${a.operation}`).toBe('id')
+    }
   })
 
   it('faesst KEINE Tabelle aus NICHT_AUTOMATISCH an', async () => {

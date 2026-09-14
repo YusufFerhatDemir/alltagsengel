@@ -21,6 +21,7 @@
 // Rueckgabewert allein sagt darueber nichts.
 
 import { describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
 import {
   AUFBEWAHRUNGSKATALOG, NICHT_AUTOMATISCH, fristAus, katalogMitFristen, alleEnvSchluessel,
 } from '../../lib/aufbewahrung/katalog'
@@ -40,7 +41,12 @@ interface Aufruf {
 function fakeClient(treffer: Record<string, number> = {}, insertFehler?: string) {
   const aufrufe: Aufruf[] = []
 
-  function kette(tabelle: string, art: Aufruf['art'], werte?: Record<string, unknown>) {
+  function kette(
+    tabelle: string,
+    art: Aufruf['art'],
+    werte?: Record<string, unknown>,
+    zaehlmodus?: string,
+  ) {
     const eintrag: Aufruf = { tabelle, art, filter: [], werte }
     aufrufe.push(eintrag)
     const n = treffer[tabelle] ?? 0
@@ -55,10 +61,19 @@ function fakeClient(treffer: Record<string, number> = {}, insertFehler?: string)
       neq(spalte: string, wert: string) { eintrag.filter.push(`neq:${spalte}:${wert}`); return api },
       select() { return api },
       then(aufloesen: (w: unknown) => unknown) {
+        // Seit Block 101 traegt auch eine MUTATION ihren Zaehler: `data`
+        // ist nur die zurueckgegebene Darstellung und bei PostgREST
+        // gedeckelt (live gemessen: 1000), `count` nennt die Zahl der
+        // betroffenen Zeilen. Der Doppelgaenger bildet beides ab —
+        // `zeilen` hoechstens 1000 lang, `count` ungedeckelt.
         return Promise.resolve(aufloesen(
           art === 'select'
             ? { count: n, error: null }
-            : { data: zeilen, error: null },
+            // `count` gibt es NUR, wenn er angefordert wurde — ohne
+            // `Prefer: count=exact` liefert PostgREST ihn nicht. Ein
+            // Doppelgaenger, der ihn immer mitschickt, liesse eine
+            // Kette ohne count gruen durchgehen.
+            : { data: zeilen.slice(0, 1000), count: zaehlmodus ? n : null, error: null },
         ))
       },
     }
@@ -69,8 +84,9 @@ function fakeClient(treffer: Record<string, number> = {}, insertFehler?: string)
     from(tabelle: string) {
       return {
         select: (_s?: string, _o?: unknown) => kette(tabelle, 'select'),
-        update: (werte: Record<string, unknown>) => kette(tabelle, 'update', werte),
-        delete: () => kette(tabelle, 'delete'),
+        update: (werte: Record<string, unknown>, o?: { count?: string }) =>
+          kette(tabelle, 'update', werte, o?.count),
+        delete: (o?: { count?: string }) => kette(tabelle, 'delete', undefined, o?.count),
         insert: (werte: Record<string, unknown>) => {
           aufrufe.push({ tabelle, art: 'insert', filter: [], werte })
           return Promise.resolve({ error: insertFehler ? { message: insertFehler } : null })
@@ -198,6 +214,60 @@ describe('Aufbewahrungslauf: der Trockenlauf aendert nichts', () => {
     expect(e.spurGeschrieben).toBeNull()
     // Gezaehlt wird trotzdem — die Zahlen SIND das Entscheidungsmaterial.
     expect(e.geloeschtGesamt).toBeGreaterThan(0)
+  })
+})
+
+describe('Block 101: gezaehlt wird ueber count, nicht ueber die Zeilenliste', () => {
+  it('meldet auch ueber 1000 betroffenen Zeilen die WAHRE Zahl', async () => {
+    // BEFUND: gezaehlt wurde `data.length`. PostgREST deckelt aber die
+    // zurueckgegebene DARSTELLUNG — live am 14.09.2026 gemessen: ein
+    // `select` auf page_views (10 357 Zeilen) liefert ohne `limit` genau
+    // 1000, ohne Fehler, und nennt die Wahrheit nur im Content-Range.
+    //
+    // Der Trockenlauf daneben zaehlt seit jeher mit `count: 'exact'`.
+    // Der scharfe Lauf haette also WENIGER gemeldet als der Trockenlauf —
+    // ein Loeschbericht, der zu wenig ausweist, und das ist der eine
+    // Fehler, den man einer Loeschung nicht ansieht.
+    const { client } = fakeClient({ geo_events: 2835 })
+    const e = await fuehreAufbewahrungslaufAus(client, {
+      jetzt: JETZT, trockenlauf: false, env: {},
+    })
+    const geo = e.regeln.find(r => r.tabelle === 'geo_events')!
+    expect(geo.geloescht).toBe(2835)
+    expect(geo.geloescht).toBeGreaterThan(1000)
+  })
+
+  it('die IP-Kuerzung fordert den Zaehler ebenfalls an', async () => {
+    // EHRLICH GESAGT: dieser eine Zweig ist nicht fahrbar. Der zentrale
+    // Katalog fuehrt heute KEINEN Eintrag mit `ipSpalte` (nur geo_events
+    // und offline_queue, beide ohne) — der Zweig existiert fuer den
+    // naechsten Eintrag, nicht fuer einen bestehenden. Eine Kette, die
+    // nie laeuft, laesst sich nicht am Verhalten pruefen; geprueft wird
+    // deshalb die Quelle. Sobald ein Eintrag eine IP-Spalte bekommt,
+    // greifen die Verhaltenstests darueber automatisch mit.
+    const quelle = readFileSync('lib/aufbewahrung/lauf.ts', 'utf8')
+    // Ab dem UPDATE vorwaerts, nicht bis zum naechsten
+    // `ergebnis.ipGekuerzt =`: den gibt es schon im Trockenlauf-Zweig
+    // darueber, und das Fenster waere leer.
+    const ab = quelle.indexOf('.update({ [regel.ipSpalte]: null }')
+    expect(ab, 'IP-Kuerzung nicht gefunden').toBeGreaterThan(-1)
+    const stelle = quelle.slice(ab, ab + 400)
+    expect(stelle).toContain("{ count: 'exact' }")
+    expect(stelle).toContain('ergebnis.ipGekuerzt = count ?? 0')
+  })
+
+  it('Trockenlauf und scharfer Lauf nennen dieselbe Zahl', async () => {
+    // Die eigentliche Zusicherung: wer vorher zaehlt und dann loescht,
+    // muss hinterher dieselbe Menge vorfinden. Vorher wich der scharfe
+    // Lauf ab, sobald mehr als 1000 Zeilen faellig waren.
+    const treffer = { geo_events: 2835 }
+    const trocken = await fuehreAufbewahrungslaufAus(fakeClient(treffer).client, {
+      jetzt: JETZT, trockenlauf: true, env: {},
+    })
+    const scharf = await fuehreAufbewahrungslaufAus(fakeClient(treffer).client, {
+      jetzt: JETZT, trockenlauf: false, env: {},
+    })
+    expect(scharf.geloeschtGesamt).toBe(trocken.geloeschtGesamt)
   })
 })
 

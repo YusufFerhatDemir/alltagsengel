@@ -231,14 +231,25 @@ export function erstelleFakeSupabase(
         operationGesetzt = true
         aufruf.payload = payload
         if (optionen !== undefined) aufruf.optionen = optionen
+        // `count` steht bei einer MUTATION im zweiten Argument, nicht im
+        // nachgelagerten select(). Ohne diese Zeile konnte der
+        // Doppelgaenger „mit Zaehler geschrieben" nicht ausdruecken —
+        // und genau das ist seit Block 101 der Unterschied zwischen der
+        // Zahl der betroffenen Zeilen und der Laenge der
+        // zurueckgegebenen Darstellung.
+        const z = (optionen as { count?: string } | undefined)?.count
+        if (z) aufruf.zaehlmodus = z
         return kette
       }
     }
 
-    kette.delete = () => {
+    kette.delete = (optionen?: unknown) => {
       aufruf.operation = 'delete'
       aufruf.roh = 'delete'
       operationGesetzt = true
+      if (optionen !== undefined) aufruf.optionen = optionen
+      const z = (optionen as { count?: string } | undefined)?.count
+      if (z) aufruf.zaehlmodus = z
       return kette
     }
 
