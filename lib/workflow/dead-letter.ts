@@ -89,14 +89,41 @@ export async function retryDeadLetter(
 
   const deadLetter = beansprucht as WfDeadLetter
 
-  /** Gibt den Anspruch frei, damit ein spaeterer Versuch moeglich bleibt. */
-  const anspruchZuruecknehmen = async () => {
-    await supabase
+  /**
+   * Gibt den Anspruch frei, damit ein spaeterer Versuch moeglich bleibt.
+   *
+   * BEFUND (Block 63, 14.09.2026): ungeprueft. Schlug die Freigabe fehl,
+   * blieb `manuell_wiederholt = true` — und der Anspruch oben weist jeden
+   * weiteren Versuch mit 409 „Dieser Eintrag wurde bereits manuell
+   * wiederholt" ab. Der Eintrag waere DAUERHAFT gesperrt gewesen, obwohl
+   * nie etwas wiederholt wurde, und die geworfene Ausnahme sprach nur
+   * vom urspruenglichen Fehler.
+   *
+   * Gibt den Grund zurueck, statt zu werfen: der Aufrufer wirft ohnehin
+   * gleich, und diese Meldung gehoert IN jene Ausnahme — nicht an ihre
+   * Stelle.
+   */
+  const anspruchZuruecknehmen = async (): Promise<string | null> => {
+    const { data: freigegeben, error: freigabeFehler } = await supabase
       .from('wf_dead_letter')
       .update({ manuell_wiederholt: false, wiederholt_am: null, wiederholt_von: null })
       .eq('id', params.id)
       .eq('organization_id', params.organizationId)
+      .select('id')
+
+    if (freigabeFehler || (freigegeben?.length ?? 0) === 0) {
+      return freigabeFehler?.message ?? 'keine Zeile getroffen'
+    }
+    return null
   }
+
+  /** Haengt den Freigabe-Fehlschlag an die Ausnahme, die ohnehin folgt. */
+  const mitFreigabe = (grundtext: string, freigabeGrund: string | null): string =>
+    freigabeGrund === null
+      ? grundtext
+      : `${grundtext} Zusaetzlich liess sich der Anspruch nicht freigeben `
+        + `(${freigabeGrund}) — Eintrag ${params.id} bleibt auf „bereits manuell wiederholt" `
+        + 'stehen und kann NICHT erneut versucht werden.'
 
   // 2. Urspruengliches Event laden.
   const { data: event, error: eventError } = await supabase
@@ -106,8 +133,11 @@ export async function retryDeadLetter(
     .eq('organization_id', params.organizationId)
     .single()
   if (eventError || !event) {
-    await anspruchZuruecknehmen()
-    throw new Error(`Urspruengliches Event konnte nicht geladen werden: ${eventError?.message ?? 'unbekannt'}`)
+    const freigabe = await anspruchZuruecknehmen()
+    throw new Error(mitFreigabe(
+      `Urspruengliches Event konnte nicht geladen werden: ${eventError?.message ?? 'unbekannt'}.`,
+      freigabe,
+    ))
   }
 
   // 3. Erst jetzt ausloesen.
@@ -123,8 +153,11 @@ export async function retryDeadLetter(
     p_ausgeloest_von: params.wiederholtVon,
   })
   if (emitError) {
-    await anspruchZuruecknehmen()
-    throw new Error(`Erneuter Versuch konnte nicht ausgeloest werden: ${emitError.message}`)
+    const freigabe = await anspruchZuruecknehmen()
+    throw new Error(mitFreigabe(
+      `Erneuter Versuch konnte nicht ausgeloest werden: ${emitError.message}.`,
+      freigabe,
+    ))
   }
 
   return { deadLetter, neuesEventId: neuesEventId as string | null }

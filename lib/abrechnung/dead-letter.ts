@@ -160,7 +160,16 @@ export async function inDeadLetter(
         .maybeSingle()
 
       if (bestehend) {
-        await supabase
+        // BEFUND (Block 63, 14.09.2026): Diese Fortschreibung verwarf
+        // Fehler UND getroffene Zeilen und meldete unbesehen
+        // `fehler: null` — waehrend der Insert wenige Zeilen weiter unten
+        // seinen Fehler ueber genau dieses Feld zurueckgibt. Dieselbe
+        // Funktion, zwei Massstaebe.
+        //
+        // Was dabei verloren ging, ist nicht nur ein Vermerk: `versuche`
+        // wird hier HOCHGEZAEHLT. Bleibt die Zahl stehen, waechst der
+        // Eintrag nie in die Aufmerksamkeit, fuer die er angelegt wurde.
+        const { data: fortgeschrieben, error: fortschreibFehler } = await supabase
           .from('dta_dead_letter')
           .update({
             grund: eingabe.grund,
@@ -172,6 +181,18 @@ export async function inDeadLetter(
             versand_protokoll_id: eingabe.versandProtokollId ?? null,
           })
           .eq('id', bestehend.id)
+          .select('id')
+
+        if (fortschreibFehler || (fortgeschrieben?.length ?? 0) === 0) {
+          return {
+            id: bestehend.id,
+            neu: false,
+            fehler:
+              `Der bestehende Dead-Letter-Eintrag ${bestehend.id} konnte nicht `
+              + `fortgeschrieben werden (${fortschreibFehler?.message ?? 'keine Zeile getroffen'}) `
+              + '— Versuchszaehler und Fehlergrund stehen weiter auf dem alten Stand.',
+          }
+        }
 
         return { id: bestehend.id, neu: false, fehler: null }
       }
