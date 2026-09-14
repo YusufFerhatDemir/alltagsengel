@@ -4,33 +4,7 @@ import { holeRollenQuellen, quellenDuerfen } from '@/lib/auth/rollen-quelle'
 import type { Berechtigung } from '@/lib/auth/rollen'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import type { SupabaseClient } from '@supabase/supabase-js'
-
-/**
- * Prüft, ob die Sitzung auf AAL2 steht (zweiter Faktor verifiziert).
- * Admin-Konten mit eingerichtetem TOTP-Faktor MÜSSEN auf AAL2 sein,
- * sonst dürfen sie keine schreibenden Operationen durchführen.
- *
- * Fail-open für Admins OHNE eingerichteten Faktor: Sonst sperrt man
- * sie komplett aus, bevor sie MFA einrichten können. Das Layout-Gate
- * leitet sie zur Einrichtung weiter.
- */
-async function requireAdminAal2(supabase: SupabaseClient): Promise<NextResponse | null> {
-  try {
-    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
-    if (!aal) return null // Fehler → fail-open (Layout-Guard greift)
-    // Nur blockieren, wenn ein Faktor existiert UND die Sitzung nicht AAL2 ist
-    if (aal.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') {
-      return NextResponse.json(
-        { error: 'Zweiter Faktor nicht verifiziert. Bitte erneut anmelden.' },
-        { status: 403 },
-      )
-    }
-  } catch {
-    // Fail-open bei Fehlern
-  }
-  return null
-}
+import { zweiterFaktorRiegel } from '@/lib/auth/zweiter-faktor'
 
 /**
  * Rollenkonzept (lib/auth/rollen.ts): geprueft wird eine BERECHTIGUNG,
@@ -49,8 +23,12 @@ export async function requireAdmin(
   if (!quellenDuerfen(quellen, berechtigung)) {
     return { ok: false, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
   }
-  // MFA-Prüfung: Admin mit Faktor muss auf AAL2 sein
-  const aalBlock = await requireAdminAal2(supabase)
+  // Zweiter Faktor: Konto MIT bestaetigtem Faktor muss auf AAL2 stehen.
+  // Fail-open bleibt ausdruecklich fuer Konten OHNE Faktor — sonst kaeme
+  // niemand mehr an die Einrichtung heran. Ob ein Faktor existiert, sagt
+  // jetzt die Faktorliste und nicht mehr das Gelingen der AAL-Abfrage
+  // (Block 95, lib/auth/zweiter-faktor.ts).
+  const aalBlock = await zweiterFaktorRiegel(supabase, quellen.faktoren)
   if (aalBlock) return { ok: false, response: aalBlock }
   return { ok: true }
 }
@@ -83,8 +61,12 @@ export async function requireAdminMitOrg(
   if (!quellenDuerfen(quellen, berechtigung)) {
     return { ok: false, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
   }
-  // MFA-Prüfung: Admin mit Faktor muss auf AAL2 sein
-  const aalBlock = await requireAdminAal2(supabase)
+  // Zweiter Faktor: Konto MIT bestaetigtem Faktor muss auf AAL2 stehen.
+  // Fail-open bleibt ausdruecklich fuer Konten OHNE Faktor — sonst kaeme
+  // niemand mehr an die Einrichtung heran. Ob ein Faktor existiert, sagt
+  // jetzt die Faktorliste und nicht mehr das Gelingen der AAL-Abfrage
+  // (Block 95, lib/auth/zweiter-faktor.ts).
+  const aalBlock = await zweiterFaktorRiegel(supabase, quellen.faktoren)
   if (aalBlock) return { ok: false, response: aalBlock }
 
   const organizationId = await getActiveOrgId()

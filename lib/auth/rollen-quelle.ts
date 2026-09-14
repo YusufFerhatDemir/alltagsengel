@@ -21,6 +21,8 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { istZurLoeschungVorgemerkt } from './konto-status'
+import { faktorenVon } from './zweiter-faktor'
+import type { MfaFaktor } from '@/lib/coach/mfa'
 import {
   wirksamDarf,
   wirksamIstAdministration,
@@ -46,6 +48,22 @@ export interface RollenQuellen {
    * Berechtigungsfrage mit Nein beantwortet wird (siehe konto-status.ts).
    */
   zurLoeschungVorgemerkt: boolean
+  /**
+   * Bestaetigte UND unbestaetigte MFA-Faktoren des Kontos, so wie
+   * `auth.getUser()` sie geliefert hat.
+   *
+   * Sie stehen hier, weil die Guards den zweiten Faktor sonst aus
+   * `getAuthenticatorAssuranceLevel()` allein ableiten muessten — und
+   * jene eine Abfrage traegt „hat einen Faktor" und „Sitzung ist
+   * erhoben" gemeinsam. Faellt sie aus, faellt beides aus, und der
+   * Riegel laesst durch (Block 95, siehe lib/auth/zweiter-faktor.ts).
+   * Die Liste kostet nichts: sie kommt mit der Benutzerantwort mit.
+   *
+   * Leer, wenn der Aufrufer `holeRollenQuellenFuer()` mit einem
+   * Benutzerobjekt ohne `factors` aufruft — das ist die Lage ALLER
+   * Routen, die den zweiten Faktor ohnehin nicht pruefen.
+   */
+  faktoren: MfaFaktor[]
 }
 
 /**
@@ -83,6 +101,8 @@ export async function holeRollenQuellen(
 export interface RollenBenutzer {
   id: string
   app_metadata?: Record<string, unknown> | null
+  /** MFA-Faktoren aus der Auth-Antwort — siehe `RollenQuellen.faktoren`. */
+  factors?: unknown
 }
 
 /**
@@ -134,6 +154,7 @@ export async function holeRollenQuellenFuer(
     nachname,
     name: [vorname, nachname].filter(Boolean).join(' ') || 'Alltagsengel',
     zurLoeschungVorgemerkt: vorgemerkt,
+    faktoren: faktorenVon(user),
   }
 }
 

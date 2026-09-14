@@ -4,21 +4,7 @@ import type { Berechtigung } from '@/lib/auth/rollen'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId, resolveUserOrgId } from '@/lib/organizations/server'
 import { hatOpsPostfach } from './postfach-rollen'
-import type { SupabaseClient } from '@supabase/supabase-js'
-
-/** MFA-Prüfung: Admin mit Faktor muss auf AAL2 sein. Fail-open bei Fehler. */
-async function requireAdminAal2(supabase: SupabaseClient): Promise<NextResponse | null> {
-  try {
-    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
-    if (aal && aal.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') {
-      return NextResponse.json(
-        { error: 'Zweiter Faktor nicht verifiziert. Bitte erneut anmelden.' },
-        { status: 403 },
-      )
-    }
-  } catch {}
-  return null
-}
+import { zweiterFaktorRiegel } from '@/lib/auth/zweiter-faktor'
 
 export interface OpsAuthContext {
   userId: string
@@ -50,8 +36,11 @@ export async function requireOpsAdmin(
   if (!quellenDuerfen(quellen, berechtigung)) {
     return { ok: false, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
   }
-  // MFA-Prüfung
-  const aalBlock = await requireAdminAal2(supabase)
+  // Zweiter Faktor: ein Konto MIT bestaetigtem Faktor muss auf AAL2
+  // stehen. Die Faktorliste kommt aus der Benutzerantwort, das Niveau aus
+  // dem Sitzungs-Token — zwei Haelften aus zwei Quellen, damit der
+  // Ausfall der einen nicht als „kein Faktor" durchgeht (Block 95).
+  const aalBlock = await zweiterFaktorRiegel(supabase, quellen.faktoren)
   if (aalBlock) return { ok: false, response: aalBlock }
 
   // Die Organisation haengt am organization_members-Mapping (Org-Switcher-Cookie),

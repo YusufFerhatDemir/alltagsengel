@@ -16,6 +16,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { istZurLoeschungVorgemerkt } from './konto-status'
+import { faktorenVon, zweiterFaktorRiegel } from './zweiter-faktor'
+import type { MfaFaktor } from '@/lib/coach/mfa'
 import {
   wirksamDarfAlle,
   wirksamIstAdministration,
@@ -36,28 +38,6 @@ export type GuardErgebnis =
 
 function fehler(status: number, text: string): { ok: false; response: NextResponse } {
   return { ok: false, response: NextResponse.json({ error: text }, { status }) }
-}
-
-/**
- * Zweiter Faktor. Bewusst fail-open fuer Konten OHNE eingerichteten
- * Faktor — sonst sperrt man sie aus, bevor sie MFA einrichten koennen
- * (dafuer gibt es /admin/mfa-einrichtung). Gleiche Regel wie in
- * lib/abrechnung/require-admin.ts.
- */
-async function pruefeAal2(supabase: SupabaseClient): Promise<NextResponse | null> {
-  try {
-    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
-    if (!aal) return null
-    if (aal.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') {
-      return NextResponse.json(
-        { error: 'Zweiter Faktor nicht verifiziert. Bitte erneut anmelden.' },
-        { status: 403 },
-      )
-    }
-  } catch {
-    // Fail-open bei Fehlern der MFA-Abfrage — das Layout-Gate greift.
-  }
-  return null
 }
 
 /**
@@ -85,6 +65,8 @@ export async function holeRolle(): Promise<
     profilRolle: string
     name: string
     supabase: SupabaseClient
+    /** MFA-Faktoren aus der Auth-Antwort — siehe lib/auth/zweiter-faktor.ts. */
+    faktoren: MfaFaktor[]
   } | null
 > {
   const supabase = await createClient()
@@ -119,6 +101,7 @@ export async function holeRolle(): Promise<
     profilRolle,
     name,
     supabase,
+    faktoren: faktorenVon(user),
   }
 }
 
@@ -149,8 +132,12 @@ export async function requireBerechtigung(
     return fehler(403, 'Für diesen Bereich fehlt Ihnen die Berechtigung.')
   }
 
+  // Zweiter Faktor: Konto MIT bestaetigtem Faktor muss auf AAL2 stehen;
+  // Konten ohne Faktor bleiben bewusst offen (dafuer gibt es
+  // /admin/mfa-einrichtung). Welche der beiden Lagen vorliegt, sagt seit
+  // Block 95 die Faktorliste — nicht mehr das Gelingen der AAL-Abfrage.
   if (!optionen.ohneMfa) {
-    const block = await pruefeAal2(auth.supabase)
+    const block = await zweiterFaktorRiegel(auth.supabase, auth.faktoren)
     if (block) return { ok: false, response: block }
   }
 
@@ -178,8 +165,12 @@ export async function requireAdministration(
     return fehler(403, 'Nur für Administratoren.')
   }
 
+  // Zweiter Faktor: Konto MIT bestaetigtem Faktor muss auf AAL2 stehen;
+  // Konten ohne Faktor bleiben bewusst offen (dafuer gibt es
+  // /admin/mfa-einrichtung). Welche der beiden Lagen vorliegt, sagt seit
+  // Block 95 die Faktorliste — nicht mehr das Gelingen der AAL-Abfrage.
   if (!optionen.ohneMfa) {
-    const block = await pruefeAal2(auth.supabase)
+    const block = await zweiterFaktorRiegel(auth.supabase, auth.faktoren)
     if (block) return { ok: false, response: block }
   }
 

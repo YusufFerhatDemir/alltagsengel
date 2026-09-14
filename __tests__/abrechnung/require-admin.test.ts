@@ -19,6 +19,16 @@
  * Genau diese Absicht wird hier festgehalten, damit ein spaeterer
  * "Haertungs"-Umbau nicht versehentlich alle aussperrt.
  *
+ * NEU SEIT BLOCK 95: woran diese eine Fail-open-Richtung haengt, hat sich
+ * geaendert. Bis hierhin las das Modul NUR `getAuthenticatorAssuranceLevel()`
+ * und schloss aus `nextLevel !== 'aal2'` auf „kein Faktor eingerichtet" —
+ * eine gescheiterte oder leere Abfrage sah damit genauso aus wie ein Konto
+ * ohne Faktor, und der Riegel liess durch. Jetzt sagt die Faktorliste aus
+ * der Benutzerantwort, ob ein Faktor existiert; das Sitzungsniveau ist die
+ * zweite, unabhaengige Haelfte. Fuer ein Konto MIT Faktor ist ein Ausfall
+ * der Niveau-Abfrage deshalb GESPERRT. Die Tests unten halten beide
+ * Richtungen getrennt fest.
+ *
  * Punkt 4 haengt an getActiveOrgId() und NICHT an profiles: die Tabelle
  * hat keine organization_id. Ein Guard, der sie dort selektiert, liefert
  * still 403 — der Test unten haelt fest, dass hier die richtige Quelle
@@ -62,9 +72,17 @@ import { requireAdmin, requireAdminMitOrg } from '@/lib/abrechnung/require-admin
 const USER = '00000000-0000-4000-8000-00000000a001'
 const ORG = '00000000-0000-4000-8000-00000000b001'
 
+const FAKTOR_BESTAETIGT = { id: 'f-1', factor_type: 'totp', status: 'verified' }
+const FAKTOR_ANGEFANGEN = { id: 'f-2', factor_type: 'totp', status: 'unverified' }
+
+/** Benutzerantwort mit Faktorliste — so liefert sie `auth.getUser()`. */
+function benutzer(factors: unknown[] = [FAKTOR_BESTAETIGT]) {
+  return { data: { user: { id: USER, factors } } }
+}
+
 /** Standardlage: angemeldeter Admin, MFA eingerichtet und verifiziert, Org gesetzt. */
 function lageOk() {
-  getUserMock.mockResolvedValue({ data: { user: { id: USER } } })
+  getUserMock.mockResolvedValue(benutzer())
   profileMock.mockResolvedValue({ data: { role: 'admin' } })
   aalMock.mockResolvedValue({ data: { currentLevel: 'aal2', nextLevel: 'aal2' } })
   getActiveOrgIdMock.mockResolvedValue(ORG)
@@ -160,21 +178,75 @@ describe('requireAdmin — zweiter Faktor', () => {
     expect(await fehlertext(r)).toMatch(/Zweiter Faktor/)
   })
 
+  it('blockt ihn auch dann, wenn nextLevel gar nichts sagt', async () => {
+    // Der Kern des Befundes: `nextLevel` wird aus der Faktorliste IN DER
+    // SITZUNG abgeleitet. Ein Sitzungs-Cookie, das aelter ist als die
+    // Einrichtung des Faktors, traegt sie nicht — `nextLevel` blieb dann
+    // 'aal1', und der alte Riegel las daraus „kein Faktor" und liess
+    // durch. Die Faktorliste aus der Benutzerantwort weiss es besser.
+    aalMock.mockResolvedValue({ data: { currentLevel: 'aal1', nextLevel: 'aal1' } })
+    expect(await status(await requireAdmin())).toBe(403)
+  })
+
   it('laesst einen Admin OHNE eingerichteten Faktor durch (bewusst fail-open)', async () => {
-    // nextLevel bleibt auf aal1, solange kein Faktor eingerichtet ist.
     // Wuerde hier geblockt, kaeme niemand mehr an die Einrichtung heran.
+    getUserMock.mockResolvedValue(benutzer([]))
     aalMock.mockResolvedValue({ data: { currentLevel: 'aal1', nextLevel: 'aal1' } })
     expect((await requireAdmin()).ok).toBe(true)
   })
 
-  it('laesst durch, wenn die AAL-Abfrage selbst scheitert', async () => {
+  it('zaehlt eine angefangene, nie bestaetigte Einrichtung NICHT als Faktor', async () => {
+    // Sonst sperrt der erste abgebrochene Einrichtungsversuch das Konto
+    // aus — und zwar genau aus der Seite, auf der man ihn beenden wuerde.
+    getUserMock.mockResolvedValue(benutzer([FAKTOR_ANGEFANGEN]))
+    aalMock.mockResolvedValue({ data: { currentLevel: 'aal1', nextLevel: 'aal1' } })
+    expect((await requireAdmin()).ok).toBe(true)
+  })
+
+  it('laesst OHNE Faktor durch, auch wenn die AAL-Abfrage scheitert', async () => {
+    getUserMock.mockResolvedValue(benutzer([]))
     aalMock.mockRejectedValue(new Error('Supabase nicht erreichbar'))
     expect((await requireAdmin()).ok).toBe(true)
   })
 
-  it('laesst durch, wenn die AAL-Abfrage nichts liefert', async () => {
+  it('fragt OHNE Faktor das Niveau gar nicht erst ab', async () => {
+    // Was nichts entscheiden kann, soll auch nicht scheitern koennen.
+    getUserMock.mockResolvedValue(benutzer([]))
+    await requireAdmin()
+    expect(aalMock).not.toHaveBeenCalled()
+  })
+
+  it('BLOCKT MIT Faktor, wenn die AAL-Abfrage scheitert', async () => {
+    // Bis Block 95 war das die Luecke: ein Ausfall der einen Abfrage sah
+    // aus wie „kein Faktor eingerichtet", und ein gestohlenes Passwort
+    // kam an den Kassenweg.
+    aalMock.mockRejectedValue(new Error('Supabase nicht erreichbar'))
+    const r = await requireAdmin()
+    expect(await status(r)).toBe(403)
+    expect(await fehlertext(r)).toMatch(/Zweiter Faktor/)
+  })
+
+  it('BLOCKT MIT Faktor, wenn die AAL-Abfrage einen Fehler meldet', async () => {
+    // PostgREST wirft nicht — und die Auth-Schicht auch nicht. Ein
+    // verworfenes `error` sah genauso aus wie „alles in Ordnung".
+    aalMock.mockResolvedValue({ data: null, error: { message: 'session missing' } })
+    expect(await status(await requireAdmin())).toBe(403)
+  })
+
+  it('BLOCKT MIT Faktor, wenn die AAL-Abfrage nichts liefert', async () => {
     aalMock.mockResolvedValue({ data: null })
-    expect((await requireAdmin()).ok).toBe(true)
+    expect(await status(await requireAdmin())).toBe(403)
+  })
+
+  it('BLOCKT MIT Faktor, wenn ein Fehler NEBEN einem alten Wert steht', async () => {
+    // Die haesslichste Form: `error` gesetzt UND `data` gefuellt. Wer nur
+    // `data` zerlegt, liest hier 'aal2' und laesst durch — obwohl die
+    // Abfrage gerade gesagt hat, dass sie nichts feststellen konnte.
+    aalMock.mockResolvedValue({
+      data: { currentLevel: 'aal2', nextLevel: 'aal2' },
+      error: { message: 'session missing' },
+    })
+    expect(await status(await requireAdmin())).toBe(403)
   })
 
   it('prueft den Faktor ERST nach der Berechtigung', async () => {
