@@ -28,6 +28,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { logger } from '@/lib/logger'
+import { pruefeZeitraum } from '@/lib/leistungsnachweis/zeitraum'
 const log = logger.child('leistungs-erfassung')
 
 // Live erlaubter Rückfallwert für den STATUS (kleinster gemeinsamer Nenner
@@ -143,6 +144,35 @@ export async function saveServiceRecord(
   supabase: SupabaseClient,
   input: ServiceRecordInput,
 ): Promise<SaveResult> {
+  /*
+   * ZEITFENSTER — die Regel gehoert an den Engpass, nicht in die Aufrufer.
+   *
+   * BEFUND (Block 44, 14.09.2026): Die Regel „Ende nach Beginn" stand an
+   * vier Stellen in vier Formulierungen — im Tourenweg, in
+   * /api/leistungsnachweis/crud, im SGB-V-Dienst und als DB-CHECK
+   * `service_records_zeitfenster_gueltig` (live: end_time > start_time).
+   * HIER, wo jeder dieser Wege durchkommt, stand sie nicht. Ein neuer
+   * Aufrufer erbte damit nichts.
+   *
+   * Was ohne diese Pruefung passierte, ist nicht „der Insert scheitert":
+   * die Schleife unten wertet bei 23514 den Status ab und versucht es ein
+   * ZWEITES Mal. Ein Zeitfenster-Verstoss hat denselben Fehlercode wie ein
+   * Status-Verstoss — der zweite Versuch scheitert also genauso, und die
+   * Meldung, die beim Menschen ankommt, ist der rohe Datenbanktext. Der
+   * Tourenweg sagt an derselben Stelle „bitte als zwei Nachweise erfassen
+   * (bis 23:59 und ab 00:00)"; ueber /admin/records/new kam bisher der
+   * Constraint-Name.
+   *
+   * Bewusst NICHT ueber 24 Stunden hinweg gerechnet: `duration_minutes`
+   * ist GENERATED und rechnet ohne diesen Zuschlag weiter — die Anwendung
+   * meldete dann eine andere Dauer als die abgerechnete. Begruendung in
+   * lib/leistungsnachweis/zeitraum.ts.
+   */
+  const zeitraum = pruefeZeitraum(input.start_time, input.end_time)
+  if (zeitraum.befund !== 'gueltig') {
+    return { id: null, error: zeitraum.meldung ?? 'Ungültiger Einsatzzeitraum.', degraded: false }
+  }
+
   /*
    * Abgewertet wird NUR der Status — der Budget-Topf niemals.
    *

@@ -204,23 +204,15 @@ export const DOKUMENTIERTE_SICHERHEITSLAGE = {
  * Verifikationsskripte unter `scripts/verify-*.mjs`.
  */
 export const JUENGSTE_MIGRATIONEN = [
-  // 14.09.2026: Mandantenzaun fuer die drei Tabellen, die
-  // `organization_id` tragen, sie aber in keiner Policy nennen
-  // (email_entwuerfe, marketing_content_status, security_watchlist).
-  // RESTRICTIVE, weil permissive Policies ODER-verknuepft sind und ein
-  // permissiver Zaun neben is_admin() wirkungslos waere. NICHT
-  // angewendet (DDL braucht den SQL-Editor); bis dahin fuehrt
-  // `npm run verify:mandantenzaun` die drei in seiner Erlaubnisliste.
-  // Die Vorwaerts-Migration ist inzwischen aus den fuenf juengsten
-  // herausgerutscht; nur ihre Ruecknahme steht noch in der Liste.
-  '20261115000001_rollback_org_fence_drei_blinde_tabellen.sql',
   // 14.09.2026 (Block 31): Kundenbindung fuer `pflege_massnahmen`. Als
   // einzige der drei Pflegedoku-Tabellen hatte sie keine — /kunde/pflegedoku
   // zeigte den Maßnahmenplan ohne Inhalt, weil PostgREST eine
   // RLS-Verweigerung mit `200 []` beantwortet statt mit einem Fehler.
   // NICHT angewendet (DDL braucht den SQL-Editor); bis dahin fuehrt
   // `npm run verify:portal-bindung` die Tabelle als bekannte Luecke.
-  '20261120000000_kunde_pflege_massnahmen_select.sql',
+  // Die Vorwaerts-Migration ist inzwischen aus den fuenf juengsten
+  // herausgerutscht; nur ihre Ruecknahme steht noch in der Liste — wie
+  // zuvor schon beim Mandantenzaun 20261115000000.
   '20261120000001_rollback_kunde_pflege_massnahmen_select.sql',
   // 14.09.2026 (Block 41): die Pflegekraft darf ihren EIGENEN Datensatz
   // in `caregivers` lesen. Keine der fuenf vorhandenen Policies band sie
@@ -231,6 +223,14 @@ export const JUENGSTE_MIGRATIONEN = [
   // `caregivers` als bekannte Luecke.
   '20261125000000_engel_caregivers_select_own.sql',
   '20261125000001_rollback_engel_caregivers_select_own.sql',
+  // 14.09.2026 (Block 44): ein Leistungsnachweis ohne Einsatzdauer darf
+  // nicht abrechenbar werden. `duration_minutes` ist GENERATED und bleibt
+  // NULL, wenn die Zeiten fehlen — und `create_invoice_draft_atomic`
+  // rechnet dann mit `COALESCE(duration_minutes, 60)` eine volle Stunde,
+  // die niemand erfasst hat. NICHT angewendet (DDL braucht den
+  // SQL-Editor); bis dahin ist der Anwendungscode der einzige Riegel.
+  '20261130000000_service_records_dauer_pflicht.sql',
+  '20261130000001_rollback_service_records_dauer_pflicht.sql',
   // HINWEIS (Track 13): die Perimeter-Migrationen stehen hier NICHT,
   // obwohl sie die zuletzt hinzugekommenen sind. Sie tragen seit dem
   // 28.08.2026 einen ECHTEN Zeitstempel (20260828180000/…0001, Regel aus

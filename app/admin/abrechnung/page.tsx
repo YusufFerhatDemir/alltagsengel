@@ -17,7 +17,8 @@ import { LAUF_STATUS, laufStatusLabel } from '@/lib/abrechnung/lauf-status'
 import { createClient } from '@/lib/supabase/client'
 import { getOrgIK } from '@/lib/config/org-config'
 import { euro } from '@/lib/admin/ops'
-import { euroZuCent, centRunden, rundeAufStellen } from '@/lib/geld'
+import { centRunden } from '@/lib/geld'
+import { kassenLeistungMenge, verweigerungsText } from '@/lib/abrechnung/kassenleistung-menge'
 import { StatusBadge, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import {
   generateEDIFACT, ALLTAGSENGEL_NAME,
@@ -267,25 +268,26 @@ export default function AbrechnungPage() {
         if (artKey === 'sonstige' && r.service_type) {
           probleme.push(`${name}, ${r.date}: Leistungsart "${r.service_type}" hat keinen EDIFACT-Schlüssel — als "sonstige" (99) übermittelt`)
         }
-        if (!r.amount || r.amount <= 0) {
-          probleme.push(`${name}, ${r.date}: kein Betrag am Leistungsnachweis — Leistung übersprungen`)
+        const schluessel = LEISTUNGSART_SCHLUESSEL[artKey]
+        // Menge und Einzelpreis entscheidet lib/abrechnung/kassenleistung-menge.ts.
+        // Die Regel lag bis Block 44 hier in der Seite — und rechnete bei
+        // fehlender Dauer mit `(r.duration_minutes || 60)`, meldete dem
+        // Kostentraeger also eine Stunde, die niemand erfasst hat. In einem
+        // Modul ist sie pruefbar; in einer Seite war sie es nicht.
+        const menge = kassenLeistungMenge({
+          amount: r.amount,
+          duration_minutes: r.duration_minutes,
+          zeitbasiert: schluessel.zeitbasiert,
+        })
+        if (!menge.ok) {
+          probleme.push(`${name}, ${r.date}: ${verweigerungsText(menge.grund)}`)
           continue
         }
-        const schluessel = LEISTUNGSART_SCHLUESSEL[artKey]
-        const stunden = (r.duration_minutes || 60) / 60
-        // Zeitvergütung: Menge = Stunden, Einzelpreis = Stundensatz.
-        // Sonst: Menge 1, Einzelpreis = Gesamtbetrag des Einsatzes.
-        const menge = schluessel.zeitbasiert ? rundeAufStellen(stunden, 2) : 1
-        // euroZuCent statt Math.round(r.amount * 100): service_records.amount
-        // ist eine EURO-Spalte, und der Halb-Cent (1,005 €) fiel dort um
-        // einen Cent nach unten, bevor der Betrag in die Kassendatei ging.
-        const gesamtCent = euroZuCent(r.amount)
-        const einzelpreisCent = menge > 0 ? centRunden(gesamtCent / menge) : gesamtCent
         leistungen.push({
           datum: r.date,
           leistungsart: artKey,
-          menge,
-          einzelpreis_cent: einzelpreisCent,
+          menge: menge.menge,
+          einzelpreis_cent: menge.einzelpreisCent,
           uhrzeit: r.start_time || undefined,
           dauer_minuten: r.duration_minutes || undefined,
           pflegekraft_name: r.caregiver_initials || '—',
