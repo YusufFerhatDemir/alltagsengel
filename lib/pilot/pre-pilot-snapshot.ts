@@ -204,19 +204,13 @@ export const DOKUMENTIERTE_SICHERHEITSLAGE = {
  * Verifikationsskripte unter `scripts/verify-*.mjs`.
  */
 export const JUENGSTE_MIGRATIONEN = [
-  // 12.09.2026: erlaubt `action = 'lead_follow_up_lauf'` in mis_audit_log,
-  // damit die Tages-Kette ihren eigenen Lauf protokollieren kann — auch den
-  // Lauf, in dem nichts faellig war. NICHT angewendet (DDL braucht den
-  // SQL-Editor); bis dahin meldet logAuditEventOrWarn eine AUDIT-LUECKE.
-  // Die Vorwaerts-Migration ist inzwischen aus den fuenf juengsten
-  // herausgerutscht; nur ihre Ruecknahme steht noch in der Liste.
-  '20261105000001_rollback_audit_action_lead_follow_up.sql',
   // 13.09.2026: ATS-Arbeitsfelder als echte Spalten (`ats_*`) auf
   // lead_inquiries, mit denselben CHECKs, die lib/bewerbung/ats-felder.ts
   // im Code prueft. NICHT angewendet — bis dahin ist
   // `bewerbung_daten.ats` (jsonb) die Wahrheit und die Migration der
   // dokumentierte Umzugsweg, nicht der aktuelle Zustand.
-  '20261106000000_bewerbung_ats_felder.sql',
+  // Die Vorwaerts-Migration ist inzwischen aus den fuenf juengsten
+  // herausgerutscht; nur ihre Ruecknahme steht noch in der Liste.
   '20261106000001_rollback_bewerbung_ats_felder.sql',
   // 14.09.2026: Mandantenzaun fuer die drei Tabellen, die
   // `organization_id` tragen, sie aber in keiner Policy nennen
@@ -227,6 +221,14 @@ export const JUENGSTE_MIGRATIONEN = [
   // `npm run verify:mandantenzaun` die drei in seiner Erlaubnisliste.
   '20261115000000_org_fence_drei_blinde_tabellen.sql',
   '20261115000001_rollback_org_fence_drei_blinde_tabellen.sql',
+  // 14.09.2026 (Block 31): Kundenbindung fuer `pflege_massnahmen`. Als
+  // einzige der drei Pflegedoku-Tabellen hatte sie keine — /kunde/pflegedoku
+  // zeigte den Maßnahmenplan ohne Inhalt, weil PostgREST eine
+  // RLS-Verweigerung mit `200 []` beantwortet statt mit einem Fehler.
+  // NICHT angewendet (DDL braucht den SQL-Editor); bis dahin fuehrt
+  // `npm run verify:portal-bindung` die Tabelle als bekannte Luecke.
+  '20261120000000_kunde_pflege_massnahmen_select.sql',
+  '20261120000001_rollback_kunde_pflege_massnahmen_select.sql',
   // HINWEIS (Track 13): die Perimeter-Migrationen stehen hier NICHT,
   // obwohl sie die zuletzt hinzugekommenen sind. Sie tragen seit dem
   // 28.08.2026 einen ECHTEN Zeitstempel (20260828180000/…0001, Regel aus
