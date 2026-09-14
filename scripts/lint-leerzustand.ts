@@ -277,7 +277,7 @@ export function pruefeQuelle(rohQuelle: string, datei: string): Befund[] {
 }
 
 /**
- * Bestand vom 14.09.2026 — 39 gebuendelte Stellen (Block 79: 85; seither
+ * Bestand vom 14.09.2026 — 32 gebuendelte Stellen (Block 79: 85; seither
  * abgearbeitet in den Bloecken 80–83).
  *
  * ── WAS DIESE LISTE IST UND WAS NICHT ─────────────────────────
@@ -318,13 +318,6 @@ export const BESTAND_GEBUENDELT: { datei: string; variable: string }[] = [
   { datei: 'app/admin/home/page.tsx', variable: 'recentProfilesRes' },
   { datei: 'app/admin/partners/page.tsx', variable: 'pRes' },
   { datei: 'app/admin/partners/page.tsx', variable: 'vRes' },
-  { datei: 'app/admin/records/new/page.tsx', variable: 'cRes' },
-  { datei: 'app/admin/records/new/page.tsx', variable: 'gRes' },
-  { datei: 'app/admin/verordnungen/page.tsx', variable: 'absRes' },
-  { datei: 'app/admin/verordnungen/page.tsx', variable: 'allAssignRes' },
-  { datei: 'app/admin/verordnungen/page.tsx', variable: 'iRes' },
-  { datei: 'app/admin/verordnungen/page.tsx', variable: 'lRes' },
-  { datei: 'app/admin/verordnungen/page.tsx', variable: 'rRes' },
   { datei: 'app/api/admin/krankenfahrten/route.ts', variable: 'providersRes' },
   { datei: 'app/api/admin/krankenfahrten/route.ts', variable: 'reviewsRes' },
   { datei: 'app/api/admin/krankenfahrten/route.ts', variable: 'ridesRes' },

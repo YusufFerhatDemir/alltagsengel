@@ -322,7 +322,39 @@ export default function AdminVerordnungenPage() {
           .select('id, verordnung_id, leistungsart, haeufigkeit, menge, dauer_minuten, leistungskomplex, preis_cent, bemerkung')
           .order('created_at'),
       ])
-      if (vRes.error) { setError(vRes.error.message); setLoading(false); return }
+      // BEFUND (Block 86): geprueft wurde nur die Verordnungsliste selbst.
+      // Die acht uebrigen Abfragen wurden ungeprueft als leere Listen
+      // weiterverarbeitet — und diese Seite stellt die Verordnung ihrem
+      // VERBRAUCH gegenueber: erbrachte Leistungen, Rechnungen,
+      // Einsaetze, Leistungspositionen.
+      //
+      // Faellt `rRes` aus, sieht jede Verordnung unverbraucht aus; faellt
+      // `iRes` aus, unberechnet; faellt `lRes` aus, hat sie keine
+      // Leistungspositionen — und jemand traegt sie ein zweites Mal ein.
+      // Jede dieser leeren Listen ist eine Aussage ueber die Abfrage, und
+      // sie liest sich wie eine ueber die Verordnung.
+      const nichtLesbar = ([
+        ['Verordnungen', vRes.error],
+        ['Klienten', cRes.error],
+        ['Betreuungskräfte', gRes.error],
+        ['Einsätze zur Verordnung', aRes.error],
+        ['Erbrachte Leistungen', rRes.error],
+        ['Rechnungen', iRes.error],
+        ['Absagen', absRes.error],
+        ['Einsatzauswahl', allAssignRes.error],
+        ['Leistungspositionen', lRes.error],
+      ] as const).filter(([, fehler]) => fehler != null).map(([name]) => name)
+
+      if (nichtLesbar.length > 0) {
+        setError(
+          `${nichtLesbar.join(', ')} konnten nicht geladen werden. Die Verordnungen werden `
+          + 'nicht angezeigt — eine Verordnung ohne erbrachte Leistungen sähe aus wie eine '
+          + 'unverbrauchte.'
+        )
+        setLoading(false)
+        return
+      }
+
       setVerordnungen((vRes.data || []).map((v: any) => ({ ...v, clientName: fullName(v.client) })))
       setClients((cRes.data || []).map((c: any) => ({ id: c.id, name: fullName(c) })))
       setCaregivers((gRes.data || []).map((c: any) => ({ id: c.id, name: fullName(c) })))
@@ -870,6 +902,18 @@ export default function AdminVerordnungenPage() {
     { key: 'abrechnung', label: '4 · Abrechnung', count: offeneAbrechnung.length },
     { key: 'absagen', label: '5 · Absagen', count: absagen.filter(a => !a.ersatz_gefunden).length },
   ]
+
+  // Konnte gar nichts geladen werden, zeigt die Seite nur den Grund. Sonst
+  // stuenden Registerkarten mit „0" neben einer roten Meldung — und das
+  // liest sich wie „keine Verordnungen" (Block 86).
+  if (error && verordnungen.length === 0 && !loading) {
+    return (
+      <div className="admin-page">
+        <div className="admin-page-header"><h1>Verordnungen</h1></div>
+        <Banner tone="danger">{error}</Banner>
+      </div>
+    )
+  }
 
   return (
     <div className="admin-page">

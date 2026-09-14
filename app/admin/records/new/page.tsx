@@ -42,6 +42,27 @@ function NewRecordInner() {
         supabase.from('clients').select('id, first_name, last_name').order('last_name'),
         supabase.from('caregivers').select('id, first_name, last_name, initials').order('last_name'),
       ])
+      // BEFUND (Block 86): beide Abfragen ungeprueft. Diese Seite legt
+      // einen LEISTUNGSNACHWEIS an; Klient und Betreuungskraft kommen
+      // ausschliesslich aus diesen beiden Listen. Faellt eine aus, sind
+      // die Auswahlfelder leer — und leer sieht aus wie „kein Klient
+      // angelegt", nicht wie „nicht nachgesehen". Wer daraufhin einen
+      // Klienten neu anlegt, hat ihn zweimal.
+      const nichtLesbar = ([
+        ['Klienten', cRes.error],
+        ['Betreuungskräfte', gRes.error],
+      ] as const).filter(([, fehler]) => fehler != null).map(([name]) => name)
+
+      if (nichtLesbar.length > 0) {
+        setError(
+          `${nichtLesbar.join(' und ')} konnten nicht geladen werden. Die Auswahl bliebe leer — `
+          + 'bitte die Seite neu laden, bevor ein Nachweis angelegt wird.'
+        )
+        setClients([])
+        setCaregivers([])
+        return
+      }
+
       setClients((cRes.data || []).map((c: any) => ({ id: c.id, label: `${c.first_name} ${c.last_name}`.trim() })))
       setCaregivers((gRes.data || []).map((g: any) => ({
         id: g.id, label: `${g.first_name} ${g.last_name}`.trim(), initials: g.initials || '',
