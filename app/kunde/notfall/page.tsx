@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { saveMedicationAction, deleteMedicationAction, saveNotfallInfoAction } from './actions'
+import { logger } from '@/lib/logger'
+const log = logger.child('kunde:notfall')
 // Tesseract wird dynamisch geladen (siehe handlePhotoScan) — spart ~2.3 MB First-Load-JS
 
 interface Medication {
@@ -119,6 +121,8 @@ export default function NotfallPage() {
   const [activeTab, setActiveTab] = useState<'medikamente' | 'notfall'>('medikamente')
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  /** Eine der beiden Abfragen war nicht lesbar (Block 84). */
+  const [ladefehler, setLadefehler] = useState<string | null>(null)
   const [medications, setMedications] = useState<Medication[]>([])
   const [notfallInfo, setNotfallInfo] = useState<NotfallInfo | null>(null)
 
@@ -168,16 +172,47 @@ export default function NotfallPage() {
   }, [])
 
   async function loadData() {
+    setLadefehler(null)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/auth/login'); return }
     setUser(user)
 
     const [medsRes, notfallRes] = await Promise.all([
       supabase.from('medikamentenplan').select('*').eq('user_id', user.id).eq('aktiv', true).order('medikament_name'),
-      supabase.from('notfall_info').select('*').eq('user_id', user.id).single()
+      // `maybeSingle` statt `single`: „noch keine Notfall-Info hinterlegt"
+      // ist der Normalfall und kein Fehler. Mit `single` war er ein
+      // PGRST116 und von einem echten Ausfall nicht zu unterscheiden.
+      supabase.from('notfall_info').select('*').eq('user_id', user.id).maybeSingle()
     ])
 
-    if (medsRes.data) setMedications(medsRes.data)
+    // BEFUND (Block 84): beide Abfragen wurden ungeprueft verworfen. Faellt
+    // die Medikamentenabfrage aus, zeigt diese Seite „Noch keine
+    // Medikamente — Tippe auf + um ein Medikament hinzuzufuegen" — einem
+    // Menschen, der einen Medikamentenplan hat. Faellt die Notfall-Info
+    // aus, fehlen Blutgruppe, Allergien, Vorerkrankungen und der
+    // Notfallkontakt, ohne dass etwas darauf hinweist.
+    //
+    // Ein leerer Medikamentenplan ist hier keine Anzeige, sondern eine
+    // Auskunft ueber die eigene Gesundheit. Sie darf nur stimmen.
+    const nichtLesbar = [
+      ['Medikamente', medsRes.error?.message ?? null],
+      ['Notfall-Info', notfallRes.error?.message ?? null],
+    ].filter(([, grund]) => grund !== null)
+    if (nichtLesbar.length > 0) {
+      log.error('Notfallseite: Abfragen fehlgeschlagen', {
+        bereiche: nichtLesbar.map(([n]) => n).join(', '),
+      })
+      setLadefehler(
+        nichtLesbar.map(([n]) => n).join(' und ')
+        + ' konnten gerade nicht geladen werden. Was hier steht, wäre nicht vollständig — '
+        + 'bitte die Seite neu laden.'
+      )
+      setMedications([])
+      setNotfallInfo(null)
+      setLoading(false)
+      return
+    }
+
     if (notfallRes.data) {
       setNotfallInfo(notfallRes.data)
       setNotfallForm({
@@ -476,6 +511,26 @@ export default function NotfallPage() {
         {/* Content */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px', paddingBottom: '100px' }}>
 
+          {/*
+            Der Ladefehler steht VOR den Inhalten und ersetzt sie: ein
+            leerer Medikamentenplan neben einem Hinweis liest sich wie
+            „nichts eingetragen".
+          */}
+          {ladefehler ? (
+            <div style={{ textAlign: 'center', paddingTop: '60px' }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.6 }}>⚠️</div>
+              <p style={{ color: '#E8A000', fontSize: '15px', margin: '0 0 8px 0', lineHeight: 1.5 }}>
+                {ladefehler}
+              </p>
+              <button
+                onClick={() => { setLoading(true); loadData() }}
+                style={{ marginTop: 16, padding: '10px 18px', borderRadius: 10, border: 'none', background: '#C9963C', color: '#1A1612', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+              >
+                Erneut laden
+              </button>
+            </div>
+          ) : (<>
+
           {/* ═══════════════ MEDIKAMENTE TAB ═══════════════ */}
           {activeTab === 'medikamente' && (
             <div>
@@ -729,6 +784,7 @@ export default function NotfallPage() {
               )}
             </div>
           )}
+          </>)}
         </div>
 
         {/* ═══════════════ FAB ═══════════════ */}

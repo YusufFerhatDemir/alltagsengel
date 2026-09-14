@@ -114,10 +114,13 @@ export default function CaregiverDetailPage() {
   const [bonuses, setBonuses] = useState<BonusRow[]>([])
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  /** Teile der Akte waren nicht lesbar (Block 84). */
+  const [ladefehler, setLadefehler] = useState<string | null>(null)
   const [modal, setModal] = useState<null | 'doc' | 'qual' | 'initials' | 'bonus' | 'regnr'>(null)
 
   const load = useCallback(async () => {
     if (!isValidUUID(id)) { setNotFound(true); setLoading(false); return }
+    setLadefehler(null)
     try {
       const supabase = createClient()
       const [cgRes, docRes, qualRes, histRes, bonusRes] = await Promise.all([
@@ -142,6 +145,37 @@ export default function CaregiverDetailPage() {
         ik_nummer: c.ik_nummer ?? null,
         qualification_level: c.qualification_level ?? null,
       })
+      // BEFUND (Block 84): der Stammsatz wird auf seinen Fehler geprueft,
+      // die vier Listen nicht. Eine leere Dokumenten- oder
+      // Qualifikationsliste ist hier keine Anzeige, sondern eine Auskunft
+      // ueber einen Menschen: „kein erweitertes Fuehrungszeugnis, kein
+      // Erste-Hilfe-Nachweis, keine Qualifikation hinterlegt." Genau
+      // daran haengt die Einsatzfreigabe (lib/personal/einsatzfreigabe.ts).
+      //
+      // Die Richtung ist dabei die gefaehrlichere: ein Ausfall zeigt
+      // WENIGER Nachweise, als es gibt — wer danach handelt, sperrt eine
+      // Kraft zu Unrecht oder legt Unterlagen doppelt an. Umgekehrt kann
+      // er nie mehr zeigen, als da ist.
+      const nichtLesbar = [
+        ['Dokumente', docRes.error?.message ?? null],
+        ['Qualifikationen', qualRes.error?.message ?? null],
+        ['Handzeichen-Verlauf', histRes.error?.message ?? null],
+        ['Praemien', bonusRes.error?.message ?? null],
+      ].filter(([, grund]) => grund !== null)
+      if (nichtLesbar.length > 0) {
+        log.error('Mitarbeiterakte: Abfragen fehlgeschlagen', {
+          caregiverId: id, bereiche: nichtLesbar.map(([n]) => n).join(', '),
+        })
+        setLadefehler(
+          nichtLesbar.map(([n]) => n).join(', ')
+          + ' konnten nicht geladen werden. Die Akte wird nicht angezeigt — '
+          + 'eine leere Nachweisliste wäre von einer fehlenden nicht zu unterscheiden.'
+        )
+        setDocs([]); setQuals([]); setHistory([]); setBonuses([])
+        setLoading(false)
+        return
+      }
+
       setDocs((docRes.data || []) as DocRow[])
       setQuals((qualRes.data || []) as QualRow[])
       setHistory((histRes.data || []) as InitialsRow[])
@@ -181,6 +215,13 @@ export default function CaregiverDetailPage() {
   }, [quals])
 
   if (loading) return <div className="admin-page"><p>Laden…</p></div>
+  if (ladefehler) return (
+    <div className="admin-page">
+      <button onClick={() => router.push('/admin/caregivers')} style={backBtn}>← Mitarbeiter</button>
+      <Banner tone="danger">{ladefehler}</Banner>
+    </div>
+  )
+
   if (notFound || !cg) return (
     <div className="admin-page">
       <button onClick={() => router.push('/admin/caregivers')} style={backBtn}>← Betreuungskräfte</button>

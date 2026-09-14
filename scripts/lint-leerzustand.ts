@@ -277,7 +277,7 @@ export function pruefeQuelle(rohQuelle: string, datei: string): Befund[] {
 }
 
 /**
- * Bestand vom 14.09.2026 — 52 gebuendelte Stellen (Block 79: 85; seither
+ * Bestand vom 14.09.2026 — 46 gebuendelte Stellen (Block 79: 85; seither
  * abgearbeitet in den Bloecken 80–83).
  *
  * ── WAS DIESE LISTE IST UND WAS NICHT ─────────────────────────
@@ -309,10 +309,6 @@ export function pruefeQuelle(rohQuelle: string, datei: string): Befund[] {
 export const BESTAND_GEBUENDELT: { datei: string; variable: string }[] = [
   { datei: 'app/admin/bonuses/page.tsx', variable: 'boRes' },
   { datei: 'app/admin/bonuses/page.tsx', variable: 'cgRes' },
-  { datei: 'app/admin/caregivers/[id]/page.tsx', variable: 'bonusRes' },
-  { datei: 'app/admin/caregivers/[id]/page.tsx', variable: 'docRes' },
-  { datei: 'app/admin/caregivers/[id]/page.tsx', variable: 'histRes' },
-  { datei: 'app/admin/caregivers/[id]/page.tsx', variable: 'qualRes' },
   { datei: 'app/admin/caregivers/page.tsx', variable: 'cgRes' },
   { datei: 'app/admin/clients/page.tsx', variable: 'budgetsRes' },
   { datei: 'app/admin/clients/page.tsx', variable: 'clientsRes' },
@@ -342,8 +338,6 @@ export const BESTAND_GEBUENDELT: { datei: string; variable: string }[] = [
   { datei: 'app/api/ai-chat/route.ts', variable: 'visitorsRes' },
   { datei: 'app/api/billing/dta/config-status/route.ts', variable: 'laufRes' },
   { datei: 'app/api/billing/dta/config-status/route.ts', variable: 'stateRes' },
-  { datei: 'app/kunde/notfall/page.tsx', variable: 'medsRes' },
-  { datei: 'app/kunde/notfall/page.tsx', variable: 'notfallRes' },
   { datei: 'app/mis/crm/page.tsx', variable: 'clientsRes' },
   { datei: 'app/mis/crm/page.tsx', variable: 'leadsRes' },
   { datei: 'app/mis/crm/page.tsx', variable: 'partnersRes' },
