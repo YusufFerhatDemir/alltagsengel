@@ -204,24 +204,15 @@ export const DOKUMENTIERTE_SICHERHEITSLAGE = {
  * Verifikationsskripte unter `scripts/verify-*.mjs`.
  */
 export const JUENGSTE_MIGRATIONEN = [
-  // 14.09.2026 (Block 31): Kundenbindung fuer `pflege_massnahmen`. Als
-  // einzige der drei Pflegedoku-Tabellen hatte sie keine — /kunde/pflegedoku
-  // zeigte den Maßnahmenplan ohne Inhalt, weil PostgREST eine
-  // RLS-Verweigerung mit `200 []` beantwortet statt mit einem Fehler.
-  // NICHT angewendet (DDL braucht den SQL-Editor); bis dahin fuehrt
-  // `npm run verify:portal-bindung` die Tabelle als bekannte Luecke.
-  // Die Vorwaerts-Migration ist inzwischen aus den fuenf juengsten
-  // herausgerutscht; nur ihre Ruecknahme steht noch in der Liste — wie
-  // zuvor schon beim Mandantenzaun 20261115000000.
-  '20261120000001_rollback_kunde_pflege_massnahmen_select.sql',
   // 14.09.2026 (Block 41): die Pflegekraft darf ihren EIGENEN Datensatz
   // in `caregivers` lesen. Keine der fuenf vorhandenen Policies band sie
   // daran, und die Rolle `engel` traegt keine Berechtigung — das
   // `.single()` in /engel/medikamente, /engel/pflegedoku/verlauf und
   // /engel/einsaetze fand nie eine Zeile. NICHT angewendet (DDL braucht
-  // den SQL-Editor); bis dahin fuehrt `npm run verify:portal-bindung`
-  // `caregivers` als bekannte Luecke.
-  '20261125000000_engel_caregivers_select_own.sql',
+  // den SQL-Editor). Die Vorwaerts-Migration ist inzwischen aus den fuenf
+  // juengsten herausgerutscht; nur ihre Ruecknahme steht noch in der
+  // Liste — wie zuvor schon beim Mandantenzaun und bei
+  // `pflege_massnahmen`.
   '20261125000001_rollback_engel_caregivers_select_own.sql',
   // 14.09.2026 (Block 44): ein Leistungsnachweis ohne Einsatzdauer darf
   // nicht abrechenbar werden. `duration_minutes` ist GENERATED und bleibt
@@ -231,6 +222,15 @@ export const JUENGSTE_MIGRATIONEN = [
   // SQL-Editor); bis dahin ist der Anwendungscode der einzige Riegel.
   '20261130000000_service_records_dauer_pflicht.sql',
   '20261130000001_rollback_service_records_dauer_pflicht.sql',
+  // 14.09.2026 (Block 46): acht UNIQUE-Constraints auf Mandanten-Tabellen
+  // nannten `organization_id` nicht — allen voran die Rechnungsnummer.
+  // `next_billing_number()` zaehlt JE MANDANT, die Nummer traegt den
+  // Mandanten aber nicht: der zweite Mandant erzeugt erneut
+  // 'RE-2026-00001' und kann damit NIE eine Rechnung stellen. NICHT
+  // angewendet (DDL braucht den SQL-Editor); bis dahin fuehrt
+  // `npm run verify:mandanten-eindeutigkeit` die acht als wartend.
+  '20261205000000_mandanten_eindeutigkeit.sql',
+  '20261205000001_rollback_mandanten_eindeutigkeit.sql',
   // HINWEIS (Track 13): die Perimeter-Migrationen stehen hier NICHT,
   // obwohl sie die zuletzt hinzugekommenen sind. Sie tragen seit dem
   // 28.08.2026 einen ECHTEN Zeitstempel (20260828180000/…0001, Regel aus
