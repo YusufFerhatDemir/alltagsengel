@@ -3,6 +3,7 @@ import { centRunden } from '@/lib/geld'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { leseAlle } from '@/lib/db/alle-zeilen'
 import { preFlightValidierung, monatsGrenzen, euroZuCent } from '@/lib/abrechnung/kassenabrechnung-engine'
 import { generateAlleDateien, type AbrechnungsFall, type GeneratorOptionen } from '@/lib/abrechnung/edifact-generator'
 import { validateEDIFACT } from '@/lib/abrechnung/edifact-validator'
@@ -232,14 +233,26 @@ export const POST = withTracking(async function POST(request: Request) {
     // die Liste leer, die Zahl fehlender Unterschriften null — und der
     // Schritt meldete „alle Nachweise unterschrieben" fuer einen Monat,
     // aus dem er keine einzige Zeile gesehen hatte.
-    const { data: alleRecords, error: recordsFehler } = await admin
-      .from('service_records')
-      .select('id, client_id, date, service_type, duration_minutes, amount, caregiver_id, caregiver:caregivers(first_name, last_name), proof_status, billing_status, signature_hash, client_signature')
-      .in('client_id', clientIds)
-      .eq('organization_id', organizationId)
-      .gte('date', drStart)
-      .lte('date', drEnd)
-      .in('status', ['complete', 'signed', 'invoiced'])
+    //
+    // Und sie haengt seit Block 102 an ALLEN Zeilen, nicht an den ersten
+    // tausend: PostgREST deckelt die zurueckgegebene Darstellung (live
+    // gemessen). Eine gekappte Liste haette hier dasselbe bewirkt wie
+    // eine leere, nur unauffaelliger — der Probelauf haette „alle
+    // unterschrieben" fuer einen Monat gemeldet, von dem er einen Teil
+    // nie gesehen hat.
+    const recordsSeiten = await leseAlle<Record<string, unknown>>((von, bis) =>
+      admin
+        .from('service_records')
+        .select('id, client_id, date, service_type, duration_minutes, amount, caregiver_id, caregiver:caregivers(first_name, last_name), proof_status, billing_status, signature_hash, client_signature')
+        .in('client_id', clientIds)
+        .eq('organization_id', organizationId)
+        .gte('date', drStart)
+        .lte('date', drEnd)
+        .in('status', ['complete', 'signed', 'invoiced'])
+        .range(von, bis),
+    )
+    const alleRecords = recordsSeiten.ok ? recordsSeiten.zeilen : null
+    const recordsFehler = recordsSeiten.ok ? null : { message: recordsSeiten.grund }
 
     if (recordsFehler) {
       schritte.push({

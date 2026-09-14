@@ -107,6 +107,20 @@ jobs:
         # Freigabe: neue Faelle machen den Lauf rot.
         run: npm run lint:blinder-insert
 
+      - name: Zeilendeckel (Auswertung ueber ein ungedeckeltes select)
+        # PostgREST liefert ohne `limit` HOECHSTENS 1000 Zeilen — HTTP 200,
+        # kein Fehler, keine Warnung; die Wahrheit steht nur im
+        # Content-Range. Live am 14.09.2026 gemessen an page_views
+        # (10 359 Zeilen → 1000 geliefert). Wer darueber summiert oder eine
+        # Vollstaendigkeit behauptet, rechnet ab der tausendsten Zeile
+        # falsch. In Block 101 hat das den Loeschbericht der Aufbewahrung
+        # untertrieben.
+        # Beobachtet werden nur Tabellen, die je EREIGNIS wachsen — ein Tor
+        # ueber alle 265 Fundstellen waere nach einer Woche abgeschaltet.
+        # Der Bestand in scripts/lint-zeilendeckel.ts ist eingefroren, KEINE
+        # Freigabe: neue Faelle machen den Lauf rot.
+        run: npm run lint:zeilendeckel
+
       - name: Secret scan
         run: bash scripts/ci-secret-scan.sh
 

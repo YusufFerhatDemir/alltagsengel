@@ -18,6 +18,7 @@ import { aktualisiereLauf } from './lauf-schreiben'
 import { logBillingAction, computeContentHash } from '../billing/core/audit'
 import { pflegegradVon } from '../clients/pflegegrad'
 import { euroZuCent, centRunden } from '@/lib/geld'
+import { leseAlle } from '@/lib/db/alle-zeilen'
 import { generateAlleDateien, type AbrechnungsFall, type GeneratorOptionen, type EdifactDatei } from './edifact-generator'
 import { validateEDIFACT, validateIK } from './edifact-validator'
 import { generateAuftragsdatei, auftragsdateiName } from './auftragsdatei'
@@ -928,17 +929,36 @@ async function fuehreExportDurch(
     0,
   ).getDate()
   const expEnd = `${exportPeriodMonth}-${String(expLastDay).padStart(2, '0')}`
-  const { data: alleRecords, error: recordsFehler } = await supabase
-    .from('service_records')
-    .select('id, client_id, date, service_type, duration_minutes, amount, caregiver_id, proof_status, billing_status, caregiver:caregivers(first_name, last_name)')
-    .in('client_id', clientIds)
-    .gte('date', expStart)
-    .lte('date', expEnd)
-    .in('status', ['complete', 'signed', 'invoiced'])
+  // SEITENWEISE, nicht in einem Zug (Block 102).
+  //
+  // Diese Abfrage holt die Leistungen EINES MONATS fuer ALLE Klienten des
+  // Laufs. PostgREST deckelt die zurueckgegebene Darstellung bei 1000
+  // Zeilen — live am 14.09.2026 gemessen: ein `select` auf page_views
+  // (10 359 Zeilen) liefert ohne `limit` genau 1000, HTTP 200, ohne
+  // Fehler; die Wahrheit steht nur im Content-Range.
+  //
+  // Hier ist das nicht folgenlos: die fehlenden Zeilen sind
+  // LEISTUNGEN, die dann nicht in der EDIFACT-Datei stehen. Die
+  // Abrechnung waere zu niedrig, und niemand saehe es der Datei an —
+  // sie ist in sich stimmig, nur unvollstaendig. `service_records` steht
+  // live bei 30 Zeilen; die Grenze ist also noch nicht erreicht, wohl
+  // aber in Reichweite: ein Monat mit taeglicher Betreuung fuer die
+  // 37 Klienten der Stamm-Organisation liegt darueber.
+  const recordsSeiten = await leseAlle<Record<string, unknown>>((von, bis) =>
+    supabase
+      .from('service_records')
+      .select('id, client_id, date, service_type, duration_minutes, amount, caregiver_id, proof_status, billing_status, caregiver:caregivers(first_name, last_name)')
+      .in('client_id', clientIds)
+      .gte('date', expStart)
+      .lte('date', expEnd)
+      .in('status', ['complete', 'signed', 'invoiced'])
+      .range(von, bis),
+  )
 
-  if (recordsFehler) {
-    throw new Error(`Leistungen konnten nicht geladen werden: ${recordsFehler.message}`)
+  if (!recordsSeiten.ok) {
+    throw new Error(`Leistungen konnten nicht geladen werden: ${recordsSeiten.grund}`)
   }
+  const alleRecords = recordsSeiten.zeilen
 
   // STORNIERTE Nachweise raus. 'STORNIERT' hat kein Gegenstueck im
   // status-Werteset (lib/leistungsnachweis/status-sync.ts) — der Widerruf
