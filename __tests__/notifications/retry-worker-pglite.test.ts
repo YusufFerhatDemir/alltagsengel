@@ -411,3 +411,157 @@ describe('Nicht wiederherstellbare Zeilen', () => {
     expect((await zeilen(vorgang)).some(z => z.grund === 'nicht_wiederherstellbar')).toBe(true)
   })
 })
+
+// ═══════════════════════════════════════════════════════════════════════
+// Die Sperre, auf deren Antwort niemand hoerte (Block 100)
+// ═══════════════════════════════════════════════════════════════════════
+//
+// BEFUND: der Lauf haelt seine Sperre mit einem Lebenszeichen wach:
+//
+//     await admin.rpc('zustellung_retry_heartbeat', { p_lauf_id: laufId })
+//
+// blind. `supabase.rpc()` wirft nicht — ein Fehler kommt als `error` im
+// Ergebnis zurueck. Und die RPC gibt mehr als „erledigt": sie ist
+// `RETURNS boolean` und liefert `FOUND` des UPDATE
+// `WHERE id = p_lauf_id AND status = 'laeuft'` (live aus pg_proc
+// gelesen). `false` heisst: dieser Lauf ist NICHT MEHR DER INHABER.
+//
+// Genau diese Antwort wurde weggeworfen. Der Lauf arbeitete dann weiter
+// an derselben Zustellwarteschlange wie der neue Inhaber — zwei Arbeiter
+// auf denselben Zeilen, und der Kanal versendet doppelt. Der Kommentar
+// in `verarbeiteOrganisation` benennt die Gefahr sogar, nur sah sie
+// niemand nach. Dreissig Zeilen weiter oben prueft
+// `zustellung_retry_beanspruchen` seinen Fehler bis zur
+// Fallunterscheidung.
+//
+// Gefahren wird das hier gegen die ECHTEN RPCs aus den Migrationen: die
+// Sperre wird dem laufenden Worker mitten in der Arbeit entzogen.
+describe('Block 100: verliert der Lauf seine Sperre, hoert er auf', () => {
+  /** Mehr Vorgaenge als HEARTBEAT_ALLE (20), damit ein Lebenszeichen faellt. */
+  async function vieleOffene(n: number): Promise<void> {
+    for (let i = 0; i < n; i++) await offeneZeile()
+  }
+
+  it('bricht ab, sobald das Lebenszeichen "nicht mehr deiner" meldet', async () => {
+    await vieleOffene(25)
+
+    let gesendet = 0
+    registriereTestVorgang(async () => {
+      gesendet++
+      // Nach dem 20. Vorgang faellt das erste Lebenszeichen. Kurz davor
+      // entreisst ein anderer Lauf die Sperre — nachgebildet durch den
+      // Zustand, den `zustellung_retry_beanspruchen` bei einer
+      // Uebernahme hinterlaesst: dieser Eintrag steht nicht mehr auf
+      // 'laeuft'.
+      if (gesendet === 19) {
+        await db.exec(`UPDATE public.zustellung_retry_laeufe SET status = 'fertig' WHERE status = 'laeuft'`)
+      }
+      return { ok: true } as SendeErgebnis
+    })
+
+    const r = await lauf()
+
+    expect(r.status).toBe('abgebrochen')
+    expect(r.grund).toBe('sperre_verloren')
+    // Der Kern: er hat NICHT alle 25 abgearbeitet — und zwar GENAU nach
+    // dem 19. Der Herzschlag faellt im 20. Durchlauf, VOR dem Versand.
+    // Wer erst beim naechsten Durchlauf nachsieht, schickt diesen einen
+    // Vorgang noch heraus — also genau den ersten, den zwei Laeufe
+    // zugleich anfassen. Die Zahl haelt diese Reihenfolge fest.
+    expect(gesendet).toBe(19)
+  })
+
+  it('bricht auch ab, wenn das Lebenszeichen gar nicht absetzbar ist', async () => {
+    // Ein Fehler der RPC ist nicht dasselbe wie „nicht mehr deiner", hat
+    // aber dieselbe Folge: ohne Lebenszeichen verfaellt die Sperre, und
+    // weiterzuarbeiten hiesse, auf ihr Verfallen zu setzen. Nachgebildet,
+    // indem die Funktion mitten im Lauf verschwindet.
+    await vieleOffene(25)
+    let gesendet = 0
+    registriereTestVorgang(async () => {
+      gesendet++
+      if (gesendet === 19) {
+        await db.exec('DROP FUNCTION IF EXISTS public.zustellung_retry_heartbeat(uuid);')
+      }
+      return { ok: true } as SendeErgebnis
+    })
+
+    try {
+      const r = await lauf()
+      expect(r.status).toBe('abgebrochen')
+      expect(r.grund).toBe('herzschlag_nicht_moeglich')
+      expect(gesendet).toBe(19)
+    } finally {
+      await db.exec(`
+        CREATE OR REPLACE FUNCTION public.zustellung_retry_heartbeat(p_lauf_id uuid)
+        RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER
+        SET search_path TO 'public', 'pg_catalog' AS $fn$
+        BEGIN
+          UPDATE public.zustellung_retry_laeufe
+             SET heartbeat_am = now()
+           WHERE id = p_lauf_id AND status = 'laeuft';
+          RETURN FOUND;
+        END $fn$;
+      `)
+    }
+  })
+
+  it('und meldet, dass sein Abschluss nicht mehr ankam', async () => {
+    await vieleOffene(25)
+    let gesendet = 0
+    registriereTestVorgang(async () => {
+      gesendet++
+      if (gesendet === 19) {
+        await db.exec(`UPDATE public.zustellung_retry_laeufe SET status = 'fertig' WHERE status = 'laeuft'`)
+      }
+      return { ok: true } as SendeErgebnis
+    })
+
+    const r = await lauf()
+    // Der Eintrag gehoert ihm nicht mehr — sein Abschluss trifft keine
+    // Zeile. Ohne dieses Feld waere das an der Rueckgabe nicht ablesbar.
+    expect(r.abschlussOffen).toBe(true)
+  })
+
+  it('Gegenprobe: ein ungestoerter Lauf laeuft durch und schliesst ab', async () => {
+    // Ohne diese Richtung waere ein Worker, der IMMER abbricht, ebenfalls
+    // gruen.
+    await vieleOffene(25)
+    let gesendet = 0
+    registriereTestVorgang(async () => { gesendet++; return { ok: true } as SendeErgebnis })
+
+    const r = await lauf()
+
+    expect(r.status).toBe('fertig')
+    expect(r.grund).toBeUndefined()
+    expect(r.abschlussOffen).toBe(false)
+    expect(gesendet).toBe(25)
+
+    const reg = await db.query<{ status: string }>(
+      `SELECT status FROM public.zustellung_retry_laeufe ORDER BY gestartet_am DESC LIMIT 1`)
+    expect(reg.rows[0].status).toBe('fertig')
+  })
+
+  it('das Lebenszeichen haelt die Sperre wirklich frisch', async () => {
+    // Die Gegenrichtung zum Befund: waere der Herzschlag wirkungslos,
+    // koennte ein zweiter Lauf die Sperre uebernehmen, obwohl der erste
+    // arbeitet. Hier wird belegt, dass er `heartbeat_am` fortschreibt.
+    await vieleOffene(25)
+    let vorher: string | null = null
+    let nachher: string | null = null
+    let gesendet = 0
+    registriereTestVorgang(async () => {
+      gesendet++
+      const r = await db.query<{ heartbeat_am: string }>(
+        `SELECT heartbeat_am FROM public.zustellung_retry_laeufe WHERE status = 'laeuft'`)
+      if (gesendet === 1) vorher = r.rows[0]?.heartbeat_am ?? null
+      if (gesendet === 25) nachher = r.rows[0]?.heartbeat_am ?? null
+      return { ok: true } as SendeErgebnis
+    })
+
+    await lauf()
+    expect(vorher).not.toBeNull()
+    expect(nachher).not.toBeNull()
+    expect(new Date(nachher!).getTime()).toBeGreaterThanOrEqual(new Date(vorher!).getTime())
+  })
+})

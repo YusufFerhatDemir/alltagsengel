@@ -138,6 +138,15 @@ export interface RetryWorkerErgebnis {
   /** true, wenn eine verwaiste Sperre uebernommen wurde. */
   uebernommen: boolean
   grund?: string
+  /**
+   * true, wenn der Lauf seinen Abschluss NICHT in die Datenbank bekam.
+   *
+   * Der Eintrag steht dann weiter auf 'laeuft', und der naechste Lauf
+   * ist entweder blockiert oder meldet faelschlich, der vorige sei
+   * abgestuerzt. Ohne dieses Feld waere das an der Rueckgabe nicht
+   * ablesbar (Block 100).
+   */
+  abschlussOffen?: boolean
   dauerMs: number
   metriken: RetryWorkerMetriken
 }
@@ -274,6 +283,10 @@ async function verarbeiteOrganisation(
     if (stand.seitHerzschlag >= HEARTBEAT_ALLE) {
       stand.seitHerzschlag = 0
       await heartbeat()
+      // Sofort nach dem Lebenszeichen nachsehen, nicht erst beim
+      // naechsten Durchlauf: haben wir die Sperre verloren, waere dieser
+      // eine Vorgang schon der erste, den zwei Laeufe zugleich anfassen.
+      if (stand.abbruch) return
     }
 
     // ── Obergrenze: endgueltig aufgeben ──
@@ -471,12 +484,53 @@ export async function fuehreWiederholungslaufAus(
     log.warn('Verwaiste Sperre uebernommen — der vorige Lauf ist abgestuerzt', { laufId })
   }
 
+  const stand: Fortschritt = { metriken, abbruch: null, seitHerzschlag: 0 }
+
+  /**
+   * Lebenszeichen — UND die Antwort darauf, ob die Sperre noch uns gehoert.
+   *
+   * BEFUND (Block 100): hier stand ein blindes
+   * `await admin.rpc('zustellung_retry_heartbeat', …)`.
+   *
+   * `supabase.rpc()` WIRFT NICHT — ein Fehler kommt als `error` im
+   * Ergebnis zurueck. Und die RPC gibt mehr zurueck als „erledigt": sie
+   * ist `RETURNS boolean` und liefert `FOUND` des UPDATE
+   * `WHERE id = p_lauf_id AND status = 'laeuft'` (live aus pg_proc
+   * gelesen). `false` heisst also: dieser Lauf ist nicht mehr der
+   * Inhaber — jemand anderes hat die Sperre uebernommen.
+   *
+   * Genau diese Antwort wurde weggeworfen. Der Lauf arbeitete dann
+   * weiter an derselben Zustellwarteschlange wie der neue Inhaber —
+   * zwei Arbeiter auf denselben Zeilen, und der Kanal versendet
+   * doppelt. Der Kommentar in `verarbeiteOrganisation` benennt die
+   * Gefahr sogar („sonst uebernimmt der naechste Lauf eine Sperre, die
+   * gar nicht verwaist ist"), nur sah sie niemand nach.
+   *
+   * Dreissig Zeilen weiter oben prueft `zustellung_retry_beanspruchen`
+   * seinen Fehler bis zur Fallunterscheidung. Wieder dasselbe: der
+   * Schritt, der entscheidet, war lockerer als sein Nachbar.
+   */
   const heartbeat = async (): Promise<void> => {
     if (!laufId) return
-    await admin.rpc('zustellung_retry_heartbeat', { p_lauf_id: laufId })
-  }
+    const { data: nochUnser, error: herzFehler } = await admin.rpc(
+      'zustellung_retry_heartbeat', { p_lauf_id: laufId },
+    )
 
-  const stand: Fortschritt = { metriken, abbruch: null, seitHerzschlag: 0 }
+    if (herzFehler) {
+      // Kein Lebenszeichen heisst: die Sperre verfaellt. Weiterzuarbeiten
+      // hiesse, auf ihr Verfallen zu setzen.
+      stand.abbruch = 'herzschlag_nicht_moeglich'
+      log.error('Lebenszeichen nicht absetzbar — Lauf bricht ab, bevor die Sperre verfaellt', {
+        laufId, errorMessage: herzFehler.message,
+      })
+      return
+    }
+
+    if (nochUnser === false) {
+      stand.abbruch = 'sperre_verloren'
+      log.error('Sperre wurde uebernommen — Lauf bricht ab, um Doppelzustellung zu vermeiden', { laufId })
+    }
+  }
   const opt = {
     maxVorgaenge: optionen.maxVorgaenge ?? MAX_VORGAENGE,
     queuedSchwelleMinuten: optionen.queuedSchwelleMinuten ?? QUEUED_SCHWELLE_MINUTEN,
@@ -504,15 +558,34 @@ export async function fuehreWiederholungslaufAus(
       }
     }
 
-    await admin.rpc('zustellung_retry_abschliessen', {
-      p_lauf_id: laufId,
-      p_verarbeitet: metriken.verarbeitet,
-      p_erfolgreich: metriken.erfolgreich,
-      p_fehlgeschlagen: metriken.fehlgeschlagen,
-      p_dead_letter: metriken.deadLetter,
-      p_uebersprungen: metriken.uebersprungen,
-      p_abbruchgrund: stand.abbruch,
-    })
+    // Auch dieser Aufruf war blind. `zustellung_retry_abschliessen` ist
+    // ebenfalls `RETURNS boolean`: `false` heisst, der Eintrag stand
+    // schon nicht mehr auf 'laeuft'. Bleibt der Abschluss aus, steht der
+    // Lauf weiter offen — der naechste ist dann entweder blockiert oder
+    // meldet faelschlich, der vorige sei abgestuerzt.
+    //
+    // Geworfen wird hier NICHT: die Arbeit ist getan, und ein Wurf
+    // machte aus einem erfolgreichen Lauf einen gescheiterten. Sichtbar
+    // muss es trotzdem sein — im Protokoll und in der Rueckgabe.
+    const { data: abgeschlossen, error: abschlussFehler } = await admin.rpc(
+      'zustellung_retry_abschliessen', {
+        p_lauf_id: laufId,
+        p_verarbeitet: metriken.verarbeitet,
+        p_erfolgreich: metriken.erfolgreich,
+        p_fehlgeschlagen: metriken.fehlgeschlagen,
+        p_dead_letter: metriken.deadLetter,
+        p_uebersprungen: metriken.uebersprungen,
+        p_abbruchgrund: stand.abbruch,
+      },
+    )
+
+    const abschlussOffen = Boolean(abschlussFehler) || abgeschlossen === false
+    if (abschlussOffen) {
+      log.error('Wiederholungslauf nicht abgeschlossen — der Eintrag bleibt auf "laeuft"', {
+        laufId,
+        errorMessage: abschlussFehler?.message ?? 'der Lauf stand nicht mehr auf "laeuft"',
+      })
+    }
 
     const dauerMs = jetzt() - start
     log.info('Wiederholungslauf beendet', { laufId, dauerMs, ...metriken, abbruch: stand.abbruch ?? undefined })
@@ -523,6 +596,7 @@ export async function fuehreWiederholungslaufAus(
       laufId,
       uebernommen,
       grund: stand.abbruch ?? undefined,
+      abschlussOffen,
       dauerMs,
       metriken,
     }
@@ -531,8 +605,13 @@ export async function fuehreWiederholungslaufAus(
     log.errorWithException('Wiederholungslauf abgebrochen', err, { laufId })
     // Sperre freigeben — die offenen Zustellungen stehen weiterhin im
     // Protokoll, der naechste Lauf macht dort weiter.
-    await admin
-      .rpc('zustellung_retry_abschliessen', {
+    // Das `.then(() => undefined, () => undefined)` von hier ist weg.
+    // Sein Ablehnungszweig war toter Code: `supabase.rpc()` wirft nicht,
+    // es LEHNT AUCH NICHT AB — ein Fehler kommt als `error` im Ergebnis.
+    // Der Zusatz sah nach bewusstem Wegsehen aus und hat in Wahrheit nie
+    // etwas abgefangen.
+    const { data: freigegeben, error: freigabeFehler } = await admin.rpc(
+      'zustellung_retry_abschliessen', {
         p_lauf_id: laufId,
         p_verarbeitet: metriken.verarbeitet,
         p_erfolgreich: metriken.erfolgreich,
@@ -540,8 +619,19 @@ export async function fuehreWiederholungslaufAus(
         p_dead_letter: metriken.deadLetter,
         p_uebersprungen: metriken.uebersprungen,
         p_abbruchgrund: grund.slice(0, 200),
+      },
+    )
+
+    const freigabeOffen = Boolean(freigabeFehler) || freigegeben === false
+    if (freigabeOffen) {
+      // Der gefaehrlichere der beiden Faelle: der Lauf ist abgestuerzt
+      // UND die Sperre bleibt stehen. Bis sie verfaellt, laeuft gar
+      // nichts mehr.
+      log.error('Sperre nach Abbruch nicht freigegeben — der Eintrag bleibt auf "laeuft"', {
+        laufId,
+        errorMessage: freigabeFehler?.message ?? 'der Lauf stand nicht mehr auf "laeuft"',
       })
-      .then(() => undefined, () => undefined)
+    }
 
     return {
       ok: false,
@@ -549,6 +639,7 @@ export async function fuehreWiederholungslaufAus(
       laufId,
       uebernommen,
       grund,
+      abschlussOffen: freigabeOffen,
       dauerMs: jetzt() - start,
       metriken,
     }
