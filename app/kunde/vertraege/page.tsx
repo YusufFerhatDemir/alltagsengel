@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
 import { VERTRAGS_STATUS, VERTRAGS_TYP, formatDate, statusMeta } from '@/lib/admin/ops'
 import type { AktenVertrag } from '@/lib/akten/types'
+import { VORLAGEN_TYPEN } from '@/lib/vertraege/vorlagen'
 
 export default function KundeVertraegePage() {
   const router = useRouter()
@@ -78,6 +79,28 @@ export default function KundeVertraegePage() {
                   {v.vertragsende && <span>Ende: {formatDate(v.vertragsende)}</span>}
                   {v.unterschrift_datum && <span>Unterschrieben: {formatDate(v.unterschrift_datum)}</span>}
                 </div>
+
+                {/* Das Dokument. Ohne diesen Knopf sieht die Kundin nur die
+                    Zeile — Titel, Art, Status — und nie den Vertrag, den
+                    sie unterschreiben soll. Neuer Tab statt Download: das
+                    PDF wird bei jedem Aufruf frisch erzeugt und nirgends
+                    abgelegt. */}
+                {VORLAGEN_TYPEN.includes(v.vertragstyp as (typeof VORLAGEN_TYPEN)[number]) && (
+                  <a
+                    href={`/api/kunde/vertraege/${v.id}/pdf`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-block', marginTop: 12, padding: '8px 14px',
+                      borderRadius: 10, border: '1px solid var(--border)',
+                      background: 'var(--gold-pale, rgba(201,150,60,.08))',
+                      color: 'var(--gold2)', fontSize: 13, fontWeight: 600,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Vertrag ansehen
+                  </a>
+                )}
               </div>
             )
           })
