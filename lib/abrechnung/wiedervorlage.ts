@@ -90,21 +90,45 @@ export async function reiheRuecklaeuferEin(
 ): Promise<EinreihenErgebnis> {
   const { ruecklaeuferId, organizationId, actorId } = params
 
-  const { data: rl } = await supabase
+  const { data: rl, error: rlFehler } = await supabase
     .from('dta_ruecklaeufer')
     .select('id, lauf_id, invoice_id, client_id, kostentraeger_ik, status, fehler_code, fehler_text, betrag_angefordert_cent, betrag_anerkannt_cent')
     .eq('id', ruecklaeuferId)
     .eq('organization_id', organizationId)
     .maybeSingle()
 
+  // BEFUND (Block 92): der Lesefehler wurde verworfen, und `!rl` meldete
+  // dann „gehoert zu einer anderen Organisation" — eine Aussage ueber die
+  // Zugehoerigkeit, die in diesem Fall nie zutraf.
+  if (rlFehler) {
+    throw new Error(
+      `Rückläufer ${ruecklaeuferId} konnte nicht gelesen werden: ${rlFehler.message}. `
+      + 'Es wurde KEINE Wiedervorlage angelegt.',
+    )
+  }
   if (!rl) throw new Error('Rückläufer nicht gefunden oder gehört zu einer anderen Organisation')
 
-  const { data: positionen } = await supabase
+  const { data: positionen, error: positionenFehler } = await supabase
     .from('dta_ruecklaeufer_positionen')
     .select('id, invoice_item_id, position_nummer, leistungsart, leistungsdatum, status, betrag_angefordert_cent, betrag_anerkannt_cent, fehler_code, fehler_text, ablehnungsgrund')
     .eq('ruecklaeufer_id', ruecklaeuferId)
     .eq('organization_id', organizationId)
     .in('status', ['abgelehnt', 'gekuerzt'])
+
+  // BEFUND (Block 92): DIESE Liste entscheidet, wofuer eine Wiedervorlage
+  // entsteht. Ihr verworfener Fehler wurde zu „keine abgelehnten
+  // Positionen" — der Rueckläufer bekaeme keinen einzigen Eintrag, die
+  // Funktion meldete `erstellt: 0`, und das liest sich wie „nichts zu
+  // tun". Eine abgelehnte oder gekürzte Forderung waere damit
+  // stillschweigend abgeschrieben, ohne dass jemand darueber entschieden
+  // hat.
+  if (positionenFehler) {
+    throw new Error(
+      `Positionen des Rückläufers nicht lesbar: ${positionenFehler.message}. `
+      + 'Es wurde KEINE Wiedervorlage angelegt — „keine abgelehnten Positionen" waere von '
+      + '„nicht nachgesehen" nicht zu unterscheiden.',
+    )
+  }
 
   const faellig = fristDatum(WIEDERVORLAGE_FRIST_TAGE)
   const eintragIds: string[] = []
@@ -494,12 +518,22 @@ export async function reicheKorrigierteEin(
 ): Promise<WiedereinreichungErgebnis> {
   const { organizationId, originalLaufId, actorId } = params
 
-  const { data: eintraege } = await supabase
+  const { data: eintraege, error: eintraegeFehler } = await supabase
     .from('dta_wiedervorlage')
     .select('id, ruecklaeufer_id, betrag_offen_cent, kategorie')
     .eq('organization_id', organizationId)
     .eq('original_lauf_id', originalLaufId)
     .eq('status', 'korrigiert')
+
+  // BEFUND (Block 92): ohne diese Pruefung meldete ein Lesefehler
+  // „Eintraege zuerst pruefen und auf korrigiert setzen" — eine
+  // Handlungsanweisung an jemanden, der genau das schon getan haben kann.
+  if (eintraegeFehler) {
+    throw new Error(
+      `Wiedervorlage-Einträge nicht lesbar: ${eintraegeFehler.message}. `
+      + 'Es wurde NICHTS wiedereingereicht.',
+    )
+  }
 
   if (!eintraege?.length) {
     throw new Error(
