@@ -277,8 +277,8 @@ export function pruefeQuelle(rohQuelle: string, datei: string): Befund[] {
 }
 
 /**
- * Bestand vom 14.09.2026 — 59 gebuendelte Stellen (Block 79: 85; sechs mit
- * Block 80 behoben, neun mit Block 81, elf mit Block 82).
+ * Bestand vom 14.09.2026 — 52 gebuendelte Stellen (Block 79: 85; seither
+ * abgearbeitet in den Bloecken 80–83).
  *
  * ── WAS DIESE LISTE IST UND WAS NICHT ─────────────────────────
  * Sie deckt BEIDE Bereiche ab: die Renderdateien, in denen die Regel
@@ -342,10 +342,6 @@ export const BESTAND_GEBUENDELT: { datei: string; variable: string }[] = [
   { datei: 'app/api/ai-chat/route.ts', variable: 'visitorsRes' },
   { datei: 'app/api/billing/dta/config-status/route.ts', variable: 'laufRes' },
   { datei: 'app/api/billing/dta/config-status/route.ts', variable: 'stateRes' },
-  { datei: 'app/api/billing/monthly-closing/route.ts', variable: 'closingsRes' },
-  { datei: 'app/api/billing/monthly-closing/route.ts', variable: 'invoicesRes' },
-  { datei: 'app/api/billing/monthly-closing/route.ts', variable: 'paymentsRes' },
-  { datei: 'app/api/billing/monthly-closing/route.ts', variable: 'recordsRes' },
   { datei: 'app/kunde/notfall/page.tsx', variable: 'medsRes' },
   { datei: 'app/kunde/notfall/page.tsx', variable: 'notfallRes' },
   { datei: 'app/mis/crm/page.tsx', variable: 'clientsRes' },
@@ -363,9 +359,6 @@ export const BESTAND_GEBUENDELT: { datei: string; variable: string }[] = [
   { datei: 'lib/abrechnung/readiness.ts', variable: 'laufRes' },
   { datei: 'lib/abrechnung/readiness.ts', variable: 'stateRes' },
   { datei: 'lib/abrechnung/readiness.ts', variable: 'zertRes' },
-  { datei: 'lib/abrechnung/sgb-v/versand.ts', variable: 'klientenRes' },
-  { datei: 'lib/abrechnung/sgb-v/versand.ts', variable: 'leistungenRes' },
-  { datei: 'lib/abrechnung/sgb-v/versand.ts', variable: 'verordnungenRes' },
 ]
 
 export function imBestand(b: Befund): boolean {
@@ -391,14 +384,18 @@ export function veraltet(alle: Befund[], gescannt: string[]): typeof BESTAND_GEB
   ))
 }
 
-function dateienSammeln(wurzel: string, treffer: string[] = []): string[] {
+function dateienSammeln(
+  wurzel: string,
+  treffer: string[] = [],
+  muster: RegExp = /\.tsx$/,
+): string[] {
   let eintraege: string[]
   try { eintraege = readdirSync(wurzel) } catch { return treffer }
   for (const e of eintraege) {
     if (UEBERSPRINGEN.includes(e)) continue
     const pfad = join(wurzel, e)
-    if (statSync(pfad).isDirectory()) dateienSammeln(pfad, treffer)
-    else if (pfad.endsWith('.tsx') && !pfad.endsWith('.test.tsx')) treffer.push(pfad)
+    if (statSync(pfad).isDirectory()) dateienSammeln(pfad, treffer, muster)
+    else if (muster.test(pfad) && !/\.test\.tsx?$/.test(pfad)) treffer.push(pfad)
   }
   return treffer
 }
@@ -478,7 +475,16 @@ function main() {
   // Eintrag zu einer nicht gescannten Datei saehe dort faelschlich
   // veraltet aus.
   if (!nurStaged) {
-    const tote = veraltet(alle, dateien)
+    // Fuer die SELBSTPRUEFUNG auch lib/ und app/api mitlesen. Die Liste
+    // deckt beide Bereiche ab; blockiert wird weiterhin nur in den
+    // Renderdateien. Ohne diesen Zusatz waeren genau die Eintraege aus
+    // lib/ und app/api dauerhaft unpruefbar — und ein dort behobener Fall
+    // bliebe fuer immer von der Regel ausgenommen (Block 83).
+    const weitereDateien = ['lib', 'app/api'].flatMap(w => dateienSammeln(w, [], /\.tsx?$/))
+    const weitereBefunde = weitereDateien.flatMap(d => {
+      try { return pruefeQuelle(readFileSync(d, 'utf-8'), d) } catch { return [] }
+    })
+    const tote = veraltet([...alle, ...weitereBefunde], [...dateien, ...weitereDateien])
     if (tote.length > 0) {
       console.error(`\n❌ lint-leerzustand: ${tote.length} Ausnahme(n) decken keinen Befund mehr:\n`)
       for (const e of tote) console.error(`  ${e.datei}  — ${e.variable}`)

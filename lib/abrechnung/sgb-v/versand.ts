@@ -118,6 +118,33 @@ export async function ladeAufbereitung(
       .eq('organization_id', organizationId),
   ])
 
+  // BEFUND (Block 83): alle drei Abfragen wurden ungeprueft als leere
+  // Listen weiterverarbeitet. Was hier durchkommt, wird als FORDERUNG an
+  // die Kasse uebermittelt — eine leere Liste ist an dieser Stelle keine
+  // Aussage ueber den Monat, sondern ueber die Abfrage.
+  //
+  // Am tueckischsten sind die Verordnungen: aus ihnen entsteht `hkpIds`,
+  // und der Filter darunter (`hkpIds.has(l.verordnung_id)`) wirft dann
+  // JEDE Leistung heraus. Ein Ausfall dieser einen Abfrage haette den
+  // ganzen Monat unauffaellig auf null gebracht — mit vorhandenen
+  // Nachweisen in der Datenbank.
+  //
+  // Geworfen statt gemeldet: es ist noch kein Lauf angelegt, es entsteht
+  // keine Datei, und der Aufrufer bekommt den Grund. Ein Lauf ueber einen
+  // ungelesenen Monat waere die schlechtere Spur.
+  const nichtLesbar = [
+    ['Leistungsnachweise', leistungenRes.error?.message ?? null],
+    ['Verordnungen', verordnungenRes.error?.message ?? null],
+    ['Klienten', klientenRes.error?.message ?? null],
+  ].filter(([, grund]) => grund !== null)
+  if (nichtLesbar.length > 0) {
+    throw new Error(
+      `§ 302-Aufbereitung abgebrochen: ${nichtLesbar.map(([n, g]) => `${n} (${g})`).join('; ')}. `
+      + 'Es wurde NICHTS aufbereitet — eine leere Aufbereitung waere von einem Monat '
+      + 'ohne Leistungen nicht zu unterscheiden.',
+    )
+  }
+
   const verordnungen = (verordnungenRes.data || []) as HkpVerordnung[]
   const klienten = (klientenRes.data || []) as HkpKlient[]
   const hkpIds = new Set(verordnungen.map(v => v.id))

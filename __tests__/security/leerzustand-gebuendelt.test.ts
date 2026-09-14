@@ -156,12 +156,14 @@ describe('Die Ausnahmeliste prüft sich selbst', () => {
 
   it('ein veralteter Eintrag macht den Lauf rot', () => {
     expect(LINT).toContain('export function veraltet(alle: Befund[], gescannt: string[])')
-    const teil = LINT.slice(LINT.indexOf('const tote = veraltet(alle, dateien)'))
+    // Der Aufruf nennt seit Block 83 beide Bereiche; gebunden wird die
+    // Zusicherung deshalb an den Funktionsnamen, nicht an die Argumente.
+    const teil = LINT.slice(LINT.indexOf('const tote = veraltet('))
     expect(teil).toContain('process.exit(1)')
   })
 
   it('und zwar VOR der Entwarnung', () => {
-    const riegel = LINT.indexOf('const tote = veraltet(alle, dateien)')
+    const riegel = LINT.indexOf('const tote = veraltet(')
     expect(riegel).toBeGreaterThan(-1)
     expect(riegel).toBeLessThan(LINT.indexOf('if (befunde.length === 0)'))
   })

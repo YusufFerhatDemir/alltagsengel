@@ -66,6 +66,25 @@ export const GET = withTracking(async function GET(request: Request) {
     // 'signed'/'invoiced' stehen und erschien in dieser Uebersicht als
     // erbrachte, abgerechnete Leistung. Die Ampel des Monatsabschlusses
     // haengt an diesen Zahlen.
+    // BEFUND (Block 83): die vier Abfragen wurden ungeprueft als leere
+    // Listen weiterverarbeitet. Jede Kennzahl dieser Antwort waere dann
+    // null gewesen — null Einsaetze, null Rechnungen, 0,00 EUR Umsatz,
+    // keine offenen Posten — und `closingStatus` stuende auf 'gelb'.
+    // Das ist die Zahlenbasis, auf der ein Monat abgeschlossen wird.
+    const nichtLesbar = [
+      ['Leistungsnachweise', recordsRes.error?.message ?? null],
+      ['Rechnungen', invoicesRes.error?.message ?? null],
+      ['Monatsabschlüsse', closingsRes.error?.message ?? null],
+      ['Zahlungen', paymentsRes.error?.message ?? null],
+    ].filter(([, grund]) => grund !== null)
+    if (nichtLesbar.length > 0) {
+      return NextResponse.json({
+        error: `${nichtLesbar.map(([n]) => n).join(', ')} konnten nicht gelesen werden — `
+          + 'es werden keine Kennzahlen zurückgegeben. Null Einsätze wären von einem '
+          + 'leeren Monat nicht zu unterscheiden.',
+      }, { status: 503 })
+    }
+
     const alleRecords = recordsRes.data || []
     const records = ohneStornierte(alleRecords)
     const stornierteRecords = alleRecords.length - records.length
