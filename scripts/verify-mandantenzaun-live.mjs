@@ -31,18 +31,15 @@
  *
  * Aufruf:  npm run verify:mandantenzaun
  */
-import { readFileSync, existsSync } from 'node:fs'
+import { apiHeaders, secretKey, envWert } from './lib/supabase-keys.mjs'
 
-for (const datei of ['.env.local', '.env']) {
-  if (!existsSync(datei)) continue
-  for (const zeile of readFileSync(datei, 'utf8').split('\n')) {
-    const m = zeile.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/)
-    if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '')
-  }
-}
-
-const URL_BASIS = process.env.NEXT_PUBLIC_SUPABASE_URL
-const SERVICE = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+// Header und Schluessel kommen aus scripts/lib/supabase-keys.mjs, nicht von
+// Hand: die Fallback-Kette dort kennt beide Key-Modelle (Legacy-JWT und
+// publishable/secret). Ein selbstgebauter `Authorization: Bearer <key>`
+// meldet mit den neuen Keys still „kein Zugriff" — ein Prueflauf, der
+// deshalb nichts findet, sieht aus wie ein sauberes Ergebnis.
+const URL_BASIS = envWert('NEXT_PUBLIC_SUPABASE_URL')
+const SERVICE = secretKey()
 if (!URL_BASIS || !SERVICE) {
   console.log('Keine Zugangsdaten — uebersprungen.')
   process.exit(0)
@@ -92,7 +89,7 @@ END $$;`
 
 const res = await fetch(`${URL_BASIS}/rest/v1/rpc/_run_sql`, {
   method: 'POST',
-  headers: { apikey: SERVICE, Authorization: `Bearer ${SERVICE}`, 'Content-Type': 'application/json' },
+  headers: apiHeaders(SERVICE, { 'Content-Type': 'application/json' }),
   body: JSON.stringify({ p: sql }),
 })
 const roh = await res.text()
