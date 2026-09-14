@@ -1,3 +1,5 @@
+> **SUPERSEDED** — Aktueller Stand siehe CURRENT_MASTER_STATUS.md bzw. die Reports vom 13.09.2026
+
 # Alltagsengel — Statusrekonstruktion 09.09.2026
 
 **Auditlauf:** 09.09.2026, 13:00–13:15 Uhr (lokal)

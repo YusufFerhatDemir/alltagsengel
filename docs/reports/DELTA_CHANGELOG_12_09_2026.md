@@ -1,3 +1,5 @@
+> **SUPERSEDED** — Aktueller Stand siehe CURRENT_MASTER_STATUS.md bzw. die Reports vom 13.09.2026
+
 # DELTA CHANGELOG — 12.09.2026
 
 **Von:** MASTER_CONTINUATION_12_09_2026 (18 Sektionen)

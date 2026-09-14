@@ -1,3 +1,5 @@
+> **SUPERSEDED** — Aktueller Stand siehe CURRENT_MASTER_STATUS.md bzw. die Reports vom 13.09.2026
+
 # AE NEXT EXECUTION — 12.09.2026
 
 **Commits:** `b136c9d9` → `992adadb` → `HEAD`
