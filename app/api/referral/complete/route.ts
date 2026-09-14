@@ -152,11 +152,16 @@ export const POST = withTracking(async function POST(request: NextRequest) {
     }
 
     // ── 3. Benachrichtigung an den Werber ───────────────────────────
+    // type: 'payment' — der CHECK auf notifications.type kennt nur
+    // booking/system/chat/payment/reminder. Mit 'referral' scheiterte der
+    // Insert immer (23514): der Werber erfuhr NIE von seinem Bonus,
+    // obwohl die Gutschrift gebucht war (Block 37). Eine Gutschrift ist
+    // fachlich eine Geldnachricht — 'payment' ist der passende Kanal.
     const { error: hinweisFehler } = await supabaseAdmin.from('notifications').insert({
       user_id: referral.referrer_id,
       title: 'Empfehlungsbonus erhalten!',
       message: `Deine Empfehlung hat die erste Buchung abgeschlossen. Du hast ${bonus} € Guthaben erhalten!`,
-      type: 'referral',
+      type: 'payment',
     })
     // Der Hinweis ist Beiwerk: das Geld ist gebucht, ein fehlgeschlagener
     // Hinweis darf die Buchung nicht zurueckdrehen. Er verschwindet aber

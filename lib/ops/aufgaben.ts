@@ -22,7 +22,9 @@ export async function listAufgaben(
     .order('created_at', { ascending: false })
 
   if (filter.status) query = query.eq('status', filter.status)
-  else query = query.neq('status', 'archiviert')
+  // Frueher `.neq('status', 'archiviert')` — ein Filter auf einen Wert,
+  // den der CHECK nie zulaesst. Er hat also nie etwas ausgeschlossen.
+  else query = query.neq('status', 'storniert')
   if (filter.kategorie) query = query.eq('kategorie', filter.kategorie)
   if (filter.prioritaet) query = query.eq('prioritaet', filter.prioritaet)
   if (filter.verantwortlichId) query = query.eq('verantwortlich_id', filter.verantwortlichId)
@@ -109,7 +111,11 @@ export async function deleteAufgabe(
 ): Promise<void> {
   const { error } = await supabase
     .from('ops_aufgaben')
-    .update({ status: 'archiviert', updated_at: new Date().toISOString() })
+    // 'storniert', nicht 'archiviert': die Spalte traegt einen CHECK mit
+    // offen/in_bearbeitung/warten/erledigt/storniert/ueberfaellig.
+    // 'archiviert' stand nur im TypeScript-Typ — jeder Aufruf scheiterte
+    // mit 23514, eine Aufgabe liess sich NIE loeschen (Block 37).
+    .update({ status: 'storniert', updated_at: new Date().toISOString() })
     .eq('id', params.id)
     .eq('organization_id', params.organizationId)
   if (error) throw new Error(`Aufgabe konnte nicht archiviert werden: ${error.message}`)

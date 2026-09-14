@@ -20,8 +20,17 @@ export const AUFGABEN_KATEGORIE_WERTE: AufgabenKategorie[] = [
 export type AufgabenPrioritaet = 'niedrig' | 'mittel' | 'hoch' | 'kritisch'
 export const AUFGABEN_PRIORITAET_WERTE: AufgabenPrioritaet[] = ['niedrig', 'mittel', 'hoch', 'kritisch']
 
-export type AufgabenStatus = 'offen' | 'in_bearbeitung' | 'warten' | 'erledigt' | 'storniert' | 'archiviert'
-export const AUFGABEN_STATUS_WERTE: AufgabenStatus[] = ['offen', 'in_bearbeitung', 'warten', 'erledigt', 'storniert', 'archiviert']
+/**
+ * Wortgleich zum CHECK `ops_aufgaben_status_check`.
+ *
+ * BEFUND (Block 37): der Typ fuehrte sein eigenes Vokabular — er kannte
+ * 'archiviert' (die Datenbank nicht) und kannte 'ueberfaellig' nicht (die
+ * Datenbank schon). Beides zugleich: ein Schreibweg, der immer scheitert,
+ * und ein Zustand, den der Code nicht behandeln konnte, obwohl die
+ * Tages-Kette ihn setzt (cron_check_ueberfaellige_aufgaben).
+ */
+export type AufgabenStatus = 'offen' | 'in_bearbeitung' | 'warten' | 'erledigt' | 'storniert' | 'ueberfaellig'
+export const AUFGABEN_STATUS_WERTE: AufgabenStatus[] = ['offen', 'in_bearbeitung', 'warten', 'erledigt', 'storniert', 'ueberfaellig']
 
 export type WiederholungIntervall = 'taeglich' | 'woechentlich' | 'monatlich' | 'quartalsweise' | 'jaehrlich'
 export const WIEDERHOLUNG_INTERVALL_WERTE: WiederholungIntervall[] = ['taeglich', 'woechentlich', 'monatlich', 'quartalsweise', 'jaehrlich']

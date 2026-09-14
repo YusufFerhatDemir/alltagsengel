@@ -69,7 +69,18 @@ export async function escalateRequest(requestId: string, currentLevel: number): 
 export async function markRequestFailed(requestId: string): Promise<{ ok: true }> {
   const { supabase, userId, organizationId, role, name } = await requireScheduleAdmin()
   const { data: gesetzt, error } = await supabase.from('substitution_requests')
-    .update({ status: 'failed' })
+    // 'cancelled', nicht 'failed': der CHECK kennt
+    // open/searching/assigned/confirmed/escalated/cancelled. Mit 'failed'
+    // scheiterte das Update immer (23514) — eine Vertretungsanfrage liess
+    // sich NIE als gescheitert markieren (Block 37).
+    //
+    // Der Unterschied geht dabei verloren: 'cancelled' heisst „abgesagt",
+    // 'failed' hiesse „keine Vertretung gefunden". Das Vokabular der
+    // Datenbank kennt den zweiten Fall nicht. Ihn zu ergaenzen waere eine
+    // Migration und eine fachliche Entscheidung — bis dahin ist der
+    // gemeinsame Endzustand ehrlicher als ein Schreibvorgang, der nie
+    // ankommt.
+    .update({ status: 'cancelled' })
     .eq('id', requestId)
     .eq('organization_id', organizationId)
     .select('id')
@@ -86,7 +97,11 @@ export async function markRequestFailed(requestId: string): Promise<{ ok: true }
     actorName: name,
     entityType: 'substitution_request',
     entityId: requestId,
-    details: { aktion: 'als_gescheitert_markiert', status: 'failed' },
+    // Der Trail haelt den TATSAECHLICH geschriebenen Wert fest. Hier stand
+    // 'failed' — ein Wert, den die Spalte nie angenommen hat. Der
+    // Vorgangsname traegt die fachliche Bedeutung, die dem Vokabular der
+    // Datenbank fehlt.
+    details: { aktion: 'als_gescheitert_markiert', status: 'cancelled' },
   }).catch((err) => log.warnWithException('Audit-Log fehlgeschlagen (non-blocking)', err))
 
   return { ok: true }
@@ -134,7 +149,12 @@ export async function assignSubstitute(requestId: string, caregiverId: string): 
   const { data: besetzt, error } = await supabase.from('substitution_requests')
     .update({
       substitute_caregiver_id: caregiverId,
-      status: 'filled',
+      // 'assigned', nicht 'filled': der CHECK kennt 'filled' nicht, und
+      // die Zuweisung scheiterte deshalb immer (23514) — eine Vertretung
+      // liess sich NIE eintragen (Block 37). 'assigned' ist die exakte
+      // Entsprechung: die Datenbank hat das richtige Wort, der Code nahm
+      // ein anderes.
+      status: 'assigned',
       resolved_at: new Date().toISOString(),
     })
     .eq('id', requestId)

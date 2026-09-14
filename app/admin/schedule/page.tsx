@@ -141,9 +141,17 @@ export default function AdminSchedulePage() {
   const stats = useMemo(() => {
     const sick = absences.filter(a => a.absence_type === 'sick').length
     const vacation = absences.filter(a => a.absence_type === 'vacation').length
-    const openReq = requests.filter(r => ['open', 'searching', 'escalated', 'proposed'].includes(r.status)).length
-    const resolved = requests.filter(r => ['filled', 'external'].includes(r.status)).length
-    const failed = requests.filter(r => r.status === 'failed').length
+    // Vokabular der DATENBANK (substitution_requests_status_check):
+    // open, searching, assigned, confirmed, escalated, cancelled.
+    //
+    // BEFUND (Block 37): hier standen 'proposed', 'filled', 'external' und
+    // 'failed' — vier Werte, die der CHECK nicht zulaesst und die deshalb
+    // nie in der Tabelle stehen koennen. Die Zaehler „besetzt" und
+    // „gescheitert" waren dauerhaft 0, und eine Anfrage auf 'assigned'
+    // oder 'confirmed' fiel durch jeden Eimer.
+    const openReq = requests.filter(r => ['open', 'searching', 'escalated'].includes(r.status)).length
+    const resolved = requests.filter(r => ['assigned', 'confirmed'].includes(r.status)).length
+    const failed = requests.filter(r => r.status === 'cancelled').length
     const totalClosed = resolved + failed
     const successRate = totalClosed > 0 ? Math.round((resolved / totalClosed) * 100) : null
     const poolSize = caregivers.filter(c => c.emergency_pool).length
@@ -291,7 +299,7 @@ export default function AdminSchedulePage() {
                 {requests.length === 0 ? <EmptyRow colSpan={7}>Keine Vertretungsanfragen</EmptyRow> : requests.map(r => {
                   const sm = statusMeta(SUBSTITUTION_STATUS, r.status)
                   const esc = ESCALATION_LEVELS[r.escalation_level] || ESCALATION_LEVELS[0]
-                  const closed = ['filled', 'external', 'cancelled', 'failed'].includes(r.status)
+                  const closed = ['assigned', 'confirmed', 'cancelled'].includes(r.status)
                   return (
                     <tr key={r.id}>
                       <td style={{ whiteSpace: 'nowrap', fontSize: 13 }}>
