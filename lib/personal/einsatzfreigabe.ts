@@ -1,10 +1,7 @@
 import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { heuteBerlin } from '@/lib/utils/timezone'
-import {
-  ENTLASTUNG_JAEHRLICH_EUR,
-  VP_KZP_KOMBINIERT_EUR,
-} from '@/lib/config/budget-constants'
+import { budgetVersionFuerJahr } from '@/lib/config/budget-constants'
 import type { BudgetTyp } from '@/lib/config/budget-constants'
 import { uebertragVerfallsdatum } from '@/lib/billing/core/budget-cap'
 import { NACHWEIS_SPALTEN, pflichtProbleme, type NachweisZeile } from './pflichtnachweis'
@@ -234,7 +231,12 @@ export async function pruefeBudget(
   }
 
   const istVp = budgetTyp === 'verhinderungspflege'
-  const defaultAmount = istVp ? VP_KZP_KOMBINIERT_EUR : ENTLASTUNG_JAEHRLICH_EUR
+  // Die Werte des LEISTUNGSJAHRES, nicht die des heutigen Tages: eine
+  // Pruefung fuer 2024 muss mit den 2024er Grenzen rechnen, sonst waere sie
+  // nicht reproduzierbar (Block 78). `budgetVersionFuerJahr` ist dabei
+  // fail-closed — fuer ein Jahr ohne hinterlegte Werte wird nichts geraten.
+  const grenzen = budgetVersionFuerJahr(year)
+  const defaultAmount = istVp ? grenzen.vpKzpKombiniert : grenzen.entlastungJaehrlich
   const anspruch = istVp
     ? Number(budget.combined_annual_amount ?? 0) || defaultAmount
     : Number(budget.annual_amount ?? 0) || defaultAmount
@@ -312,18 +314,20 @@ export async function pruefeVPBudget(
   // „keine Beanstandung am Kombinationsbudget". Der gemeinsame Deckel aus
   // VP und KZP ist aber die gesetzliche Obergrenze — „nicht nachsehen
   // koennen" ist keine Auskunft darueber.
+  const kombiGrenze = budgetVersionFuerJahr(year).vpKzpKombiniert
+
   let vpKzpKombiniertWarnung: string | null = null
   if (budgetFehler) {
     vpKzpKombiniertWarnung =
       `VP+KZP Kombinationsbudget nicht prüfbar (${budgetFehler.message}) — bitte von Hand prüfen.`
   } else if (budget) {
     const combinedUsed = Number(budget.combined_used_amount ?? 0)
-    if (combinedUsed > VP_KZP_KOMBINIERT_EUR) {
+    if (combinedUsed > kombiGrenze) {
       vpKzpKombiniertWarnung =
-        `VP+KZP Kombinationsbudget überschritten (${combinedUsed.toFixed(2)} / ${VP_KZP_KOMBINIERT_EUR} EUR)`
-    } else if (combinedUsed > VP_KZP_KOMBINIERT_EUR * 0.95) {
+        `VP+KZP Kombinationsbudget überschritten (${combinedUsed.toFixed(2)} / ${kombiGrenze} EUR)`
+    } else if (combinedUsed > kombiGrenze * 0.95) {
       vpKzpKombiniertWarnung =
-        `VP+KZP Kombinationsbudget zu ${Math.round((combinedUsed / VP_KZP_KOMBINIERT_EUR) * 100)}% ausgeschöpft (${(VP_KZP_KOMBINIERT_EUR - combinedUsed).toFixed(2)} EUR verbleibend)`
+        `VP+KZP Kombinationsbudget zu ${Math.round((combinedUsed / kombiGrenze) * 100)}% ausgeschöpft (${(kombiGrenze - combinedUsed).toFixed(2)} EUR verbleibend)`
     }
   }
 

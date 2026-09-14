@@ -107,10 +107,12 @@ describe('D2: pruefeBudget VP-Unterstützung', () => {
     expect(src).toContain('FAIL-CLOSED')
   })
 
-  it('verwendet VP_KZP_KOMBINIERT_EUR als Default für VP (§42a gemeinsamer Jahresbetrag)', () => {
+  it('verwendet den kombinierten Jahresbetrag als Default für VP (§42a)', () => {
+    // Seit Block 78 kommen die Grenzen aus der Version des LEISTUNGSJAHRES
+    // statt aus den Konstanten des heutigen Tages. Die Regel ist dieselbe;
+    // geprüft wird sie jetzt an der Vorgabe selbst.
     const src = read('lib/personal/einsatzfreigabe.ts')
-    expect(src).toContain('VP_KZP_KOMBINIERT_EUR')
-    expect(src).toContain('ENTLASTUNG_JAEHRLICH_EUR')
+    expect(src).toContain('istVp ? grenzen.vpKzpKombiniert : grenzen.entlastungJaehrlich')
   })
 
   it('VP-Budget-Warnung ist klar beschriftet', () => {
@@ -127,7 +129,7 @@ describe('D2: pruefeVPBudget (Kombinations-Budget)', () => {
 
   it('prüft VP+KZP Kombinationsbudget', () => {
     const src = read('lib/personal/einsatzfreigabe.ts')
-    expect(src).toContain('VP_KZP_KOMBINIERT_EUR')
+    expect(src).toContain('budgetVersionFuerJahr(year).vpKzpKombiniert')
     expect(src).toContain('vpKzpKombiniertWarnung')
   })
 
@@ -144,8 +146,8 @@ describe('D2: §42a Gemeinsamer Jahresbetrag (seit 01.07.2025)', () => {
       src.indexOf('async function pruefeBudget'),
       src.indexOf('async function pruefeVPBudget'),
     )
-    expect(pruefeBudgetFn).toContain('VP_KZP_KOMBINIERT_EUR')
-    expect(pruefeBudgetFn).not.toContain('VP_JAEHRLICH_EUR')
+    expect(pruefeBudgetFn).toContain('grenzen.vpKzpKombiniert')
+    expect(pruefeBudgetFn).not.toContain('vpJaehrlich')
   })
 
   it('Gesamtbudget 3539€ wird nicht überschritten', async () => {
@@ -169,11 +171,11 @@ describe('D2: §42a Gemeinsamer Jahresbetrag (seit 01.07.2025)', () => {
     expect(mod.VP_JAEHRLICH_EUR + mod.KZP_JAEHRLICH_EUR).toBe(mod.VP_KZP_KOMBINIERT_EUR)
   })
 
-  it('pruefeVPBudget prüft combined_used_amount gegen VP_KZP_KOMBINIERT_EUR', () => {
+  it('pruefeVPBudget prüft combined_used_amount gegen den kombinierten Jahresbetrag', () => {
     const src = read('lib/personal/einsatzfreigabe.ts')
     const vpBudgetFn = src.slice(src.indexOf('async function pruefeVPBudget'))
     expect(vpBudgetFn).toContain('combined_used_amount')
-    expect(vpBudgetFn).toContain('VP_KZP_KOMBINIERT_EUR')
+    expect(vpBudgetFn).toContain('kombiGrenze')
   })
 
   it('VP_JAEHRLICH_EUR und KZP_JAEHRLICH_EUR sind nur Referenzwerte', () => {

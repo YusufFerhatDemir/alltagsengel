@@ -18,6 +18,8 @@
  * Abrechnungen oder blockiert berechtigte Leistungen.
  */
 
+import { heuteBerlin } from '@/lib/utils/timezone'
+
 export interface BudgetVersion {
   gueltigAb: string   // ISO-Datum (YYYY-MM-DD)
   gueltigBis: string   // ISO-Datum (YYYY-MM-DD), '9999-12-31' = aktuell
@@ -116,8 +118,45 @@ export function budgetVersionFuerJahrOderNull(jahr: number): BudgetVersion | nul
   }
 }
 
-/** Aktuell gültige Version — Quelle der Einzelkonstanten unten. */
-const AKTUELL = BUDGET_VERSIONEN[BUDGET_VERSIONEN.length - 1]
+/**
+ * Die heute geltende Version — Quelle der Einzelkonstanten unten.
+ *
+ * BEFUND (Block 78): hier stand `BUDGET_VERSIONEN[BUDGET_VERSIONEN.length - 1]`,
+ * also schlicht der LETZTE Eintrag der Liste. Die Anleitung im Kopf dieser
+ * Datei sagt aber, wie neue Werte einzutragen sind: „NEUEN Eintrag mit
+ * gueltigAb='2028-01-01' … anhaengen."
+ *
+ * Wer dieser Anleitung folgt — etwa im Herbst 2027, um die Dynamisierung
+ * vorzubereiten —, aendert damit SOFORT `ENTLASTUNG_MONATLICH_EUR`,
+ * `ENTLASTUNG_JAEHRLICH_EUR` und `VP_KZP_KOMBINIERT_EUR` auf die Werte des
+ * naechsten Jahres. Die Budgetpruefung haette von diesem Tag an ein zu
+ * hohes Limit zugelassen, und die Marketingtexte haetten einen Betrag
+ * genannt, den es noch nicht gibt.
+ *
+ * Das ist genau der Schaden, den die Versionierung verhindern soll: „Alte
+ * Werte NIEMALS ueberschreiben — Rechnungen und Budgetpruefungen
+ * vergangener Jahre muessen reproduzierbar bleiben." Ein Eintrag, dessen
+ * Gueltigkeit noch nicht begonnen hat, ist kein aktueller Wert.
+ *
+ * Deshalb: der spaeteste Eintrag, dessen `gueltigAb` bereits erreicht ist.
+ * Ein ZUKUENFTIGER Eintrag wird nie genommen.
+ *
+ * Geworfen wird hier NICHT — anders als in `budgetVersionFuerJahr()`. Diese
+ * Konstanten werden beim Import ausgewertet; eine Ausnahme an dieser Stelle
+ * legte die gesamte Anwendung lahm, und zwar an einem Jahreswechsel, an dem
+ * ohnehin niemand darauf gefasst ist. Die rechnenden Wege gehen ueber
+ * `budgetVersionFuerJahr(jahr)` und bleiben dort fail-closed.
+ */
+function versionFuerHeute(): BudgetVersion {
+  const heute = heuteBerlin()
+  let treffer: BudgetVersion | null = null
+  for (const v of BUDGET_VERSIONEN) {
+    if (v.gueltigAb <= heute) treffer = v
+  }
+  return treffer ?? BUDGET_VERSIONEN[0]
+}
+
+const AKTUELL = versionFuerHeute()
 
 /** § 45b SGB XI — Entlastungsbetrag: 131 €/Monat (seit 01.01.2025) */
 export const ENTLASTUNG_MONATLICH_EUR = AKTUELL.entlastungMonatlich
