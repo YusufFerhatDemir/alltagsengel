@@ -139,9 +139,110 @@ export function ohneKommentare(quelle: string): string {
   return aus
 }
 
+/**
+ * Dieselbe Form, gebuendelt:
+ *
+ *     const [aRes, bRes] = await Promise.all([
+ *       supabase.from('x').select('*'),
+ *       supabase.from('y').select('*'),
+ *     ])
+ *     setA(aRes.data || [])
+ *
+ * BEFUND (Block 79): die Regel oben kann das nicht sehen. Sie sucht
+ * `const { data } = await supabase` — hier steht kein `data` in der
+ * Zerlegung, sondern ein Ergebnisobjekt je Abfrage, und der verworfene
+ * Fehler heisst dann `aRes.error`. Genau diese Form traegt die
+ * Uebersichtsseiten des Betriebssystems: acht bis neunzehn Abfragen in
+ * einem Aufruf, jede Auswertung mit `|| []` daneben.
+ *
+ * Der Schaden ist derselbe, den der Dateikopf beschreibt — nur groesser:
+ * faellt EINE der acht Abfragen aus, zeigt die Seite ueberall Nullen und
+ * meldet nichts.
+ */
+const PROMISE_ALL = /const\s*\[([^\]]+)\]\s*=\s*await\s+Promise\.all\(\[/g
+
+/**
+ * Steht der Name nahe genug an einer Stelle, die `.error` liest?
+ *
+ * Gemeint ist die Sammelpruefung:
+ *
+ *     const abfragen = [['Klienten', clientsRes], …]
+ *     const gescheitert = abfragen.filter(([, r]) => r.error)
+ *
+ * Dort taucht `clientsRes.error` nie woertlich auf, geprueft wird er
+ * trotzdem. 400 Zeichen sind der Abstand, den so eine Liste ueberbrueckt.
+ */
+function gebuendeltGeprueft(quelle: string, name: string): boolean {
+  const NAEHE = 400
+  const nameRe = new RegExp(`\\b${name}\\b`, 'g')
+  let t: RegExpExecArray | null
+  while ((t = nameRe.exec(quelle)) !== null) {
+    const umfeld = quelle.slice(Math.max(0, t.index - NAEHE), t.index + NAEHE)
+    if (/\.error\b/.test(umfeld)) return true
+  }
+  return false
+}
+
+/** Fenster hinter einem Promise.all-Block — diese Bloecke sind lang. */
+const FENSTER_GEBUENDELT = 2500
+
+function pruefeGebuendelt(quelle: string, rohQuelle: string, datei: string): Befund[] {
+  const befunde: Befund[] = []
+  PROMISE_ALL.lastIndex = 0
+  let m: RegExpExecArray | null
+  while ((m = PROMISE_ALL.exec(quelle)) !== null) {
+    const ab = m.index + m[0].length
+    // Bis zur schliessenden Klammer des Arrays.
+    let tiefe = 1
+    let i = ab
+    while (i < quelle.length && tiefe > 0) {
+      const z = quelle[i]
+      if (z === '[') tiefe++
+      else if (z === ']') tiefe--
+      i++
+    }
+    const block = quelle.slice(ab, i)
+    if (!/\.from\(|\.rpc\(/.test(block)) continue
+
+    const fenster = quelle.slice(i, i + FENSTER_GEBUENDELT)
+    for (const roh of m[1].split(',')) {
+      const name = roh.trim()
+      // Nur einfache Bezeichner: `{ data: c }` traegt den Fehler gar nicht
+      // erst, das ist die Form der Regel oben.
+      if (!/^[A-Za-z_$][\w$]*$/.test(name)) continue
+      // Wird der Fehler IRGENDWO in der Datei gelesen, ist er nicht
+      // verworfen. Bewusst grosszuegig: lieber eine Stelle zu wenig
+      // melden als eine falsche.
+      if (new RegExp(`\\b${name}\\.error\\b`).test(quelle)) continue
+      // Auch die gebuendelte Form zaehlt: wer die Ergebnisse in eine Liste
+      // legt und diese auf `.error` filtert, prueft sie ebenso — nur unter
+      // einem anderen Namen. Eine Regel, die nur EINE Schreibweise gelten
+      // laesst, erzieht zur Schreibweise statt zur Pruefung.
+      if (gebuendeltGeprueft(quelle, name)) continue
+
+      const leerliste = new RegExp(`\\b${name}\\.data\\s*(?:\\|\\||\\?\\?)\\s*\\[\\s*\\]`).exec(fenster)
+      const zustand = new RegExp(`\\bset[A-Z]\\w*\\(\\s*${name}\\.data\\b`).exec(fenster)
+      const treffer = leerliste ?? zustand
+      if (!treffer) continue
+
+      befunde.push({
+        datei,
+        zeile: quelle.slice(0, m.index).split('\n').length,
+        variable: name,
+        art: leerliste ? 'leerliste' : 'zustand',
+        ausschnitt: rohQuelle
+          .slice(i, i + FENSTER_GEBUENDELT)
+          .slice(Math.max(0, treffer.index - 20), treffer.index + 90)
+          .split('\n').map(z => z.trim()).filter(Boolean).slice(0, 2).join(' ').slice(0, 110),
+      })
+    }
+  }
+  return befunde
+}
+
 export function pruefeQuelle(rohQuelle: string, datei: string): Befund[] {
   const quelle = ohneKommentare(rohQuelle)
-  const befunde: Befund[] = []
+  const befunde: Befund[] = pruefeGebuendelt(quelle, rohQuelle, datei)
   NUR_DATA.lastIndex = 0
   let m: RegExpExecArray | null
   while ((m = NUR_DATA.exec(quelle)) !== null) {
@@ -173,6 +274,146 @@ export function pruefeQuelle(rohQuelle: string, datei: string): Befund[] {
     })
   }
   return befunde
+}
+
+/**
+ * Bestand vom 14.09.2026 — 85 gebuendelte Stellen.
+ *
+ * ── WAS DIESE LISTE IST UND WAS NICHT ─────────────────────────
+ * Sie deckt BEIDE Bereiche ab: die Renderdateien, in denen die Regel
+ * blockiert, und lib/ + app/api, wo dieselbe Form in Entscheidungen
+ * endet und von den Tests festgehalten wird.
+ *
+ * Sie ist KEINE Freigabe. Diese Uebersichtsseiten zeigen bei einer
+ * gescheiterten Abfrage Nullen statt einer Meldung — genau der Schaden,
+ * den der Dateikopf beschreibt. Sie sind eingefroren, damit die Zahl nur
+ * noch sinken kann und NEUE Faelle den Lauf rot machen.
+ *
+ * Dass die Liste so lang ist, ist der Befund: die Form
+ * `const [aRes, bRes] = await Promise.all([…])` stand bisher ausserhalb
+ * der Regel, und deshalb ist sie in jeder zweiten Uebersichtsseite
+ * gewachsen. Sie kommentarlos in einem Durchlauf abzuarbeiten waere
+ * falsch — jede Seite braucht eine eigene Entscheidung, was sie statt der
+ * Nullen zeigt.
+ *
+ * Wer eine davon anfasst: `.error` pruefen (auch gebuendelt ueber eine
+ * Liste), im Render den Leerzustand nur ohne Fehler zeigen, und die Zeile
+ * hier herausnehmen. Ein veralteter Eintrag macht den Lauf rot — siehe
+ * `veraltet()`.
+ *
+ * `app/admin/dashboard/page.tsx` steht NICHT in dieser Liste: dort war der
+ * Schaden am groessten (acht Abfragen, darunter beide Umsatzzahlen), und
+ * die Seite ist mit Block 79 behoben.
+ */
+export const BESTAND_GEBUENDELT: { datei: string; variable: string }[] = [
+  { datei: 'app/admin/abrechnung/page.tsx', variable: 'cliRes' },
+  { datei: 'app/admin/abrechnung/page.tsx', variable: 'laufRes' },
+  { datei: 'app/admin/abrechnung/page.tsx', variable: 'recRes' },
+  { datei: 'app/admin/bonuses/page.tsx', variable: 'boRes' },
+  { datei: 'app/admin/bonuses/page.tsx', variable: 'cgRes' },
+  { datei: 'app/admin/caregivers/[id]/page.tsx', variable: 'bonusRes' },
+  { datei: 'app/admin/caregivers/[id]/page.tsx', variable: 'docRes' },
+  { datei: 'app/admin/caregivers/[id]/page.tsx', variable: 'histRes' },
+  { datei: 'app/admin/caregivers/[id]/page.tsx', variable: 'qualRes' },
+  { datei: 'app/admin/caregivers/page.tsx', variable: 'cgRes' },
+  { datei: 'app/admin/clients/page.tsx', variable: 'budgetsRes' },
+  { datei: 'app/admin/clients/page.tsx', variable: 'clientsRes' },
+  { datei: 'app/admin/home/page.tsx', variable: 'bookingsRes' },
+  { datei: 'app/admin/home/page.tsx', variable: 'profilesRes' },
+  { datei: 'app/admin/home/page.tsx', variable: 'recentBookingsRes' },
+  { datei: 'app/admin/home/page.tsx', variable: 'recentProfilesRes' },
+  { datei: 'app/admin/kalender/page.tsx', variable: 'aRes' },
+  { datei: 'app/admin/kalender/page.tsx', variable: 'abRes' },
+  { datei: 'app/admin/kalender/page.tsx', variable: 'cgRes' },
+  { datei: 'app/admin/kalender/page.tsx', variable: 'clRes' },
+  { datei: 'app/admin/kalender/page.tsx', variable: 'stRes' },
+  { datei: 'app/admin/monatsabschluss-vorbereitung/page.tsx', variable: 'assignRes' },
+  { datei: 'app/admin/monatsabschluss-vorbereitung/page.tsx', variable: 'budgetRes' },
+  { datei: 'app/admin/monatsabschluss-vorbereitung/page.tsx', variable: 'caregiverRes' },
+  { datei: 'app/admin/monatsabschluss-vorbereitung/page.tsx', variable: 'clientRes' },
+  { datei: 'app/admin/monatsabschluss-vorbereitung/page.tsx', variable: 'recordRes' },
+  { datei: 'app/admin/monatsabschluss/[clientId]/page.tsx', variable: 'recordsRes' },
+  { datei: 'app/admin/monatsabschluss/page.tsx', variable: 'budgetsRes' },
+  { datei: 'app/admin/monatsabschluss/page.tsx', variable: 'closingsRes' },
+  { datei: 'app/admin/monatsabschluss/page.tsx', variable: 'recordsRes' },
+  { datei: 'app/admin/partners/page.tsx', variable: 'pRes' },
+  { datei: 'app/admin/partners/page.tsx', variable: 'vRes' },
+  { datei: 'app/admin/rechnungen/[id]/page.tsx', variable: 'allocRes' },
+  { datei: 'app/admin/rechnungen/[id]/page.tsx', variable: 'auditRes' },
+  { datei: 'app/admin/rechnungen/[id]/page.tsx', variable: 'itemsRes' },
+  { datei: 'app/admin/records/new/page.tsx', variable: 'cRes' },
+  { datei: 'app/admin/records/new/page.tsx', variable: 'gRes' },
+  { datei: 'app/admin/schedule/page.tsx', variable: 'abRes' },
+  { datei: 'app/admin/schedule/page.tsx', variable: 'asRes' },
+  { datei: 'app/admin/schedule/page.tsx', variable: 'cgRes' },
+  { datei: 'app/admin/schedule/page.tsx', variable: 'clRes' },
+  { datei: 'app/admin/schedule/page.tsx', variable: 'prRes' },
+  { datei: 'app/admin/schedule/page.tsx', variable: 'srRes' },
+  { datei: 'app/admin/verordnungen/page.tsx', variable: 'absRes' },
+  { datei: 'app/admin/verordnungen/page.tsx', variable: 'allAssignRes' },
+  { datei: 'app/admin/verordnungen/page.tsx', variable: 'iRes' },
+  { datei: 'app/admin/verordnungen/page.tsx', variable: 'lRes' },
+  { datei: 'app/admin/verordnungen/page.tsx', variable: 'rRes' },
+  { datei: 'app/api/admin/krankenfahrten/route.ts', variable: 'providersRes' },
+  { datei: 'app/api/admin/krankenfahrten/route.ts', variable: 'reviewsRes' },
+  { datei: 'app/api/admin/krankenfahrten/route.ts', variable: 'ridesRes' },
+  { datei: 'app/api/admin/pricing/route.ts', variable: 'audit' },
+  { datei: 'app/api/admin/pricing/route.ts', variable: 'config' },
+  { datei: 'app/api/admin/pricing/route.ts', variable: 'regions' },
+  { datei: 'app/api/admin/pricing/route.ts', variable: 'surcharges' },
+  { datei: 'app/api/admin/pricing/route.ts', variable: 'tiers' },
+  { datei: 'app/api/ai-chat/route.ts', variable: 'bookingsRes' },
+  { datei: 'app/api/ai-chat/route.ts', variable: 'usersRes' },
+  { datei: 'app/api/ai-chat/route.ts', variable: 'visitorsRes' },
+  { datei: 'app/api/billing/dta/config-status/route.ts', variable: 'laufRes' },
+  { datei: 'app/api/billing/dta/config-status/route.ts', variable: 'stateRes' },
+  { datei: 'app/api/billing/monthly-closing/route.ts', variable: 'closingsRes' },
+  { datei: 'app/api/billing/monthly-closing/route.ts', variable: 'invoicesRes' },
+  { datei: 'app/api/billing/monthly-closing/route.ts', variable: 'paymentsRes' },
+  { datei: 'app/api/billing/monthly-closing/route.ts', variable: 'recordsRes' },
+  { datei: 'app/kunde/notfall/page.tsx', variable: 'medsRes' },
+  { datei: 'app/kunde/notfall/page.tsx', variable: 'notfallRes' },
+  { datei: 'app/mis/crm/page.tsx', variable: 'clientsRes' },
+  { datei: 'app/mis/crm/page.tsx', variable: 'leadsRes' },
+  { datei: 'app/mis/crm/page.tsx', variable: 'partnersRes' },
+  { datei: 'app/mis/crm/page.tsx', variable: 'satisfactionRes' },
+  { datei: 'app/mis/krankenfahrt-pricing/page.tsx', variable: 'configRes' },
+  { datei: 'app/mis/krankenfahrt-pricing/page.tsx', variable: 'regionsRes' },
+  { datei: 'app/mis/krankenfahrt-pricing/page.tsx', variable: 'surchargesRes' },
+  { datei: 'app/mis/krankenfahrt-pricing/page.tsx', variable: 'tiersRes' },
+  { datei: 'components/admin/AmpelSummaryWidget.tsx', variable: 'closingsRes' },
+  { datei: 'components/admin/AmpelSummaryWidget.tsx', variable: 'recordsRes' },
+  { datei: 'lib/abrechnung/readiness.ts', variable: 'dasRes' },
+  { datei: 'lib/abrechnung/readiness.ts', variable: 'ktRes' },
+  { datei: 'lib/abrechnung/readiness.ts', variable: 'laufRes' },
+  { datei: 'lib/abrechnung/readiness.ts', variable: 'stateRes' },
+  { datei: 'lib/abrechnung/readiness.ts', variable: 'zertRes' },
+  { datei: 'lib/abrechnung/sgb-v/versand.ts', variable: 'klientenRes' },
+  { datei: 'lib/abrechnung/sgb-v/versand.ts', variable: 'leistungenRes' },
+  { datei: 'lib/abrechnung/sgb-v/versand.ts', variable: 'verordnungenRes' },
+]
+
+export function imBestand(b: Befund): boolean {
+  return BESTAND_GEBUENDELT.some(e => e.datei === b.datei && e.variable === b.variable)
+}
+
+/**
+ * Eintraege, die keinen Befund mehr decken.
+ *
+ * Dieselbe Selbstpruefung wie in scripts/lint-stilles-update.ts (Block 68):
+ * eine Ausnahmeliste, die ihre eigene Gueltigkeit nicht prueft, wird mit
+ * jeder Behebung ein Stueck blinder — der behobene Fall bliebe fuer immer
+ * von der Regel ausgenommen.
+ */
+export function veraltet(alle: Befund[], gescannt: string[]): typeof BESTAND_GEBUENDELT {
+  // Nur Eintraege beurteilen, deren Datei ueberhaupt gescannt wurde: der
+  // blockierende Lauf sieht nur app/ und components/, die Liste deckt auch
+  // lib/ und app/api ab. Ohne diese Grenze saehe jeder Eintrag der anderen
+  // Haelfte veraltet aus.
+  const imUmfang = new Set(gescannt)
+  return BESTAND_GEBUENDELT.filter(e => imUmfang.has(e.datei) && !alle.some(
+    b => b.datei === e.datei && b.variable === e.variable,
+  ))
 }
 
 function dateienSammeln(wurzel: string, treffer: string[] = []): string[] {
@@ -246,15 +487,40 @@ function main() {
     dateien = WURZELN.flatMap(w => dateienSammeln(w))
   }
 
-  const befunde: Befund[] = []
+  const alle: Befund[] = []
   for (const d of dateien) {
     let quelle: string
     try { quelle = readFileSync(d, 'utf-8') } catch { continue }
-    befunde.push(...pruefeQuelle(quelle, d))
+    alle.push(...pruefeQuelle(quelle, d))
+  }
+  const befunde = alle.filter(b => !imBestand(b))
+
+  // Der Veraltet-Riegel steht VOR der Entwarnung: stuende er danach,
+  // meldete der Lauf bei sauberem Code gruen und erreichte die toten
+  // Eintraege nie.
+  //
+  // Nur beim VOLLSCAN: `--staged` sieht nur die geaenderten Dateien, ein
+  // Eintrag zu einer nicht gescannten Datei saehe dort faelschlich
+  // veraltet aus.
+  if (!nurStaged) {
+    const tote = veraltet(alle, dateien)
+    if (tote.length > 0) {
+      console.error(`\n❌ lint-leerzustand: ${tote.length} Ausnahme(n) decken keinen Befund mehr:\n`)
+      for (const e of tote) console.error(`  ${e.datei}  — ${e.variable}`)
+      console.error(`
+  Diese Zeilen gehoeren aus BESTAND_GEBUENDELT heraus. Solange sie stehen,
+  wuerde ein Rueckfall an derselben Stelle als „im Bestand" durchgewunken.
+`)
+      process.exit(1)
+    }
   }
 
   if (befunde.length === 0) {
-    console.log(`✅ lint-leerzustand OK — ${dateien.length} Renderdateien gescannt${nurStaged ? ' (STAGED)' : ''}, 0 Leerzustaende aus verworfenen Fehlern.`)
+    console.log(
+      `✅ lint-leerzustand OK — ${dateien.length} Renderdateien gescannt${nurStaged ? ' (STAGED)' : ''}, `
+      + '0 neue Leerzustaende aus verworfenen Fehlern'
+      + (nurStaged ? '.' : ` (${BESTAND_GEBUENDELT.length} gebuendelte Stellen im Bestand).`),
+    )
     return
   }
 

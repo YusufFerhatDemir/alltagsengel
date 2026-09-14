@@ -580,9 +580,14 @@ describe('lint-leerzustand: Kommentare sind kein Code', () => {
       return treffer
     }
 
+    // Wie im Schwestertest: die gebuendelte Form ist seit Block 79
+    // sichtbar, ihre Bestandsstellen sind eingefroren. Neue fallen hier
+    // auf.
+    const { imBestand } = await import('../scripts/lint-leerzustand')
     const befunde = ['lib', 'app/api']
       .flatMap(w => sammeln(w))
       .flatMap(d => pruefeQuelle(readFileSync(d, 'utf-8'), d))
+      .filter(b => !imBestand(b))
 
     expect(
       befunde.map(b => `${b.datei}:${b.zeile} (${b.variable})`),

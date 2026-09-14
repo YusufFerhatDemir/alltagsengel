@@ -133,9 +133,16 @@ describe('lint-leerzustand — laeuft ueber den echten Bestand sauber', () => {
       return treffer
     }
 
+    // Seit Block 79 sieht die Regel auch die gebuendelte Form
+    // (`const [aRes, bRes] = await Promise.all([…])`). Die dabei
+    // aufgedeckten Bestandsstellen stehen eingefroren in
+    // BESTAND_GEBUENDELT — KEINE Freigabe, sondern ein Deckel. Geprueft
+    // wird hier, dass keine NEUE hinzukommt.
+    const { imBestand } = await import('../scripts/lint-leerzustand')
     const befunde = ['app', 'components']
       .flatMap(w => sammeln(w))
       .flatMap(d => pruefeQuelle(readFileSync(d, 'utf-8'), d))
+      .filter(b => !imBestand(b))
 
     expect(
       befunde.map(b => `${b.datei}:${b.zeile} (${b.variable})`),

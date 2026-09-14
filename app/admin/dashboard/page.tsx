@@ -79,6 +79,40 @@ export default function AdminDashboardPage() {
           supabase.from('service_records').select('amount').gte('date', monthStart),
         ])
 
+        // BEFUND (Block 79): alle acht Abfragen verwarfen ihren Fehler, und
+        // jede Auswertung darunter beginnt mit `|| []`. Faellt eine aus —
+        // RLS-Aenderung, Schemadrift, Netz —, ist `data` null, die Liste
+        // leer, und die Uebersicht meldet 0 neue Klienten, 0 freie
+        // Betreuungskraefte, 0 offene Nachweise, 0 offene Rechnungen und
+        // 0,00 EUR Umsatz. Das ist keine Auskunft ueber den Betrieb,
+        // sondern ueber die Abfrage.
+        //
+        // Das `catch` darunter faengt das NICHT ab: PostgREST wirft nicht,
+        // ein abgelehnter Lesevorgang kommt als `error` im Rueckgabewert.
+        //
+        // Deshalb: eine einzige gescheiterte Abfrage macht die ganze Seite
+        // zur Fehlermeldung. Eine halbe Uebersicht ist schlimmer als keine —
+        // man sieht ihr nicht an, welche Haelfte fehlt.
+        const abfragen = [
+          ['Klienten', clientsRes], ['Betreuungskräfte', caregiversRes],
+          ['Abwesenheiten', absencesRes], ['Leistungsnachweise', recordsRes],
+          ['Rechnungen', invoicesRes], ['Budgets', budgetsRes],
+          ['Umsatz heute', revTodayRes], ['Umsatz Monat', revMonthRes],
+        ] as const
+        const gescheitert = abfragen.filter(([, r]) => r.error)
+        if (gescheitert.length > 0) {
+          log.error('Dashboard: Abfragen fehlgeschlagen', {
+            bereiche: gescheitert.map(([name]) => name).join(', '),
+            ersterCode: gescheitert[0][1].error?.code ?? undefined,
+          })
+          setError(
+            'Die Übersicht konnte nicht geladen werden ('
+            + gescheitert.map(([name]) => name).join(', ')
+            + '). Die Zahlen unten wären nicht aussagekräftig und werden deshalb nicht angezeigt.'
+          )
+          return
+        }
+
         const clients = clientsRes.data || []
         const caregivers = caregiversRes.data || []
         const records = recordsRes.data || []
@@ -134,6 +168,18 @@ export default function AdminDashboardPage() {
   }, [])
 
   if (loading) return <div className="admin-page"><h1>Übersicht</h1><p>Laden…</p></div>
+
+  // Ohne Kennzahlen gibt es nichts anzuzeigen ausser dem Grund. Leere
+  // Kacheln neben einer Fehlermeldung laesen sich wie „alles bei null".
+  if (error && !stats) {
+    return (
+      <div className="admin-page">
+        <h1>Übersicht</h1>
+        <p className="admin-subtitle">Betriebssystem — heute, {formatDate(todayISO())}</p>
+        <Banner tone="danger">{error}</Banner>
+      </div>
+    )
+  }
 
   return (
     <div className="admin-page">
