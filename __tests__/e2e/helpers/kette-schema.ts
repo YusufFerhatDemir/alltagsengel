@@ -27,6 +27,7 @@ import {
 // ── Quellmigrationen ─────────────────────────────────────────────────
 const M_CORE          = '20250101000000_core_tables_baseline.sql'
 const M_LIVE          = '20260101000000_baseline_live_only_tables.sql'
+const M_TOUREN        = '20260809120000_tourenplanung.sql'
 const M_SIGNATUREN    = '20260706_monatsabschluss_ki_pruefzentrale.sql'
 const M_BILLING_CORE  = '20260806200000_billing_core_corrections.sql'
 const M_TARIF_HARD    = '20260807120000_tariff_model_hardening.sql'
@@ -450,6 +451,67 @@ export async function baueMahnTabellen(db: PGlite): Promise<void> {
  *
  * Setzt baueKettenSchema() voraus.
  */
+/**
+ * Tourenplanung: tour_templates, tours, tour_stops — samt Triggern.
+ *
+ * ── WARUM DIE GANZE MIGRATION ────────────────────────────────────────
+ * Die Strecke lebt von zwei Triggern, und genau die sind der Gegenstand:
+ *   · `tour_stop_sync_assignment()` zieht den Stop-Status auf den
+ *     verknuepften Einsatz nach,
+ *   · `tour_recalc_totals()` rechnet Dauer und Wegzeit der Tour neu,
+ *     sobald sich ein Stop aendert.
+ * Ein handgeschriebenes Testschema haette beide nicht — und der Test
+ * wuerde gruen melden, was live von einem Trigger erledigt wird oder
+ * eben nicht. Deshalb wird die Migration WORTGLEICH abgespielt.
+ *
+ * ── SETZT bauePersonalTabellen() VORAUS ──────────────────────────────
+ * Nicht aus Bequemlichkeit, sondern weil die Route ohne sie etwas
+ * ANDERES prueft, als sie zu pruefen scheint:
+ *   · POST /api/tours selektiert `caregivers.wochenstunden_soll`. Fehlt
+ *     die Spalte, kippt PostgREST die ganze Abfrage mit 42703 und der
+ *     Handler antwortet „Mitarbeiter nicht gefunden" — ein Schemafehler,
+ *     der sich als fachliche Ablehnung liest.
+ *   · `pruefeCaregiverVerfuegbarkeit` liest `absences` und ist
+ *     fail-closed: ohne die Tabelle bricht das Anlegen mit 500 ab.
+ * Beide Tabellen/Spalten kommen aus bauePersonalTabellen().
+ *
+ * Setzt ausserdem baueKettenSchema() voraus (clients, caregivers,
+ * assignments).
+ */
+export async function baueTourenTabellen(db: PGlite): Promise<void> {
+  const M_FUNKTIONEN = '20250101000050_missing_production_functions.sql'
+  // Voraussetzung der updated_at-Trigger. baueKettenSchema() legt sie
+  // nicht an; ohne sie bricht die Migration mit
+  // „function public.set_updated_at() does not exist" ab.
+  await db.exec(funktionAusMigration(M_FUNKTIONEN, 'set_updated_at'))
+  // Die ganze Datei, nicht `transaktionsInhalt`: diese Migration ist
+  // nicht in BEGIN/COMMIT geklammert.
+  await db.exec(liesMigration(M_TOUREN))
+
+  // NACHZUG: `clients.aufnahmestatus` — live vorhanden, in der Baseline
+  // nicht. `pruefeEinsatzfreigabe` (lib/personal/einsatzfreigabe.ts)
+  // selektiert sie beim Anlegen einer Tour. Fehlt sie, kippt PostgREST
+  // die ganze Abfrage mit 42703, und der Handler antwortet „Klient nicht
+  // gefunden oder gehoert zu einer anderen Organisation" — ein
+  // Schemafehler, der sich als Mandantenverletzung liest. Genau diese
+  // Verwechslung ist der Grund, warum das Testschema aus den Migrationen
+  // kommt und nicht von Hand geschrieben wird.
+  await db.exec(`
+    ALTER TABLE public.clients
+      ADD COLUMN IF NOT EXISTS aufnahmestatus text;
+  `)
+
+  // NACHZUG: Einsatzort am Einsatz. `aufloeseStops` (lib/touren/server.ts)
+  // selektiert `address, zip_code` mitsamt dem Klienten-Embed, um die
+  // Fahrtzeit zwischen zwei Stops zu bestimmen. Live sind die Spalten da.
+  await db.exec(`
+    ALTER TABLE public.assignments
+      ADD COLUMN IF NOT EXISTS address    text,
+      ADD COLUMN IF NOT EXISTS zip_code   text,
+      ADD COLUMN IF NOT EXISTS bundesland text;
+  `)
+}
+
 export async function baueCamtTabellen(db: PGlite): Promise<void> {
   // billing_audit_trail wie live: actor_id nullable, kein FK.
   await db.exec(`

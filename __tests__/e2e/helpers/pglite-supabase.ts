@@ -148,6 +148,12 @@ interface EingebettetSpec {
   alias: string
   tabelle: string
   spalten: string
+  /**
+   * Ausdruecklich benannter Fremdschluessel am ELTERN-Datensatz, aus der
+   * Form `zieltabelle:fk_spalte(…)`. Ohne ihn wird er aus dem
+   * Tabellennamen abgeleitet (siehe `fkSpalte`).
+   */
+  fkSpalte?: string
 }
 
 /**
@@ -175,8 +181,20 @@ function zerlegeSelect(select: string): { flach: string[]; eingebettet: Eingebet
     if (!teil) continue
     const treffer = teil.match(/^(?:([\w]+):)?([\w]+)\(([^]*)\)$/)
     if (treffer) {
-      const [, alias, tabelle, spalten] = treffer
-      eingebettet.push({ alias: alias || tabelle, tabelle, spalten })
+      const [, alias, name, spalten] = treffer
+      // PostgREST kennt ZWEI Formen mit Doppelpunkt:
+      //   `client:clients(…)`     Alias : ZIELTABELLE
+      //   `clients:client_id(…)`  ZIELTABELLE : FK-SPALTE
+      // Die zweite benennt den Fremdschluessel ausdruecklich — noetig,
+      // sobald zwei Spalten auf dieselbe Tabelle zeigen. Ohne diese
+      // Unterscheidung las der Shim `client_id` als Tabellennamen und
+      // meldete „kein Fremdschluessel gefunden" fuer eine Abfrage, die
+      // live einwandfrei laeuft (lib/touren/server.ts::aufloeseStops).
+      if (alias && /_id$/.test(name)) {
+        eingebettet.push({ alias, tabelle: alias, spalten, fkSpalte: name })
+      } else {
+        eingebettet.push({ alias: alias || name, tabelle: name, spalten })
+      }
     } else {
       flach.push(teil)
     }
@@ -464,7 +482,8 @@ export function macheSupabaseClient(
         const elternSpalten = await spaltenVon(elternTabelle)
         const kindSpalten = await spaltenVon(spec.tabelle)
 
-        const fkAmEltern = fkSpalte(spec.tabelle)          // invoices → invoice_id
+        // Ausdruecklich benannter FK gewinnt vor der Namensableitung.
+        const fkAmEltern = spec.fkSpalte ?? fkSpalte(spec.tabelle)  // invoices → invoice_id
         const fkAmKind = fkSpalte(elternTabelle)           // payments → payment_id
 
         /** Die angeforderten Spalten aus einer vollen Zeile herausschneiden. */

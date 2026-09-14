@@ -307,11 +307,26 @@ export const POST = withTracking(async function POST(req: NextRequest) {
   }
 
   // D1-Fix: Audit-Trail bei force_override
+  //
+  // `entityId` ist die reine Tour-ID. Bis zum 14.09.2026 stand hier
+  // `tour-override-${tour.id}` — und `billing_audit_trail.entity_id` ist
+  // vom Typ uuid. Der Insert scheiterte deshalb mit
+  // „invalid input syntax for type uuid", `logBillingAction` wirft, und
+  // die Route endete mit 500. Tour und Stops waren zu diesem Zeitpunkt
+  // BEREITS angelegt: jeder Uebersteuerungsversuch hinterliess eine Tour,
+  // zeigte einen Fehler und erzeugte beim naechsten Versuch die zweite.
+  // Damit war `force_override` — der einzige Weg, eine Tour trotz
+  // fehlender Einsatzfreigabe zu planen — vollstaendig unbenutzbar.
+  //
+  // Dass es sich um eine Tour handelt, steht in `action` und in
+  // `newState.tour_id`. `entityType` bleibt 'invoice', weil der CHECK
+  // `billing_audit_trail_entity_type_check` keinen Tour-Wert kennt und
+  // DDL aus der Anwendung nicht moeglich ist (42501).
   if (force_override && warnungen.length > 0) {
     await logBillingAction(admin, {
       entityType: 'invoice',
       organizationId: auth.ctx.organizationId,
-      entityId: `tour-override-${tour.id}`,
+      entityId: tour.id,
       action: 'force_override',
       newState: {
         tour_id: tour.id,
