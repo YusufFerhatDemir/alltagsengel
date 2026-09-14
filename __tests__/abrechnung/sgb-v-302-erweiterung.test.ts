@@ -271,3 +271,125 @@ describe('transport-adapter — Warteschlange uebernehmen und quittieren', () =>
     expect(p.letzter_fehler).toBeNull()
   })
 })
+
+// ═════════════════════════════════════════════════════════════════════
+/**
+ * BEFUND (Block 75): die Uebernahme ohne Rueckweg
+ *
+ * `.in('status', ['wartend', 'fehlgeschlagen'])` macht den Statuswechsel
+ * auf 'in_bearbeitung' zu einer SPERRE — aus 'in_bearbeitung' heraus laesst
+ * sich der Eintrag nicht mehr uebernehmen. Genau dafuer ist sie da.
+ *
+ * `const ergebnis = await adapter.send(datensatz)` stand ohne Riegel
+ * dahinter. Warf `send()`, blieb der Eintrag dauerhaft auf
+ * 'in_bearbeitung', und jeder weitere Anlauf endete mit „steht nicht mehr
+ * auf wartend oder fehlgeschlagen — es wurde NICHTS gesendet". Die Sperre
+ * richtete sich gegen ihren eigenen Eintrag.
+ *
+ * Und `send()` wirft: der FileExportAdapter reicht den Storage-Aufruf
+ * ungeschuetzt durch.
+ */
+describe('transport-adapter — eine geworfene Uebertragung setzt nichts fest', () => {
+  const ORG = '00000000-0000-4000-8000-000460629986'
+  const QUEUE = 'q1111111-1111-4111-8111-111111111111'
+  const ACTOR = '22222222-2222-4222-8222-222222222222'
+
+  function exp2() {
+    return erzeugePruefExport('lauf-1', '2026-08', aufbereitung([fall()]), '2026-08-15T10:00:00.000Z')
+  }
+
+  /** Ein Storage-Aufruf, der wirft — der reale Weg in die Ausnahme. */
+  const speichernWirft = async () => { throw new Error('Storage nicht erreichbar') }
+
+  function fakeExport(treffer: unknown[][]) {
+    let n = 0
+    return erstelleFakeSupabase((a: FakeAufruf) => {
+      if (a.tabelle === 'sgb_v_uebertragungsqueue' && a.operation === 'select') {
+        return { data: { id: QUEUE, adapter_typ: 'file_export', versuch_zaehler: 0 } }
+      }
+      if (a.tabelle === 'sgb_v_uebertragungsqueue' && a.operation === 'update') {
+        return { data: treffer[n++] ?? [] }
+      }
+      return { data: null }
+    })
+  }
+
+  it('loest die Uebernahme wieder, statt sie stehen zu lassen', async () => {
+    const f = fakeExport([[{ id: QUEUE }], [{ id: QUEUE }]])
+    await expect(verarbeiteEintrag(f.client, ORG, QUEUE, exp2(), ACTOR, speichernWirft))
+      .rejects.toThrow(/unerwartet abgebrochen/)
+
+    const schreibend = f.auf('sgb_v_uebertragungsqueue').filter(a => a.operation === 'update')
+    expect(schreibend).toHaveLength(2)
+    expect((schreibend[1].payload as Record<string, unknown>).status).toBe('fehlgeschlagen')
+  })
+
+  it('und nur die EIGENE Uebernahme', async () => {
+    const f = fakeExport([[{ id: QUEUE }], [{ id: QUEUE }]])
+    await expect(verarbeiteEintrag(f.client, ORG, QUEUE, exp2(), ACTOR, speichernWirft)).rejects.toThrow()
+    const loesung = f.auf('sgb_v_uebertragungsqueue').filter(a => a.operation === 'update')[1]
+    expect(hatFilter(loesung, 'eq', 'status', 'in_bearbeitung')).toBe(true)
+    expect(hatOrgFence(loesung, ORG)).toBe(true)
+  })
+
+  it('haelt fest, dass der Ausgang UNBEKANNT ist', async () => {
+    const f = fakeExport([[{ id: QUEUE }], [{ id: QUEUE }]])
+    await expect(verarbeiteEintrag(f.client, ORG, QUEUE, exp2(), ACTOR, speichernWirft)).rejects.toThrow()
+    const loesung = f.auf('sgb_v_uebertragungsqueue').filter(a => a.operation === 'update')[1]
+    expect(String((loesung.payload as Record<string, unknown>).letzter_fehler)).toMatch(/UNBEKANNT/)
+  })
+
+  it('die urspruengliche Ausnahme bleibt die Auskunft', async () => {
+    const f = fakeExport([[{ id: QUEUE }], [{ id: QUEUE }]])
+    await expect(verarbeiteEintrag(f.client, ORG, QUEUE, exp2(), ACTOR, speichernWirft))
+      .rejects.toThrow(/Storage nicht erreichbar/)
+  })
+
+  it('scheitert auch die Loesung, sagt die Meldung es', async () => {
+    const f = fakeExport([[{ id: QUEUE }], []])
+    await expect(verarbeiteEintrag(f.client, ORG, QUEUE, exp2(), ACTOR, speichernWirft))
+      .rejects.toThrow(/gar nicht mehr senden/)
+  })
+
+  it('quittiert NICHTS, wenn gar nicht uebertragen wurde', async () => {
+    // Die Loesung ist kein Ergebnisvermerk: 'erfolgreich' darf hier
+    // nirgends auftauchen.
+    const f = fakeExport([[{ id: QUEUE }], [{ id: QUEUE }]])
+    await expect(verarbeiteEintrag(f.client, ORG, QUEUE, exp2(), ACTOR, speichernWirft)).rejects.toThrow()
+    for (const a of f.auf('sgb_v_uebertragungsqueue').filter(x => x.operation === 'update')) {
+      expect((a.payload as Record<string, unknown>).status).not.toBe('erfolgreich')
+    }
+  })
+})
+
+describe('transport-adapter — „nicht nachsehen koennen" ist nicht „nicht gefunden"', () => {
+  const ORG = '00000000-0000-4000-8000-000460629986'
+  const QUEUE = 'q1111111-1111-4111-8111-111111111111'
+  const ACTOR = '22222222-2222-4222-8222-222222222222'
+
+  function exp3() {
+    return erzeugePruefExport('lauf-1', '2026-08', aufbereitung([fall()]), '2026-08-15T10:00:00.000Z')
+  }
+
+  it('ein Lesefehler wird nicht zu „gehoert einem anderen Mandanten"', async () => {
+    const f = erstelleFakeSupabase((a: FakeAufruf) => {
+      if (a.tabelle === 'sgb_v_uebertragungsqueue' && a.operation === 'select') {
+        return { data: null, error: { message: 'connection reset', code: '08006' } }
+      }
+      return { data: null }
+    })
+    await expect(verarbeiteEintrag(f.client, ORG, QUEUE, exp3(), ACTOR))
+      .rejects.toThrow(/nicht gelesen werden/)
+  })
+
+  it('und es wird dabei nichts uebernommen', async () => {
+    const f = erstelleFakeSupabase((a: FakeAufruf) => {
+      if (a.tabelle === 'sgb_v_uebertragungsqueue' && a.operation === 'select') {
+        return { data: null, error: { message: 'connection reset', code: '08006' } }
+      }
+      return { data: null }
+    })
+    await expect(verarbeiteEintrag(f.client, ORG, QUEUE, exp3(), ACTOR)).rejects.toThrow()
+    expect(f.auf('sgb_v_uebertragungsqueue').filter(a => a.operation === 'update')).toHaveLength(0)
+  })
+})

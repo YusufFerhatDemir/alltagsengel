@@ -201,12 +201,22 @@ export async function verarbeiteEintrag(
   actorId: string,
   speichern?: (dateiname: string, inhalt: string) => Promise<string>,
 ): Promise<TransportResult> {
-  const { data: eintrag } = await supabase
+  const { data: eintrag, error: leseFehler } = await supabase
     .from('sgb_v_uebertragungsqueue')
     .select('id, adapter_typ, versuch_zaehler')
     .eq('id', queueId)
     .eq('organization_id', organizationId)
     .maybeSingle()
+  // BEFUND (Block 75): der Lesefehler wurde verworfen, und „nicht
+  // gefunden" ist eine ANDERE Aussage als „nicht nachsehen koennen". Die
+  // erste heisst: den Eintrag gibt es nicht oder er gehoert einem anderen
+  // Mandanten — eine Auskunft, die hier nie zutraf.
+  if (leseFehler) {
+    throw new Error(
+      `Warteschlangeneintrag ${queueId} konnte nicht gelesen werden: ${leseFehler.message}. `
+      + 'Es wurde NICHTS gesendet.',
+    )
+  }
   if (!eintrag) throw new Error('Warteschlangeneintrag nicht gefunden oder gehört zu einer anderen Organisation.')
 
   const adapter = adapterFuer(eintrag.adapter_typ as AdapterTyp, speichern)
@@ -245,7 +255,46 @@ export async function verarbeiteEintrag(
     )
   }
 
-  const ergebnis = await adapter.send(datensatz)
+  // BEFUND (Block 75): hier stand `const ergebnis = await adapter.send(…)`
+  // ohne Riegel. Die Uebernahme oben ist eine SPERRE
+  // (`.in('status', ['wartend', 'fehlgeschlagen'])`) — aus
+  // 'in_bearbeitung' heraus laesst sich der Eintrag nicht mehr uebernehmen.
+  // Warf `send()`, blieb er dauerhaft dort stehen, und jeder weitere
+  // Anlauf endete mit „steht nicht mehr auf wartend oder fehlgeschlagen".
+  //
+  // Und `send()` WIRFT: der FileExportAdapter reicht den Storage-Aufruf
+  // ungeschuetzt durch, und der gesperrte Adapter wirft alles weiter, was
+  // kein ExternGesperrtError ist.
+  let ergebnis: TransportResult
+  try {
+    ergebnis = await adapter.send(datensatz)
+  } catch (err) {
+    const meldung = err instanceof Error ? err.message : String(err)
+    // Zurueck auf 'fehlgeschlagen' — der Zustand, den auch ein regulaerer
+    // Fehlschlag bekommt und aus dem die Uebernahme wieder greifen darf.
+    // `.eq('status', 'in_bearbeitung')` sorgt dafuer, dass nur die EIGENE
+    // Uebernahme geloest wird.
+    const { data: geloest, error: loeseFehler } = await supabase
+      .from('sgb_v_uebertragungsqueue')
+      .update({
+        status: 'fehlgeschlagen',
+        letzter_fehler: `Uebertragung unerwartet abgebrochen: ${meldung}. `
+          + 'Ob etwas beim Empfaenger ankam, ist UNBEKANNT — vor einem erneuten '
+          + 'Versand pruefen.',
+      })
+      .eq('id', queueId)
+      .eq('organization_id', organizationId)
+      .eq('status', 'in_bearbeitung')
+      .select('id')
+
+    throw new Error(
+      `Uebertragung des Warteschlangeneintrags ${queueId} unerwartet abgebrochen: ${meldung}`
+      + (!loeseFehler && (geloest?.length ?? 0) > 0
+        ? ' — der Eintrag steht auf „fehlgeschlagen"; ob etwas beim Empfaenger ankam, ist UNBEKANNT.'
+        : ` — und er konnte nicht aus „in_bearbeitung" geloest werden `
+          + `(${loeseFehler?.message ?? 'keine Zeile getroffen'}); er laesst sich dann gar nicht mehr senden.`),
+    )
+  }
 
   // ── Und das Ergebnis festhalten ───────────────────────────────────
   //
