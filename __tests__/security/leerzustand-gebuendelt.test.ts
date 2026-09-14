@@ -172,10 +172,13 @@ describe('Die Ausnahmeliste prüft sich selbst', () => {
     // Der blockierende Lauf sieht app/ und components/; die Liste deckt
     // auch lib/ und app/api ab. Ohne diese Grenze sähe jeder Eintrag der
     // anderen Hälfte veraltet aus und der Lauf wäre dauerhaft rot.
-    const { veraltet, BESTAND_GEBUENDELT } = await import('../../scripts/lint-leerzustand')
-    const ausLib = BESTAND_GEBUENDELT.find(e => e.datei.startsWith('lib/'))
-    expect(ausLib, 'kein lib-Eintrag im Bestand').toBeDefined()
-    // Kein Befund, kein Umfang — der Eintrag darf trotzdem nicht als tot gelten.
+    // Kein Befund, kein Umfang — kein Eintrag darf als tot gelten.
+    //
+    // Die erste Fassung verlangte hier zusaetzlich, dass ueberhaupt ein
+    // lib-Eintrag im Bestand steht. Das war Geruest, keine Aussage: mit
+    // Block 85 ist der letzte davon behoben, und der Test waere rot
+    // geworden, WEIL aufgeraeumt wurde.
+    const { veraltet } = await import('../../scripts/lint-leerzustand')
     expect(veraltet([], [])).toEqual([])
   })
 

@@ -38,6 +38,34 @@ export const GET = withTracking(async function GET(request: Request) {
       admin.from('abrechnungslaeufe').select('id, status, abrechnungsmonat, bundesland, kostentraeger_ik, erstellt_am').eq('organization_id', organizationId).order('erstellt_am', { ascending: false }).limit(20),
     ])
 
+    // BEFUND (Block 85): alle fuenf Abfragen wurden ungeprueft
+    // weiterverarbeitet. Der Kommentar bei `laufRes` haelt den Schaden
+    // bereits fest — „`laufRes.data ?? []` schluckte den Fehler und die
+    // DTA-Seite zeigte dauerhaft 'keine Laeufe'". Behoben wurde damals der
+    // SPALTENNAME, nicht der stille Kanal: jede andere Stoerung haette
+    // denselben Ausfall bewirkt.
+    //
+    // Und die uebrigen vier sind schwerer: ohne `zertRes` fehlt das
+    // Absenderzertifikat, ohne `dasRes` jede Datenannahmestelle, ohne
+    // `stateRes` jede Freischaltung. Die Seite haette gemeldet, es sei
+    // nichts eingerichtet — und jemand haette es ein zweites Mal
+    // eingerichtet.
+    const nichtLesbar = ([
+      ['Organisation', orgRes.error],
+      ['Zertifikate', zertRes.error],
+      ['Datenannahmestellen', dasRes.error],
+      ['Bundesland-Freischaltung', stateRes.error],
+      ['Abrechnungsläufe', laufRes.error],
+    ] as const).filter(([, fehler]) => fehler != null).map(([name]) => name)
+
+    if (nichtLesbar.length > 0) {
+      return NextResponse.json({
+        error: `${nichtLesbar.join(', ')} konnten nicht gelesen werden — es wird kein `
+          + 'Einrichtungsstand zurückgegeben. „Nichts eingerichtet" wäre von „nicht '
+          + 'nachgesehen" nicht zu unterscheiden.',
+      }, { status: 503 })
+    }
+
     const absenderZert = zertRes.data?.find(z => z.typ === 'absender')
     const empfaengerZerts = zertRes.data?.filter(z => z.typ === 'empfaenger') ?? []
     const aktiveDas = dasRes.data?.filter(d => d.aktiv) ?? []

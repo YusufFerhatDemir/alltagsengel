@@ -277,7 +277,7 @@ export function pruefeQuelle(rohQuelle: string, datei: string): Befund[] {
 }
 
 /**
- * Bestand vom 14.09.2026 — 46 gebuendelte Stellen (Block 79: 85; seither
+ * Bestand vom 14.09.2026 — 39 gebuendelte Stellen (Block 79: 85; seither
  * abgearbeitet in den Bloecken 80–83).
  *
  * ── WAS DIESE LISTE IST UND WAS NICHT ─────────────────────────
@@ -336,8 +336,6 @@ export const BESTAND_GEBUENDELT: { datei: string; variable: string }[] = [
   { datei: 'app/api/ai-chat/route.ts', variable: 'bookingsRes' },
   { datei: 'app/api/ai-chat/route.ts', variable: 'usersRes' },
   { datei: 'app/api/ai-chat/route.ts', variable: 'visitorsRes' },
-  { datei: 'app/api/billing/dta/config-status/route.ts', variable: 'laufRes' },
-  { datei: 'app/api/billing/dta/config-status/route.ts', variable: 'stateRes' },
   { datei: 'app/mis/crm/page.tsx', variable: 'clientsRes' },
   { datei: 'app/mis/crm/page.tsx', variable: 'leadsRes' },
   { datei: 'app/mis/crm/page.tsx', variable: 'partnersRes' },
@@ -348,11 +346,6 @@ export const BESTAND_GEBUENDELT: { datei: string; variable: string }[] = [
   { datei: 'app/mis/krankenfahrt-pricing/page.tsx', variable: 'tiersRes' },
   { datei: 'components/admin/AmpelSummaryWidget.tsx', variable: 'closingsRes' },
   { datei: 'components/admin/AmpelSummaryWidget.tsx', variable: 'recordsRes' },
-  { datei: 'lib/abrechnung/readiness.ts', variable: 'dasRes' },
-  { datei: 'lib/abrechnung/readiness.ts', variable: 'ktRes' },
-  { datei: 'lib/abrechnung/readiness.ts', variable: 'laufRes' },
-  { datei: 'lib/abrechnung/readiness.ts', variable: 'stateRes' },
-  { datei: 'lib/abrechnung/readiness.ts', variable: 'zertRes' },
 ]
 
 export function imBestand(b: Befund): boolean {

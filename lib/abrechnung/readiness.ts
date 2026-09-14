@@ -100,6 +100,50 @@ export async function ermittleReadiness(
     ])
 
   const punkte: ReadinessPunkt[] = []
+
+  // BEFUND (Block 85): elf Abfragen, alle ungeprueft. Ihre leeren
+  // Ergebnisse werden hier zu ROTEN Punkten — das blockiert zwar, aber
+  // mit einem falschen Grund: „Ohne eigene IK kann keine DTA-Datei
+  // adressiert werden — IK bei der ARGE·IK beantragen", obwohl die IK
+  // hinterlegt ist. Wer dieser Liste folgt, beantragt eine Nummer, die er
+  // hat, oder sucht nach einem Zertifikat, das da ist.
+  //
+  // Diese Funktion beantwortet laut ihrem Kopf „eine einzige Frage: Kann
+  // diese Organisation heute echt gegen die Kassen abrechnen — und wenn
+  // nein, woran genau liegt es?" Der zweite Halbsatz ist der Punkt.
+  //
+  // Ein eigener Punkt statt einer Ausnahme: `pruefeVersandbereitschaft`
+  // sperrt darueber weiterhin (rot = kein Versand), und die
+  // Readiness-Seite zeigt den Grund an derselben Stelle wie jeden anderen
+  // Blocker.
+  const nichtLesbar: string[] = ([
+    ['Organisation', orgRes.error],
+    ['Zertifikate', zertRes.error],
+    ['Datenannahmestellen', dasRes.error],
+    ['Kostenträger', ktRes.error],
+    ['Bundesland-Freischaltung', stateRes.error],
+    ['Tarife', tarifRes.error],
+    ['Abrechnungsläufe', laufRes.error],
+    ['Rückläufer', rlRes.error],
+    ['Aufgaben', aufgabenRes.error],
+    ['Fehlerprotokoll', fehlerRes.error],
+    ['Prüfpfad', auditRes.error],
+  ] as const)
+    .filter(([, fehler]) => fehler != null)
+    .map(([name]) => name)
+
+  if (nichtLesbar.length > 0) {
+    punkte.push(punkt(
+      'readiness_unvollstaendig', 'Readiness vollständig ermittelbar', 'organisation',
+      'rot',
+      `${nichtLesbar.length} von 11 Abfragen fehlgeschlagen`,
+      `${nichtLesbar.join(', ')} nicht lesbar — die Punkte unten sind deshalb `
+      + 'unvollständig und ihre Begründungen möglicherweise falsch. Erst erneut prüfen, '
+      + 'bevor etwas beantragt oder nachgetragen wird.',
+      'intern',
+    ))
+  }
+
   const org = orgRes.data
   const zerts = zertRes.data ?? []
   const annahmestellen = dasRes.data ?? []
