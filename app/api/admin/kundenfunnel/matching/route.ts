@@ -41,8 +41,19 @@ export const GET = withTracking(async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 })
     }
 
+    // BEIDE Rechte, und `personal.lesen` ist das strengere von beiden.
+    //
+    // Die Antwort mischt zwei Akten: die Kundenanfrage (stammdaten) und
+    // Angaben ueber Mitarbeitende — Name, Wohnort-PLZ, Qualifikation,
+    // Vertragsstatus, Austrittsdatum. Das ist Personalakte, auch wenn es
+    // nur ein Ausschnitt ist. `stammdaten.lesen` allein liesse die
+    // Buchhaltung mitlesen, wo jede Kollegin wohnt und wann ihr Vertrag
+    // endet.
+    //
+    // Dieselbe Unterscheidung wie beim Aktenmodul: die Frage ist nicht, wie
+    // heikel ein einzelnes Feld aussieht, sondern WESSEN Akte es ist.
     const quellen = await holeRollenQuellenFuer(supabase, user)
-    if (!quellenDuerfen(quellen, 'stammdaten.lesen')) {
+    if (!quellenDuerfen(quellen, 'stammdaten.lesen') || !quellenDuerfen(quellen, 'personal.lesen')) {
       return NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 })
     }
 

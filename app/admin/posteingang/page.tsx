@@ -18,6 +18,20 @@ import { logger } from '@/lib/logger'
 
 const log = logger.child('admin:posteingang')
 
+/** Antwort von GET /api/admin/kundenfunnel/matching. */
+interface MatchAntwort {
+  gepruefte: number
+  treffer: {
+    engelId: string
+    name: string
+    punkte: number
+    entfernungKm: number | null
+    gruende: string[]
+    huerden: string[]
+  }[]
+  ausgeschlossen: { engelId: string; name: string; grund: string }[]
+}
+
 // ═══════════════════════════════════════════════════════════════════════
 // PRIORITY INBOX — was heute liegen bleibt, auf einer Seite
 //
@@ -56,6 +70,14 @@ export default function AdminPosteingangPage() {
   // Der Arbeitskorb ist die Hauptauswahl: „was mache ich als Naechstes".
   // Die Ampel sagt, wie schlimm es ist — nicht, wer dran ist.
   const [korbWahl, setKorbWahl] = useState<'alle' | KorbKey>('alle')
+
+  // ── Engel-Vorschlag zu einer Kundenanfrage ─────────────────────────
+  // Ein Vorschlag fuer einen Menschen, keine Zuteilung: die Route ist GET
+  // und schreibt nichts. Hier steht nur, was sie zurueckgibt.
+  const [matchFuer, setMatchFuer] = useState<PosteingangEintrag | null>(null)
+  const [matchDaten, setMatchDaten] = useState<MatchAntwort | null>(null)
+  const [matchLaeuft, setMatchLaeuft] = useState(false)
+  const [matchFehler, setMatchFehler] = useState<string | null>(null)
   const [suche, setSuche] = useState('')
   const [jetzt, setJetzt] = useState(() => new Date())
 
@@ -108,6 +130,29 @@ export default function AdminPosteingangPage() {
   }
 
   useEffect(() => { laden() }, [])
+
+  async function zeigeVorschlag(e: PosteingangEintrag) {
+    // Zweiter Klick auf dieselbe Zeile schliesst das Feld wieder.
+    if (matchFuer?.id === e.id) { setMatchFuer(null); setMatchDaten(null); setMatchFehler(null); return }
+    setMatchFuer(e)
+    setMatchDaten(null)
+    setMatchFehler(null)
+    setMatchLaeuft(true)
+    try {
+      const res = await fetch(`/api/admin/kundenfunnel/matching?leadId=${encodeURIComponent(e.id)}`)
+      const json = await res.json().catch(() => ({}))
+      // „Keine passenden Engel" und „Vorschlag nicht abrufbar" sind
+      // verschiedene Aussagen. Die erste darf nur stehen, wenn wirklich
+      // gesucht wurde.
+      if (!res.ok) throw new Error(json.error || `Vorschlag nicht abrufbar (HTTP ${res.status}).`)
+      setMatchDaten(json as MatchAntwort)
+    } catch (err) {
+      log.errorWithException('Engel-Vorschlag fehlgeschlagen', err)
+      setMatchFehler(err instanceof Error ? err.message : 'Vorschlag nicht abrufbar.')
+    } finally {
+      setMatchLaeuft(false)
+    }
+  }
 
   // Deep-Link aus der Glocke: ?ampel=rot
   useEffect(() => {
@@ -380,7 +425,18 @@ export default function AdminPosteingangPage() {
                       />
                     ) : e.wiedervorlage ? formatDate(e.wiedervorlage) : <span style={{ color: 'var(--ink5)' }}>—</span>}
                   </td>
-                  <td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    {/* Nur Kundenanfragen: fuer eine Bewerbung gibt es keine
+                        passenden Engel — sie IST eine in spe. */}
+                    {e.art === 'anfrage' && (
+                      <button
+                        type="button"
+                        onClick={() => zeigeVorschlag(e)}
+                        style={{ ...linkBtn, cursor: 'pointer', marginRight: 6 }}
+                      >
+                        {matchFuer?.id === e.id ? 'Engel ausblenden' : 'Engel vorschlagen'}
+                      </button>
+                    )}
                     <Link href={e.ziel} style={linkBtn}>Bearbeiten →</Link>
                   </td>
                 </tr>
@@ -389,6 +445,81 @@ export default function AdminPosteingangPage() {
           </tbody>
         </table>
       </div>
+
+      {matchFuer && (
+        <div style={{
+          marginTop: 16, padding: 18, borderRadius: 12,
+          background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+            <h3 style={{ margin: 0, fontSize: 15 }}>Passende Engel für {matchFuer.name}</h3>
+            <button type="button" onClick={() => setMatchFuer(null)} style={btnGhost}>Schließen</button>
+          </div>
+
+          <p style={{ fontSize: 12, color: 'var(--ink5)', margin: '0 0 14px' }}>
+            Vorschlag, keine Zuteilung. Die Entfernung ist Luftlinie aus der Postleitzahl —
+            sie taugt zum Sortieren, nicht als Fahrtzeit.
+          </p>
+
+          {matchLaeuft && <p style={{ fontSize: 13 }}>Suche läuft…</p>}
+          {matchFehler && <Banner tone="danger">{matchFehler}</Banner>}
+
+          {matchDaten && (
+            <>
+              {matchDaten.treffer.length === 0 ? (
+                <p style={{ fontSize: 13, color: 'var(--ink3)' }}>
+                  Von {matchDaten.gepruefte} geprüften Engeln kommt keiner in Frage —
+                  die Gründe stehen unten.
+                </p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+                  {matchDaten.treffer.map(t => (
+                    <div key={t.engelId} style={{
+                      padding: '10px 14px', borderRadius: 10,
+                      background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)',
+                    }}>
+                      <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+                        <strong style={{ fontSize: 14 }}>{t.name}</strong>
+                        <StatusBadge label={`${t.punkte} Punkte`} color="#5CB882" />
+                        <span style={{ fontSize: 12, color: 'var(--ink5)' }}>
+                          {t.entfernungKm === null ? 'Entfernung unbekannt' : `${Math.round(t.entfernungKm)} km`}
+                        </span>
+                      </div>
+                      {t.gruende.length > 0 && (
+                        <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 4 }}>
+                          {t.gruende.join(' · ')}
+                        </div>
+                      )}
+                      {t.huerden.length > 0 && (
+                        <div style={{ fontSize: 12, color: '#E8A000', marginTop: 4 }}>
+                          {t.huerden.join(' · ')}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Wer NICHT vorgeschlagen wird, steht mit Grund da. Eine
+                  Liste, aus der jemand kommentarlos fehlt, laedt zum Raten ein. */}
+              {matchDaten.ausgeschlossen.length > 0 && (
+                <details>
+                  <summary style={{ fontSize: 13, cursor: 'pointer', color: 'var(--ink3)' }}>
+                    {matchDaten.ausgeschlossen.length} nicht vorgeschlagen — mit Grund
+                  </summary>
+                  <ul style={{ fontSize: 12, color: 'var(--ink5)', margin: '8px 0 0', paddingLeft: 20 }}>
+                    {matchDaten.ausgeschlossen.map(a => (
+                      <li key={a.engelId} style={{ marginBottom: 4 }}>
+                        <strong>{a.name}</strong> — {a.grund}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       <p style={{ fontSize: 12, color: 'var(--ink5)', marginTop: 12 }}>
         Ampel: rot ab 72 Stunden, orange ab 48, gelb ab 24 — für neue Leads ab Eingang,
