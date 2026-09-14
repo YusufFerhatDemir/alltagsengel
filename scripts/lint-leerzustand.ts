@@ -277,7 +277,7 @@ export function pruefeQuelle(rohQuelle: string, datei: string): Befund[] {
 }
 
 /**
- * Bestand vom 14.09.2026 — 23 gebuendelte Stellen (Block 79: 85; seither
+ * Bestand vom 14.09.2026 — 11 gebuendelte Stellen (Block 79: 85; seither
  * abgearbeitet in den Bloecken 80–83).
  *
  * ── WAS DIESE LISTE IST UND WAS NICHT ─────────────────────────
@@ -311,14 +311,6 @@ export const BESTAND_GEBUENDELT: { datei: string; variable: string }[] = [
   { datei: 'app/admin/bonuses/page.tsx', variable: 'cgRes' },
   { datei: 'app/admin/partners/page.tsx', variable: 'pRes' },
   { datei: 'app/admin/partners/page.tsx', variable: 'vRes' },
-  { datei: 'app/api/admin/krankenfahrten/route.ts', variable: 'providersRes' },
-  { datei: 'app/api/admin/krankenfahrten/route.ts', variable: 'reviewsRes' },
-  { datei: 'app/api/admin/krankenfahrten/route.ts', variable: 'ridesRes' },
-  { datei: 'app/api/admin/pricing/route.ts', variable: 'audit' },
-  { datei: 'app/api/admin/pricing/route.ts', variable: 'config' },
-  { datei: 'app/api/admin/pricing/route.ts', variable: 'regions' },
-  { datei: 'app/api/admin/pricing/route.ts', variable: 'surcharges' },
-  { datei: 'app/api/admin/pricing/route.ts', variable: 'tiers' },
   { datei: 'app/api/ai-chat/route.ts', variable: 'bookingsRes' },
   { datei: 'app/api/ai-chat/route.ts', variable: 'usersRes' },
   { datei: 'app/api/ai-chat/route.ts', variable: 'visitorsRes' },
@@ -326,10 +318,6 @@ export const BESTAND_GEBUENDELT: { datei: string; variable: string }[] = [
   { datei: 'app/mis/crm/page.tsx', variable: 'leadsRes' },
   { datei: 'app/mis/crm/page.tsx', variable: 'partnersRes' },
   { datei: 'app/mis/crm/page.tsx', variable: 'satisfactionRes' },
-  { datei: 'app/mis/krankenfahrt-pricing/page.tsx', variable: 'configRes' },
-  { datei: 'app/mis/krankenfahrt-pricing/page.tsx', variable: 'regionsRes' },
-  { datei: 'app/mis/krankenfahrt-pricing/page.tsx', variable: 'surchargesRes' },
-  { datei: 'app/mis/krankenfahrt-pricing/page.tsx', variable: 'tiersRes' },
 ]
 
 export function imBestand(b: Befund): boolean {

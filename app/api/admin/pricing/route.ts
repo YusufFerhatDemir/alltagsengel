@@ -58,6 +58,29 @@ export const GET = withTracking(async function GET(request: Request) {
         supabase.from('kf_pricing_config').select('*').order('key'),
         supabase.from('kf_pricing_audit').select('*').order('created_at', { ascending: false }).limit(50),
       ])
+      // BEFUND (Block 88): derselbe Endpunkt, zwei Massstaebe. Der
+      // Einzelabruf wenige Zeilen weiter unten wirft bei einem Lesefehler
+      // (`if (dbErr) throw dbErr`); der Sammelabruf gab leere Listen
+      // zurueck. Eine leere Preisliste ist hier keine Auskunft ueber die
+      // Preise, sondern ueber die Abfrage — und wer sie sieht, traegt die
+      // Stufen ein zweites Mal ein oder haelt die Preise fuer nicht
+      // eingerichtet.
+      const nichtLesbar = ([
+        ['Preisstufen', tiers.error],
+        ['Zuschläge', surcharges.error],
+        ['Regionen', regions.error],
+        ['Konfiguration', config.error],
+        ['Prüfpfad', audit.error],
+      ] as const).filter(([, fehler]) => fehler != null).map(([name]) => name)
+
+      if (nichtLesbar.length > 0) {
+        return NextResponse.json({
+          error: `${nichtLesbar.join(', ')} konnten nicht gelesen werden — es wird keine `
+            + 'Preisliste zurückgegeben. Eine leere wäre von „nicht eingerichtet" nicht zu '
+            + 'unterscheiden.',
+        }, { status: 503 })
+      }
+
       return NextResponse.json({
         tiers: tiers.data || [],
         surcharges: surcharges.data || [],

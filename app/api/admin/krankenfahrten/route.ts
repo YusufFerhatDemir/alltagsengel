@@ -51,6 +51,25 @@ export const GET = withTracking(async function GET(request: Request) {
         .limit(100),
     ])
 
+    // BEFUND (Block 88): drei Abfragen, alle ungeprueft. Aus `rides`
+    // entstehen unmittelbar darunter die Kennzahlen — faellt die Abfrage
+    // aus, meldet die Antwort 0 Fahrten, 0 offene, 0 laufende. Ohne
+    // `providersRes` gibt es keine Fahrdienste, ohne `reviewsRes` keine
+    // Bewertungen. Nullen sind hier eine Aussage ueber die Abfrage.
+    const nichtLesbar = ([
+      ['Fahrten', ridesRes.error],
+      ['Fahrdienste', providersRes.error],
+      ['Bewertungen', reviewsRes.error],
+    ] as const).filter(([, fehler]) => fehler != null).map(([name]) => name)
+
+    if (nichtLesbar.length > 0) {
+      return NextResponse.json({
+        error: `${nichtLesbar.join(', ')} konnten nicht gelesen werden — es werden keine `
+          + 'Zahlen zurückgegeben. Null Fahrten wären von einem ruhigen Tag nicht zu '
+          + 'unterscheiden.',
+      }, { status: 503 })
+    }
+
     const rides = ridesRes.data || []
     const providers = providersRes.data || []
 

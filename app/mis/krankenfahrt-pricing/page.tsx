@@ -45,6 +45,8 @@ function Select({ value, onChange, children }: { value: string; onChange: (v: st
 export default function KrankenfahrtPricingPage() {
   const [tab, setTab] = useState('tarife')
   const [loading, setLoading] = useState(true)
+  /** Eine der fuenf Quellen war nicht lesbar (Block 88). */
+  const [ladefehler, setLadefehler] = useState<string | null>(null)
 
   const [tiers, setTiers] = useState<PricingTier[]>([])
   const [surcharges, setSurcharges] = useState<PricingSurcharge[]>([])
@@ -64,6 +66,7 @@ export default function KrankenfahrtPricingPage() {
   }
 
   const loadData = useCallback(async () => {
+    setLadefehler(null)
     try {
       const supabase = createClient()
       const [tiersRes, surchargesRes, regionsRes, configRes, auditRes] = await Promise.all([
@@ -73,6 +76,31 @@ export default function KrankenfahrtPricingPage() {
         supabase.from('kf_pricing_config').select('*').order('key'),
         supabase.from('kf_pricing_audit').select('*').order('created_at', { ascending: false }).limit(50),
       ])
+      // BEFUND (Block 88): fuenf Abfragen, alle ungeprueft. Auf dieser
+      // Seite werden Preise GEPFLEGT — eine leere Liste laedt dazu ein,
+      // sie neu anzulegen. Danach stuenden sie doppelt.
+      const nichtLesbar = ([
+        ['Preisstufen', tiersRes.error],
+        ['Zuschläge', surchargesRes.error],
+        ['Regionen', regionsRes.error],
+        ['Konfiguration', configRes.error],
+        ['Prüfpfad', auditRes.error],
+      ] as const).filter(([, fehler]) => fehler != null).map(([name]) => name)
+
+      if (nichtLesbar.length > 0) {
+        log.error('Krankenfahrt-Preise: Abfragen fehlgeschlagen', {
+          bereiche: nichtLesbar.join(', '),
+        })
+        setLadefehler(
+          nichtLesbar.join(', ')
+          + ' konnten nicht geladen werden. Es wird keine Preisliste angezeigt — '
+          + 'eine leere lädt dazu ein, sie ein zweites Mal anzulegen.'
+        )
+        setTiers([]); setSurcharges([]); setRegions([]); setConfig([]); setAudit([])
+        setLoading(false)
+        return
+      }
+
       setTiers((tiersRes.data || []) as PricingTier[])
       setSurcharges((surchargesRes.data || []) as PricingSurcharge[])
       setRegions((regionsRes.data || []) as PricingRegion[])
@@ -117,6 +145,16 @@ export default function KrankenfahrtPricingPage() {
 
   if (loading) {
     return <div style={{ padding: 40, textAlign: 'center', color: BRAND.muted }}>Preisdaten werden geladen...</div>
+  }
+
+  // Ohne Preisliste keine Kacheln: „0 aktive Tarife" laedt dazu ein, sie
+  // neu anzulegen — und danach stuenden sie doppelt (Block 88).
+  if (ladefehler) {
+    return (
+      <div style={{ padding: 24, borderRadius: 10, background: 'rgba(208,75,59,.1)', border: '1px solid #D04B3B', color: '#D04B3B' }}>
+        {ladefehler}
+      </div>
+    )
   }
 
   return (
