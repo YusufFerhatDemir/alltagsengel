@@ -28,6 +28,7 @@
  */
 import { readFile } from 'fs/promises'
 import { join } from 'path'
+import fontkit from '@pdf-lib/fontkit'
 import { rgb } from 'pdf-lib'
 import type { PDFDocument, PDFFont, PDFImage, PDFPage } from 'pdf-lib'
 import { logger } from '@/lib/logger'
@@ -86,6 +87,14 @@ export interface MeasurableFont {
  * auf der fertigen Rechnung auf.
  */
 export async function loadPdfFonts(pdfDoc: PDFDocument): Promise<{ regular: PDFFont; bold: PDFFont }> {
+  // fontkit hier registrieren, nicht beim Aufrufer. Ohne ihn wirft
+  // `embedFont` mit FontkitNotRegisteredError — und zwar erst zur
+  // Laufzeit, wenn jemand das Dokument anfordert. Bis 14.09.2026 tat das
+  // jeder Aufrufer selbst (rechnung-paket, mahnung-pdf-datei,
+  // leistungsnachweis/route); der vierte vergass es prompt. Der Aufruf
+  // ist idempotent, die drei bestehenden Registrierungen stoeren nicht.
+  pdfDoc.registerFontkit(fontkit)
+
   const [regularBytes, boldBytes] = await Promise.all([
     readFile(join(FONT_DIR, 'DejaVuSans.ttf')),
     readFile(join(FONT_DIR, 'DejaVuSans-Bold.ttf')),

@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { VERTRAGS_STATUS, VERTRAGS_TYP, formatDate, statusMeta } from '@/lib/admin/ops'
 import { StatusBadge, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import type { AktenVertrag } from '@/lib/akten/types'
+import { VORLAGEN_TYPEN } from '@/lib/vertraege/vorlagen'
 
 const EMPTY_FORM = {
   titel: '', vertragstyp: 'dienstleistungsvertrag', clientId: '', caregiverId: '',
@@ -171,6 +172,21 @@ export default function AdminVertraegePage() {
                     <td style={{ fontSize: 13 }}>{formatDate(v.vertragsbeginn)}</td>
                     <td style={{ fontSize: 13 }}>{formatDate(v.vertragsende)}</td>
                     <td style={{ whiteSpace: 'nowrap' }}>
+                      {/* Das Dokument. Ohne diesen Knopf existiert der Vertrag
+                          nur als Datenbankzeile — und die unterschreibt
+                          niemand. Neuer Tab statt Download: das PDF wird bei
+                          jedem Aufruf frisch aus dem aktuellen Stand gebaut
+                          und nirgends abgelegt. */}
+                      {VORLAGEN_TYPEN.includes(v.vertragstyp as (typeof VORLAGEN_TYPEN)[number]) && (
+                        <a
+                          href={`/api/akten/vertraege/${v.id}/pdf`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ ...miniBtn, display: 'inline-block', textDecoration: 'none' }}
+                        >
+                          PDF
+                        </a>
+                      )}
                       {v.status === 'entwurf' && <button onClick={() => statusChange(v, 'versendet')} disabled={busyId === v.id} style={miniBtn}>Versenden</button>}
                       {v.status === 'versendet' && <button onClick={() => unterschreiben(v)} disabled={busyId === v.id} style={miniBtn}>Unterschreiben</button>}
                       {v.status === 'unterschrieben' && <button onClick={() => statusChange(v, 'aktiv')} disabled={busyId === v.id} style={miniBtn}>Aktivieren</button>}
