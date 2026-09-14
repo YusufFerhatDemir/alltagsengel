@@ -114,8 +114,11 @@ describe('standVon — teilweise ist ein eigener Zustand', () => {
 })
 
 describe('der Katalog', () => {
-  it('fuehrt sechs wartende Migrationen', () => {
-    expect(WARTENDE_MIGRATIONEN).toHaveLength(6)
+  it('fuehrt wartende Migrationen, jede mit Datei und Ruecknahme', () => {
+    // Keine feste Zahl mehr (Block 103): ein Test, der beim SIEBTEN
+    // Eintrag zerbricht, erzieht dazu, keinen siebten aufzunehmen. Die
+    // Ueberschrift der erzeugten Datei zaehlt jetzt selbst mit.
+    expect(WARTENDE_MIGRATIONEN.length).toBeGreaterThan(0)
   })
 
   it('jede Datei und jede Ruecknahme existiert im Repo', () => {

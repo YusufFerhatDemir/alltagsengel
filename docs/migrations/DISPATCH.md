@@ -1,16 +1,16 @@
-# Dispatch: sechs wartende Migrationen
+# Dispatch: sieben wartende Migrationen
 
 > **Erzeugt aus `lib/migration/stand.ts`.** Nicht von Hand ändern —
 > `npm run migrations:dispatch` schreibt die Datei neu, ein Test hält sie dagegen.
 
-DDL ist aus der Anwendung heraus nicht möglich (42501). Diese sechs
+DDL ist aus der Anwendung heraus nicht möglich (42501). Diese sieben
 Migrationen gehen deshalb durch den Supabase-SQL-Editor.
 
 **Nach jedem Schritt messen:** `npm run verify:migrationsstand`.
 Der Lauf fragt nicht das Migrations-Verzeichnis, sondern die *Wirkung* —
 ein Apply ohne Rechte meldet HTTP 204 und bewirkt nichts.
 
-Die sechs sind **voneinander unabhängig**. Jede lässt sich einzeln
+Die sieben sind **voneinander unabhängig**. Jede lässt sich einzeln
 einspielen und einzeln zurücknehmen; die Reihenfolge unten ist die
 nach Nummern, keine Abhängigkeitskette.
 
@@ -107,6 +107,24 @@ Die Rechnungsnummer ist global eindeutig, der Zaehler laeuft je Mandant. Der ZWE
 - Constraint `mis_quality_processes_org_process_id_key` auf `mis_quality_processes` — Prozesskennung je Mandant.
 
 **Zusätzlich danach:** `npm run verify:mandanten-eindeutigkeit`
+
+## 7. Der Bucket ohne Policy: `mis-documents`
+
+**Datei:** `supabase/migrations/20261210000000_mis_documents_storage_policy.sql`
+**Rücknahme:** `supabase/migrations/20261210000001_rollback_mis_documents_storage_policy.sql`
+
+**Ohne sie:**
+
+`storage.objects` traegt RLS, und jede der fuenfzehn vorhandenen Policies nennt ausdruecklich ihren `bucket_id` — eine bucket-uebergreifende gibt es nicht. Versorgt sind damit genau fuenf von dreizehn Buckets; `mis-documents` gehoert nicht dazu und ist zugleich der einzige, den eine Oberflaeche mit dem BROWSER-Client anfasst. Fuer `authenticated` ist er vollstaendig zu: jeder Upload und jede signierte URL scheitert — leise, denn die Storage-Aufrufe werfen nicht, sie geben `error` zurueck. Live am 14.09.2026: `mis_documents` fuehrt 1 Zeile mit `file_path`, der Bucket enthaelt 0 Objekte. Der Code legt seit Block 103 ohne Datei keinen Eintrag mehr an — die Dokumentenlenkung bleibt bis zum Einspielen aber unbenutzbar, sie sagt es jetzt nur ehrlich.
+
+**Messbare Wirkung (4):**
+
+- Policy `mis_documents_storage_select` auf `objects` — Lesen im eigenen Mandanten — erstes Pfadsegment = current_org_id().
+- Policy `mis_documents_storage_insert` auf `objects` — Ablegen im eigenen Mandanten — dieselbe Pfadbedingung.
+- Policy `mis_documents_storage_update` auf `objects` — Aendern zusaetzlich nur mit is_admin() — ein freigegebenes Dokument der Lenkung ist nicht fuer jedes Mitglied ueberschreibbar.
+- Policy `mis_documents_storage_delete` auf `objects` — Entfernen ebenso nur mit is_admin(), im eigenen Mandanten.
+
+**Zusätzlich danach:** `npm run lint:bucket-policy`
 
 ## Wenn etwas schiefgeht
 

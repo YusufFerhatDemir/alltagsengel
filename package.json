@@ -102,6 +102,7 @@
     "lint:stilles-update": "tsx scripts/lint-stilles-update.ts",
     "lint:blinder-insert": "tsx scripts/lint-blinder-insert.ts",
     "lint:zeilendeckel": "tsx scripts/lint-zeilendeckel.ts",
+    "lint:bucket-policy": "tsx scripts/lint-bucket-policy.ts",
     "verify:vertrag-pdf": "tsx scripts/verify-vertrag-pdf.ts",
     "verify:bewerberfunnel": "tsx scripts/verify-bewerberfunnel-live.ts",
     "verify:automatisierung": "tsx --require ./scripts/test-stubs/server-only-stub.cjs --require ./scripts/test-stubs/admin-client-trockenlauf.cjs scripts/verify-automatisierung-trockenlauf.ts",

@@ -121,6 +121,19 @@ jobs:
         # Freigabe: neue Faelle machen den Lauf rot.
         run: npm run lint:zeilendeckel
 
+      - name: Bucket ohne Policy (Storage unter RLS)
+        # `storage.objects` traegt RLS, und JEDE Policy nennt ausdruecklich
+        # ihren bucket_id — eine bucket-uebergreifende gibt es nicht. Ein
+        # Bucket ohne Policy ist damit fuer anon und authenticated zu, und
+        # jeder Upload scheitert LEISE: die Storage-Aufrufe werfen nicht,
+        # sie geben `error` zurueck.
+        # So geschehen bei `mis-documents` (Block 103): live eine Zeile in
+        # mis_documents mit file_path, NULL Objekte im Bucket — der Eintrag
+        # zeigt auf eine Datei, die es nie gab.
+        # Die Pruefung liest KEINE Datenbank: sie vergleicht die Buckets aus
+        # dem Quelltext mit den Policies aus den Migrationen.
+        run: npm run lint:bucket-policy
+
       - name: Secret scan
         run: bash scripts/ci-secret-scan.sh
 

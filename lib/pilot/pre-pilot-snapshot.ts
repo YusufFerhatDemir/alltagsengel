@@ -213,14 +213,19 @@ export const JUENGSTE_MIGRATIONEN = [
   // juengsten herausgerutscht; nur ihre Ruecknahme steht noch in der
   // Liste — wie zuvor schon beim Mandantenzaun und bei
   // `pflege_massnahmen`.
-  '20261125000001_rollback_engel_caregivers_select_own.sql',
+  //
+  // Mit Block 103 ist auch sie herausgerutscht — der Speicher-Riegel fuer
+  // `mis-documents` ist juenger.
   // 14.09.2026 (Block 44): ein Leistungsnachweis ohne Einsatzdauer darf
   // nicht abrechenbar werden. `duration_minutes` ist GENERATED und bleibt
   // NULL, wenn die Zeiten fehlen — und `create_invoice_draft_atomic`
   // rechnet dann mit `COALESCE(duration_minutes, 60)` eine volle Stunde,
   // die niemand erfasst hat. NICHT angewendet (DDL braucht den
   // SQL-Editor); bis dahin ist der Anwendungscode der einzige Riegel.
-  '20261130000000_service_records_dauer_pflicht.sql',
+  //
+  // Mit Block 103 ist die Vorwaerts-Migration aus den fuenf juengsten
+  // herausgerutscht; nur ihre Ruecknahme steht noch hier. Die vollstaendige
+  // Liste der wartenden Migrationen fuehrt lib/migration/stand.ts.
   '20261130000001_rollback_service_records_dauer_pflicht.sql',
   // 14.09.2026 (Block 46): acht UNIQUE-Constraints auf Mandanten-Tabellen
   // nannten `organization_id` nicht — allen voran die Rechnungsnummer.
@@ -249,6 +254,16 @@ export const JUENGSTE_MIGRATIONEN = [
   // steht, sind die groessten Dateinamen, nicht die neuesten Dateien.
   // Solange der 20261017-Block existiert, ist diese Konstante fuer die
   // Frage „was ist zuletzt dazugekommen" NICHT zu gebrauchen.
+  // 14.09.2026 (Block 103): `storage.objects` traegt RLS, und jede der
+  // fuenfzehn Policies nennt ausdruecklich ihren `bucket_id`. Versorgt
+  // sind fuenf von dreizehn Buckets; `mis-documents` gehoert nicht dazu
+  // und ist zugleich der einzige, den eine Oberflaeche mit dem
+  // BROWSER-Client anfasst. Live: eine Zeile in `mis_documents` mit
+  // `file_path`, NULL Objekte im Bucket. NICHT angewendet (DDL braucht
+  // den SQL-Editor); bis dahin bleibt die MIS-Dokumentenlenkung
+  // unbenutzbar — sie sagt es seit Block 103 nur ehrlich.
+  '20261210000000_mis_documents_storage_policy.sql',
+  '20261210000001_rollback_mis_documents_storage_policy.sql',
 ] as const
 
 // ---------------------------------------------------------------------------

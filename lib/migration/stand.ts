@@ -197,6 +197,35 @@ export const WARTENDE_MIGRATIONEN: readonly WartendeMigration[] = [
     ],
     pruefung: 'npm run verify:mandanten-eindeutigkeit',
   },
+  {
+    datei: '20261210000000_mis_documents_storage_policy.sql',
+    ruecknahme: '20261210000001_rollback_mis_documents_storage_policy.sql',
+    titel: 'Der Bucket ohne Policy: `mis-documents`',
+    ohneSie:
+      '`storage.objects` traegt RLS, und jede der fuenfzehn vorhandenen '
+      + 'Policies nennt ausdruecklich ihren `bucket_id` — eine '
+      + 'bucket-uebergreifende gibt es nicht. Versorgt sind damit genau fuenf '
+      + 'von dreizehn Buckets; `mis-documents` gehoert nicht dazu und ist '
+      + 'zugleich der einzige, den eine Oberflaeche mit dem BROWSER-Client '
+      + 'anfasst. Fuer `authenticated` ist er vollstaendig zu: jeder Upload '
+      + 'und jede signierte URL scheitert — leise, denn die Storage-Aufrufe '
+      + 'werfen nicht, sie geben `error` zurueck. Live am 14.09.2026: '
+      + '`mis_documents` fuehrt 1 Zeile mit `file_path`, der Bucket enthaelt '
+      + '0 Objekte. Der Code legt seit Block 103 ohne Datei keinen Eintrag '
+      + 'mehr an — die Dokumentenlenkung bleibt bis zum Einspielen aber '
+      + 'unbenutzbar, sie sagt es jetzt nur ehrlich.',
+    wirkungen: [
+      { art: 'policy', tabelle: 'objects', name: 'mis_documents_storage_select',
+        zweck: 'Lesen im eigenen Mandanten — erstes Pfadsegment = current_org_id().' },
+      { art: 'policy', tabelle: 'objects', name: 'mis_documents_storage_insert',
+        zweck: 'Ablegen im eigenen Mandanten — dieselbe Pfadbedingung.' },
+      { art: 'policy', tabelle: 'objects', name: 'mis_documents_storage_update',
+        zweck: 'Aendern zusaetzlich nur mit is_admin() — ein freigegebenes Dokument der Lenkung ist nicht fuer jedes Mitglied ueberschreibbar.' },
+      { art: 'policy', tabelle: 'objects', name: 'mis_documents_storage_delete',
+        zweck: 'Entfernen ebenso nur mit is_admin(), im eigenen Mandanten.' },
+    ],
+    pruefung: 'npm run lint:bucket-policy',
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -263,21 +292,38 @@ export function fehlendeWirkungen(
  * der ersten Aenderung falsch. Ein Test haelt die eingecheckte Datei
  * gegen diese Funktion.
  */
+/**
+ * Zahlwort zur Laenge der Liste.
+ *
+ * Bis Block 103 stand „sechs" dreimal fest im Text — und ein siebter
+ * Eintrag machte die Ueberschrift zur Falschaussage, ohne dass es beim
+ * Schreiben auffiel. Ein erzeugter Text darf seine eigene Zahl nicht
+ * behaupten.
+ */
+export function zahlwort(n: number): string {
+  const woerter = [
+    'keine', 'eine', 'zwei', 'drei', 'vier', 'fuenf', 'sechs',
+    'sieben', 'acht', 'neun', 'zehn', 'elf', 'zwoelf',
+  ]
+  return woerter[n] ?? String(n)
+}
+
 export function dispatchText(): string {
   const z: string[] = []
-  z.push('# Dispatch: sechs wartende Migrationen')
+  const anzahl = zahlwort(WARTENDE_MIGRATIONEN.length)
+  z.push(`# Dispatch: ${anzahl} wartende Migrationen`)
   z.push('')
   z.push('> **Erzeugt aus `lib/migration/stand.ts`.** Nicht von Hand ändern —')
   z.push('> `npm run migrations:dispatch` schreibt die Datei neu, ein Test hält sie dagegen.')
   z.push('')
-  z.push('DDL ist aus der Anwendung heraus nicht möglich (42501). Diese sechs')
+  z.push(`DDL ist aus der Anwendung heraus nicht möglich (42501). Diese ${anzahl}`)
   z.push('Migrationen gehen deshalb durch den Supabase-SQL-Editor.')
   z.push('')
   z.push('**Nach jedem Schritt messen:** `npm run verify:migrationsstand`.')
   z.push('Der Lauf fragt nicht das Migrations-Verzeichnis, sondern die *Wirkung* —')
   z.push('ein Apply ohne Rechte meldet HTTP 204 und bewirkt nichts.')
   z.push('')
-  z.push('Die sechs sind **voneinander unabhängig**. Jede lässt sich einzeln')
+  z.push(`Die ${anzahl} sind **voneinander unabhängig**. Jede lässt sich einzeln`)
   z.push('einspielen und einzeln zurücknehmen; die Reihenfolge unten ist die')
   z.push('nach Nummern, keine Abhängigkeitskette.')
   z.push('')

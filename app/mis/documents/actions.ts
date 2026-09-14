@@ -32,6 +32,28 @@ async function requireMISAdmin() {
   return { supabase, userId: user.id, organizationId, role: profile.role, name }
 }
 
+// ── Ablagepfad im Dokumentenspeicher ──────────────────────────
+//
+// BEFUND (Block 103): die Oberflaeche baute den Pfad selbst, als
+// `documents/<zeit>_<name>` — ohne Mandantensegment. Der Bucket
+// `mis-documents` hatte gar keine Policy, also fiel es nicht auf; mit der
+// Policy aus Migration 20261210000000 faellt es sofort auf, denn sie
+// prueft das ERSTE Pfadsegment gegen `current_org_id()`.
+//
+// Der Pfad wird deshalb hier gebildet, wo die Organisation
+// serverseitig feststeht. Die Oberflaeche kann sie nicht behaupten — und
+// selbst wenn sie es versuchte, entschiede die Policy dagegen.
+export async function ablagePfad(
+  dateiname: string,
+): Promise<{ ok: true; pfad: string } | { ok: false; error: string }> {
+  try {
+    const { organizationId } = await requireMISAdmin()
+    return { ok: true, pfad: `${organizationId}/documents/${Date.now()}_${dateiname}` }
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : 'Ablagepfad nicht ermittelbar' }
+  }
+}
+
 // ── Dokument erstellen (DB-Eintrag nach Storage-Upload) ───────
 
 export async function createDocument(data: {

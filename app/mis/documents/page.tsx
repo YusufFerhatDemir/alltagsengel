@@ -5,7 +5,7 @@ import { BRAND, CLASSIFICATION_LABELS } from '@/lib/mis/constants'
 import { SectionHeader, Card, DataTable, MisButton, SearchInput, StatusBadge, Badge, Tabs, EmptyState, Modal } from '@/components/mis/MisComponents'
 import { useMis } from '@/lib/mis/MisContext'
 import type { MisDocument, DocumentCategory } from '@/lib/mis/types'
-import { createDocument, updateDocumentStatus, incrementDownloadCount } from './actions'
+import { createDocument, updateDocumentStatus, incrementDownloadCount, ablagePfad } from './actions'
 import { sanitizeStorageName } from '@/lib/file-upload-validation'
 import { logger } from '@/lib/logger'
 const log = logger.child('mis:documents')
@@ -70,8 +70,53 @@ export default function DocumentsPage() {
       fileName = file.name
       fileSize = file.size
       fileType = file.type
-      filePath = `documents/${Date.now()}_${sanitizeStorageName(file.name)}`
-      await supabase.storage.from('mis-documents').upload(filePath, file)
+      // Der Pfad kommt vom Server: sein erstes Segment ist die
+      // Organisation, und genau die prueft die Storage-Policy
+      // (Migration 20261210000000). Ein hier gebauter Pfad haette das
+      // Mandantensegment nicht — und der Upload scheiterte wieder, nur
+      // aus einem anderen Grund.
+      const pfadAntwort = await ablagePfad(sanitizeStorageName(file.name))
+      if (!pfadAntwort.ok) {
+        log.errorWithException('MIS-Ablagepfad nicht ermittelbar', new Error(pfadAntwort.error))
+        alert('Der Ablageort konnte nicht bestimmt werden — es wurde kein Dokument angelegt.')
+        return
+      }
+      filePath = pfadAntwort.pfad
+
+      // BEFUND (Block 103, 14.09.2026): hier stand ein blindes
+      // `await supabase.storage.from('mis-documents').upload(…)`. Das
+      // Ergebnis wurde verworfen — und direkt darunter legte
+      // `createDocument()` den Datenbankeintrag MIT diesem `file_path` an.
+      //
+      // Der Bucket `mis-documents` traegt bis heute KEINE Policy auf
+      // `storage.objects` (live am 14.09.2026 aus pg_policies gelesen: RLS
+      // ist an, jede der fuenfzehn Policies nennt ausdruecklich ihren
+      // bucket_id, und `mis-documents` ist bei keiner dabei). Diese Seite
+      // laedt aber mit dem BROWSER-Client hoch, also unter RLS. Der Upload
+      // wird deshalb abgewiesen.
+      //
+      // Live belegt: `mis_documents` fuehrt eine Zeile mit `file_path`,
+      // der Bucket enthaelt NULL Objekte. Der Eintrag zeigt auf eine
+      // Datei, die es nie gegeben hat — und die Oberflaeche hat Erfolg
+      // gemeldet.
+      //
+      // Ohne Datei kein Eintrag: ein Dokumentenlenkungs-System, dessen
+      // Eintraege ins Leere zeigen, ist schlimmer als eines ohne Eintrag.
+      const { error: uploadFehler } = await supabase.storage
+        .from('mis-documents')
+        .upload(filePath, file)
+
+      if (uploadFehler) {
+        log.errorWithException('MIS-Upload abgewiesen — kein Eintrag angelegt', uploadFehler, {
+          bucket: 'mis-documents',
+          filePath,
+        })
+        alert(
+          'Die Datei konnte nicht gespeichert werden — es wurde kein Dokument angelegt. '
+          + 'Bitte erneut versuchen; bleibt es dabei, fehlt die Freigabe fuer den Dokumentenspeicher.',
+        )
+        return
+      }
     }
 
     const result = await createDocument({
@@ -103,11 +148,28 @@ export default function DocumentsPage() {
   async function handleDownload(doc: MisDocument) {
     if (!doc.file_path) return
     const supabase = createClient()
-    const { data } = await supabase.storage.from('mis-documents').createSignedUrl(doc.file_path, 3600)
-    if (data?.signedUrl) {
-      window.open(data.signedUrl, '_blank')
-      await incrementDownloadCount(doc.id)
+    const { data, error } = await supabase.storage
+      .from('mis-documents')
+      .createSignedUrl(doc.file_path, 3600)
+
+    // Vorher: `if (data?.signedUrl)` ohne Gegenzweig. Ein Klick auf
+    // „Herunterladen" tat dann GAR NICHTS — kein Fenster, keine Meldung,
+    // kein Protokolleintrag. Genau so verhaelt sich diese Seite heute fuer
+    // jedes Dokument, dessen Datei nie angekommen ist (Block 103).
+    if (error || !data?.signedUrl) {
+      log.errorWithException('MIS-Download nicht moeglich', error, {
+        docId: doc.id,
+        filePath: doc.file_path,
+      })
+      alert(
+        'Diese Datei ist im Dokumentenspeicher nicht auffindbar. '
+        + 'Der Eintrag verweist auf eine Datei, die dort nicht liegt.',
+      )
+      return
     }
+
+    window.open(data.signedUrl, '_blank')
+    await incrementDownloadCount(doc.id)
   }
 
   const filteredDocs = docs.filter(d => {
