@@ -277,7 +277,8 @@ export function pruefeQuelle(rohQuelle: string, datei: string): Befund[] {
 }
 
 /**
- * Bestand vom 14.09.2026 — 85 gebuendelte Stellen.
+ * Bestand vom 14.09.2026 — 79 gebuendelte Stellen (Block 79: 85, davon
+ * sechs mit Block 80 behoben).
  *
  * ── WAS DIESE LISTE IST UND WAS NICHT ─────────────────────────
  * Sie deckt BEIDE Bereiche ab: die Renderdateien, in denen die Regel
@@ -306,9 +307,6 @@ export function pruefeQuelle(rohQuelle: string, datei: string): Befund[] {
  * die Seite ist mit Block 79 behoben.
  */
 export const BESTAND_GEBUENDELT: { datei: string; variable: string }[] = [
-  { datei: 'app/admin/abrechnung/page.tsx', variable: 'cliRes' },
-  { datei: 'app/admin/abrechnung/page.tsx', variable: 'laufRes' },
-  { datei: 'app/admin/abrechnung/page.tsx', variable: 'recRes' },
   { datei: 'app/admin/bonuses/page.tsx', variable: 'boRes' },
   { datei: 'app/admin/bonuses/page.tsx', variable: 'cgRes' },
   { datei: 'app/admin/caregivers/[id]/page.tsx', variable: 'bonusRes' },
@@ -338,9 +336,6 @@ export const BESTAND_GEBUENDELT: { datei: string; variable: string }[] = [
   { datei: 'app/admin/monatsabschluss/page.tsx', variable: 'recordsRes' },
   { datei: 'app/admin/partners/page.tsx', variable: 'pRes' },
   { datei: 'app/admin/partners/page.tsx', variable: 'vRes' },
-  { datei: 'app/admin/rechnungen/[id]/page.tsx', variable: 'allocRes' },
-  { datei: 'app/admin/rechnungen/[id]/page.tsx', variable: 'auditRes' },
-  { datei: 'app/admin/rechnungen/[id]/page.tsx', variable: 'itemsRes' },
   { datei: 'app/admin/records/new/page.tsx', variable: 'cRes' },
   { datei: 'app/admin/records/new/page.tsx', variable: 'gRes' },
   { datei: 'app/admin/schedule/page.tsx', variable: 'abRes' },

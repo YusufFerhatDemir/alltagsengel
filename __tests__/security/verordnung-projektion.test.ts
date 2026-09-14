@@ -109,10 +109,19 @@ describe('Verordnungs-Projektion: die Seite nutzt sie auch', () => {
     expect(seitenQuelle).toContain('/api/billing/verordnungen')
   })
 
-  it('bleibt bei einem Fehler leer, statt einen Teilbestand zu zeigen', () => {
+  it('zeigt bei einem Fehler keinen Teilbestand — und sagt es (Block 80)', () => {
     // Eine halbe Verordnungsliste waere gefaehrlicher als keine: sie
     // saehe vollstaendig aus und liesse Abrechnungsfaelle weg.
-    expect(seitenQuelle).toContain('if (!res.ok) return []')
+    //
+    // Bis Block 80 stand hier `if (!res.ok) return []`. Das erfuellte die
+    // erste Haelfte (kein Teilbestand) und verletzte die zweite: die
+    // leere Liste war von „es gibt keine Verordnungen" nicht zu
+    // unterscheiden, und die Seite baute daraus Abrechnungsfaelle mit dem
+    // Kostentraeger des Klienten statt dem der Bewilligung.
+    expect(seitenQuelle).toContain('if (!res.ok) return { ok: false, grund: `HTTP ${res.status}` }')
+    expect(seitenQuelle).not.toMatch(/return \[\]/)
+    // Und der Aufrufer wertet das aus, statt es zu ignorieren.
+    expect(seitenQuelle).toContain('verRes.ok ? null : verRes.grund')
   })
 })
 

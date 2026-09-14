@@ -7,6 +7,8 @@ import { euro, formatDate, fullName, statusMeta, INVOICE_STATUS } from '@/lib/ad
 import { StatusBadge, Banner } from '@/components/admin/OpsUI'
 import { ABSCHREIBBAR_VON, isTerminalStatus, isValidInvoiceStatus } from '@/lib/billing/core/status-machine'
 import Link from 'next/link'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:rechnung')
 
 interface Invoice {
   id: string; invoice_number: string | null; invoice_number_formatted: string | null
@@ -47,12 +49,15 @@ export default function InvoiceDetailPage() {
   const [allocations, setAllocations] = useState<Allocation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  /** Teile der Rechnung konnten nicht geladen werden (Block 80). */
+  const [unvollstaendig, setUnvollstaendig] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
   const [versandHinweis, setVersandHinweis] = useState<string | null>(null)
 
   async function load() {
     const supabase = createClient()
 
+    setUnvollstaendig(false)
     const { data: invData, error: invErr } = await supabase
       .from('invoices')
       .select('*, client:clients(first_name, last_name)')
@@ -75,6 +80,35 @@ export default function InvoiceDetailPage() {
         .select('id, amount_cents, allocation_type, allocated_at, payment:payments(id, payment_date, payer_name)')
         .eq('invoice_id', id).order('allocated_at', { ascending: false }),
     ])
+
+    // BEFUND (Block 80): der Rechnungskopf wird auf seinen Fehler geprueft,
+    // diese drei Abfragen nicht. Faellt eine aus, ist `data` null, die Liste
+    // leer — und die Seite zeigt eine Rechnung OHNE Positionen, OHNE
+    // Pruefpfad oder OHNE Zahlungen, ohne dass etwas darauf hinweist.
+    //
+    // Das ist hier mehr als eine falsche Anzeige: neben diesen Listen
+    // stehen „Festschreiben", „Stornieren" und „Zahlung erfassen". Wer
+    // eine Rechnung festschreibt, waehrend die Positionsliste still leer
+    // geblieben ist, entscheidet ueber etwas, das er nicht gesehen hat.
+    const teile = [
+      ['Positionen', itemsRes], ['Prüfpfad', auditRes], ['Zahlungen', allocRes],
+    ] as const
+    const gescheitert = teile.filter(([, r]) => r.error)
+    if (gescheitert.length > 0) {
+      log.error('Rechnungsdetail: Abfragen fehlgeschlagen', {
+        invoiceId: id,
+        bereiche: gescheitert.map(([name]) => name).join(', '),
+        ersterCode: gescheitert[0][1].error?.code ?? undefined,
+      })
+      setUnvollstaendig(true)
+      setError(
+        gescheitert.map(([name]) => name).join(', ')
+        + ' konnten nicht geladen werden. Die Rechnung wird deshalb nicht zur Bearbeitung angezeigt — '
+        + 'bitte die Seite neu laden.'
+      )
+      setLoading(false)
+      return
+    }
 
     setItems((itemsRes.data || []) as InvoiceItem[])
     setAudit((auditRes.data || []) as AuditEntry[])
@@ -227,6 +261,17 @@ export default function InvoiceDetailPage() {
 
   if (loading) return <div className="admin-page"><p>Laden…</p></div>
   if (!inv) return <div className="admin-page"><Banner tone="danger">{error || 'Nicht gefunden'}</Banner></div>
+  // Teile der Rechnung fehlen: Kopf zeigen, aber keine Listen und keine
+  // Schaltflaechen. Eine halbe Rechnung neben „Festschreiben" ist
+  // gefaehrlicher als gar keine.
+  if (unvollstaendig) {
+    return (
+      <div className="admin-page">
+        <h1>Rechnung {inv.invoice_number}</h1>
+        <Banner tone="danger">{error}</Banner>
+      </div>
+    )
+  }
 
   const sm = statusMeta(INVOICE_STATUS, inv.status)
   const openAmount = (inv.total_amount || 0) - (inv.paid_amount || 0)

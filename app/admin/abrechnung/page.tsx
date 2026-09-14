@@ -37,14 +37,25 @@ import { speichereLauf, setzeLaufStatusAction } from './actions'
  * Ansicht wie vorher, nur ohne stille Falschaussage. Ein leeres Ergebnis
  * heisst hier „keine Verordnungsdaten", nicht „keine Verordnungen".
  */
-async function verordnungenFuerAbrechnung(): Promise<unknown[]> {
+/**
+ * BEFUND (Block 80): hier stand dreimal `return []`. Eine gescheiterte
+ * Abfrage wurde damit zu „keine Verordnungen" — und daraus baut die Seite
+ * die Abrechnungsfaelle. Ohne Verordnung traegt ein Fall den
+ * Kostentraeger des Klienten statt den der Bewilligung, oder er faellt
+ * ganz heraus. Eine leere Liste ist hier keine Aussage ueber die Daten,
+ * sondern ueber die Abfrage.
+ */
+async function verordnungenFuerAbrechnung(): Promise<
+  { ok: true; zeilen: unknown[] } | { ok: false; grund: string }
+> {
   try {
     const res = await fetch('/api/billing/verordnungen', { cache: 'no-store' })
-    if (!res.ok) return []
+    if (!res.ok) return { ok: false, grund: `HTTP ${res.status}` }
     const daten = await res.json()
-    return Array.isArray(daten) ? daten : []
-  } catch {
-    return []
+    if (!Array.isArray(daten)) return { ok: false, grund: 'unerwartetes Format' }
+    return { ok: true, zeilen: daten }
+  } catch (e) {
+    return { ok: false, grund: e instanceof Error ? e.message : String(e) }
   }
 }
 
@@ -180,6 +191,8 @@ export default function AbrechnungPage() {
   const [pruefung, setPruefung] = useState<Record<string, PruefErgebnis>>({})
   const [vorschauIK, setVorschauIK] = useState<string | null>(null)
   const [meldung, setMeldung] = useState<string | null>(null)
+  /** Eine der vier Quellen war nicht lesbar (Block 80). */
+  const [ladefehler, setLadefehler] = useState<string | null>(null)
   const [orgIk, setOrgIk] = useState('')
 
   // ── Absender-IK laden (organizations-Tabelle bzw. ALLTAGSENGEL_IK-Env) ──
@@ -194,6 +207,7 @@ export default function AbrechnungPage() {
     setLaden(true)
     setPruefung({})
     setVorschauIK(null)
+    setLadefehler(null)
     const supabase = createClient()
     const jahr = monat.slice(0, 4), mm = monat.slice(4, 6)
     const von = `${jahr}-${mm}-01`
@@ -219,8 +233,36 @@ export default function AbrechnungPage() {
       supabase.from('abrechnungslaeufe').select('*').eq('abrechnungsmonat', monat).order('erstellt_am', { ascending: false }),
     ])
 
+    // BEFUND (Block 80): alle vier Quellen wurden als leere Liste
+    // weiterverarbeitet, wenn sie ausfielen. Diese Seite baut daraus die
+    // KASSENABRECHNUNG eines Monats: faellt `recRes` aus, zeigt sie null
+    // abrechenbare Faelle — ein ganzer Monat waere unbemerkt nicht
+    // eingereicht worden. Faellt `cliRes` aus, ist die Klientenzuordnung
+    // leer und jeder Fall wird uebersprungen. Faellt `laufRes` aus, sind
+    // bestehende Laeufe unsichtbar und jemand legt einen zweiten an.
+    const quellen = [
+      ['Leistungsnachweise', recRes.error?.message ?? null],
+      ['Verordnungen', verRes.ok ? null : verRes.grund],
+      ['Klienten', cliRes.error?.message ?? null],
+      ['Abrechnungsläufe', laufRes.error?.message ?? null],
+    ] as const
+    const fehlend = quellen.filter(([, grund]) => grund !== null)
+    if (fehlend.length > 0) {
+      setLadefehler(
+        fehlend.map(([name]) => name).join(', ')
+        + ' konnten nicht geladen werden. Es werden KEINE Abrechnungsfälle angezeigt — '
+        + 'eine unvollständige Liste wäre von einer vollständigen nicht zu unterscheiden.'
+      )
+      setLaeufe([])
+      setGruppen([])
+      setLaden(false)
+      return
+    }
+
     const records = (recRes.data || []) as RecordRow[]
-    const verordnungen = verRes as VerordnungRow[]
+    // Nach der Pruefung oben steht fest, dass `verRes.ok` gilt; TypeScript
+    // sieht das durch die Zwischenliste hindurch nicht.
+    const verordnungen = (verRes.ok ? verRes.zeilen : []) as VerordnungRow[]
     const clients = (cliRes.data || []) as ClientRow[]
     setLaeufe((laufRes.data || []) as LaufRow[])
 
@@ -469,8 +511,14 @@ export default function AbrechnungPage() {
       </Banner>
 
       {meldung && <Banner tone="info">{meldung}</Banner>}
+      {ladefehler && <Banner tone="danger">{ladefehler}</Banner>}
       {laden && <p style={{ color: 'var(--muted)' }}>Lade Abrechnungsdaten…</p>}
-      {!laden && gruppen.length === 0 && (
+      {/*
+        Der Leerzustand darf NUR erscheinen, wenn wirklich nachgesehen
+        wurde. Sonst behauptet er „keine abrechenbaren Leistungsnachweise"
+        ueber einen Monat, den niemand gelesen hat (Block 80).
+      */}
+      {!laden && !ladefehler && gruppen.length === 0 && (
         <Banner tone="warn">Keine abrechenbaren Leistungsnachweise (Status vollständig/unterschrieben/abgerechnet) im gewählten Monat.</Banner>
       )}
 
