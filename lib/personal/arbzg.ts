@@ -1,6 +1,18 @@
 /**
  * Arbeitszeitgesetz (ArbZG) — die Regeln an EINER Stelle.
  *
+ * WER SIE DURCHSETZT (gemessen am 14.09.2026)
+ * NICHT diese Datei. Die Verstoesse schreibt der DB-Trigger
+ * `arbzg_pruefung_ist` auf `personal_arbeitszeiten` (Migration
+ * 20260829184500); `pruefeArbeitstag` und `pruefeRuhezeit` haben ausser
+ * Tests KEINEN Aufrufer. Das ist hier ausdruecklich gesagt, weil es die
+ * Ursache eines Befunds war: die beiden Rechnungen waren auseinander-
+ * gelaufen, und niemandem fiel es auf, weil die TypeScript-Seite nie
+ * ausgefuehrt wird.
+ *
+ * Wer die Regeln aendert, aendert sie an ZWEI Stellen. Ein Test haelt
+ * die Grenzwerte und die Dauerformel gegen die Migration.
+ *
  * WARUM ES DIESE DATEI GIBT (Befund GAP-13, 29.08.2026):
  *
  * Die ArbZG-Pruefung des Projekts lebte bisher ausschliesslich im
@@ -131,9 +143,27 @@ export interface ArbeitszeitTag {
  * „Regel" und „Folge".
  */
 export function pruefeArbeitstag(tag: ArbeitszeitTag): ArbzgBefund[] {
-  const netto = tag.istMinuten != null && Number.isFinite(Number(tag.istMinuten))
+  // BEFUND (Block 52, 14.09.2026): hier stand `istMinuten`, WENN
+  // vorhanden — sonst die Rechnung aus Start/Ende/Pause. Der DB-Trigger
+  // `arbzg_pruefung_ist` nimmt dagegen das GROESSERE von beidem:
+  //
+  //     v_dauer_minuten := GREATEST(COALESCE(NEW.ist_minuten, 0),
+  //                                 GREATEST(v_aus_zeiten, 0))
+  //
+  // Der Unterschied ist nicht formal. § 2 Abs. 1 ArbZG bestimmt die
+  // Arbeitszeit als die Zeit von Beginn bis Ende OHNE Ruhepausen — die
+  // Uhrzeiten sind massgeblich, nicht der eingetragene Wert. Ein zu
+  // klein erfasstes `ist_minuten` machte einen 11,5-Stunden-Tag hier
+  // beschwerdefrei, waehrend die Datenbank den Verstoss protokollierte.
+  // Zwei Antworten auf dieselbe Frage, und die mildere stand in der
+  // Anwendung.
+  const ausZeiten = nettoMinuten(tag.startZeit, tag.endZeit, tag.pauseMinuten)
+  const erfasst = Number.isFinite(Number(tag.istMinuten)) && tag.istMinuten != null
     ? Number(tag.istMinuten)
-    : nettoMinuten(tag.startZeit, tag.endZeit, tag.pauseMinuten)
+    : null
+  const netto = ausZeiten == null
+    ? erfasst
+    : Math.max(ausZeiten, erfasst ?? 0)
   if (netto == null) return []
 
   const befunde: ArbzgBefund[] = []
