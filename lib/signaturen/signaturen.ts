@@ -81,6 +81,7 @@ import { UserFacingError } from '@/lib/api/user-facing-error'
 import { MAX_BILD_BYTES } from './unterschrift-bild'
 import { createHash } from 'crypto'
 import { logger } from '@/lib/logger'
+import { uebernimmOderMelde } from './nachweis-uebernahme'
 
 const log = logger.child('signaturen')
 
@@ -469,7 +470,7 @@ export async function leisteSignatur(
 
   const { data: vorher, error: ladeFehler } = await dienst
     .from('signaturen')
-    .select('*, signatur_dokumente!inner(dokument_hash_sha256)')
+    .select('*, signatur_dokumente!inner(dokument_hash_sha256, referenz_tabelle, referenz_id)')
     .eq('id', signaturId)
     .eq('organization_id', orgId)
     .maybeSingle()
@@ -486,7 +487,11 @@ export async function leisteSignatur(
     )
   }
 
-  const joinedDoc = vorher.signatur_dokumente as unknown as { dokument_hash_sha256: string } | null
+  const joinedDoc = vorher.signatur_dokumente as unknown as {
+    dokument_hash_sha256: string
+    referenz_tabelle: string | null
+    referenz_id: string | null
+  } | null
   const dokumentHash = joinedDoc?.dokument_hash_sha256 ?? ''
   if (!dokumentHash) {
     throw new UserFacingError(
@@ -538,6 +543,26 @@ export async function leisteSignatur(
     await rolleSignaturZurueck(dienst, orgId, signaturId)
     throw err
   }
+
+  // ── Die Unterschrift erreicht den Leistungsnachweis ──────────────────
+  //
+  // Bis zum 14.09.2026 endete der Weg hier: `signatur_dokumente` trug
+  // `referenz_tabelle`/`referenz_id`, und niemand wertete sie aus. Eine
+  // Kundin konnte einen Leistungsnachweis unterschreiben, und der Nachweis
+  // blieb auf `proof_status='ENTWURF'` — fuer den Sammelrechnungslauf
+  // unabrechenbar (UNTERSCHRIFT_FEHLT).
+  //
+  // NACH dem Pruefeintrag und ohne Ruecknahme: die Unterschrift ist
+  // geleistet und protokolliert. Scheitert die Uebernahme, waere es falsch,
+  // sie zurueckzunehmen — der Fehlschlag gehoert gemeldet, damit jemand den
+  // Beleg nachtraegt.
+  await uebernimmOderMelde(dienst, {
+    referenzTabelle: joinedDoc?.referenz_tabelle,
+    referenzId: joinedDoc?.referenz_id,
+    signiertAm: zeitstempel,
+    signatarName: String((data as Record<string, unknown>).signatar_name ?? ''),
+    organizationId: orgId,
+  })
 
   return data as Signatur
 }

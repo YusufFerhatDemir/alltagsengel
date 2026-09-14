@@ -27,7 +27,18 @@ const log = logger.child('monatsabschluss-pruefung')
 
 export interface MonatsabschlussPruefungErgebnis {
   monat: string
+  /** Nachweise auf `draft`/`incomplete` — noch nicht fertig erfasst. */
   unvollstaendig: number
+  /**
+   * Nachweise, die FERTIG aussehen, aber keinen Unterschriftsbeleg tragen.
+   *
+   * Sie stehen auf `signed`/`complete` und fallen durch jede Sichtprüfung —
+   * die Nachweisliste zeigt sie als erledigt. Der Sammelrechnungslauf
+   * überspringt sie trotzdem mit `UNTERSCHRIFT_FEHLT`, weil er den BELEG
+   * verlangt (`proof_status='UNTERSCHRIEBEN'` oder einen Signatur-Hash) und
+   * nicht das Statuswort.
+   */
+  ohneBeleg: number
   aufgabeErstellt: boolean
 }
 
@@ -59,12 +70,38 @@ export async function pruefeMonatsabschlussVollstaendigkeit(
 
   if (countErr) {
     log.error('Zählung fehlgeschlagen', { errorMessage: countErr.message })
-    return { monat, unvollstaendig: 0, aufgabeErstellt: false }
+    return { monat, unvollstaendig: 0, ohneBeleg: 0, aufgabeErstellt: false }
   }
 
   const unvollstaendigAnzahl = count ?? 0
-  if (unvollstaendigAnzahl === 0) {
-    return { monat, unvollstaendig: 0, aufgabeErstellt: false }
+
+  // ── Der zweite, unsichtbare Fall ──────────────────────────────────────
+  //
+  // Am 14.09.2026 live gefunden: dreizehn Nachweise aus vier Monaten stehen
+  // auf `signed`, tragen aber `proof_status='ENTWURF'` und keinen Hash. Fuer
+  // die Zaehlung oben sind sie fertig; fuer den Sammelrechnungslauf sind sie
+  // es nicht. Die Leistung ist erbracht, die Rechnung kommt nie, und keine
+  // Liste zeigte es an.
+  //
+  // Dieselbe Regel wie `istUnterschrieben` in
+  // lib/billing/core/sammelrechnung.ts: Beleg ist proof_status oder Hash.
+  const { data: fertige, error: belegErr } = await supabase
+    .from('service_records')
+    .select('id, proof_status, signature_hash')
+    .eq('organization_id', organizationId)
+    .gte('date', periodStart)
+    .lte('date', periodEnd)
+    .in('status', ['signed', 'complete'])
+
+  if (belegErr) {
+    log.error('Belegprüfung fehlgeschlagen', { errorMessage: belegErr.message })
+  }
+  const ohneBeleg = (fertige ?? []).filter(
+    r => r.proof_status !== 'UNTERSCHRIEBEN' && r.signature_hash == null,
+  ).length
+
+  if (unvollstaendigAnzahl === 0 && ohneBeleg === 0) {
+    return { monat, unvollstaendig: 0, ohneBeleg: 0, aufgabeErstellt: false }
   }
 
   const { data: vorhanden, error: dupErr } = await supabase
@@ -77,10 +114,10 @@ export async function pruefeMonatsabschlussVollstaendigkeit(
 
   if (dupErr) {
     log.error('Dublettenprüfung fehlgeschlagen', { errorMessage: dupErr.message })
-    return { monat, unvollstaendig: unvollstaendigAnzahl, aufgabeErstellt: false }
+    return { monat, unvollstaendig: unvollstaendigAnzahl, ohneBeleg, aufgabeErstellt: false }
   }
   if (vorhanden) {
-    return { monat, unvollstaendig: unvollstaendigAnzahl, aufgabeErstellt: false }
+    return { monat, unvollstaendig: unvollstaendigAnzahl, ohneBeleg, aufgabeErstellt: false }
   }
 
   const verantwortlichId = await ersterPdlDerOrg(supabase, organizationId)
@@ -89,32 +126,57 @@ export async function pruefeMonatsabschlussVollstaendigkeit(
     .from('ops_aufgaben')
     .insert({
       organization_id: organizationId,
-      titel: `Monatsabschluss ${monat} blockiert: ${unvollstaendigAnzahl} Leistungsnachweise unvollständig`,
-      beschreibung:
-        `${unvollstaendigAnzahl} Leistungsnachweis(e) aus ${monat} stehen noch auf Entwurf/unvollständig. `
-        + `Der Monatsabschluss (POST /api/billing/monthly-closing) markiert Positionen ohne abgeschlossenen `
-        + `Nachweis als nicht abrechenbar — bitte vor dem Abschluss vervollständigen.`,
+      titel: ohneBeleg > 0 && unvollstaendigAnzahl > 0
+        ? `Monatsabschluss ${monat}: ${unvollstaendigAnzahl} unvollständig, ${ohneBeleg} ohne Unterschriftsbeleg`
+        : ohneBeleg > 0
+          ? `Monatsabschluss ${monat}: ${ohneBeleg} Leistungsnachweise ohne Unterschriftsbeleg`
+          : `Monatsabschluss ${monat} blockiert: ${unvollstaendigAnzahl} Leistungsnachweise unvollständig`,
+      beschreibung: [
+        unvollstaendigAnzahl > 0
+          ? `${unvollstaendigAnzahl} Leistungsnachweis(e) aus ${monat} stehen noch auf Entwurf/unvollständig. `
+            + `Der Monatsabschluss (POST /api/billing/monthly-closing) markiert Positionen ohne abgeschlossenen `
+            + `Nachweis als nicht abrechenbar — bitte vor dem Abschluss vervollständigen.`
+          : null,
+        // Der zweite Satz ist der wichtigere: diese Nachweise SEHEN fertig
+        // aus. Ohne Hinweis sucht niemand nach ihnen.
+        ohneBeleg > 0
+          ? `${ohneBeleg} Leistungsnachweis(e) aus ${monat} gelten als abgeschlossen oder unterschrieben, `
+            + `tragen aber KEINEN Unterschriftsbeleg. Der Sammelrechnungslauf überspringt sie mit `
+            + `„UNTERSCHRIFT_FEHLT" — die Leistung ist erbracht, eine Rechnung entsteht nicht. `
+            + `Prüfen mit: npm run verify:sammelrechnung (Punkt S13c).`
+          : null,
+      ].filter(Boolean).join('\n\n'),
       kategorie: 'abrechnung',
       prioritaet: 'hoch',
       status: 'offen',
       verantwortlich_id: verantwortlichId,
       erstellt_von: actorId,
       faellig_am: heuteBerlin(),
-      tags: ['monatsabschluss', 'nachweis_unvollstaendig'],
-      metadata: { monatsabschluss_monat: monat, unvollstaendig: unvollstaendigAnzahl, quelle: 'automatisch_monatsabschluss' },
+      tags: ohneBeleg > 0
+        ? ['monatsabschluss', 'nachweis_unvollstaendig', 'unterschrift_fehlt']
+        : ['monatsabschluss', 'nachweis_unvollstaendig'],
+      metadata: {
+        monatsabschluss_monat: monat,
+        unvollstaendig: unvollstaendigAnzahl,
+        ohne_beleg: ohneBeleg,
+        quelle: 'automatisch_monatsabschluss',
+      },
     })
     .select('id')
     .single()
 
   if (insErr || !aufgabe) {
     log.error('Anlage fehlgeschlagen', { errorMessage: insErr?.message })
-    return { monat, unvollstaendig: unvollstaendigAnzahl, aufgabeErstellt: false }
+    return { monat, unvollstaendig: unvollstaendigAnzahl, ohneBeleg, aufgabeErstellt: false }
   }
 
   await logAuditEvent({
     action: 'create', actorId, organizationId, entityType: 'ops_aufgabe', entityId: aufgabe.id,
-    details: { grund: 'monatsabschluss_unvollstaendig', monat, unvollstaendig: unvollstaendigAnzahl },
+    details: {
+      grund: ohneBeleg > 0 ? 'monatsabschluss_unterschrift_fehlt' : 'monatsabschluss_unvollstaendig',
+      monat, unvollstaendig: unvollstaendigAnzahl, ohne_beleg: ohneBeleg,
+    },
   }).catch(err => log.error('Audit fehlgeschlagen', { errorMessage: String(err) }))
 
-  return { monat, unvollstaendig: unvollstaendigAnzahl, aufgabeErstellt: true }
+  return { monat, unvollstaendig: unvollstaendigAnzahl, ohneBeleg, aufgabeErstellt: true }
 }
