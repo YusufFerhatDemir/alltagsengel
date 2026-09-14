@@ -119,6 +119,60 @@ export function statusFuerProofStatus(
   return STATUS_RANG[ziel] > istRang ? ziel : null
 }
 
+/** Der Ausschnitt, den die Rechnungs-RPC für die Unterschriftsfrage liest. */
+export interface Unterschriftsspur {
+  proof_status?: string | null
+  signature_hash?: string | null
+}
+
+/**
+ * Wertet `create_invoice_draft_atomic` diesen Nachweis als unterschrieben?
+ *
+ * Das ist eine Nachbildung, keine eigene Meinung. Die RPC zählt einen
+ * Nachweis als unsigniert, wenn
+ *
+ *     proof_status IS DISTINCT FROM 'UNTERSCHRIEBEN' AND signature_hash IS NULL
+ *
+ * — hier steht dieselbe Bedingung, verneint. Wer sie verschärft, lässt die
+ * Vorprüfung eine andere Menge melden als die, die die Datenbank
+ * anschliessend abrechnet.
+ *
+ * ── NICHT ZU VERWECHSELN ──────────────────────────────────────────────
+ * In diesem Repo stehen drei Fragen zur Unterschrift nebeneinander. Sie
+ * sehen gleich aus und sind es nicht:
+ *
+ *   `hatUnterschrift` (unten)         „muss hier noch jemand erinnert
+ *                                      werden?" — mild, Berichtsfrage.
+ *   `zaehltAlsUnterschrieben` (hier)  „was wird die Abrechnung tun?" —
+ *                                      die Regel der RPC, wörtlich.
+ *   `unterschriftBelegt`              „gibt es einen echten BELEG?" —
+ *   (lib/billing/nachweis-beleg.ts)    streng; `proof_status` zählt dort
+ *                                      ausdrücklich NICHT, weil eine
+ *                                      Pflegekraft ihn live selbst setzen
+ *                                      kann (siehe dortiger Kopf).
+ *
+ * Für eine Zeile mit `proof_status='UNTERSCHRIEBEN'` ohne Hash und ohne
+ * Unterschriftsbild antwortet diese Funktion `true` und `unterschriftBelegt`
+ * `false`. Beide haben recht: die Rechnung entsteht, und belegbar ist sie
+ * nicht. Genau diese Lücke schliesst der strengere Guard VOR der RPC.
+ *
+ * ── WOFÜR DIESE HIER DA IST ───────────────────────────────────────────
+ * Für jede Stelle, die dem Betrieb oder der Kundin ankündigt, was mit
+ * einem Nachweis passieren wird. Sie lag bis zum 14.09.2026 in vier
+ * Kopien vor und war in einer davon falsch: `app/kunde/leistungsnachweis`
+ * las das Statuswort `signed` statt der Belegspalten und meldete der
+ * Kundin „✓ Unterschrieben", während der Sammelrechnungslauf denselben
+ * Nachweis mit UNTERSCHRIFT_FEHLT übersprang. Live betraf das dreizehn
+ * Nachweise — die Kundin bekam keine Rechnung, ohne dass irgendwo etwas
+ * falsch aussah.
+ *
+ * Diese Datei hat KEINE Importe und ist deshalb von beiden Seiten
+ * benutzbar, Client wie Server.
+ */
+export function zaehltAlsUnterschrieben(zeile: Unterschriftsspur): boolean {
+  return zeile.proof_status === 'UNTERSCHRIEBEN' || zeile.signature_hash != null
+}
+
 /**
  * Ergänzt ein Update-Objekt für service_records um das synchrone status-Feld.
  *

@@ -39,6 +39,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { logger } from '@/lib/logger'
+import { zaehltAlsUnterschrieben } from '@/lib/leistungsnachweis/status-sync'
 
 const log = logger.child('signatur-nachweis')
 
@@ -102,7 +103,7 @@ export async function uebernimmSignaturInNachweis(
     return { art: 'fehlgeschlagen', grund: `Leistungsnachweis ${referenzId} nicht gefunden.` }
   }
 
-  if (nachweis.proof_status === 'UNTERSCHRIEBEN' || nachweis.signature_hash != null) {
+  if (zaehltAlsUnterschrieben(nachweis)) {
     return { art: 'bereits_belegt' }
   }
 

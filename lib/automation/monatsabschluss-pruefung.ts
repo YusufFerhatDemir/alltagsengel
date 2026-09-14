@@ -22,6 +22,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { logAuditEvent } from '@/lib/audit-log'
 import { ersterPdlDerOrg } from './org-empfaenger'
 import { heuteBerlin } from '@/lib/utils/timezone'
+import { zaehltAlsUnterschrieben, ohneStornierte } from '@/lib/leistungsnachweis/status-sync'
 import { logger } from '@/lib/logger'
 const log = logger.child('monatsabschluss-pruefung')
 
@@ -83,11 +84,20 @@ export async function pruefeMonatsabschlussVollstaendigkeit(
   // es nicht. Die Leistung ist erbracht, die Rechnung kommt nie, und keine
   // Liste zeigte es an.
   //
-  // Dieselbe Regel wie `istUnterschrieben` in
-  // lib/billing/core/sammelrechnung.ts: Beleg ist proof_status oder Hash.
+  // Gefragt wird mit der Regel der Rechnungs-RPC (`zaehltAlsUnterschrieben`),
+  // denn genau deren Urteil soll die Aufgabe ankuendigen. Das ist bewusst
+  // NICHT die Frage, die das Kundenportal stellt — dort zaehlt das
+  // Unterschriftsbild mit (siehe lib/kunde/leistungen.ts).
+  //
+  // Stornierte Nachweise bleiben draussen: sie stehen weiter auf 'signed'
+  // (STORNIERT hat kein status-Gegenstueck), werden aber nie abgerechnet.
+  // Sie als Mangel zu melden hiesse, den Betrieb einer Leistung
+  // hinterherzuschicken, die jemand ausdruecklich widerrufen hat. Dafuer
+  // muss `billing_status` mitgelesen werden — ohne die Spalte antwortet
+  // `istStorniert` immer mit false.
   const { data: fertige, error: belegErr } = await supabase
     .from('service_records')
-    .select('id, proof_status, signature_hash')
+    .select('id, proof_status, signature_hash, billing_status')
     .eq('organization_id', organizationId)
     .gte('date', periodStart)
     .lte('date', periodEnd)
@@ -96,9 +106,7 @@ export async function pruefeMonatsabschlussVollstaendigkeit(
   if (belegErr) {
     log.error('Belegprüfung fehlgeschlagen', { errorMessage: belegErr.message })
   }
-  const ohneBeleg = (fertige ?? []).filter(
-    r => r.proof_status !== 'UNTERSCHRIEBEN' && r.signature_hash == null,
-  ).length
+  const ohneBeleg = ohneStornierte(fertige ?? []).filter(r => !zaehltAlsUnterschrieben(r)).length
 
   if (unvollstaendigAnzahl === 0 && ohneBeleg === 0) {
     return { monat, unvollstaendig: 0, ohneBeleg: 0, aufgabeErstellt: false }

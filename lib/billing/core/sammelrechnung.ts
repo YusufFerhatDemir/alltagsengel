@@ -60,7 +60,7 @@ import { budgetTypeToRechtsgrundlage, TarifNichtVerifiziertError, type TarifStat
 import { tarifLeistungsart } from '../leistungsarten';
 import { logBillingAction } from './audit';
 import { validateTransition, isValidInvoiceStatus, type InvoiceStatus } from './status-machine';
-import { ohneStornierte } from '@/lib/leistungsnachweis/status-sync';
+import { ohneStornierte, zaehltAlsUnterschrieben } from '@/lib/leistungsnachweis/status-sync';
 import type { UeberspringCode } from './sammelrechnung-codes';
 
 // ---------------------------------------------------------------------------
@@ -259,11 +259,6 @@ interface TarifRow {
   gueltig_ab: string;
   gueltig_bis: string | null;
   tarif_status: TarifStatus;
-}
-
-/** Ein Nachweis gilt als unterschrieben — identisch zur Pruefung in der RPC. */
-function istUnterschrieben(r: SammelrechnungNachweis): boolean {
-  return r.proof_status === 'UNTERSCHRIEBEN' || r.signature_hash != null;
 }
 
 export function monatsZeitraum(periodMonth: string): { von: string; bis: string } {
@@ -483,7 +478,7 @@ export function pruefeGruppe(
   // ── 2. Unterschriftsnachweis ──
   // Vor der Tarifpruefung: eine fehlende Unterschrift laesst die RPC ohnehin
   // scheitern, und der Hinweis "unterschreiben lassen" ist der konkretere.
-  const ohneUnterschrift = rows.filter(r => !istUnterschrieben(r));
+  const ohneUnterschrift = rows.filter(r => !zaehltAlsUnterschrieben(r));
   if (ohneUnterschrift.length > 0) {
     return {
       ...basis,

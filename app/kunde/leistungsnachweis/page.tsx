@@ -5,7 +5,10 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
 import { euro, formatDate, formatTime, fullName } from '@/lib/admin/ops'
-import { budgetTypeLabel, serviceTypeLabel, fmtDuration, MONTH_NAMES } from '@/lib/kunde/leistungen'
+import {
+  budgetTypeLabel, serviceTypeLabel, fmtDuration, MONTH_NAMES,
+  nachweisstand, wartetAufUnterschrift, NACHWEISSTAND_LABEL, type Nachweisstand,
+} from '@/lib/kunde/leistungen'
 
 interface RecordRow {
   id: string
@@ -19,11 +22,22 @@ interface RecordRow {
   status: string
   caregiver_initials: string | null
   client_signature: string | null
+  proof_status: string | null
+  signature_hash: string | null
+  billing_status: string | null
   caregiver: { first_name?: string | null; last_name?: string | null } | null
 }
 
-function isSigned(r: RecordRow): boolean {
-  return !!r.client_signature || r.status === 'signed' || r.status === 'invoiced'
+/**
+ * Etikettfarben je Stand. Text und Regel liegen in lib/kunde/leistungen.ts —
+ * dort steht auch, warum die Kundin eine andere Frage gestellt bekommt als
+ * der Sammelrechnungslauf.
+ */
+const STAND_FARBE: Record<Nachweisstand, { farbe: string; flaeche: string; rand: string }> = {
+  abgerechnet:    { farbe: 'var(--ink3)',  flaeche: 'rgba(120,120,120,.10)', rand: '1px solid rgba(120,120,120,.25)' },
+  unterschrieben: { farbe: 'var(--green)', flaeche: 'rgba(92,184,130,.12)',  rand: '1px solid rgba(92,184,130,.3)' },
+  offen:          { farbe: '#E8A000',      flaeche: 'rgba(232,160,0,.12)',   rand: '1px solid rgba(232,160,0,.3)' },
+  storniert:      { farbe: 'var(--ink4)',  flaeche: 'rgba(120,120,120,.08)', rand: '1px solid var(--border)' },
 }
 
 function caregiverLabel(r: RecordRow): string {
@@ -55,7 +69,7 @@ export default function KundeLeistungsnachweisPage() {
       // Entwürfe der Betreuungskraft werden nicht angezeigt.
       const { data, error: recErr } = await supabase
         .from('service_records')
-        .select('id, date, start_time, end_time, duration_minutes, service_type, budget_type, amount, status, caregiver_initials, client_signature, caregiver:caregivers(first_name, last_name)')
+        .select('id, date, start_time, end_time, duration_minutes, service_type, budget_type, amount, status, caregiver_initials, client_signature, proof_status, signature_hash, billing_status, caregiver:caregivers(first_name, last_name)')
         .neq('status', 'draft')
         .order('date', { ascending: false })
         .limit(500)
@@ -160,6 +174,9 @@ export default function KundeLeistungsnachweisPage() {
               totals.set(key, t)
             }
             const monthTotal = monthRecords.reduce((s, r) => s + (Number(r.amount) || 0), 0)
+            // Offene Unterschriften zusammengefasst: einzeln steht es an jedem
+            // Einsatz, aber die Handlung ("da fehlt noch was") gehoert nach oben.
+            const offen = monthRecords.filter(wartetAufUnterschrift).length
 
             return (
               <div key={m} style={{ marginBottom: 20 }}>
@@ -168,8 +185,22 @@ export default function KundeLeistungsnachweisPage() {
                   <div style={{ fontSize: 12, color: 'var(--ink4)' }}>{monthRecords.length} Einsätze · <span style={{ color: 'var(--gold2)', fontWeight: 700 }}>{euro(monthTotal)}</span></div>
                 </div>
 
+                {offen > 0 && (
+                  <div style={{
+                    background: 'rgba(232,160,0,.08)', border: '1px solid rgba(232,160,0,.25)',
+                    borderRadius: 12, padding: '9px 12px', marginBottom: 8,
+                    fontSize: 12, color: 'var(--ink3)', lineHeight: 1.45,
+                  }}>
+                    {offen === 1
+                      ? 'Für einen Einsatz in diesem Monat liegt noch keine Unterschrift vor.'
+                      : `Für ${offen} Einsätze in diesem Monat liegt noch keine Unterschrift vor.`}
+                    {' '}Ihre Betreuungskraft holt sie beim nächsten Termin nach.
+                  </div>
+                )}
+
                 {monthRecords.map(r => {
-                  const signed = isSigned(r)
+                  const stand = nachweisstand(r)
+                  const farbe = STAND_FARBE[stand]
                   return (
                     <div key={r.id} style={{
                       background: 'var(--white)', borderRadius: 14, padding: 14,
@@ -194,11 +225,9 @@ export default function KundeLeistungsnachweisPage() {
                           <span style={{
                             display: 'inline-block', marginTop: 6, padding: '2px 8px',
                             borderRadius: 20, fontSize: 10, fontWeight: 600, whiteSpace: 'nowrap',
-                            color: signed ? 'var(--green)' : '#E8A000',
-                            background: signed ? 'rgba(92,184,130,.12)' : 'rgba(232,160,0,.12)',
-                            border: signed ? '1px solid rgba(92,184,130,.3)' : '1px solid rgba(232,160,0,.3)',
+                            color: farbe.farbe, background: farbe.flaeche, border: farbe.rand,
                           }}>
-                            {signed ? '✓ Unterschrieben' : 'Ohne Unterschrift'}
+                            {NACHWEISSTAND_LABEL[stand]}
                           </span>
                         </div>
                       </div>
