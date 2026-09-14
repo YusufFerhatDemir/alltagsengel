@@ -94,7 +94,8 @@
     "lint:45a": "tsx scripts/lint-45a-aussagen.ts",
     "lint:pii": "tsx scripts/lint-pii-dateien.ts",
     "lint:stilles-update": "tsx scripts/lint-stilles-update.ts",
-    "verify:vertrag-pdf": "tsx scripts/verify-vertrag-pdf.ts"
+    "verify:vertrag-pdf": "tsx scripts/verify-vertrag-pdf.ts",
+    "verify:bewerberfunnel": "tsx scripts/verify-bewerberfunnel-live.ts"
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",

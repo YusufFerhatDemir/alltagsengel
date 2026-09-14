@@ -8,6 +8,7 @@ import { useMis } from '@/lib/mis/MisContext'
 import { createApplicant, createJobPosting, updateApplicantStatus, updateApplicantRating, deleteApplicant, updatePostingStatus, deleteJobPosting } from './actions'
 import { logger } from '@/lib/logger'
 import { klickbar } from '@/lib/a11y'
+import { bewerbungHinweis, BEWERBUNG_VERWALTUNG_PFAD, type BewerbungUebersicht } from '@/lib/bewerbung/quellen'
 const log = logger.child('mis:recruiting')
 
 // ===== Status-Definitionen =====
@@ -83,6 +84,19 @@ export default function RecruitingPage() {
     title: '', description: '', location: 'Hagen',
     position_type: 'Alltagsbegleiter/in', channels: [] as string[],
   })
+
+  // Die zweite Bewerberquelle. Ohne sie zeigt diese Seite eine stille
+  // Null — siehe lib/bewerbung/quellen.ts.
+  const [webBewerbungen, setWebBewerbungen] = useState<BewerbungUebersicht | null>(null)
+
+  useEffect(() => {
+    let abgebrochen = false
+    fetch('/api/bewerbungen/uebersicht')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (!abgebrochen && d) setWebBewerbungen(d as BewerbungUebersicht) })
+      .catch(() => { /* Hinweis entfaellt, Seite bleibt nutzbar */ })
+    return () => { abgebrochen = true }
+  }, [])
 
   useEffect(() => { loadAll() }, [])
 
@@ -222,10 +236,42 @@ export default function RecruitingPage() {
         }
       />
 
+      {/* ── Die zweite Bewerberquelle ──────────────────────────────────
+          Diese Seite fuehrt NUR von Hand erfasste Bewerber
+          (mis_applicants). Die Bewerbungen ueber das Website-Formular
+          liegen in lead_inquiries und werden in /admin/applications
+          gefuehrt. Ohne diesen Hinweis liest sich eine leere Tabelle hier
+          als „keine Bewerbungen" — am 14.09.2026 waren es 36, davon 35
+          unbearbeitet. */}
+      {webBewerbungen && (
+        <Card>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 9, flexShrink: 0,
+              background: `${BRAND.info}20`, color: BRAND.info,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <MIcon name="inbox" size={16} />
+            </div>
+            <div style={{ fontSize: 13, color: BRAND.text, lineHeight: 1.5 }}>
+              {bewerbungHinweis(webBewerbungen)}
+              {webBewerbungen.darfSehen && (webBewerbungen.offen ?? 0) > 0 && (
+                <>
+                  {' '}
+                  <a href={BEWERBUNG_VERWALTUNG_PFAD} style={{ color: BRAND.gold, fontWeight: 600 }}>
+                    Dort öffnen
+                  </a>
+                </>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* KPI Row */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 16 }}>
         {[
-          { label: 'Offene Bewerbungen', value: openApplicants, icon: 'inbox', color: BRAND.gold },
+          { label: 'Offen (manuell erfasst)', value: openApplicants, icon: 'inbox', color: BRAND.gold },
           { label: 'Ø Bearbeitungszeit', value: `${avgDays} Tage`, icon: 'clock', color: BRAND.info },
           { label: 'Einstellungsquote', value: `${hireRate}%`, icon: 'trending', color: BRAND.success },
           { label: 'Aktive Stellen', value: activePostings, icon: 'briefcase', color: '#8B5CF6' },
@@ -257,7 +303,7 @@ export default function RecruitingPage() {
           {loading ? (
             <Card><div style={{ textAlign: 'center', padding: 40, color: BRAND.muted }}>Lade Bewerbungen...</div></Card>
           ) : filtered.length === 0 ? (
-            <EmptyState icon="userPlus" title="Keine Bewerber" description="Fügen Sie einen neuen Bewerber hinzu, um die Pipeline zu starten." />
+            <EmptyState icon="userPlus" title="Keine manuell erfassten Bewerber" description="Diese Liste führt Bewerber aus Arbeitsagentur, Indeed und Empfehlungen. Bewerbungen über das Website-Formular stehen in der Verwaltung." />
           ) : (
             <Card noPad>
               <DataTable
