@@ -206,13 +206,49 @@ export const POST = withTracking(async function POST(req: NextRequest) {
 
   const isVP = service_type === 'verhinderungspflege' || service_type === 'verhinderung'
   const budgetCheck = await pruefeBudget(admin, client_id, organizationId, isVP ? 'verhinderungspflege' : undefined)
-  if (budgetCheck.blockiert && !body.force_override) {
-    return NextResponse.json({
-      error: `Budget-Blockierung: ${budgetCheck.warnung}`,
-      hinweis: 'Mit force_override: true kann die Zuweisung erzwungen werden.',
-    }, { status: 422 })
+
+  // ── Die Budgetsperre ist eine GELDENTSCHEIDUNG ────────────────────
+  //
+  // BEFUND (14.09.2026, Block 33): `force_override` hing fuer ALLE Riegel
+  // dieser Route an `personal.schreiben` — mit der Begruendung
+  // „Uebersteuern einer fehlenden Einsatzfreigabe ist eine
+  // Personalentscheidung". Fuer die Einsatz- und Klientenfreigabe stimmt
+  // das. Fuer das Budget nicht.
+  //
+  // Was am Budgetdeckel haengt, ist Geld: der Ueberschuss wandert im
+  // Rechnungsweg auf den PRIVATANTEIL des Klienten
+  // (lib/billing/core/invoice-engine.ts). Ein uebersteuerter Deckel
+  // erzeugt also eine private Forderung.
+  //
+  // `pdl` traegt `personal.schreiben`, aber ausdruecklich NICHT
+  // `abrechnung.schreiben` — die Rollenmatrix sagt woertlich: „Rechnungen
+  // darf sie einsehen …, aber nicht erzeugen oder aendern."
+  // (lib/auth/rollen.ts). Ueber diesen Weg konnte sie genau das
+  // ausloesen, was ihr verwehrt ist.
+  //
+  // Deshalb: fuer die Budgetsperre reicht `personal.schreiben` nicht.
+  if (budgetCheck.blockiert) {
+    if (!body.force_override) {
+      return NextResponse.json({
+        error: `Budget-Blockierung: ${budgetCheck.warnung}`,
+        hinweis: 'Mit force_override: true kann die Zuweisung erzwungen werden — dafür wird abrechnung.schreiben benötigt.',
+      }, { status: 422 })
+    }
+    if (!quellenDuerfen(auth.quellen, 'abrechnung.schreiben')) {
+      return NextResponse.json({
+        error: 'Die Budget-Blockierung zu übersteuern erzeugt eine private Forderung und benötigt abrechnung.schreiben.',
+        budget_problem: budgetCheck.warnung,
+      }, { status: 403 })
+    }
+    // Ausdruecklich als UEBERSTEUERUNG vermerkt, nicht als blosse
+    // Auslastungswarnung: vorher landete hier nur „Budget zu 97 %
+    // ausgeschoepft" im Audit-Trail — und damit war im Nachhinein nicht
+    // unterscheidbar, ob jemand eine SPERRE gebrochen oder lediglich eine
+    // Warnung gesehen hat. Das sind zwei sehr verschiedene Vorgaenge.
+    warnungen.push(`Budgetsperre übersteuert: ${budgetCheck.warnung ?? 'Budget erschöpft'}`)
+  } else if (budgetCheck.warnung) {
+    warnungen.push(budgetCheck.warnung)
   }
-  if (budgetCheck.warnung) warnungen.push(budgetCheck.warnung)
 
   if (isVP) {
     const vpCheck = await pruefeVPBudget(admin, client_id, organizationId)
