@@ -114,7 +114,7 @@ export async function personaldokumentAbgewehrt(
 ): Promise<NextResponse | null> {
   if (ctx.darf('personal.lesen')) return null
 
-  const { data } = await dienstClient
+  const { data, error } = await dienstClient
     .from('akten_dokumente')
     .select('caregiver_id')
     // Der Mandanten-Fence muss von Hand stehen: der Dienstschluessel
@@ -122,6 +122,26 @@ export async function personaldokumentAbgewehrt(
     .eq('organization_id', ctx.organizationId)
     .eq('id', dokumentId)
     .maybeSingle()
+
+  // BEFUND (Block 70): der Lesefehler wurde verworfen. `data` ist dann
+  // null, `data?.caregiver_id` undefined — und diese Funktion antwortete
+  // mit `null`, also „Zugriff darf weitergehen". Ein Verbindungsabbruch,
+  // eine Schemadrift oder eine Zeitueberschreitung reichten damit aus, um
+  // ein PERSONALDOKUMENT an jemanden auszuliefern, dem `personal.lesen`
+  // fehlt. Der Abwehrzweig hing an einer Antwort, die es nie gab.
+  //
+  // Der lange Absatz ueber dieser Funktion wiegt eine Schwaeche ab, die
+  // heute nicht ausnutzbar ist. Die hier war es.
+  //
+  // 503 und nicht 403: es ist keine Aussage ueber die Berechtigung,
+  // sondern darueber, dass sie gerade nicht zu pruefen war. „Nicht
+  // nachsehen koennen" ist kein Freibrief — und auch keine Ablehnung.
+  if (error) {
+    return NextResponse.json(
+      { error: 'Die Zuordnung des Dokuments war gerade nicht zu prüfen. Bitte in Kürze erneut versuchen.' },
+      { status: 503 },
+    )
+  }
 
   if (data?.caregiver_id) {
     return NextResponse.json(
