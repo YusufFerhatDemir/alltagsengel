@@ -192,6 +192,13 @@ ALTER TABLE public.service_records
   ADD COLUMN IF NOT EXISTS signature_hash TEXT,                   -- 20260706_monatsabschluss…
   ADD COLUMN IF NOT EXISTS client_signed_at TIMESTAMPTZ,          -- 20260706_monatsabschluss…
   ADD COLUMN IF NOT EXISTS client_signer_name TEXT,               -- 20260706_monatsabschluss…
+  -- Block 36: client_signer_role fehlte hier, obwohl live vorhanden — und
+  -- ein Update auf eine unbekannte Spalte scheitert in Postgres KOMPLETT
+  -- (42703), nicht nur im fehlenden Feld. Der CHECK kommt gleich mit: live
+  -- laesst er nur KUNDE/ANGEHOERIGER/VERTRETER zu, und ohne ihn haette das
+  -- Testschema das Vokabular der Native-Route ('client') klaglos
+  -- geschluckt — die Produktion nicht.
+  ADD COLUMN IF NOT EXISTS client_signer_role TEXT,               -- 20260706_monatsabschluss…
   ADD COLUMN IF NOT EXISTS caregiver_confirmed_at TIMESTAMPTZ,    -- 20260706_monatsabschluss…
   ADD COLUMN IF NOT EXISTS is_locked BOOLEAN DEFAULT false,       -- 20260706_monatsabschluss…
   -- 20260808200000: billing_status. Fehlte hier, obwohl live vorhanden — und
@@ -200,6 +207,15 @@ ALTER TABLE public.service_records
   -- Leistungsnachweises; die status-Spalte bleibt dabei auf signed stehen.
   ADD COLUMN IF NOT EXISTS billing_status TEXT DEFAULT 'OFFEN',    -- 20260808200000
   ADD COLUMN IF NOT EXISTS bundesland TEXT;                       -- 20260808120002
+
+-- service_records_client_signer_role_check — wortgleich zur Produktion.
+DO $ktt$ BEGIN
+  ALTER TABLE public.service_records
+    ADD CONSTRAINT service_records_client_signer_role_check
+    CHECK (client_signer_role IS NULL
+           OR client_signer_role = ANY (ARRAY['KUNDE'::text, 'ANGEHOERIGER'::text, 'VERTRETER'::text]));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $ktt$;
 
 -- billing_tariffs ─────────────────────────────────────────────────────
 -- 20260807120000: ist_aktiv, 20260831040000: tarif_status (Fail-Closed),

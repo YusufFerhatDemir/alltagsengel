@@ -9,6 +9,7 @@ import {
 } from '@/lib/admin/ops'
 import { StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
 import SignaturePad from '@/components/admin/SignaturePad'
+import { istBilddaten } from '@/lib/leistungsnachweis/status-sync'
 import DialogOverlay from '@/components/DialogOverlay'
 import { klickbareZeile } from '@/lib/a11y'
 
@@ -621,13 +622,25 @@ function LeistungsnachweisDigitalInner() {
                   </div>
                 )}
 
-                {detailRecord.client_signature && (
+                {(detailRecord.client_signature || detailRecord.client_signer_name) && (
                   <div style={{ marginTop: 12 }}>
                     <div style={detailLabel}>Klienten-Unterschrift</div>
-                    <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 6, padding: 8, display: 'inline-block' }}>
-                      { }
-                      <img src={detailRecord.client_signature} alt="Unterschrift" style={{ maxWidth: 300, maxHeight: 120 }} />
-                    </div>
+                    {/*
+                      Nur echte Bilddaten kommen ins <img>. Auf dem Tablet
+                      unterschriebene Nachweise fuehren ihr Bild in
+                      `service_signatures`; im Nachweis steht dann nur der
+                      Name. Ein `<img src="Erika Muster">` waere ein
+                      kaputtes Bild — und bis Block 36 stand genau das dort.
+                    */}
+                    {istBilddaten(detailRecord.client_signature) ? (
+                      <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 6, padding: 8, display: 'inline-block' }}>
+                        <img src={detailRecord.client_signature as string} alt="Unterschrift" style={{ maxWidth: 300, maxHeight: 120 }} />
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 13, color: 'var(--ink3)' }}>
+                        Digital unterschrieben — das Unterschriftsbild liegt in der Signaturakte.
+                      </div>
+                    )}
                     {detailRecord.client_signer_name && (
                       <div style={{ fontSize: 12, color: 'var(--ink4)', marginTop: 4 }}>
                         Unterzeichner: {detailRecord.client_signer_name}

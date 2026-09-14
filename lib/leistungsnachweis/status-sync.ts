@@ -350,3 +350,22 @@ export function hatUnterschrift(rec: UnterschriftFelder | null | undefined): boo
   const s = String(cs).trim()
   return s !== '' && s.toLowerCase() !== 'false'
 }
+
+
+/**
+ * Traegt dieser Wert echte Bilddaten — oder nur Text?
+ *
+ * BEFUND (14.09.2026, Block 36): `client_signature` ist das Feld fuer das
+ * Unterschriftsbild, aber der Signaturweg der Native-App legte dort den
+ * KLARNAMEN des Signatars ab. Die Admin-Detailansicht rendert das Feld als
+ * `<img src={…}>` — ein Name darin ergibt ein kaputtes Bild.
+ *
+ * Der Schreibweg ist behoben (der Name steht jetzt in
+ * `client_signer_name`). Diese Pruefung schuetzt die Anzeige zusaetzlich:
+ * im Bestand stehen Zeilen aus beiden Zeiten, und eine Oberflaeche sollte
+ * nicht darauf angewiesen sein, dass jeder Schreibweg sich benimmt.
+ */
+export function istBilddaten(wert: string | null | undefined): boolean {
+  const s = String(wert ?? '').trim()
+  return s.startsWith('data:image/') || s.startsWith('http://') || s.startsWith('https://')
+}

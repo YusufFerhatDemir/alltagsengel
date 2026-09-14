@@ -20,7 +20,7 @@
  * Postgres.
  */
 import { describe, it, expect } from 'vitest'
-import { uebernimmSignaturInNachweis, uebernimmOderMelde, NACHWEIS_TABELLE } from '@/lib/signaturen/nachweis-uebernahme'
+import { uebernimmSignaturInNachweis, uebernimmOderMelde, NACHWEIS_TABELLE, SIGNER_ROLLEN } from '@/lib/signaturen/nachweis-uebernahme'
 import { erstelleFakeSupabase, hatFilter, hatOrgFence, type FakeAufruf } from '../helpers/supabase-fake'
 
 const ORG = '00000000-0000-4000-8000-000460629986'
@@ -56,9 +56,39 @@ describe('Wann gestempelt wird', () => {
     // ein halber Zustand — unterschrieben ohne Hash und ohne Sperre.
     expect(p.proof_status).toBe('UNTERSCHRIEBEN')
     expect(p.client_signed_at).toBe(BASIS.signiertAm)
+
+    // Block 36: der Name gehoert in die NAMENSSPALTE. Vorher stand er in
+    // `client_signature` — dem Feld fuer das Unterschriftsbild, das die
+    // Admin-Detailansicht als `<img src={…}>` rendert. Ein Klarname darin
+    // ergibt ein kaputtes Bild.
+    expect(p.client_signer_name).toBe('Erika Mustermann')
+
+    // `client_signature` bleibt gesetzt — und das ist tragend, nicht
+    // nachlaessig: `enforce_unterschrift_beleg` laesst
+    // proof_status='UNTERSCHRIEBEN' nur durch, wenn ENTWEDER
+    // client_signature mit client_signed_at vorliegt ODER eine Zeile in
+    // service_signatures. Der Signaturdienst schreibt nicht nach
+    // service_signatures — fuer ihn ist dieses Feld der einzige Beleg,
+    // den der Trigger akzeptiert. Ein Entfernen riss beim Bau von
+    // Block 36 die ganze Kette.
     expect(p.client_signature).toBe('Erika Mustermann')
+
+    // 'KUNDE', nicht 'client': die Spalte traegt einen CHECK mit deutschem
+    // Vokabular (KUNDE/ANGEHOERIGER/VERTRETER). Das Vokabular der
+    // Native-Route ungeprueft durchzureichen liesse das GANZE Update am
+    // CHECK scheitern — die Unterschrift erreichte den Nachweis dann gar
+    // nicht mehr.
+    expect(p.client_signer_role).toBe('KUNDE')
+
     expect(hatOrgFence(update, ORG)).toBe(true)
     expect(hatFilter(update, 'eq', 'id', NACHWEIS)).toBe(true)
+  })
+
+  it('schreibt nur Rollenwerte, die der CHECK der Spalte zulaesst', async () => {
+    const f = fake({ id: NACHWEIS, proof_status: 'ENTWURF', signature_hash: null, is_locked: false })
+    await uebernimmSignaturInNachweis(f.client as never, BASIS)
+    const p = f.auf('service_records').find(a => a.operation === 'update')?.payload as Record<string, unknown>
+    expect(SIGNER_ROLLEN).toContain(p.client_signer_role as string)
   })
 
   it('rührt nichts an, wenn die Referenz nicht auf einen Nachweis zeigt', async () => {
