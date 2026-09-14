@@ -297,7 +297,7 @@ export async function pruefeVPBudget(
   const vpResult = await pruefeBudget(supabase, clientId, organizationId, 'verhinderungspflege')
 
   const year = parseInt(heuteBerlin().slice(0, 4), 10)
-  const { data: budget } = await supabase
+  const { data: budget, error: budgetFehler } = await supabase
     .from('client_budgets')
     .select('used_amount, combined_used_amount')
     .eq('client_id', clientId)
@@ -305,8 +305,18 @@ export async function pruefeVPBudget(
     .eq('year', year)
     .maybeSingle()
 
+  // BEFUND (Block 76): dieselbe Tabelle, dieselben Filter, zwei
+  // Massstaebe. `pruefeBudget` oben ist bei einem Lesefehler ausdruecklich
+  // fail-closed („eine nicht lesbare Budgetzeile ist kein freies
+  // Budget"); hier wurde er verworfen, und `null` heisst beim Aufrufer
+  // „keine Beanstandung am Kombinationsbudget". Der gemeinsame Deckel aus
+  // VP und KZP ist aber die gesetzliche Obergrenze — „nicht nachsehen
+  // koennen" ist keine Auskunft darueber.
   let vpKzpKombiniertWarnung: string | null = null
-  if (budget) {
+  if (budgetFehler) {
+    vpKzpKombiniertWarnung =
+      `VP+KZP Kombinationsbudget nicht prüfbar (${budgetFehler.message}) — bitte von Hand prüfen.`
+  } else if (budget) {
     const combinedUsed = Number(budget.combined_used_amount ?? 0)
     if (combinedUsed > VP_KZP_KOMBINIERT_EUR) {
       vpKzpKombiniertWarnung =

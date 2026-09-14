@@ -172,7 +172,7 @@ export const PATCH = withTracking(async function PATCH(
       // lib/budget/auto-budget.ts). Der alte Filter ließ die Abfrage mit
       // 42703 scheitern, der Hinweis auf ein verbrauchtes VP-Budget blieb
       // bei jeder Herabstufung aus.
-      const { data: vpBudget } = await admin
+      const { data: vpBudget, error: vpBudgetFehler } = await admin
         .from('client_budgets')
         .select('id, combined_annual_amount, combined_used_amount')
         .eq('client_id', id)
@@ -180,7 +180,25 @@ export const PATCH = withTracking(async function PATCH(
         .eq('year', parseInt(berlinParts(new Date()).year, 10))
         .maybeSingle()
 
-      if (vpBudget && Number(vpBudget.combined_annual_amount ?? 0) > 0) {
+      // BEFUND (Block 76): der Lesefehler wurde verworfen — und damit
+      // blieb der Hinweis genauso aus wie vorher beim 42703. Der
+      // Kommentar darueber haelt den Schaden bereits fest („der Hinweis
+      // auf ein verbrauchtes VP-Budget blieb bei jeder Herabstufung
+      // aus"); behoben wurden damals die Spaltennamen, nicht der stille
+      // Kanal. Jede andere Stoerung haette dasselbe bewirkt.
+      //
+      // Abgebrochen wird NICHT: der Pflegegrad ist zu diesem Zeitpunkt
+      // bereits geschrieben, und ein 500 machte aus einer erledigten
+      // Aenderung eine scheinbar gescheiterte. Der Hinweis sagt
+      // stattdessen, dass NICHT nachgesehen werden konnte.
+      if (vpBudgetFehler) {
+        hinweise.push(
+          `Herabstufung auf PG ${neuerPg}: Ob ein VP/KZP-Budget besteht, war nicht feststellbar `
+          + `(${vpBudgetFehler.message}). Der Anspruch auf Verhinderungs-/Kurzzeitpflege `
+          + `(ab PG ${version.minPflegegradVpKzp}) entfällt ab dem Änderungsdatum — `
+          + 'bitte das Budget von Hand prüfen.'
+        )
+      } else if (vpBudget && Number(vpBudget.combined_annual_amount ?? 0) > 0) {
         const verbraucht = Number(vpBudget.combined_used_amount ?? 0)
         hinweise.push(
           `Herabstufung auf PG ${neuerPg}: Der Anspruch auf Verhinderungs-/Kurzzeitpflege (ab PG ${version.minPflegegradVpKzp}) entfällt ab dem Änderungsdatum. ` +
