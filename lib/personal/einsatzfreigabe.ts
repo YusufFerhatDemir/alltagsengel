@@ -155,14 +155,24 @@ export async function pruefeClientFreigabe(
   }
 
   if (einsatzDatum) {
-    const { data: vertraege } = await supabase
+    const { data: vertraege, error: vertraegeFehler } = await supabase
       .from('akten_vertraege')
       .select('id, status, vertragsende')
       .eq('client_id', clientId)
       .eq('organization_id', organizationId)
       .in('status', ['aktiv', 'unterschrieben'])
 
-    if (!vertraege || vertraege.length === 0) {
+    // BEFUND (Block 93): der Lesefehler wurde verworfen, und die leere
+    // Liste meldete „Kein aktiver Vertrag vorhanden". Fail-closed — der
+    // Einsatz wird also nicht freigegeben, das ist richtig — aber mit
+    // einer Aussage ueber den Vertragsbestand, die niemand geprueft hat.
+    // Wer ihr folgt, sucht nach einem Vertrag, der da ist.
+    if (vertraegeFehler) {
+      probleme.push(
+        `Vertragslage nicht prüfbar (${vertraegeFehler.message}) — Einsatz nicht freigegeben. `
+        + 'Ob ein Vertrag besteht, wurde NICHT festgestellt.',
+      )
+    } else if (!vertraege || vertraege.length === 0) {
       probleme.push('Kein aktiver Vertrag vorhanden')
     } else {
       const hatGueltig = vertraege.some(v =>

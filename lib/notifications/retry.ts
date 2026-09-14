@@ -394,12 +394,29 @@ export async function offeneZustellungen(
 
     const erledigt = new Set<string>()
     if (korrelationen.length > 0) {
-      const { data: erfolge } = await client
+      // BEFUND (Block 93): diese Abfrage sammelt, was BEREITS zugestellt
+      // ist. Ihr Fehler wurde verworfen — `erledigt` blieb dann leer, und
+      // der Wiederholungslauf schickte Nachrichten ERNEUT, die schon
+      // angekommen sind. An Kunden und Engel.
+      //
+      // Die Abfrage unmittelbar darunter prueft ihren Fehler
+      // (`if (!totFehler)`). Dieselbe Funktion, zwei Massstaebe.
+      //
+      // Leere Rueckgabe statt halber Menge: der Lauf holt beim naechsten
+      // Takt nach, die offenen Zustellungen stehen ja weiterhin da. Eine
+      // doppelte Nachricht laesst sich nicht zuruecknehmen.
+      const { data: erfolge, error: erfolgeFehler } = await client
         .from('notification_delivery_log')
         .select('correlation_id, channel')
         .eq('organization_id', organizationId)
         .in('status', ['sent', 'delivered'])
         .in('correlation_id', korrelationen)
+      if (erfolgeFehler) {
+        log.warn('Bereits zugestellte Vorgaenge nicht lesbar — dieser Takt wiederholt nichts', {
+          errorMessage: erfolgeFehler.message,
+        })
+        return []
+      }
       for (const e of erfolge ?? []) {
         erledigt.add(`${e.correlation_id}:${e.channel}`)
       }
