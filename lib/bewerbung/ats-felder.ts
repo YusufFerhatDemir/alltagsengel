@@ -279,6 +279,20 @@ export function mitAtsFeldern(daten: unknown, neu: AtsFelder): Record<string, un
  * hängt daran die Einsatzfreigabe.
  *
  * Wer das ändern will, braucht zuerst die Belegkette — nicht diese Zeile.
+ *
+ * ── WO DIE BELEGKETTE INZWISCHEN VERLANGT WIRD ───────────────────────
+ *
+ * Der Satz „Bei § 45a hängt daran die Einsatzfreigabe" war bis Block 29
+ * ein Versprechen ohne Deckung: `sammleVoraussetzungen` in
+ * lib/personal/einsatzfreigabe.ts prüfte nur, ob eine Zeile mit passendem
+ * Titel und `pflicht = true` existierte. Eine von Hand angelegte
+ * Qualifikation ohne Dokument und ohne Prüfvermerk gab die Freigabe.
+ *
+ * Seit Block 29 verlangt lib/personal/pflichtnachweis.ts für jeden
+ * Pflichtnachweis `dokument_id` UND `verifiziert_am` + `verifiziert_von`.
+ * Der Riegel hier bleibt trotzdem, was er ist: die ATS-Felder sind nach
+ * wie vor Selbstauskunft, und eine Bewerbung wird nicht dadurch geprüft,
+ * dass es anderswo eine geprüfte Qualifikation gibt.
  */
 export function darfAlsVerifiziertGelten(_felder: AtsFelder): false {
   return false

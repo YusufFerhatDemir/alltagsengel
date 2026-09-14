@@ -188,8 +188,8 @@ const LAENGST_ABGELAUFEN = '2020-01-01'
 
 function vollstaendigeQuals() {
   return [
-    { id: 'q-1', title: 'Erweitertes Führungszeugnis', valid_until: HEUTE_PLUS, einsatzrelevant: true, pflicht: true },
-    { id: 'q-2', title: 'Erste Hilfe Kurs', valid_until: HEUTE_PLUS, einsatzrelevant: true, pflicht: true },
+    { id: 'q-1', title: 'Erweitertes Führungszeugnis', valid_until: HEUTE_PLUS, einsatzrelevant: true, pflicht: true, qualification_type: 'fuehrungszeugnis', dokument_id: 'dok-1', verifiziert_am: '2026-09-01T09:00:00Z', verifiziert_von: 'pruefer-1' },
+    { id: 'q-2', title: 'Erste Hilfe Kurs', valid_until: HEUTE_PLUS, einsatzrelevant: true, pflicht: true, qualification_type: 'erste_hilfe', dokument_id: 'dok-2', verifiziert_am: '2026-09-01T09:00:00Z', verifiziert_von: 'pruefer-1' },
   ]
 }
 

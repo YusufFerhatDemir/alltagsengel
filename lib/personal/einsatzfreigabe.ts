@@ -7,6 +7,7 @@ import {
 } from '@/lib/config/budget-constants'
 import type { BudgetTyp } from '@/lib/config/budget-constants'
 import { uebertragVerfallsdatum } from '@/lib/billing/core/budget-cap'
+import { NACHWEIS_SPALTEN, pflichtProbleme, type NachweisZeile } from './pflichtnachweis'
 
 export interface FreigabeErgebnis {
   caregiverId: string
@@ -72,7 +73,11 @@ async function sammleVoraussetzungen(
   // mit einer Begruendung, die den echten Grund verdeckte.
   const { data: quals, error: qualErr } = await supabase
     .from('caregiver_qualifications')
-    .select('id, title, valid_until, einsatzrelevant, pflicht')
+    // NACHWEIS_SPALTEN statt einer handgeschriebenen Liste: die alte
+    // Auswahl liess `dokument_id`, `verifiziert_am` und `verifiziert_von`
+    // weg — und eine Pruefung, die ein Feld nicht liest, kann es auch
+    // nicht verlangen. Genau daran lag der Befund aus Block 29.
+    .select(NACHWEIS_SPALTEN)
     .eq('caregiver_id', caregiverId)
     .eq('organization_id', organizationId)
     .eq('einsatzrelevant', true)
@@ -90,20 +95,10 @@ async function sammleVoraussetzungen(
     probleme.push(`${abgelaufen.length} einsatzrelevante Qualifikation(en) abgelaufen`)
   }
 
-  // Enforcing: Führungszeugnis + Erste Hilfe müssen als Pflichtqualifikation vorliegen
-  for (const pflicht of PFLICHT_QUALIFIKATIONEN) {
-    const vorhanden = (quals ?? []).find(q =>
-      q.title?.toLowerCase().includes(pflicht.suchbegriff) && q.pflicht
-    )
-    if (!vorhanden) {
-      probleme.push(`Pflichtqualifikation "${pflicht.label}" fehlt`)
-    } else if (vorhanden.valid_until && vorhanden.valid_until < heute) {
-      // Die Sammelmeldung oben nennt nur die Anzahl. Fuer eine Pflicht-
-      // qualifikation gehoert der Name in den Klartext — sonst sucht die
-      // Disposition, welcher Nachweis nachgereicht werden muss.
-      probleme.push(`Pflichtqualifikation "${pflicht.label}" ist am ${vorhanden.valid_until} abgelaufen`)
-    }
-  }
+  // Führungszeugnis + Erste Hilfe müssen vorliegen, gültig sein UND belegt
+  // sein. Die Regel steht in lib/personal/pflichtnachweis.ts, damit
+  // Freigabeprüfung, Prüfskript und Tests dieselbe lesen.
+  probleme.push(...pflichtProbleme((quals ?? []) as NachweisZeile[], heute))
 
   return { name, vertragsstatus: cg.vertragsstatus, einsatzfreigabe: !!cg.einsatzfreigabe, probleme, abgelaufen }
 }
@@ -135,11 +130,6 @@ export async function pruefeEinsatzfreigabe(
     budgetBlockiert: false,
   }
 }
-
-const PFLICHT_QUALIFIKATIONEN = [
-  { suchbegriff: 'führungszeugnis', label: 'Erweitertes Führungszeugnis' },
-  { suchbegriff: 'erste hilfe', label: 'Erste-Hilfe-Nachweis' },
-] as const
 
 export async function pruefeClientFreigabe(
   supabase: SupabaseClient,

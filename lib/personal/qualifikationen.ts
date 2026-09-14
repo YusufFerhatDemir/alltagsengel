@@ -180,6 +180,55 @@ export async function updateQualifikation(
 
   if (Object.keys(update).length === 0) throw new UserFacingError('Keine Änderungen übergeben.')
 
+  // ── Belegkette: der Pruefvermerk muss sich auf ein Dokument beziehen ──
+  //
+  // BEFUND (14.09.2026, Block 29). Zwei Wege fuehrten zu einem Vermerk,
+  // der nichts belegt:
+  //
+  //   1. `verifiziert: true` auf einer Zeile ohne `dokument_id` — ein
+  //      „geprueft" ueber ein Dokument, das es nicht gibt.
+  //   2. `dokument_id` nach der Pruefung austauschen — der Vermerk blieb
+  //      stehen und buergte danach fuer ein Blatt, das niemand gesehen
+  //      hat.
+  //
+  // Bei einer MD-Pruefung ist genau dieser Vermerk der Beleg dafuer, dass
+  // das Fuehrungszeugnis eingesehen wurde. Er darf nicht laenger halten
+  // als das, worauf er sich bezieht.
+  //
+  // Der Bestand wird nur gelesen, wenn der Patch die Belegkette
+  // ueberhaupt beruehrt — sonst bleibt es beim einen Schreibvorgang.
+  const beruehrtBeleg = patch.verifiziert !== undefined || patch.dokumentId !== undefined
+  if (beruehrtBeleg) {
+    const { data: bestand, error: leseFehler } = await supabase
+      .from('caregiver_qualifications')
+      .select('dokument_id, verifiziert_am')
+      .eq('id', id)
+      .eq('organization_id', organizationId)
+      .maybeSingle()
+    // Fail-closed: wer den Bestand nicht lesen kann, darf keinen
+    // Pruefvermerk setzen.
+    if (leseFehler) throw new Error(`Qualifikation konnte nicht gelesen werden: ${leseFehler.message}`)
+    if (!bestand) throw new UserFacingError('Qualifikation nicht gefunden oder gehört zu einer anderen Organisation.', 404)
+
+    const dokumentNachher = patch.dokumentId !== undefined ? patch.dokumentId : bestand.dokument_id
+
+    if (patch.verifiziert === true && !dokumentNachher) {
+      throw new UserFacingError(
+        'Prüfvermerk ohne hinterlegtes Dokument nicht möglich — erst das Dokument hochladen, dann prüfen.',
+        400,
+      )
+    }
+
+    // Dokument getauscht, ohne im selben Zug neu zu pruefen: der alte
+    // Vermerk faellt. Sichtbar, nicht stillschweigend — der Aufrufer
+    // bekommt die Zeile mit geleertem Vermerk zurueck.
+    const dokumentWechselt = patch.dokumentId !== undefined && patch.dokumentId !== bestand.dokument_id
+    if (dokumentWechselt && bestand.verifiziert_am && patch.verifiziert !== true) {
+      update.verifiziert_von = null
+      update.verifiziert_am = null
+    }
+  }
+
   const { data, error } = await supabase
     .from('caregiver_qualifications')
     .update(update)

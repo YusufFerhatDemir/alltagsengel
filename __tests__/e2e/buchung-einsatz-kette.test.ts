@@ -194,10 +194,12 @@ function seed(opt: SeedOptionen = {}) {
   }
 
   // Ohne die beiden Pflichtqualifikationen blockiert pruefeEinsatzfreigabe
-  // unabhängig vom einsatzfreigabe-Flag.
+  // unabhängig vom einsatzfreigabe-Flag. Seit Block 29 genügt die blosse
+  // Zeile nicht mehr: sie braucht ein Dokument und einen Prüfvermerk,
+  // sonst ist sie nur eine Behauptung über eine Prüfung.
   db.seed('caregiver_qualifications', [
-    { id: 'q1', organization_id: ORG, caregiver_id: BETREUUNGSKRAFT, title: 'Erweitertes Führungszeugnis', valid_until: null, einsatzrelevant: true, pflicht: true },
-    { id: 'q2', organization_id: ORG, caregiver_id: BETREUUNGSKRAFT, title: 'Erste Hilfe Kurs', valid_until: null, einsatzrelevant: true, pflicht: true },
+    { id: 'q1', organization_id: ORG, caregiver_id: BETREUUNGSKRAFT, title: 'Erweitertes Führungszeugnis', qualification_type: 'fuehrungszeugnis', valid_until: null, einsatzrelevant: true, pflicht: true, dokument_id: 'dok-fz', verifiziert_am: '2026-09-01T09:00:00Z', verifiziert_von: 'pruefer-1' },
+    { id: 'q2', organization_id: ORG, caregiver_id: BETREUUNGSKRAFT, title: 'Erste Hilfe Kurs', qualification_type: 'erste_hilfe', valid_until: null, einsatzrelevant: true, pflicht: true, dokument_id: 'dok-eh', verifiziert_am: '2026-09-01T09:00:00Z', verifiziert_von: 'pruefer-1' },
   ])
 
   if (mitBudget) {

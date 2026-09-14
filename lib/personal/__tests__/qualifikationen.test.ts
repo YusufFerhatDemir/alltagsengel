@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createQualifikation, updateQualifikation } from '../qualifikationen'
+import { UserFacingError } from '@/lib/api/user-facing-error'
 
 function mockInsertClient(data: Record<string, unknown>) {
   return {
@@ -160,4 +161,106 @@ test('updateQualifikation: wirft bei leeren Änderungen', async () => {
     () => updateQualifikation(supabase, 'q-1', 'org-1', {}),
     /Keine Änderungen/,
   )
+})
+
+// ═══════════════════════════════════════════════════════════════════════
+// Block 29 — der Prüfvermerk muss sich auf ein Dokument beziehen
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * Doppelgänger für den Belegweg: `updateQualifikation` liest den Bestand,
+ * sobald der Patch `verifiziert` oder `dokumentId` berührt, und schreibt
+ * danach.
+ */
+function mockBelegClient(bestand: Record<string, unknown> | null) {
+  const geschrieben: Record<string, unknown>[] = []
+  const supabase = {
+    from: () => ({
+      select: () => {
+        const lese: any = { eq: () => lese, maybeSingle: async () => ({ data: bestand, error: null }) }
+        return lese
+      },
+      update: (werte: Record<string, unknown>) => {
+        geschrieben.push(werte)
+        return {
+          eq: () => ({
+            eq: () => ({
+              select: () => ({
+                single: async () => ({ data: { id: 'q-1', ...bestand, ...werte }, error: null }),
+              }),
+            }),
+          }),
+        }
+      },
+    }),
+  } as never
+  return { supabase, geschrieben }
+}
+
+test('updateQualifikation: Prüfvermerk ohne Dokument wird abgewiesen', async () => {
+  // „Geprüft" über ein Dokument, das es nicht gibt.
+  const { supabase, geschrieben } = mockBelegClient({ dokument_id: null, verifiziert_am: null })
+  await assert.rejects(
+    () => updateQualifikation(supabase, 'q-1', 'org-1', { verifiziert: true }, 'user-1'),
+    (err: unknown) => err instanceof UserFacingError && /ohne hinterlegtes Dokument/.test((err as Error).message),
+  )
+  assert.equal(geschrieben.length, 0, 'Ohne Dokument darf nichts geschrieben werden')
+})
+
+test('updateQualifikation: Dokument und Prüfvermerk im selben Zug sind erlaubt', async () => {
+  const { supabase, geschrieben } = mockBelegClient({ dokument_id: null, verifiziert_am: null })
+  await updateQualifikation(supabase, 'q-1', 'org-1', { dokumentId: 'dok-1', verifiziert: true }, 'user-1')
+  assert.equal(geschrieben[0].dokument_id, 'dok-1')
+  assert.equal(geschrieben[0].verifiziert_von, 'user-1')
+  assert.ok(geschrieben[0].verifiziert_am)
+})
+
+test('updateQualifikation: Prüfvermerk auf bereits hinterlegtem Dokument bleibt möglich', async () => {
+  const { supabase, geschrieben } = mockBelegClient({ dokument_id: 'dok-1', verifiziert_am: null })
+  await updateQualifikation(supabase, 'q-1', 'org-1', { verifiziert: true }, 'user-1')
+  assert.equal(geschrieben[0].verifiziert_von, 'user-1')
+})
+
+test('updateQualifikation: Dokumententausch löscht den alten Prüfvermerk', async () => {
+  // Sonst bürgt der Vermerk für ein Blatt, das niemand gesehen hat.
+  const { supabase, geschrieben } = mockBelegClient({ dokument_id: 'dok-alt', verifiziert_am: '2026-09-01T09:00:00Z' })
+  await updateQualifikation(supabase, 'q-1', 'org-1', { dokumentId: 'dok-neu' }, 'user-1')
+  assert.equal(geschrieben[0].dokument_id, 'dok-neu')
+  assert.equal(geschrieben[0].verifiziert_am, null)
+  assert.equal(geschrieben[0].verifiziert_von, null)
+})
+
+test('updateQualifikation: Dokumententausch MIT neuer Prüfung behält den Vermerk', async () => {
+  const { supabase, geschrieben } = mockBelegClient({ dokument_id: 'dok-alt', verifiziert_am: '2026-09-01T09:00:00Z' })
+  await updateQualifikation(supabase, 'q-1', 'org-1', { dokumentId: 'dok-neu', verifiziert: true }, 'user-2')
+  assert.equal(geschrieben[0].verifiziert_von, 'user-2')
+  assert.ok(geschrieben[0].verifiziert_am)
+})
+
+test('updateQualifikation: unveränderte dokument_id lässt den Vermerk stehen', async () => {
+  const { supabase, geschrieben } = mockBelegClient({ dokument_id: 'dok-1', verifiziert_am: '2026-09-01T09:00:00Z' })
+  await updateQualifikation(supabase, 'q-1', 'org-1', { dokumentId: 'dok-1', bemerkung: 'Notiz' }, 'user-1')
+  assert.equal(geschrieben[0].verifiziert_am, undefined, 'Der Vermerk darf unangetastet bleiben')
+})
+
+test('updateQualifikation: unbekannte Qualifikation wird als 404 abgewiesen', async () => {
+  const { supabase, geschrieben } = mockBelegClient(null)
+  await assert.rejects(
+    () => updateQualifikation(supabase, 'q-weg', 'org-1', { verifiziert: true }, 'user-1'),
+    (err: unknown) => err instanceof UserFacingError && /nicht gefunden/.test((err as Error).message),
+  )
+  assert.equal(geschrieben.length, 0)
+})
+
+test('updateQualifikation: ein Patch ohne Belegbezug liest den Bestand gar nicht', async () => {
+  // Der zusaetzliche Lesevorgang faellt nur an, wo er gebraucht wird.
+  let gelesen = 0
+  const supabase = {
+    from: () => ({
+      select: () => { gelesen++; const l: any = { eq: () => l, maybeSingle: async () => ({ data: {}, error: null }) }; return l },
+      update: () => ({ eq: () => ({ eq: () => ({ select: () => ({ single: async () => ({ data: { id: 'q-1' }, error: null }) }) }) }) }),
+    }),
+  } as never
+  await updateQualifikation(supabase, 'q-1', 'org-1', { bemerkung: 'nur eine Notiz' })
+  assert.equal(gelesen, 0)
 })

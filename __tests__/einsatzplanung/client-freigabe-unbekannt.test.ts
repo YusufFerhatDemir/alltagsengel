@@ -113,8 +113,8 @@ function grundzustand(): Record<string, Zeile[]> {
       einsatzfreigabe: true, vertragsstatus: 'aktiv', status: 'aktiv', user_id: 'engel-1',
     }],
     caregiver_qualifications: [
-      { id: 'q-1', caregiver_id: MITARBEITER, organization_id: ORG, title: 'Erweitertes Führungszeugnis', valid_until: null, einsatzrelevant: true, pflicht: true },
-      { id: 'q-2', caregiver_id: MITARBEITER, organization_id: ORG, title: 'Erste Hilfe Kurs', valid_until: null, einsatzrelevant: true, pflicht: true },
+      { id: 'q-1', caregiver_id: MITARBEITER, organization_id: ORG, title: 'Erweitertes Führungszeugnis', qualification_type: 'fuehrungszeugnis', valid_until: null, einsatzrelevant: true, pflicht: true, dokument_id: 'dok-fz', verifiziert_am: '2026-09-01T09:00:00Z', verifiziert_von: 'pruefer-1' },
+      { id: 'q-2', caregiver_id: MITARBEITER, organization_id: ORG, title: 'Erste Hilfe Kurs', qualification_type: 'erste_hilfe', valid_until: null, einsatzrelevant: true, pflicht: true, dokument_id: 'dok-eh', verifiziert_am: '2026-09-01T09:00:00Z', verifiziert_von: 'pruefer-1' },
     ],
     absences: [],
     angel_availability: [],

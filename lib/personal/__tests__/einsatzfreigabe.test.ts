@@ -43,8 +43,8 @@ test('Einsatzfreigabe: aktiver Mitarbeiter mit gültigen Quals → freigegeben',
   const supabase = mockSupabase(
     { id: 'cg-1', first_name: 'Anna', last_name: 'Müller', einsatzfreigabe: true, vertragsstatus: 'aktiv' },
     [
-      { id: 'q-1', title: 'Erste Hilfe', valid_until: '2027-12-31', einsatzrelevant: true, pflicht: true },
-      { id: 'q-2', title: 'Erweitertes Führungszeugnis', valid_until: '2027-12-31', einsatzrelevant: true, pflicht: true },
+      { id: 'q-1', title: 'Erste Hilfe', valid_until: '2027-12-31', einsatzrelevant: true, pflicht: true, qualification_type: 'erste_hilfe', dokument_id: 'dok-1', verifiziert_am: '2026-09-01T09:00:00Z', verifiziert_von: 'pruefer-1' },
+      { id: 'q-2', title: 'Erweitertes Führungszeugnis', valid_until: '2027-12-31', einsatzrelevant: true, pflicht: true, qualification_type: 'fuehrungszeugnis', dokument_id: 'dok-2', verifiziert_am: '2026-09-01T09:00:00Z', verifiziert_von: 'pruefer-1' },
     ],
   )
   const result = await pruefeEinsatzfreigabe(supabase, 'cg-1', 'org-1')
@@ -76,7 +76,7 @@ test('Einsatzfreigabe: fehlende Freigabe → nicht freigegeben', async () => {
 test('Einsatzfreigabe: abgelaufene einsatzrelevante Qual → Problem', async () => {
   const supabase = mockSupabase(
     { id: 'cg-4', first_name: 'Tom', last_name: 'Test', einsatzfreigabe: true, vertragsstatus: 'aktiv' },
-    [{ id: 'q-1', title: 'Führungszeugnis', valid_until: '2020-01-01', einsatzrelevant: true, pflicht: true }],
+    [{ id: 'q-1', title: 'Führungszeugnis', valid_until: '2020-01-01', einsatzrelevant: true, pflicht: true, qualification_type: 'fuehrungszeugnis', dokument_id: 'dok-1', verifiziert_am: '2026-09-01T09:00:00Z', verifiziert_von: 'pruefer-1' }],
   )
   const result = await pruefeEinsatzfreigabe(supabase, 'cg-4', 'org-1')
   assert.equal(result.freigegeben, false)

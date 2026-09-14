@@ -435,10 +435,13 @@ test('createQualifikation: unbekannter Status wird abgewiesen', async () => {
 })
 
 test('updateQualifikation: der Prüfvermerk trägt den angemeldeten Benutzer, nicht den Body', async () => {
+  // Seit Block 29 liest updateQualifikation den Bestand, sobald der Patch
+  // die Belegkette berührt — ein Prüfvermerk braucht ein Dokument, auf das
+  // er sich bezieht. Der Doppelgänger liefert deshalb eine Bestandszeile.
   const fake = erstelleFakeSupabase((a: FakeAufruf) =>
     a.operation === 'update'
       ? { data: { id: 'q-1', ...(a.payload as Record<string, unknown>) }, error: null }
-      : { data: null, error: null }
+      : { data: { id: 'q-1', dokument_id: 'dok-1', verifiziert_am: null }, error: null }
   )
   await updateQualifikation(fake.client as never, 'q-1', 'org-1', { verifiziert: true }, 'pdl-42')
   const p = fake.aufrufe.find(a => a.operation === 'update')!.payload as Record<string, unknown>
@@ -447,10 +450,13 @@ test('updateQualifikation: der Prüfvermerk trägt den angemeldeten Benutzer, ni
 })
 
 test('updateQualifikation: Prüfvermerk zurücknehmen leert beide Spalten', async () => {
+  // Seit Block 29 liest updateQualifikation den Bestand, sobald der Patch
+  // die Belegkette berührt — ein Prüfvermerk braucht ein Dokument, auf das
+  // er sich bezieht. Der Doppelgänger liefert deshalb eine Bestandszeile.
   const fake = erstelleFakeSupabase((a: FakeAufruf) =>
     a.operation === 'update'
       ? { data: { id: 'q-1', ...(a.payload as Record<string, unknown>) }, error: null }
-      : { data: null, error: null }
+      : { data: { id: 'q-1', dokument_id: 'dok-1', verifiziert_am: null }, error: null }
   )
   await updateQualifikation(fake.client as never, 'q-1', 'org-1', { verifiziert: false }, 'pdl-42')
   const p = fake.aufrufe.find(a => a.operation === 'update')!.payload as Record<string, unknown>
