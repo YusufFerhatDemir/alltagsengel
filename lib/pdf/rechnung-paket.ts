@@ -199,16 +199,44 @@ export async function erzeugeRechnungsPaket(
   let signaturesByRecord: Record<string, any[]> = {}
 
   if (recordIds.length > 0) {
-    const { data: recData } = await admin
+    // BEFUND (Block 90): die Positionen darueber werden auf ihren Fehler
+    // geprueft (`if (itemsErr) throw`), diese beiden nicht — dieselbe
+    // Funktion, zwei Massstaebe.
+    //
+    // Ohne `recData` traegt der Leistungsnachweis im Paket KEINE Zeilen,
+    // waehrend die Rechnung daneben ihre Positionen auflistet: ein Beleg,
+    // der sich selbst widerspricht, und er geht an den Kunden oder an die
+    // Kasse.
+    //
+    // Ohne `sigData` sieht der Nachweis UNUNTERSCHRIEBEN aus. Die
+    // Datenbank laesst eine Rechnung ohne Unterschrift gar nicht erst zu
+    // (RPC v8) — das Dokument haette also das Gegenteil dessen behauptet,
+    // was das Tor davor geprueft hat.
+    const { data: recData, error: recErr } = await admin
       .from('service_records')
       .select('id, date, start_time, end_time, duration_minutes, service_type, budget_type, amount, status, caregiver:caregivers(first_name, last_name)')
       .in('id', recordIds)
+    if (recErr) {
+      throw new RechnungsPaketError(
+        `Leistungen zum Nachweis nicht lesbar: ${recErr.message}. Es wurde KEIN Beleg erzeugt — `
+        + 'ein Nachweis ohne Zeilen neben einer Rechnung mit Positionen widerspricht sich selbst.',
+        500,
+      )
+    }
     records = recData || []
 
-    const { data: sigData } = await admin
+    const { data: sigData, error: sigErr } = await admin
       .from('service_signatures')
       .select('id, service_record_id, signer_role, signer_name, signature_image, signed_at')
       .in('service_record_id', recordIds)
+    if (sigErr) {
+      throw new RechnungsPaketError(
+        `Unterschriften nicht lesbar: ${sigErr.message}. Es wurde KEIN Beleg erzeugt — `
+        + 'der Nachweis saehe ununterschrieben aus, obwohl die Rechnung ohne Unterschrift '
+        + 'gar nicht entstehen kann.',
+        500,
+      )
+    }
 
     signaturesByRecord = (sigData || []).reduce((acc: Record<string, any[]>, s: any) => {
       if (!acc[s.service_record_id]) acc[s.service_record_id] = []

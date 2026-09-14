@@ -263,10 +263,26 @@ export async function storniereGeloesteAssignments(
   const ids = [...new Set(assignmentIds.filter((a): a is string => !!a))]
   if (ids.length === 0) return
 
-  const { data: verknuepfte } = await admin
+  // BEFUND (Block 90): diese Abfrage entscheidet, WELCHE Einsaetze
+  // storniert werden — `nochGenutzt` sind die, die noch an einem anderen
+  // Halt haengen. Ihr Fehler wurde verworfen, und eine leere Antwort
+  // heisst dann: KEINER wird noch gebraucht. `frei` waere die volle
+  // Liste, und die Funktion stornierte Einsaetze, die in einer anderen
+  // Tour weiterlaufen.
+  //
+  // Der Schreibvorgang darunter ist sorgfaeltig abgesichert („Ein Fehler
+  // hier bliebe sonst unsichtbar") — der Lesevorgang, der seine Menge
+  // bestimmt, war es nicht.
+  const { data: verknuepfte, error: verknuepftFehler } = await admin
     .from('tour_stops')
     .select('id, assignment_id, status')
     .in('assignment_id', ids)
+  if (verknuepftFehler) {
+    throw new Error(
+      `Verknuepfte Stops nicht lesbar: ${verknuepftFehler.message}. Es wurde NICHTS storniert — `
+      + 'ohne diese Liste waeren auch Einsaetze storniert worden, die an einer anderen Tour haengen.',
+    )
+  }
 
   const ignoriert = new Set(optionen.ignoriereStopIds ?? [])
   const nochGenutzt = new Set(
