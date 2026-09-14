@@ -95,6 +95,18 @@ jobs:
         # Freigabe: neue Faelle machen den Lauf rot.
         run: npm run lint:stilles-update
 
+      - name: Blinde Schreibwege (insert/upsert ohne Blick aufs Ergebnis)
+        # Die andere Haelfte derselben Frage: PostgREST WIRFT NICHT. Ein
+        # abgewiesener INSERT — RLS, CHECK, Fremdschluessel, UNIQUE — kommt
+        # als `error` IM ERGEBNIS zurueck; wer es gar nicht bindet, sieht ihn
+        # nie, und ein try/catch darum faengt nichts. In den Bloecken 96 bis
+        # 98 dreimal mit Folge gefunden: der gezaehlte Klaerfall, den es nicht
+        # gab, und zwei Rechnungsvorgaenge ohne ihren
+        # Unveraenderlichkeits-Beleg.
+        # Der Bestand in scripts/lint-blinder-insert.ts ist eingefroren, KEINE
+        # Freigabe: neue Faelle machen den Lauf rot.
+        run: npm run lint:blinder-insert
+
       - name: Secret scan
         run: bash scripts/ci-secret-scan.sh
 
