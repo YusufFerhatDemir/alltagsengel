@@ -45,6 +45,16 @@ export interface FakeAufruf {
    */
   optionen: unknown
   terminal: Terminal
+  /**
+   * Die TATSAECHLICH gerufene Methode.
+   *
+   * `operation` fasst insert und upsert bewusst zusammen — fuer die
+   * meisten Pruefungen ist „es wurde geschrieben" die richtige Frage.
+   * Manchmal ist es aber genau die falsche: ein `upsert` trifft auch eine
+   * BESTEHENDE Zeile und stempelt sie zurueck, ein `insert` kann das
+   * nicht. Wer diesen Unterschied pruefen will, fragt hier (Block 97).
+   */
+  roh: 'select' | 'insert' | 'upsert' | 'update' | 'delete'
   /** true bei `{ head: true }` — Zaehlabfrage ohne Zeilen. */
   head: boolean
   zaehlmodus: string | null
@@ -183,6 +193,7 @@ export function erstelleFakeSupabase(
       payload: undefined,
       optionen: undefined,
       terminal: 'liste',
+      roh: 'select',
       head: false,
       zaehlmodus: null,
       nr,
@@ -216,6 +227,7 @@ export function erstelleFakeSupabase(
     for (const op of ['insert', 'update', 'upsert'] as const) {
       kette[op] = (payload: unknown, optionen?: unknown) => {
         aufruf.operation = op === 'upsert' ? 'insert' : op
+        aufruf.roh = op
         operationGesetzt = true
         aufruf.payload = payload
         if (optionen !== undefined) aufruf.optionen = optionen
@@ -225,6 +237,7 @@ export function erstelleFakeSupabase(
 
     kette.delete = () => {
       aufruf.operation = 'delete'
+      aufruf.roh = 'delete'
       operationGesetzt = true
       return kette
     }

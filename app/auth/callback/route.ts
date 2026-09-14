@@ -3,6 +3,9 @@ import { NextResponse } from 'next/server'
 import { erfasseSicherheitsereignis } from '@/lib/security'
 import { istRolle, wirksameRolle } from '@/lib/auth/rollen'
 import { startseiteNachAnmeldung } from '@/lib/auth/startseite'
+import { logger } from '@/lib/logger'
+
+const log = logger.child('auth-callback')
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -62,19 +65,64 @@ export async function GET(request: Request) {
       const { data: { user } } = await supabase.auth.getUser()
 
       if (user) {
-        // Create profile if it doesn't exist yet (from user metadata set during signup)
-        // SICHERHEIT: Nur erlaubte Rollen — admin/superadmin NIEMALS automatisch erstellen
+        // ── Profil anlegen, falls es noch keines gibt ──────────────
+        //
+        // BEFUND (Block 97, 14.09.2026): hier stand ein `upsert` ohne
+        // Konfliktbehandlung, dessen Ergebnis verworfen wurde. Beides war
+        // falsch, und das erste davon schwer.
+        //
+        // `safeRole` bildet JEDE Rolle ausserhalb der Signup-Liste auf
+        // 'kunde' ab — auch 'admin' und 'superadmin'. Ein `upsert` trifft
+        // aber auch eine BESTEHENDE Zeile. Wer also eine privilegierte
+        // Rolle in `user_metadata` traegt und einen Bestaetigungs- oder
+        // Magic-Link anklickt, bekam damit `profiles.role = 'kunde'`
+        // geschrieben — und `profiles` ist die bindende Rollenquelle
+        // (lib/auth/rollen.ts).
+        //
+        // Der Datenbank-Riegel greift dagegen NICHT: prevent_role_escalation
+        // wirft nur, wenn der Handelnde kein Admin ist. Hier ist der
+        // Handelnde der Betroffene selbst — `is_admin()` ist wahr, die
+        // Herabstufung ist erlaubt. Ein Administrator stuft sich mit einem
+        // Klick auf einen Link aus seiner eigenen Mail selbst ab.
+        //
+        // Live gemessen am 14.09.2026 ueber die GoTrue-Admin-API: drei
+        // Konten tragen eine `user_metadata.role` ausserhalb der
+        // Signup-Liste, darunter zwei mit `profiles.role = 'superadmin'`.
+        //
+        // Nebenwirkung derselben Zeile: Vor- und Nachname und die Adresse
+        // wurden bei jedem Aufruf aus den Signup-Metadaten
+        // ueberschrieben — jede spaetere Korrektur im Profil ging damit
+        // verloren.
+        //
+        // RICHTIG IST: nur ANLEGEN, nie ueberschreiben. Existiert die
+        // Zeile schon, ist SIE die Wahrheit, nicht die Anmelde-Metadaten.
+        // `insert` kann eine bestehende Zeile gar nicht erst beruehren;
+        // 23505 ist hier deshalb kein Fehler, sondern der Normalfall.
         const ALLOWED_SIGNUP_ROLES = ['kunde', 'engel', 'fahrer']
         const meta = user.user_metadata
         if (meta?.role) {
           const safeRole = ALLOWED_SIGNUP_ROLES.includes(meta.role) ? meta.role : 'kunde'
-          await supabase.from('profiles').upsert({
+          const { error: profilAnlage } = await supabase.from('profiles').insert({
             id: user.id,
             role: safeRole,
             first_name: meta.first_name || '',
             last_name: meta.last_name || '',
             email: user.email,
           })
+
+          // 23505 = die Zeile gibt es bereits. Genau das ist die Absicht.
+          if (profilAnlage && profilAnlage.code !== '23505') {
+            // Ohne Profil traegt das Konto keine Rolle, und jeder Guard
+            // antwortet 403 — ohne dass irgendwo stuende, warum. Die
+            // Weiterleitung nach /kunde/home waere hier die stille
+            // Falschaussage: angemeldet, aber ohne Zugang.
+            log.error('Profil konnte nicht angelegt werden', {
+              userId: user.id,
+              code: profilAnlage.code,
+              errorMessage: profilAnlage.message,
+            })
+            return NextResponse.redirect(`${origin}/auth/login?error=rolle_nicht_pruefbar`)
+          }
         }
 
         // ── Weiterleitung nach Rolle ────────────────────────────────
