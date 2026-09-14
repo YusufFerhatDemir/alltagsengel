@@ -103,15 +103,28 @@ export async function verarbeiteRuecklastschrift(
       batch_id: string;
     } | null = null;
 
+    // BEFUND (Block 77): jeder SCHREIBVORGANG dieser Funktion ist
+    // vorbildlich abgesichert — Fehler, getroffene Zeilen, teils ein
+    // Vergleich gegen den gelesenen Stand. Die LESEVORGAENGE, die darueber
+    // entscheiden, ob er ueberhaupt stattfindet, waren es nicht. Sieben
+    // Abfragen verwarfen ihren Fehler; jede davon liess einen ganzen
+    // Schritt still ausfallen.
+    //
     // Zuerst ueber EndToEndId
+    let suchFehler: string | null = null;
     if (buchung.endToEndId) {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('sepa_batch_items')
         .select('id, invoice_id, mandate_id, batch_id')
         .eq('end_to_end_id', buchung.endToEndId)
         .eq('organization_id', organizationId)
         .maybeSingle();
-      if (data) sepaItem = data;
+      // Ein Lesefehler ist kein „nicht gefunden". Faellt er durch, greift
+      // unten der schwaechere Rueckfall ueber Mandat und Betrag — und der
+      // hat nachweislich schon einmal die Rechnung eines Unbeteiligten
+      // getroffen (siehe Delta-Check Phase 4.5 weiter unten).
+      if (error) suchFehler = `Suche ueber EndToEndId fehlgeschlagen (${error.message})`;
+      else if (data) sepaItem = data;
     }
 
     // Fallback: MandateId + Betrag
@@ -130,20 +143,22 @@ export async function verarbeiteRuecklastschrift(
     // UUID-Fremdschluessel auf sepa_mandates(id). Die Referenz muss
     // deshalb erst aufgeloest werden — ein direkter Vergleich der beiden
     // Werte trifft nie zu (und laeuft auf einer UUID-Spalte in 22P02).
-    if (!sepaItem && buchung.mandateId) {
+    if (!sepaItem && !suchFehler && buchung.mandateId) {
       const betragCent = Math.abs(buchung.betragCent);
 
       // (organization_id, mandate_reference) ist UNIQUE — die Auflösung
       // ist damit eindeutig und bleibt innerhalb des Mandanten.
-      const { data: mandat } = await supabase
+      const { data: mandat, error: mandatFehler } = await supabase
         .from('sepa_mandates')
         .select('id')
         .eq('organization_id', organizationId)
         .eq('mandate_reference', buchung.mandateId)
         .maybeSingle();
 
-      if (mandat) {
-        const { data } = await supabase
+      if (mandatFehler) {
+        suchFehler = `Mandatsreferenz nicht aufloesbar (${mandatFehler.message})`;
+      } else if (mandat) {
+        const { data, error: postenFehler } = await supabase
           .from('sepa_batch_items')
           .select('id, invoice_id, mandate_id, batch_id')
           .eq('organization_id', organizationId)
@@ -152,7 +167,8 @@ export async function verarbeiteRuecklastschrift(
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
-        if (data) sepaItem = data;
+        if (postenFehler) suchFehler = `Lastschriftposten nicht lesbar (${postenFehler.message})`;
+        else if (data) sepaItem = data;
       }
     }
 
@@ -167,7 +183,12 @@ export async function verarbeiteRuecklastschrift(
       // Rechnung galt weiter als bezahlt, und niemand bekam den Fall auf
       // den Tisch.
       result.erkannt = false;
-      result.fehler = 'Keine zugehoerige SEPA-Lastschrift gefunden';
+      // „Nicht gefunden" und „nicht nachsehen koennen" sind verschiedene
+      // Aussagen. Beide fuehren hier zum Klaerfall — aber wer ihn bearbeitet,
+      // braucht den richtigen Grund.
+      result.fehler = suchFehler
+        ? `${suchFehler} — es wurde NICHT festgestellt, ob eine zugehoerige Lastschrift existiert.`
+        : 'Keine zugehoerige SEPA-Lastschrift gefunden';
       return result;
     }
 
@@ -193,13 +214,19 @@ export async function verarbeiteRuecklastschrift(
     }
 
     // 3. Zugehoerige Zahlung finden und stornieren
-    const { data: payAllocs } = await supabase
+    const { data: payAllocs, error: payAllocsFehler } = await supabase
       .from('payment_allocations')
       .select('id, payment_id, amount_cents')
       .eq('invoice_id', sepaItem.invoice_id)
       .eq('organization_id', organizationId)
       .order('created_at', { ascending: false })
       .limit(1);
+
+    if (payAllocsFehler) {
+      // Ohne diese Liste findet der ganze Stornoschritt nicht statt: die
+      // Zuordnung bleibt stehen, das Geld gilt weiter als zugeordnet.
+      meldeFehler(result, `Zahlungszuordnung nicht lesbar (${payAllocsFehler.message}) — die Originalzahlung wurde NICHT storniert.`);
+    }
 
     if (payAllocs && payAllocs.length > 0) {
       const alloc = payAllocs[0];
@@ -236,11 +263,15 @@ export async function verarbeiteRuecklastschrift(
       }
 
       // Payment-allocated_cents reduzieren
-      const { data: payment } = await supabase
+      const { data: payment, error: paymentFehler } = await supabase
         .from('payments')
         .select('id, allocated_cents')
         .eq('id', alloc.payment_id)
-        .single();
+        .maybeSingle();
+
+      if (paymentFehler) {
+        meldeFehler(result, `Zahlung nicht lesbar (${paymentFehler.message}) — allocated_cents wurde NICHT reduziert.`);
+      }
 
       if (payment) {
         const newAllocated = Math.max(0, (payment.allocated_cents || 0) - alloc.amount_cents);
@@ -267,11 +298,17 @@ export async function verarbeiteRuecklastschrift(
     }
 
     // 4. Rechnung wieder oeffnen
-    const { data: invoice } = await supabase
+    const { data: invoice, error: invoiceFehler } = await supabase
       .from('invoices')
       .select('id, total_amount, paid_amount')
       .eq('id', sepaItem.invoice_id)
-      .single();
+      .maybeSingle();
+
+    if (invoiceFehler) {
+      // Der teuerste Schritt des Vorgangs faellt damit ganz aus — und zwar
+      // genau mit der Folge, die der Kommentar darunter beschreibt.
+      meldeFehler(result, `Rechnung nicht lesbar (${invoiceFehler.message}) — sie wurde NICHT wieder geöffnet und gilt weiter als bezahlt, obwohl das Geld zurück ist.`);
+    }
 
     if (invoice) {
       const totalCents = euroZuCent(invoice.total_amount || 0);
@@ -342,12 +379,20 @@ export async function verarbeiteRuecklastschrift(
     }
 
     // 6. Mandat pruefen — bei Mehrfach-Ruecklastschrift sperren
-    const { count: rlCount } = await supabase
+    const { count: rlCount, error: rlCountFehler } = await supabase
       .from('sepa_batch_items')
       .select('id', { count: 'exact', head: true })
       .eq('organization_id', organizationId)
       .eq('mandate_id', sepaItem.mandate_id)
       .eq('status', 'ruecklastschrift');
+
+    if (rlCountFehler) {
+      // `null` wird unten zu 0 und damit zu „weit unter der Schwelle".
+      // Ein Mandat, das gesperrt gehoerte, bliebe offen, und der naechste
+      // Lastschriftlauf zoege erneut von einem Konto ein, das schon
+      // mehrfach zurueckgegangen ist.
+      meldeFehler(result, `Rücklastschriften nicht zählbar (${rlCountFehler.message}) — es wurde NICHT geprüft, ob das Mandat zu sperren ist.`);
+    }
 
     if ((rlCount ?? 0) >= MAX_RUECKLASTSCHRIFTEN_BEVOR_SPERRE) {
       const { data: gesperrt, error: sperrErr } = await supabase
@@ -402,12 +447,20 @@ export async function verarbeiteRuecklastschrift(
     // uebergibt einen Admin-Client, der RLS umgeht. `sepaItem` stammt zwar
     // bereits aus einer mandantengefencten Suche — aber eine Sperre, die nur
     // ueber die Herkunft einer Variablen gilt, haelt keine Umbauten aus.
-    const { data: dunning } = await supabase
+    // `maybeSingle` statt `single`: ohne Mahnvorgang gibt es nichts zu
+    // erhoehen, und das ist kein Fehler. Mit `single` war genau dieser
+    // Normalfall ein PGRST116 — und damit von einem echten Ausfall nicht
+    // zu unterscheiden.
+    const { data: dunning, error: dunningFehler } = await supabase
       .from('dunning_entries')
       .select('id, dunning_level, block_dunning, block_reason')
       .eq('invoice_id', sepaItem.invoice_id)
       .eq('organization_id', organizationId)
-      .single();
+      .maybeSingle();
+
+    if (dunningFehler) {
+      meldeFehler(result, `Mahnvorgang nicht lesbar (${dunningFehler.message}) — die Mahnstufe wurde NICHT erhöht.`);
+    }
 
     if (dunning?.block_dunning) {
       result.mahnstufeUebersprungen =
