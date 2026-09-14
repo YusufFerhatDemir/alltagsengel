@@ -26,6 +26,7 @@ import {
   type InvoiceStatus,
 } from './status-machine';
 import { logBillingAction, computeSnapshotChecksum } from './audit';
+import { schreibeSnapshot } from './snapshot-schreiben'
 // resolvePrice wird nicht mehr als Fallback verwendet — die Tarifaufloesung
 // erfolgt vollstaendig innerhalb der atomaren RPC (billing_tariffs = fuehrend).
 // import { resolvePrice } from './price-resolver';  // ENTFERNT: kein Fallback
@@ -967,7 +968,16 @@ export async function cancelInvoice(
 
   const checksum = await computeSnapshotChecksum(stornoSnapshot);
 
-  await supabase.from('invoice_snapshots').insert({
+  // Der Beleg zuerst — und nachsehen, ob er entstanden ist.
+  //
+  // Bis Block 98 stand hier ein blindes `await … .insert(…)`. Schlug es
+  // still fehl, wurde das Original gleich darunter trotzdem auf
+  // 'storniert' gesetzt: eine Stornorechnung in den Buechern, aber kein
+  // Beleg darueber, WAS storniert wurde. Die Stornorechnung ist an
+  // dieser Stelle noch von nichts referenziert — sie laesst sich
+  // zuruecknehmen, und genau das tut der Zweig unten beim CAS-Konflikt
+  // auch schon.
+  const belegStorno = await schreibeSnapshot(supabase, {
     invoice_id: stornoInvoice.id,
     version: 1,
     snapshot: stornoSnapshot,
@@ -977,6 +987,23 @@ export async function cancelInvoice(
     created_by: actorId,
     organization_id: original.organization_id,
   });
+
+  if (!belegStorno.ok) {
+    // Ruecknahme wie im CAS-Zweig unten: nicht werfen, aber auch nicht
+    // schweigen — bliebe die Stornorechnung stehen, laege sie ohne
+    // Gegenstueck in den Buechern.
+    const { error: rollbackFehler } = await supabase
+      .from('invoices').delete().eq('id', stornoInvoice.id).select('id');
+    if (rollbackFehler) {
+      log.error('Storno-Rollback nach fehlendem Beleg fehlgeschlagen — verwaiste Storno-Rechnung', {
+        invoiceId: stornoInvoice.id, errorMessage: rollbackFehler.message,
+      });
+    }
+    throw new Error(
+      `Storno abgelehnt: Der Unveraenderlichkeits-Beleg konnte nicht geschrieben werden `
+      + `(${belegStorno.grund}) — die Stornorechnung wurde zurueckgenommen.`,
+    );
+  }
 
   // Original als storniert markieren (CAS: nur wenn Status noch nicht storniert)
   const { data: updated, error: statusError } = await supabase
@@ -1406,7 +1433,7 @@ export async function correctInvoice(
 
   const checksum = await computeSnapshotChecksum(snapshotContent);
 
-  await supabase.from('invoice_snapshots').insert({
+  const belegKorrektur = await schreibeSnapshot(supabase, {
     invoice_id: korrInvoice.id,
     version: 1,
     snapshot: snapshotContent,
@@ -1415,6 +1442,27 @@ export async function correctInvoice(
     created_by: actorId,
     organization_id: original.organization_id,
   });
+
+  if (!belegKorrektur.ok) {
+    // Derselbe dreiteilige Rollback wie im CAS-Zweig darueber: ohne
+    // Beleg darf die Korrekturrechnung nicht in den Buechern bleiben.
+    const rollbacks = await Promise.all([
+      supabase.from('invoice_corrections').delete().eq('id', correction.id).select('id'),
+      supabase.from('invoice_items').delete().eq('invoice_id', korrInvoice.id).select('id'),
+      supabase.from('invoices').delete().eq('id', korrInvoice.id).select('id'),
+    ]);
+    const gescheitert = rollbacks.filter(r => r.error);
+    if (gescheitert.length > 0) {
+      log.error('Korrektur-Rollback nach fehlendem Beleg unvollstaendig — halbe Korrekturrechnung', {
+        korrInvoiceId: korrInvoice.id,
+        fehler: gescheitert.map(r => r.error?.message).join('; '),
+      });
+    }
+    throw new Error(
+      `Korrektur abgelehnt: Der Unveraenderlichkeits-Beleg konnte nicht geschrieben werden `
+      + `(${belegKorrektur.grund}) — die Korrekturrechnung wurde zurueckgenommen.`,
+    );
+  }
 
   // Audit-Trail (erweitert: mit Preisabweichungs-Gruenden)
   const priceDeviations = corrections
@@ -1662,7 +1710,7 @@ export async function createCreditNote(
 
   const checksum = await computeSnapshotChecksum(snapshotContent);
 
-  await supabase.from('invoice_snapshots').insert({
+  const belegGutschrift = await schreibeSnapshot(supabase, {
     invoice_id: creditInvoice.id,
     version: 1,
     snapshot: snapshotContent,
@@ -1671,6 +1719,27 @@ export async function createCreditNote(
     created_by: actorId,
     organization_id: original.organization_id,
   });
+
+  if (!belegGutschrift.ok) {
+    // Dieselbe Ruecknahme wie im Summen-Zweig darueber: eine Gutschrift
+    // ohne Beleg mindert den offenen Betrag, ohne dass jemand belegen
+    // koennte, wofuer.
+    const [korrekturWeg, gutschriftWeg] = await Promise.all([
+      supabase.from('invoice_corrections').delete().eq('id', correction.id).select('id'),
+      supabase.from('invoices').delete().eq('id', creditInvoice.id).select('id'),
+    ]);
+    if (korrekturWeg.error || gutschriftWeg.error) {
+      log.error('Gutschrift-Ruecknahme nach fehlendem Beleg fehlgeschlagen — verwaiste Gutschrift', {
+        correctionId: correction.id,
+        creditInvoiceId: creditInvoice.id,
+        errorMessage: korrekturWeg.error?.message ?? gutschriftWeg.error?.message,
+      });
+    }
+    throw new Error(
+      `Gutschrift abgelehnt: Der Unveraenderlichkeits-Beleg konnte nicht geschrieben werden `
+      + `(${belegGutschrift.grund}) — die Gutschrift wurde zurueckgenommen.`,
+    );
+  }
 
   // Audit-Trail
   await logBillingAction(supabase, {

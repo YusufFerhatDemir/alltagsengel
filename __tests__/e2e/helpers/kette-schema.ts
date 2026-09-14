@@ -308,6 +308,11 @@ export async function baueKettenSchema(): Promise<PGlite> {
   await db.exec(tabelleAusMigration(M_BILLING_CORE, 'billing_tariffs'))
   await db.exec(tabelleAusMigration(M_BILLING_CORE, 'billing_number_sequences'))
   await db.exec(tabelleAusMigration(M_BILLING_CORE, 'billing_audit_trail'))
+  // invoice_corrections: Storno, Korrektur und Gutschrift legen hier
+  // ihren Vorgangs-Eintrag an. Ohne die Tabelle bricht cancelInvoice()
+  // erst NACH dem Beleg ab — der Storno-Weg war deshalb bis Block 98
+  // gegen echtes Postgres gar nicht fahrbar.
+  await db.exec(tabelleAusMigration(M_BILLING_CORE, 'invoice_corrections'))
   await db.exec(tabelleAusMigration(M_BILLING_CORE, 'invoice_snapshots'))
   await db.exec(tabelleAusMigration(M_BILLING_CORE, 'invoice_line_snapshots'))
   await db.exec(tabelleAusMigration(M_TARIF_HARD, 'billing_feiertage'))

@@ -23,6 +23,7 @@ import {
   type InvoiceStatus,
   type CorrectionStatus,
 } from './status-machine';
+import { schreibeSnapshot } from './snapshot-schreiben';
 
 function asCorrectionStatus(status: string): CorrectionStatus {
   if (!(status in CORRECTION_STATUS_LABELS)) {
@@ -207,7 +208,15 @@ export async function releaseCreditNote(
 
     const checksum = await computeSnapshotChecksum(snapshotContent);
 
-    await supabase.from('invoice_snapshots').insert({
+    // Anders als bei Storno/Korrektur/Gutschrift ist hier NICHTS mehr
+    // zurueckzunehmen: die Rechnung ist eine Zeile hoeher festgeschrieben
+    // worden, und `frozen_at` ist ausdruecklich einmalig („kein zweites
+    // Mal"). Bleibt der Beleg aus, ist der einzig richtige Ausgang, die
+    // Freigabe NICHT abzuschliessen. Die Korrektur bleibt dann im
+    // Entwurf, und ein zweiter Versuch scheitert sichtbar an der schon
+    // gesetzten Festschreibung — ein sichtbarer Stillstand ist besser
+    // als eine freigegebene Gutschrift ohne Beleg.
+    const belegFreigabe = await schreibeSnapshot(supabase, {
       invoice_id: creditInvoice.id,
       version: 2,
       snapshot: snapshotContent,
@@ -216,6 +225,14 @@ export async function releaseCreditNote(
       created_by: actorId,
       organization_id: expectedOrgId,
     });
+
+    if (!belegFreigabe.ok) {
+      throw new Error(
+        `Freigabe abgebrochen: Der Unveraenderlichkeits-Beleg zur Gutschrift `
+        + `${creditInvoice.id} konnte nicht geschrieben werden (${belegFreigabe.grund}). `
+        + `Die Rechnung ist bereits festgeschrieben, die Korrektur bleibt im Entwurf.`,
+      );
+    }
   }
 
   const { data: freigegeben, error: updError } = await supabase

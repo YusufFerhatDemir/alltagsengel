@@ -34,6 +34,13 @@ function makeDb(rows: Record<string, unknown>) {
 
     const result = () => {
       if (op === 'select') return { data: rows[table] ?? null, error: null };
+      // Ein INSERT gibt bei PostgREST die EBEN GESCHRIEBENE Zeile zurueck —
+      // nicht den vorkonfigurierten Bestand. Der Doppelgaenger lieferte
+      // bis Block 98 auch hier `rows[table]` und damit fuer jede Tabelle
+      // ohne Eintrag eine leere Liste. Das las sich wie „nichts
+      // angelegt", obwohl der Aufruf erfolgreich war, und liess den
+      // Freigabeweg an seinem eigenen Beleg scheitern.
+      if (op === 'insert') return { data: [{ id: `neu-${table}`, ...payload }], error: null };
       // PostgREST gibt bei `update().select()` die BETROFFENEN Zeilen
       // zurueck — und bei null Treffern eine leere Liste, ohne Fehler.
       // Der Doppelgaenger lieferte bis zum 13.09.2026 immer `null` und
