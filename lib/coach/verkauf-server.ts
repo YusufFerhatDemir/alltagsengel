@@ -202,22 +202,76 @@ export async function beendeZugang(bestellungId: string, sofort: boolean): Promi
 // BESTELLUNG FINDEN
 // ═══════════════════════════════════════════════════════════════
 
-export async function bestellungPerCheckout(checkoutId: string): Promise<CoachBestellung | null> {
-  const { data } = await admin()
+/**
+ * Eine Bestellung ueber eine Spalte suchen.
+ *
+ * BEFUND (Block 65): alle diese Wege verwarfen ihren Lesefehler, und `null`
+ * heisst beim einzigen Aufrufer — dem Stripe-Webhook — „diese Bestellung
+ * gibt es nicht". Ein Verbindungsabbruch oder eine Schemadrift sahen damit
+ * aus wie eine unbekannte Zahlung: der Kunde hatte bezahlt, der Zugang blieb
+ * zu, und das Protokoll nannte einen Grund, der nicht stimmte. Nicht
+ * nachsehen koennen ist keine Auskunft ueber eine Bestellung.
+ */
+async function bestellungUeber(
+  spalte: 'stripe_checkout_id' | 'stripe_subscription_id' | 'id',
+  wert: string,
+): Promise<CoachBestellung | null> {
+  const { data, error } = await admin()
     .from('coach_bestellungen')
     .select('*')
-    .eq('stripe_checkout_id', checkoutId)
+    .eq(spalte, wert)
     .maybeSingle()
+  if (error) {
+    throw new Error(
+      `Bestellung zu ${spalte}=${wert} konnte nicht gelesen werden: ${error.message}`,
+    )
+  }
   return (data as CoachBestellung) ?? null
 }
 
+export async function bestellungPerCheckout(checkoutId: string): Promise<CoachBestellung | null> {
+  return bestellungUeber('stripe_checkout_id', checkoutId)
+}
+
 export async function bestellungPerSubscription(subId: string): Promise<CoachBestellung | null> {
-  const { data } = await admin()
+  return bestellungUeber('stripe_subscription_id', subId)
+}
+
+/**
+ * Die Bestellung zu ihrer eigenen Kennung.
+ *
+ * Diese Kennung reist in den Stripe-Metadaten mit und ist der einzige Weg
+ * zur Bestellung, der keinen spaeteren Schreibvorgang voraussetzt.
+ */
+export async function bestellungPerId(bestellungId: string): Promise<CoachBestellung | null> {
+  return bestellungUeber('id', bestellungId)
+}
+
+/**
+ * Traegt die Checkout-Kennung nach, wenn sie fehlt.
+ *
+ * Nur wenn sie fehlt: steht dort bereits eine ANDERE Kennung, gehoert die
+ * Bestellung zu einem anderen Bezahlvorgang, und ein Ueberschreiben wuerde
+ * den ersten unauffindbar machen. Der Rueckgabewert sagt, was geschah —
+ * der Aufrufer protokolliert, er bricht daran nichts ab.
+ */
+export async function vermerkeCheckoutId(
+  bestellungId: string,
+  checkoutId: string,
+): Promise<{ ok: true } | { ok: false; grund: string }> {
+  const { data, error } = await admin()
     .from('coach_bestellungen')
-    .select('*')
-    .eq('stripe_subscription_id', subId)
-    .maybeSingle()
-  return (data as CoachBestellung) ?? null
+    .update({ stripe_checkout_id: checkoutId })
+    .eq('id', bestellungId)
+    .is('stripe_checkout_id', null)
+    .select('id')
+  if (error) {
+    return { ok: false, grund: `Schreibfehler: ${error.message}` }
+  }
+  if ((data ?? []).length === 0) {
+    return { ok: false, grund: 'Die Bestellung trägt bereits eine andere Checkout-Kennung.' }
+  }
+  return { ok: true }
 }
 
 /**

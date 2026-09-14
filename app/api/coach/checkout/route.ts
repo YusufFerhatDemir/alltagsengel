@@ -237,10 +237,26 @@ export const POST = withTracking(async function POST(request: Request) {
       billing_address_collection: 'auto',
     })
 
-    await db
+    // Der Vermerk ist der kurze Weg zurueck zur Bestellung; der belastbare
+    // ist die Bestellkennung in `metadaten`, die der Webhook seit Block 65
+    // zuerst liest. Deshalb bricht ein Fehlschlag hier den Bezahlvorgang
+    // NICHT ab — die Sitzung steht bereits bei Stripe, und ein 500 wuerde
+    // dem Kunden nur den Weg zur Zahlung nehmen, die er gleich leisten kann.
+    // Verschwiegen wird er trotzdem nicht: vorher fiel er lautlos aus, und
+    // solange der Webhook nur diese Spalte kannte, hiess das: bezahlt,
+    // aber kein Zugang.
+    const { data: vermerkt, error: vermerkFehler } = await db
       .from('coach_bestellungen')
       .update({ stripe_checkout_id: sitzung.id })
       .eq('id', bestellung.id)
+      .select('id')
+    if (vermerkFehler || (vermerkt ?? []).length === 0) {
+      log.error('Checkout-Kennung nicht an der Bestellung vermerkt', {
+        bestellung: bestellung.id,
+        sitzung: sitzung.id,
+        grund: vermerkFehler?.message ?? 'null getroffene Zeilen',
+      })
+    }
 
     if (!sitzung.url) {
       log.error('Stripe lieferte keine Weiterleitungs-URL')

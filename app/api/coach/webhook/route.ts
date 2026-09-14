@@ -29,8 +29,9 @@ import { heuteBerlin } from '@/lib/utils/timezone'
 import type { CoachBestellung } from '@/lib/coach/types'
 import { laufzeitEnde, widerrufsfristEnde } from '@/lib/coach/bestellung'
 import {
-  aktiviereBestellung, bestellungPerCheckout, bestellungPerSubscription,
-  beendeZugang, setzeStatus, stelleRechnungAus, verbucheZahlung,
+  aktiviereBestellung, bestellungPerCheckout, bestellungPerId,
+  bestellungPerSubscription, beendeZugang, setzeStatus, stelleRechnungAus,
+  verbucheZahlung, vermerkeCheckoutId,
 } from '@/lib/coach/verkauf-server'
 import {
   sendeBestellbestaetigung, sendeZahlungFehlgeschlagen,
@@ -99,6 +100,53 @@ async function bestellungZuRechnung(invoice: Stripe.Invoice): Promise<CoachBeste
   return null
 }
 
+/**
+ * Findet die Bestellung zu einer abgeschlossenen Checkout-Sitzung.
+ *
+ * BEFUND (Block 65): hier stand nur `bestellungPerCheckout(sitzung.id)` —
+ * derselbe Webhook, zwei Massstaebe. `bestellungZuRechnung` direkt darueber
+ * nimmt die Metadaten ZUERST und die Abo-Kennung nur als Rueckfallweg, mit
+ * der Begruendung „keiner allein ist zuverlaessig". Der Weg, der den ZUGANG
+ * freischaltet, ging ausschliesslich ueber `stripe_checkout_id` — eine
+ * Spalte, deren einziger Schreibvorgang in der Checkout-Route ungeprueft
+ * war.
+ *
+ * Blieb dieser Schreibvorgang aus, endete die Kette hier: der Kunde hatte
+ * bezahlt, `bestellungPerCheckout` fand nichts, das Ereignis wurde mit 200
+ * quittiert und nie wiederholt. Kein Zugang, keine Bestaetigungsmail, die
+ * Bestellung dauerhaft auf 'offen'.
+ *
+ * Die Bestellkennung in den Metadaten setzt genau diese Route beim Anlegen
+ * der Sitzung, und die Signaturpruefung steht davor — sie ist damit die
+ * belastbarere der beiden Auskuenfte, nicht die schwaechere.
+ */
+async function bestellungZuCheckout(
+  sitzung: Stripe.Checkout.Session,
+): Promise<CoachBestellung | null> {
+  const ausMetadaten = sitzung.metadata?.coach_bestellung_id
+  if (ausMetadaten) {
+    const bestellung = await bestellungPerId(ausMetadaten)
+    if (bestellung) {
+      // Die fehlende Kennung nachtragen, damit spaetere Ereignisse und jede
+      // Nachschau den kurzen Weg wiederfinden. Scheitert das, ist die
+      // Bestellung trotzdem gefunden — deshalb nur ein Protokolleintrag.
+      if (!bestellung.stripe_checkout_id) {
+        const vermerk = await vermerkeCheckoutId(bestellung.id, sitzung.id)
+        if (!vermerk.ok) {
+          log.error('Checkout-Kennung konnte nicht nachgetragen werden', {
+            bestellung: bestellung.id, grund: vermerk.grund,
+          })
+        }
+      }
+      return bestellung
+    }
+    log.error('Bestellkennung aus den Metadaten fuehrt zu keiner Bestellung', {
+      bestellung: ausMetadaten,
+    })
+  }
+  return bestellungPerCheckout(sitzung.id)
+}
+
 /** Gehört dieses Ereignis überhaupt zum PflegeCoach? */
 function istCoachEreignis(metadata: Stripe.Metadata | null | undefined): boolean {
   return metadata?.produkt === 'pflegecoach'
@@ -145,9 +193,11 @@ async function verarbeite(ereignis: Stripe.Event): Promise<void> {
       if (!istCoachEreignis(sitzung.metadata)) return
       if (sitzung.mode !== 'subscription') return
 
-      const bestellung = await bestellungPerCheckout(sitzung.id)
+      const bestellung = await bestellungZuCheckout(sitzung)
       if (!bestellung) {
-        log.error('Keine Bestellung zu Checkout', { id: sitzung.id })
+        log.error('Keine Bestellung zu Checkout', {
+          id: sitzung.id, metadaten: sitzung.metadata?.coach_bestellung_id ?? null,
+        })
         return
       }
       // Bereits aktiv = zweite Zustellung desselben Ereignisses.
