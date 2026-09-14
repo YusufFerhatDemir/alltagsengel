@@ -28,6 +28,7 @@ import {
 const M_CORE          = '20250101000000_core_tables_baseline.sql'
 const M_LIVE          = '20260101000000_baseline_live_only_tables.sql'
 const M_TOUREN        = '20260809120000_tourenplanung.sql'
+const M_BUDGET_VERBRAUCH = '20261013000002_budget_used_amount_statuswerte.sql'
 const M_SIGNATUREN    = '20260706_monatsabschluss_ki_pruefzentrale.sql'
 const M_BILLING_CORE  = '20260806200000_billing_core_corrections.sql'
 const M_TARIF_HARD    = '20260807120000_tariff_model_hardening.sql'
@@ -525,6 +526,29 @@ export async function baueTourenTabellen(db: PGlite): Promise<void> {
       ADD COLUMN IF NOT EXISTS actual_end_time         time,
       ADD COLUMN IF NOT EXISTS actual_duration_minutes integer;
   `)
+}
+
+/**
+ * Budget-Verbrauch: der Trigger, der `client_budgets.used_amount` führt.
+ *
+ * ── WARUM ER IN DIE KETTE GEHÖRT ─────────────────────────────────────
+ * `used_amount` ist die Zahl, an der die Einsatzfreigabe entscheidet, ob
+ * noch Budget da ist — und der Entlastungsbetrag nach § 45b ist auf 131 €
+ * im Monat gedeckelt. Ohne den Trigger bliebe die Spalte im Test auf dem
+ * Wert, den jemand hineinschreibt; eine Kette, die den Abzug prüfen will,
+ * würde dann ihre eigene Vorgabe messen.
+ *
+ * Die Fassung ist die LIVE gültige (20261013000002). Ihre Vorgängerin aus
+ * der Baseline summierte `status IN ('completed','billed','paid')` —
+ * Werte, die das Status-Werteset seit dem 02.07.2026 nicht mehr kennt.
+ * Die IN-Liste traf auf keine Zeile zu, und `used_amount` stand für JEDEN
+ * Klienten auf 0. Genau deshalb wird hier die neue Fassung geholt und
+ * nicht die aus M_FUNKTIONEN.
+ *
+ * Setzt baueKettenSchema() voraus (service_records, client_budgets).
+ */
+export async function baueBudgetTrigger(db: PGlite): Promise<void> {
+  await db.exec(liesMigration(M_BUDGET_VERBRAUCH))
 }
 
 export async function baueCamtTabellen(db: PGlite): Promise<void> {
