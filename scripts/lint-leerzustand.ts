@@ -277,8 +277,8 @@ export function pruefeQuelle(rohQuelle: string, datei: string): Befund[] {
 }
 
 /**
- * Bestand vom 14.09.2026 — 70 gebuendelte Stellen (Block 79: 85; sechs mit
- * Block 80 behoben, neun mit Block 81).
+ * Bestand vom 14.09.2026 — 59 gebuendelte Stellen (Block 79: 85; sechs mit
+ * Block 80 behoben, neun mit Block 81, elf mit Block 82).
  *
  * ── WAS DIESE LISTE IST UND WAS NICHT ─────────────────────────
  * Sie deckt BEIDE Bereiche ab: die Renderdateien, in denen die Regel
@@ -320,21 +320,10 @@ export const BESTAND_GEBUENDELT: { datei: string; variable: string }[] = [
   { datei: 'app/admin/home/page.tsx', variable: 'profilesRes' },
   { datei: 'app/admin/home/page.tsx', variable: 'recentBookingsRes' },
   { datei: 'app/admin/home/page.tsx', variable: 'recentProfilesRes' },
-  { datei: 'app/admin/kalender/page.tsx', variable: 'aRes' },
-  { datei: 'app/admin/kalender/page.tsx', variable: 'abRes' },
-  { datei: 'app/admin/kalender/page.tsx', variable: 'cgRes' },
-  { datei: 'app/admin/kalender/page.tsx', variable: 'clRes' },
-  { datei: 'app/admin/kalender/page.tsx', variable: 'stRes' },
   { datei: 'app/admin/partners/page.tsx', variable: 'pRes' },
   { datei: 'app/admin/partners/page.tsx', variable: 'vRes' },
   { datei: 'app/admin/records/new/page.tsx', variable: 'cRes' },
   { datei: 'app/admin/records/new/page.tsx', variable: 'gRes' },
-  { datei: 'app/admin/schedule/page.tsx', variable: 'abRes' },
-  { datei: 'app/admin/schedule/page.tsx', variable: 'asRes' },
-  { datei: 'app/admin/schedule/page.tsx', variable: 'cgRes' },
-  { datei: 'app/admin/schedule/page.tsx', variable: 'clRes' },
-  { datei: 'app/admin/schedule/page.tsx', variable: 'prRes' },
-  { datei: 'app/admin/schedule/page.tsx', variable: 'srRes' },
   { datei: 'app/admin/verordnungen/page.tsx', variable: 'absRes' },
   { datei: 'app/admin/verordnungen/page.tsx', variable: 'allAssignRes' },
   { datei: 'app/admin/verordnungen/page.tsx', variable: 'iRes' },

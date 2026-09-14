@@ -58,6 +58,8 @@ export default function AdminSchedulePage() {
   const [requests, setRequests] = useState<SubRequest[]>([])
   const [preferred, setPreferred] = useState<{ client_id: string; caregiver_id: string; priority: number }[]>([])
   const [loading, setLoading] = useState(true)
+  /** Eine der sechs Quellen war nicht lesbar (Block 82). */
+  const [ladefehler, setLadefehler] = useState<string | null>(null)
   const [weekOffset, setWeekOffset] = useState(0)
   const [reportAbsence, setReportAbsence] = useState(false)
   const [createSub, setCreateSub] = useState(false)
@@ -71,6 +73,7 @@ export default function AdminSchedulePage() {
   }, [weekOffset])
 
   const load = useCallback(async () => {
+    setLadefehler(null)
     try {
       const supabase = createClient()
       const today = isoDate(new Date())
@@ -82,6 +85,39 @@ export default function AdminSchedulePage() {
         supabase.from('substitution_requests').select('id, client_id, original_caregiver_id, substitute_caregiver_id, date, start_time, end_time, service_type, status, escalation_level, client_notified, notes, client:clients(first_name, last_name)').order('date', { ascending: false }),
         supabase.from('client_preferred_substitutes').select('client_id, caregiver_id, priority'),
       ])
+      // BEFUND (Block 82): sechs Abfragen, alle ungeprueft. Das ist der
+      // Dienstplan — genau die Lage, die der Kopf von
+      // scripts/lint-leerzustand.ts als Beispiel nennt: „Ein Engel liest
+      // das morgens als Aussage ueber seinen Tag und faehrt nicht los."
+      //
+      // Hier ist es die Disposition, die liest. Faellt `asRes` aus, ist
+      // die Woche leer und niemand fehlt; faellt `abRes` aus, ist niemand
+      // abwesend und `isAbsent()` antwortet ueberall mit nein — die Seite
+      // schlaegt dann eine Kraft vor, die im Urlaub ist. Faellt `srRes`
+      // aus, sind offene Vertretungsanfragen unsichtbar.
+      const quellen = [
+        ['Betreuungskräfte', cgRes.error?.message ?? null],
+        ['Klienten', clRes.error?.message ?? null],
+        ['Einsätze', asRes.error?.message ?? null],
+        ['Abwesenheiten', abRes.error?.message ?? null],
+        ['Vertretungsanfragen', srRes.error?.message ?? null],
+        ['Wunschvertretungen', prRes.error?.message ?? null],
+      ] as const
+      const fehlend = quellen.filter(([, grund]) => grund !== null)
+      if (fehlend.length > 0) {
+        log.error('Dienstplan: Abfragen fehlgeschlagen', {
+          bereiche: fehlend.map(([name]) => name).join(', '),
+        })
+        setLadefehler(
+          fehlend.map(([name]) => name).join(', ')
+          + ' konnten nicht geladen werden. Der Dienstplan wird nicht angezeigt — '
+          + 'eine leere Woche wäre von einer freien nicht zu unterscheiden.'
+        )
+        setCaregivers([]); setClients([]); setAssignments([])
+        setAbsences([]); setRequests([]); setPreferred([])
+        return
+      }
+
       const cgNameMap = new Map<string, string>()
       ;(cgRes.data || []).forEach((c: any) => cgNameMap.set(c.id, fullName(c)))
       setCaregivers((cgRes.data || []).map((c: any) => ({
@@ -104,6 +140,7 @@ export default function AdminSchedulePage() {
       setPreferred((prRes.data || []) as { client_id: string; caregiver_id: string; priority: number }[])
     } catch (err) {
       log.errorWithException('Schedule load error', err)
+      setLadefehler('Der Dienstplan konnte nicht geladen werden. Bitte Seite neu laden.')
     } finally {
       setLoading(false)
     }
@@ -217,7 +254,8 @@ export default function AdminSchedulePage() {
         </div>
       </div>
 
-      {loading ? <p>Laden…</p> : (
+      {ladefehler && <Banner tone="danger">{ladefehler}</Banner>}
+      {loading ? <p>Laden…</p> : ladefehler ? null : (
         <>
           {/* Wochenübersicht */}
           <h2 style={{ marginTop: 28, display: 'flex', alignItems: 'center', gap: 12 }}>

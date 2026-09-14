@@ -143,6 +143,8 @@ export default function AdminKalenderPage() {
   const [caregiverOptions, setCaregiverOptions] = useState<CaregiverOption[]>([])
   const [clientOptions, setClientOptions] = useState<ClientOption[]>([])
   const [loading, setLoading] = useState(true)
+  /** Eine der fuenf Quellen war nicht lesbar (Block 82). */
+  const [ladefehler, setLadefehler] = useState<string | null>(null)
 
   // Filter state
   const [filterBundesland, setFilterBundesland] = useState('')
@@ -179,6 +181,7 @@ export default function AdminKalenderPage() {
 
   // ── Data loading ─────────────────────────────────────────────
   const load = useCallback(async () => {
+    setLadefehler(null)
     try {
       const supabase = createClient()
 
@@ -206,6 +209,32 @@ export default function AdminKalenderPage() {
         supabase.from('caregivers').select('id, first_name, last_name').eq('status', 'active'),
         supabase.from('clients').select('id, first_name, last_name'),
       ])
+      // BEFUND (Block 82): fuenf Abfragen, alle ungeprueft. Faellt `aRes`
+      // aus, ist der Kalender leer — und ein leerer Kalender sieht aus wie
+      // ein Tag ohne Einsaetze. Faellt `abRes` aus, antwortet `isAbsent()`
+      // ueberall mit nein, und die Ansicht zeigt eine Kraft als verfuegbar,
+      // die im Urlaub ist.
+      const quellen = [
+        ['Einsätze', aRes.error?.message ?? null],
+        ['Abwesenheiten', abRes.error?.message ?? null],
+        ['Bundesländer', stRes.error?.message ?? null],
+        ['Betreuungskräfte', cgRes.error?.message ?? null],
+        ['Klienten', clRes.error?.message ?? null],
+      ] as const
+      const fehlend = quellen.filter(([, grund]) => grund !== null)
+      if (fehlend.length > 0) {
+        log.error('Kalender: Abfragen fehlgeschlagen', {
+          bereiche: fehlend.map(([name]) => name).join(', '),
+        })
+        setLadefehler(
+          fehlend.map(([name]) => name).join(', ')
+          + ' konnten nicht geladen werden. Der Kalender wird nicht angezeigt — '
+          + 'ein leerer Tag wäre von einem freien nicht zu unterscheiden.'
+        )
+        setAssignments([]); setAbsences([])
+        return
+      }
+
       setAssignments((aRes.data || []) as AssignmentRow[])
       setAbsences((abRes.data || []) as AbsenceRow[])
       setBundeslaender(Array.from(new Set((stRes.data || []).map((s: StateRow) => s.bundesland))).sort())
@@ -213,6 +242,7 @@ export default function AdminKalenderPage() {
       setClientOptions((clRes.data || []).map((c: any) => ({ id: c.id, name: fullName(c) })))
     } catch (err) {
       log.errorWithException('Kalender load error', err)
+      setLadefehler('Der Kalender konnte nicht geladen werden. Bitte Seite neu laden.')
     } finally {
       setLoading(false)
     }
@@ -390,7 +420,8 @@ export default function AdminKalenderPage() {
         </label>
       </div>
 
-      {loading ? <p style={{ color: 'var(--ink4)' }}>Laden…</p> : (
+      {ladefehler && <Banner tone="danger">{ladefehler}</Banner>}
+      {loading ? <p style={{ color: 'var(--ink4)' }}>Laden…</p> : ladefehler ? null : (
         <>
           {view === 'day' && (
             <DayView
