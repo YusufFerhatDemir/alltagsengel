@@ -74,7 +74,7 @@ const ENDUNGEN = ['.ts', '.tsx']
 /** Verzeichnisse, die kein Anwendungscode sind. */
 const AUS = new Set(['node_modules', '.next', 'dist', 'build', '__tests__', '__mocks__'])
 
-interface Befund {
+export interface Befund {
   datei: string
   zeile: number
   tabelle: string
@@ -105,14 +105,14 @@ function dateien(verzeichnis: string, raus: string[] = []): string[] {
  * und dem Ende der Anweisung ein `.select(` steht. Die Kette endet am
  * ersten Semikolon oder an einer Zeile, die eine neue Anweisung beginnt.
  */
-function kette(text: string, start: number): string {
+export function kette(text: string, start: number): string {
   const grenze = Math.min(text.length, start + 1200)
   const stueck = text.slice(start, grenze)
   const semikolon = stueck.indexOf('\n\n')
   return semikolon > 0 ? stueck.slice(0, semikolon) : stueck
 }
 
-function pruefe(datei: string): Befund[] {
+export function pruefe(datei: string): Befund[] {
   const text = readFileSync(datei, 'utf8')
   const befunde: Befund[] = []
   const muster = /\.from\(\s*['"`]([A-Za-z0-9_]+)['"`]\s*\)/g
@@ -155,7 +155,7 @@ function pruefe(datei: string): Befund[] {
  * Die Einträge sind eng gefasst (Datei + Tabelle + Operation): ein neuer
  * Fall in derselben Datei macht den Lauf trotzdem rot.
  */
-const BESTAND: { datei: string; tabelle: string; operation: string }[] = [
+export const BESTAND: { datei: string; tabelle: string; operation: string }[] = [
   // BEGRUENDET: schliesst den bisher offenen Handzeichen-Eintrag
   // (.is('valid_until', null)). Beim ERSTEN Handzeichen gibt es noch
   // keinen offenen Eintrag — NULL Zeilen sind dort der Normalfall. Der
@@ -176,6 +176,13 @@ const BESTAND: { datei: string; tabelle: string; operation: string }[] = [
   // eine Leerpruefung wuerde hier bei jedem zweiten Aufruf Alarm schlagen.
   { datei: 'app/kunde/chat/[id]/actions.ts', tabelle: 'messages', operation: 'update' },
 
+  // BEGRUENDET (Block 66): loescht den Fehlversuchszaehler nach einer
+  // erfolgreichen Anmeldung. NULL getroffene Zeilen heisst hier: es gab
+  // keinen Zaehler, weil sich niemand vertippt hat — der Normalfall. Der
+  // FEHLER wird seit Block 66 geprueft und protokolliert, die Trefferzahl
+  // bewusst nicht; die Begruendung steht bei `deleteEntry` im Code.
+  { datei: 'app/api/auth/check-rate-limit/route.ts', tabelle: 'login_rate_limits', operation: 'delete' },
+
   // ── API-Routen, aufgenommen am 14.09.2026 ──────────────────────────
   // KEINE FREIGABE. Diese Wege sind nicht geprueft; sie sind eingefroren,
   // damit die Zahl nur noch sinken kann und NEUE Faelle den Lauf rot
@@ -193,29 +200,42 @@ const BESTAND: { datei: string; tabelle: string; operation: string }[] = [
   { datei: 'app/api/admin/biografiebogen/[clientId]/route.ts', tabelle: 'biografiebogen', operation: 'update' },
   { datei: 'app/api/admin/clients/[id]/status/route.ts', tabelle: 'clients', operation: 'update' },
   { datei: 'app/api/admin/ocr/route.ts', tabelle: 'ocr_results', operation: 'delete' },
-  { datei: 'app/api/auth/check-rate-limit/route.ts', tabelle: 'login_rate_limits', operation: 'delete' },
-  { datei: 'app/api/coach/checkout/route.ts', tabelle: 'coach_bestellungen', operation: 'update' },
   { datei: 'app/api/coach/consents/route.ts', tabelle: 'coach_consents', operation: 'update' },
   { datei: 'app/api/coach/freigaben/[id]/route.ts', tabelle: 'coach_shares', operation: 'update' },
   { datei: 'app/api/coach/freigaben/route.ts', tabelle: 'coach_shares', operation: 'update' },
-  { datei: 'app/api/coach/freischaltung/route.ts', tabelle: 'coach_freischaltcodes', operation: 'update' },
   { datei: 'app/api/coach/loeschung/route.ts', tabelle: 'coach_nutzungsereignisse', operation: 'delete' },
   { datei: 'app/api/email/send/route.ts', tabelle: 'email_entwuerfe', operation: 'update' },
   { datei: 'app/api/fhir/import/route.ts', tabelle: 'clients', operation: 'update' },
   { datei: 'app/api/organizations/zertifikat/route.ts', tabelle: 'organizations', operation: 'update' },
   { datei: 'app/api/pflege/sturzprotokoll/route.ts', tabelle: 'pflege_verlauf', operation: 'update' },
-  { datei: 'app/api/referral/complete/route.ts', tabelle: 'referrals', operation: 'update' },
-  { datei: 'app/api/tours/[id]/route.ts', tabelle: 'assignments', operation: 'update' },
-  { datei: 'app/api/tours/[id]/stops/route.ts', tabelle: 'service_records', operation: 'update' },
-  { datei: 'app/api/tours/[id]/stops/route.ts', tabelle: 'tour_stops', operation: 'update' },
   { datei: 'app/api/tours/[id]/stops/route.ts', tabelle: 'tour_stops', operation: 'delete' },
-  { datei: 'app/api/tours/route.ts', tabelle: 'tour_stops', operation: 'delete' },
-  { datei: 'app/api/tours/route.ts', tabelle: 'tours', operation: 'delete' },
   { datei: 'app/api/user/delete/undo/route.ts', tabelle: 'profiles', operation: 'update' },
 ]
 
 function passtZumBestand(b: Befund): boolean {
   return BESTAND.some(e => e.datei === b.datei && e.tabelle === b.tabelle && e.operation === b.operation)
+}
+
+/**
+ * Eintraege, die nichts mehr decken.
+ *
+ * BEFUND (Block 68): die Liste oben sagt seit jeher „wer einen davon
+ * anfasst, haengt `.select('id')` an und nimmt die Zeile hier heraus". Der
+ * erste Teil geschah in den Bloecken 60-67 achtmal, der zweite nie. Acht
+ * Eintraege deckten damit einen Befund, den es nicht mehr gab — und jeder
+ * von ihnen war eine offene Tuer: waere das `.select('id')` in einer jener
+ * Dateien wieder herausgefallen, haette dieser Lauf den Rueckfall als
+ * „im Bestand" durchgewunken.
+ *
+ * Eine Ausnahmeliste, die ihre eigene Gueltigkeit nicht prueft, wird mit
+ * jeder Behebung ein Stueck blinder. Ab hier macht ein veralteter Eintrag
+ * den Lauf rot — dasselbe Verfahren wie `ausnahmeGiltNoch()` in
+ * scripts/lint-schreibrecht.ts.
+ */
+export function veraltet(alle: Befund[]): typeof BESTAND {
+  return BESTAND.filter(e => !alle.some(
+    b => b.datei === e.datei && b.tabelle === e.tabelle && b.operation === e.operation,
+  ))
 }
 
 function main() {
@@ -224,12 +244,27 @@ function main() {
     for (const d of dateien(join(REPO, w))) alle.push(...pruefe(d))
   }
   const neu = alle.filter(b => !passtZumBestand(b))
+  const tote = veraltet(alle)
 
   console.log('── Stille Schreibvorgänge in Server Actions und API-Routen ─')
   console.log(`   geprüft:           ${WURZELN.join(', ')}/**/{actions,route}.ts`)
   console.log(`   Treffer gesamt:    ${alle.length}`)
   console.log(`   im Bestand:        ${alle.length - neu.length}`)
+  console.log(`   Ausnahmen:         ${BESTAND.length}${tote.length > 0 ? `, davon ${tote.length} veraltet` : ''}`)
   console.log('')
+
+  if (tote.length > 0) {
+    console.log(`❌ ${tote.length} Ausnahme(n) decken keinen Befund mehr:\n`)
+    for (const e of tote) {
+      console.log(`   ${e.datei}  [${e.operation} auf ${e.tabelle}]`)
+    }
+    console.log('')
+    console.log('   Diese Zeilen gehören aus BESTAND heraus. Solange sie stehen, würde')
+    console.log('   ein Rückfall in derselben Datei als „im Bestand“ durchgewunken —')
+    console.log('   die Ausnahme wäre dann keine Ausnahme mehr, sondern eine offene Tür.')
+    console.log('')
+    process.exit(1)
+  }
 
   if (neu.length === 0) {
     console.log('✓ Kein Befund.')
@@ -249,4 +284,6 @@ function main() {
   process.exit(1)
 }
 
-main()
+// Nur als Lauf, nicht beim Import aus einem Test: `main()` beendet den
+// Prozess bei einem Befund, und das darf ein Testlauf nicht tun.
+if (process.argv[1] && process.argv[1].endsWith('lint-stilles-update.ts')) main()
