@@ -22,6 +22,8 @@
     "lint:route-auth": "tsx scripts/lint-route-auth.ts",
     "lint:schreibrecht": "tsx scripts/lint-schreibrecht.ts",
     "verify:mandanten-eindeutigkeit": "tsx scripts/verify-mandanten-eindeutigkeit.ts",
+    "verify:migrationsstand": "tsx scripts/verify-migrationsstand.ts",
+    "migrations:dispatch": "tsx scripts/generate-migrations-dispatch.ts",
     "lint:ladefehler": "tsx scripts/lint-ladefehler.ts",
     "lint:leerzustand": "tsx scripts/lint-leerzustand.ts",
     "lint:client-bundle": "tsx scripts/lint-client-bundle.ts",
