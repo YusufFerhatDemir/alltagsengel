@@ -157,10 +157,23 @@ export const DELETE = withTracking(async function DELETE(request: NextRequest) {
 
     // ── 5. Soft-Delete setzen (oder idempotent ueberspringen) ────
     if (!alreadySoftDeleted) {
-      const { error: softErr } = await adminClient
+      // `.select('id')` ist hier kein Beiwerk: PostgREST meldet KEINEN
+      // Fehler, wenn ein update null Zeilen trifft. Ohne die Rueckgabe
+      // haette diese Route „Konto geloescht" gemeldet, waehrend das
+      // Profil unveraendert steht — bei einer Loeschung nach Art. 17
+      // DSGVO ist das die eine Auskunft, die nicht falsch sein darf.
+      const { data: weich, error: softErr } = await adminClient
         .from('profiles')
         .update({ deleted_at: new Date().toISOString() })
         .eq('id', userId)
+        .select('id')
+      if (!softErr && (weich?.length ?? 0) === 0) {
+        log.error('user/delete soft-delete traf keine Zeile', { userId })
+        return NextResponse.json(
+          { error: 'Konto konnte nicht geloescht werden' },
+          { status: 500 }
+        )
+      }
       if (softErr) {
         log.error('user/delete soft-delete error', {
           code: softErr?.code,

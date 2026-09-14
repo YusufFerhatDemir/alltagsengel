@@ -219,13 +219,22 @@ export const POST = withTracking(async function POST(req: NextRequest) {
 
     // ── 3) Schreiben: Nachweis → Einsatz → Buchung ─────────────────
     if (nachweis) {
-      const { error } = await admin
+      // Null getroffene Zeilen sind hier KEIN Erfolg: der Nachweis bliebe
+      // dann ohne Storno-Kennzeichen stehen und damit abrechenbar — die
+      // widerrufene Leistung landete auf der naechsten Rechnung. Genau
+      // dieser Fall ist als P0 dokumentiert (RPC v10 filtert auf
+      // proof_status/billing_status <> 'STORNIERT'); er tritt ein, sobald
+      // die Zeile gesperrt ist oder einer anderen Organisation gehoert.
+      const { data: storniert, error } = await admin
         .from('service_records')
         .update({ proof_status: 'STORNIERT', billing_status: 'STORNIERT', updated_at: new Date().toISOString() })
         .eq('id', nachweis.id)
         .eq('organization_id', orgId)
-      if (error) {
-        log.error('Nachweis-Storno fehlgeschlagen', { msg: error.message })
+        .select('id')
+      if (error || (storniert?.length ?? 0) === 0) {
+        log.error('Nachweis-Storno fehlgeschlagen', {
+          msg: error?.message ?? 'keine Zeile betroffen', nachweisId: nachweis.id,
+        })
         return NextResponse.json(
           { error: 'Der Leistungsnachweis konnte nicht storniert werden. Es wurde nichts geändert.' },
           { status: 500 },
@@ -234,11 +243,19 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     }
 
     if (einsatz) {
-      const { error } = await admin
+      const { data: einsatzStorno, error } = await admin
         .from('assignments')
         .update({ status: 'STORNIERT' })
         .eq('id', einsatz.id)
         .eq('organization_id', orgId)
+        .select('id')
+      if (!error && (einsatzStorno?.length ?? 0) === 0) {
+        log.error('Einsatz-Storno traf keine Zeile', { einsatzId: einsatz.id })
+        return NextResponse.json(
+          { error: 'Der Einsatz konnte nicht storniert werden. Es wurde nichts geändert.' },
+          { status: 500 },
+        )
+      }
       if (error) {
         log.error('Einsatz-Storno fehlgeschlagen', { msg: error.message })
         return NextResponse.json(

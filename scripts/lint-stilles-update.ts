@@ -46,7 +46,29 @@ const REPO = process.cwd()
  * „gespeichert" angezeigt wird. Darauf ist die Prüfung begrenzt.
  */
 const WURZELN = ['app']
-const NUR_DATEIEN = /(^|\/)actions\.tsx?$/
+/**
+ * Server Actions UND API-Routen.
+ *
+ * ── WARUM DIE ROUTEN DAZUGEKOMMEN SIND (14.09.2026) ──────────────────
+ * Die Begrenzung auf `actions.ts` hatte einen guten Grund: sie trifft
+ * dort, wo ein MENSCH eine Rueckmeldung bekommt. Genau das gilt aber fuer
+ * die interaktiven API-Routen ebenso — `/api/tours/[id]/vertretung`,
+ * `/api/bookings/cancel` und `/api/admin/manage-role` werden von einer
+ * Oberflaeche aufgerufen, deren Antwort als „gespeichert" angezeigt wird.
+ * Sie standen nur deshalb nicht unter Beobachtung, weil das Muster
+ * `actions.ts` sie nicht traf.
+ *
+ * Der erste Lauf ueber `app/api/**\/route.ts` fand 31 Stellen, darunter
+ * vier mit echtem Schaden: die Kontoloeschung meldete „geloescht" ohne
+ * getroffene Zeile, das Storno liess die widerrufene Leistung
+ * abrechenbar, der Rollenwechsel liess `profiles` und `app_metadata`
+ * auseinanderlaufen, und die Tour-Vertretung meldete eine Ruecknahme, die
+ * nichts zuruecknahm. Die vier sind behoben, der Rest steht im BESTAND.
+ *
+ * `lib/` bleibt weiterhin aussen vor: dort liegen die Stapellaeufe, bei
+ * denen „keine Zeile betroffen" das normale Ergebnis ist.
+ */
+const NUR_DATEIEN = /(^|\/)(actions|route)\.tsx?$/
 const ENDUNGEN = ['.ts', '.tsx']
 
 /** Verzeichnisse, die kein Anwendungscode sind. */
@@ -153,6 +175,43 @@ const BESTAND: { datei: string; tabelle: string; operation: string }[] = [
   // Ungelesenes. Das ist der haeufigste Fall ueberhaupt und kein Fehler —
   // eine Leerpruefung wuerde hier bei jedem zweiten Aufruf Alarm schlagen.
   { datei: 'app/kunde/chat/[id]/actions.ts', tabelle: 'messages', operation: 'update' },
+
+  // ── API-Routen, aufgenommen am 14.09.2026 ──────────────────────────
+  // KEINE FREIGABE. Diese Wege sind nicht geprueft; sie sind eingefroren,
+  // damit die Zahl nur noch sinken kann und NEUE Faelle den Lauf rot
+  // machen. Wer einen davon anfasst, haengt `.select('id')` an, prueft auf
+  // eine leere Trefferliste und nimmt die Zeile hier heraus.
+  //
+  // Die vier Faelle mit belegtem Schaden sind NICHT in dieser Liste — sie
+  // wurden behoben: /api/user/delete (Loeschung meldete Erfolg ohne
+  // getroffene Zeile), /api/bookings/cancel (Storno blieb aus, die
+  // widerrufene Leistung damit abrechenbar), /api/admin/manage-role
+  // (profiles und app_metadata liefen auseinander) und
+  // /api/tours/[id]/vertretung (Ruecknahme meldete Erfolg, ohne
+  // zurueckzunehmen).
+  { datei: 'app/api/admin/abrechnung/sftp-key/route.ts', tabelle: 'datenannahmestellen', operation: 'update' },
+  { datei: 'app/api/admin/biografiebogen/[clientId]/route.ts', tabelle: 'biografiebogen', operation: 'update' },
+  { datei: 'app/api/admin/clients/[id]/status/route.ts', tabelle: 'clients', operation: 'update' },
+  { datei: 'app/api/admin/ocr/route.ts', tabelle: 'ocr_results', operation: 'delete' },
+  { datei: 'app/api/auth/check-rate-limit/route.ts', tabelle: 'login_rate_limits', operation: 'delete' },
+  { datei: 'app/api/coach/checkout/route.ts', tabelle: 'coach_bestellungen', operation: 'update' },
+  { datei: 'app/api/coach/consents/route.ts', tabelle: 'coach_consents', operation: 'update' },
+  { datei: 'app/api/coach/freigaben/[id]/route.ts', tabelle: 'coach_shares', operation: 'update' },
+  { datei: 'app/api/coach/freigaben/route.ts', tabelle: 'coach_shares', operation: 'update' },
+  { datei: 'app/api/coach/freischaltung/route.ts', tabelle: 'coach_freischaltcodes', operation: 'update' },
+  { datei: 'app/api/coach/loeschung/route.ts', tabelle: 'coach_nutzungsereignisse', operation: 'delete' },
+  { datei: 'app/api/email/send/route.ts', tabelle: 'email_entwuerfe', operation: 'update' },
+  { datei: 'app/api/fhir/import/route.ts', tabelle: 'clients', operation: 'update' },
+  { datei: 'app/api/organizations/zertifikat/route.ts', tabelle: 'organizations', operation: 'update' },
+  { datei: 'app/api/pflege/sturzprotokoll/route.ts', tabelle: 'pflege_verlauf', operation: 'update' },
+  { datei: 'app/api/referral/complete/route.ts', tabelle: 'referrals', operation: 'update' },
+  { datei: 'app/api/tours/[id]/route.ts', tabelle: 'assignments', operation: 'update' },
+  { datei: 'app/api/tours/[id]/stops/route.ts', tabelle: 'service_records', operation: 'update' },
+  { datei: 'app/api/tours/[id]/stops/route.ts', tabelle: 'tour_stops', operation: 'update' },
+  { datei: 'app/api/tours/[id]/stops/route.ts', tabelle: 'tour_stops', operation: 'delete' },
+  { datei: 'app/api/tours/route.ts', tabelle: 'tour_stops', operation: 'delete' },
+  { datei: 'app/api/tours/route.ts', tabelle: 'tours', operation: 'delete' },
+  { datei: 'app/api/user/delete/undo/route.ts', tabelle: 'profiles', operation: 'update' },
 ]
 
 function passtZumBestand(b: Befund): boolean {
@@ -166,8 +225,8 @@ function main() {
   }
   const neu = alle.filter(b => !passtZumBestand(b))
 
-  console.log('── Stille Schreibvorgänge in Server Actions ────────────────')
-  console.log(`   geprüft:           ${WURZELN.join(', ')}/**/actions.ts`)
+  console.log('── Stille Schreibvorgänge in Server Actions und API-Routen ─')
+  console.log(`   geprüft:           ${WURZELN.join(', ')}/**/{actions,route}.ts`)
   console.log(`   Treffer gesamt:    ${alle.length}`)
   console.log(`   im Bestand:        ${alle.length - neu.length}`)
   console.log('')

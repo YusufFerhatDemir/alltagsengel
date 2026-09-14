@@ -176,11 +176,17 @@ export const POST = withTracking(async function POST(
   async function nimmZurueck(): Promise<string | null> {
     const gescheitert: string[] = []
     for (const aId of umgehaengt) {
-      const { error } = await admin
+      // Trefferzahl statt nur Fehler: eine Ruecknahme, die null Zeilen
+      // erreicht, meldete sonst Erfolg — und der Einsatz bliebe beim
+      // Vertreter stehen, waehrend der Nachsatz „alles zurueckgenommen"
+      // behauptet. Das ist genau der halb uebertragene Zustand, den
+      // diese Funktion verhindern soll.
+      const { data: zurueck, error } = await admin
         .from('assignments')
         .update({ caregiver_id: urspruenglicherCaregiver })
         .eq('id', aId)
-      if (error) gescheitert.push(aId)
+        .select('id')
+      if (error || (zurueck?.length ?? 0) === 0) gescheitert.push(aId)
     }
     return gescheitert.length > 0
       ? ` ACHTUNG: ${gescheitert.length} bereits umgehängte Einsätze konnten NICHT zurückgenommen werden `
@@ -189,10 +195,23 @@ export const POST = withTracking(async function POST(
   }
 
   for (const assignmentId of offeneAssignments) {
-    const { error: aError } = await admin
+    const { data: uebertragen, error: aError } = await admin
       .from('assignments')
       .update({ caregiver_id: neuer_caregiver_id })
       .eq('id', assignmentId)
+      .select('id')
+    // Kein Fehler, aber auch keine Zeile: der Einsatz gehoert einer
+    // anderen Organisation oder ist nicht mehr offen. Weiterlaufen hiesse,
+    // die Tour als uebertragen zu melden, waehrend dieser Einsatz beim
+    // Erkrankten stehen bleibt.
+    if (!aError && (uebertragen?.length ?? 0) === 0) {
+      const nachsatz = await nimmZurueck()
+      return NextResponse.json(
+        { error: `Ein Einsatz der Tour konnte nicht übertragen werden (${assignmentId}) `
+          + `— die Tour wurde NICHT übertragen.${nachsatz}` },
+        { status: 409 },
+      )
+    }
     if (aError) {
       const nachsatz = await nimmZurueck()
       if (aError.message.includes('DOPPELBELEGUNG')) {

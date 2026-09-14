@@ -101,13 +101,27 @@ export const POST = withTracking(async function POST(request: NextRequest) {
     }
 
     // 6. Rolle ändern
-    const { error } = await adminSupabase
+    //
+    // Die Trefferzahl zaehlt: `profiles.role` ist die bindende Quelle,
+    // `app_metadata.role` (Schritt 7) schraenkt nur ein. Traefe dieses
+    // update null Zeilen und liefe der Ablauf weiter, stuende in
+    // app_metadata die NEUE und in profiles die ALTE Rolle — zwei
+    // autoritative Quellen mit verschiedenen Antworten, und die
+    // Oberflaeche meldete Erfolg.
+    const { data: geaendert, error } = await adminSupabase
       .from('profiles')
       .update({ role: newRole })
       .eq('id', userId)
+      .select('id')
 
     if (error) {
       return safeApiError(error, request)
+    }
+    if ((geaendert?.length ?? 0) === 0) {
+      return NextResponse.json(
+        { error: 'Die Rolle wurde nicht geändert — der Benutzer war nicht erreichbar. Es wurde nichts geändert.' },
+        { status: 409 },
+      )
     }
 
     // 7. app_metadata (serverseitig, NICHT vom User editierbar) setzen — das ist
