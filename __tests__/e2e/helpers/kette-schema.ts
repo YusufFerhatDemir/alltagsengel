@@ -510,6 +510,21 @@ export async function baueTourenTabellen(db: PGlite): Promise<void> {
       ADD COLUMN IF NOT EXISTS zip_code   text,
       ADD COLUMN IF NOT EXISTS bundesland text;
   `)
+
+  // NACHZUG: die Ist-Zeiten am Einsatz. Der Trigger
+  // `tour_stop_sync_assignment` aus derselben Migration schreibt sie,
+  // sobald ein Stop seinen Status wechselt — ohne die Spalten scheitert
+  // JEDER Statuswechsel eines Stops mit „column actual_start_time does
+  // not exist". Live sind sie vorhanden — und zwar als `time`, NICHT als
+  // `timestamptz`: mit dem falschen Typ scheitert der Trigger an
+  // „CASE/WHEN could not convert type time without time zone". Der Typ
+  // ist am 14.09.2026 aus der Live-OpenAPI gelesen.
+  await db.exec(`
+    ALTER TABLE public.assignments
+      ADD COLUMN IF NOT EXISTS actual_start_time       time,
+      ADD COLUMN IF NOT EXISTS actual_end_time         time,
+      ADD COLUMN IF NOT EXISTS actual_duration_minutes integer;
+  `)
 }
 
 export async function baueCamtTabellen(db: PGlite): Promise<void> {
