@@ -184,6 +184,17 @@ describe('Die Ausnahmeliste prüft sich selbst', () => {
 
   it('und meldet einen Eintrag, dessen Datei gescannt wurde und keinen Befund mehr trägt', async () => {
     const { veraltet, BESTAND_GEBUENDELT } = await import('../../scripts/lint-leerzustand')
+    if (BESTAND_GEBUENDELT.length === 0) {
+      // Seit Block 89 ist die Liste LEER — dann kann nichts veralten, und
+      // diese Richtung ist ueber die oeffentliche Funktion nicht mehr
+      // pruefbar. Die Aussage bleibt trotzdem festgehalten: leer heisst
+      // „keine Ausnahme", nicht „Pruefung abgeschaltet". Dieselbe
+      // Richtung deckt die Schwesterliste in
+      // __tests__/security/stilles-update-ausnahmeliste.test.ts ab, die
+      // weiterhin Eintraege fuehrt.
+      expect(veraltet([], ['app/irgendwas/page.tsx'])).toEqual([])
+      return
+    }
     const einer = BESTAND_GEBUENDELT[0]
     expect(veraltet([], [einer.datei])).toContainEqual(einer)
   })

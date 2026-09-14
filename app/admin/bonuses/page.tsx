@@ -57,6 +57,8 @@ export default function AdminBonusesPage() {
   const [caregivers, setCaregivers] = useState<Caregiver[]>([])
   const [bonuses, setBonuses] = useState<BonusRow[]>([])
   const [loading, setLoading] = useState(true)
+  /** Eine der Quellen war nicht lesbar (Block 89). */
+  const [ladefehler, setLadefehler] = useState<string | null>(null)
   const [award, setAward] = useState(false)
 
   // Regelwerk
@@ -212,12 +214,32 @@ export default function AdminBonusesPage() {
   const regelName = useCallback((id: string) => regeln.find(r => r.id === id)?.name || id, [regeln])
 
   const load = useCallback(async () => {
+    setLadefehler(null)
     try {
       const supabase = createClient()
       const [cgRes, boRes] = await Promise.all([
         supabase.from('caregivers').select('id, first_name, last_name, status'),
         supabase.from('caregiver_bonuses').select('id, caregiver_id, bonus_type, description, points, reward_type, reward_value, awarded_date, caregiver:caregivers(first_name, last_name)').order('awarded_date', { ascending: false }),
       ])
+      // BEFUND (Block 89): beide Abfragen ungeprueft. Ohne `boRes` hat
+      // niemand eine Praemie erhalten — und wer das liest, vergibt sie
+      // ein zweites Mal. Ohne `cgRes` gibt es keine Kraefte, denen man
+      // eine zuordnen koennte.
+      const nichtLesbar = ([
+        ['Betreuungskräfte', cgRes.error],
+        ['Prämien', boRes.error],
+      ] as const).filter(([, fehler]) => fehler != null).map(([name]) => name)
+
+      if (nichtLesbar.length > 0) {
+        setLadefehler(
+          nichtLesbar.join(' und ')
+          + ' konnten nicht geladen werden. Es wird keine Liste angezeigt — eine leere '
+          + 'lädt dazu ein, eine Prämie ein zweites Mal zu vergeben.'
+        )
+        setCaregivers([]); setBonuses([])
+        return
+      }
+
       setCaregivers((cgRes.data || []).map((c: any) => ({ id: c.id, name: fullName(c), status: c.status || 'active' })))
       setBonuses((boRes.data || []).map((b: any) => ({
         id: b.id, caregiver_id: b.caregiver_id, caregiver: fullName(b.caregiver), bonus_type: b.bonus_type,
@@ -295,7 +317,8 @@ export default function AdminBonusesPage() {
         </div>
       </div>
 
-      {loading ? <p>Laden…</p> : (
+      {ladefehler && <Banner tone="danger">{ladefehler}</Banner>}
+      {loading ? <p>Laden…</p> : ladefehler ? null : (
         <>
           {/* Bonus-Übersicht / Ranking */}
           <h2 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

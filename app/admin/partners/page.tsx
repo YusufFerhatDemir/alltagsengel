@@ -35,18 +35,39 @@ interface PartnerRow {
 export default function AdminPartnersPage() {
   const [rows, setRows] = useState<PartnerRow[]>([])
   const [loading, setLoading] = useState(true)
+  /** Eine der Quellen war nicht lesbar (Block 89). */
+  const [ladefehler, setLadefehler] = useState<string | null>(null)
   const [typeFilter, setTypeFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [expanded, setExpanded] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
+      setLadefehler(null)
       try {
         const supabase = createClient()
         const [pRes, vRes] = await Promise.all([
           supabase.from('cooperation_partners').select('*').order('name'),
           supabase.from('partner_visits').select('*').order('visit_date', { ascending: false }),
         ])
+        // BEFUND (Block 89): beide Abfragen ungeprueft. Ohne `vRes` hat
+        // kein Partner je einen Besuch bekommen — und die Seite, die
+        // genau daran erinnern soll, erinnert an nichts.
+        const nichtLesbar = ([
+          ['Partner', pRes.error],
+          ['Besuche', vRes.error],
+        ] as const).filter(([, fehler]) => fehler != null).map(([name]) => name)
+
+        if (nichtLesbar.length > 0) {
+          setLadefehler(
+            nichtLesbar.join(' und ')
+            + ' konnten nicht geladen werden. Es wird keine Liste angezeigt — „kein Besuch '
+            + 'hinterlegt" wäre von „nicht nachgesehen" nicht zu unterscheiden.'
+          )
+          setRows([])
+          return
+        }
+
         const visitsByPartner = new Map<string, Visit[]>()
         ;(vRes.data || []).forEach((v: any) => {
           const arr = visitsByPartner.get(v.partner_id) || []
@@ -96,6 +117,15 @@ export default function AdminPartnersPage() {
   }, [rows, typeFilter, search])
 
   const availableTypes = Object.keys(typeCounts)
+
+  // Ohne Liste nur den Grund: „kein Besuch hinterlegt" waere von „nicht
+  // nachgesehen" nicht zu unterscheiden (Block 89).
+  if (ladefehler) return (
+    <div className="admin-page">
+      <div className="admin-page-header"><h1>Kooperationspartner</h1></div>
+      <Banner tone="danger">{ladefehler}</Banner>
+    </div>
+  )
 
   return (
     <div className="admin-page">

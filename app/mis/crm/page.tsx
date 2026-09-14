@@ -132,6 +132,8 @@ export default function CrmPage() {
   const [activeTab, setActiveTab] = useState('pipeline')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
+  /** Eine der Quellen war nicht lesbar (Block 89). */
+  const [ladefehler, setLadefehler] = useState<string | null>(null)
   // Ein fehlgeschlagener Statuswechsel sah bisher wie Erfolg aus: das
   // Ergebnis der Server Action wurde weggeworfen. Jetzt steht der Grund da.
   const [aktionsFehler, setAktionsFehler] = useState<string | null>(null)
@@ -159,6 +161,7 @@ export default function CrmPage() {
   const [activityForm, setActivityForm] = useState({ activity_type: 'call', title: '', description: '' })
 
   const loadData = useCallback(async () => {
+    setLadefehler(null)
     try {
       const supabase = createClient()
       const [clientsRes, leadsRes, partnersRes, satisfactionRes, activitiesRes] = await Promise.all([
@@ -168,6 +171,31 @@ export default function CrmPage() {
         supabase.from('satisfaction_calls').select('*').order('call_date', { ascending: false }),
         supabase.from('mis_crm_activities').select('*').order('created_at', { ascending: false }).limit(50),
       ])
+      // BEFUND (Block 89): fuenf Abfragen, alle ungeprueft. Diese Seite
+      // ist der Vertriebstrichter — Klienten, Anfragen, Partner,
+      // Zufriedenheitsanrufe. Faellt `leadsRes` aus, gibt es keine
+      // offenen Anfragen, und niemand ruft zurueck. Faellt
+      // `satisfactionRes` aus, sieht jeder Klient unbetreut aus.
+      const nichtLesbar = ([
+        ['Klienten', clientsRes.error],
+        ['Anfragen', leadsRes.error],
+        ['Partner', partnersRes.error],
+        ['Zufriedenheitsanrufe', satisfactionRes.error],
+        ['Aktivitäten', activitiesRes.error],
+      ] as const).filter(([, fehler]) => fehler != null).map(([name]) => name)
+
+      if (nichtLesbar.length > 0) {
+        log.error('CRM: Abfragen fehlgeschlagen', { bereiche: nichtLesbar.join(', ') })
+        setLadefehler(
+          nichtLesbar.join(', ')
+          + ' konnten nicht geladen werden. Es wird nichts angezeigt — eine leere '
+          + 'Anfrageliste wäre von „keine offenen Anfragen" nicht zu unterscheiden.'
+        )
+        setClients([]); setLeads([]); setPartners([]); setSatisfactionCalls([]); setActivities([])
+        setLoading(false)
+        return
+      }
+
       setClients(clientsRes.data as Client[] || [])
       setLeads(leadsRes.data as Lead[] || [])
       setPartners(partnersRes.data as Partner[] || [])
@@ -288,6 +316,20 @@ export default function CrmPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         <SectionHeader title="CRM" subtitle="Kundenbeziehungen verwalten" icon="users" />
         <Card><div style={{ textAlign: 'center', padding: 40, color: BRAND.muted }}>Lade CRM-Daten...</div></Card>
+      </div>
+    )
+  }
+
+  // Ohne Daten keine leeren Listen: „keine offenen Anfragen" ist die eine
+  // Aussage, die diese Seite nach einem Lesefehler nicht treffen darf
+  // (Block 89).
+  if (ladefehler) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <SectionHeader title="CRM" subtitle="Kundenbeziehungen verwalten" icon="users" />
+        <Card>
+          <div style={{ padding: 24, color: '#D04B3B' }}>{ladefehler}</div>
+        </Card>
       </div>
     )
   }

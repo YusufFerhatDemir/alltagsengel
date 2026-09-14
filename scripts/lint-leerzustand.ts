@@ -277,48 +277,19 @@ export function pruefeQuelle(rohQuelle: string, datei: string): Befund[] {
 }
 
 /**
- * Bestand vom 14.09.2026 — 11 gebuendelte Stellen (Block 79: 85; seither
- * abgearbeitet in den Bloecken 80–83).
+ * Der Bestand ist ABGEARBEITET — die Liste ist leer.
  *
- * ── WAS DIESE LISTE IST UND WAS NICHT ─────────────────────────
- * Sie deckt BEIDE Bereiche ab: die Renderdateien, in denen die Regel
- * blockiert, und lib/ + app/api, wo dieselbe Form in Entscheidungen
- * endet und von den Tests festgehalten wird.
+ * Sie enthielt am 14.09.2026 fuenfundachtzig gebuendelte Stellen: die Form
+ * `const [aRes, bRes] = await Promise.all([…])`, die die Regel bis
+ * Block 79 nicht sehen konnte. Abgearbeitet in den Bloecken 80–89, jede
+ * Seite mit einer eigenen Entscheidung darueber, was sie statt der Nullen
+ * zeigt.
  *
- * Sie ist KEINE Freigabe. Diese Uebersichtsseiten zeigen bei einer
- * gescheiterten Abfrage Nullen statt einer Meldung — genau der Schaden,
- * den der Dateikopf beschreibt. Sie sind eingefroren, damit die Zahl nur
- * noch sinken kann und NEUE Faelle den Lauf rot machen.
- *
- * Dass die Liste so lang ist, ist der Befund: die Form
- * `const [aRes, bRes] = await Promise.all([…])` stand bisher ausserhalb
- * der Regel, und deshalb ist sie in jeder zweiten Uebersichtsseite
- * gewachsen. Sie kommentarlos in einem Durchlauf abzuarbeiten waere
- * falsch — jede Seite braucht eine eigene Entscheidung, was sie statt der
- * Nullen zeigt.
- *
- * Wer eine davon anfasst: `.error` pruefen (auch gebuendelt ueber eine
- * Liste), im Render den Leerzustand nur ohne Fehler zeigen, und die Zeile
- * hier herausnehmen. Ein veralteter Eintrag macht den Lauf rot — siehe
- * `veraltet()`.
- *
- * `app/admin/dashboard/page.tsx` steht NICHT in dieser Liste: dort war der
- * Schaden am groessten (acht Abfragen, darunter beide Umsatzzahlen), und
- * die Seite ist mit Block 79 behoben.
+ * Die Liste bleibt stehen, damit klar ist, dass es KEINE Ausnahmen gibt.
+ * Wer hier wieder einen Eintrag hinzufuegt, sollte den Grund danebenschreiben
+ * — und `veraltet()` nimmt ihn wieder heraus, sobald er nichts mehr deckt.
  */
-export const BESTAND_GEBUENDELT: { datei: string; variable: string }[] = [
-  { datei: 'app/admin/bonuses/page.tsx', variable: 'boRes' },
-  { datei: 'app/admin/bonuses/page.tsx', variable: 'cgRes' },
-  { datei: 'app/admin/partners/page.tsx', variable: 'pRes' },
-  { datei: 'app/admin/partners/page.tsx', variable: 'vRes' },
-  { datei: 'app/api/ai-chat/route.ts', variable: 'bookingsRes' },
-  { datei: 'app/api/ai-chat/route.ts', variable: 'usersRes' },
-  { datei: 'app/api/ai-chat/route.ts', variable: 'visitorsRes' },
-  { datei: 'app/mis/crm/page.tsx', variable: 'clientsRes' },
-  { datei: 'app/mis/crm/page.tsx', variable: 'leadsRes' },
-  { datei: 'app/mis/crm/page.tsx', variable: 'partnersRes' },
-  { datei: 'app/mis/crm/page.tsx', variable: 'satisfactionRes' },
-]
+export const BESTAND_GEBUENDELT: { datei: string; variable: string }[] = []
 
 export function imBestand(b: Befund): boolean {
   return BESTAND_GEBUENDELT.some(e => e.datei === b.datei && e.variable === b.variable)

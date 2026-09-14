@@ -65,6 +65,34 @@ async function fetchLiveContext(orgId: string): Promise<string> {
       admin.from('profiles').select('id').in('id', memberIdList).eq('role', 'fahrer'),
     ])
 
+    // BEFUND (Block 89): sechs Abfragen, alle ungeprueft. Was hier
+    // entsteht, ist ein Textblock mit der Ueberschrift „LIVE DATEN AUS DER
+    // DATENBANK", der an ein Sprachmodell geht. Faellt eine Abfrage aus,
+    // bekommt das Modell 0 Nutzer, 0 Buchungen und 0,00 EUR Umsatz ALS
+    // TATSACHE — und antwortet der Geschaeftsfuehrung darauf mit voller
+    // Ueberzeugung.
+    //
+    // Nullen, die als Messwert ausgegeben werden, sind hier schlimmer als
+    // eine Fehlermeldung: das Modell kann sie nicht als Ausfall erkennen.
+    const nichtLesbar = ([
+      ['Profile', usersRes.error],
+      ['Buchungen', bookingsRes.error],
+      ['Besucher', visitorsRes.error],
+      ['Engel', engelsRes.error],
+      ['Kunden', kundenRes.error],
+      ['Fahrer', fahrerRes.error],
+    ] as const).filter(([, fehler]) => fehler != null).map(([name]) => name)
+
+    if (nichtLesbar.length > 0) {
+      return `
+=== KEINE LIVE-DATEN VERFUEGBAR (Stand: ${new Date().toLocaleString('de-DE')}) ===
+Die folgenden Bereiche konnten NICHT gelesen werden: ${nichtLesbar.join(', ')}.
+
+Es liegen KEINE Zahlen vor. Nenne keine Kennzahlen, schaetze keine, und
+sage ausdruecklich, dass die Daten gerade nicht abrufbar sind.
+`
+    }
+
     const users = usersRes.data || []
     const bookings = bookingsRes.data || []
     const visitors = visitorsRes.data || []
