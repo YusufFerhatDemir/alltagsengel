@@ -25,7 +25,10 @@ import {
   pruefeCodeGueltigkeit, codePraefix,
 } from '@/lib/coach/freischaltung'
 import { dipaModus, freischaltungPflicht } from '@/lib/coach/config'
+import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
+
+const log = logger.child('api:coach:freischaltung')
 
 const FEHLER_UNGUELTIG = 'Dieser Code ist nicht gültig. Bitte prüfen Sie Ihre Eingabe.'
 
@@ -149,10 +152,31 @@ export const POST = withTracking(async function POST(request: Request) {
 
   if (insertFehler) {
     // Code zurückdrehen, damit der Nutzer es erneut versuchen kann.
-    await admin
+    //
+    // BEFUND (Block 61, 14.09.2026): ungeprueft. Schlug das Zurueckdrehen
+    // fehl, blieb der Code auf 'eingeloest' — der Nutzer kann ihn NIE
+    // wieder verwenden und hat nichts dafuer bekommen. Genau das, was die
+    // Ruecknahme verhindern soll.
+    const { data: zurueckgedreht, error: ruecknahmeFehler } = await admin
       .from('coach_freischaltcodes')
       .update({ status: 'ausgegeben', eingeloest_am: null, eingeloest_pseudonym: null })
       .eq('id', code.id)
+      .select('id')
+
+    if (ruecknahmeFehler || (zurueckgedreht?.length ?? 0) === 0) {
+      log.error('Freischaltung UND Ruecknahme fehlgeschlagen — Code bleibt eingeloest', {
+        codeId: code.id,
+        insertFehler: insertFehler.message,
+        ruecknahme: ruecknahmeFehler?.message ?? 'keine Zeile getroffen',
+      })
+      return NextResponse.json({
+        error:
+          'Die Freischaltung konnte nicht abgeschlossen werden, und der Code liess sich '
+          + 'nicht zuruecksetzen. Er gilt weiter als eingeloest und kann nicht erneut '
+          + 'verwendet werden — bitte beim Support melden.',
+      }, { status: 500 })
+    }
+
     return NextResponse.json({ error: 'Die Freischaltung konnte nicht abgeschlossen werden.' }, { status: 500 })
   }
 

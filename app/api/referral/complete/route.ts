@@ -131,7 +131,12 @@ export const POST = withTracking(async function POST(request: NextRequest) {
       // stehenbleiben, wenn kein Geld geflossen ist — sonst ist er
       // verbrannt und niemand merkt es. Gleiche Linie wie
       // genehmigenAbwesenheit und protokolliereSignaturAudit.
-      await supabaseAdmin
+      // BEFUND (Block 61, 14.09.2026): Diese Ruecknahme war ungeprueft —
+      // und der Kommentar darueber beschreibt genau den Schaden, den ein
+      // Fehlschlag anrichtet: der Vorgang bleibt „abgeschlossen", obwohl
+      // kein Geld geflossen ist, und ist damit verbrannt. Das gilt fuer
+      // die Ruecknahme selbst genauso wie fuer die Buchung.
+      const { data: zurueckgesetzt, error: ruecknahmeFehler } = await supabaseAdmin
         .from('referrals')
         .update({
           status: 'pending',
@@ -140,6 +145,22 @@ export const POST = withTracking(async function POST(request: NextRequest) {
           referred_credited: false,
         })
         .eq('id', referral.id)
+        .select('id')
+
+      if (ruecknahmeFehler || (zurueckgesetzt?.length ?? 0) === 0) {
+        log.error('Gutschrift UND Ruecknahme fehlgeschlagen — Referral bleibt abgeschlossen', {
+          referralId: referral.id,
+          werber: fuerWerber.fehler ?? null,
+          geworbener: fuerGeworbenen.fehler ?? null,
+          ruecknahme: ruecknahmeFehler?.message ?? 'keine Zeile getroffen',
+        })
+        return NextResponse.json({
+          error:
+            'Der Empfehlungsbonus konnte nicht gutgeschrieben werden, und der Vorgang '
+            + `liess sich nicht zuruecksetzen. Empfehlung ${referral.id} steht weiter auf `
+            + '„abgeschlossen", ohne dass Geld geflossen ist — bitte im Buero pruefen.',
+        }, { status: 500 })
+      }
 
       log.error('Gutschrift fehlgeschlagen — Referral zurückgesetzt', {
         werber: fuerWerber.fehler ?? null,

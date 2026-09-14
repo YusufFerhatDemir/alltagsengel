@@ -266,12 +266,27 @@ export async function genehmigenAbwesenheit(
       // Restanspruch aufgebraucht haben. Dann darf die Genehmigung NICHT
       // stehenbleiben — der Antrag geht zurueck auf 'beantragt' und kann
       // erneut entschieden werden.
-      await supabase
+      // BEFUND (Block 61, 14.09.2026): ungeprueft. Schlug die Ruecknahme
+      // fehl, blieb der Antrag GENEHMIGT, ohne dass die Tage gebucht
+      // wurden — die Kraft hat frei, das Urlaubskonto weiss nichts davon,
+      // und der geworfene Fehler liess den Aufrufer annehmen, die
+      // Genehmigung sei nicht zustande gekommen.
+      const { data: zurueckgenommen, error: ruecknahmeFehler } = await supabase
         .from('absences')
         .update({ status: 'beantragt', genehmigt_von: null, genehmigt_am: null })
         .eq('id', id)
         .eq('organization_id', organizationId)
         .eq('status', 'genehmigt')
+        .select('id')
+
+      if (ruecknahmeFehler || (zurueckgenommen?.length ?? 0) === 0) {
+        throw new Error(
+          `Die Urlaubstage konnten nicht gebucht werden (${(fehler as Error).message}) UND die `
+          + `Genehmigung liess sich nicht zuruecknehmen `
+          + `(${ruecknahmeFehler?.message ?? 'keine Zeile getroffen'}). Abwesenheit ${id} steht `
+          + 'weiter auf „genehmigt", ohne Buchung im Urlaubskonto.',
+        )
+      }
       throw fehler
     }
   }
