@@ -624,7 +624,21 @@ export async function versendeDakotaAuftrag(
   // Annahmestelle die Verarbeitung begonnen haben; ab da entscheidet ein
   // Mensch über die Dead-Letter-Queue. Siehe lib/abrechnung/retry.ts.
   const versandStart = new Date().toISOString()
-  const wiederholung = await mitWiederholung(
+  // BEFUND (Block 74): der Zustandswechsel oben ist eine UEBERNAHME —
+  // `.neq('status', 'uebermittlung_laeuft')` sperrt jeden weiteren
+  // Versuch aus. Entkam aus dem Uebertragungsblock eine Ausnahme, blieb
+  // der Auftrag genau dort stehen, und die Sperre richtete sich gegen
+  // ihren eigenen Auftrag: „steht bereits auf uebermittlung_laeuft — es
+  // wurde NICHTS uebertragen", bei jedem weiteren Anlauf, dauerhaft.
+  //
+  // Dass `sendePerSFTP` selbst ein try/catch hat, deckt das nicht ab:
+  // `pruefeDakotaFreigabe()` steht dort VOR dem try, und `mitWiederholung`
+  // umschliesst `aktion` nicht — eine Ausnahme aus der Aktion reicht bis
+  // hierher durch.
+  //
+  // Als benannte Funktion, damit der Rueckgabetyp ohne zusaetzlichen
+  // Import abzuleiten ist.
+  const uebertrage = () => mitWiederholung(
     (versuch) => {
       if (versuch > 1) log(`Wiederholung ${versuch} von ${MAX_VERSUCHE}`)
       return sendePerSFTP(
@@ -650,6 +664,34 @@ export async function versendeDakotaAuftrag(
       },
     },
   )
+
+  let wiederholung: Awaited<ReturnType<typeof uebertrage>>
+  try {
+    wiederholung = await uebertrage()
+  } catch (err) {
+    // Wir wissen NICHT, ob etwas hinausgegangen ist. Deshalb wird die
+    // Uebernahme nicht auf den alten Stand zurueckgenommen — das hiesse,
+    // einen erneuten Versand freizugeben, und eine doppelt eingereichte
+    // Kassenabrechnung ist der schlimmere Schaden. `technischer_fehler`
+    // ist derselbe Endzustand, den ein gescheiterter Versuch bekommt: der
+    // Auftrag ist wieder handhabbar, und ueber das Weitere entscheidet ein
+    // Mensch.
+    const meldung = err instanceof Error ? err.message : String(err)
+    const freigabeVermerk = await zaehleVersuch(
+      supabase, auftragId, organizationId, (auftrag.versand_versuche ?? 0),
+      {
+        status: 'technischer_fehler',
+        fehler_code: 'UNERWARTET',
+        fehler_meldung: `Uebertragung unerwartet abgebrochen: ${meldung}`.slice(0, 1000),
+      },
+    )
+    throw new Error(
+      `Uebertragung des DAKOTA-Auftrags ${auftragId} unerwartet abgebrochen: ${meldung}`
+      + (freigabeVermerk.ok
+        ? ' — der Auftrag steht auf "technischer_fehler"; ob Daten hinausgegangen sind, ist UNBEKANNT und vor einem erneuten Versand zu pruefen.'
+        : ` — und der Auftrag konnte nicht aus "uebermittlung_laeuft" geloest werden (${freigabeVermerk.grund}); er laesst sich dann gar nicht mehr versenden.`),
+    )
+  }
 
   const ergebnis = wiederholung.ergebnis
   protokoll.push(ergebnis.protokoll)
