@@ -332,11 +332,19 @@ export default function SicherheitsspurSeite() {
   const ladeWatchlist = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/security/watchlist')
-      if (!res.ok) return
+      if (!res.ok) throw new Error(`Überwachungsliste konnte nicht geladen werden (HTTP ${res.status}).`)
       const json = (await res.json()) as { eintraege: WatchlistZeile[] }
       setWl(json.eintraege ?? [])
     } catch (err) {
+      // Eine leere Überwachungsliste heisst „niemand wird überwacht". Das ist
+      // eine Aussage über die Sicherheitslage — sie darf nicht aus einem
+      // gescheiterten Abruf entstehen.
       log.errorWithException('Überwachungsliste konnte nicht geladen werden', err)
+      setWl([])
+      setWlMeldung({
+        ton: 'danger',
+        text: err instanceof Error ? err.message : 'Überwachungsliste konnte nicht geladen werden.',
+      })
     }
   }, [])
 

@@ -128,6 +128,8 @@ export default function AufgabeDetailPage() {
   const [anhaenge, setAnhaenge] = useState<Anhang[]>([])
   const [eskalationen, setEskalationen] = useState<EskalationsEintrag[]>([])
   const [tabLoading, setTabLoading] = useState(false)
+  const [ladeFehler, setLadeFehler] = useState<string | null>(null)
+  const [tabFehler, setTabFehler] = useState<string | null>(null)
 
   // Checklist form
   const [newCheckText, setNewCheckText] = useState('')
@@ -143,15 +145,22 @@ export default function AufgabeDetailPage() {
   const [newAnhangDokId, setNewAnhangDokId] = useState('')
 
   // Load Aufgabe
+  //
+  // Bisher endete ein gescheiterter Abruf in beiden Effekten still: die
+  // Aufgabe blieb `null`, die Reiter (Checkliste, Kommentare, Anhaenge,
+  // Eskalationen) blieben leer. Ein leerer Eskalationsreiter heisst „nichts
+  // eskaliert" — das ist genau die Aussage, die man hier nicht raten darf.
   useEffect(() => {
     async function load() {
       try {
         const res = await fetch(`/api/ops/aufgaben/${aufgabeId}`)
-        if (!res.ok) { setLoading(false); return }
+        if (!res.ok) throw new Error(`Aufgabe konnte nicht geladen werden (HTTP ${res.status}).`)
         const data = await res.json()
         setAufgabe(data)
         setEditData(data)
-      } catch { /* ignore */ } finally { setLoading(false) }
+      } catch (e) {
+        setLadeFehler(e instanceof Error ? e.message : 'Aufgabe konnte nicht geladen werden.')
+      } finally { setLoading(false) }
     }
     load()
   }, [aufgabeId])
@@ -160,21 +169,25 @@ export default function AufgabeDetailPage() {
   useEffect(() => {
     async function loadTab() {
       setTabLoading(true)
+      setTabFehler(null)
+      const hole = async (pfad: string, was: string) => {
+        const res = await fetch(pfad)
+        if (!res.ok) throw new Error(`${was} konnten nicht geladen werden (HTTP ${res.status}).`)
+        return res.json()
+      }
       try {
         if (tab === 'checkliste') {
-          const res = await fetch(`/api/ops/aufgaben/${aufgabeId}/checklisten`)
-          if (res.ok) setChecklist(await res.json())
+          setChecklist(await hole(`/api/ops/aufgaben/${aufgabeId}/checklisten`, 'Checkliste'))
         } else if (tab === 'kommentare') {
-          const res = await fetch(`/api/ops/aufgaben/${aufgabeId}/kommentare`)
-          if (res.ok) setKommentare(await res.json())
+          setKommentare(await hole(`/api/ops/aufgaben/${aufgabeId}/kommentare`, 'Kommentare'))
         } else if (tab === 'anhaenge') {
-          const res = await fetch(`/api/ops/aufgaben/${aufgabeId}/anhaenge`)
-          if (res.ok) setAnhaenge(await res.json())
+          setAnhaenge(await hole(`/api/ops/aufgaben/${aufgabeId}/anhaenge`, 'Anhänge'))
         } else if (tab === 'eskalation') {
-          const res = await fetch(`/api/ops/eskalationshistorie?aufgabe_id=${aufgabeId}`)
-          if (res.ok) setEskalationen(await res.json())
+          setEskalationen(await hole(`/api/ops/eskalationshistorie?aufgabe_id=${aufgabeId}`, 'Eskalationen'))
         }
-      } catch { /* ignore */ } finally { setTabLoading(false) }
+      } catch (e) {
+        setTabFehler(e instanceof Error ? e.message : 'Daten konnten nicht geladen werden.')
+      } finally { setTabLoading(false) }
     }
     if (tab !== 'details') loadTab()
   }, [tab, aufgabeId])
@@ -318,7 +331,19 @@ export default function AufgabeDetailPage() {
   }
 
   if (loading) return <div className="admin-page"><p>Laden...</p></div>
-  if (!aufgabe) return <div className="admin-page"><p>Aufgabe nicht gefunden</p></div>
+  // Der frühe Ausstieg kommt VOR dem Banner weiter unten — deshalb muss er
+  // hier selbst unterscheiden. „Aufgabe nicht gefunden" ist eine Aussage
+  // über die Datenbank; sie darf nicht herauskommen, wenn bloss der Abruf
+  // gescheitert ist.
+  if (!aufgabe) {
+    return (
+      <div className="admin-page">
+        {ladeFehler
+          ? <Banner tone="danger">{ladeFehler}</Banner>
+          : <p>Aufgabe nicht gefunden</p>}
+      </div>
+    )
+  }
 
   const st = statusMeta(AUFGABEN_STATUS, aufgabe.status)
   const prio = statusMeta(AUFGABEN_PRIORITAET, aufgabe.prioritaet)
@@ -360,6 +385,8 @@ export default function AufgabeDetailPage() {
         </div>
       </div>
 
+      {ladeFehler && <Banner tone="danger">{ladeFehler}</Banner>}
+      {tabFehler && <Banner tone="danger">{tabFehler}</Banner>}
       {saveMsg && <Banner tone={saveMsg === 'Gespeichert' || saveMsg === 'Keine Änderungen' ? 'success' : 'danger'}>{saveMsg}</Banner>}
 
       {/* Tabs */}

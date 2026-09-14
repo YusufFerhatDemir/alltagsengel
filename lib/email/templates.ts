@@ -369,6 +369,166 @@ export const EMAIL_VORLAGEN: EmailVorlage[] = [
       + ENTLASTUNGSBETRAG_ABSATZ
       + FRAGEN,
   },
+
+  // ── 4. Stufenwechsel der beiden Trichter ────────────────────────────
+  //
+  // Diese Vorlagen gehoeren zu den Stufen aus `lib/kunde/pipeline.ts` und
+  // `lib/bewerbung/pipeline.ts`. Jede beantwortet die Frage, die auf genau
+  // dieser Stufe beim Empfaenger entsteht — und keine andere.
+  //
+  // Sie werden NICHT automatisch versendet. Es gibt sie, damit die
+  // Verwaltung an der Stufe einen fertigen Entwurf hat, statt jedes Mal neu
+  // zu formulieren.
+
+  {
+    id: 'kunde_erstgespraech_termin',
+    quelle: 'F-1',
+    name: 'Bestätigung — Termin für das Erstgespräch',
+    zielgruppe: 'kunde',
+    betreff: () => 'Ihr Beratungstermin bei Alltagsengel',
+    felder: [
+      FELD_VORNAME,
+      { key: 'termin', label: 'Termin (Datum und Uhrzeit)', pflicht: true },
+      { key: 'ort', label: 'Ort oder Telefon', pflicht: true, beispiel: 'bei Ihnen zu Hause' },
+    ],
+    rumpf: v =>
+      p('vielen Dank für Ihr Vertrauen — wir haben den Termin für Ihr Erstgespräch notiert.')
+      + kasten(`<strong>Termin:</strong> ${esc(v.termin || '')}<br><strong>Wo:</strong> ${esc(v.ort || '')}`)
+      + p('Im Gespräch klären wir in Ruhe, welche Unterstützung im Alltag hilft, '
+        + 'zu welchen Zeiten und wie oft. Das dauert etwa eine Stunde.')
+      + p('<strong>Wenn Sie mögen, legen Sie bereit:</strong>')
+      + ul([
+        'den Pflegegrad-Bescheid, falls vorhanden',
+        'den Namen Ihrer Pflegekasse',
+        'Ihre Fragen — es gibt keine unpassenden',
+      ])
+      + p('Nichts davon ist Voraussetzung. Wenn etwas fehlt, klären wir es gemeinsam.')
+      + p('Passt der Termin doch nicht? Sagen Sie uns kurz Bescheid, wir finden einen anderen.')
+      + FRAGEN,
+  },
+  {
+    id: 'kunde_erstgespraech_erinnerung',
+    quelle: 'F-2',
+    name: 'Erinnerung — Erstgespräch morgen',
+    zielgruppe: 'kunde',
+    betreff: () => 'Erinnerung: unser Gespräch morgen',
+    felder: [
+      FELD_VORNAME,
+      { key: 'termin', label: 'Termin (Datum und Uhrzeit)', pflicht: true },
+      { key: 'ort', label: 'Ort oder Telefon', pflicht: true },
+    ],
+    rumpf: v =>
+      p('nur eine kurze Erinnerung an unser Gespräch.')
+      + kasten(`<strong>Termin:</strong> ${esc(v.termin || '')}<br><strong>Wo:</strong> ${esc(v.ort || '')}`)
+      + p('Sollte etwas dazwischenkommen, genügt eine kurze Nachricht — wir verschieben '
+        + 'den Termin gerne.')
+      + FRAGEN,
+  },
+  {
+    id: 'kunde_angebot',
+    quelle: 'F-3',
+    name: 'Status — Leistungs- und Kostenvorschlag',
+    zielgruppe: 'kunde',
+    betreff: () => 'Ihr Vorschlag von Alltagsengel',
+    felder: [
+      FELD_VORNAME,
+      { key: 'umfang', label: 'Umfang', pflicht: true, beispiel: '2 Stunden pro Woche, dienstags vormittags' },
+      { key: 'stundensatz', label: 'Stundensatz', pflicht: true, beispiel: 'siehe beigefügter Vorschlag' },
+    ],
+    rumpf: v =>
+      p('nach unserem Gespräch haben wir Ihnen einen Vorschlag zusammengestellt.')
+      + kasten(`<strong>Umfang:</strong> ${esc(v.umfang || '')}<br><strong>Kosten:</strong> ${esc(v.stundensatz || '')}`)
+      + ENTLASTUNGSBETRAG_ABSATZ
+      + p('Schauen Sie in Ruhe darüber. Wenn etwas nicht passt — Zeiten, Umfang, '
+        + 'Aufgaben —, ändern wir das gerne.')
+      + p('Melden Sie sich einfach, wenn Sie einverstanden sind oder Fragen haben.')
+      + FRAGEN,
+  },
+  {
+    id: 'kunde_vertrag',
+    quelle: 'F-4',
+    name: 'Status — Vertrag zur Unterschrift',
+    zielgruppe: 'kunde',
+    betreff: () => 'Ihre Vertragsunterlagen von Alltagsengel',
+    felder: [FELD_VORNAME],
+    rumpf: () =>
+      p('wir freuen uns, dass Sie sich für Alltagsengel entschieden haben.')
+      + p('<strong>Die nächsten Schritte:</strong>')
+      + ol([
+        'Sie erhalten die Vertragsunterlagen von uns.',
+        'Sie schauen sie durch und unterschreiben, was passt.',
+        'Wir stellen Ihnen Ihre Alltagsbegleitung persönlich vor.',
+      ])
+      + p('Lassen Sie sich Zeit beim Lesen. Was unklar ist, erklären wir Ihnen — '
+        + 'am Telefon oder bei einem weiteren Besuch.')
+      + FRAGEN,
+  },
+  {
+    id: 'kunde_absage',
+    quelle: 'F-5',
+    name: 'Status — Anfrage kann nicht bedient werden',
+    zielgruppe: 'kunde',
+    betreff: () => 'Ihre Anfrage bei Alltagsengel',
+    felder: [
+      FELD_VORNAME,
+      { key: 'grund', label: 'Grund in einem Satz', pflicht: true,
+        beispiel: 'in Ihrer Region derzeit keine freie Begleitung' },
+    ],
+    rumpf: v =>
+      p('vielen Dank für Ihre Anfrage und Ihr Vertrauen.')
+      + p(`Leider können wir Ihnen im Moment kein Angebot machen: ${esc(v.grund || '')}.`)
+      + p('Das tut uns leid — gerade weil Sie sich an uns gewandt haben.')
+      + p('Wenn Sie möchten, melden wir uns, sobald sich das ändert. Schreiben Sie uns '
+        + 'dazu einfach kurz zurück.')
+      + FRAGEN,
+  },
+  {
+    id: 'bewerber_probearbeit',
+    quelle: 'F-6',
+    name: 'Einladung zur Probearbeit',
+    zielgruppe: 'bewerber',
+    betreff: () => 'Ihre Probearbeit bei Alltagsengel',
+    felder: [
+      FELD_VORNAME,
+      { key: 'termin', label: 'Termin (Datum und Uhrzeit)', pflicht: true },
+      { key: 'treffpunkt', label: 'Treffpunkt', pflicht: true },
+      { key: 'begleitung', label: 'Wer begleitet', beispiel: 'eine erfahrene Kollegin' },
+    ],
+    rumpf: v =>
+      p('das Gespräch hat uns gefallen — jetzt möchten wir Sie im Alltag erleben, '
+        + 'und Sie uns.')
+      + kasten(`<strong>Termin:</strong> ${esc(v.termin || '')}<br>`
+        + `<strong>Treffpunkt:</strong> ${esc(v.treffpunkt || '')}`
+        + (v.begleitung ? `<br><strong>Begleitung:</strong> ${esc(v.begleitung)}` : ''))
+      + p('Sie begleiten einen regulären Einsatz und sehen, wie unsere Arbeit aussieht. '
+        + 'Sie müssen nichts allein machen und nichts vorbereiten.')
+      + p('<strong>Bitte mitbringen:</strong>')
+      + ul([
+        'bequeme Kleidung und feste Schuhe',
+        'Ihren Personalausweis',
+        'Ihre Fragen',
+      ])
+      + p('Im Anschluss sprechen wir kurz darüber, wie es für Sie war.')
+      + FRAGEN,
+  },
+  {
+    id: 'bewerber_erinnerung',
+    quelle: 'F-7',
+    name: 'Erinnerung — Termin morgen',
+    zielgruppe: 'bewerber',
+    betreff: () => 'Erinnerung: Ihr Termin bei Alltagsengel morgen',
+    felder: [
+      FELD_VORNAME,
+      { key: 'termin', label: 'Termin (Datum und Uhrzeit)', pflicht: true },
+      { key: 'ort', label: 'Ort oder Videolink', pflicht: true },
+    ],
+    rumpf: v =>
+      p('nur eine kurze Erinnerung an unseren Termin.')
+      + kasten(`<strong>Termin:</strong> ${esc(v.termin || '')}<br><strong>Wo:</strong> ${esc(v.ort || '')}`)
+      + p('Sollte etwas dazwischenkommen, schreiben Sie uns kurz — wir finden einen '
+        + 'neuen Termin.')
+      + FRAGEN,
+  },
 ]
 
 const NACH_ID = new Map(EMAIL_VORLAGEN.map(v => [v.id, v]))

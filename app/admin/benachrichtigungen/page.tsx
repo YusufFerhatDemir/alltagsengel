@@ -41,7 +41,9 @@ export default function BenachrichtigungenPage() {
   async function load() {
     try {
       const res = await fetch('/api/ops/benachrichtigungen')
-      if (!res.ok) { setLoading(false); return }
+      // Der catch darunter meldet korrekt — nur kam er bei einem HTTP-Fehler
+      // nie zum Zug. Die Liste blieb leer und sah aus wie „nichts Neues".
+      if (!res.ok) throw new Error(`Benachrichtigungen konnten nicht geladen werden (HTTP ${res.status}).`)
       const data = await res.json()
       setRows(data)
     } catch (err) {
@@ -68,10 +70,17 @@ export default function BenachrichtigungenPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids: [id] }),
       })
-      if (!res.ok) return
+      // Ohne diese Pruefung markierte die Oberflaeche die Zeile als gelesen,
+      // waehrend sie es in der Datenbank nicht war — beim naechsten Laden
+      // waere sie wieder ungelesen gewesen, ohne dass jemand weiss warum.
+      if (!res.ok) {
+        setError('Als gelesen markieren fehlgeschlagen — bitte neu laden.')
+        return
+      }
       setRows(prev => prev.map(r => r.id === id ? { ...r, gelesen: true } : r))
     } catch (err) {
       log.errorWithException('Fehler in markAsRead (Admin-Benachrichtigungen)', err)
+      setError('Als gelesen markieren fehlgeschlagen — bitte neu laden.')
     }
   }
 

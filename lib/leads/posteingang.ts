@@ -32,6 +32,7 @@ import {
 
 import { atsFelderAus } from '@/lib/bewerbung/ats-felder'
 import { bewerteAlterung, dringlichkeitsRang, type Alterung } from '@/lib/leads/alterung'
+import { stufeFuerAnfrage, kundenStufe, KUNDEN_ENDZUSTAENDE } from '@/lib/kunde/pipeline'
 
 export type Ampel = 'schwarz' | 'rot' | 'orange' | 'gelb' | 'gruen'
 
@@ -120,6 +121,7 @@ export interface RohLead {
   updated_at?: string | null
   follow_up_date?: string | null
   bewerbung_daten?: unknown
+  anfrage_daten?: unknown
 }
 
 function kontaktAus(email?: string | null, telefon?: string | null): string | null {
@@ -212,16 +214,21 @@ export function ausBewerbung(z: RohLead, jetzt: Date): PosteingangEintrag | null
  * CRM-Status. NEU läuft ab Eingang, sonst ab gesetzter Wiedervorlage —
  * ohne Wiedervorlage gibt es keine Uhr, und das steht dann auch so da.
  */
-const ANFRAGE_STATUS: Record<string, { label: string; color: string }> = {
-  new: { label: 'Neu', color: '#2196F3' },
-  contacted: { label: 'Kontaktiert', color: '#E8A000' },
-  qualified: { label: 'Qualifiziert', color: '#9C27B0' },
-}
-
 export function ausAnfrage(z: RohLead, jetzt: Date): PosteingangEintrag | null {
   const status = z.status || 'new'
-  const meta = ANFRAGE_STATUS[status]
-  if (!meta) return null
+  // ── DIE FEINE STUFE STATT DES GROBEN STATUS ──────────────────────────
+  // Hier standen drei Etiketten (Neu / Kontaktiert / Qualifiziert), also der
+  // CRM-Status in Worten. „Qualifiziert" sagt nicht, ob das Erstgespräch
+  // geführt, ein Angebot draußen oder der Vertrag unterwegs ist — und genau
+  // das ist die Frage, die der Posteingang beantworten soll.
+  //
+  // `lib/kunde/pipeline.ts` führt die feine Stufe in `anfrage_daten` und
+  // leitet sie aus dem Status ab, wo keine gespeichert ist. Bestandszeilen
+  // ohne Pipeline sehen damit genauso aus wie vorher, nur unter dem
+  // richtigen Namen. Dieselbe Zweiteilung wie auf der Bewerberseite.
+  const { stufe } = stufeFuerAnfrage(z.anfrage_daten, status)
+  if (KUNDEN_ENDZUSTAENDE.includes(stufe)) return null
+  const meta = kundenStufe(stufe)
   const wiedervorlage = tagAlsZeitpunkt(z.follow_up_date ?? null)
   // ── WARUM HIER EIN RÜCKFALL STEHT ────────────────────────────────────
   // Für einen bearbeiteten Lead läuft die Uhr ab der Wiedervorlage. Ist
@@ -243,7 +250,7 @@ export function ausAnfrage(z: RohLead, jetzt: Date): PosteingangEintrag | null {
     art: 'anfrage',
     name: (z.name || '').trim() || '—',
     kontakt: kontaktAus(z.email, z.phone),
-    stufe: status,
+    stufe,
     stufeLabel: meta.label,
     stufeFarbe: meta.color,
     eingang: z.created_at,
@@ -253,9 +260,13 @@ export function ausAnfrage(z: RohLead, jetzt: Date): PosteingangEintrag | null {
     ampel: ampelFuer(followUp),
     stundenOffen: stunden(z.created_at, jetzt),
     punkte: 0,
+    // Die Aufgabe der Stufe statt einer Zustandsbeschreibung: „Rückruf ist
+    // raus — Termin für das Erstgespräch vereinbaren" sagt, was zu tun ist.
     hinweis: status === 'new'
-      ? `Anfrage über ${z.source || 'Website'} — noch nicht bearbeitet`
-      : wiedervorlage ? 'Wiedervorlage gesetzt' : 'Ohne Wiedervorlage — Termin setzen',
+      ? `Anfrage über ${z.source || 'Website'} — ${meta.aufgabe.toLowerCase()}`
+      // Die fehlende Wiedervorlage steht VORN: sie ist der Grund, warum
+      // dieser Vorgang liegen bleibt. Die Aufgabe der Stufe folgt.
+      : wiedervorlage ? meta.aufgabe : `Ohne Wiedervorlage — ${meta.aufgabe.toLowerCase()}`,
     ziel: ART_META.anfrage.ziel,
     quelle: z.source ?? null,
     letzterKontakt: null,

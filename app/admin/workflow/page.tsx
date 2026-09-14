@@ -80,10 +80,15 @@ export default function WorkflowDashboardPage() {
   async function load() {
     try {
       const res = await fetch('/api/ops/workflow/dashboard')
-      if (!res.ok) { setLoading(false); return }
+      // „Leer" und „nicht geladen" sind verschiedene Aussagen. Auf
+      // dieser Seite heisst eine leere Liste „nichts offen" — ein
+      // gescheiterter Abruf darf nicht so aussehen.
+      if (!res.ok) throw new Error(`Workflow-Übersicht konnte nicht geladen werden (HTTP ${res.status}).`)
       const data = await res.json()
       setDashboard(data)
-    } catch { /* ignore */ } finally { setLoading(false) }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Laden fehlgeschlagen.')
+    } finally { setLoading(false) }
   }
 
   useEffect(() => { load() }, [])

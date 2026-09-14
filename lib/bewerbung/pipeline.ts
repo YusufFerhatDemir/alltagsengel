@@ -1,13 +1,14 @@
 /**
- * Bewerber-Pipeline: acht Stufen mit automatischer Wiedervorlage.
+ * Bewerber-Pipeline: zwölf Stufen mit automatischer Wiedervorlage.
  *
- * NEU → VORGEPRÜFT → RÜCKFRAGE → VORSTELLUNGSGESPRÄCH → ZUSAGE →
- * UNTERLAGEN → EINSATZBEREIT, Ausstieg ABGELEHNT.
+ * NEU → VORGEPRÜFT → KONTAKTIERT → RÜCKFRAGE → GESPRÄCH → PROBEARBEIT →
+ * ZUSAGE → UNTERLAGEN → VERTRAG → EINSATZBEREIT, Ausstieg ABGELEHNT
+ * bzw. ARCHIVIERT.
  *
  * ── WO DIE STUFE STEHT ────────────────────────────────────────────────
  * `lead_inquiries.status` trägt einen CHECK auf genau fünf CRM-Werte
  * (new, contacted, qualified, converted, lost — live am 11.09.2026 per
- * 23514-Probe belegt). Acht Stufen passen da nicht hinein, und die Spalte
+ * 23514-Probe belegt). Zwölf Stufen passen da nicht hinein, und die Spalte
  * zu erweitern bräuchte DDL, die aus einer Agentensitzung nicht geht.
  *
  * Deshalb zwei Ebenen:
@@ -60,6 +61,16 @@ export const BEWERBER_STUFEN: readonly BewerberStufe[] = [
     aufgabe: 'Offene Angaben erfragen, Antwort nachhalten' },
   { key: 'vorstellungsgespraech', label: 'Gespräch', color: '#9C27B0', dbStatus: 'qualified', wiedervorlageTage: 7,
     aufgabe: 'Gespräch führen und Entscheidung festhalten' },
+  // Die Probearbeit steht zwischen Gespräch und Zusage, weil sie in der
+  // Alltagsbegleitung die eigentliche Entscheidung trägt: ein Gespräch
+  // zeigt, wie jemand spricht, eine Begleitschicht zeigt, wie jemand mit
+  // einem Menschen umgeht. Die Zusage kommt danach, nicht davor.
+  //
+  // Sieben Tage Wiedervorlage: der Termin muss vereinbart, gefahren und
+  // ausgewertet werden. Kürzer hiesse nachfassen, bevor er stattgefunden
+  // hat.
+  { key: 'probearbeit', label: 'Probearbeit', color: '#8E63C9', dbStatus: 'qualified', wiedervorlageTage: 7,
+    aufgabe: 'Begleitschicht vereinbaren, durchführen und auswerten' },
   { key: 'zusage', label: 'Zusage', color: '#7E57C2', dbStatus: 'qualified', wiedervorlageTage: 3,
     aufgabe: 'Zusage mitteilen, Unterlagen anfordern' },
   { key: 'unterlagen', label: 'Unterlagen', color: '#26A69A', dbStatus: 'qualified', wiedervorlageTage: 5,

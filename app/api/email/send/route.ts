@@ -8,7 +8,9 @@ import { sendEmailNotificationErgebnis } from '@/lib/notifications'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { withTracking } from '@/lib/monitoring/tracker'
 import { logger } from '@/lib/logger'
-import { vorlageFinden, vorlageRendern } from '@/lib/email/templates'
+import {
+  vorlageFinden, vorlageRendern, vorlagenFuer, EMAIL_VORLAGEN, type Zielgruppe,
+} from '@/lib/email/templates'
 
 const log = logger.child('api:email:send')
 
@@ -56,6 +58,43 @@ async function requireAdmin() {
     name: quellen.name,
   }
 }
+
+/**
+ * GET /api/email/send?zielgruppe=kunde|bewerber|intern
+ *
+ * Listet die Vorlagen — Kennung, Name, Felder. Ohne diese Liste musste die
+ * Verwaltung die Kennungen kennen, um eine Vorschau zu bekommen; ein
+ * Vorlagenkatalog, den man auswendig wissen muss, ist keiner.
+ *
+ * Gibt NUR Metadaten heraus, keinen gerenderten Text: der entsteht in der
+ * Vorschau (POST, modus='vorschau') mit den Werten des Vorgangs.
+ */
+export const GET = withTracking(async function GET(request: NextRequest) {
+  try {
+    await requireAdmin()
+
+    const zielgruppe = new URL(request.url).searchParams.get('zielgruppe')
+    const alle = zielgruppe
+      ? vorlagenFuer(zielgruppe as Zielgruppe)
+      : EMAIL_VORLAGEN
+
+    return NextResponse.json({
+      vorlagen: alle.map(v => ({
+        id: v.id,
+        name: v.name,
+        quelle: v.quelle,
+        zielgruppe: v.zielgruppe,
+        felder: v.felder.map(f => ({
+          key: f.key, label: f.label, pflicht: f.pflicht === true, beispiel: f.beispiel ?? null,
+        })),
+      })),
+    })
+  } catch (err) {
+    const meldung = err instanceof Error ? err.message : 'Unbekannter Fehler.'
+    const status = meldung.includes('autorisiert') ? 401 : meldung.includes('Administratoren') ? 403 : 400
+    return NextResponse.json({ error: meldung }, { status })
+  }
+})
 
 export const POST = withTracking(async function POST(request: NextRequest) {
   try {

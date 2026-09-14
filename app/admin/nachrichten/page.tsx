@@ -56,7 +56,9 @@ export default function NachrichtenPage() {
   async function load() {
     try {
       const res = await fetch('/api/ops/nachrichten')
-      if (!res.ok) { setLoading(false); return }
+      // Der catch darunter meldet korrekt — nur kam er bei einem
+      // HTTP-Fehler nie zum Zug, und die Seite sah aus wie „nichts da".
+      if (!res.ok) throw new Error(`Nachrichten konnte nicht geladen werden (HTTP ${res.status}).`)
       const data = await res.json()
       setRows(data)
     } catch (err) {

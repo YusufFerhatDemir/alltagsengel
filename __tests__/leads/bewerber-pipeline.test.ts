@@ -22,11 +22,21 @@ describe('Stufen', () => {
   // unterschriebenen Papier, „archiviert" den erledigten Vorgang von der
   // Absage an die Person. Priorität und fehlende Unterlagen sind bewusst
   // KEINE Stufen — siehe BEWERBER_PRIO / BEWERBER_BLOCKER.
-  it('genau die elf Stufen, in dieser Reihenfolge', () => {
+  it('genau die zwölf Stufen, in dieser Reihenfolge', () => {
     expect(BEWERBER_STUFEN_FLOW).toEqual([
       'neu', 'vorgeprueft', 'kontaktiert', 'rueckfrage', 'vorstellungsgespraech',
-      'zusage', 'unterlagen', 'vertrag', 'einsatzbereit', 'abgelehnt', 'archiviert',
+      'probearbeit', 'zusage', 'unterlagen', 'vertrag', 'einsatzbereit',
+      'abgelehnt', 'archiviert',
     ])
+  })
+
+  it('die Probearbeit steht ZWISCHEN Gespräch und Zusage', () => {
+    // Die Reihenfolge ist die fachliche Aussage, nicht die Menge: ein
+    // Gespraech zeigt, wie jemand spricht, eine Begleitschicht zeigt, wie
+    // jemand mit einem Menschen umgeht. Die Zusage kommt danach.
+    const i = (k: string) => BEWERBER_STUFEN_FLOW.indexOf(k)
+    expect(i('probearbeit')).toBeGreaterThan(i('vorstellungsgespraech'))
+    expect(i('probearbeit')).toBeLessThan(i('zusage'))
   })
 
   it('jede Stufe schreibt einen Status, den der LIVE-CHECK erlaubt', () => {

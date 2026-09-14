@@ -41,10 +41,15 @@ export default function WorkflowWarteschlangePage() {
       const params = new URLSearchParams()
       if (filterStatus !== 'all') params.set('status', filterStatus)
       const res = await fetch(`/api/ops/workflow/warteschlange?${params.toString()}`)
-      if (!res.ok) { setLoading(false); return }
+      // „Leer" und „nicht geladen" sind verschiedene Aussagen. Auf
+      // dieser Seite heisst eine leere Liste „nichts offen" — ein
+      // gescheiterter Abruf darf nicht so aussehen.
+      if (!res.ok) throw new Error(`Warteschlange konnte nicht geladen werden (HTTP ${res.status}).`)
       const data = await res.json()
       setRows(data)
-    } catch { /* ignore */ } finally { setLoading(false) }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Laden fehlgeschlagen.')
+    } finally { setLoading(false) }
   }
 
   useEffect(() => { setLoading(true); load() }, [filterStatus])

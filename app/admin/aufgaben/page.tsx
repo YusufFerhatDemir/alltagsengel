@@ -5,7 +5,7 @@ import {
   statusMeta, formatDate,
   AUFGABEN_STATUS, AUFGABEN_KATEGORIE, AUFGABEN_PRIORITAET, FAELLIGKEITS_STATUS,
 } from '@/lib/admin/ops'
-import { StatusBadge, SearchInput, EmptyRow } from '@/components/admin/OpsUI'
+import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 
 interface AufgabeRow {
   id: string
@@ -37,15 +37,22 @@ export default function AufgabenPage() {
   const [filterKategorie, setFilterKategorie] = useState('all')
   const [filterPrioritaet, setFilterPrioritaet] = useState('all')
   const [showArchived, setShowArchived] = useState(false)
+  // „Noch keine Aufgaben" und „Aufgaben nicht geladen" sehen gleich aus,
+  // sind aber das Gegenteil voneinander: das eine heisst nichts zu tun, das
+  // andere, dass niemand weiss, was zu tun ist.
+  const [fehler, setFehler] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
       try {
         const res = await fetch('/api/ops/aufgaben')
-        if (!res.ok) { setLoading(false); return }
+        if (!res.ok) throw new Error(`Aufgaben konnten nicht geladen werden (HTTP ${res.status}).`)
         const data = await res.json()
         setRows(data)
-      } catch { /* ignore */ } finally { setLoading(false) }
+      } catch (e) {
+        setRows([])
+        setFehler(e instanceof Error ? e.message : 'Aufgaben konnten nicht geladen werden.')
+      } finally { setLoading(false) }
     }
     load()
   }, [])
@@ -75,11 +82,13 @@ export default function AufgabenPage() {
 
   return (
     <div className="admin-page">
+      {fehler && <Banner tone="danger">{fehler}</Banner>}
+
       <div className="admin-page-header">
         <div>
           <h1>Aufgaben</h1>
           <p className="admin-subtitle">
-            {rows.length} Aufgaben{' '}
+            {fehler ? 'Anzahl unbekannt' : `${rows.length} Aufgaben`}{' '}
             {offenCount > 0 && <>&middot; {offenCount} offen</>}{' '}
             {ueberfaelligCount > 0 && <span style={{ color: '#D04B3B' }}>&middot; {ueberfaelligCount} überfällig</span>}
           </p>

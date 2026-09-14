@@ -77,7 +77,12 @@ export default function AdminClientsPage() {
       })
       setClients(rows)
     } catch (err) {
+      // Protokolliert wurde das schon — der Nutzer sah davon nichts. Eine
+      // leere Klientenliste heisst „keine Klienten", und das ist bei einem
+      // Abrufsfehler falsch.
       log.errorWithException('Clients load error', err)
+      setClients([])
+      setError(err instanceof Error ? err.message : 'Klienten konnten nicht geladen werden.')
     } finally {
       setLoading(false)
     }

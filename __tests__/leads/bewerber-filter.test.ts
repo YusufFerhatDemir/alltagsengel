@@ -141,8 +141,8 @@ describe('Priorität und Blocker sind unabhängig von der Stufe', () => {
 })
 
 describe('Stufenmodell', () => {
-  it('trägt alle elf Stufen, jede mit Aufgabe und Farbe', () => {
-    expect(BEWERBER_STUFEN_FLOW).toHaveLength(11)
+  it('trägt alle zwölf Stufen, jede mit Aufgabe und Farbe', () => {
+    expect(BEWERBER_STUFEN_FLOW).toHaveLength(12)
     for (const key of BEWERBER_STUFEN_FLOW) {
       const s = bewerberStufe(key)
       expect(s.aufgabe.length, key).toBeGreaterThan(8)

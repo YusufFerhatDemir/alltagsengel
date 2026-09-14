@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { statusMeta, formatDate, WF_EVENT_STATUS, WF_MODUL, WF_EVENT_PRIORITAET } from '@/lib/admin/ops'
-import { StatusBadge, SearchInput, EmptyRow } from '@/components/admin/OpsUI'
+import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 
 interface EventRow {
   id: string
@@ -27,6 +27,9 @@ export default function WorkflowEventsPage() {
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterModul, setFilterModul] = useState('all')
+  // Ein gescheiterter Abruf sah bisher aus wie „keine Events" — also wie
+  // ein System, in dem nichts passiert ist.
+  const [fehler, setFehler] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -35,12 +38,16 @@ export default function WorkflowEventsPage() {
         if (filterStatus !== 'all') params.set('status', filterStatus)
         if (filterModul !== 'all') params.set('modul', filterModul)
         const res = await fetch(`/api/ops/workflow/events?${params.toString()}`)
-        if (!res.ok) { setLoading(false); return }
+        if (!res.ok) throw new Error(`Events konnten nicht geladen werden (HTTP ${res.status}).`)
         const data = await res.json()
         setRows(data)
-      } catch { /* ignore */ } finally { setLoading(false) }
+      } catch (e) {
+        setRows([])
+        setFehler(e instanceof Error ? e.message : 'Events konnten nicht geladen werden.')
+      } finally { setLoading(false) }
     }
     setLoading(true)
+    setFehler(null)
     load()
   }, [filterStatus, filterModul])
 
@@ -55,9 +62,13 @@ export default function WorkflowEventsPage() {
       <div className="admin-page-header">
         <div>
           <h1>Workflow-Events</h1>
-          <p className="admin-subtitle">{rows.length} Events</p>
+          <p className="admin-subtitle">{fehler ? 'Anzahl unbekannt' : `${rows.length} Events`}</p>
         </div>
         <Link href="/admin/workflow" style={{ fontSize: 13, color: 'var(--gold)' }}>← Dashboard</Link>
+      </div>
+
+      <div>
+        {fehler && <Banner tone="danger">{fehler}</Banner>}
       </div>
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>

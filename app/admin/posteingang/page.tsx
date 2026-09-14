@@ -69,7 +69,7 @@ export default function AdminPosteingangPage() {
       supabase.from('state_waitlist')
         .select('id, name, email, telefon, status, pflegegrad, ort, bundesland, gewuenschte_leistungen, nachricht, quelle, created_at, updated_at'),
       supabase.from('lead_inquiries')
-        .select('id, name, email, phone, status, source, created_at, updated_at, follow_up_date, bewerbung_daten')
+        .select('id, name, email, phone, status, source, created_at, updated_at, follow_up_date, bewerbung_daten, anfrage_daten')
         .or(BEWERBUNG_FILTER).in('status', ['new', 'contacted', 'qualified']),
       supabase.from('lead_inquiries')
         .select('id, name, email, phone, status, source, created_at, updated_at, follow_up_date')

@@ -189,6 +189,7 @@ export default function PersonalDetailPage() {
   const [tab, setTab] = useState<Tab>('stammdaten')
   const [stamm, setStamm] = useState<Stammdaten | null>(null)
   const [loading, setLoading] = useState(true)
+  const [ladeFehler, setLadeFehler] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState<string | null>(null)
 
@@ -225,7 +226,7 @@ export default function PersonalDetailPage() {
     async function load() {
       try {
         const res = await fetch(`/api/personal/stammdaten?caregiverId=${caregiverId}`)
-        if (!res.ok) { setLoading(false); return }
+        if (!res.ok) throw new Error(`Stammdaten konnten nicht geladen werden (HTTP ${res.status}).`)
         const data = await res.json()
         const r = data.stammdaten || data
         const s: Stammdaten = {
@@ -253,7 +254,11 @@ export default function PersonalDetailPage() {
         setStamm(s)
         setEditData(s)
       } catch (err) {
+        // Protokolliert wurde das schon vorher — nur sah der Nutzer davon
+        // nichts. Die Seite meldete dann „Mitarbeiter nicht gefunden", also
+        // eine Aussage ueber die Datenbank statt ueber den Abruf.
         log.errorWithException('Stammdaten laden fehlgeschlagen', err)
+        setLadeFehler(err instanceof Error ? err.message : 'Stammdaten konnten nicht geladen werden.')
       } finally {
         setLoading(false)
       }
@@ -544,7 +549,15 @@ export default function PersonalDetailPage() {
   }, [arbeitszeiten, stamm])
 
   if (loading) return <div className="admin-page"><p>Laden...</p></div>
-  if (!stamm) return <div className="admin-page"><p>Mitarbeiter nicht gefunden.</p></div>
+  if (!stamm) {
+    return (
+      <div className="admin-page">
+        {ladeFehler
+          ? <Banner tone="danger">{ladeFehler}</Banner>
+          : <p>Mitarbeiter nicht gefunden.</p>}
+      </div>
+    )
+  }
 
   const vs = statusMeta(VERTRAGSSTATUS, stamm.vertragsstatus)
 
