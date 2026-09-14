@@ -114,6 +114,8 @@ export default function MonatsabschlussVorbereitungPage() {
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth() + 1)
   const [loading, setLoading] = useState(true)
+  /** Eine der fuenf Quellen war nicht lesbar (Block 81). */
+  const [ladefehler, setLadefehler] = useState<string | null>(null)
 
   // Rohdaten
   const [assignments, setAssignments] = useState<Assignment[]>([])
@@ -137,6 +139,7 @@ export default function MonatsabschlussVorbereitungPage() {
     let cancelled = false
     async function load() {
       setLoading(true)
+      setLadefehler(null)
       try {
         const supabase = createClient()
         const { start, end } = monthRange(year, month)
@@ -154,6 +157,37 @@ export default function MonatsabschlussVorbereitungPage() {
 
         if (cancelled) return
 
+        // BEFUND (Block 81): fuenf Abfragen, alle ungeprueft. Diese Seite
+        // stellt Einsaetze und Leistungsnachweise GEGENUEBER, um zu
+        // zeigen, was vor dem Monatsabschluss noch fehlt. Faellt
+        // `recordRes` aus, sieht jeder Einsatz unbelegt aus; faellt
+        // `assignRes` aus, sieht jeder Nachweis unangefordert aus. Beides
+        // ist eine Aussage ueber die Abfrage, nicht ueber den Monat — und
+        // beide Richtungen fuehren zu einer Liste, nach der jemand
+        // handelt.
+        const quellen = [
+          ['Einsätze', assignRes.error?.message ?? null],
+          ['Leistungsnachweise', recordRes.error?.message ?? null],
+          ['Budgets', budgetRes.error?.message ?? null],
+          ['Klienten', clientRes.error?.message ?? null],
+          ['Betreuungskräfte', caregiverRes.error?.message ?? null],
+        ] as const
+        const fehlend = quellen.filter(([, grund]) => grund !== null)
+        if (fehlend.length > 0) {
+          log.error('Monatsabschluss-Vorbereitung: Abfragen fehlgeschlagen', {
+            bereiche: fehlend.map(([name]) => name).join(', '),
+          })
+          setLadefehler(
+            fehlend.map(([name]) => name).join(', ')
+            + ' konnten nicht geladen werden. Die Gegenüberstellung wird nicht angezeigt — '
+            + 'sie wäre von einer vollständigen nicht zu unterscheiden.'
+          )
+          setAssignments([])
+          setRecords([])
+          setBudgets([])
+          return
+        }
+
         setAssignments(assignRes.data || [])
         setRecords(recordRes.data || [])
         setBudgets(budgetRes.data || [])
@@ -167,6 +201,9 @@ export default function MonatsabschlussVorbereitungPage() {
         setCaregiverMap(cg)
       } catch (err) {
         log.errorWithException('Monatsabschluss-Vorbereitung Ladefehler', err)
+        if (!cancelled) {
+          setLadefehler('Die Gegenüberstellung konnte nicht geladen werden. Bitte Seite neu laden.')
+        }
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -303,6 +340,7 @@ export default function MonatsabschlussVorbereitungPage() {
       </div>
 
       {/* Lade-Indikator */}
+      {ladefehler && <Banner tone="danger">{ladefehler}</Banner>}
       {loading && <p style={{ color: 'var(--ink3)', padding: '20px 0' }}>Daten werden geladen…</p>}
 
       {!loading && (

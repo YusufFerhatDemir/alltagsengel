@@ -133,7 +133,12 @@ describe('Der Bestand ist mitgezogen', () => {
     // Die Liste selbst zaehlen, nicht ihren Quelltext: die
     // Typangabe der Deklaration (`{ datei: string; … }`) sieht wie ein
     // Eintrag aus und haette die Zahl um eins verfaelscht.
+    //
+    // Obergrenze statt Gleichheit: der Bestand soll SINKEN. Eine
+    // Gleichheitspruefung machte jeden folgenden Block, der eine Stelle
+    // behebt, faelschlich rot — sie wuerde das Aufraeumen bestrafen.
+    // Block 80 hat ihn von 85 auf 79 gebracht; alles darunter ist recht.
     const { BESTAND_GEBUENDELT } = await import('../../scripts/lint-leerzustand')
-    expect(BESTAND_GEBUENDELT).toHaveLength(79)
+    expect(BESTAND_GEBUENDELT.length).toBeLessThanOrEqual(79)
   })
 })

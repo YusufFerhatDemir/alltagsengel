@@ -63,12 +63,15 @@ function MonatsabschlussDetailInner() {
   const [closing, setClosing] = useState<Closing | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  /** Teile des Monats waren nicht lesbar (Block 81). */
+  const [unvollstaendig, setUnvollstaendig] = useState<string | null>(null)
   const [closingBusy, setClosingBusy] = useState(false)
   const [closeError, setCloseError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     if (!isValidUUID(clientId)) { setNotFound(true); setLoading(false); return }
     setLoading(true)
+    setUnvollstaendig(null)
     try {
       const supabase = createClient()
       const monthStart = `${year}-${String(month).padStart(2, '0')}-01`
@@ -84,6 +87,34 @@ function MonatsabschlussDetailInner() {
       ])
 
       if (clientRes.error || !clientRes.data) { setNotFound(true); setLoading(false); return }
+
+      // BEFUND (Block 81): die drei uebrigen Abfragen wurden ungeprueft
+      // weiterverarbeitet. Faellt `recordsRes` aus, hat der Monat keine
+      // Nachweise, `recordIds` ist leer, die review_errors-Abfrage laeuft
+      // gar nicht erst — und die Ampel steht auf GRUEN. Auf dieser Seite
+      // ist das keine Anzeige, sondern eine Freigabe: die Schaltflaeche
+      // „Monat abschliessen" haengt an genau dieser Ampel.
+      //
+      // Fehlt `budgetRes`, entfaellt die Budgetampel; fehlt `closingRes`,
+      // sieht ein bereits abgeschlossener Monat offen aus.
+      const quellen = [
+        ['Leistungsnachweise', recordsRes.error?.message ?? null],
+        ['Budget', budgetRes.error?.message ?? null],
+        ['Monatsabschluss', closingRes.error?.message ?? null],
+      ] as const
+      const fehlend = quellen.filter(([, grund]) => grund !== null)
+      if (fehlend.length > 0) {
+        log.error('Monatsabschluss-Detail: Abfragen fehlgeschlagen', {
+          clientId, bereiche: fehlend.map(([name]) => name).join(', '),
+        })
+        setUnvollstaendig(
+          fehlend.map(([name]) => name).join(', ')
+          + ' konnten nicht geladen werden. Der Monat wird deshalb nicht zur Freigabe angezeigt — '
+          + 'eine gruene Ampel hiesse hier „geprüft und in Ordnung".'
+        )
+        setLoading(false)
+        return
+      }
       setClientName(fullName(clientRes.data))
       setBudgetSummary(budgetRes.data ? summarizeBudget(budgetRes.data) : null)
       setClosing(closingRes.data ? {
@@ -167,6 +198,13 @@ function MonatsabschlussDetailInner() {
   }
 
   if (loading) return <div className="admin-page"><p>Laden…</p></div>
+  if (unvollstaendig) return (
+    <div className="admin-page">
+      <h1>Monatsabschluss</h1>
+      <Banner tone="danger">{unvollstaendig}</Banner>
+    </div>
+  )
+
   if (notFound) return (
     <div className="admin-page">
       <button onClick={() => router.push('/admin/monatsabschluss')} style={backBtn}>← Monatsabschluss</button>

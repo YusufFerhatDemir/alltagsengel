@@ -52,6 +52,7 @@ function MonatsabschlussInner() {
     let cancelled = false
     async function load() {
       setLoading(true)
+      setLadefehler(null)
       try {
         const supabase = createClient()
         const monthStart = `${year}-${String(month).padStart(2, '0')}-01`
@@ -62,6 +63,37 @@ function MonatsabschlussInner() {
           supabase.from('service_records').select('id, client_id, status, amount, client:clients(first_name, last_name)').gte('date', monthStart).lte('date', monthEnd),
           supabase.from('client_budgets').select('*').eq('year', year),
         ])
+
+        // BEFUND (Block 81): die drei Abfragen wurden ungeprueft als leere
+        // Listen weiterverarbeitet — und die Pruefung, die wenige Zeilen
+        // darunter ausdruecklich steht („Ihr Verlust faerbt den Monat
+        // gruen, obwohl niemand nachgesehen hat"), wird dadurch
+        // UEBERSPRUNGEN: ohne `recordsRes` ist `recordIds` leer, die
+        // review_errors-Abfrage laeuft gar nicht erst, und jeder Klient
+        // steht auf gruen.
+        //
+        // Fehlt `closingsRes`, sehen abgeschlossene Monate offen aus;
+        // fehlt `budgetsRes`, faellt die Budgetampel weg.
+        const quellen = [
+          ['Monatsabschlüsse', closingsRes.error?.message ?? null],
+          ['Leistungsnachweise', recordsRes.error?.message ?? null],
+          ['Budgets', budgetsRes.error?.message ?? null],
+        ] as const
+        const fehlend = quellen.filter(([, grund]) => grund !== null)
+        if (fehlend.length > 0) {
+          log.error('Monatsabschluss: Abfragen fehlgeschlagen', {
+            bereiche: fehlend.map(([name]) => name).join(', '),
+          })
+          if (!cancelled) {
+            setRows([])
+            setLadefehler(
+              fehlend.map(([name]) => name).join(', ')
+              + ' konnten nicht geladen werden. Es wird KEINE Ampel angezeigt — '
+              + 'gruen hiesse hier „geprüft und in Ordnung".'
+            )
+          }
+          return
+        }
 
         const budgetByClient = new Map<string, any>()
         for (const b of budgetsRes.data || []) budgetByClient.set(b.client_id, b)
@@ -138,7 +170,17 @@ function MonatsabschlussInner() {
         result.sort((a, b) => a.client.localeCompare(b.client, 'de'))
         if (!cancelled) setRows(result)
       } catch (err) {
+        // Hierher fuehrt auch `throw errsErr` oben. Vorher endete das im
+        // Protokoll und die Tabelle blieb einfach leer — der Monat sah
+        // aus, als gaebe es nichts zu tun.
         log.errorWithException('Monatsabschluss load error', err)
+        if (!cancelled) {
+          setRows([])
+          setLadefehler(
+            'Der Monatsabschluss konnte nicht geladen werden. Es wird KEINE Ampel angezeigt — '
+            + 'gruen hiesse hier „geprüft und in Ordnung".'
+          )
+        }
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -176,6 +218,8 @@ function MonatsabschlussInner() {
   const [lauf, setLauf] = useState<(MonatsabschlussErgebnis & { modus: string }) | null>(null)
   const [laufLaeuft, setLaufLaeuft] = useState<'vorschau' | 'abschluss' | null>(null)
   const [laufFehler, setLaufFehler] = useState<string | null>(null)
+  /** Eine der Quellen war nicht lesbar (Block 81). */
+  const [ladefehler, setLadefehler] = useState<string | null>(null)
 
   async function starteLauf(dryRun: boolean) {
     // Der Echtlauf schreibt `monthly_closings` fort. Die Rueckfrage steht
@@ -339,7 +383,8 @@ function MonatsabschlussInner() {
         ))}
       </div>
 
-      {loading ? <p>Laden…</p> : (
+      {ladefehler && <div style={{ marginTop: 12 }}><Banner tone="danger">{ladefehler}</Banner></div>}
+      {loading ? <p>Laden…</p> : ladefehler ? null : (
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
