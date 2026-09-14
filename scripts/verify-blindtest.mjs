@@ -36,8 +36,17 @@
  */
 import { spawn, execSync } from 'node:child_process'
 
-/** Nur Laeufe, die das Lese-Orakel benutzen — nur die koennen so blind sein. */
-const dateien = execSync("grep -l _run_sql scripts/verify-* 2>/dev/null | sort", { encoding: 'utf8' })
+/**
+ * Nur Laeufe, die das Lese-Orakel benutzen — nur die koennen so blind sein.
+ *
+ * Gesucht wird BEIDES: der rohe Aufruf `_run_sql` und der Helfer
+ * `frageOrakel`. Ein erster Entwurf suchte nur das Literal — und uebersah
+ * damit ausgerechnet die Skripte, die es richtig machen und ueber
+ * lib/lese-orakel.mjs gehen. Ein Detektor, der die gute Form nicht kennt,
+ * schrumpft mit jeder Verbesserung.
+ */
+const dateien = execSync(
+  "grep -lE '_run_sql|frageOrakel' scripts/verify-* 2>/dev/null | sort", { encoding: 'utf8' })
   .trim().split('\n').filter(Boolean)
   .filter(d => !d.endsWith('verify-blindtest.mjs'))
 

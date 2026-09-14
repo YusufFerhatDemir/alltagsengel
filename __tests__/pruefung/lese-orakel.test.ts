@@ -126,6 +126,14 @@ describe('der Blindtest selbst', () => {
     expect(q).toContain("!d.endsWith('verify-blindtest.mjs')")
   })
 
+  it('findet auch die Laeufe, die den HELFER benutzen', () => {
+    // Ein erster Entwurf suchte nur das Literal `_run_sql` — und uebersah
+    // damit genau die Skripte, die ueber frageOrakel() gehen, also die
+    // richtig gebauten. Ein Detektor, der die gute Form nicht kennt,
+    // schrumpft mit jeder Verbesserung.
+    expect(q).toContain('_run_sql|frageOrakel')
+  })
+
   it('faerbt eine Zeitgrenze NICHT rot, meldet sie aber', () => {
     // Eine Zeitgrenze ist eine Aussage ueber diesen Rechner, nicht ueber
     // den Prueflauf.

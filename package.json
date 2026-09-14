@@ -24,6 +24,7 @@
     "verify:mandanten-eindeutigkeit": "tsx scripts/verify-mandanten-eindeutigkeit.ts",
     "verify:migrationsstand": "tsx scripts/verify-migrationsstand.ts",
     "verify:blindtest": "node scripts/verify-blindtest.mjs",
+    "verify:mandanten-konsistenz": "tsx scripts/verify-mandanten-konsistenz.ts",
     "migrations:dispatch": "tsx scripts/generate-migrations-dispatch.ts",
     "lint:ladefehler": "tsx scripts/lint-ladefehler.ts",
     "lint:leerzustand": "tsx scripts/lint-leerzustand.ts",
