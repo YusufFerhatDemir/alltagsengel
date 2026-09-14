@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireCaregiverSession } from '@/lib/native-auth'
 import { logger } from '@/lib/logger'
 import { withTracking } from '@/lib/monitoring/tracker'
+import { uebernimmOderMelde, NACHWEIS_TABELLE } from '@/lib/signaturen/nachweis-uebernahme'
 const log = logger.child('api/native/signatures')
 
 // ═══════════════════════════════════════════════════════════════
@@ -122,6 +123,29 @@ export const POST = withTracking(async function POST(request: Request) {
     if (sigErr || !signature) {
       log.errorWithException('Insert-Fehler', sigErr)
       return NextResponse.json({ error: 'Unterschrift konnte nicht gespeichert werden' }, { status: 500 })
+    }
+
+    // ── Die Unterschrift erreicht den Leistungsnachweis ────────────────
+    //
+    // Bis zum 14.09.2026 endete dieser Weg mit dem Insert oben. Die
+    // Unterschrift lag in `service_signatures`, und `service_records` blieb
+    // auf `proof_status='ENTWURF'` ohne Hash — fuer den
+    // Sammelrechnungslauf unabrechenbar (UNTERSCHRIFT_FEHLT). Die Kundin
+    // hatte unterschrieben, und eine Rechnung entstand trotzdem nie.
+    //
+    // NUR bei `signer_role === 'client'`: `client_signed_at` und
+    // `client_signature` sind die Felder des KUNDEN. Die Unterschrift der
+    // Pflegekraft belegt, dass der Einsatz stattgefunden hat — sie belegt
+    // nicht, dass der Kunde ihn bestaetigt. Beides gleichzusetzen waere
+    // genau die Abkuerzung, gegen die `enforce_unterschrift_beleg` steht.
+    if (signer_role === 'client') {
+      await uebernimmOderMelde(admin, {
+        referenzTabelle: NACHWEIS_TABELLE,
+        referenzId: service_record_id,
+        signiertAm: new Date().toISOString(),
+        signatarName: signer_name,
+        organizationId: record.organization_id,
+      })
     }
 
     return NextResponse.json({ success: true, signature_id: signature.id })
