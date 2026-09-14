@@ -347,15 +347,47 @@ export const PATCH = withTracking(async function PATCH(
         notes: `Aus Tourenplanung, Tour ${tour.tour_date}, Stop ${stop.position}`,
       })
       if (gespeichert.id) {
-        await admin
+        // BEFUND (Block 60, 14.09.2026): Beide Verknuepfungen verwarfen
+        // Fehler UND getroffene Zeilen.
+        //
+        // Die zweite ist die gefaehrliche. Die Wiederholungssperre oben
+        // ist `!stop.service_record_id` — steht in der Datenbank weiter
+        // `null`, legt der naechste Aufruf einen ZWEITEN Nachweis fuer
+        // denselben Stop an. Das ist eine doppelte Rechnungsposition.
+        // `stop.service_record_id = gespeichert.id` setzte ausserdem nur
+        // das Objekt im Speicher und verdeckte den Fehlschlag in der
+        // Antwort.
+        const { data: verknuepft, error: verknuepfFehler } = await admin
           .from('service_records')
           .update({ assignment_id: stop.assignment_id, organization_id: auth.ctx.organizationId })
           .eq('id', gespeichert.id)
-        await admin
+          .select('id')
+
+        const { data: amStop, error: stopFehler } = await admin
           .from('tour_stops')
           .update({ service_record_id: gespeichert.id })
           .eq('id', stop_id)
-        stop.service_record_id = gespeichert.id
+          .select('id')
+
+        if (stopFehler || (amStop?.length ?? 0) === 0) {
+          // Der Nachweis EXISTIERT. Ihn zurueckzunehmen waere falsch — die
+          // erfasste Arbeit ginge verloren. Stattdessen wird der Zustand
+          // benannt, mit der Kennung, damit die Verknuepfung von Hand
+          // nachgetragen werden kann.
+          serviceRecordFehler =
+            `Der Leistungsnachweis ${gespeichert.id} wurde angelegt, konnte dem Stop aber `
+            + `nicht zugeordnet werden (${stopFehler?.message ?? 'keine Zeile getroffen'}). `
+            + 'Ein erneutes Abschliessen dieses Stops wuerde einen ZWEITEN Nachweis anlegen. '
+            + 'Bitte die Zuordnung von Hand nachtragen.'
+        } else if (verknuepfFehler || (verknuepft?.length ?? 0) === 0) {
+          serviceRecordFehler =
+            `Der Leistungsnachweis ${gespeichert.id} wurde angelegt und dem Stop zugeordnet, `
+            + `haengt aber nicht am Einsatz (${verknuepfFehler?.message ?? 'keine Zeile getroffen'}). `
+            + 'Storno und Abrechnung finden ihn ueber den Einsatz nicht.'
+          stop.service_record_id = gespeichert.id
+        } else {
+          stop.service_record_id = gespeichert.id
+        }
       } else {
         serviceRecordFehler = gespeichert.error
       }

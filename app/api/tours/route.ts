@@ -301,8 +301,25 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     }))
   )
   if (stopsError) {
-    // Tour ohne Stops wieder entfernen, damit kein leerer Torso bleibt
-    await admin.from('tours').delete().eq('id', tour.id)
+    // Tour ohne Stops wieder entfernen, damit kein leerer Torso bleibt.
+    //
+    // BEFUND (Block 60, 14.09.2026): Diese Ruecknahme war ungeprueft.
+    // Schlug sie fehl, blieb genau der Torso stehen, den sie verhindern
+    // soll — eine Tour ohne Stops im Dienstplan —, und der Aufrufer las
+    // nur den urspruenglichen Fehler und durfte annehmen, es sei nichts
+    // entstanden.
+    const { data: entfernt, error: ruecknahmeFehler } = await admin
+      .from('tours').delete().eq('id', tour.id).select('id')
+
+    if (ruecknahmeFehler || (entfernt?.length ?? 0) === 0) {
+      return NextResponse.json({
+        error:
+          `${uebersetzeDbFehler(stopsError)} Die angelegte Tour konnte ausserdem nicht `
+          + `zurueckgenommen werden (${ruecknahmeFehler?.message ?? 'keine Zeile getroffen'}) — `
+          + `Tour ${tour.id} steht OHNE Stops im Dienstplan und muss von Hand entfernt werden.`,
+      }, { status: 500 })
+    }
+
     return NextResponse.json({ error: uebersetzeDbFehler(stopsError) }, { status: 500 })
   }
 
