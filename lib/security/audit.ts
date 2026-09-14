@@ -315,33 +315,78 @@ export async function geraetPruefen(
 ): Promise<{ neu: boolean; hash: string }> {
   const hash = geraeteHash(userId, plattform, userAgent)
   try {
-    const { data: bekannt } = await admin
+    // BEFUND (Block 67): jeder der drei Zugriffe hier verwarf sein
+    // Ergebnis. Der try/catch darunter sieht aus wie eine Absicherung, ist
+    // aber keine: PostgREST WIRFT nicht: ein abgelehnter Schreibvorgang
+    // kommt als `error` im Rueckgabewert zurueck und erreicht den catch
+    // nie. Abgefangen wurde damit nur, was gar nicht passierte.
+    const { data: bekannt, error: leseFehler } = await admin
       .from('security_known_devices')
       .select('id, seen_count')
       .eq('user_id', userId)
       .eq('device_hash', hash)
       .maybeSingle()
+    if (leseFehler) {
+      // Wir wissen jetzt NICHT, ob das Geraet bekannt ist. Der Versuch,
+      // es anzulegen, laeuft weiter — der eindeutige Index unten faengt
+      // den Fall „doch bekannt" ab und macht daraus keine Falschmeldung.
+      log.error('Geraeteliste nicht lesbar — Bekanntheit unbestimmt', {
+        userId, errorCode: leseFehler.code,
+      })
+    }
 
     if (bekannt?.id) {
-      await admin
+      const { data: fortgeschrieben, error: updateFehler } = await admin
         .from('security_known_devices')
         .update({ last_seen_at: new Date().toISOString(), seen_count: (bekannt.seen_count ?? 0) + 1 })
         .eq('id', bekannt.id)
+        .select('id')
+      if (updateFehler || (fortgeschrieben ?? []).length === 0) {
+        // Das Geraet bleibt bekannt — gelesen haben wir es ja. Nur sein
+        // Zaehler und sein Zeitstempel stehen still, und genau daraus
+        // liest eine spaetere Pruefung, wann dieses Geraet zuletzt da war.
+        log.error('Geraet nicht fortgeschrieben — letzter Zugriff bleibt alt', {
+          userId, errorCode: updateFehler?.code ?? 'null getroffene Zeilen',
+        })
+      }
       return { neu: false, hash }
     }
 
-    const { count } = await admin
+    const { count, error: zaehlFehler } = await admin
       .from('security_known_devices')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
+    if (zaehlFehler) {
+      // `count` ist dann null und `neu` unten damit false. Das ist der
+      // stillere der beiden Irrtuemer (siehe catch) — aber er soll nicht
+      // unbemerkt bleiben.
+      log.error('Geraetezahl nicht ermittelbar — kein Hinweis auf ein neues Geraet', {
+        userId, errorCode: zaehlFehler.code,
+      })
+    }
 
-    await admin.from('security_known_devices').insert({
+    const { error: anlageFehler } = await admin.from('security_known_devices').insert({
       user_id: userId,
       device_hash: hash,
       platform: plattform,
       user_agent: userAgent,
       device_label: bezeichnung,
     })
+
+    if (anlageFehler) {
+      // 23505 auf UNIQUE(user_id, device_hash): das Geraet IST bekannt.
+      // Zwei parallele Anmeldungen, oder die Lesung oben ist gescheitert.
+      // Eine Meldung „unbekanntes Geraet" waere hier nachweislich falsch.
+      if (anlageFehler.code === '23505') return { neu: false, hash }
+      // Jeder andere Fehlschlag: das Geraet wurde NICHT gemerkt. Die
+      // Meldung bleibt stehen, weil sie echt sein kann — aber sie wird
+      // sich bei JEDER weiteren Anmeldung von diesem Geraet wiederholen,
+      // und genau davor warnt der Kopf dieser Funktion. Das gehoert
+      // benannt, nicht verschwiegen.
+      log.error('Geraet NICHT gemerkt — die Meldung „unbekanntes Geraet" wiederholt sich', {
+        userId, errorCode: anlageFehler.code,
+      })
+    }
 
     return { neu: (count ?? 0) > 0, hash }
   } catch (err) {
