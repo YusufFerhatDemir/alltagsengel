@@ -497,8 +497,33 @@ export async function createSepaBatch(
   }
 
   if (verloren.length > 0) {
-    await supabase.from('sepa_batch_items').delete().eq('batch_id', batch.id)
-    await supabase.from('sepa_batches').delete().eq('id', batch.id)
+    // BEFUND (Block 57, 14.09.2026): Beide Loeschungen verwarfen ihren
+    // Fehler — und die Meldung darunter SAGT ZU, der Lauf sei
+    // „vollstaendig zurueckgenommen". Schlug eine der beiden fehl, war
+    // das eine Falschaussage: der Sammelauftrag blieb stehen und war
+    // weiter exportierbar. Aus einem verhinderten Doppeleinzug waere so
+    // ein echter geworden.
+    //
+    // Die Reihenfolge ist Absicht: erst die Posten, dann der Auftrag.
+    // Andersherum blieben Posten ohne Auftrag zurueck.
+    const { error: postenFehler } = await supabase
+      .from('sepa_batch_items').delete().eq('batch_id', batch.id)
+    const { error: auftragFehler } = postenFehler
+      ? { error: null }
+      : await supabase.from('sepa_batches').delete().eq('id', batch.id)
+
+    if (postenFehler || auftragFehler) {
+      // KEINE Ruecknahme-Zusage mehr. Der Auftrag steht noch, und genau
+      // das muss dastehen — sonst sucht niemand danach.
+      throw new Error(
+        `Paralleler Zugriff: ${verloren.length} Rechnung(en) wurden zeitgleich in einen `
+        + `anderen Sammelauftrag aufgenommen. Die Ruecknahme dieses Laufs ist `
+        + `FEHLGESCHLAGEN (${postenFehler?.message ?? auftragFehler?.message}) — `
+        + `Sammelauftrag ${batch.id} steht NOCH in der Datenbank und darf nicht `
+        + `eingereicht werden. Bitte ihn von Hand stornieren.`
+      )
+    }
+
     throw new Error(
       `Paralleler Zugriff: ${verloren.length} Rechnung(en) wurden zeitgleich in einen `
       + `anderen Sammelauftrag aufgenommen. Dieser Lauf wurde vollstaendig zurueckgenommen `
