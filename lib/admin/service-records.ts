@@ -53,6 +53,18 @@ export interface ServiceRecordInput {
   amount?: number | null
   notes?: string | null
   client_signature?: string | null
+  /** Name der unterzeichnenden Person — gehoert zum Beleg, nicht zur Deko. */
+  client_signer_name?: string | null
+  /** Rolle der unterzeichnenden Person (Klient, Angehoerige, Betreuung). */
+  client_signer_role?: string | null
+  /**
+   * GPS des Erfassungsorts. Gehoert in DENSELBEN Insert und nicht in ein
+   * Folge-UPDATE: sobald eine Unterschrift mitkommt, setzt der Trigger
+   * `compute_signature_hash` `is_locked = true`, und danach weist
+   * `prevent_locked_record_change()` jedes weitere UPDATE ab.
+   */
+  gps_lat?: number | null
+  gps_lng?: number | null
   status: string
   completeness_check?: Record<string, unknown> | null
   /**
@@ -87,6 +99,46 @@ export interface SaveResult {
  * in der DB GENERATED (aus start_time/end_time). Ein mitgeschickter Wert lässt
  * Postgres den Insert komplett ablehnen.
  */
+/**
+ * Die Belegfelder zur Unterschrift — oder nichts.
+ *
+ * BEFUND (14.09.2026, Block 35)
+ *
+ * Dieser Weg schrieb `client_signature` und sonst nichts. Der Trigger
+ * `compute_signature_hash` verlangt aber BEIDES:
+ *
+ *     IF NEW.proof_status = 'UNTERSCHRIEBEN'
+ *        AND NEW.client_signed_at IS NOT NULL THEN …
+ *
+ * Ohne die zwei Felder blieb der Nachweis auf `proof_status = 'ENTWURF'`,
+ * bekam keinen `signature_hash` und wurde nicht gesperrt — mit einem
+ * Unterschriftsbild in der Zeile, das nichts belegt.
+ *
+ * Live am 14.09.2026 (alle am 02.07.2026 angelegt):
+ *
+ *     26 von 30 Nachweisen: Bild vorhanden, client_signed_at NULL
+ *     30 von 30 Nachweisen: kein signature_hash, is_locked = false
+ *
+ * Das ist der Ursprung von BUSINESS_DECISION #5 („10 von 13 =
+ * Datenproblem, client_signed_at NULL trotz Bild"). Der Bestand wird
+ * hier NICHT angefasst — das ist eine Geschaeftsentscheidung. Was diese
+ * Funktion aendert, ist, dass KEIN NEUER Nachweis mehr so entsteht.
+ *
+ * Ohne Unterschrift bleibt alles wie bisher: kein Zeitstempel, kein
+ * Status, keine Sperre. Ein Nachweis ohne Unterschrift ist ein Entwurf,
+ * und das soll er auch bleiben.
+ */
+function belegFelder(input: ServiceRecordInput): Record<string, unknown> {
+  const unterschrift = (input.client_signature ?? '').trim()
+  if (!unterschrift) return {}
+  return {
+    client_signed_at: new Date().toISOString(),
+    proof_status: 'UNTERSCHRIEBEN',
+    ...(input.client_signer_name ? { client_signer_name: input.client_signer_name } : {}),
+    ...(input.client_signer_role ? { client_signer_role: input.client_signer_role } : {}),
+  }
+}
+
 export async function saveServiceRecord(
   supabase: SupabaseClient,
   input: ServiceRecordInput,
@@ -139,6 +191,9 @@ export async function saveServiceRecord(
         client_signature: input.client_signature || null,
         status: attempt.status,
         completeness_check: input.completeness_check ?? null,
+        ...(input.gps_lat != null ? { gps_lat: input.gps_lat } : {}),
+        ...(input.gps_lng != null ? { gps_lng: input.gps_lng } : {}),
+        ...belegFelder(input),
       })
       .select('id')
       .single()
