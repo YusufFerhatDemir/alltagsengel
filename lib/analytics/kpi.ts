@@ -7,6 +7,7 @@
 // ═══════════════════════════════════════════════════════════════
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { berlinParts } from '@/lib/utils/timezone'
+import { zaehltAlsUmsatz } from '@/lib/billing/status-vokabular'
 
 export interface KpiZeitraum {
   von: string // ISO-Datum YYYY-MM-DD, inklusive
@@ -16,6 +17,21 @@ export interface KpiZeitraum {
 export interface UmsatzKpi {
   summeEuro: number
   anzahlRechnungen: number
+  /**
+   * Rechnungen im Zeitraum, die wegen ihres STATUS nicht als Umsatz zaehlen
+   * (storniert, abgelehnt, Entwurf, abgeschrieben).
+   */
+  nichtGezaehlt: number
+  /**
+   * Rechnungen im Zeitraum ohne `frozen_at` — nicht festgeschrieben, also
+   * nie rechtswirksam ausgestellt.
+   *
+   * Wird getrennt ausgewiesen und NICHT stillschweigend weggelassen: am
+   * 14.09.2026 sind das live ALLE drei Rechnungen im Bestand (1.901 €).
+   * Eine Kennzahl, die deshalb wortlos auf 0 faellt, sieht aus wie ein
+   * Geschaeftseinbruch statt wie das, was sie ist — ein leerer Bestand.
+   */
+  nichtFestgeschrieben: number
 }
 
 export interface AuslastungKpi {
@@ -46,9 +62,38 @@ export interface KpiDashboard {
 
 // ── Pure Berechnungen ────────────────────────────────────────────
 
-export function berechneUmsatz(rechnungen: { total_amount: number | null }[]): UmsatzKpi {
-  const summeEuro = rechnungen.reduce((sum, r) => sum + (Number(r.total_amount) || 0), 0)
-  return { summeEuro, anzahlRechnungen: rechnungen.length }
+/**
+ * Zeile einer Umsatzrechnung. `status` und `frozen_at` sind PFLICHT, nicht
+ * optional: Beide entscheiden ueber Geld, und ein Aufrufer, der sie nicht
+ * mitselektiert, bekaeme sonst lautlos eine zu hohe Zahl. So verlangt der
+ * Typ die Entscheidung an jeder Aufrufstelle.
+ */
+export interface UmsatzZeile {
+  total_amount: number | null
+  status: string | null
+  frozen_at: string | null
+}
+
+export function berechneUmsatz(rechnungen: UmsatzZeile[]): UmsatzKpi {
+  // Zwei Fragen, zwei Riegel — und beide fehlten hier vor Block 28:
+  //
+  //  1. Ist die Rechnung ueberhaupt ausgestellt? Ohne `frozen_at` ist sie
+  //     nicht festgeschrieben und damit keine rechtswirksame Forderung.
+  //     Genau diese Bedingung traegt `getOposListe` seit jeher — das
+  //     KPI-Dashboard trug sie nicht, und so beantworteten zwei
+  //     Auswertungen desselben Systems dieselbe Frage verschieden:
+  //     offene Posten 0 €, Umsatz 1.901 €.
+  //  2. Zaehlt der Status als Umsatz? Ein Storno nimmt der Zeile ihren
+  //     Status, nicht ihren Betrag.
+  const nichtFestgeschrieben = rechnungen.filter(r => !r.frozen_at).length
+  const gezaehlt = rechnungen.filter(r => r.frozen_at && zaehltAlsUmsatz(r.status))
+  const summeEuro = gezaehlt.reduce((sum, r) => sum + (Number(r.total_amount) || 0), 0)
+  return {
+    summeEuro: Math.round(summeEuro * 100) / 100,
+    anzahlRechnungen: gezaehlt.length,
+    nichtGezaehlt: rechnungen.filter(r => r.frozen_at && !zaehltAlsUmsatz(r.status)).length,
+    nichtFestgeschrieben,
+  }
 }
 
 export function berechneAuslastung(aktiveCaregiverIds: string[], eingesetzteCaregiverIds: Set<string>): AuslastungKpi {
@@ -93,7 +138,7 @@ export async function ladeKpiDashboard(
   const [invoicesRes, caregiversRes, assignmentsRes, bookingsRes, callsRes] = await Promise.all([
     supabase
       .from('invoices')
-      .select('total_amount')
+      .select('total_amount, status, frozen_at')
       .eq('organization_id', organizationId)
       .gte('created_at', vonIso)
       .lte('created_at', bisIso),

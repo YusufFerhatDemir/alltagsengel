@@ -101,3 +101,50 @@ export const KEINE_ZUORDNUNG_STATUS: readonly string[] = RECHNUNG_ERLEDIGT
 export function alsPostgrestListe(werte: readonly string[]): string {
   return `(${werte.map(w => `"${w}"`).join(',')})`
 }
+
+/**
+ * Zustaende, die NICHT als Umsatz zaehlen.
+ *
+ * BEFUND (14.09.2026, Block 28): `berechneUmsatz()` in
+ * lib/analytics/kpi.ts summierte `total_amount` ueber ALLE Rechnungen des
+ * Zeitraums, ohne den Status auch nur anzusehen. Eine stornierte Rechnung
+ * blieb damit fuer immer im Umsatz stehen — der Storno nimmt der Zeile
+ * ihren Status, aber nicht ihren Betrag.
+ *
+ * Live war das am 14.09.2026 nicht sichtbar: die drei Rechnungen im
+ * Bestand stehen auf `sent`, `disputed` und `paid`, keine ist storniert.
+ * Der Weg stand trotzdem offen, und das Kontrollzentrum haette den
+ * Fehlbetrag als Wahrheit ausgewiesen.
+ *
+ * Die Liste ist ENGER als RECHNUNG_ERLEDIGT und aus einem anderen Grund
+ * zusammengestellt:
+ *
+ *   • `bezahlt`/`paid` ist ein Endzustand, aber selbstverstaendlich
+ *     Umsatz — deshalb steht es hier NICHT drin.
+ *   • `strittig`/`disputed` bleibt Umsatz: die Forderung ist gestellt und
+ *     bestritten, nicht zurueckgenommen. Ob sie eingeht, beantwortet der
+ *     offene Posten, nicht der Umsatz.
+ *   • `entwurf`/`draft` ist noch nicht hinausgegangen. Was der Kunde nie
+ *     gesehen hat, ist keine Forderung.
+ *   • `abgeschrieben` war einmal Umsatz und ist es nicht mehr; die
+ *     Abschreibung ist genau die Aussage, dass nichts kommt.
+ */
+export const KEIN_UMSATZ_STATUS: readonly string[] = [
+  // deutsch
+  'storniert', 'abgelehnt', 'abgeschrieben', 'entwurf', 'korrektur_erforderlich',
+  // englisch
+  'cancelled', 'rejected', 'draft',
+]
+
+/**
+ * Zaehlt eine Rechnung mit diesem Status als Umsatz?
+ *
+ * Fail-open ist hier richtig: ein unbekannter Status (das Vokabular hat
+ * einundzwanzig Werte und waechst) soll im Umsatz auftauchen und nicht
+ * lautlos verschwinden. Eine zu hohe Zahl faellt auf, eine zu niedrige
+ * sieht aus wie ein schlechter Monat.
+ */
+export function zaehltAlsUmsatz(status: string | null | undefined): boolean {
+  if (status == null) return true
+  return !KEIN_UMSATZ_STATUS.includes(status)
+}

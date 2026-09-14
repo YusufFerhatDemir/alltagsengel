@@ -42,15 +42,15 @@ export default function FinancePage() {
         <>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: isMobile ? 10 : 16 }}>
             <KpiCard title="Seed-Runde" value="€500K" icon="target" color={BRAND.gold} />
-            <KpiCard title="Bewertung" value="€2,5M" icon="trending" trend="up" />
+            <KpiCard title="Bewertung" value="€2,5M" icon="trending" />
             <KpiCard title="Burn Rate" value="€12K" unit="/Monat" icon="activity" color={BRAND.warning} />
             <KpiCard title="Runway" value="~42" unit="Monate" icon="clock" color={BRAND.success} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))', gap: isMobile ? 12 : 20 }}>
-            <Card title="Umsatzentwicklung" icon="chart">
+            <Card title="Umsatzentwicklung (Plan)" icon="chart">
               <MiniBarChart data={FP.revenue} labels={FP.years} height={150} />
             </Card>
-            <Card title="Gewinn/Verlust" icon="trending">
+            <Card title="Gewinn/Verlust (Plan)" icon="trending">
               <MiniBarChart data={FP.profit.map(v => Math.abs(v))} labels={FP.years} color={BRAND.success} height={150} />
               <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: 11, color: BRAND.muted, flexWrap: 'wrap' }}>
                 {FP.years.map((y, i) => (

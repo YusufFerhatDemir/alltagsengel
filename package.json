@@ -98,7 +98,8 @@
     "verify:bewerberfunnel": "tsx scripts/verify-bewerberfunnel-live.ts",
     "verify:automatisierung": "tsx --require ./scripts/test-stubs/server-only-stub.cjs --require ./scripts/test-stubs/admin-client-trockenlauf.cjs scripts/verify-automatisierung-trockenlauf.ts",
     "verify:mandantenzaun": "node scripts/verify-mandantenzaun-live.mjs",
-    "verify:einsatzbereitschaft": "tsx --require ./scripts/test-stubs/server-only-stub.cjs scripts/verify-einsatzbereitschaft-live.ts"
+    "verify:einsatzbereitschaft": "tsx --require ./scripts/test-stubs/server-only-stub.cjs scripts/verify-einsatzbereitschaft-live.ts",
+    "verify:mis-kennzahlen": "tsx --require ./scripts/test-stubs/server-only-stub.cjs scripts/verify-mis-kennzahlen-live.ts"
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",

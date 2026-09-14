@@ -8,14 +8,22 @@ import {
 } from '../../lib/analytics/kpi'
 
 describe('KPI-Dashboard — berechneUmsatz', () => {
-  it('summiert total_amount über alle Rechnungen', () => {
-    const r = berechneUmsatz([{ total_amount: 100 }, { total_amount: 50.5 }])
+  const FEST = '2026-09-01T10:00:00Z'
+
+  it('summiert total_amount über festgeschriebene Rechnungen', () => {
+    const r = berechneUmsatz([
+      { total_amount: 100, status: 'sent', frozen_at: FEST },
+      { total_amount: 50.5, status: 'paid', frozen_at: FEST },
+    ])
     expect(r.summeEuro).toBe(150.5)
     expect(r.anzahlRechnungen).toBe(2)
   })
 
   it('behandelt null-Beträge als 0', () => {
-    const r = berechneUmsatz([{ total_amount: null }, { total_amount: 20 }])
+    const r = berechneUmsatz([
+      { total_amount: null, status: 'sent', frozen_at: FEST },
+      { total_amount: 20, status: 'sent', frozen_at: FEST },
+    ])
     expect(r.summeEuro).toBe(20)
   })
 
@@ -23,6 +31,84 @@ describe('KPI-Dashboard — berechneUmsatz', () => {
     const r = berechneUmsatz([])
     expect(r.summeEuro).toBe(0)
     expect(r.anzahlRechnungen).toBe(0)
+    expect(r.nichtFestgeschrieben).toBe(0)
+  })
+
+  // ── Block 28: der Storno nimmt der Zeile ihren Status, nicht ihren Betrag
+  it('zählt eine stornierte Rechnung NICHT als Umsatz', () => {
+    const r = berechneUmsatz([
+      { total_amount: 100, status: 'sent', frozen_at: FEST },
+      { total_amount: 900, status: 'storniert', frozen_at: FEST },
+    ])
+    expect(r.summeEuro).toBe(100)
+    expect(r.anzahlRechnungen).toBe(1)
+    expect(r.nichtGezaehlt).toBe(1)
+  })
+
+  it('kennt auch das englische Storno-Wort', () => {
+    const r = berechneUmsatz([{ total_amount: 900, status: 'cancelled', frozen_at: FEST }])
+    expect(r.summeEuro).toBe(0)
+    expect(r.nichtGezaehlt).toBe(1)
+  })
+
+  it('zählt Entwurf, Ablehnung und Abschreibung nicht', () => {
+    const r = berechneUmsatz([
+      { total_amount: 10, status: 'entwurf', frozen_at: FEST },
+      { total_amount: 20, status: 'draft', frozen_at: FEST },
+      { total_amount: 30, status: 'abgelehnt', frozen_at: FEST },
+      { total_amount: 40, status: 'rejected', frozen_at: FEST },
+      { total_amount: 50, status: 'abgeschrieben', frozen_at: FEST },
+    ])
+    expect(r.summeEuro).toBe(0)
+    expect(r.nichtGezaehlt).toBe(5)
+  })
+
+  it('zählt eine bestrittene Rechnung SEHR WOHL als Umsatz', () => {
+    // strittig heisst: die Forderung ist gestellt und wird bestritten —
+    // nicht zurueckgenommen. Ob sie eingeht, beantwortet der offene Posten.
+    const r = berechneUmsatz([{ total_amount: 1064, status: 'disputed', frozen_at: FEST }])
+    expect(r.summeEuro).toBe(1064)
+  })
+
+  // ── Block 28: ohne frozen_at ist die Rechnung nie ausgestellt worden
+  it('zählt eine nicht festgeschriebene Rechnung NICHT als Umsatz', () => {
+    const r = berechneUmsatz([{ total_amount: 187, status: 'sent', frozen_at: null }])
+    expect(r.summeEuro).toBe(0)
+    expect(r.anzahlRechnungen).toBe(0)
+  })
+
+  it('weist die nicht festgeschriebenen Rechnungen getrennt aus statt sie zu verschweigen', () => {
+    // Der Produktionsbestand am 14.09.2026: drei Rechnungen über 1.901 €,
+    // keine davon festgeschrieben. Der Umsatz ist 0 € — aber die Seite
+    // muss sagen koennen, WARUM, sonst sieht der leere Bestand aus wie
+    // ein Geschaeftseinbruch.
+    const r = berechneUmsatz([
+      { total_amount: 187, status: 'sent', frozen_at: null },
+      { total_amount: 1064, status: 'disputed', frozen_at: null },
+      { total_amount: 650, status: 'paid', frozen_at: null },
+    ])
+    expect(r.summeEuro).toBe(0)
+    expect(r.nichtFestgeschrieben).toBe(3)
+    expect(r.nichtGezaehlt).toBe(0)
+  })
+
+  it('trennt die beiden Gruende sauber: Status und Festschreibung', () => {
+    const r = berechneUmsatz([
+      { total_amount: 100, status: 'sent', frozen_at: FEST },
+      { total_amount: 200, status: 'storniert', frozen_at: FEST },
+      { total_amount: 300, status: 'sent', frozen_at: null },
+    ])
+    expect(r.summeEuro).toBe(100)
+    expect(r.nichtGezaehlt).toBe(1)
+    expect(r.nichtFestgeschrieben).toBe(1)
+  })
+
+  it('rundet auf Cent statt Gleitkommareste auszuweisen', () => {
+    const r = berechneUmsatz([
+      { total_amount: 0.1, status: 'sent', frozen_at: FEST },
+      { total_amount: 0.2, status: 'sent', frozen_at: FEST },
+    ])
+    expect(r.summeEuro).toBe(0.3)
   })
 })
 
