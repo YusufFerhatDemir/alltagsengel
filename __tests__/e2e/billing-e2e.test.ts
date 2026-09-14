@@ -276,6 +276,10 @@ function serviceRecordsKette() {
     data: [{
       id: 'sr-e2e-1',
       date: '2026-06-15',
+      // `service_type` ist live NOT NULL. Ohne sie modelliert die
+      // Attrappe eine Zeile, die es nicht geben kann — und der
+      // Tarif-Guard aus Block 45 weist sie zu Recht ab.
+      service_type: 'Demenzbetreuung',
       proof_status: 'UNTERSCHRIEBEN',
       signature_hash: 'a'.repeat(64),
       client_signed_at: '2026-06-15T12:00:00Z',

@@ -50,6 +50,7 @@ import {
   type BudgetDeckelErgebnis,
 } from './budget-cap';
 import { assertBelegteNachweise } from '@/lib/billing/nachweis-beleg';
+import { assertTarifZuordnung } from '@/lib/billing/tarif-zuordnung';
 
 // ---------------------------------------------------------------------------
 // Fehler-Codes fuer Tarif-Aufloesung
@@ -388,11 +389,28 @@ export async function createInvoiceDraft(
   // — also eine ODER-Annahme: der blosse Statuswert 'UNTERSCHRIEBEN'
   // genuegt ihr, auch wenn nie ein Hash gebildet wurde. Der Hash entsteht
   // aber nur, wenn `client_signed_at` gesetzt ist; wer den Status ohne
-  // Zeitstempel setzt, kommt an der Sperre vorbei. Und den Status setzen
-  // kann live jede Pflegekraft auf ihrer eigenen Zeile: die Policy
-  // `sr_engel_own` ist FOR ALL und hebt die Statuseinschraenkung der
-  // daneben liegenden Policy `service_records_caregiver_update` durch die
-  // ODER-Verknuepfung permissiver Policies auf.
+  // Zeitstempel setzt, kommt an der Sperre vorbei.
+  //
+  // NACHGEMESSEN 14.09.2026 (Block 45) — hier stand, jede Pflegekraft
+  // koenne das live selbst tun, weil die FOR-ALL-Policy `sr_engel_own`
+  // die Statuseinschraenkung von `service_records_caregiver_update`
+  // ueberstimme. Das stimmt nicht mehr: `sr_engel_own` ist in der
+  // Produktionsdatenbank nicht vorhanden (Policy-Liste aus `pg_policies`
+  // gelesen), und `rollen_matrix('engel')` ist leer — `einsatz.schreiben`
+  // haben nur superadmin, admin und pdl. Ein Wechsel auf
+  // 'UNTERSCHRIEBEN' zieht ueber `sync_service_record_status` (BEFORE)
+  // den `status` auf 'signed' hoch, und die Policy prueft die NEUE Zeile:
+  // der Schreibversuch einer Pflegekraft wird abgewiesen.
+  //
+  // Offen bleibt eine LATENTE Unstimmigkeit der beiden Trigger:
+  // `enforce_unterschrift_beleg` erkennt eine Zeile in
+  // `service_signatures` als Beleg an, `compute_signature_hash` bildet
+  // den Hash aber nur bei gesetztem `client_signed_at` — und setzt
+  // `is_locked` ebenfalls nur dann. Auf diesem Weg entstuende ein
+  // Nachweis, der als unterschrieben GILT, keinen Hash traegt und nicht
+  // gesperrt ist. Kein Anwendungsweg tut das heute (der einzige Schreiber
+  // ist lib/signaturen/nachweis-uebernahme.ts, und der setzt beides);
+  // deshalb steht es hier als benannte Latenz und nicht als Befund.
   //
   // Deshalb hier, an der EINEN Stelle, durch die jeder Rechnungsweg laeuft
   // (Einzelrechnung, auto-invoice, Sammelrechnungslauf), noch einmal die
@@ -400,6 +418,31 @@ export async function createInvoiceDraft(
   // Migration 20261017000000 zieht dieselbe Verschaerfung in der Datenbank
   // nach; bis sie angewendet ist, ist diese Pruefung die einzige.
   await assertBelegteNachweise(supabase, {
+    clientId,
+    organizationId: client.organization_id,
+    periodMonth,
+    budgetType,
+  });
+
+  // ── Tarifzuordnung VOR der Rechnungserstellung ───────────────────────
+  // BEFUND (Block 45, 14.09.2026): Findet die RPC zu einer Leistungsart
+  // keinen Tarif-Schluessel, wirft sie MISSING_VALID_TARIFF — im
+  // Schleifenkoerper. Die ganze Transaktion faellt zurueck, also auch die
+  // bereits geschriebenen Positionen der uebrigen Nachweise. EIN Nachweis
+  // ueber Koerperpflege laesst die vollstaendige Monatsrechnung dieses
+  // Klienten scheitern, und die Meldung nennt nur den ersten Treffer.
+  //
+  // Der Sammelrechnungslauf prueft das laengst vorher (`pruefeGruppe`,
+  // LEISTUNGSART_UNBEKANNT). Die Einzelrechnung und der automatische Lauf
+  // kommen hier durch, ohne diese Pruefung gesehen zu haben — die Regel
+  // stand in einem Aufrufer statt an der Stelle, durch die alle drei
+  // laufen.
+  //
+  // Sie fragt NUR nach dem Schluessel, nicht nach dem Tarifbestand: das
+  // Kostentraeger-/Bundesland-Scoring der RPC nachzubilden wuerde
+  // abrechenbare Faelle aussortieren, und Ueber-Sperren ist hier der
+  // schwerere Fehler. Siehe lib/billing/tarif-zuordnung.ts.
+  await assertTarifZuordnung(supabase, {
     clientId,
     organizationId: client.organization_id,
     periodMonth,
