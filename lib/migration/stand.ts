@@ -226,6 +226,35 @@ export const WARTENDE_MIGRATIONEN: readonly WartendeMigration[] = [
     ],
     pruefung: 'npm run lint:bucket-policy',
   },
+  {
+    datei: '20261215000000_abrechnung_storage_mandantenzaun.sql',
+    ruecknahme: '20261215000001_rollback_abrechnung_storage_mandantenzaun.sql',
+    titel: 'Abrechnungsdateien: der Zaun, den nur der Nachbarbucket hatte',
+    ohneSie:
+      '`is_admin()` ist MANDANTENBLIND — live aus pg_proc gelesen prueft es '
+      + 'nur `profiles.role IN (admin, superadmin)` und sonst nichts. Die vier '
+      + 'Policies auf dem Bucket `abrechnung` haengen NUR daran. Damit liest, '
+      + 'schreibt, aendert und loescht die Administration JEDER Organisation '
+      + 'die DTA-Dateien JEDER anderen — Versichertendaten, Leistungen, '
+      + 'Betraege je Kostentraeger. Der Nachbarbucket `dta-dateien` macht es '
+      + 'seit jeher richtig und prueft zusaetzlich '
+      + '`(storage.foldername(name))[2] = current_org_id()`. Der Ablagepfad '
+      + 'traegt die Organisation bereits (`dta/<organization_id>/<lauf>/…`), '
+      + 'die Bedingung liest sie also nur aus — keine Code-Aenderung noetig. '
+      + 'Der Bucket enthaelt live NULL Objekte; es gibt keinen Altbestand, '
+      + 'dem der Zaun etwas nimmt.',
+    wirkungen: [
+      { art: 'policy', tabelle: 'objects', name: 'admin_abrechnung_storage_select',
+        zweck: 'Lesen nur im eigenen Mandanten — zweites Pfadsegment = current_org_id().' },
+      { art: 'policy', tabelle: 'objects', name: 'admin_abrechnung_storage_insert',
+        zweck: 'Ablegen nur im eigenen Mandanten, mit derselben Pfadbedingung.' },
+      { art: 'policy', tabelle: 'objects', name: 'admin_abrechnung_storage_update',
+        zweck: 'Aendern nur im eigenen Mandanten, mit derselben Pfadbedingung.' },
+      { art: 'policy', tabelle: 'objects', name: 'admin_abrechnung_storage_delete',
+        zweck: 'Entfernen nur im eigenen Mandanten, mit derselben Pfadbedingung.' },
+    ],
+    pruefung: 'npm run lint:bucket-policy',
+  },
 ]
 
 // ---------------------------------------------------------------------------

@@ -30,7 +30,10 @@
  */
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { bucketsMitPolicy, unterRls, pruefeQuelle } from '../../scripts/lint-bucket-policy'
+import {
+  bucketsMitPolicy, unterRls, pruefeQuelle,
+  storagePolicies, hatMandantenbedingung, OHNE_MANDANT_BESTAND,
+} from '../../scripts/lint-bucket-policy'
 
 const DATEI = 'app/beispiel/page.tsx'
 
@@ -161,6 +164,139 @@ describe('Der behobene Fall bleibt behoben', () => {
     const stelle = SEITE.slice(ab, ab + 1200)
     expect(stelle).toContain('if (error || !data?.signedUrl) {')
     expect(stelle).toContain('log.errorWithException(')
+  })
+})
+
+describe('Block 104: Policies ohne Mandantenbedingung', () => {
+  // BEFUND: `is_admin()` ist MANDANTENBLIND. Live aus pg_proc gelesen —
+  // es prueft `profiles.role IN ('admin','superadmin')` und sonst nichts.
+  // Die vier Policies auf `abrechnung` hingen NUR daran: die
+  // Administration jeder Organisation las, schrieb, aenderte und loeschte
+  // die DTA-Dateien jeder anderen. `dta-dateien` nebenan macht es seit
+  // jeher richtig.
+
+  it('zerlegt eine Policy in Name, Bucket und Rumpf', () => {
+    const sql = `CREATE POLICY p_eins ON storage.objects
+      FOR SELECT USING (bucket_id = 'abrechnung' AND is_admin());`
+    const p = storagePolicies([sql])
+    expect(p).toHaveLength(1)
+    expect(p[0].name).toBe('p_eins')
+    expect(p[0].bucket).toBe('abrechnung')
+  })
+
+  it('erkennt den Mandantenzaun', () => {
+    const mit = storagePolicies([`CREATE POLICY a ON storage.objects
+      USING (bucket_id = 'x' AND is_admin()
+             AND (storage.foldername(name))[2] = (current_org_id())::text);`])[0]
+    expect(hatMandantenbedingung(mit)).toBe(true)
+  })
+
+  it('laesst auch die Bindung an das eigene Konto gelten', () => {
+    // `auth.uid()` ist ENGER als der Mandant — wer nur an seine eigenen
+    // Dateien kommt, kommt erst recht nicht an die des Nachbarn.
+    const p = storagePolicies([`CREATE POLICY a ON storage.objects
+      USING (bucket_id = 'documents' AND (storage.foldername(name))[1] = (auth.uid())::text);`])[0]
+    expect(hatMandantenbedingung(p)).toBe(true)
+  })
+
+  it('und den Dienstschluessel — dort umgeht RLS ohnehin', () => {
+    const p = storagePolicies([`CREATE POLICY a ON storage.objects
+      TO service_role USING (bucket_id = 'x');`])[0]
+    expect(hatMandantenbedingung(p)).toBe(true)
+  })
+
+  it('meldet is_admin() ALLEIN als mandantenblind', () => {
+    const p = storagePolicies([`CREATE POLICY a ON storage.objects
+      FOR SELECT USING (bucket_id = 'abrechnung' AND is_admin());`])[0]
+    expect(hatMandantenbedingung(p)).toBe(false)
+  })
+
+  it('Ruecknahmedateien werden ausgesiebt — sonst waere das Tor nach der ersten rot', () => {
+    // Eine Ruecknahme stellt den alten, schwaecheren Zustand wieder her.
+    // Das ist ihr Zweck; sie als Befund zu zaehlen hiesse, keine
+    // Ruecknahme mehr schreiben zu duerfen. Der Lauf siebt sie ueber den
+    // Dateinamen aus — hier festgehalten, weil genau das im ersten
+    // Anlauf gefehlt hat und das Tor rot war.
+    const quelle = readFileSync('scripts/lint-bucket-policy.ts', 'utf8')
+    expect(quelle).toContain("filter(d => !/rollback/i.test(d))")
+    expect(quelle).toContain('storagePolicies(vorwaerts)')
+  })
+
+  it('die drei Ausnahmen sind benannt und begruendet', () => {
+    expect([...OHNE_MANDANT_BESTAND].sort()).toEqual([
+      'documents_admin_storage',
+      'service_proofs_admin_all',
+      'verordnungen_scans_admin_all',
+    ])
+    const quelle = readFileSync('scripts/lint-bucket-policy.ts', 'utf8')
+    const block = quelle.slice(
+      quelle.indexOf('Policies, die HEUTE noch ohne Mandantenbedingung'),
+      quelle.indexOf('export const OHNE_MANDANT_BESTAND'),
+    )
+    // Der Grund ist derselbe fuer alle drei: der Mandant steht nicht im
+    // Pfad. Ohne diesen Satz waere die Liste eine Freigabe.
+    expect(block).toContain('KEINE FREIGABE')
+    expect(block).toContain('NICHT im Pfad')
+  })
+})
+
+describe('Block 104: der Zaun fuer abrechnung', () => {
+  const ROH = readFileSync(
+    'supabase/migrations/20261215000000_abrechnung_storage_mandantenzaun.sql', 'utf8')
+  /**
+   * Nur das AUSGEFUEHRTE SQL.
+   *
+   * Der Kopf der Migration zitiert den Befund — samt der Bedingung, um
+   * die es geht. Wer den Rohtext zaehlt, zaehlt die Begruendung mit und
+   * bekommt fuenf statt vier. Genau so stand der erste Anlauf hier.
+   */
+  const MIG = ROH.split('\n').filter(z => !z.trim().startsWith('--')).join('\n')
+
+  it('haertet alle vier Policies', () => {
+    const policies = storagePolicies([MIG])
+    expect(policies).toHaveLength(4)
+    for (const p of policies) {
+      expect(p.bucket, p.name).toBe('abrechnung')
+      expect(hatMandantenbedingung(p), p.name).toBe(true)
+    }
+  })
+
+  it('liest den Mandanten aus dem ZWEITEN Pfadsegment', () => {
+    // Der Ablageort ist `dta/<organization_id>/<laufId>/<datei>` —
+    // Segment 1 ist `dta`, Segment 2 der Mandant. Ein Zaun auf Segment 1
+    // vergliche die Zeichenkette `dta` mit einer UUID und sperrte alles.
+    const treffer = (MIG.match(/\(storage\.foldername\(name\)\)\[2\] = \(current_org_id\(\)\)::text/g) ?? []).length
+    expect(treffer).toBe(4)
+    expect(MIG).not.toContain('(storage.foldername(name))[1]')
+  })
+
+  it('und der Code legt auch wirklich so ab', () => {
+    // Die Policy und der Ablagepfad muessen zusammenpassen; sonst ist der
+    // Zaun eine Sperre statt eines Zauns.
+    const engine = readFileSync('lib/abrechnung/kassenabrechnung-engine.ts', 'utf8')
+    expect(engine).toContain('`dta/${lauf.organization_id}/${laufId}/')
+  })
+
+  it('behaelt is_admin() — der Zaun ERSETZT die Rolle nicht', () => {
+    // Ohne `is_admin()` duerfte jedes Mitglied des Mandanten an die
+    // DTA-Dateien. Der Zaun kommt HINZU.
+    expect((MIG.match(/is_admin\(\)/g) ?? []).length).toBe(4)
+  })
+
+  it('haltet den Kopf der Migration bei der Wahrheit', () => {
+    // Der Befund gehoert in die Datei — aber er muss im Kommentar stehen,
+    // nicht im ausgefuehrten Teil.
+    expect(ROH).toContain('is_admin()` ist MANDANTENBLIND')
+    expect(ROH).toContain('dta-dateien')
+  })
+
+  it('die Ruecknahme stellt den alten Zustand her und sagt, dass er schlecht ist', () => {
+    const zurueck = readFileSync(
+      'supabase/migrations/20261215000001_rollback_abrechnung_storage_mandantenzaun.sql', 'utf8')
+    expect(storagePolicies([zurueck])).toHaveLength(4)
+    expect(zurueck.split('\n').filter(z => !z.trim().startsWith('--')).join('\n'))
+      .not.toContain('current_org_id()')
+    expect(zurueck).toContain('kein guter')
   })
 })
 

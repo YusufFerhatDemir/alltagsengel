@@ -1,16 +1,16 @@
-# Dispatch: sieben wartende Migrationen
+# Dispatch: acht wartende Migrationen
 
 > **Erzeugt aus `lib/migration/stand.ts`.** Nicht von Hand ändern —
 > `npm run migrations:dispatch` schreibt die Datei neu, ein Test hält sie dagegen.
 
-DDL ist aus der Anwendung heraus nicht möglich (42501). Diese sieben
+DDL ist aus der Anwendung heraus nicht möglich (42501). Diese acht
 Migrationen gehen deshalb durch den Supabase-SQL-Editor.
 
 **Nach jedem Schritt messen:** `npm run verify:migrationsstand`.
 Der Lauf fragt nicht das Migrations-Verzeichnis, sondern die *Wirkung* —
 ein Apply ohne Rechte meldet HTTP 204 und bewirkt nichts.
 
-Die sieben sind **voneinander unabhängig**. Jede lässt sich einzeln
+Die acht sind **voneinander unabhängig**. Jede lässt sich einzeln
 einspielen und einzeln zurücknehmen; die Reihenfolge unten ist die
 nach Nummern, keine Abhängigkeitskette.
 
@@ -123,6 +123,24 @@ Die Rechnungsnummer ist global eindeutig, der Zaehler laeuft je Mandant. Der ZWE
 - Policy `mis_documents_storage_insert` auf `objects` — Ablegen im eigenen Mandanten — dieselbe Pfadbedingung.
 - Policy `mis_documents_storage_update` auf `objects` — Aendern zusaetzlich nur mit is_admin() — ein freigegebenes Dokument der Lenkung ist nicht fuer jedes Mitglied ueberschreibbar.
 - Policy `mis_documents_storage_delete` auf `objects` — Entfernen ebenso nur mit is_admin(), im eigenen Mandanten.
+
+**Zusätzlich danach:** `npm run lint:bucket-policy`
+
+## 8. Abrechnungsdateien: der Zaun, den nur der Nachbarbucket hatte
+
+**Datei:** `supabase/migrations/20261215000000_abrechnung_storage_mandantenzaun.sql`
+**Rücknahme:** `supabase/migrations/20261215000001_rollback_abrechnung_storage_mandantenzaun.sql`
+
+**Ohne sie:**
+
+`is_admin()` ist MANDANTENBLIND — live aus pg_proc gelesen prueft es nur `profiles.role IN (admin, superadmin)` und sonst nichts. Die vier Policies auf dem Bucket `abrechnung` haengen NUR daran. Damit liest, schreibt, aendert und loescht die Administration JEDER Organisation die DTA-Dateien JEDER anderen — Versichertendaten, Leistungen, Betraege je Kostentraeger. Der Nachbarbucket `dta-dateien` macht es seit jeher richtig und prueft zusaetzlich `(storage.foldername(name))[2] = current_org_id()`. Der Ablagepfad traegt die Organisation bereits (`dta/<organization_id>/<lauf>/…`), die Bedingung liest sie also nur aus — keine Code-Aenderung noetig. Der Bucket enthaelt live NULL Objekte; es gibt keinen Altbestand, dem der Zaun etwas nimmt.
+
+**Messbare Wirkung (4):**
+
+- Policy `admin_abrechnung_storage_select` auf `objects` — Lesen nur im eigenen Mandanten — zweites Pfadsegment = current_org_id().
+- Policy `admin_abrechnung_storage_insert` auf `objects` — Ablegen nur im eigenen Mandanten, mit derselben Pfadbedingung.
+- Policy `admin_abrechnung_storage_update` auf `objects` — Aendern nur im eigenen Mandanten, mit derselben Pfadbedingung.
+- Policy `admin_abrechnung_storage_delete` auf `objects` — Entfernen nur im eigenen Mandanten, mit derselben Pfadbedingung.
 
 **Zusätzlich danach:** `npm run lint:bucket-policy`
 

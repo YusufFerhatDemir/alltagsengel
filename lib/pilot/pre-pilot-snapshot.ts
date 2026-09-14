@@ -216,17 +216,6 @@ export const JUENGSTE_MIGRATIONEN = [
   //
   // Mit Block 103 ist auch sie herausgerutscht — der Speicher-Riegel fuer
   // `mis-documents` ist juenger.
-  // 14.09.2026 (Block 44): ein Leistungsnachweis ohne Einsatzdauer darf
-  // nicht abrechenbar werden. `duration_minutes` ist GENERATED und bleibt
-  // NULL, wenn die Zeiten fehlen — und `create_invoice_draft_atomic`
-  // rechnet dann mit `COALESCE(duration_minutes, 60)` eine volle Stunde,
-  // die niemand erfasst hat. NICHT angewendet (DDL braucht den
-  // SQL-Editor); bis dahin ist der Anwendungscode der einzige Riegel.
-  //
-  // Mit Block 103 ist die Vorwaerts-Migration aus den fuenf juengsten
-  // herausgerutscht; nur ihre Ruecknahme steht noch hier. Die vollstaendige
-  // Liste der wartenden Migrationen fuehrt lib/migration/stand.ts.
-  '20261130000001_rollback_service_records_dauer_pflicht.sql',
   // 14.09.2026 (Block 46): acht UNIQUE-Constraints auf Mandanten-Tabellen
   // nannten `organization_id` nicht — allen voran die Rechnungsnummer.
   // `next_billing_number()` zaehlt JE MANDANT, die Nummer traegt den
@@ -234,7 +223,10 @@ export const JUENGSTE_MIGRATIONEN = [
   // 'RE-2026-00001' und kann damit NIE eine Rechnung stellen. NICHT
   // angewendet (DDL braucht den SQL-Editor); bis dahin fuehrt
   // `npm run verify:mandanten-eindeutigkeit` die acht als wartend.
-  '20261205000000_mandanten_eindeutigkeit.sql',
+  //
+  // Mit Block 104 ist die Vorwaerts-Migration aus den fuenf juengsten
+  // herausgerutscht; nur ihre Ruecknahme steht noch hier. Die vollstaendige
+  // Liste der wartenden Migrationen fuehrt lib/migration/stand.ts.
   '20261205000001_rollback_mandanten_eindeutigkeit.sql',
   // HINWEIS (Track 13): die Perimeter-Migrationen stehen hier NICHT,
   // obwohl sie die zuletzt hinzugekommenen sind. Sie tragen seit dem
@@ -264,6 +256,16 @@ export const JUENGSTE_MIGRATIONEN = [
   // unbenutzbar — sie sagt es seit Block 103 nur ehrlich.
   '20261210000000_mis_documents_storage_policy.sql',
   '20261210000001_rollback_mis_documents_storage_policy.sql',
+  // 14.09.2026 (Block 104): `is_admin()` ist mandantenblind — es prueft
+  // nur `profiles.role`. Die vier Policies auf dem Bucket `abrechnung`
+  // haengen NUR daran: die Administration jeder Organisation liest,
+  // schreibt und loescht die DTA-Dateien jeder anderen. Der Nachbarbucket
+  // `dta-dateien` prueft seit jeher zusaetzlich das zweite Pfadsegment
+  // gegen current_org_id(); der Ablagepfad traegt die Organisation
+  // bereits. NICHT angewendet (DDL braucht den SQL-Editor). Der Bucket
+  // ist live leer — der Zaun nimmt keinem Altbestand etwas.
+  '20261215000000_abrechnung_storage_mandantenzaun.sql',
+  '20261215000001_rollback_abrechnung_storage_mandantenzaun.sql',
 ] as const
 
 // ---------------------------------------------------------------------------

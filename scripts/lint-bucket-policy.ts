@@ -105,9 +105,85 @@ export function pruefeQuelle(text: string, datei: string): Befund[] {
   return befunde
 }
 
+/**
+ * Eine einzelne `CREATE POLICY …` auf `storage.objects`, so wie sie in
+ * einer Migration steht.
+ */
+export interface PolicyText {
+  name: string
+  bucket: string
+  text: string
+}
+
+/**
+ * Zerlegt Migrations-SQL in die Storage-Policies, die es anlegt.
+ *
+ * RUECKNAHMEDATEIEN GEHOEREN NICHT HINEIN. Eine Ruecknahme stellt den
+ * alten, schwaecheren Zustand wieder her — das ist ihr Zweck. Wer sie
+ * mitliest, bekommt fuer JEDE gehaertete Policy sofort wieder einen
+ * Befund und schaltet das Tor nach der ersten Ruecknahme ab. Der
+ * Aufrufer siebt sie deshalb ueber den Dateinamen aus; diese Funktion
+ * bekommt nur die Vorwaertsmigrationen zu sehen.
+ */
+export function storagePolicies(sqlTexte: string[]): PolicyText[] {
+  const raus: PolicyText[] = []
+  for (const text of sqlTexte) {
+    for (const m of text.matchAll(
+      /CREATE\s+POLICY\s+"?([A-Za-z0-9_]+)"?\s+ON\s+storage\.objects([\s\S]*?);/gi,
+    )) {
+      const rumpf = m[2]
+      const bucket = /bucket_id\s*=\s*'([a-z0-9-]+)'/i.exec(rumpf)
+      if (!bucket) continue
+      raus.push({ name: m[1], bucket: bucket[1], text: rumpf })
+    }
+  }
+  return raus
+}
+
+/**
+ * Traegt die Policy eine Mandantenbedingung?
+ *
+ * Gelten gelassen wird dreierlei:
+ *   `current_org_id()`   der Mandantenzaun
+ *   `auth.uid()`         die Bindung an das eigene Konto — enger als der
+ *                        Mandant, also ausreichend
+ *   `TO service_role`    der Dienstschluessel umgeht RLS ohnehin; eine
+ *                        Bedingung dort waere Zierde
+ */
+export function hatMandantenbedingung(policy: PolicyText): boolean {
+  if (/TO\s+service_role/i.test(policy.text)) return true
+  return /current_org_id\(\)/.test(policy.text) || /auth\.uid\(\)/.test(policy.text)
+}
+
+/**
+ * Policies, die HEUTE noch ohne Mandantenbedingung stehen.
+ *
+ * KEINE FREIGABE. Bei allen dreien steht der Mandant NICHT im Pfad — der
+ * Zaun braucht dort zuerst eine Aenderung am Ablageort, und die macht
+ * bestehende Dateien unauffindbar. Das ist je Bucket zu entscheiden, nicht
+ * in einem Durchlauf.
+ *
+ *   service-proofs   Pfad `<service_record_id>/…`  (lib/upload-service-proof.ts)
+ *   verordnungen     Pfad `<client_id>/…`          (app/admin/verordnungen)
+ *   documents        Pfad `<user_id>/…` — die EIGENEN Dateien sind ueber
+ *                    auth.uid() gebunden; nur die zusaetzliche
+ *                    Admin-Policy ist mandantenblind.
+ */
+export const OHNE_MANDANT_BESTAND: readonly string[] = [
+  'service_proofs_admin_all',
+  'verordnungen_scans_admin_all',
+  'documents_admin_storage',
+]
+
 function main() {
-  const sql = dateien(join(REPO, 'supabase', 'migrations'), [], false).map(d => readFileSync(d, 'utf8'))
+  const migrationsDateien = dateien(join(REPO, 'supabase', 'migrations'), [], false)
+  const sql = migrationsDateien.map(d => readFileSync(d, 'utf8'))
   const versorgt = bucketsMitPolicy(sql)
+
+  // Ohne Ruecknahmen — siehe storagePolicies().
+  const vorwaerts = migrationsDateien
+    .filter(d => !/rollback/i.test(d))
+    .map(d => readFileSync(d, 'utf8'))
 
   const alle: Befund[] = []
   for (const w of ['lib', 'app', 'components']) {
@@ -122,6 +198,43 @@ function main() {
   console.log(`   Zugriffe unter RLS:                    ${alle.length}`)
   console.log(`   davon ohne Policy:                     ${offen.length}`)
   console.log('')
+
+  const policies = storagePolicies(vorwaerts)
+  const blind = policies.filter(
+    p => !hatMandantenbedingung(p) && !OHNE_MANDANT_BESTAND.includes(p.name),
+  )
+  const tote = OHNE_MANDANT_BESTAND.filter(
+    n => !policies.some(p => p.name === n && !hatMandantenbedingung(p)),
+  )
+
+  console.log(`   Storage-Policies:                      ${policies.length}`)
+  console.log(`   davon ohne Mandantenbedingung:         ${blind.length + OHNE_MANDANT_BESTAND.length - tote.length}`)
+  console.log(`   Ausnahmen:                             ${OHNE_MANDANT_BESTAND.length}${tote.length > 0 ? `, davon ${tote.length} veraltet` : ''}`)
+  console.log('')
+
+  if (tote.length > 0) {
+    console.log(`❌ ${tote.length} Ausnahme(n) decken keine mandantenblinde Policy mehr:\n`)
+    for (const n of tote) console.log(`   ${n}`)
+    console.log('')
+    console.log('   Diese Namen gehören aus OHNE_MANDANT_BESTAND heraus. Solange sie')
+    console.log('   stehen, käme ein Rückfall auf dieselbe Policy durch.')
+    console.log('')
+    process.exit(1)
+  }
+
+  if (blind.length > 0) {
+    console.log(`❌ ${blind.length} Policy/Policies ohne Mandantenbedingung:\n`)
+    for (const p of blind) console.log(`   ${p.name}  [${p.bucket}]`)
+    console.log('')
+    console.log('   `is_admin()` ist MANDANTENBLIND — es prüft nur profiles.role. Eine')
+    console.log('   Policy, die nur daran hängt, gibt der Administration JEDER')
+    console.log('   Organisation die Dateien JEDER anderen.')
+    console.log('')
+    console.log('   Abhilfe: `(storage.foldername(name))[n] = (current_org_id())::text`')
+    console.log('   wie bei `dta-dateien` und `abrechnung` — oder `auth.uid()`, wenn die')
+    console.log('   Datei an ein Konto gebunden ist.')
+    process.exit(1)
+  }
 
   if (offen.length === 0) {
     console.log('✓ Kein Befund.')
