@@ -20,6 +20,7 @@
     "lint:forbidden": "tsx scripts/lint-forbidden.ts",
     "lint:org-id": "tsx scripts/lint-org-id-inserts.ts",
     "lint:route-auth": "tsx scripts/lint-route-auth.ts",
+    "lint:schreibrecht": "tsx scripts/lint-schreibrecht.ts",
     "lint:ladefehler": "tsx scripts/lint-ladefehler.ts",
     "lint:leerzustand": "tsx scripts/lint-leerzustand.ts",
     "lint:client-bundle": "tsx scripts/lint-client-bundle.ts",

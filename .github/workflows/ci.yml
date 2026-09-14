@@ -154,6 +154,28 @@ jobs:
         # Beide Regeln laufen rein statisch und brauchen keinen DB-Zugang.
         run: npm run lint:route-auth
 
+      - name: Lint — Schreib-Handler autorisiert auf Leserecht
+        # Block 43 (14.09.2026). Zehn Waechter-Helfer nehmen die verlangte
+        # Berechtigung als Parameter MIT Vorgabewert — und der ist ein
+        # `.lesen`-Recht:
+        #
+        #   requirePflegeAdmin(berechtigung: Berechtigung = 'pflege.lesen')
+        #   requireAdmin(berechtigung: Berechtigung = 'abrechnung.lesen')
+        #
+        # Ein POST, der den Helfer ohne Argument ruft, sieht bewacht aus
+        # und prueft doch nur Lesen. Keine bestehende Pruefung sah diese
+        # Form: `lint:route-auth` fragt nach der Rollen-QUELLE, nicht nach
+        # dem Recht, und eine Suche nach Berechtigungs-Literalen findet
+        # nichts, weil das Literal im Helfer steht, nicht am Aufrufort.
+        #
+        # R2 haelt zusaetzlich fest, dass ein Leserecht nur dann eine
+        # Schreibautorisierung sein darf, wenn es unter Vorbehalt der
+        # Administration steht (NUR_ADMINISTRATION). Das ist der Grund,
+        # warum die Sicherheits-Watchlist heute KEIN Fund ist — und die
+        # Regel, die anschlaegt, sobald jemand `sicherheit.lesen` einer
+        # Fachrolle gibt.
+        run: npm run lint:schreibrecht
+
       - name: Lint — Weiterleitung auf verworfenen Ladefehler
         # Track A (31.08.2026). `const { data: x } = await supabase…` verwirft
         # den Fehler. Faellt die Abfrage aus, ist `x` null — und eine daran
