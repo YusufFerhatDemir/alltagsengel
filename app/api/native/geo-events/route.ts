@@ -84,13 +84,33 @@ export const POST = withTracking(async function POST(request: Request) {
       return NextResponse.json({ error: 'Kein Zugriff auf diesen Leistungsnachweis' }, { status: 403 })
     }
 
-    const { data: location } = await admin
+    // BEFUND (Block 54, 14.09.2026): hier stand `const { data: location }`
+    // ohne Fehlerpruefung. Faellt die Abfrage aus — Rechteproblem, fehlende
+    // Tabelle, Netz —, ist `location` null, und der Radius wird einfach
+    // NICHT geprueft. „Kein genehmigter Ort hinterlegt" und „konnte nicht
+    // nachsehen" sahen identisch aus, und beide endeten in einem
+    // Anwesenheitsnachweis ohne Aussage.
+    //
+    // Fail-closed: wer nicht nachsehen kann, darf keinen Nachweis
+    // schreiben, der so aussieht wie ein geprueter.
+    const { data: location, error: ortFehler } = await admin
       .from('approved_locations')
       .select('gps_lat, gps_lng, radius_m')
       .eq('client_id', record.client_id)
       .eq('is_active', true)
       .limit(1)
       .maybeSingle()
+
+    if (ortFehler) {
+      log.errorWithException('Genehmigter Einsatzort nicht lesbar', ortFehler)
+      return NextResponse.json(
+        {
+          error: 'Der genehmigte Einsatzort konnte nicht gelesen werden. Ohne ihn '
+            + 'lässt sich die Anwesenheit nicht belegen; es wurde nichts gespeichert.',
+        },
+        { status: 503 },
+      )
+    }
 
     let distanceM: number | null = null
     let withinRadius: boolean | null = null
@@ -124,6 +144,35 @@ export const POST = withTracking(async function POST(request: Request) {
       return NextResponse.json({ error: 'Standort konnte nicht gespeichert werden' }, { status: 500 })
     }
 
+    // Kein genehmigter Ort hinterlegt: der Nachweis entsteht, sagt aber
+    // nichts aus.
+    //
+    // BEFUND (Block 54): fuer `within_radius === false` gab es einen
+    // Pruefeintrag, fuer `null` NICHTS. Dabei ist `null` heute der
+    // Normalfall — `approved_locations` ist live LEER (0 Zeilen bei 4
+    // Klienten). Jeder Check-in waere damit als unpruefbar gespeichert
+    // worden, und im Buero waere nie etwas aufgeschlagen: ein
+    // Anwesenheitsnachweis, der wie einer aussieht und keiner ist.
+    //
+    // 'info' statt 'warning': es ist kein verdaechtiges Ereignis, sondern
+    // eine fehlende Stammdatenpflege. Sichtbar muss sie trotzdem sein.
+    if (withinRadius === null) {
+      const { error: hinweisErr } = await admin.from('review_errors').insert({
+        service_record_id,
+        organization_id: auth.organizationId,
+        error_type: 'geo_mismatch',
+        severity: 'info',
+        description:
+          `${event_type === 'check_in' ? 'Check-in' : 'Check-out'} ohne Abgleich: für diesen `
+          + 'Klienten ist kein genehmigter Einsatzort mit Koordinaten hinterlegt '
+          + '(approved_locations). Der Standort wurde gespeichert, belegt aber keine '
+          + 'Anwesenheit.',
+      })
+      if (hinweisErr) {
+        log.errorWithException('review_errors-Hinweis nicht schreibbar', hinweisErr)
+      }
+    }
+
     // Außerhalb des Radius: kein Hard-Block, aber Prüfeintrag für das Büro
     if (withinRadius === false) {
       const { error: reviewErr } = await admin.from('review_errors').insert({
@@ -144,6 +193,13 @@ export const POST = withTracking(async function POST(request: Request) {
       distance_to_client_m: distanceM,
       within_radius: withinRadius,
       radius_m: radiusM,
+      // Die App soll den Unterschied anzeigen koennen: ein Haekchen fuer
+      // „im Radius" und dasselbe Haekchen fuer „ungeprueft" waere eine
+      // Falschauskunft gegenueber der Pflegekraft.
+      hinweis: withinRadius === null
+        ? 'Kein genehmigter Einsatzort hinterlegt — der Standort wurde gespeichert, '
+          + 'belegt aber keine Anwesenheit.'
+        : null,
     })
   } catch (err) {
     return safeApiError(err, request)
