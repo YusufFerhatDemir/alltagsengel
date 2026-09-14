@@ -56,6 +56,24 @@ export default function AdminClientsPage() {
         supabase.from('client_budgets').select('*').eq('year', year),
       ])
 
+      // BEFUND (Block 87): beide Abfragen ungeprueft. Faellt `clientsRes`
+      // aus, ist die Klientenliste leer — und leer sieht aus wie „keine
+      // Klienten angelegt". Faellt `budgetsRes` aus, hat JEDER Klient
+      // kein Budget, und die Budgetampel der Liste fehlt ueberall.
+      const nichtLesbar = ([
+        ['Klienten', clientsRes.error],
+        ['Budgets', budgetsRes.error],
+      ] as const).filter(([, fehler]) => fehler != null).map(([name]) => name)
+
+      if (nichtLesbar.length > 0) {
+        setError(
+          `${nichtLesbar.join(' und ')} konnten nicht geladen werden. Es wird keine Liste `
+          + 'angezeigt — eine leere wäre von „keine Klienten angelegt" nicht zu unterscheiden.'
+        )
+        setClients([])
+        return
+      }
+
       const budgetMap = new Map<string, any>()
       ;(budgetsRes.data || []).forEach((b: any) => budgetMap.set(b.client_id, b))
 

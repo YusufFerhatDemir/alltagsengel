@@ -23,11 +23,14 @@ export default function AmpelSummaryWidget({ year, month, refreshKey }: {
 }) {
   const [counts, setCounts] = useState<AmpelCounts | null>(null)
   const [loading, setLoading] = useState(true)
+  /** Welche Quelle nicht lesbar war (Block 87) — null, wenn alles ging. */
+  const [fehler, setFehler] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
     async function load() {
       setLoading(true)
+      setFehler(null)
       try {
         const supabase = createClient()
         const monthStart = `${year}-${String(month).padStart(2, '0')}-01`
@@ -37,6 +40,29 @@ export default function AmpelSummaryWidget({ year, month, refreshKey }: {
           supabase.from('monthly_closings').select('client_id, ampel').eq('year', year).eq('month', month),
           supabase.from('service_records').select('id, client_id, status').gte('date', monthStart).lte('date', monthEnd),
         ])
+
+        // BEFUND (Block 87): beide Abfragen wurden ungeprueft
+        // weiterverarbeitet. Die Pruefefehler werden wenige Zeilen
+        // darunter ausdruecklich geprueft — mit dem Satz „Ihr Verlust
+        // liess das Widget gruen melden, obwohl niemand nachgesehen hat".
+        // Genau diese Pruefung wird UEBERSPRUNGEN, wenn `recordsRes`
+        // ausfaellt: `recordIds` ist dann leer und die Abfrage laeuft gar
+        // nicht erst.
+        //
+        // Und der catch darunter setzte alles auf null — drei Kacheln mit
+        // „0", die sich lesen wie „nichts zu tun".
+        const nichtLesbar = ([
+          ['Monatsabschlüsse', closingsRes.error],
+          ['Leistungsnachweise', recordsRes.error],
+        ] as const).filter(([, fehler]) => fehler != null).map(([name]) => name)
+
+        if (nichtLesbar.length > 0) {
+          log.error('AmpelSummaryWidget: Abfragen fehlgeschlagen', {
+            bereiche: nichtLesbar.join(', '),
+          })
+          if (!cancelled) { setCounts(null); setFehler(nichtLesbar.join(' und ')) }
+          return
+        }
 
         const closingByClient = new Map<string, Ampel>()
         for (const c of closingsRes.data || []) closingByClient.set(c.client_id, c.ampel as Ampel)
@@ -97,8 +123,10 @@ export default function AmpelSummaryWidget({ year, month, refreshKey }: {
 
         if (!cancelled) setCounts(result)
       } catch (err) {
+        // Hierher fuehrt auch `throw errsErr`. Vorher endete das in drei
+        // Nullen — der ruhigsten aller Anzeigen.
         log.errorWithException('AmpelSummaryWidget load error', err)
-        if (!cancelled) setCounts({ gruen: 0, gelb: 0, rot: 0 })
+        if (!cancelled) { setCounts(null); setFehler('Prüfergebnisse') }
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -107,18 +135,36 @@ export default function AmpelSummaryWidget({ year, month, refreshKey }: {
     return () => { cancelled = true }
   }, [year, month, refreshKey])
 
+  // Ohne Zahlen KEINE Nullen: drei Kacheln mit „0" lesen sich wie
+  // „nichts zu tun" — und das ist die eine Aussage, die dieses Widget
+  // nach einem Lesefehler nicht treffen darf.
+  if (fehler) {
+    return (
+      <div className="admin-stats-grid" style={{ marginBottom: 20 }}>
+        <div className="admin-stat-card" style={{ gridColumn: '1 / -1', borderLeft: '3px solid #D04B3B' }}>
+          <div className="admin-stat-value">—</div>
+          <div className="admin-stat-label">
+            Ampel nicht ermittelbar ({fehler} nicht lesbar)
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const zahl = (n: number | undefined) => loading ? '…' : n ?? '—'
+
   return (
     <div className="admin-stats-grid" style={{ marginBottom: 20 }}>
       <div className="admin-stat-card" style={{ borderLeft: `3px solid ${AMPEL_META.gruen.color}` }}>
-        <div className="admin-stat-value">{loading ? '…' : counts?.gruen ?? 0}</div>
+        <div className="admin-stat-value">{zahl(counts?.gruen)}</div>
         <div className="admin-stat-label">🟢 Im Rahmen</div>
       </div>
       <div className="admin-stat-card" style={{ borderLeft: `3px solid ${AMPEL_META.gelb.color}` }}>
-        <div className="admin-stat-value">{loading ? '…' : counts?.gelb ?? 0}</div>
+        <div className="admin-stat-value">{zahl(counts?.gelb)}</div>
         <div className="admin-stat-label">🟡 Achtung</div>
       </div>
       <div className="admin-stat-card" style={{ borderLeft: `3px solid ${AMPEL_META.rot.color}` }}>
-        <div className="admin-stat-value">{loading ? '…' : counts?.rot ?? 0}</div>
+        <div className="admin-stat-value">{zahl(counts?.rot)}</div>
         <div className="admin-stat-label">🔴 Kritisch</div>
       </div>
     </div>

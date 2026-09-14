@@ -51,12 +51,15 @@ export default function AdminCaregiversPage() {
   const router = useRouter()
   const [rows, setRows] = useState<CaregiverRow[]>([])
   const [loading, setLoading] = useState(true)
+  /** Eine der beiden Quellen war nicht lesbar (Block 87). */
+  const [ladefehler, setLadefehler] = useState<string | null>(null)
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [expanded, setExpanded] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
+      setLadefehler(null)
       try {
         const supabase = createClient()
         const [cgRes, qualAntwort] = await Promise.all([
@@ -68,7 +71,28 @@ export default function AdminCaregiversPage() {
         // Gefunden mit `npm run lint:rls-sicht`.
           fetch('/api/personal/qualifikationen'),
         ])
-        const qualRes = { data: qualAntwort.ok ? await qualAntwort.json() : [] }
+        // BEFUND (Block 87): `qualAntwort.ok ? … : []` machte aus einer
+        // gescheiterten Anfrage eine leere Qualifikationsliste. Der
+        // Kommentar darueber nennt genau diesen Schaden als Grund fuer
+        // die Route: „die Pflegedienstleitung saehe hier sonst eine leere
+        // Liste ohne jede Meldung". Der Rueckfall stellte ihn wieder her.
+        //
+        // Und `cgRes` wurde ebenfalls nicht geprueft: ohne Kraefte zeigt
+        // die Seite „keine Betreuungskraefte angelegt".
+        const nichtLesbar: string[] = []
+        if (cgRes.error) nichtLesbar.push('Betreuungskräfte')
+        if (!qualAntwort.ok) nichtLesbar.push('Qualifikationen')
+        if (nichtLesbar.length > 0) {
+          setLadefehler(
+            nichtLesbar.join(' und ')
+            + ' konnten nicht geladen werden. Es wird keine Liste angezeigt — '
+            + 'eine leere wäre von „nichts hinterlegt" nicht zu unterscheiden.'
+          )
+          setRows([])
+          return
+        }
+
+        const qualRes = { data: await qualAntwort.json() }
         const qualsByCg = new Map<string, Qualification[]>()
         ;(qualRes.data || []).forEach((q: any) => {
           const { ampel, daysLeft } = qualAmpel(q.valid_until)
@@ -121,6 +145,15 @@ export default function AdminCaregiversPage() {
         r.languages.some(l => l.toLowerCase().includes(q)) || (r.city || '').toLowerCase().includes(q)
     })
   }, [rows, filter, search])
+
+  // Ohne Liste nur den Grund: eine leere Tabelle mit „0 Kraefte" liest
+  // sich wie „nichts angelegt" (Block 87).
+  if (ladefehler) return (
+    <div className="admin-page">
+      <div className="admin-page-header"><h1>Betreuungskräfte</h1></div>
+      <Banner tone="danger">{ladefehler}</Banner>
+    </div>
+  )
 
   return (
     <div className="admin-page">

@@ -49,9 +49,12 @@ export default function AdminHomePage() {
   const [recentUsers, setRecentUsers] = useState<RecentUser[]>([])
   const [recentBookings, setRecentBookings] = useState<RecentBooking[]>([])
   const [loading, setLoading] = useState(true)
+  /** Eine der vier Abfragen war nicht lesbar (Block 87). */
+  const [ladefehler, setLadefehler] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadAll() {
+      setLadefehler(null)
       try {
         const supabase = createClient()
 
@@ -67,6 +70,29 @@ export default function AdminHomePage() {
             customer:profiles!bookings_customer_id_fkey(first_name, last_name)
           `).order('created_at', { ascending: false }).limit(10),
         ])
+
+        // BEFUND (Block 87): vier Abfragen, alle ungeprueft. Diese Seite
+        // ist die Startseite des Betriebssystems; aus `profiles` und
+        // `bookings` entstehen samtliche Kennzahlen. Faellt eine aus,
+        // meldet sie 0 Nutzer, 0 Engel, 0 Kunden, 0 Buchungen, 0,00 EUR
+        // Umsatz und 0,00 EUR Gebuehren — und daneben zwei leere Listen
+        // „zuletzt registriert" und „zuletzt gebucht".
+        const nichtLesbar = ([
+          ['Profile', profilesRes.error],
+          ['Buchungen', bookingsRes.error],
+          ['Neue Registrierungen', recentProfilesRes.error],
+          ['Neue Buchungen', recentBookingsRes.error],
+        ] as const).filter(([, fehler]) => fehler != null).map(([name]) => name)
+
+        if (nichtLesbar.length > 0) {
+          log.error('Dashboard: Abfragen fehlgeschlagen', { bereiche: nichtLesbar.join(', ') })
+          setLadefehler(
+            nichtLesbar.join(', ')
+            + ' konnten nicht geladen werden. Es werden keine Zahlen angezeigt — '
+            + 'Nullen wären von einem leeren Betrieb nicht zu unterscheiden.'
+          )
+          return
+        }
 
         const profiles = profilesRes.data || []
         const bookings = bookingsRes.data || []
@@ -98,6 +124,7 @@ export default function AdminHomePage() {
         })))
       } catch (err) {
         log.errorWithException('Admin stats load error', err)
+        setLadefehler('Das Dashboard konnte nicht geladen werden. Bitte Seite neu laden.')
       } finally {
         setLoading(false)
       }
@@ -145,6 +172,17 @@ export default function AdminHomePage() {
   }
 
   if (loading) return <div className="admin-page"><h1>Dashboard</h1><p>Laden...</p></div>
+
+  // Ohne Zahlen keine Kacheln: Nullen neben einer Fehlermeldung lesen
+  // sich wie ein leerer Betrieb (Block 87).
+  if (ladefehler) return (
+    <div className="admin-page">
+      <h1>Dashboard</h1>
+      <div style={{ padding: 16, borderRadius: 10, background: 'rgba(208,75,59,.1)', border: '1px solid #D04B3B', color: '#D04B3B' }}>
+        {ladefehler}
+      </div>
+    </div>
+  )
 
   return (
     <div className="admin-page">

@@ -277,7 +277,7 @@ export function pruefeQuelle(rohQuelle: string, datei: string): Befund[] {
 }
 
 /**
- * Bestand vom 14.09.2026 — 32 gebuendelte Stellen (Block 79: 85; seither
+ * Bestand vom 14.09.2026 — 23 gebuendelte Stellen (Block 79: 85; seither
  * abgearbeitet in den Bloecken 80–83).
  *
  * ── WAS DIESE LISTE IST UND WAS NICHT ─────────────────────────
@@ -309,13 +309,6 @@ export function pruefeQuelle(rohQuelle: string, datei: string): Befund[] {
 export const BESTAND_GEBUENDELT: { datei: string; variable: string }[] = [
   { datei: 'app/admin/bonuses/page.tsx', variable: 'boRes' },
   { datei: 'app/admin/bonuses/page.tsx', variable: 'cgRes' },
-  { datei: 'app/admin/caregivers/page.tsx', variable: 'cgRes' },
-  { datei: 'app/admin/clients/page.tsx', variable: 'budgetsRes' },
-  { datei: 'app/admin/clients/page.tsx', variable: 'clientsRes' },
-  { datei: 'app/admin/home/page.tsx', variable: 'bookingsRes' },
-  { datei: 'app/admin/home/page.tsx', variable: 'profilesRes' },
-  { datei: 'app/admin/home/page.tsx', variable: 'recentBookingsRes' },
-  { datei: 'app/admin/home/page.tsx', variable: 'recentProfilesRes' },
   { datei: 'app/admin/partners/page.tsx', variable: 'pRes' },
   { datei: 'app/admin/partners/page.tsx', variable: 'vRes' },
   { datei: 'app/api/admin/krankenfahrten/route.ts', variable: 'providersRes' },
@@ -337,8 +330,6 @@ export const BESTAND_GEBUENDELT: { datei: string; variable: string }[] = [
   { datei: 'app/mis/krankenfahrt-pricing/page.tsx', variable: 'regionsRes' },
   { datei: 'app/mis/krankenfahrt-pricing/page.tsx', variable: 'surchargesRes' },
   { datei: 'app/mis/krankenfahrt-pricing/page.tsx', variable: 'tiersRes' },
-  { datei: 'components/admin/AmpelSummaryWidget.tsx', variable: 'closingsRes' },
-  { datei: 'components/admin/AmpelSummaryWidget.tsx', variable: 'recordsRes' },
 ]
 
 export function imBestand(b: Befund): boolean {
