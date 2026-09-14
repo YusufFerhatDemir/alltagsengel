@@ -136,8 +136,21 @@ async function zaehleVersuch(
   organizationId: string,
   aktuelleVersuche: number,
   weitereFelder: Record<string, unknown> = {},
-): Promise<void> {
-  await supabase
+): Promise<{ ok: true } | { ok: false; grund: string }> {
+  // BEFUND (Block 62, 14.09.2026): Dieser Schreibvorgang verwarf Fehler
+  // UND getroffene Zeilen — und er traegt weit mehr als den Zaehler. Ueber
+  // `weitereFelder` kommt der STATUS des Auftrags mit, nach einer
+  // erfolgreichen Uebertragung 'uebermittelt' samt `uebermittelt_am`.
+  //
+  // Schlug er still fehl, lag die Datei bei der Datenannahmestelle,
+  // waehrend der Auftrag in seinem alten Status stehenblieb — der
+  // naechste Lauf haette sie ERNEUT geschickt. Eine doppelt eingereichte
+  // Kassenabrechnung.
+  //
+  // Und die Zahl selbst ist laut dem Kopf dieser Funktion die, „an der
+  // spaeter auffaellt, dass eine Annahmestelle systematisch ablehnt".
+  // Waechst sie nicht, ist genau diese Beobachtung tot.
+  const { data: gezaehlt, error: zaehlFehler } = await supabase
     .from('dta_dakota_auftraege')
     .update({
       versand_versuche: (aktuelleVersuche ?? 0) + 1,
@@ -147,6 +160,15 @@ async function zaehleVersuch(
     })
     .eq('id', auftragId)
     .eq('organization_id', organizationId)
+    .select('id')
+
+  if (zaehlFehler || (gezaehlt?.length ?? 0) === 0) {
+    return {
+      ok: false,
+      grund: zaehlFehler?.message ?? 'keine Zeile getroffen',
+    }
+  }
+  return { ok: true }
 }
 
 /**
@@ -263,11 +285,18 @@ export async function versendeDakotaAuftrag(
     // Probelauf für die Oberfläche aus wie ein gescheiterter Versand.
     if (art !== 'testmodus') {
       const neuerStatus = art === 'extern' ? 'externer_zugang_fehlt' : auftrag.status
-      await zaehleVersuch(supabase, auftragId, organizationId, auftrag.versand_versuche ?? 0, {
-        status: neuerStatus,
-        fehler_code: art === 'extern' ? 'EXTERN_GESPERRT' : 'INTERN_UNVOLLSTAENDIG',
-        fehler_meldung: grund.slice(0, 1000),
-      })
+      const vermerk = await zaehleVersuch(
+        supabase, auftragId, organizationId, auftrag.versand_versuche ?? 0, {
+          status: neuerStatus,
+          fehler_code: art === 'extern' ? 'EXTERN_GESPERRT' : 'INTERN_UNVOLLSTAENDIG',
+          fehler_meldung: grund.slice(0, 1000),
+        })
+      if (!vermerk.ok) {
+        log(
+          `WARNUNG: Der Auftrag konnte nicht auf "${neuerStatus}" gesetzt werden `
+          + `(${vermerk.grund}). Er steht weiter in seinem alten Status.`,
+        )
+      }
     }
 
     await protokolliereVersand(supabase, {
@@ -629,7 +658,7 @@ export async function versendeDakotaAuftrag(
 
   // Jeder Wiederholversuch zählt einzeln mit: an dieser Zahl fällt später auf,
   // dass eine Annahmestelle systematisch Verbindungen abweist.
-  await zaehleVersuch(
+  const statusVermerk = await zaehleVersuch(
     supabase, auftragId, organizationId,
     (auftrag.versand_versuche ?? 0) + wiederholung.versuche - 1,
     {
@@ -642,6 +671,21 @@ export async function versendeDakotaAuftrag(
       fehler_meldung: ergebnis.erfolg ? null : ergebnis.protokoll.slice(-1000),
     },
   )
+
+  if (!statusVermerk.ok) {
+    // Die Datei IST draussen (oder der Versuch ist gescheitert) — das
+    // laesst sich nicht mehr zuruecknehmen. Der Vermerk fehlt aber, und
+    // beim Erfolg ist das der gefaehrlichere Fall: ohne 'uebermittelt'
+    // schickt der naechste Lauf dieselbe Abrechnung noch einmal.
+    const satz = ergebnis.erfolg
+      ? `WARNUNG: Die Datei wurde an ${annahmestelle.name} UEBERMITTELT, der Auftrag `
+        + `konnte aber nicht auf "uebermittelt" gesetzt werden (${statusVermerk.grund}). `
+        + 'Er darf NICHT erneut versendet werden — Status von Hand nachtragen.'
+      : `WARNUNG: Der gescheiterte Versuch konnte nicht am Auftrag vermerkt werden `
+        + `(${statusVermerk.grund}). Der Versuchszaehler stimmt nicht.`
+    protokoll.push(satz)
+    log(satz)
+  }
 
   if (!ergebnis.erfolg && basis.laufId) {
     await supabase.from('dta_fehlerprotokoll').insert({
