@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { euro } from '@/lib/admin/ops'
 import { Banner, EmptyRow } from '@/components/admin/OpsUI'
 import { monatBerlin } from '@/lib/utils/timezone'
+import { UEBERSPRING_LABELS } from '@/lib/billing/core/sammelrechnung'
 import { logger } from '@/lib/logger'
 
 const log = logger.child('admin:sammelrechnung')
@@ -86,16 +87,10 @@ interface LaufKopf {
   festschreiben: boolean
 }
 
-const CODE_LABELS: Record<string, string> = {
-  LEISTUNGSART_UNBEKANNT: 'Leistungsart ohne Tarif-Schlüssel',
-  BUDGETTYP_UNBEKANNT: 'Budget-Typ unbekannt',
-  TARIF_FEHLT: 'Kein gültiger Tarif',
-  TARIF_NICHT_VERIFIZIERT: 'Tarif nicht verifiziert / gesperrt',
-  TARIF_MEHRDEUTIG: 'Tarif mehrdeutig',
-  UNTERSCHRIFT_FEHLT: 'Unterschrift fehlt',
-  BUDGETLAGE_UNBEKANNT: 'Budgetlage nicht ermittelbar',
-  FEHLER: 'Fehler',
-}
+// Die Etiketten stehen neben den Codes in lib/billing/core/sammelrechnung.ts.
+// Eine zweite Liste hier waere eine, die beim naechsten neuen Code vergessen
+// wird — und dann zeigt der Betrieb ein rohes BUDGETLAGE_UNBEKANNT.
+const CODE_LABELS: Record<string, string> = UEBERSPRING_LABELS
 
 const STATUS_LABELS: Record<LaufKopf['status'], string> = {
   laeuft: 'läuft',

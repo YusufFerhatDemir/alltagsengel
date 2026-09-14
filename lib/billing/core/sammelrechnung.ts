@@ -94,6 +94,28 @@ export const UEBERSPRING_CODES = [
 
 export type UeberspringCode = (typeof UEBERSPRING_CODES)[number];
 
+/**
+ * Klartext je Code — für die Oberfläche.
+ *
+ * Steht bewusst HIER, direkt neben den Codes, und nicht in der Seite: ein
+ * neuer Code ohne Etikett zeigt dem Betrieb ein rohes
+ * `BUDGETLAGE_UNBEKANNT` statt eines Satzes, den jemand lesen kann. Der
+ * Test dazu geht die Liste durch — zwei Dateien hätten das nicht gemerkt.
+ *
+ * Der Grund im Klartext (`SammelrechnungUebersprungen.grund`) steht
+ * daneben; dieses Etikett ist die Überschrift, nicht die Erklärung.
+ */
+export const UEBERSPRING_LABELS: Record<UeberspringCode, string> = {
+  LEISTUNGSART_UNBEKANNT: 'Leistungsart ohne Tarif-Schlüssel',
+  BUDGETTYP_UNBEKANNT: 'Budget-Typ unbekannt',
+  TARIF_FEHLT: 'Kein gültiger Tarif',
+  TARIF_NICHT_VERIFIZIERT: 'Tarif nicht verifiziert / gesperrt',
+  TARIF_MEHRDEUTIG: 'Tarif mehrdeutig',
+  UNTERSCHRIFT_FEHLT: 'Unterschrift fehlt',
+  BUDGETLAGE_UNBEKANNT: 'Budgetlage nicht ermittelbar',
+  FEHLER: 'Fehler',
+};
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------

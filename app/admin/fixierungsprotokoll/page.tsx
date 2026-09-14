@@ -90,6 +90,7 @@ export default function FixierungsprotokollPage() {
   const [form, setForm] = useState(LEER_FORM)
   const [viewId, setViewId] = useState<string | null>(null)
   const [ueberwachungen, setUeberwachungen] = useState<Ueberwachung[]>([])
+  const [ueberwachungFehler, setUeberwachungFehler] = useState('')
   const [uForm, setUForm] = useState(LEER_UEBERWACHUNG)
 
   async function loadKunden() {
@@ -118,11 +119,21 @@ export default function FixierungsprotokollPage() {
   }
 
   async function loadUeberwachungen(id: string) {
+    setUeberwachungFehler('')
     try {
       const res = await fetch(`/api/admin/fixierungen/${id}/ueberwachung`)
+      if (!res.ok) throw new Error(`Überwachungseinträge konnten nicht geladen werden (HTTP ${res.status}).`)
       const body = await res.json()
       setUeberwachungen(body.ueberwachungen || [])
-    } catch { /* nicht kritisch */ }
+    } catch (err) {
+      // „nicht kritisch" stimmte hier nicht. Eine leere Überwachungsliste
+      // heisst „es wurde nicht überwacht" — und die Überwachung einer
+      // Fixierung ist dokumentationspflichtig. Wer eine Lücke sieht, die
+      // keine ist, dokumentiert nach; wer keine sieht, obwohl eine da ist,
+      // merkt es nie.
+      setUeberwachungen([])
+      setUeberwachungFehler(err instanceof Error ? err.message : 'Überwachungseinträge konnten nicht geladen werden.')
+    }
   }
 
   useEffect(() => { load(); loadKunden() }, [])
@@ -302,7 +313,12 @@ export default function FixierungsprotokollPage() {
                 </button>
               </div>
             )}
-            {ueberwachungen.length === 0
+            {ueberwachungFehler && (
+              <p style={{ fontSize: 13, color: '#D04B3B' }}>
+                {ueberwachungFehler} — ob Kontrollen protokolliert sind, ist damit UNBEKANNT.
+              </p>
+            )}
+            {!ueberwachungFehler && ueberwachungen.length === 0
               ? <p style={{ fontSize: 13, color: 'var(--ink4)' }}>Noch keine Kontrollen protokolliert.</p>
               : (
                 <div style={{ display: 'grid', gap: 8 }}>

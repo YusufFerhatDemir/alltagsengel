@@ -65,6 +65,7 @@
     "chairmatch:i18n:coverage": "node scripts/chairmatch-i18n-coverage.mjs",
     "verify:abrechnung": "node scripts/verify-abrechnung-live.mjs",
     "verify:geldweg": "node scripts/verify-geldweg-live.mjs",
+    "verify:sammelrechnung": "NODE_OPTIONS=\"--require ./scripts/test-stubs/server-only-stub.cjs\" tsx scripts/verify-sammelrechnung-live.mjs",
     "verify:perimeter": "node scripts/verify-perimeter-live.mjs",
     "verify:versand": "node scripts/verify-versandbereitschaft.mjs",
     "verify:security-audit": "node scripts/verify-security-audit-live.mjs",

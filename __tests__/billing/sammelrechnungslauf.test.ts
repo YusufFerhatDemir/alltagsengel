@@ -65,6 +65,8 @@ import {
   ermittleGruppen,
   monatsZeitraum,
   ueberspringCodeFuerFehler,
+  UEBERSPRING_CODES,
+  UEBERSPRING_LABELS,
 } from '@/lib/billing/core/sammelrechnung'
 import { TarifNichtVerifiziertError } from '@/lib/billing/core/price-resolver'
 
@@ -742,5 +744,122 @@ describe('ueberspringCodeFuerFehler', () => {
     const r = ueberspringCodeFuerFehler(new Error('Netzwerk weg'))
     expect(r.code).toBe('FEHLER')
     expect(r.grund).toBe('Netzwerk weg')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════
+// Vollständigkeit: kein Nachweis fällt aus der Betrachtung
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Die Zusage, auf der alles andere aufsetzt.
+ *
+ * Ein Monatslauf darf einen abrechenbaren Nachweis nicht einfach
+ * übergehen. Entweder er steht in einer Gruppe, die abgerechnet wird —
+ * oder in einer, die mit GRUND übersprungen wird. Ein dritter Ausgang
+ * wäre der schlimmste: die Leistung ist erbracht, das Geld bleibt aus,
+ * und keine Liste zeigt es an.
+ *
+ * Die Einzelfälle (welcher Code bei welcher Ursache) stehen weiter oben.
+ * Hier geht es um die Menge: alles, was hineingeht, kommt irgendwo wieder
+ * heraus.
+ *
+ * `npm run verify:sammelrechnung` misst dieselbe Zusage live gegen den
+ * echten Bestand (Prüfpunkt S13b) — dort hängen am 14.09.2026 dreizehn
+ * unterschriebene Nachweise, alle mit `UNTERSCHRIFT_FEHLT`.
+ */
+describe('Vollstaendigkeit des Laufs', () => {
+  /** Alle Kennungen, die der Lauf irgendwo zugeordnet hat. */
+  function beruecksichtigt(e: Awaited<ReturnType<typeof lauf>>): Set<string> {
+    const ids = new Set<string>()
+    for (const g of e.vorschau ?? []) for (const id of g.recordIds ?? []) ids.add(id)
+    for (const u of e.uebersprungen ?? []) for (const id of u.recordIds ?? []) ids.add(id)
+    return ids
+  }
+
+  it('ordnet im Trockenlauf JEDEN Nachweis des Monats zu', async () => {
+    // Bewusst gemischt: zwei Klienten, zwei Budgettypen, signiert und
+    // abgeschlossen. Keiner davon darf verschwinden.
+    const store: Store = {
+      service_records: [
+        nachweis({ client_id: KLIENT_A, budget_type: 'entlastung' }),
+        nachweis({ client_id: KLIENT_A, budget_type: 'entlastung', status: 'complete', date: `${MONAT}-16` }),
+        nachweis({ client_id: KLIENT_A, budget_type: 'private', date: `${MONAT}-17` }),
+        nachweis({ client_id: KLIENT_B, budget_type: 'entlastung', date: `${MONAT}-18` }),
+      ],
+    }
+    const e = await lauf(store, { dryRun: true })
+    const drin = beruecksichtigt(e)
+    for (const r of store.service_records!) {
+      expect(drin.has(r.id as string), `${r.id} (${r.client_id}/${r.budget_type})`).toBe(true)
+    }
+  })
+
+  it('ordnet auch die zu, die es NICHT abrechnen kann', async () => {
+    // Ohne Tarif ist die Gruppe nicht abrechenbar — aber sie muss mit
+    // Grund auftauchen, nicht verschwinden.
+    const store: Store = {
+      service_records: [nachweis({ service_type: 'Gibt-es-nicht' })],
+    }
+    const e = await lauf(store, { dryRun: true })
+    expect(e.vorschau ?? []).toHaveLength(0)
+    expect(e.uebersprungen.length).toBeGreaterThan(0)
+    expect(beruecksichtigt(e).has(store.service_records![0].id as string)).toBe(true)
+    expect(e.uebersprungen[0].code).toBeTruthy()
+    expect(e.uebersprungen[0].grund.length).toBeGreaterThan(3)
+  })
+
+  it('zaehlt jeden Nachweis genau einmal — keine Gruppe doppelt', async () => {
+    const store: Store = {
+      service_records: [
+        nachweis({ client_id: KLIENT_A, budget_type: 'entlastung' }),
+        nachweis({ client_id: KLIENT_A, budget_type: 'entlastung', date: `${MONAT}-16` }),
+        nachweis({ client_id: KLIENT_B, budget_type: 'private', date: `${MONAT}-17` }),
+      ],
+    }
+    const e = await lauf(store, { dryRun: true })
+    const alle: string[] = []
+    for (const g of e.vorschau ?? []) alle.push(...(g.recordIds ?? []))
+    for (const u of e.uebersprungen ?? []) alle.push(...(u.recordIds ?? []))
+    expect(new Set(alle).size, 'ein Nachweis in zwei Gruppen waere eine Doppelabrechnung')
+      .toBe(alle.length)
+  })
+
+  it('schreibt im Trockenlauf nichts — auch kein Protokoll', async () => {
+    // Der Trockenlauf ist nur brauchbar, wenn er das wirklich einhaelt.
+    // `verify:sammelrechnung` misst dasselbe live (S14).
+    const geschrieben: string[] = []
+    const store: Store = { service_records: [nachweis()] }
+    const protokoll = {
+      laufId: 'lauf-1',
+      erledigt: new Set<string>(),
+      vormerken: async () => { geschrieben.push('vormerken') },
+      festhalten: async () => { geschrieben.push('festhalten') },
+    }
+    await lauf(store, { dryRun: true, protokoll })
+    expect(geschrieben).toEqual([])
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════
+// Klartext je Überspring-Code
+// ═══════════════════════════════════════════════════════════════
+
+describe('Ueberspring-Etiketten', () => {
+  it('jeder Code hat einen Klartext', () => {
+    // Ein Code ohne Etikett zeigt dem Betrieb ein rohes
+    // BUDGETLAGE_UNBEKANNT statt eines Satzes, den jemand lesen kann.
+    // Deshalb stehen Codes und Etiketten in DERSELBEN Datei — zwei Listen
+    // in zwei Dateien haetten das nicht gemerkt.
+    for (const code of UEBERSPRING_CODES) {
+      expect(UEBERSPRING_LABELS[code], code).toBeTruthy()
+      expect(UEBERSPRING_LABELS[code].length, code).toBeGreaterThan(4)
+    }
+  })
+
+  it('kein Etikett ohne Code', () => {
+    for (const key of Object.keys(UEBERSPRING_LABELS)) {
+      expect(UEBERSPRING_CODES, key).toContain(key)
+    }
   })
 })
