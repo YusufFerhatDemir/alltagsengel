@@ -54,12 +54,37 @@ async function ketteAusfuehren<T>(
  * `actorId` ist bei Cron-Läufen die Organisation selbst (systemgetrieben,
  * kein handelnder Benutzer) — derselbe Kompromiss wie im Mahnlauf-Cron.
  */
+export interface AutomatisierungsOptionen {
+  /**
+   * Soll dieser Lauf den Feiertagskatalog pflegen?
+   *
+   * `billing_feiertage` hat KEIN `organization_id` — Feiertage sind
+   * bundesweite Tatsachen, kein Mandantengut. Die Kette stand trotzdem in
+   * der Mandantenschleife und lief damit einmal JE Organisation: bei sechs
+   * Mandanten sechsmal taeglich, wovon fuenf Laeufe nichts tun koennen als
+   * 76 Unique-Verletzungen zu erzeugen. Schlimmer als die vergebliche
+   * Arbeit ist der Bericht: jede Organisation wies "importiert: 76" fuer
+   * Daten aus, die ihr gar nicht gehoeren.
+   *
+   * Denselben Fall loest die Cron-Route beim Aufraeumen der Zustellspur
+   * bereits richtig ("bewusst EINMAL pro Lauf, nicht je Organisation") —
+   * hier fehlte er.
+   *
+   * Default `true`, damit der Einzelanstoss ueber
+   * POST /api/admin/automatisierung den Katalog weiterhin pflegt. Der
+   * Cron-Lauf setzt `false` und ruft die Pflege selbst einmal auf.
+   */
+  katalogpflege?: boolean
+}
+
 export async function fuehreTaeglicheAutomatisierungAus(
   supabase: SupabaseClient,
   organizationId: string,
   actorId: string = organizationId,
+  optionen: AutomatisierungsOptionen = {},
 ): Promise<AutomatisierungsErgebnis> {
   const ketten: AutomatisierungsErgebnis['ketten'] = {}
+  const katalogpflege = optionen.katalogpflege ?? true
 
   await ketteAusfuehren(ketten, 'nachweis_fehlt', () => meldeFehlendeNachweise(supabase, organizationId, actorId))
   await ketteAusfuehren(ketten, 'fristen_warnung', () => warneVorFristablauf(supabase, organizationId))
@@ -74,8 +99,12 @@ export async function fuehreTaeglicheAutomatisierungAus(
   // 24/48/72-h-Leiter — Meldung nur nach innen, nie an den Lead selbst.
   await ketteAusfuehren(ketten, 'lead_follow_up', () => erinnereAnLeadFollowUps(supabase, organizationId))
   // Katalogpflege, mandantenuebergreifend: schreibt nur Feiertagsdaten,
-  // keine Zuschlagssaetze (siehe feiertage-pflege.ts).
-  await ketteAusfuehren(ketten, 'feiertage_katalog', () => pflegeFeiertagskatalog(supabase))
+  // keine Zuschlagssaetze (siehe feiertage-pflege.ts). Ueber einen Lauf
+  // mit mehreren Mandanten gehoert sie genau EINMAL ausgefuehrt — siehe
+  // AutomatisierungsOptionen.katalogpflege.
+  if (katalogpflege) {
+    await ketteAusfuehren(ketten, 'feiertage_katalog', () => pflegeFeiertagskatalog(supabase))
+  }
 
   // Fallback für die überfällige-Aufgaben-Eskalation (SQL-Trigger-Kette):
   // Migration 20260918000000 legt eine pg_cron-Planung an, die nur greift,

@@ -104,6 +104,7 @@ async function main(): Promise<void> {
   ;(globalThis as Record<string, unknown>).__TROCKENLAUF_ADMIN__ = global.client
 
   const { fuehreTaeglicheAutomatisierungAus } = await import('../lib/automation')
+  const { pflegeFeiertagskatalog } = await import('../lib/automation/feiertage-pflege')
 
   console.log('═══════════════════════════════════════════════════════════════════')
   console.log(' AUTOMATISIERUNGSKETTEN — Trockenlauf gegen Produktion')
@@ -129,7 +130,13 @@ async function main(): Promise<void> {
 
     let ergebnis: Awaited<ReturnType<typeof fuehreTaeglicheAutomatisierungAus>>
     try {
-      ergebnis = await fuehreTaeglicheAutomatisierungAus(client, String(org.id))
+      // katalogpflege: false — genau wie in app/api/cron/automatisierung.
+      // Der Trockenlauf muss zeigen, was SCHARF passiert; liefe der
+      // Katalog hier je Mandant, berichtete er einen Lauf, den es nicht
+      // mehr gibt.
+      ergebnis = await fuehreTaeglicheAutomatisierungAus(client, String(org.id), String(org.id), {
+        katalogpflege: false,
+      })
     } catch (err) {
       console.error(`  ABBRUCH der gesamten Automatisierung: ${(err as Error).message}`)
       fehlerhafteKetten++
@@ -155,6 +162,32 @@ async function main(): Promise<void> {
     }
     const methoden = protokoll.jeMethode()
     console.log(`     nach Art: ${Object.entries(methoden).map(([m, n]) => `${n}x ${m}`).join(', ') || '—'}`)
+    console.log()
+  }
+
+  // ── Katalogpflege: EINMAL, nach der Schleife ────────────────────
+  // Genau wie in app/api/cron/automatisierung. `billing_feiertage` hat
+  // kein `organization_id`; in der Mandantenschleife lief die Pflege
+  // einmal je Organisation und jede wies "importiert: 76" fuer
+  // bundesweite Daten aus.
+  console.log('── Katalogpflege (mandantenuebergreifend, einmal pro Lauf) ──')
+  {
+    const { client, protokoll } = nurLesenderClient(echt)
+    try {
+      const katalog = await pflegeFeiertagskatalog(client)
+      console.log(`  ✓ feiertage_katalog              ${JSON.stringify(katalog)}`)
+      if (katalog.fehler.length > 0) fehlerhafteKetten++
+    } catch (err) {
+      fehlerhafteKetten++
+      console.log(`  ✗ feiertage_katalog              ${(err as Error).message}`)
+    }
+    const gesamt = protokoll.vorgaenge.length
+    schreibvorgaengeGesamt += gesamt
+    // Im Trockenlauf meldet jeder abgefangene Insert Erfolg, deshalb steht
+    // hier die volle Zahl. SCHARF faengt der Unique-Index
+    // (unique_feiertag_datum_bl) alles ab, was schon im Katalog steht —
+    // live sind das 76 von 76 Zeilen, der Lauf schreibt dann nichts.
+    console.log(`  Schreibvorgaenge, die scharf VERSUCHT wuerden: ${gesamt}`)
     console.log()
   }
 
