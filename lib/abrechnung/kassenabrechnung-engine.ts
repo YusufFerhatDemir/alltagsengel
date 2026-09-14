@@ -739,6 +739,100 @@ export async function exportiereLauf(
     { status: 'export_laeuft' },
     { schritt: 'Export gestartet' })
 
+  // BEFUND (Block 72): ab hier steht der Lauf auf `export_laeuft` — und
+  // der gesamte Rest dieser Funktion konnte werfen, ohne ihn wieder
+  // herauszuholen. Der Zustandstrigger `validate_lauf_status_transition`
+  // laesst aus `export_laeuft` NUR nach `bereit_zum_export`, `exportiert`
+  // oder `validierung_fehlgeschlagen` (live aus pg_proc gelesen). Ein
+  // Abbruch dazwischen liess den Lauf also dauerhaft dort stehen: ein
+  // neuer Export scheitert an „Export nur aus freigegeben moeglich",
+  // stornieren geht aus diesem Zustand nicht, und den einzigen Ausweg
+  // `validierung_fehlgeschlagen` setzte der Code nur in EINEM von vielen
+  // Fehlerfaellen. Die Kassenabrechnung eines ganzen Monats waere ohne
+  // Eingriff in der Datenbank nicht mehr zu versenden gewesen.
+  try {
+    return await fuehreExportDurch(supabase, lauf, laufId, absenderIk, actorId)
+  } catch (err) {
+    const rest = await loeseExportSperre(supabase, lauf, laufId, err)
+    if (rest) {
+      throw new Error(`${err instanceof Error ? err.message : String(err)} — ${rest}`)
+    }
+    throw err
+  }
+}
+
+/**
+ * Holt einen Lauf aus `export_laeuft` heraus, nachdem der Export dort
+ * abgebrochen ist.
+ *
+ * `validierung_fehlgeschlagen` ist der vom Zustandstrigger vorgesehene
+ * Ausgang: von dort fuehrt der Weg ueber `validierung_laeuft` zurueck nach
+ * `geprueft` und `freigegeben`. Der Lauf ist danach also wieder
+ * versendbar, statt festzustehen.
+ *
+ * Steht der Lauf bereits woanders, hat ein naeherer Fehlerpfad ihn schon
+ * vermerkt (die Validierung tut das mit einer genaueren Meldung) — dann
+ * geschieht hier nichts.
+ *
+ * Gibt den Grund zurueck, wenn die Befreiung selbst nicht gelang. Der
+ * Aufrufer haengt ihn an die Ausnahme, die ohnehin folgt: die Meldung
+ * gehoert IN jene Ausnahme, nicht an ihre Stelle.
+ */
+async function loeseExportSperre(
+  supabase: SupabaseClient,
+  lauf: { organization_id: string },
+  laufId: string,
+  ursache: unknown,
+): Promise<string | null> {
+  const grundtext = ursache instanceof Error ? ursache.message : String(ursache)
+
+  const { data: stand, error: leseFehler } = await supabase
+    .from('abrechnungslaeufe')
+    .select('status')
+    .eq('id', laufId)
+    .maybeSingle()
+  if (leseFehler) {
+    return `der Lauf konnte danach nicht gelesen werden (${leseFehler.message}); er steht moeglicherweise weiter auf "export_laeuft" und laesst sich dann weder exportieren noch stornieren.`
+  }
+  if (!stand) return null
+  if (stand.status !== 'export_laeuft') return null
+
+  try {
+    await aktualisiereLauf(supabase, laufId,
+      { status: 'validierung_fehlgeschlagen' },
+      { schritt: 'Export abgebrochen vermerken', vonStatus: 'export_laeuft' })
+  } catch (e) {
+    return `der Lauf steht weiter auf "export_laeuft" und laesst sich dann weder exportieren noch stornieren (${e instanceof Error ? e.message : String(e)}).`
+  }
+
+  const { error: protokollFehler } = await supabase.from('dta_fehlerprotokoll').insert({
+    organization_id: lauf.organization_id,
+    lauf_id: laufId,
+    fehler_quelle: 'export',
+    fehler_kategorie: 'technisch',
+    fehler_meldung: `Export abgebrochen: ${grundtext}`,
+    schweregrad: 'kritisch',
+  })
+  if (protokollFehler) {
+    return `der Abbruch ist nicht ins Fehlerprotokoll gelangt (${protokollFehler.message}); der Lauf steht auf "validierung_fehlgeschlagen" und ist wieder versendbar.`
+  }
+
+  return null
+}
+
+/**
+ * Der eigentliche Export. Herausgeloest, damit der Aufrufer den Lauf bei
+ * jedem Abbruch aus `export_laeuft` befreien kann — ohne dass dieser
+ * Rumpf dafuer eine Einrueckungsebene tiefer wandern muss.
+ */
+async function fuehreExportDurch(
+  supabase: SupabaseClient,
+  lauf: Record<string, any>,
+  laufId: string,
+  absenderIk: string,
+  actorId: string,
+): Promise<ExportErgebnis> {
+
   // Rechnungen + Kunden + Leistungen laden
   const { data: laufRechnungen } = await supabase
     .from('dta_lauf_rechnungen')
