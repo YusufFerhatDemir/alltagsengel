@@ -65,17 +65,46 @@ export async function schalteZugangFrei(
 ): Promise<void> {
   const db = admin()
 
-  const { data: vorhanden } = await db
+  // BEFUND (Block 55, 14.09.2026): Dieser Weg GEWAEHRT Zugang, nachdem
+  // bezahlt wurde — und war als einziger im Modul nicht abgesichert.
+  // `beendeZugang()` weiter unten prueft Fehler UND getroffene Zeilen und
+  // begruendet das ausfuehrlich; hier wurde beides verworfen. Eine
+  // fehlgeschlagene Verlaengerung blieb damit stumm: der Kunde hat
+  // bezahlt, `verbucheZahlung()` meldete Erfolg, und `gueltig_bis` stand
+  // weiter auf dem alten Datum.
+  const { data: vorhanden, error: leseFehler } = await db
     .from('coach_freischaltungen')
     .select('id')
     .eq('bestellung_id', bestellungId)
     .maybeSingle()
 
+  if (leseFehler) {
+    throw new Error(
+      `Bestehende Freischaltung zu Bestellung ${bestellungId} nicht lesbar `
+      + `(${leseFehler.message}). Es wurde NICHTS freigeschaltet.`,
+    )
+  }
+
   if (vorhanden) {
-    await db
+    // PostgREST meldet bei null getroffenen Zeilen keinen Fehler — deshalb
+    // `.select('id')` und die Zeilenzahl, genau wie in `beendeZugang()`.
+    const { data: verlaengert, error: updateFehler } = await db
       .from('coach_freischaltungen')
       .update({ status: 'aktiv', gueltig_bis: gueltigBis })
       .eq('id', vorhanden.id)
+      .select('id')
+    if (updateFehler) {
+      throw new Error(
+        `Freischaltung zu Bestellung ${bestellungId} konnte nicht verlaengert werden: `
+        + updateFehler.message,
+      )
+    }
+    if (!verlaengert || verlaengert.length === 0) {
+      throw new Error(
+        `Freischaltung ${vorhanden.id} wurde nicht verlaengert — keine Zeile getroffen. `
+        + 'Der Zugang steht weiter auf dem alten gueltig_bis.',
+      )
+    }
     return
   }
 
@@ -95,16 +124,34 @@ export async function schalteZugangFrei(
   // dann als 23505 ab — die zuerst angelegte Zeile ist die gültige, wir
   // schreiben ihr nur noch den aktuellen Stand fort statt zu duplizieren.
   if (error?.code === '23505') {
-    const { data: bestehend } = await db
+    const { data: bestehend, error: nachleseFehler } = await db
       .from('coach_freischaltungen')
       .select('id')
       .eq('bestellung_id', bestellungId)
       .single()
-    if (bestehend) {
-      await db
-        .from('coach_freischaltungen')
-        .update({ status: 'aktiv', gueltig_bis: gueltigBis })
-        .eq('id', bestehend.id)
+    // Auch hier war der Fehler verworfen: schlug die Nachlese fehl, kehrte
+    // die Funktion OHNE Verlaengerung zurueck und meldete Erfolg.
+    if (nachleseFehler || !bestehend) {
+      throw new Error(
+        `Die parallel angelegte Freischaltung zu Bestellung ${bestellungId} war nicht `
+        + `nachlesbar (${nachleseFehler?.message ?? 'keine Zeile'}). Der Zugang wurde NICHT `
+        + 'verlaengert.',
+      )
+    }
+    const { data: nachgezogen, error: nachtragFehler } = await db
+      .from('coach_freischaltungen')
+      .update({ status: 'aktiv', gueltig_bis: gueltigBis })
+      .eq('id', bestehend.id)
+      .select('id')
+    if (nachtragFehler) {
+      throw new Error(
+        `Freischaltung ${bestehend.id} konnte nicht fortgeschrieben werden: ${nachtragFehler.message}`,
+      )
+    }
+    if (!nachgezogen || nachgezogen.length === 0) {
+      throw new Error(
+        `Freischaltung ${bestehend.id} wurde nicht fortgeschrieben — keine Zeile getroffen.`,
+      )
     }
     return
   }
