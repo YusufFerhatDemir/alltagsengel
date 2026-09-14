@@ -46,6 +46,52 @@ async function storniereTourEinsaetze(
   return { ok: true }
 }
 
+/**
+ * Nimmt eine begonnene Datumsverschiebung zurueck.
+ *
+ * BEFUND (Block 64): die Ruecknahme war zweifach laxer als der Zug, den sie
+ * zurueckzunehmen hatte. Der Hinweg prueft seinen Fehler und unterscheidet
+ * sogar die Doppelbelegung; der Rueckweg schrieb ungeprueft — und
+ * `check_assignment_overlap` feuert live auch auf UPDATE. Die Ruecknahme
+ * konnte also an genau dem Fehler scheitern, der sie ausgeloest hat, und die
+ * Antwort meldete trotzdem „die Tour wurde NICHT verschoben", waehrend ein
+ * Teil der Einsaetze am neuen Tag stehenblieb.
+ *
+ * Zurueckgegeben werden die Einsaetze, die NICHT zurueckkamen. Ein Einsatz
+ * ohne bekanntes Vordatum zaehlt dazu, statt auf gut Glueck ueberschrieben zu
+ * werden — ein geratenes Datum waere schlimmer als ein benannter Rueckstand.
+ */
+async function nimmVerschiebungZurueck(
+  admin: ReturnType<typeof createAdminClient>,
+  verschoben: string[],
+  altesDatum: Map<string, string | null>,
+): Promise<string[]> {
+  const haengengeblieben: string[] = []
+  for (const id of verschoben) {
+    if (!altesDatum.has(id)) {
+      haengengeblieben.push(id)
+      continue
+    }
+    const { data, error } = await admin
+      .from('assignments')
+      .update({ assignment_date: altesDatum.get(id) ?? null })
+      .eq('id', id)
+      .select('id')
+    if (error || (data ?? []).length === 0) haengengeblieben.push(id)
+  }
+  return haengengeblieben
+}
+
+/** Der Nachsatz, der den halben Zustand benennt — leer, wenn es keinen gibt. */
+function berichteRueckstand(haengengeblieben: string[], neuesDatum: string): string {
+  if (haengengeblieben.length === 0) return ''
+  const wieviele = haengengeblieben.length === 1
+    ? 'Ein Einsatz steht'
+    : `${haengengeblieben.length} Einsätze stehen`
+  return ` ACHTUNG: ${wieviele} weiterhin am ${neuesDatum}, weil die Rücknahme fehlschlug`
+    + ` (${haengengeblieben.join(', ')}) — bitte in der Einsatzplanung richtigstellen.`
+}
+
 // ── GET /api/tours/[id] ───────────────────────────────────────────
 export const GET = withTracking(async function GET(
   _req: Request,
@@ -147,21 +193,49 @@ export const PATCH = withTracking(async function PATCH(
         error: 'Die Tour hat bereits abgeschlossene Stops — ihr Datum lässt sich nicht mehr verschieben.',
       }, { status: 422 })
     }
+    // Der Rueckweg braucht das Datum, das der Einsatz VORHER trug — nicht
+    // das der Tour. Beides ist nicht dasselbe: `loeseStops` laesst einen
+    // Einsatz mit `assignment_date = NULL` in eine Tour (die Pruefung dort
+    // lautet `a.assignment_date && …`), und die Spalte ist live nullable.
+    // Eine Ruecknahme auf `bestand.tour_date` haette ihm ein Datum gegeben,
+    // das er nie hatte — und der Doppelbelegungs-Trigger haette ihn von da
+    // an als belegte Zeit gelesen.
+    const zuVerschieben = offene.map(s => s.assignment_id as string)
+    const { data: vorher, error: vorherFehler } = await admin
+      .from('assignments')
+      .select('id, assignment_date')
+      .in('id', zuVerschieben)
+    if (vorherFehler) {
+      return NextResponse.json({
+        error: `${uebersetzeDbFehler(vorherFehler)} — die Tour wurde NICHT verschoben, weil der Rückweg sonst kein Ziel hätte.`,
+      }, { status: 500 })
+    }
+    const altesDatum = new Map<string, string | null>(
+      (vorher ?? []).map(a => [a.id as string, (a.assignment_date ?? null) as string | null]),
+    )
+
     const verschoben: string[] = []
     for (const s of offene) {
-      const { error: aErr } = await admin
+      const { data: bewegt, error: aErr } = await admin
         .from('assignments')
         .update({ assignment_date: neuesDatum })
         .eq('id', s.assignment_id as string)
-      if (aErr) {
-        for (const id2 of verschoben) {
-          await admin.from('assignments').update({ assignment_date: bestand.tour_date }).eq('id', id2)
-        }
-        const konflikt = aErr.message.includes('DOPPELBELEGUNG')
+        .select('id')
+      // Null getroffene Zeilen ist hier kein Erfolg: der Stop zeigt dann
+      // auf einen Einsatz, den es nicht mehr gibt. Wuerde die Schleife
+      // weiterlaufen, stuende die Tour am neuen Tag mit einem Stop ohne
+      // Einsatz — und die Ruecknahme haette ihn spaeter als
+      // haengengeblieben gemeldet, obwohl er nie bewegt wurde.
+      if (aErr || (bewegt ?? []).length === 0) {
+        const haengengeblieben = await nimmVerschiebungZurueck(admin, verschoben, altesDatum)
+        const konflikt = aErr?.message.includes('DOPPELBELEGUNG') ?? false
+        const grund = aErr
+          ? konflikt
+            ? `Am ${neuesDatum} hat der Mitarbeiter bereits einen kollidierenden Termin`
+            : uebersetzeDbFehler(aErr)
+          : `Der Einsatz ${s.assignment_id} zu einem Stop dieser Tour existiert nicht mehr`
         return NextResponse.json({
-          error: konflikt
-            ? `Am ${neuesDatum} hat der Mitarbeiter bereits einen kollidierenden Termin — die Tour wurde NICHT verschoben.`
-            : `${uebersetzeDbFehler(aErr)} — die Tour wurde NICHT verschoben.`,
+          error: `${grund} — die Tour wurde NICHT verschoben.${berichteRueckstand(haengengeblieben, neuesDatum)}`,
         }, { status: konflikt ? 409 : 500 })
       }
       verschoben.push(s.assignment_id as string)
