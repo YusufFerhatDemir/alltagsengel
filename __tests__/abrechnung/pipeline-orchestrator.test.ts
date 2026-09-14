@@ -126,7 +126,11 @@ describe('holePipelineStatus — Auswertung', () => {
 
   const schrittAbbildung: Array<[string, string, string | null]> = [
     ['erstellt', 'erstellt', 'Validierung starten'],
-    ['validierung_laeuft', 'erstellt', null],
+    // Block 73: die Zwischenzustaende hatten hier `null` — genau der
+    // Befund. Der feste Zeitstempel des Doppelgaengers liegt weit in der
+    // Vergangenheit, diese Laeufe stehen also STILL, und der naechste
+    // Schritt ist die Handlungsanweisung dafuer.
+    ['validierung_laeuft', 'erstellt', 'Steht seit über einer halben Stunde in der Validierung — Lauf öffnen und erneut validieren.'],
     ['validierung_fehlgeschlagen', 'erstellt', 'Fehler korrigieren und erneut validieren'],
     ['geprueft', 'geprueft', 'Freigabe erteilen'],
     ['bereit_zum_export', 'geprueft', 'Freigabe erteilen'],

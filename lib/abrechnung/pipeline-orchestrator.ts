@@ -35,6 +35,8 @@ export interface PipelineLauf {
   autoFreigabeMoeglich: boolean
   ruecklaeuferAnzahl: number
   letzteAenderung: string
+  /** Steht in einem Zwischenzustand fest (siehe `stehtStill`). */
+  haengengeblieben: boolean
 }
 
 export interface PipelineStatus {
@@ -45,6 +47,15 @@ export interface PipelineStatus {
     wartendAufAntwort: number
     fehlerhaft: number
     abgeschlossen: number
+    /**
+     * Laeufe, die in einem Zwischenzustand stehengeblieben sind.
+     *
+     * Eigene Zahl statt einer Erweiterung von `fehlerhaft`: „fehlerhaft"
+     * meint einen Lauf, den die Kasse oder die Validierung beanstandet
+     * hat. Ein Stillstand ist etwas anderes — er braucht einen Anstoss,
+     * keine Korrektur.
+     */
+    haengengeblieben: number
   }
   unzugeordneteRuecklaeufer: number
 }
@@ -54,6 +65,68 @@ export interface PipelineVerarbeitungErgebnis {
   ruecklaeuferZugeordnet: number
   korrekturVorschlaegeErstellt: number
   fehler: string[]
+}
+
+// ── Stillstand in einem Zwischenzustand ─────────────────────────
+
+/**
+ * Die drei Zustaende, in denen ein Lauf nicht wartet, sondern LAEUFT.
+ *
+ * BEFUND (Block 73): sie zaehlten in keiner einzigen Kennzahl der
+ * Uebersicht mit — nicht in `wartendAufFreigabe`, nicht in
+ * `wartendAufAntwort`, nicht in `fehlerhaft`, nicht in `abgeschlossen`.
+ * `naechsterSchrittText` kannte sie nicht und lieferte `null`, die Spalte
+ * „Naechster Schritt" zeigte „—", und `laufStatusZuSchritt` ordnete sie
+ * dem VORIGEN Meilenstein zu. Ein haengengebliebener Lauf sah damit aus
+ * wie einer, der gerade eben gestartet ist — dauerhaft.
+ *
+ * Block 72 hat die Ursache im Export geschlossen: jeder Abbruch holt den
+ * Lauf jetzt wieder heraus. Das deckt aber nur Abbrueche, bei denen
+ * ueberhaupt noch Code laeuft. Ein abgebrochener Serverless-Aufruf, ein
+ * Zeitlimit der Plattform, ein Neustart mitten im Export — dort greift
+ * kein catch. Dagegen hilft nur, dass es auffaellt.
+ */
+export const ZWISCHENZUSTAENDE = [
+  'validierung_laeuft', 'export_laeuft', 'uebermittlung_laeuft',
+] as const
+
+/**
+ * Ab wann ein Zwischenzustand kein Vorgang mehr ist, sondern ein
+ * Stillstand.
+ *
+ * Validierung, Export und Uebermittlung eines Monatslaufs dauern Sekunden
+ * bis wenige Minuten. Eine halbe Stunde ist reichlich Luft fuer einen
+ * langsamen Lauf und kurz genug, dass ein Stillstand am selben Arbeitstag
+ * auffaellt.
+ */
+export const STILLSTAND_MINUTEN = 30
+
+/**
+ * Steht dieser Lauf still?
+ *
+ * Ohne Zeitstempel wird NICHT behauptet, er stehe still: „nicht wissen,
+ * seit wann" ist keine Aussage ueber die Dauer.
+ */
+export function stehtStill(
+  status: string,
+  letzteAenderung: string | null | undefined,
+  jetzt: Date = new Date(),
+): boolean {
+  if (!(ZWISCHENZUSTAENDE as readonly string[]).includes(status)) return false
+  if (!letzteAenderung) return false
+  const seit = new Date(letzteAenderung).getTime()
+  if (Number.isNaN(seit)) return false
+  return jetzt.getTime() - seit > STILLSTAND_MINUTEN * 60_000
+}
+
+/** Was zu tun ist, wenn ein Lauf in einem Zwischenzustand steht. */
+const STILLSTAND_TEXT: Record<string, string> = {
+  validierung_laeuft:
+    'Steht seit über einer halben Stunde in der Validierung — Lauf öffnen und erneut validieren.',
+  export_laeuft:
+    'Steht seit über einer halben Stunde im Export — Lauf öffnen; er muss auf „Validierung fehlgeschlagen" zurück, bevor er neu exportiert werden kann.',
+  uebermittlung_laeuft:
+    'Steht seit über einer halben Stunde in der Übermittlung — Aufträge des Laufs prüfen und den Versand erneut anstoßen.',
 }
 
 // ── Schritt-Mapping ─────────────────────────────────────────────
@@ -93,8 +166,15 @@ function laufStatusZuSchritt(status: LaufStatus): PipelineSchritt {
   }
 }
 
-function naechsterSchrittText(status: LaufStatus): string | null {
+function naechsterSchrittText(status: LaufStatus, stillstand: boolean): string | null {
+  // Der Stillstand geht jedem regulaeren Text vor: er IST der naechste
+  // Schritt.
+  if (stillstand && STILLSTAND_TEXT[status]) return STILLSTAND_TEXT[status]
   switch (status) {
+    // Laeuft gerade — und laeuft noch nicht zu lange.
+    case 'validierung_laeuft': return 'Validierung läuft …'
+    case 'export_laeuft': return 'Export läuft …'
+    case 'uebermittlung_laeuft': return 'Übermittlung läuft …'
     case 'erstellt': return 'Validierung starten'
     case 'validierung_fehlgeschlagen': return 'Fehler korrigieren und erneut validieren'
     case 'geprueft': return 'Freigabe erteilen'
@@ -186,8 +266,12 @@ export async function holePipelineStatus(
     )
   }
 
+  // EIN Zeitpunkt fuer die ganze Liste: sonst koennten zwei Laeufe mit
+  // demselben Zeitstempel verschieden beurteilt werden.
+  const jetztPruefung = new Date()
   const pipelineLaeufe: PipelineLauf[] = (laeufe ?? []).map(l => {
     const status = l.status as LaufStatus
+    const haengengeblieben = stehtStill(status, l.updated_at, jetztPruefung)
     return {
       id: l.id,
       abrechnungsmonat: l.abrechnungsmonat,
@@ -195,10 +279,11 @@ export async function holePipelineStatus(
       kostentraegerIk: l.kostentraeger_ik || '',
       status,
       aktuellerSchritt: laufStatusZuSchritt(status),
-      naechsterSchritt: naechsterSchrittText(status),
+      naechsterSchritt: naechsterSchrittText(status, haengengeblieben),
       autoFreigabeMoeglich: status === 'geprueft' || status === 'bereit_zum_export',
       ruecklaeuferAnzahl: ruecklaeuferCounts[l.id] || 0,
       letzteAenderung: l.updated_at,
+      haengengeblieben,
     }
   })
 
@@ -214,6 +299,7 @@ export async function holePipelineStatus(
       ['validierung_fehlgeschlagen', 'teilweise_abgelehnt', 'abgelehnt', 'korrektur_erforderlich'].includes(l.status),
     ).length,
     abgeschlossen: pipelineLaeufe.filter(l => l.status === 'angenommen').length,
+    haengengeblieben: pipelineLaeufe.filter(l => l.haengengeblieben).length,
   }
 
   return {

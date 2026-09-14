@@ -74,6 +74,13 @@ interface PipelineLauf {
   aktuellerSchritt: string
   naechsterSchritt: string | null
   ruecklaeuferAnzahl: number
+  /**
+   * Steht seit ueber einer halben Stunde in einem Zwischenzustand
+   * (Validierung/Export/Uebermittlung laeuft). Block 73: vorher war ein
+   * solcher Lauf in dieser Tabelle von einem frisch gestarteten nicht zu
+   * unterscheiden — „Naechster Schritt" stand auf „—".
+   */
+  haengengeblieben?: boolean
 }
 
 // ── Pipeline-Stufen ─────────────────────────────────────────────
@@ -547,7 +554,14 @@ export default function RuecklaeuferPage() {
                       <td><StatusBadge label={sm.label || l.status} color={sm.color || '#94a3b8'} /></td>
                       <td><PipelineVis schritt={l.aktuellerSchritt} /></td>
                       <td>{l.ruecklaeuferAnzahl || '—'}</td>
-                      <td style={{ fontSize: 13, color: 'var(--muted)' }}>{l.naechsterSchritt || '—'}</td>
+                      <td style={{
+                        fontSize: 13,
+                        color: l.haengengeblieben ? '#b45309' : 'var(--muted)',
+                        fontWeight: l.haengengeblieben ? 600 : undefined,
+                      }}>
+                        {l.haengengeblieben && <span aria-hidden="true">⚠️ </span>}
+                        {l.naechsterSchritt || '—'}
+                      </td>
                       <td>
                         <Link href={`/admin/dta/laeufe/${l.id}`} className="admin-btn small">
                           Öffnen
