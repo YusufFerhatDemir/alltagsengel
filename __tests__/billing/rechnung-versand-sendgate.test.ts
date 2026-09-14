@@ -380,8 +380,19 @@ describe('Gueltige Freigabe', () => {
     expect(verbrauch, 'Verbrauch wurde nicht protokolliert').toBeGreaterThanOrEqual(0)
     expect(mail, 'Mail wurde nicht gerufen').toBeGreaterThanOrEqual(0)
     expect(verbrauch).toBeLessThan(mail)
-    expect(protokoll.gateUpdates).toHaveLength(1)
-    expect(protokoll.gateUpdates[0]).toHaveProperty('verbraucht_am')
+    // GENAU EIN Verbrauch — das ist die Zusicherung. Seit Block 53 haengt
+    // am Pilotweg die Nachpruefung (`pruefeNachVersand`), und die
+    // ENTWERTET bei einer Abweichung offene Einmal-Freigaben. Das ist ihr
+    // entworfenes Verhalten und erzeugt eine ZWEITE Gate-Aktualisierung;
+    // der Doppelgaenger hier loest die acht Pruefpunkte nicht ein und
+    // provoziert sie deshalb.
+    //
+    // Auf die Gesamtzahl zu pruefen hiesse, diese Entwertung zu verbieten.
+    // Gemeint war immer: der Verbrauch geschieht genau einmal.
+    const verbrauchsUpdates = protokoll.gateUpdates.filter(
+      (u: Record<string, unknown>) => 'verbraucht_am' in u,
+    )
+    expect(verbrauchsUpdates).toHaveLength(1)
   })
 
   it('Gegenprobe: die Reihenfolge-Liste ist bei getauschter Reihenfolge rot', () => {

@@ -48,6 +48,7 @@ import {
 } from '@/lib/pilot/send-gate'
 import type { EnvQuelle } from '@/lib/env/pruefung'
 import { euroZuCent } from '@/lib/geld'
+import { pruefeNachVersand } from '@/lib/pilot/post-send-verification'
 import { logger } from '@/lib/logger'
 
 const log = logger.child('rechnung-versand')
@@ -469,6 +470,51 @@ export async function versendeRechnungPerEmail(
     },
     actorId,
   })
+
+  // ── Nachpruefung nach einem ECHTEN Pilotversand ──────────────────────
+  //
+  // BEFUND (Block 53, 14.09.2026): `pilot_versand_sperre` wurde an VIER
+  // Stellen gelesen — als Sperre vor jedem weiteren Pilotversand — und an
+  // genau EINER geschrieben: in `pruefeNachVersand`. Diese Funktion hatte
+  // ausser Tests keinen Aufrufer. Das Tor las damit eine Tabelle, die
+  // niemand fuellt: die P0-Sperre konnte nie entstehen, und die
+  // achtstufige Nachpruefung des ersten echten Versands lief nie.
+  //
+  // NUR wenn das Pilottor tatsaechlich GEGRIFFEN hat — `gateGilt`, nicht
+  // `pilotToken`. Ein erster Entwurf fragte, ob ein Token MITGEGEBEN
+  // wurde; bei ausgeschaltetem Pilotbetrieb wird es aber ignoriert, und
+  // die Nachpruefung lief dann fuer einen ganz gewoehnlichen Versand.
+  // Ein bestehender Test hat das gefangen („ignoriert ein mitgegebenes
+  // Token, statt es stillschweigend zu verbrauchen").
+  //
+  // Die Nachpruefung ist fuer den begleiteten Erstversand gebaut (siehe
+  // Kopf von lib/pilot/post-send-verification.ts) und setzt bei jeder
+  // Abweichung eine P0-Sperre. Sie an JEDEN Versand zu haengen hiesse,
+  // den laufenden Betrieb an einer Pruefung aufzuhaengen, die fuer den
+  // Einzelfall entworfen wurde.
+  //
+  // Sie darf den Aufrufer NICHT in einen Fehlerpfad schicken: die Mail ist
+  // raus, und ein Wurf hier wuerde den Wiederholungslauf ein zweites Mal
+  // senden lassen. Ihr Ergebnis steht in der Sperre und im Protokoll —
+  // genau dort, wo das naechste Tor es liest.
+  if (gateGilt) {
+    try {
+      await pruefeNachVersand(admin, {
+        invoiceId,
+        organizationId,
+        actorId,
+        versandStatus: 'versendet',
+        providerMessageId: ergebnis.messageId,
+        empfaenger: client.email,
+        betreff: mail.subject,
+        betragCents: euroZuCent(inv.total_amount ?? 0),
+      })
+    } catch (err) {
+      log.error('Nachpruefung nach Pilotversand fehlgeschlagen — die Mail ist raus', {
+        invoiceId, errorMessage: (err as Error).message,
+      })
+    }
+  }
 
   return {
     status: 'versendet',
