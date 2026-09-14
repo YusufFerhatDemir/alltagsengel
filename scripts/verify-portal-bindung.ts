@@ -33,7 +33,15 @@ for (const datei of ['.env.local', '.env']) {
   }
 }
 
-const PORTAL = join(process.cwd(), 'app', 'kunde')
+/**
+ * Beide Portale. Block 41: `/engel` kam dazu — dort werden
+ * Gesundheitsdaten fremder Menschen angezeigt, und die Seiten binden
+ * genauso wenig selbst wie die des Kundenportals.
+ */
+const PORTALE = [
+  join(process.cwd(), 'app', 'kunde'),
+  join(process.cwd(), 'app', 'engel'),
+]
 
 function dateienUnter(verzeichnis: string): string[] {
   const treffer: string[] = []
@@ -50,15 +58,17 @@ async function main(): Promise<void> {
   const { bewerteTabelle, tabellenAusQuelltext } = await import('../lib/kunde/portal-bindung')
 
   const gefunden = new Set<string>()
-  for (const datei of dateienUnter(PORTAL)) {
-    for (const t of tabellenAusQuelltext(readFileSync(datei, 'utf8'))) gefunden.add(t)
+  for (const portal of PORTALE) {
+    for (const datei of dateienUnter(portal)) {
+      for (const t of tabellenAusQuelltext(readFileSync(datei, 'utf8'))) gefunden.add(t)
+    }
   }
   const tabellen = [...gefunden].sort()
 
   console.log('═══════════════════════════════════════════════════════════════════')
-  console.log(' KUNDENPORTAL — sieht die Kundin ihre Daten, und nur ihre?')
+  console.log(' PORTALE (Kunde + Engel) — sieht jede Person ihre Daten, und nur ihre?')
   console.log(` ${new Date().toISOString()}`)
-  console.log(` ${tabellen.length} Tabellen, aus dem Quelltext von app/kunde gelesen`)
+  console.log(` ${tabellen.length} Tabellen, aus dem Quelltext von app/kunde und app/engel`)
   console.log(' Es wird NICHTS geschrieben.')
   console.log('═══════════════════════════════════════════════════════════════════\n')
 
@@ -94,11 +104,34 @@ async function main(): Promise<void> {
     proTabelle.get(tabelle)!.push({ name, permissive, cmd: cmd ?? '-', qual: qual ?? '' })
   }
 
-  const bewertungen = tabellen.map(t => bewerteTabelle(t, proTabelle.get(t) ?? []))
-  const zeichen = { gebunden: '✓', offen_beabsichtigt: '○', bekannte_luecke: '⚠', befund: '✗' } as const
+  // Views mit security_invoker: sie brauchen keine eigene Policy.
+  const sichtSql = `DO $$ DECLARE t text; BEGIN
+    SELECT COALESCE(string_agg(c.relname, ','), '') INTO t
+    FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public' AND c.relkind = 'v'
+      AND 'security_invoker=true' = ANY(c.reloptions);
+    RAISE EXCEPTION 'KETTE:%', t;
+  END $$;`
+  const sichtRes = await fetch(`${url}/rest/v1/rpc/_run_sql`, {
+    method: 'POST',
+    headers: apiHeaders(secretKey(), { 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ p: sichtSql }),
+  })
+  const sichtRoh = await sichtRes.text()
+  let sj: { message?: string } | null = null
+  try { sj = JSON.parse(sichtRoh) } catch { /* Fehlertexte sind nicht immer JSON */ }
+  const sichtMeldung = sj?.message ?? ''
+  const sichten = new Set(
+    sichtMeldung.slice(sichtMeldung.indexOf('KETTE:') + 6).split(',').map(x => x.trim()).filter(Boolean),
+  )
+  console.log(`  Views mit security_invoker: ${sichten.size}\n`)
+
+  const bewertungen = tabellen.map(t => bewerteTabelle(t, proTabelle.get(t) ?? [], sichten))
+  const zeichen = { gebunden: '✓', sicht_invoker: '↳', offen_beabsichtigt: '○', bekannte_luecke: '⚠', befund: '✗' } as const
 
   for (const b of bewertungen) {
     const rechts = b.einordnung === 'gebunden' ? b.policies.join(', ')
+      : b.einordnung === 'sicht_invoker' ? 'View, security_invoker'
       : b.einordnung === 'offen_beabsichtigt' ? 'bewusst offen'
       : b.einordnung === 'bekannte_luecke' ? 'bekannte Luecke, Migration wartet'
       : 'ohne Kundenbindung'
@@ -132,7 +165,8 @@ async function main(): Promise<void> {
 
   console.log('\n═══════════════════════════════════════════════════════════════════')
   console.log(` Tabellen geprueft        : ${tabellen.length}`)
-  console.log(` mit Kundenbindung        : ${gruppe('gebunden').length}`)
+  console.log(` mit Bindung              : ${gruppe('gebunden').length}`)
+  console.log(` Views (security_invoker) : ${gruppe('sicht_invoker').length}`)
   console.log(` bewusst offen            : ${beabsichtigt.length}`)
   console.log(` bekannte Luecken         : ${bekannt.length}`)
   console.log(` NEUE BEFUNDE             : ${befunde.length}`)

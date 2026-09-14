@@ -19,8 +19,16 @@
 //
 // Dieses Modul ist die Bewertung, das Skript daneben die Beschaffung.
 
-/** Ausdruecke, die eine Zeile an die angemeldete Person binden. */
-export const BINDUNGS_MUSTER = /auth\.uid\(\)|eigene_client_ids/
+/**
+ * Ausdruecke, die eine Zeile an die angemeldete Person binden.
+ *
+ * Block 41: `eigene_caregiver_ids` und `engel_hat_aktiven_klienten` kamen
+ * dazu, als der Lauf auch das Engel-Portal abdeckte. Beide sind
+ * SECURITY-DEFINER-Helfer, die intern auf `auth.uid()` aufsetzen — sie
+ * binden ebenso an die angemeldete Person, nur ueber den Umweg der
+ * Zuordnung.
+ */
+export const BINDUNGS_MUSTER = /auth\.uid\(\)|eigene_client_ids|eigene_caregiver_ids|engel_hat_aktiven_klienten/
 
 export interface PolicyZeile {
   name: string
@@ -29,7 +37,7 @@ export interface PolicyZeile {
   qual: string
 }
 
-export type Einordnung = 'gebunden' | 'offen_beabsichtigt' | 'bekannte_luecke' | 'befund'
+export type Einordnung = 'gebunden' | 'sicht_invoker' | 'offen_beabsichtigt' | 'bekannte_luecke' | 'befund'
 
 export interface Bewertung {
   tabelle: string
@@ -67,6 +75,7 @@ export const OFFEN_BEABSICHTIGT: ReadonlyMap<string, string> = new Map([
  */
 export const BEKANNTE_LUECKEN: ReadonlyMap<string, string> = new Map([
   ['pflege_massnahmen', 'Migration 20261120000000_kunde_pflege_massnahmen_select.sql wartet auf Einspielung. Live 0 Zeilen — die Luecke ist latent, nicht eingetreten.'],
+  ['caregivers', 'Migration 20261125000000_engel_caregivers_select_own.sql wartet auf Einspielung. Bis dahin scheitert in drei Seiten des Engel-Portals das `.single()` auf den EIGENEN Datensatz — Medikamente, Pflegedoku-Verlauf und Einsaetze melden „Ihre Zuordnung konnte nicht geladen werden".'],
 ])
 
 /**
@@ -93,10 +102,39 @@ export function bindendePolicies(policies: readonly PolicyZeile[]): string[] {
  * Ausnahme eine Policy, die laengst da ist — und der Lauf behauptete eine
  * Luecke, die niemand mehr hat.
  */
-export function bewerteTabelle(tabelle: string, policies: readonly PolicyZeile[]): Bewertung {
+export function bewerteTabelle(
+  tabelle: string,
+  policies: readonly PolicyZeile[],
+  /**
+   * Views mit `security_invoker = true`. Sie tragen selbst keine Policy
+   * und brauchen auch keine: die Abfrage laeuft mit den Rechten des
+   * Aufrufers, die RLS der zugrunde liegenden Tabellen greift also
+   * unveraendert.
+   *
+   * Block 41: ohne dieses Wissen meldete der Lauf
+   * `ops_aufgaben_uebersicht` als Befund — eine View, die genau richtig
+   * gebaut ist. Eine Ausnahmeliste waere hier falsch gewesen; der Lauf
+   * muss den Unterschied KENNEN, sonst meldet er die naechste solche
+   * View wieder.
+   *
+   * Der Gegenfall bleibt ein Befund: eine View OHNE `security_invoker`
+   * laeuft mit den Rechten ihres Eigentuemers und umgeht RLS — genau der
+   * P0, der in diesem Projekt schon einmal behoben werden musste.
+   */
+  sichtenMitInvoker: ReadonlySet<string> = new Set(),
+): Bewertung {
   const gebunden = bindendePolicies(policies)
   if (gebunden.length > 0) {
     return { tabelle, einordnung: 'gebunden', policies: gebunden, begruendung: '' }
+  }
+
+  if (sichtenMitInvoker.has(tabelle)) {
+    return {
+      tabelle,
+      einordnung: 'sicht_invoker',
+      policies: [],
+      begruendung: 'View mit security_invoker=true — die RLS der zugrunde liegenden Tabellen greift.',
+    }
   }
 
   const beabsichtigt = OFFEN_BEABSICHTIGT.get(tabelle)

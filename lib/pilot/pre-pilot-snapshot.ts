@@ -204,14 +204,6 @@ export const DOKUMENTIERTE_SICHERHEITSLAGE = {
  * Verifikationsskripte unter `scripts/verify-*.mjs`.
  */
 export const JUENGSTE_MIGRATIONEN = [
-  // 13.09.2026: ATS-Arbeitsfelder als echte Spalten (`ats_*`) auf
-  // lead_inquiries, mit denselben CHECKs, die lib/bewerbung/ats-felder.ts
-  // im Code prueft. NICHT angewendet — bis dahin ist
-  // `bewerbung_daten.ats` (jsonb) die Wahrheit und die Migration der
-  // dokumentierte Umzugsweg, nicht der aktuelle Zustand.
-  // Die Vorwaerts-Migration ist inzwischen aus den fuenf juengsten
-  // herausgerutscht; nur ihre Ruecknahme steht noch in der Liste.
-  '20261106000001_rollback_bewerbung_ats_felder.sql',
   // 14.09.2026: Mandantenzaun fuer die drei Tabellen, die
   // `organization_id` tragen, sie aber in keiner Policy nennen
   // (email_entwuerfe, marketing_content_status, security_watchlist).
@@ -219,7 +211,8 @@ export const JUENGSTE_MIGRATIONEN = [
   // permissiver Zaun neben is_admin() wirkungslos waere. NICHT
   // angewendet (DDL braucht den SQL-Editor); bis dahin fuehrt
   // `npm run verify:mandantenzaun` die drei in seiner Erlaubnisliste.
-  '20261115000000_org_fence_drei_blinde_tabellen.sql',
+  // Die Vorwaerts-Migration ist inzwischen aus den fuenf juengsten
+  // herausgerutscht; nur ihre Ruecknahme steht noch in der Liste.
   '20261115000001_rollback_org_fence_drei_blinde_tabellen.sql',
   // 14.09.2026 (Block 31): Kundenbindung fuer `pflege_massnahmen`. Als
   // einzige der drei Pflegedoku-Tabellen hatte sie keine — /kunde/pflegedoku
@@ -229,6 +222,15 @@ export const JUENGSTE_MIGRATIONEN = [
   // `npm run verify:portal-bindung` die Tabelle als bekannte Luecke.
   '20261120000000_kunde_pflege_massnahmen_select.sql',
   '20261120000001_rollback_kunde_pflege_massnahmen_select.sql',
+  // 14.09.2026 (Block 41): die Pflegekraft darf ihren EIGENEN Datensatz
+  // in `caregivers` lesen. Keine der fuenf vorhandenen Policies band sie
+  // daran, und die Rolle `engel` traegt keine Berechtigung — das
+  // `.single()` in /engel/medikamente, /engel/pflegedoku/verlauf und
+  // /engel/einsaetze fand nie eine Zeile. NICHT angewendet (DDL braucht
+  // den SQL-Editor); bis dahin fuehrt `npm run verify:portal-bindung`
+  // `caregivers` als bekannte Luecke.
+  '20261125000000_engel_caregivers_select_own.sql',
+  '20261125000001_rollback_engel_caregivers_select_own.sql',
   // HINWEIS (Track 13): die Perimeter-Migrationen stehen hier NICHT,
   // obwohl sie die zuletzt hinzugekommenen sind. Sie tragen seit dem
   // 28.08.2026 einen ECHTEN Zeitstempel (20260828180000/…0001, Regel aus

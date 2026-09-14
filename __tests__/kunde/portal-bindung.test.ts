@@ -180,3 +180,82 @@ describe('tabellenAusQuelltext', () => {
     expect(tabellenAusQuelltext('export default function Seite() { return null }')).toEqual([])
   })
 })
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// Block 41 — das Engel-Portal
+// ═══════════════════════════════════════════════════════════════════════
+//
+// Der Lauf deckt jetzt beide Portale ab. Im Engel-Portal werden
+// Gesundheitsdaten FREMDER Menschen angezeigt — Diagnosen, Vitalwerte,
+// Medikamente, Pflegeverlauf. 22 von 26 Tabellen waren sauber an die
+// Pflegekraft gebunden.
+//
+// BEFUND: `caregivers` nicht. Drei Seiten beginnen mit
+//
+//     from('caregivers').select('id').eq('user_id', user.id).single()
+//
+// und holen damit die eigene caregiver_id — alles Weitere hängt daran.
+// Keine der fünf Policies band eine Pflegekraft an ihren eigenen
+// Datensatz, und die Rolle `engel` trägt laut Rollenmatrix KEINE
+// Berechtigung, also ist auch `darf('personal.lesen')` falsch.
+// Medikamente, Pflegedoku-Verlauf und Einsätze waren unbenutzbar.
+describe('Engel-Portal', () => {
+  const KUNDE = "(client_id IN ( SELECT c.id FROM clients c WHERE (c.user_id = auth.uid())))"
+
+  it('erkennt eigene_caregiver_ids als Bindung', () => {
+    const q = '(caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids))'
+    expect(bindendePolicies([p({ name: 'engel_lesen', qual: q })])).toEqual(['engel_lesen'])
+  })
+
+  it('erkennt engel_hat_aktiven_klienten als Bindung', () => {
+    const q = '((client_id IS NOT NULL) AND engel_hat_aktiven_klienten(client_id))'
+    expect(bindendePolicies([p({ name: 'engel_verlauf', qual: q })])).toEqual(['engel_verlauf'])
+  })
+
+  it('meldet caregivers als bekannte Lücke mit der wartenden Migration', () => {
+    // Der Produktionsstand am 14.09.2026, wortgetreu.
+    const b = bewerteTabelle('caregivers', [
+      p({ name: 'caregivers_admin_all', cmd: 'ALL', qual: 'is_admin()' }),
+      p({ name: 'rk_caregivers_lesen', qual: "(darf('personal.lesen'::text) AND (organization_id = current_org_id()))" }),
+      p({ name: 'caregivers_org_fence', permissive: 'RESTRICTIVE', cmd: 'ALL', qual: '(organization_id = current_org_id())' }),
+    ])
+    expect(b.einordnung).toBe('bekannte_luecke')
+    expect(b.begruendung).toMatch(/20261125000000/)
+  })
+
+  it('schlägt nach der Migration von selbst auf gebunden um', () => {
+    const b = bewerteTabelle('caregivers', [
+      p({ name: 'engel_caregivers_select_own', qual: '(user_id = auth.uid())' }),
+    ])
+    expect(b.einordnung).toBe('gebunden')
+  })
+
+  it('lässt die Kundenbindung unberührt', () => {
+    expect(bindendePolicies([p({ name: 'kunde_lesen', qual: KUNDE })])).toEqual(['kunde_lesen'])
+  })
+})
+
+describe('Views mit security_invoker', () => {
+  it('braucht keine eigene Policy', () => {
+    // `ops_aufgaben_uebersicht` ist genau richtig gebaut: die Abfrage
+    // läuft mit den Rechten des Aufrufers, die RLS der zugrunde
+    // liegenden Tabellen greift unverändert. Eine Ausnahmeliste wäre
+    // hier falsch gewesen — der Lauf muss den Unterschied KENNEN.
+    const b = bewerteTabelle('ops_aufgaben_uebersicht', [], new Set(['ops_aufgaben_uebersicht']))
+    expect(b.einordnung).toBe('sicht_invoker')
+    expect(b.begruendung).toMatch(/security_invoker/)
+  })
+
+  it('eine View OHNE security_invoker bleibt ein Befund', () => {
+    // Sie liefe mit den Rechten ihres Eigentümers und umginge RLS —
+    // genau der P0, der hier schon einmal behoben werden musste.
+    const b = bewerteTabelle('irgendeine_sicht', [], new Set(['andere_sicht']))
+    expect(b.einordnung).toBe('befund')
+  })
+
+  it('eine echte Bindung schlägt auch die View-Einordnung', () => {
+    const b = bewerteTabelle('x', [p({ name: 'eigenes', qual: '(user_id = auth.uid())' })], new Set(['x']))
+    expect(b.einordnung).toBe('gebunden')
+  })
+})
