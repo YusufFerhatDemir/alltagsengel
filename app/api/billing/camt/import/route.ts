@@ -8,6 +8,10 @@ import { logBillingAction } from '@/lib/billing/core/audit';
 import { safeApiError } from '@/lib/api/error-sanitizer';
 import { camtImportModus } from '@/lib/billing/camt/camt-modus';
 import { camtPreflight } from '@/lib/billing/camt/camt-preflight';
+// Der Klaerfall-Schreibweg liegt in lib/: route.ts darf ausser den
+// Handlern nichts exportieren, und beide Fehlschlagsarten muessen
+// einzeln pruefbar sein (Block 96).
+import { legeKlaerfallAn } from '@/lib/billing/camt/klaerfall';
 import { withTracking } from '@/lib/monitoring/tracker'
 import { logger } from '@/lib/logger'
 
@@ -79,14 +83,36 @@ export const POST = withTracking(async function POST(req: NextRequest) {
       }, { status: 200 });
     }
 
-    // Duplikatpruefung
+    // ── Duplikatpruefung auf DATEIebene ──
+    //
+    // Sie verwarf ihren Lesefehler und stand auf `.single()` — bei dem
+    // Normalfall „noch nicht importiert" liefert PostgREST PGRST116 als
+    // FEHLER, also genau die Antwort, die auch eine Stoerung gibt. Beides
+    // sah aus wie „keine Dublette".
+    //
+    // Der UNIQUE-Index camt_imports_organization_id_quelldatei_hash_key
+    // (live am 14.09.2026 gelesen) faengt die tatsaechliche Doppelanlage
+    // ab — verhindert wurde die Doppelbuchung also. Was fehlte, war die
+    // richtige ANTWORT: statt eines fruehen, klaren 409 lief der Aufruf
+    // durch Parser und Dublettenpruefung und scheiterte erst am INSERT,
+    // und eine echte Lesestoerung war davon nicht zu unterscheiden.
+    //
+    // Fuenfzig Zeilen weiter unten macht es dieselbe Funktion richtig:
+    // die Dublettenpruefung auf Buchungsebene bricht bei einem Lesefehler
+    // ausdruecklich ab. Dieselbe Regel gilt hier.
     const fileHash = computeCamtFileHash(xmlContent);
-    const { data: existing } = await supabase
+    const { data: existing, error: dateiDublettenFehler } = await supabase
       .from('camt_imports')
       .select('id')
       .eq('organization_id', organizationId)
       .eq('quelldatei_hash', fileHash)
-      .single();
+      .maybeSingle();
+
+    if (dateiDublettenFehler) {
+      throw new Error(
+        `Dublettenpruefung (Dateihash) nicht moeglich: ${dateiDublettenFehler.message}`,
+      );
+    }
 
     if (existing) {
       return NextResponse.json(
@@ -234,6 +260,16 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     // Buchungen speichern und matchen
     let zugeordnet = 0;
     let klaerfaelle = 0;
+    /**
+     * Buchungen, zu denen ein Klaerfall noetig war, aber keiner entstand.
+     *
+     * Eigene Liste statt `nichtGespeichert`: dort steht „der
+     * Zahlungseingang fehlt", hier steht „das Geld ist da, die Aufgabe
+     * dazu fehlt". Zwei verschiedene Lagen, zwei verschiedene
+     * Aufraeumschritte — eine gemeinsame Liste haette beides zu
+     * „irgendetwas ging schief" verwischt.
+     */
+    const ohneKlaerfall: { buchung: number; grund: string }[] = [];
     const ergebnisse: {
       buchung: number;
       status: string;
@@ -316,8 +352,7 @@ export const POST = withTracking(async function POST(req: NextRequest) {
           // Vorher wurde sie nur gezaehlt — es entstand keine Zeile, die
           // jemand haette abarbeiten koennen. Der normale Zahlungsweg legt
           // an derselben Stelle einen Klaerfall an; hier fehlte er.
-          klaerfaelle++;
-          await supabase.from('klaerfaelle').insert({
+          const angelegt = await legeKlaerfallAn(supabase, {
             organization_id: organizationId,
             zahlungseingang_id: ze.id,
             grund:
@@ -326,6 +361,12 @@ export const POST = withTracking(async function POST(req: NextRequest) {
             vorschlaege: [],
             status: 'offen',
           });
+          // Gezaehlt wird nur, was existiert.
+          if (angelegt.ok) {
+            klaerfaelle++;
+          } else {
+            ohneKlaerfall.push({ buchung: i + 1, grund: angelegt.grund });
+          }
         }
         continue;
       }
@@ -339,15 +380,19 @@ export const POST = withTracking(async function POST(req: NextRequest) {
         if (matchResult.status === 'automatisch') {
           zugeordnet++;
         } else {
-          klaerfaelle++;
-          // Klaerfall-Datensatz anlegen
-          await supabase.from('klaerfaelle').insert({
+          // Klaerfall-Datensatz anlegen — und nur zaehlen, was entstand.
+          const angelegt = await legeKlaerfallAn(supabase, {
             organization_id: organizationId,
             zahlungseingang_id: ze.id,
             grund: matchResult.klaerfallGrund || 'Keine Zuordnung moeglich',
             vorschlaege: matchResult.kandidaten,
             status: 'offen',
           });
+          if (angelegt.ok) {
+            klaerfaelle++;
+          } else {
+            ohneKlaerfall.push({ buchung: i + 1, grund: angelegt.grund });
+          }
         }
 
         ergebnisse.push({
@@ -371,7 +416,13 @@ export const POST = withTracking(async function POST(req: NextRequest) {
         // dafuer vorgesehene Wert; die CHECK-Beschraenkung der Spalte laesst
         // nur importiert|verarbeitet|fehler zu (Migration 20260825010000),
         // ein neuer Wert waere still an 23514 gescheitert.
-        status: nichtGespeichert.length > 0 ? 'fehler' : 'verarbeitet',
+        // Ein fehlender Klaerfall zaehlt hier genauso wie eine fehlende
+        // Zeile: der Import ist nicht abgearbeitet, solange zu einem
+        // Geldeingang die zugehoerige Aufgabe nicht existiert.
+        status:
+          nichtGespeichert.length > 0 || ohneKlaerfall.length > 0
+            ? 'fehler'
+            : 'verarbeitet',
       })
       .eq('id', camtImport.id)
       .select('id');
@@ -402,6 +453,7 @@ export const POST = withTracking(async function POST(req: NextRequest) {
         datei_dubletten_uebersprungen: dateiDublettenUebersprungen,
         ausgehende_uebersprungen: ausgehendeUebersprungen,
         nicht_gespeichert: nichtGespeichert.length,
+        ohne_klaerfall: ohneKlaerfall.length,
         zugeordnet,
         klaerfaelle,
       },
@@ -423,6 +475,9 @@ export const POST = withTracking(async function POST(req: NextRequest) {
       dateiDublettenUebersprungen,
       ausgehendeUebersprungen,
       nichtGespeichert,
+      // Geldeingaenge, zu denen die Aufgabe fehlt. Ohne diese Zahl saehe
+      // der Import so aus, als waere alles eingeordnet.
+      ohneKlaerfall,
       zugeordnet,
       klaerfaelle,
       ergebnisse,

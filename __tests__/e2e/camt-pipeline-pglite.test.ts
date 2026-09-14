@@ -1130,6 +1130,227 @@ describe('Fehlerpfade werden nicht still verschluckt', () => {
 })
 
 // ═══════════════════════════════════════════════════════════════════════
+// Der Klaerfall, der nur gezaehlt wurde (Block 96)
+// ═══════════════════════════════════════════════════════════════════════
+//
+// BEFUND: beide Klaerfall-Anlagen der Route standen als blosses
+// `await supabase.from('klaerfaelle').insert({…})` — ohne Zerlegung, ohne
+// Fehlerpruefung. PostgREST wirft nicht: ein abgewiesener INSERT kam als
+// stilles `error` im Ergebnis zurueck, das niemand ansah. `klaerfaelle++`
+// stand aber DAVOR.
+//
+// Die Antwort meldete dann N Klaerfaelle, `camt_imports.klaerfaelle_anzahl`
+// schrieb N fort, der Pruefeintrag behauptete dasselbe — und es existierte
+// keine einzige Zeile, die jemand haette abarbeiten koennen. Bei einer
+// nicht zuzuordnenden Ruecklastschrift ist das der teuerste Fall des
+// ganzen Imports: das Geld ist zurueckgegangen, die Rechnung steht weiter
+// auf 'bezahlt', und niemand sieht es.
+//
+// Geprueft wird hier gegen echtes Postgres mit einem Trigger, der den
+// INSERT scheitern laesst — er steht fuer jede Ursache, die eine Zeile
+// verhindert (RLS, CHECK, Fremdschluessel, Ausfall).
+describe('Block 96: ein Klaerfall, der nicht entstand, wird nicht gezaehlt', () => {
+  beforeAll(async () => { await leereStrecke() })
+
+  /** Laesst JEDEN klaerfaelle-INSERT scheitern, solange sie steht. */
+  async function mitKlaerfallSperre(lauf: () => Promise<void>): Promise<void> {
+    await db.exec(`
+      CREATE OR REPLACE FUNCTION public.test_blockiere_klaerfall() RETURNS trigger
+      LANGUAGE plpgsql AS $$
+      BEGIN
+        RAISE EXCEPTION 'Testsperre Klaerfall';
+      END $$;
+      CREATE TRIGGER trg_test_klaerfall BEFORE INSERT ON public.klaerfaelle
+        FOR EACH ROW EXECUTE FUNCTION public.test_blockiere_klaerfall();
+    `)
+    try { await lauf() } finally {
+      await db.exec('DROP TRIGGER IF EXISTS trg_test_klaerfall ON public.klaerfaelle;')
+    }
+  }
+
+  it('meldet den fehlenden Klaerfall, statt ihn mitzuzaehlen', async () => {
+    await leereStrecke()
+    await mitKlaerfallSperre(async () => {
+      // Zahlung ohne jede Referenz ⇒ kein Match ⇒ Klaerfall noetig.
+      const r = await importiere(auszug(
+        ntry({ betrag: '77.00', ref: 'REF-K1', zweck: null }), 'M-K1',
+      ), 'klaerfall-gesperrt.xml')
+
+      expect(r.status).toBe(201)
+      // Der Kern: gezaehlt wird nur, was existiert.
+      expect(r.body.klaerfaelle).toBe(0)
+      expect(r.body.ohneKlaerfall).toEqual([
+        expect.objectContaining({ buchung: 1 }),
+      ])
+      expect(await zaehle('klaerfaelle')).toBe(0)
+    })
+  })
+
+  it('der Zahlungseingang bleibt trotzdem stehen — Geld verschwindet nicht', async () => {
+    // Die Zahlung IST eingegangen. Sie zurueckzurollen, weil die Aufgabe
+    // dazu nicht angelegt werden konnte, waere der schlimmere Fehler.
+    expect(await zaehle('zahlungseingaenge')).toBe(1)
+  })
+
+  it('der Import gilt danach als "fehler", nicht als "verarbeitet"', async () => {
+    // Sonst sieht er in jeder Uebersicht abgeschlossen aus.
+    const [imp] = await zeilen<{ status: string; klaerfaelle_anzahl: number }>(
+      'SELECT status, klaerfaelle_anzahl FROM public.camt_imports')
+    expect(imp.status).toBe('fehler')
+    expect(imp.klaerfaelle_anzahl).toBe(0)
+  })
+
+  it('auch die nicht zuzuordnende Ruecklastschrift zaehlt nur mit Zeile', async () => {
+    await leereStrecke()
+    await mitKlaerfallSperre(async () => {
+      // RvslInd=true ohne passendes Mandat ⇒ Ruecklastschrift unklar.
+      const r = await importiere(auszug(
+        ntry({
+          betrag: '49.00', richtung: 'DBIT', ref: 'REF-RL1',
+          mndt: 'MND-GIBTSNICHT',
+          extra: '<RvslInd>true</RvslInd>',
+        }), 'M-RL1',
+      ), 'ruecklast-gesperrt.xml')
+
+      expect(r.status).toBe(201)
+      expect(r.body.klaerfaelle).toBe(0)
+      expect(r.body.ohneKlaerfall).toEqual([
+        expect.objectContaining({ buchung: 1 }),
+      ])
+      expect(await zaehle('klaerfaelle')).toBe(0)
+    })
+  })
+
+  it('Gegenprobe ohne Sperre: der Klaerfall entsteht und wird gezaehlt', async () => {
+    // Ohne diese Richtung wuerde ein Riegel, der IMMER meldet „kein
+    // Klaerfall", ebenfalls gruen aussehen.
+    await leereStrecke()
+    const r = await importiere(auszug(
+      ntry({ betrag: '77.00', ref: 'REF-K2', zweck: null }), 'M-K2',
+    ), 'klaerfall-offen.xml')
+
+    expect(r.status).toBe(201)
+    expect(r.body.klaerfaelle).toBe(1)
+    expect(r.body.ohneKlaerfall).toEqual([])
+    expect(await zaehle('klaerfaelle')).toBe(1)
+
+    const [imp] = await zeilen<{ status: string; klaerfaelle_anzahl: number }>(
+      'SELECT status, klaerfaelle_anzahl FROM public.camt_imports')
+    expect(imp.status).toBe('verarbeitet')
+    expect(imp.klaerfaelle_anzahl).toBe(1)
+  })
+
+  it('der Pruefeintrag nennt die fehlenden Klaerfaelle ebenfalls', async () => {
+    await leereStrecke()
+    await mitKlaerfallSperre(async () => {
+      await importiere(auszug(
+        ntry({ betrag: '77.00', ref: 'REF-K3', zweck: null }), 'M-K3',
+      ), 'klaerfall-pruefpfad.xml')
+    })
+    const [eintrag] = await zeilen<{ new_state: Record<string, unknown> }>(
+      `SELECT new_state FROM public.billing_audit_trail
+       WHERE entity_type = 'camt_import' ORDER BY created_at DESC LIMIT 1`)
+    expect(eintrag.new_state.ohne_klaerfall).toBe(1)
+    expect(eintrag.new_state.klaerfaelle).toBe(0)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════
+// Die Dublettenpruefung auf DATEIebene verwarf ihren Lesefehler (Block 96)
+// ═══════════════════════════════════════════════════════════════════════
+//
+// Sie stand auf `.single()` und zerlegte nur `data`. Bei dem Normalfall
+// „noch nicht importiert" liefert PostgREST PGRST116 als FEHLER — also
+// genau die Antwort, die auch eine Stoerung gibt. Beides sah aus wie
+// „keine Dublette".
+//
+// Der UNIQUE-Index camt_imports_organization_id_quelldatei_hash_key faengt
+// die tatsaechliche Doppelanlage ab; verhindert war die Doppelbuchung
+// also. Was fehlte, war die richtige ANTWORT — und die Unterscheidbarkeit
+// von einer echten Lesestoerung. Fuenfzig Zeilen weiter unten macht
+// dieselbe Funktion es richtig.
+describe('Block 96: die Dateihash-Pruefung bricht bei einem Lesefehler ab', () => {
+  beforeAll(async () => { await leereStrecke() })
+
+  it('der Normalfall bleibt: ein neuer Auszug geht durch', async () => {
+    // Die Gegenprobe zuerst — `.single()` machte aus „noch nicht da"
+    // einen Fehler. Wer den jetzt auswertet, ohne auf `.maybeSingle()`
+    // umzustellen, wiese JEDEN ersten Import ab.
+    const r = await importiere(auszug(
+      ntry({ betrag: '11.00', ref: 'REF-D1', zweck: null }), 'M-D1',
+    ), 'erstimport.xml')
+    expect(r.status).toBe(201)
+  })
+
+  it('derselbe Auszug bekommt weiterhin ein fruehes 409', async () => {
+    const xml = auszug(ntry({ betrag: '11.00', ref: 'REF-D1', zweck: null }), 'M-D1')
+    const r = await importiere(xml, 'anderer-name.xml')
+    expect(r.status).toBe(409)
+    expect(String(r.body.error)).toMatch(/bereits importiert/)
+  })
+
+  it('ist die Pruefung nicht lesbar, wird NICHT importiert', async () => {
+    // Ein Datenbank-Trigger traegt das hier NICHT: er koennte nur den
+    // INSERT scheitern lassen, und den faengt die Route schon an anderer
+    // Stelle ab — der Test waere gruen, ohne die Dublettenpruefung je
+    // beruehrt zu haben. Der erste Anlauf machte genau diesen Fehler.
+    //
+    // Es muss also GENAU die eine Leseabfrage scheitern. Der Doppelgaenger
+    // unten faengt den ERSTEN Zugriff auf camt_imports ab — das ist die
+    // Dublettenpruefung — und reicht alles andere an die echte Datenbank
+    // weiter.
+    await leereStrecke()
+    const vorher = await zaehle('zahlungseingaenge')
+    const echt = halter.client
+    let schonAbgefangen = false
+    const gesperrt = {
+      select: () => gesperrt,
+      eq: () => gesperrt,
+      maybeSingle: async () => ({ data: null, error: { message: 'Lesesperre', code: 'XX000' } }),
+      single: async () => ({ data: null, error: { message: 'Lesesperre', code: 'XX000' } }),
+    }
+    halter.client = {
+      ...(echt as unknown as Record<string, unknown>),
+      from: (tabelle: string) => {
+        if (tabelle === 'camt_imports' && !schonAbgefangen) {
+          schonAbgefangen = true
+          return gesperrt
+        }
+        return (echt as unknown as { from: (t: string) => unknown }).from(tabelle)
+      },
+    } as unknown as SupabaseClient
+
+    try {
+      const r = await importiere(auszug(
+        ntry({ betrag: '12.00', ref: 'REF-D2', zweck: null }), 'M-D2',
+      ), 'nicht-lesbar.xml')
+      // Kein 201: aus einer Datei, deren Dublettenlage unklar ist,
+      // entsteht kein Geldeingang.
+      expect(schonAbgefangen, 'die Dublettenpruefung wurde gar nicht erreicht').toBe(true)
+      expect(r.status).not.toBe(201)
+      expect(await zaehle('zahlungseingaenge')).toBe(vorher)
+      expect(await zaehle('camt_imports')).toBe(0)
+    } finally {
+      halter.client = echt
+    }
+  })
+
+  it('die Route liest die Dublettenlage mit maybeSingle und prueft den Fehler', () => {
+    // Der Quelltext haelt die Richtung fest: `.single()` waere hier
+    // dasselbe wie „jeder Erstimport ist ein Fehler".
+    const quelle = readFileSync('app/api/billing/camt/import/route.ts', 'utf8')
+    const stelle = quelle.slice(
+      quelle.indexOf('const fileHash = computeCamtFileHash'),
+      quelle.indexOf('if (existing) {'),
+    )
+    expect(stelle).toContain('.maybeSingle()')
+    expect(stelle).not.toContain('.single()')
+    expect(stelle).toContain('error: dateiDublettenFehler')
+    expect(stelle).toContain('throw new Error(')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════
 // Betriebsart — der Trockenlauf gegen echtes Postgres
 // ═══════════════════════════════════════════════════════════════════════
 //
