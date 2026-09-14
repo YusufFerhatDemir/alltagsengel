@@ -442,6 +442,14 @@ describe('erstelleDokument', () => {
     const f = fake(a => {
       if (a.tabelle === 'signatur_dokumente' && a.operation === 'insert') return { data: { id: DOK_ID } }
       if (a.tabelle === 'signatur_audit_log') return { error: { message: 'rls', code: '42501' } }
+      // Seit Block 59 prueft die Ruecknahme die getroffenen Zeilen. Ein
+      // echtes DELETE mit `.select('id')` gibt die geloeschte Zeile
+      // zurueck; `data: null` hiesse „keine Zeile getroffen" und waere
+      // hier das FALSCHE Szenario — geprueft wird der Fall, in dem die
+      // Ruecknahme GELINGT.
+      if (a.tabelle === 'signatur_dokumente' && a.operation === 'delete') {
+        return { data: [{ id: DOK_ID }], error: null }
+      }
       return { data: null, error: null }
     })
     await expect(erstelleDokument(f.client, ORG, SIGNATAR, {

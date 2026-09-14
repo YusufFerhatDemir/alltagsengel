@@ -294,6 +294,12 @@ export async function erstelleDokument(
 
   // Fail-closed: ohne Nachweis kein Dokument. Die Zeile ist noch von
   // nichts referenziert, die Ruecknahme also sauber.
+  //
+  // BEFUND (Block 59, 14.09.2026): Die Ruecknahme selbst war UNGEPRUEFT.
+  // Schlug das Loeschen fehl, blieb ein Signaturdokument stehen, dessen
+  // Anlage nie protokolliert wurde — genau der Zustand, den dieses
+  // fail-closed verhindern soll. Der Aufrufer bekam eine Ausnahme und
+  // durfte annehmen, es sei nichts entstanden.
   try {
     await protokolliereSignaturAudit(dienst, orgId, {
       dokument_id: dokument.id,
@@ -302,7 +308,28 @@ export async function erstelleDokument(
       details: { dokument_typ: typ, titel: row.titel },
     })
   } catch (err) {
-    await dienst.from('signatur_dokumente').delete().eq('id', dokument.id)
+    const { data: zurueckgenommen, error: ruecknahmeFehler } = await dienst
+      .from('signatur_dokumente')
+      .delete()
+      .eq('id', dokument.id)
+      .select('id')
+
+    if (ruecknahmeFehler || (zurueckgenommen?.length ?? 0) === 0) {
+      // Die Ausnahme muss sagen, dass die Zeile NOCH steht — sonst sucht
+      // niemand danach.
+      // UserFacingError, nicht Error: die API-Schicht liest den Status,
+      // und ein nackter Error kaeme beim Aufrufer als generischer
+      // 500-Text an. 500 ist richtig — der Zustand ist schwerer als der
+      // urspruengliche Fehlschlag, den der Aufrufer haette wiederholen
+      // koennen.
+      throw new UserFacingError(
+        `Signaturdokument ${dokument.id} wurde angelegt, der Nachweis schlug fehl `
+        + `(${(err as Error).message}) UND die Ruecknahme ebenso `
+        + `(${ruecknahmeFehler?.message ?? 'keine Zeile getroffen'}). Das Dokument steht `
+        + 'NOCH in der Datenbank, ohne Protokolleintrag ueber seine Anlage.',
+        500,
+      )
+    }
     throw err
   }
 
@@ -432,7 +459,27 @@ export async function fordereSignaturAn(
       details: { signatar_name: row.signatar_name },
     })
   } catch (err) {
-    await dienst.from('signaturen').delete().eq('id', signatur.id)
+    // Wie beim Dokument oben: die Ruecknahme war ungeprueft. Eine
+    // stehengebliebene Signaturanforderung ist hier schwerer als ein
+    // verwaistes Dokument — sie taucht in der Liste der Signatarin auf
+    // und laesst sich unterschreiben, obwohl ihre Anforderung nie
+    // protokolliert wurde.
+    const { data: zurueckgenommen, error: ruecknahmeFehler } = await dienst
+      .from('signaturen')
+      .delete()
+      .eq('id', signatur.id)
+      .select('id')
+
+    if (ruecknahmeFehler || (zurueckgenommen?.length ?? 0) === 0) {
+      throw new UserFacingError(
+        `Signaturanforderung ${signatur.id} wurde angelegt, der Nachweis schlug fehl `
+        + `(${(err as Error).message}) UND die Ruecknahme ebenso `
+        + `(${ruecknahmeFehler?.message ?? 'keine Zeile getroffen'}). Die Anforderung steht `
+        + 'NOCH in der Datenbank und ist unterschreibbar, ohne Protokolleintrag ueber '
+        + 'ihre Anforderung.',
+        500,
+      )
+    }
     throw err
   }
 
