@@ -67,11 +67,33 @@ export async function getDatevConfig(
   supabase: SupabaseClient,
   organizationId: string,
 ): Promise<DatevConfig> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('organizations')
     .select('datev_config')
     .eq('id', organizationId)
     .single();
+
+  // BEFUND (Block 94): der Lesefehler wurde verworfen, und `!data` fuehrte
+  // in denselben Zweig wie „noch nichts konfiguriert". Beides ist nicht
+  // dasselbe:
+  //
+  //   * Auf dem EXPORTWEG faellt die leere Beraternummer anschliessend in
+  //     `isDatevConfigComplete()` auf — fail-closed, aber mit der falschen
+  //     Begruendung „DATEV-Konfiguration unvollstaendig" ueber eine
+  //     Konfiguration, die vollstaendig ist.
+  //   * In den Pilot-Auskuenften (control-center, voraussetzungen,
+  //     business-inputs) wird der Rueckfall ANGEZEIGT: SKR03,
+  //     Sachkontenlaenge 4, naechste Debitorennummer 10000 — Werte, die
+  //     mit denen des Mandanten nichts zu tun haben muessen.
+  //
+  // Die Organisationszeile existiert immer (die Kennung kommt aus der
+  // Sitzung); `!data` ist hier praktisch immer ein Lesefehler.
+  if (error) {
+    throw new Error(
+      `DATEV-Konfiguration nicht lesbar: ${error.message}. Es werden KEINE Vorgabewerte `
+      + 'eingesetzt — sie waeren von einer echten Konfiguration nicht zu unterscheiden.',
+    );
+  }
 
   if (!data?.datev_config) return { ...DEFAULT_CONFIG };
 

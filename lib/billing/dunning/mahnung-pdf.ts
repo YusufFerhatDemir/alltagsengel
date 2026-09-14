@@ -296,11 +296,30 @@ export async function baueMahnungData(
   if (!inv) throw new Error(`Rechnung ${invoiceId} nicht gefunden`)
 
   // Dunning-Entry laden
-  const { data: entry } = await supabase
+  //
+  // BEFUND (Block 94): die beiden Abfragen darueber pruefen ihren Fehler
+  // ausdruecklich — die dritte nicht. Dieselbe Funktion, drei Lesevorgaenge,
+  // zwei Massstaebe.
+  //
+  // `entry?.dunning_fee_cents || DUNNING_FEES_CENTS[dunningLevel]` faellt
+  // dann auf den Standardsatz zurueck. Hat der Betrieb fuer DIESEN Vorgang
+  // eine andere Gebuehr festgelegt, fordert der Brief einen Betrag, der so
+  // nicht vereinbart ist — und er geht als Zahlungsaufforderung raus.
+  const { data: entry, error: entryErr } = await supabase
     .from('dunning_entries')
     .select('dunning_fee_cents')
     .eq('id', dunningEntryId)
     .single()
+
+  // PGRST116 ist „keine Zeile" — dann gilt der Standardsatz, so wie es die
+  // Zeile darunter ohnehin vorsieht. Jeder andere Fehler heisst: der
+  // hinterlegte Satz ist UNBEKANNT, und darauf wird kein Brief gedruckt.
+  if (entryErr && entryErr.code !== 'PGRST116') {
+    throw new Error(
+      `Mahnvorgang ${dunningEntryId} nicht lesbar: ${entryErr.message}. Es wurde KEINE Mahnung `
+      + 'erzeugt — die Gebuehr haette sonst der Standardsatz sein koennen statt des hinterlegten.',
+    )
+  }
 
   const totalCents = euroZuCent(inv.total_amount as number | string | null)
   const paidCents = euroZuCent(inv.paid_amount as number | string | null)
