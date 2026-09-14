@@ -557,18 +557,47 @@ export async function createSepaBatch(
   }
 
   // Mandate auf RCUR setzen (nach erstem Einzug)
+  //
+  // BEFUND (Block 58, 14.09.2026): Beide Schreibwege verwarfen Fehler UND
+  // getroffene Zeilen. Bleibt ein Mandat auf 'FRST' stehen, geht es im
+  // NAECHSTEN Sammelauftrag erneut als Erstlastschrift hinaus — und eine
+  // zweite FRST zum selben Mandat weist die Bank zurueck. Der Einzug
+  // scheitert, die Rechnung bleibt offen, und hier haette nichts davon
+  // gestanden.
+  //
+  // Dreissig Zeilen weiter oben prueft der `xml_storage_path`-Vermerk
+  // beides und protokolliert laut. Ausgerechnet der folgenschwerere
+  // Schreibvorgang tat es nicht.
+  //
+  // FAIL-SOFT, aber SICHTBAR: der Einzug ist an dieser Stelle vorbereitet,
+  // die Datei liegt, der Auftrag steht. Abzubrechen waere falsch. Die
+  // betroffenen Mandate landen deshalb im Protokoll UND im
+  // Abrechnungs-Audit neben dem Sammelauftrag — dort sucht jemand.
+  const mandateNichtFortgeschrieben: string[] = []
+
   for (const i of items) {
     const mandate = mandateByClient.get(invoices.find(inv => inv.id === i.invoiceId)!.client_id)
-    if (mandate && mandate.sequence_type === 'FRST') {
-      await supabase
-        .from('sepa_mandates')
-        .update({ sequence_type: 'RCUR', last_used_at: new Date().toISOString() })
-        .eq('id', mandate.id)
-    } else if (mandate) {
-      await supabase
-        .from('sepa_mandates')
-        .update({ last_used_at: new Date().toISOString() })
-        .eq('id', mandate.id)
+    if (!mandate) continue
+
+    const werte = mandate.sequence_type === 'FRST'
+      ? { sequence_type: 'RCUR', last_used_at: new Date().toISOString() }
+      : { last_used_at: new Date().toISOString() }
+
+    const { data: fortgeschrieben, error: mandatFehler } = await supabase
+      .from('sepa_mandates')
+      .update(werte)
+      .eq('id', mandate.id)
+      .select('id')
+
+    if (mandatFehler || (fortgeschrieben?.length ?? 0) === 0) {
+      mandateNichtFortgeschrieben.push(mandate.id)
+      log.error('Mandat nach dem Einzug nicht fortgeschrieben', {
+        batchId: batch.id,
+        mandateId: mandate.id,
+        vorher: mandate.sequence_type,
+        gewollt: mandate.sequence_type === 'FRST' ? 'RCUR' : 'last_used_at',
+        errorMessage: mandatFehler?.message ?? 'keine Zeile getroffen',
+      })
     }
   }
 
@@ -577,7 +606,16 @@ export async function createSepaBatch(
     organizationId,
     entityId: batch.id,
     action: 'created',
-    newState: { batch_number: batchNumber, total_items: items.length, total_cents: totalCents },
+    newState: {
+      batch_number: batchNumber,
+      total_items: items.length,
+      total_cents: totalCents,
+      // Nur wenn etwas offen blieb — ein leeres Feld in jedem Eintrag
+      // liest nach kurzer Zeit niemand mehr.
+      ...(mandateNichtFortgeschrieben.length > 0
+        ? { mandate_nicht_fortgeschrieben: mandateNichtFortgeschrieben }
+        : {}),
+    },
     actorId,
   })
 
