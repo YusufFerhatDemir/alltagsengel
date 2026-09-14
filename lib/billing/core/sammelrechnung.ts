@@ -61,60 +61,22 @@ import { tarifLeistungsart } from '../leistungsarten';
 import { logBillingAction } from './audit';
 import { validateTransition, isValidInvoiceStatus, type InvoiceStatus } from './status-machine';
 import { ohneStornierte } from '@/lib/leistungsnachweis/status-sync';
+import type { UeberspringCode } from './sammelrechnung-codes';
 
 // ---------------------------------------------------------------------------
 // Vokabular
 // ---------------------------------------------------------------------------
 
-/**
- * Gruende, aus denen eine Gruppe nicht abgerechnet wird.
- *
- * Jeder Code steht fuer eine Sperre, die bewusst gesetzt ist. Keiner davon
- * ist ein "Fehler, den man wegkonfigurieren kann" — sie benennen, was fehlt,
- * damit es behoben werden kann.
- */
-export const UEBERSPRING_CODES = [
-  /** Erfasste Leistungsart hat keinen Tarif-Schluessel (lib/billing/leistungsarten.ts). */
-  'LEISTUNGSART_UNBEKANNT',
-  /** budget_type ist keiner Rechtsgrundlage zugeordnet. */
-  'BUDGETTYP_UNBEKANNT',
-  /** Kein aktiver, zum Leistungsdatum gueltiger Tarif vorhanden. */
-  'TARIF_FEHLT',
-  /** Tarif vorhanden, aber blocked bzw. (bei Kasse) nicht verified. */
-  'TARIF_NICHT_VERIFIZIERT',
-  /** Mehrere gleich spezifische Tarife — die RPC verweigert die Auswahl. */
-  'TARIF_MEHRDEUTIG',
-  /** Mindestens ein Nachweis der Gruppe traegt keinen Unterschriftsnachweis. */
-  'UNTERSCHRIFT_FEHLT',
-  /** Budgetlage (§ 45b / § 42a) nicht ermittelbar — Aufteilung waere geraten. */
-  'BUDGETLAGE_UNBEKANNT',
-  /** Alles andere, mit Originaltext im Grund. */
-  'FEHLER',
-] as const;
-
-export type UeberspringCode = (typeof UEBERSPRING_CODES)[number];
-
-/**
- * Klartext je Code — für die Oberfläche.
- *
- * Steht bewusst HIER, direkt neben den Codes, und nicht in der Seite: ein
- * neuer Code ohne Etikett zeigt dem Betrieb ein rohes
- * `BUDGETLAGE_UNBEKANNT` statt eines Satzes, den jemand lesen kann. Der
- * Test dazu geht die Liste durch — zwei Dateien hätten das nicht gemerkt.
- *
- * Der Grund im Klartext (`SammelrechnungUebersprungen.grund`) steht
- * daneben; dieses Etikett ist die Überschrift, nicht die Erklärung.
- */
-export const UEBERSPRING_LABELS: Record<UeberspringCode, string> = {
-  LEISTUNGSART_UNBEKANNT: 'Leistungsart ohne Tarif-Schlüssel',
-  BUDGETTYP_UNBEKANNT: 'Budget-Typ unbekannt',
-  TARIF_FEHLT: 'Kein gültiger Tarif',
-  TARIF_NICHT_VERIFIZIERT: 'Tarif nicht verifiziert / gesperrt',
-  TARIF_MEHRDEUTIG: 'Tarif mehrdeutig',
-  UNTERSCHRIFT_FEHLT: 'Unterschrift fehlt',
-  BUDGETLAGE_UNBEKANNT: 'Budgetlage nicht ermittelbar',
-  FEHLER: 'Fehler',
-};
+// Codes und Etiketten stehen in einer eigenen, importfreien Datei:
+// `/admin/sammelrechnung` ist eine Client-Komponente und darf diese Datei
+// hier nicht anfassen — sie zieht ueber die Rechnungs-Engine
+// `lib/supabase/admin.ts` mit `import 'server-only'` nach, und der
+// Next-Build bricht dann ab. Am 14.09.2026 genau so passiert.
+export {
+  UEBERSPRING_CODES,
+  UEBERSPRING_LABELS,
+  type UeberspringCode,
+} from './sammelrechnung-codes';
 
 // ---------------------------------------------------------------------------
 // Types

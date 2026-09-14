@@ -48,6 +48,9 @@ const M_TARIF_AUDIT   = '20260831040000_tarif_verifizierung_audit.sql'
 const M_BELEGPFLICHT  = '20260904000000_tarif_belege_belegpflicht.sql'
 const M_NACHWEIS_HART = '20260814010000_leistungsnachweis_haertung.sql'
 const M_SEARCH_PATH   = '20260914010000_security_search_path_und_profiles.sql'
+// Die LIVE gueltige Fassung der Sperre. Nicht M_SEARCH_PATH — siehe
+// baueNachweisManipulationsschutz().
+const M_SPERRE        = '20260829200000_sperre_generierte_spalten.sql'
 const M_STATUS_SYNC   = '20260901010000_service_record_status_sync.sql'
 const M_INTEGRITAET   = '20261017000000_abrechnungsintegritaet_leistungsnachweis.sql'
 
@@ -770,9 +773,24 @@ export async function baueTarifVerifizierung(db: PGlite): Promise<void> {
  *   trg_compute_signature_hash 20260814010000  Hash + is_locked
  *   trg_prevent_locked_record  20260814010000  gesperrt heisst gesperrt
  *
- * Die beiden Funktionskoerper stammen aus 20260914010000 — das ist die
- * JUENGSTE Fassung (SET search_path) und damit die, die live in pg_proc
- * steht; am 28.08.2026 gegen den Live-Quelltext gehalten und identisch.
+ * ── WELCHE FASSUNG DER SPERRE HIER LAEUFT ──────────────────────────────
+ * `compute_signature_hash` kommt aus 20260914010000 (SET search_path).
+ * `prevent_locked_record_change` NICHT — die steht dort in der ALTEN,
+ * strengeren Fassung, und live gilt die aus 20260829200000.
+ *
+ * Am 14.09.2026 aus `pg_proc` gelesen: der Live-Koerper traegt die
+ * Ausnahme `NEW.status = 'invoiced' AND OLD.status IN ('signed','complete')`
+ * bei sonst unveraenderter Zeile. Die 20260914er Fassung kennt sie nicht —
+ * sie wuerde den Abrechnungsvermerk auf einem gesperrten Nachweis abweisen
+ * und damit die Kette blockieren (der P0 aus 20260829200000).
+ *
+ * Solange hier die falsche Fassung stand, war dieser Prueflauf STRENGER als
+ * die Produktion. Ein Test, der darin gruen wird, beweist dann nichts ueber
+ * das, was live passiert — genau der Fehler, vor dem der Absatz darunter
+ * schon fuer die WHEN-Bedingungen warnt.
+ *
+ * ACHTUNG fuer spaeter: wird 20260914010000 jemals angewendet, ueberschreibt
+ * sie den Live-Koerper mit der strengeren Fassung und holt den P0 zurueck.
  * Die Trigger-Anweisungen selbst stehen dort nicht, sie kommen samt ihrer
  * WHEN-Bedingungen aus 20260814010000. Diese WHEN-Bedingungen sind kein
  * Beiwerk: `trg_compute_signature_hash` feuert nur, wenn sich
@@ -794,7 +812,7 @@ export async function baueNachweisManipulationsschutz(db: PGlite): Promise<void>
   await db.exec(funktionAusMigration(M_STATUS_SYNC, 'sync_service_record_status'))
   await db.exec(funktionAusMigration(M_INTEGRITAET, 'enforce_unterschrift_beleg'))
   await db.exec(funktionAusMigration(M_SEARCH_PATH, 'compute_signature_hash'))
-  await db.exec(funktionAusMigration(M_SEARCH_PATH, 'prevent_locked_record_change'))
+  await db.exec(funktionAusMigration(M_SPERRE, 'prevent_locked_record_change'))
 
   await db.exec(`
     DROP TRIGGER IF EXISTS trg_sync_record_status ON public.service_records;

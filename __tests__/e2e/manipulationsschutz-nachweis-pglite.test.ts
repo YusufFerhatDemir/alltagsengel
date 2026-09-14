@@ -210,6 +210,64 @@ describe('Die vollstaendige Kette — sie greift, sobald sie betreten wird', () 
         `UPDATE public.service_records SET proof_status = 'STORNIERT' WHERE id = $1`, [id]),
     ).resolves.toBeDefined()
   })
+
+  /**
+   * Die ZWEITE Ausnahme — und der Grund, warum hier die richtige Fassung
+   * der Sperre laufen muss.
+   *
+   * Live traegt `prevent_locked_record_change` die Ausnahme aus Migration
+   * 20260829200000: `status` von signed/complete auf invoiced, bei sonst
+   * unveraenderter Zeile. Am 14.09.2026 aus `pg_proc` gelesen und bestaetigt.
+   *
+   * Der Prueflauf hier zog bis dahin die Fassung aus 20260914010000, die
+   * diese Ausnahme NICHT kennt. Er war damit strenger als die Produktion —
+   * und kein einziger Test merkte es, weil keiner den Abrechnungsvermerk
+   * probierte. Genau das tut dieser.
+   *
+   * Faellt er, ist entweder die Sperre veraendert oder das Kettenschema
+   * zieht wieder die falsche Migration. Beides muss auffallen: ohne diese
+   * Ausnahme ist KEIN gesperrter Nachweis mehr abrechenbar (der P0 aus
+   * 20260829200000).
+   */
+  it('der Abrechnungsvermerk kommt durch die Sperre — signed → invoiced', async () => {
+    await db.query(
+      `UPDATE public.service_records SET proof_status = 'ABGESCHLOSSEN' WHERE id = $1`, [id])
+    await db.query(
+      `UPDATE public.service_records
+          SET proof_status = 'UNTERSCHRIEBEN', client_signed_at = now(),
+              client_signature = 'data:image/png;base64,AAAA'
+        WHERE id = $1`, [id])
+    const vorher = await zustand(id)
+    expect(vorher.is_locked).toBe(true)
+    expect(vorher.status).toBe('signed')
+
+    // NUR der Status. Genau das laesst die Sperre durch.
+    await expect(
+      db.query(`UPDATE public.service_records SET status = 'invoiced' WHERE id = $1`, [id]),
+    ).resolves.toBeDefined()
+
+    const nachher = await zustand(id)
+    expect(nachher.status).toBe('invoiced')
+    // Der Unterschriftsbeleg hat den Wechsel ueberlebt — ein Abrechnen,
+    // das den Beleg abraeumt, waere schlimmer als eines, das blockiert.
+    expect(nachher.signature_hash).toBe(vorher.signature_hash)
+    expect(nachher.is_locked).toBe(true)
+  })
+
+  it('aber NUR der Status — ein zweites Feld daneben faellt', async () => {
+    await db.query(
+      `UPDATE public.service_records SET proof_status = 'ABGESCHLOSSEN' WHERE id = $1`, [id])
+    await db.query(
+      `UPDATE public.service_records
+          SET proof_status = 'UNTERSCHRIEBEN', client_signed_at = now(),
+              client_signature = 'data:image/png;base64,AAAA'
+        WHERE id = $1`, [id])
+
+    await expect(
+      db.query(
+        `UPDATE public.service_records SET status = 'invoiced', amount = 999 WHERE id = $1`, [id]),
+    ).rejects.toThrow(/NUR den Status/i)
+  })
 })
 
 describe('Die Abkuerzungen — was die Datenbank abfaengt und was nicht', () => {

@@ -73,6 +73,19 @@ const IMPORT_RE = /(?:^|\n)\s*(?:import|export)\s[^;\n]*?from\s+['"]([^'"]+)['"]
 const USE_SERVER_RE = /^\s*(?:\/\/[^\n]*\n|\/\*[\s\S]*?\*\/\s*)*['"]use server['"]/
 const SERVER_ONLY_RE = /import\s+['"]server-only['"]/
 
+/**
+ * Entfernt Kommentare, laesst aber jedes Zeichen an seiner Stelle.
+ *
+ * Zeilenkommentare nur, wenn die Zeile damit BEGINNT — so bleiben URLs
+ * (https://…) in Zeichenketten unangetastet. Dieselbe Bauart wie in
+ * `scripts/schema-drift-check.mjs`.
+ */
+function ohneKommentare(text: string): string {
+  return text
+    .replace(/\/\*[\s\S]*?\*\//g, m => m.replace(/[^\n]/g, ' '))
+    .replace(/^([ \t]*)\/\/.*$/gm, (m, einzug: string) => einzug + ' '.repeat(m.length - einzug.length))
+}
+
 function aufloesen(spez: string, von: string): string | null {
   let basis: string
   if (spez.startsWith('@/')) basis = join(WURZEL, spez.slice(2))
@@ -102,8 +115,18 @@ export function baueGraph(dateien: string[]): Graph {
   const useServer = new Set<string>()
   const serverOnly = new Set<string>()
   for (const p of dateien) {
-    let s: string
-    try { s = readFileSync(p, 'utf-8') } catch { continue }
+    let roh: string
+    try { roh = readFileSync(p, 'utf-8') } catch { continue }
+    // Kommentare raus, BEVOR gesucht wird. Ohne das liest die Regel einen
+    // Erklaertext als Code: eine Datei, die `import 'server-only'` ZITIERT,
+    // um zu begruenden, warum sie es gerade NICHT tut, galt als
+    // servergebunden. Am 14.09.2026 genau so passiert — und ein Waechter,
+    // der Dokumentation anschlaegt, ist einer, den man abschaltet.
+    //
+    // Ersetzt wird durch Leerzeichen statt geloescht: `kopf` misst die
+    // ersten 400 Zeichen, und verschobene Positionen haetten ein
+    // 'use client' aus dem Fenster geschoben.
+    const s = ohneKommentare(roh)
     const kopf = s.slice(0, 400)
     if (kopf.includes("'use client'") || kopf.includes('"use client"')) useClient.add(p)
     if (USE_SERVER_RE.test(s)) useServer.add(p)

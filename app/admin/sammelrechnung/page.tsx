@@ -5,7 +5,10 @@ import { createClient } from '@/lib/supabase/client'
 import { euro } from '@/lib/admin/ops'
 import { Banner, EmptyRow } from '@/components/admin/OpsUI'
 import { monatBerlin } from '@/lib/utils/timezone'
-import { UEBERSPRING_LABELS } from '@/lib/billing/core/sammelrechnung'
+// Aus der importfreien Codes-Datei, NICHT aus sammelrechnung.ts: diese
+// Seite ist eine Client-Komponente, und sammelrechnung.ts zieht ueber die
+// Rechnungs-Engine `server-only` nach. Der Next-Build bricht dann ab.
+import { UEBERSPRING_LABELS } from '@/lib/billing/core/sammelrechnung-codes'
 import { logger } from '@/lib/logger'
 
 const log = logger.child('admin:sammelrechnung')
