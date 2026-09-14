@@ -236,6 +236,41 @@ export const EMAIL_VORLAGEN: EmailVorlage[] = [
       + FRAGEN,
   },
   {
+    // ── Nachgetragen 14.09.2026 ──────────────────────────────────────
+    // Diesen Text gab es schon — aber als fest verdrahtetes HTML in
+    // app/admin/applications/actions.ts, mitten in der Server-Action,
+    // die den Status auf „einsatzbereit" setzt. Er war damit der EINZIGE
+    // Statuswechsel mit automatischer E-Mail und zugleich der einzige
+    // Versand, der an den 22 gepflegten Vorlagen vorbeilief: ohne
+    // Zielgruppe, ohne Feldpruefung, ohne die gemeinsame Gestaltung.
+    //
+    // Wer die Kundenkommunikation ueberarbeitet, sieht die Vorlagen —
+    // und haette diesen Text nicht gefunden.
+    //
+    // NICHT dasselbe wie `bewerber_zusage`: die steht VOR dem Vertrag
+    // („wir senden Ihnen die Unterlagen zu"), diese hier danach, wenn
+    // die Nachweise geprueft sind und die Person wirklich starten kann.
+    id: 'bewerber_freigabe',
+    quelle: '2.5',
+    name: 'Freigabe — einsatzbereit',
+    zielgruppe: 'bewerber',
+    betreff: () => 'Ihre Bewerbung bei Alltagsengel wurde freigegeben',
+    felder: [FELD_VORNAME],
+    rumpf: () =>
+      p('Ihre Unterlagen sind geprüft, und Sie sind ab sofort freigeschaltet.')
+      + p('Sie können sich einloggen und Einsätze in Ihrer Nähe annehmen. '
+        + 'Sobald eine Anfrage zu Ihnen passt, melden wir uns.')
+      + kasten(
+        '<strong style="color:#C9963C;">Ihre nächsten Schritte</strong>'
+        + ol([
+          'Profil vervollständigen — Foto und eine kurze Beschreibung.',
+          'Verfügbarkeiten hinterlegen, damit die Einsatzplanung Sie findet.',
+          'Ersten Einsatz annehmen.',
+        ]),
+      )
+      + FRAGEN,
+  },
+  {
     id: 'bewerber_absage',
     quelle: '2.4',
     name: 'Absage nach Screening',
