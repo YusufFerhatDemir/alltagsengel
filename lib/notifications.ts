@@ -450,7 +450,12 @@ async function versendeBuchungsereignis(
   const nachricht = baueBuchungsNachricht(art, data, grund)
 
   // 1. In-App
-  await createNotification(supabase, {
+  //
+  // BEFUND (Block 69): der Rueckgabewert wurde verworfen. `createNotification`
+  // meldet mit `false`, dass die Zeile NICHT entstanden ist — und genau auf
+  // diese Zeile schreibt Schritt 2 unten `email_sent`. Ohne sie schrieb er
+  // ins Leere.
+  const inAppEntstanden = await createNotification(supabase, {
     userId: empfaengerId,
     type: nachricht.inApp.type,
     title: nachricht.inApp.title,
@@ -475,11 +480,28 @@ async function versendeBuchungsereignis(
       spur
     )
 
-    await supabase.from('notifications')
-      .update({ email_sent: true })
-      .eq('user_id', empfaengerId)
-      .eq('data->>bookingId', data.bookingId)
-      .eq('title', nachricht.inApp.title)
+    // Der Vermerk gilt der Zeile aus Schritt 1. Gibt es sie nicht, gibt es
+    // nichts zu vermerken — und ein Protokolleintrag ueber null getroffene
+    // Zeilen waere dann nur die Wiederholung des Fehlers von oben.
+    if (inAppEntstanden) {
+      const { data: vermerkt, error: vermerkFehler } = await supabase
+        .from('notifications')
+        .update({ email_sent: true })
+        .eq('user_id', empfaengerId)
+        .eq('data->>bookingId', data.bookingId)
+        .eq('title', nachricht.inApp.title)
+        .select('id')
+      // Die Zeile wird ueber ihre MERKMALE gesucht, nicht ueber ihre
+      // Kennung: `createNotification` gibt sie nicht zurueck. Trifft die
+      // Suche nichts, ist der Vermerk verloren — vorher fiel auch das
+      // lautlos aus.
+      if (vermerkFehler || (vermerkt ?? []).length === 0) {
+        log.error('E-Mail-Vermerk an der Benachrichtigung nicht gesetzt', {
+          art,
+          errorMessage: vermerkFehler?.message ?? 'keine Zeile getroffen',
+        })
+      }
+    }
   }
 
   // 3. Web Push

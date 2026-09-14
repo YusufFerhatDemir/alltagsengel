@@ -569,13 +569,29 @@ export async function fuehreVersandAus(
       link = marketingAbmeldelink(adresse)
     } catch (err) {
       fehlgeschlagen += 1
-      await supabase
+      // BEFUND (Block 69): dieser Vermerk war der einzige ungepruefte der
+      // Schleife — die beiden anderen (gesendet / Versandfehler) pruefen
+      // seit jeher Fehler und Zeilen. Bleibt er aus, steht der Eintrag
+      // weiter auf 'geplant'. Der UNIQUE-Index verhindert, dass ein
+      // Folgelauf die Adresse erneut aufnimmt: die Person bekommt die
+      // Kampagne nie, gezaehlt wird sie dann als „uebersprungen", und der
+      // Grund steht nirgends. `fehlgeschlagen` oben zaehlt nur im
+      // Arbeitsspeicher.
+      const { data: fehlerVermerkt, error: fehlerVermerkFehler } = await supabase
         .from('email_campaign_logs')
         .update({
           status: 'fehler',
           fehler_text: `Abmeldelink nicht erzeugbar: ${err instanceof Error ? err.message : String(err)}`,
         })
         .eq('id', eintrag.id)
+        .select('id')
+      if (fehlerVermerkFehler || (fehlerVermerkt ?? []).length === 0) {
+        log.error('Abmeldelink-Fehler nicht protokolliert — der Eintrag bleibt auf „geplant"', {
+          kampagne: kampagne.id,
+          logEintrag: eintrag.id,
+          errorMessage: fehlerVermerkFehler?.message ?? 'keine Zeile getroffen',
+        })
+      }
       continue
     }
 

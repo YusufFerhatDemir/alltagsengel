@@ -230,9 +230,22 @@ export async function aktualisiereFehler(
   // still unter den Tisch. Die Route meldete danach { success: true } und
   // der Pruefpfad-Eintrag unten behauptete einen Statuswechsel, den es nie
   // gegeben hat — ein falscher Audit-Eintrag ist schlimmer als keiner.
-  const { error: updateError } = await fehlerUpdate
+  const { data: geaendert, error: updateError } = await fehlerUpdate.select('id')
   if (updateError) {
     throw new Error(`Fehler konnte nicht aktualisiert werden: ${updateError.message}`)
+  }
+  // BEFUND (Block 69): geprueft wurde nur der Fehler. Null getroffene Zeilen
+  // meldet PostgREST nicht — und der Pruefpfad-Eintrag unten haette dann
+  // genau das behauptet, wovor der Kommentar darueber warnt: einen
+  // Statuswechsel, den es nie gegeben hat. Erreichbar ist das, wenn die
+  // Zeile zwischen Lesen und Schreiben verschwindet oder den Mandanten
+  // wechselt; die Lesung oben hat denselben Zaun, aber nicht denselben
+  // Augenblick.
+  if ((geaendert ?? []).length === 0) {
+    throw new Error(
+      `Fehler ${params.fehlerId} wurde NICHT aktualisiert — keine Zeile getroffen. `
+      + `Der Status steht weiter auf "${current}".`,
+    )
   }
 
   await logBillingAction(supabase, {

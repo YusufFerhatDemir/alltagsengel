@@ -46,6 +46,14 @@ interface StubLage {
   zeile?: Record<string, unknown> | null
   /** Fehler, den das UPDATE melden soll. */
   updateFehler?: string | null
+  /**
+   * Getroffene Zeilen des UPDATE (Vorgabe 1).
+   *
+   * Seit Block 69 haengt `aktualisiereFehler` ein `.select('id')` an und
+   * wirft bei null Treffern: der Pruefpfad-Eintrag darunter darf keinen
+   * Statuswechsel behaupten, den es nicht gab.
+   */
+  updateZeilen?: number
   /** Fehler, den das INSERT melden soll. */
   insertFehler?: string | null
   /** Zeilen fuer die Dashboard-Abfrage. */
@@ -95,13 +103,18 @@ function makeStub(lage: StubLage = {}) {
           update: (werte: Record<string, unknown>) => {
             protokoll.updates.push(werte)
             const u: Record<string, unknown> = {}
+            const antwort = () => ({
+              data: lage.updateFehler
+                ? null
+                : Array.from({ length: lage.updateZeilen ?? 1 }, () => ({ id: FEHLER_ID })),
+              error: lage.updateFehler ? { message: lage.updateFehler } : null,
+            })
             u.eq = (spalte: string, wert: unknown) => {
               protokoll.updateFilter.push([spalte, wert]); return u
             }
+            u.select = () => u
             u.then = (aufloesen: (v: unknown) => unknown) =>
-              Promise.resolve({
-                error: lage.updateFehler ? { message: lage.updateFehler } : null,
-              }).then(aufloesen)
+              Promise.resolve(antwort()).then(aufloesen)
             return u
           },
         } as never
@@ -299,6 +312,42 @@ describe('aktualisiereFehler — FP-3: Ergebnis des Schreibens', () => {
       fehlerId: FEHLER_ID, bearbeitungsstatus: 'in_pruefung',
       actorId: ACTOR, organizationId: ORG,
     })).rejects.toThrow(/nicht aktualisiert/)
+  })
+
+  it('wirft auch, wenn das UPDATE null Zeilen trifft (Block 69)', async () => {
+    // PostgREST meldet null getroffene Zeilen NICHT als Fehler. Vorher lief
+    // die Funktion danach weiter und schrieb den Pruefpfad-Eintrag.
+    const { stub } = makeStub({
+      zeile: { bearbeitungsstatus: 'neu', organization_id: ORG },
+      updateZeilen: 0,
+    })
+    await expect(aktualisiereFehler(stub, {
+      fehlerId: FEHLER_ID, bearbeitungsstatus: 'in_pruefung',
+      actorId: ACTOR, organizationId: ORG,
+    })).rejects.toThrow(/keine Zeile getroffen/)
+  })
+
+  it('nennt dabei den Status, der stehen geblieben ist', async () => {
+    const { stub } = makeStub({
+      zeile: { bearbeitungsstatus: 'korrigiert', organization_id: ORG },
+      updateZeilen: 0,
+    })
+    await expect(aktualisiereFehler(stub, {
+      fehlerId: FEHLER_ID, bearbeitungsstatus: 'erledigt',
+      actorId: ACTOR, organizationId: ORG,
+    })).rejects.toThrow(/"korrigiert"/)
+  })
+
+  it('schreibt bei null getroffenen Zeilen KEINEN Pruefpfad-Eintrag', async () => {
+    const { stub, protokoll } = makeStub({
+      zeile: { bearbeitungsstatus: 'neu', organization_id: ORG },
+      updateZeilen: 0,
+    })
+    await expect(aktualisiereFehler(stub, {
+      fehlerId: FEHLER_ID, bearbeitungsstatus: 'in_pruefung',
+      actorId: ACTOR, organizationId: ORG,
+    })).rejects.toThrow()
+    expect(protokoll.audit).toHaveLength(0)
   })
 
   it('schreibt bei gescheitertem UPDATE KEINEN Pruefpfad-Eintrag', async () => {

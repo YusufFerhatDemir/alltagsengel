@@ -5,6 +5,8 @@ import { requireOrgRole } from '@/lib/organizations/server'
 import { pruefeZertifikat, ZERTIFIKAT_BUCKET } from '@/lib/abrechnung/zertifikate'
 import { datumBerlin } from '@/lib/utils/timezone';
 import { withTracking } from '@/lib/monitoring/tracker'
+import { logger } from '@/lib/logger'
+const log = logger.child('api:organizations:zertifikat')
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -102,8 +104,29 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     if (dbErr) return safeApiError(dbErr, req)
 
     // Onboarding-Fortschritt
+    //
+    // BEFUND (Block 69): ungeprueft. Das Zertifikat liegt dann im Speicher
+    // und in `abrechnung_zertifikate`, der Fortschritt aber nicht — die
+    // Einrichtung verlangt denselben Schritt beim naechsten Aufruf erneut,
+    // ohne dass irgendwo stuende, warum. Abgebrochen wird deshalb NICHT:
+    // das Zertifikat ist angekommen, und ein 500 wuerde einen erledigten
+    // Vorgang als gescheitert ausgeben. Der Hinweis reist stattdessen mit
+    // der Antwort und steht im Protokoll.
+    let fortschrittHinweis: string | null = null
     if ((org.onboarding_step ?? 0) < 3) {
-      await admin.from('organizations').update({ onboarding_step: 3 }).eq('id', organizationId)
+      const { data: fortschritt, error: fortschrittFehler } = await admin
+        .from('organizations')
+        .update({ onboarding_step: 3 })
+        .eq('id', organizationId)
+        .select('id')
+      if (fortschrittFehler || (fortschritt ?? []).length === 0) {
+        fortschrittHinweis = 'Das Zertifikat ist gespeichert, der Einrichtungsfortschritt konnte '
+          + 'jedoch nicht fortgeschrieben werden — der Schritt wird möglicherweise erneut angezeigt.'
+        log.error('Onboarding-Fortschritt nicht fortgeschrieben', {
+          organizationId,
+          errorMessage: fortschrittFehler?.message ?? 'keine Zeile getroffen',
+        })
+      }
     }
 
     return NextResponse.json({
@@ -111,6 +134,7 @@ export const POST = withTracking(async function POST(req: NextRequest) {
       ik_nummer: zeile.ik_nummer,
       gueltig_bis: zeile.gueltig_bis,
       fingerprint: pruefung.fingerprint,
+      ...(fortschrittHinweis ? { hinweis: fortschrittHinweis } : {}),
     })
   } catch (e) {
     return safeApiError(e, req)

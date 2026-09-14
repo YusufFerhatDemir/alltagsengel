@@ -206,7 +206,6 @@ export const BESTAND: { datei: string; tabelle: string; operation: string }[] = 
   { datei: 'app/api/coach/loeschung/route.ts', tabelle: 'coach_nutzungsereignisse', operation: 'delete' },
   { datei: 'app/api/email/send/route.ts', tabelle: 'email_entwuerfe', operation: 'update' },
   { datei: 'app/api/fhir/import/route.ts', tabelle: 'clients', operation: 'update' },
-  { datei: 'app/api/organizations/zertifikat/route.ts', tabelle: 'organizations', operation: 'update' },
   { datei: 'app/api/pflege/sturzprotokoll/route.ts', tabelle: 'pflege_verlauf', operation: 'update' },
   { datei: 'app/api/tours/[id]/stops/route.ts', tabelle: 'tour_stops', operation: 'delete' },
   { datei: 'app/api/user/delete/undo/route.ts', tabelle: 'profiles', operation: 'update' },
