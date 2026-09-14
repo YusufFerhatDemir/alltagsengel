@@ -29,6 +29,7 @@ import {
   WARTENDE_MIGRATIONEN, standVon, fehlendeWirkungen, wirkungsSchluessel,
   type LiveWirkung,
 } from '../lib/migration/stand'
+import { frageOrakel } from './lib/lese-orakel.mjs'
 
 for (const datei of ['.env.local', '.env']) {
   if (!existsSync(datei)) continue
@@ -43,19 +44,25 @@ for (const datei of ['.env.local', '.env']) {
 
 const SYMBOL = { angewendet: '✓', teilweise: '◐', offen: '·' } as const
 
+/**
+ * Fragt das Lese-Orakel.
+ *
+ * BEFUND (Block 50): hier stand `JSON.parse(roh).message` — und genau
+ * das war blind. Das Orakel antwortet auf einen MESSWERT mit
+ * `{code:'P0001', message:…}`, auf einen kaputten Schluessel aber mit
+ * `{message:'Invalid API key'}`. Beide tragen `message`; dieser Lauf
+ * hielt die Fehlermeldung fuer einen Messwert und berichtete
+ * anschliessend „alle sechs Migrationen OFFEN" ueber eine Datenbank, die
+ * er nie erreicht hatte.
+ *
+ * `frageOrakel` verlangt `code === 'P0001'` — den Beweis, dass der
+ * DO-Block gelaufen ist — und wirft sonst.
+ */
 async function orakel(url: string, key: string, sql: string): Promise<string> {
-  // Das Lese-Orakel nimmt den Parameter `p`, nicht `query`.
-  const res = await fetch(`${url}/rest/v1/rpc/_run_sql`, {
-    method: 'POST',
-    headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ p: `DO $$ DECLARE v text; BEGIN ${sql} RAISE EXCEPTION '%', COALESCE(v, ''); END $$;` }),
-  })
-  const roh = await res.text()
-  try {
-    return String(JSON.parse(roh).message ?? '')
-  } catch {
-    throw new Error(`Antwort des Lese-Orakels nicht lesbar: ${roh.slice(0, 200)}`)
-  }
+  return frageOrakel(
+    url, key,
+    `DO $$ DECLARE v text; BEGIN ${sql} RAISE EXCEPTION '%', COALESCE(v, ''); END $$;`,
+  )
 }
 
 async function main(): Promise<void> {

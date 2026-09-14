@@ -13,6 +13,7 @@
  */
 import { readFileSync, existsSync } from 'node:fs'
 import { apiHeaders, publishableKey, secretKey } from './lib/supabase-keys.mjs'
+import { pruefeAnonErreichbar } from './lib/lese-orakel.mjs'
 
 for (const datei of ['.env.local', '.env']) {
   if (!existsSync(datei)) continue
@@ -46,6 +47,26 @@ async function rpc(sql) {
 }
 
 console.log(`\nSQL-Ausfuehrungs-RPC gegen ${BASIS.replace(/^https:\/\//, '')} (anon-Key)\n`)
+
+// ── Positivkontrolle VOR jeder Verweigerungs-Feststellung ──────────────
+//
+// BEFUND (Block 50, 14.09.2026): dieser Lauf meldete mit einem kaputten
+// Schluessel exit 0. Jede Pruefung der Form `status >= 400` trifft naemlich
+// auch bei HTTP 401 zu — „anon wurde abgewiesen" gilt dann, ohne dass je
+// ein Riegel geprueft wurde. Gemessen mit einem absichtlich verfaelschten
+// Schluessel: der Lauf faerbte sich gruen.
+//
+// `bundeslaender` traegt die Policy `bundeslaender_read` fuer anon. Wer
+// die nicht lesen kann, kann gar nichts messen.
+{
+  const kontrolle = await pruefeAnonErreichbar(BASIS, ANON)
+  if (!kontrolle.ok) {
+    console.error(`\nABBRUCH: ${kontrolle.grund}`)
+    process.exit(2)
+  }
+  console.log('Positivkontrolle: anon liest `bundeslaender` (HTTP 200) — der Schluessel traegt.')
+}
+
 
 // A) Gueltiges SQL — darf NICHT 2xx liefern.
 const gueltig = await rpc('SELECT 1')

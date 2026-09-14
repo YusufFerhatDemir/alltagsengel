@@ -230,7 +230,11 @@ describe('die Skripte sind verdrahtet', () => {
     expect(quelle).toContain("permissive === 'RESTRICTIVE'")
   })
 
-  it('der Lauf nutzt den Parameter `p` des Lese-Orakels, nicht `query`', () => {
-    expect(readFileSync('scripts/verify-migrationsstand.ts', 'utf8')).toContain('p: `DO $$')
+  it('der Lauf fragt ueber den geteilten Helfer, der `p` benutzt', () => {
+    // Seit Block 50 steht der Orakel-Aufruf in scripts/lib/lese-orakel.mjs
+    // — dort auch der Parametername. Ein eigener fetch im Lauf waere ein
+    // Rueckschritt: er koennte wieder blank `message` lesen.
+    expect(readFileSync('scripts/verify-migrationsstand.ts', 'utf8')).toContain('frageOrakel(')
+    expect(readFileSync('scripts/lib/lese-orakel.mjs', 'utf8')).toContain('{ p: sql }')
   })
 })

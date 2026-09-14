@@ -16,6 +16,7 @@
  */
 import { readFileSync, existsSync, readdirSync } from 'node:fs'
 import { apiHeaders, publishableKey, secretKey } from './lib/supabase-keys.mjs'
+import { pruefeAnonErreichbar } from './lib/lese-orakel.mjs'
 
 for (const datei of ['.env.local', '.env']) {
   if (!existsSync(datei)) continue
@@ -63,6 +64,26 @@ async function orakel(sql) {
 }
 
 console.log(`\nPhase 2/3/4 Reverify gegen ${BASIS.replace(/^https:\/\//, '')}\n`)
+
+// ── Positivkontrolle VOR jeder Verweigerungs-Feststellung ──────────────
+//
+// BEFUND (Block 50, 14.09.2026): dieser Lauf meldete mit einem kaputten
+// Schluessel exit 0. Jede Pruefung der Form `status >= 400` trifft naemlich
+// auch bei HTTP 401 zu — „anon wurde abgewiesen" gilt dann, ohne dass je
+// ein Riegel geprueft wurde. Gemessen mit einem absichtlich verfaelschten
+// Schluessel: der Lauf faerbte sich gruen.
+//
+// `bundeslaender` traegt die Policy `bundeslaender_read` fuer anon. Wer
+// die nicht lesen kann, kann gar nichts messen.
+{
+  const kontrolle = await pruefeAnonErreichbar(BASIS, publishableKey())
+  if (!kontrolle.ok) {
+    console.error(`\nABBRUCH: ${kontrolle.grund}`)
+    process.exit(2)
+  }
+  console.log('Positivkontrolle: anon liest `bundeslaender` (HTTP 200) — der Schluessel traegt.')
+}
+
 
 // ─────────────────────────────────────────────────────────────────────────
 console.log('══ PHASE 2 — Production Database Reverify ══\n')
