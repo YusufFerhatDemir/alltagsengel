@@ -96,7 +96,8 @@
     "lint:stilles-update": "tsx scripts/lint-stilles-update.ts",
     "verify:vertrag-pdf": "tsx scripts/verify-vertrag-pdf.ts",
     "verify:bewerberfunnel": "tsx scripts/verify-bewerberfunnel-live.ts",
-    "verify:automatisierung": "tsx --require ./scripts/test-stubs/server-only-stub.cjs --require ./scripts/test-stubs/admin-client-trockenlauf.cjs scripts/verify-automatisierung-trockenlauf.ts"
+    "verify:automatisierung": "tsx --require ./scripts/test-stubs/server-only-stub.cjs --require ./scripts/test-stubs/admin-client-trockenlauf.cjs scripts/verify-automatisierung-trockenlauf.ts",
+    "verify:mandantenzaun": "node scripts/verify-mandantenzaun-live.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",
