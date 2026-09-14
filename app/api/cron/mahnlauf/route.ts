@@ -64,6 +64,7 @@ export const GET = withTracking(async function GET(request: Request) {
     const laeufe: Array<Record<string, unknown>> = []
     let eskaliertGesamt = 0
     let blockiertGesamt = 0
+    let nichtBenachrichtigtGesamt = 0
     let versendetGesamt = 0
     let storniertGesamt = 0
     let aufgegebenGesamt = 0
@@ -82,6 +83,7 @@ export const GET = withTracking(async function GET(request: Request) {
         const result = await runDunningRun(supabaseAdmin, org.id, org.id, { sendEmails: true })
         eskaliertGesamt += result.eskaliert.length
         blockiertGesamt += result.blockiert.length
+        nichtBenachrichtigtGesamt += result.nichtBenachrichtigt?.length ?? 0
 
         const eintrag: Record<string, unknown> = {
           organizationId: org.id,
@@ -91,6 +93,12 @@ export const GET = withTracking(async function GET(request: Request) {
           blockiert: result.blockiert.length,
           unveraendert: result.unveraendert,
           details: result.eskaliert,
+          // Eskaliert, aber ohne Schreiben — die Mahnstufe steht bereits
+          // und die Gebuehr ist gebucht. Gehoert in den Bericht, nicht nur
+          // ins Log: das muss ein Mensch aufloesen (Postweg, Adresse
+          // nachtragen). Siehe DunningRunResult.nichtBenachrichtigt.
+          nichtBenachrichtigt: result.nichtBenachrichtigt ?? [],
+          emailsEingereiht: result.emailsVersendet ?? 0,
         }
 
         if (versandAktiv) {
@@ -136,6 +144,10 @@ export const GET = withTracking(async function GET(request: Request) {
       organisationen: laeufe.length,
       eskaliert: eskaliertGesamt,
       blockiert: blockiertGesamt,
+      // Mahnstufe erhoeht, aber kein Schreiben erzeugt. Steht bewusst
+      // neben `eskaliert`: die Differenz ist die Zahl der Kundinnen und
+      // Kunden, die eine Gebuehr tragen, ohne davon zu wissen.
+      nichtBenachrichtigt: nichtBenachrichtigtGesamt,
       versand: versandAktiv
         ? {
             aktiv: true,

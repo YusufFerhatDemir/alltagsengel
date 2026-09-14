@@ -526,8 +526,28 @@ export interface DunningRunResult {
   /** faellig, aber Frist zur naechsten Stufe noch nicht erreicht */
   unveraendert: number
   dryRun: boolean
-  /** Anzahl versendeter Mahn-E-Mails (nur bei sendEmails: true) */
+  /** Anzahl tatsaechlich eingereihter Mahn-E-Mails (nur bei sendEmails: true) */
   emailsVersendet?: number
+  /**
+   * Eskaliert, aber NICHT benachrichtigt — je Rechnung mit Grund.
+   *
+   * BEFUND (14.09.2026, Block 32): `sendDunningEmail` kehrte bei
+   * fehlender Klienten-E-Mail wortlos zurueck, und der Zaehler stand
+   * ausserhalb dieses Pfads:
+   *
+   *     await sendDunningEmail(...)   // kehrt wortlos zurueck
+   *     emailCount++                  // zaehlt trotzdem als versendet
+   *
+   * Die Eskalation war zu diesem Zeitpunkt bereits gebucht — Mahnstufe
+   * erhoeht, Mahngebuehr berechnet. Ein Klient ohne E-Mail konnte so bis
+   * zur Inkasso-Vorbereitung hochlaufen, ohne je ein Schreiben zu
+   * bekommen, waehrend der Lauf meldete, es seien Mahnungen versendet
+   * worden. Live betrifft das 1 von 4 Klienten.
+   *
+   * Diese Liste ist die Gegenprobe: eine Eskalation ohne Zustellung ist
+   * ein Betriebszustand, den ein Mensch aufloesen muss.
+   */
+  nichtBenachrichtigt?: DunningRunSkip[]
 }
 
 /**
@@ -691,35 +711,71 @@ export async function runDunningRun(
   // E-Mail-Versand: nach erfolgreicher Eskalation Mahnschreiben als E-Mail senden
   if (sendEmails && !dryRun && result.eskaliert.length > 0) {
     let emailCount = 0
+    const nichtBenachrichtigt: DunningRunSkip[] = []
     for (const esc of result.eskaliert) {
       try {
-        await sendDunningEmail(supabase, esc.invoiceId, organizationId, actorId)
-        emailCount++
+        const versand = await sendDunningEmail(supabase, esc.invoiceId, organizationId, actorId)
+        // Nur ein echtes `ok` zaehlt. Vorher stand das `emailCount++`
+        // ausserhalb jeder Pruefung und zaehlte auch die Faelle mit, in
+        // denen die Funktion wortlos zurueckgekehrt war.
+        if (versand.ok) emailCount++
+        else nichtBenachrichtigt.push({ invoiceId: esc.invoiceId, invoiceNumber: esc.invoiceNumber, reason: versand.grund })
       } catch (err) {
+        const grund = err instanceof Error ? err.message : String(err)
         log.errorWithException('E-Mail-Versand fehlgeschlagen', err, { invoiceId: esc.invoiceId })
+        nichtBenachrichtigt.push({ invoiceId: esc.invoiceId, invoiceNumber: esc.invoiceNumber, reason: grund })
       }
     }
     result.emailsVersendet = emailCount
+    result.nichtBenachrichtigt = nichtBenachrichtigt
+    if (nichtBenachrichtigt.length > 0) {
+      // Sichtbar machen, nicht nur zurueckgeben: die Mahnstufe ist
+      // bereits erhoeht und die Gebuehr gebucht.
+      log.error('Eskaliert, aber nicht benachrichtigt', {
+        organizationId,
+        anzahl: nichtBenachrichtigt.length,
+        rechnungen: nichtBenachrichtigt.map(n => n.invoiceNumber ?? n.invoiceId),
+      })
+    }
   }
 
   return result
 }
+
+/**
+ * Ergebnis eines Mahnungsversands.
+ *
+ * BEWUSST kein `void`: die drei Abbruchgruende (Rechnung weg, keine
+ * E-Mail-Adresse, kein Mahneintrag) kehrten frueher wortlos zurueck. Der
+ * Aufrufer konnte einen Fehlschlag nicht von einem Erfolg unterscheiden
+ * und zaehlte beides als versendet.
+ */
+type MahnungVersandErgebnis = { ok: true } | { ok: false; grund: string }
 
 async function sendDunningEmail(
   supabase: SupabaseClient,
   invoiceId: string,
   organizationId: string,
   actorId: string,
-): Promise<void> {
+): Promise<MahnungVersandErgebnis> {
   const { data: inv } = await supabase
     .from('invoices')
     .select('id, dunning_level, client:clients(email, first_name, last_name)')
     .eq('id', invoiceId)
     .single()
 
-  if (!inv) return
+  if (!inv) return { ok: false, grund: 'Rechnung nicht gefunden' }
   const client = inv.client as unknown as ClientJoin
-  if (!client?.email) return
+  // `.trim()`, nicht blosse Wahrheit: eine Adresse aus Leerzeichen ist
+  // truthy und waere als Empfaenger in die Queue gegangen — der
+  // Versandversuch scheitert dann erst beim Anbieter, und bis dahin sieht
+  // der Lauf aus, als sei zugestellt worden.
+  const adresse = (client?.email ?? '').trim()
+  if (!adresse) {
+    // Der haeufigste Fall und der gefaehrlichste: die Mahnstufe steht
+    // bereits, die Gebuehr ist gebucht — nur erfaehrt es niemand.
+    return { ok: false, grund: 'Klient hat keine E-Mail-Adresse hinterlegt — Mahnung muss auf dem Postweg zugestellt werden' }
+  }
 
   const { data: entry } = await supabase
     .from('dunning_entries')
@@ -727,7 +783,7 @@ async function sendDunningEmail(
     .eq('invoice_id', invoiceId)
     .single()
 
-  if (!entry) return
+  if (!entry) return { ok: false, grund: 'Kein Mahneintrag zur Rechnung' }
 
   // Lazy-Import um zirkuläre Abhängigkeit zu vermeiden
   const { createMahnungDocument, generateMahnungEmail } = await import('../dunning/mahnung-pdf')
@@ -748,8 +804,8 @@ async function sendDunningEmail(
     invoice_id: invoiceId,
     dunning_entry_id: entry.id,
     dunning_document_id: doc.documentId,
-    empfaenger_email: client.email,
-    empfaenger_name: `${client.first_name ?? ''} ${client.last_name ?? ''}`.trim(),
+    empfaenger_email: adresse,
+    empfaenger_name: `${client?.first_name ?? ''} ${client?.last_name ?? ''}`.trim(),
     betreff: email.subject,
     inhalt: email.body,
     status: 'wartend',
@@ -758,6 +814,7 @@ async function sendDunningEmail(
 
   if (queueError) {
     log.error('E-Mail-Queue-Insert fehlgeschlagen', { errorMessage: queueError.message })
+    return { ok: false, grund: `Mahnung konnte nicht eingereiht werden: ${queueError.message}` }
   }
 
   await logBillingAction(supabase, {
@@ -765,7 +822,9 @@ async function sendDunningEmail(
     organizationId,
     entityId: entry.id,
     action: 'email_queued',
-    newState: { empfaenger: client.email, betreff: email.subject },
+    newState: { empfaenger: adresse, betreff: email.subject },
     actorId,
   })
+
+  return { ok: true }
 }
