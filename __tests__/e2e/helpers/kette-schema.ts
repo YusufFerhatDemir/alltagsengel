@@ -28,6 +28,7 @@ import {
 const M_CORE          = '20250101000000_core_tables_baseline.sql'
 const M_LIVE          = '20260101000000_baseline_live_only_tables.sql'
 const M_TOUREN        = '20260809120000_tourenplanung.sql'
+const M_OPS           = '20260812010000_aufgaben_kommunikation.sql'
 const M_BUDGET_VERBRAUCH = '20261013000002_budget_used_amount_statuswerte.sql'
 const M_SIGNATUREN    = '20260706_monatsabschluss_ki_pruefzentrale.sql'
 const M_BILLING_CORE  = '20260806200000_billing_core_corrections.sql'
@@ -549,6 +550,52 @@ export async function baueTourenTabellen(db: PGlite): Promise<void> {
  */
 export async function baueBudgetTrigger(db: PGlite): Promise<void> {
   await db.exec(liesMigration(M_BUDGET_VERBRAUCH))
+}
+
+/**
+ * Betriebsaufgaben: `ops_aufgaben` — das Ziel der taeglichen Ketten.
+ *
+ * ── WARUM MIT DEN ECHTEN CHECKS ──────────────────────────────────────
+ * Die elf Automatisierungsketten schreiben ihr Ergebnis hierher. Die
+ * Tabelle traegt vier CHECK-Constraints (kategorie, prioritaet, status,
+ * wiederholung_intervall), und ein unbekannter Wert laesst den INSERT
+ * scheitern — die Kette meldet dann "Anlage fehlgeschlagen" und laeuft
+ * weiter, die Aufgabe fehlt aber.
+ *
+ * Genau dieser Fall ist im Bestand belegt: `mis_audit_log.action` traegt
+ * denselben Aufbau, und ein nicht eingetragener Wert liess den Eintrag
+ * der Lead-Kette lautlos scheitern. Ein Testschema ohne die CHECKs
+ * koennte solche Faelle nicht sehen — deshalb kommt die Tabelle
+ * WORTGLEICH aus ihrer Migration.
+ *
+ * Setzt baueKettenSchema() voraus (clients, caregivers, profiles).
+ */
+export async function baueOpsAufgaben(db: PGlite): Promise<void> {
+  // `ops_aufgaben.dokument_id` zeigt auf akten_dokumente. Der
+  // Fremdschluessel bleibt stehen — ihn wegzulassen waere die Lockerung,
+  // die einen kaputten Pfad gruen haelt.
+  //
+  // Die Zieltabelle selbst wird hier MINIMAL angelegt, nicht aus ihrer
+  // Migration geholt: die zoege verordnungen, pflege_* und weitere nach
+  // sich, und keine davon ist Gegenstand dieser Kette. Was gemessen wird,
+  // ist `ops_aufgaben` — und dessen CHECKs und Fremdschluessel kommen
+  // wortgleich aus der Migration. Eine Nachbartabelle, die nur als
+  // FK-Ziel dasteht, darf schmal sein; die gepruefte Tabelle nicht.
+  // `ops_aufgaben` zeigt auf SECHS Nachbartabellen, von denen keine hier
+  // Gegenstand ist. Sie werden schmal angelegt, damit die Fremdschluessel
+  // stehen bleiben koennen.
+  for (const t of [
+    'akten_dokumente', 'verordnungen', 'abrechnungslaeufe',
+    'pflege_aufnahmen', 'dienstplan_eintraege',
+  ]) {
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS public."${t}" (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        organization_id uuid
+      );
+    `)
+  }
+  await db.exec(tabelleAusMigration(M_OPS, 'ops_aufgaben'))
 }
 
 export async function baueCamtTabellen(db: PGlite): Promise<void> {

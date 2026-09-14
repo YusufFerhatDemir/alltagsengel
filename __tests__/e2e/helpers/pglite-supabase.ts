@@ -136,6 +136,31 @@ function fkSpalte(tabelle: string): string {
   return `${tabelle.replace(/ies$/, 'y').replace(/s$/, '')}_id`
 }
 
+/**
+ * Spaltenname oder JSONB-Pfad als SQL-Ausdruck.
+ *
+ * PostgREST erlaubt in Filtern den Pfad `spalte->>schluessel`, und der
+ * Bestand benutzt das: die Dublettenpruefung der Automatisierungsketten
+ * fragt `metadata->>service_record_id`, der Monatsabschluss
+ * `metadata->>monatsabschluss_monat`. In Anfuehrungszeichen gesetzt wird
+ * daraus ein SPALTENNAME mit Pfeilen darin — Postgres meldet dann
+ * „column \"metadata->>service_record_id\" does not exist", und der
+ * Aufrufer liest das als „Dublettenpruefung fehlgeschlagen".
+ *
+ * Unterstuetzt `->>` (Text) und `->` (jsonb), auch mehrstufig.
+ */
+function spaltenAusdruck(spalte: string): string {
+  if (!spalte.includes('->')) return `"${spalte}"`
+  const teile = spalte.split(/(->>|->)/)
+  let sql = `"${teile[0].trim()}"`
+  for (let i = 1; i < teile.length; i += 2) {
+    const pfeil = teile[i]
+    const schluessel = teile[i + 1]?.trim().replace(/^'|'$/g, '') ?? ''
+    sql += `${pfeil}'${schluessel.replace(/'/g, "''")}'`
+  }
+  return sql
+}
+
 /** `("a","b")` → `['a', 'b']` — das Listenformat von PostgREST `not.in`. */
 function parsePgListe(literal: unknown): string[] {
   const s = String(literal ?? '')
@@ -372,7 +397,7 @@ export function macheSupabaseClient(
         return `NOT (${bedingung(f.innen, params)})`
       }
 
-      const q = `"${f.spalte}"`
+      const q = spaltenAusdruck(f.spalte)
       switch (f.art) {
         case 'eq': case 'neq': case 'lt': case 'lte': case 'gt': case 'gte': {
           const op = { eq: '=', neq: '<>', lt: '<', lte: '<=', gt: '>', gte: '>=' }[f.art]
