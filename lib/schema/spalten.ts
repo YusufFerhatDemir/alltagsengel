@@ -120,3 +120,95 @@ export function spaltenAusOpenApi(spec: unknown): Map<string, Set<string>> {
   }
   return karte
 }
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// Block 39 — die Leseseite
+// ═══════════════════════════════════════════════════════════════════════
+//
+// Eine unbekannte Spalte in `.select()` scheitert genauso mit 42703 wie
+// beim Schreiben — nur ist die Folge dort schlimmer: der Fehler wird in
+// aller Regel verschluckt, die Liste kommt leer zurueck, und die
+// Oberflaeche zeigt einen Leerzustand. Genau die stille Null, die diese
+// Sitzung durchzieht.
+//
+// ── ERGEBNIS DES ERSTEN LAUFS: SAUBER ─────────────────────────────────
+//
+// Null Befunde ueber alle `.from('X').select('…')`. Das ist geprueft und
+// nicht bloss behauptet: die Gegenprobe mit einer eingebauten
+// Falschspalte wurde gefunden (siehe Tests).
+//
+// ── WAS HIER BEWUSST NICHT GEPRUEFT WIRD ──────────────────────────────
+//
+// Eingebettete Abfragen. PostgREST kennt dafuer ZWEI Formen:
+//
+//     kunde:profiles!customer_id(first_name)   Alias : Tabelle ! Schluessel
+//     profiles:customer_id(first_name)         Alias : Fremdschluesselspalte
+//
+// Ohne Aufloesung der Fremdschluessel sind sie nicht auseinanderzuhalten —
+// im zweiten Fall haelt jeder naive Ausdruck `customer_id` fuer eine
+// Tabelle und meldet einen Fehler, den es nicht gibt. Ein Detektor, der
+// Falschalarm gibt, wird abgeschaltet; lieber prueft er weniger.
+
+export interface LeseBefund {
+  datei: string
+  zeile: number
+  tabelle: string
+  spalte: string
+}
+
+/** `.from('X').select('…')` mit einfacher Zeichenkette, direkt verkettet. */
+const LESEWEG = /\.from\(\s*'([a-z_]+)'\s*\)\s*\.select\(\s*'([^']*)'/g
+
+/**
+ * Die Spaltennamen einer PostgREST-Auswahl — ohne Einbettungen.
+ *
+ * Alles in Klammern gehoert einer anderen Tabelle und wird samt seinem
+ * Praefix entfernt, bevor die Liste zerlegt wird.
+ */
+export function auswahlFelder(auswahl: string): string[] {
+  let rest = auswahl
+  for (let runde = 0; runde < 8; runde++) {
+    const kuerzer = rest.replace(/[a-z_]*\s*:?\s*[a-z_!.]*\([^()]*\)/g, '')
+    if (kuerzer === rest) break
+    rest = kuerzer
+  }
+  return rest
+    .split(',')
+    .map(x => x.trim())
+    .filter(Boolean)
+    .map(x => x.split(':').pop()!.trim())
+    .filter(x => /^[a-z_][a-z0-9_]*$/.test(x))
+}
+
+/** Prueft die Lesewege einer Quelldatei gegen das Schema. */
+export function pruefeLeseSpalten(
+  datei: string,
+  quelle: string,
+  spalten: ReadonlyMap<string, ReadonlySet<string>>,
+): LeseBefund[] {
+  const q = ohneKommentare(quelle)
+  const befunde: LeseBefund[] = []
+
+  for (const treffer of q.matchAll(LESEWEG)) {
+    const tabelle = treffer[1]
+    const bekannt = spalten.get(tabelle)
+    if (!bekannt) continue
+    // Nur ein reines `*` holt alles und ist nicht pruefbar. Bei
+    // `'*, spalte'` gibt es sehr wohl etwas zu pruefen: eine unbekannte
+    // Spalte neben dem Stern laesst die Abfrage genauso scheitern.
+    if (treffer[2].trim() === '*') continue
+
+    for (const spalte of auswahlFelder(treffer[2])) {
+      if (bekannt.has(spalte)) continue
+      befunde.push({
+        datei,
+        zeile: q.slice(0, treffer.index!).split('\n').length,
+        tabelle,
+        spalte,
+      })
+    }
+  }
+
+  return befunde
+}

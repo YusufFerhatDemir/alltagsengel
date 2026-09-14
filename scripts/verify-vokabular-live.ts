@@ -6,6 +6,11 @@
  *
  *   1. Schreibt der Code einen WERT, den der CHECK nicht zulaesst? (23514)
  *   2. Schreibt er auf eine SPALTE, die es nicht gibt?          (42703)
+ *   3. LIEST er eine Spalte, die es nicht gibt?                  (42703)
+ *
+ * Die dritte ist die tueckischste: ein fehlgeschlagenes SELECT wird in
+ * aller Regel verschluckt, die Liste kommt leer zurueck, und die
+ * Oberflaeche zeigt einen Leerzustand statt eines Fehlers.
  *
  * Beide Achsen sind noetig, und die erste Messung zeigte warum: die
  * Referral-Benachrichtigung trug BEIDE Fehler in einer Anweisung. Nach
@@ -29,7 +34,7 @@
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Vokabelbefund } from '../lib/schema/vokabular'
-import type { Spaltenbefund } from '../lib/schema/spalten'
+import type { Spaltenbefund, LeseBefund } from '../lib/schema/spalten'
 
 for (const datei of ['.env.local', '.env']) {
   if (!existsSync(datei)) continue
@@ -67,7 +72,7 @@ function dateienUnter(verzeichnis: string): string[] {
 async function main(): Promise<void> {
   const { apiHeaders, secretKey, envWert } = await import('./lib/supabase-keys.mjs')
   const { ladeWertelisten, pruefeQuelle, schluessel } = await import('../lib/schema/vokabular')
-  const { pruefeSpalten, spaltenAusOpenApi } = await import('../lib/schema/spalten')
+  const { pruefeSpalten, pruefeLeseSpalten, spaltenAusOpenApi } = await import('../lib/schema/spalten')
 
   const url = envWert('NEXT_PUBLIC_SUPABASE_URL')
 
@@ -109,11 +114,13 @@ async function main(): Promise<void> {
 
   const alle: Vokabelbefund[] = []
   const spaltenBefunde: Spaltenbefund[] = []
+  const leseBefunde: LeseBefund[] = []
   for (const datei of dateien) {
     const kurz = datei.replace(process.cwd() + '/', '')
     const quelle = readFileSync(datei, 'utf8')
     alle.push(...pruefeQuelle(kurz, quelle, erlaubt))
     spaltenBefunde.push(...pruefeSpalten(kurz, quelle, spalten))
+    leseBefunde.push(...pruefeLeseSpalten(kurz, quelle, spalten))
   }
 
   const bekannt = alle.filter(b => BEKANNT.has(schluessel(b.tabelle, b.spalte)))
@@ -150,10 +157,22 @@ async function main(): Promise<void> {
     console.log()
   }
 
-  const gesamtNeu = neu.length + spaltenBefunde.length
+  if (leseBefunde.length > 0) {
+    console.log('✗  NEUER BEFUND — diese Spalte wird GELESEN, gibt es aber nicht:')
+    for (const b of leseBefunde) {
+      console.log(`     ${b.datei}:${b.zeile}`)
+      console.log(`        ${b.tabelle}.${b.spalte}`)
+      console.log('        Ein fehlgeschlagenes SELECT wird meist verschluckt —')
+      console.log('        die Oberflaeche zeigt dann einen Leerzustand statt eines Fehlers.')
+    }
+    console.log()
+  }
+
+  const gesamtNeu = neu.length + spaltenBefunde.length + leseBefunde.length
   console.log(` bekannte Befunde      : ${bekannt.length}`)
   console.log(` NEU: verbotener Wert  : ${neu.length}`)
   console.log(` NEU: fehlende Spalte  : ${spaltenBefunde.length}`)
+  console.log(` NEU: gelesene Spalte  : ${leseBefunde.length}`)
   console.log(gesamtNeu === 0
     ? ' ✅ Kein Schreibvorgang, der nie gelingen kann.'
     : ' ❌ Mindestens ein Schreibvorgang kann nie gelingen.')
