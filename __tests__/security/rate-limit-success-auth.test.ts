@@ -41,7 +41,12 @@ vi.mock('@/lib/supabase/admin', () => ({
         },
       }),
       select: () => ({
-        eq: () => ({ single: async () => ({ data: null, error: null }) }),
+        // `maybeSingle`, weil die Route seit Block 66 den Normalfall
+        // „noch kein Zaehler" nicht mehr als Fehler entgegennimmt.
+        eq: () => ({
+          single: async () => ({ data: null, error: null }),
+          maybeSingle: async () => ({ data: null, error: null }),
+        }),
       }),
       upsert: async (row: { key: string }) => {
         upsertKeys.push(row.key)

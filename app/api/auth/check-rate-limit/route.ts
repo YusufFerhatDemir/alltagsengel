@@ -44,17 +44,67 @@ function formatLockMessage(remainingMs: number): string {
     : `Zu viele Fehlversuche. Bitte warten Sie ${remainingMin} Minuten.`
 }
 
+/**
+ * Die Art des Schluessels — nie der Schluessel selbst.
+ *
+ * `email:…` traegt eine Adresse, `ip:…` eine IP. Beides gehoert nicht ins
+ * Protokoll (AUTH-002-Muster wie im Catch dieser Route). Fuer die Frage
+ * „welcher Zaehler ist ausgefallen" reicht die Art.
+ */
+function schluesselArt(key: string): 'email' | 'ip' | 'unbekannt' {
+  if (key.startsWith('email:')) return 'email'
+  if (key.startsWith('ip:')) return 'ip'
+  return 'unbekannt'
+}
+
+/**
+ * Ein Eintrag — oder null, weil es keinen gibt.
+ *
+ * BEFUND (Block 66): hier stand `const { data } = ….single()`. Der Fehler
+ * wurde verworfen, und `null` heisst beim Aufrufer „kein Eintrag" — also
+ * „nicht gesperrt". Ein Verbindungsabbruch, eine Schemadrift oder eine
+ * entzogene Berechtigung sahen damit exakt so aus wie ein unbescholtener
+ * Anmeldeversuch: der `check`-Zweig antwortete `allowed: true`, ohne dass
+ * irgendwo ein Wort darueber fiel. Der Brute-Force-Schutz konnte
+ * VOLLSTAENDIG fehlen, und nichts im System haette es gesagt. Live traegt
+ * die Tabelle 32 Zeilen mit bis zu 6 Fehlversuchen — sie ist in Gebrauch.
+ *
+ * `.maybeSingle()` statt `.single()` ist die Voraussetzung dafuer: bei
+ * `.single()` ist der haeufigste Normalfall (noch kein Eintrag) selbst ein
+ * Fehler (PGRST116), und ein Protokolleintrag darauf waere Laerm statt
+ * Signal.
+ *
+ * Fail-open bleibt: die Route blockiert Anmeldungen nicht, wenn ihr
+ * Zaehlwerk streikt (Begruendung im Catch am Ende). Neu ist nur, dass es
+ * hoerbar geschieht.
+ */
 async function getEntry(supabase: SupabaseClient, key: string): Promise<RateLimitEntry | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('login_rate_limits')
     .select('*')
     .eq('key', key)
-    .single()
+    .maybeSingle()
+  if (error) {
+    log.error('Rate-Limit-Eintrag nicht lesbar — eine Sperre wuerde JETZT nicht erkannt', {
+      art: schluesselArt(key), code: error.code,
+    })
+    return null
+  }
   return (data as RateLimitEntry | null) ?? null
 }
 
-async function upsertEntry(supabase: SupabaseClient, key: string, attempts: number, firstAttempt: string, lockedUntil: string) {
-  await supabase
+/**
+ * Zaehlt einen Fehlversuch fort. Gibt den Grund zurueck, wenn nicht.
+ *
+ * Der Rueckgabewert ist der Befund: vorher wurde das Versprechen nur
+ * abgewartet. Schlug der Schreibvorgang fehl, blieb der Zaehler stehen —
+ * und mit ihm die Sperre, die sich aus ihm aufbaut. Ein Angreifer haette
+ * beliebig weiter geraten.
+ */
+async function upsertEntry(
+  supabase: SupabaseClient, key: string, attempts: number, firstAttempt: string, lockedUntil: string,
+): Promise<string | null> {
+  const { error } = await supabase
     .from('login_rate_limits')
     .upsert({
       key,
@@ -63,6 +113,19 @@ async function upsertEntry(supabase: SupabaseClient, key: string, attempts: numb
       locked_until: lockedUntil,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'key' })
+  return error ? `${schluesselArt(key)} (${error.code ?? 'ohne Code'})` : null
+}
+
+/**
+ * Loescht einen Zaehler. Gibt den Grund zurueck, wenn nicht.
+ *
+ * ABSICHTLICH OHNE ZEILENPRUEFUNG — anders als ueberall sonst: null
+ * getroffene Zeilen ist hier der Normalfall (es gab keinen Zaehler, weil
+ * es keine Fehlversuche gab) und kein Fehlschlag. Nur der Fehler zaehlt.
+ */
+async function deleteEntry(supabase: SupabaseClient, key: string): Promise<string | null> {
+  const { error } = await supabase.from('login_rate_limits').delete().eq('key', key)
+  return error ? `${schluesselArt(key)} (${error.code ?? 'ohne Code'})` : null
 }
 
 /**
@@ -113,6 +176,7 @@ export const POST = withTracking(async function POST(req: NextRequest) {
     }
 
     if (action === 'fail') {
+      const nichtGezaehlt: string[] = []
       for (const key of [keyByIP, keyByEmail]) {
         const entry = await getEntry(supabase, key)
 
@@ -141,7 +205,17 @@ export const POST = withTracking(async function POST(req: NextRequest) {
           attempts = 1
         }
 
-        await upsertEntry(supabase, key, attempts, firstAttempt, lockedUntil)
+        const grund = await upsertEntry(supabase, key, attempts, firstAttempt, lockedUntil)
+        if (grund) nichtGezaehlt.push(grund)
+      }
+      if (nichtGezaehlt.length > 0) {
+        // Der Zaehler steht — also baut sich auch keine Sperre auf. Die
+        // Antwort unten liest den tatsaechlichen Stand neu und bleibt
+        // dadurch wahr; sie kann nur nicht wissen, dass sie es aus dem
+        // falschen Grund ist.
+        log.error('Fehlversuch NICHT gezaehlt — die Sperre baut sich nicht auf', {
+          zaehler: nichtGezaehlt.join(', '),
+        })
       }
 
       // Aktuelle Werte für Response laden
@@ -205,7 +279,14 @@ export const POST = withTracking(async function POST(req: NextRequest) {
       //  3) Wenn der IP-Eintrag aktuell gesperrt ist, lassen wir die
       //     Sperre unangetastet — Success von einem gesperrten Key sollte
       //     gar nicht stattfinden, aber falls doch, nicht als Exploit-Weg.
-      await supabase.from('login_rate_limits').delete().eq('key', keyByEmail)
+      const emailGrund = await deleteEntry(supabase, keyByEmail)
+      if (emailGrund) {
+        // Der Nutzer hat sich soeben ausgewiesen — und sein Zaehler steht
+        // weiter auf dem alten Stand. Beim naechsten Vertipper sperrt ihn
+        // die Route aus einem Konto aus, dessen Inhaber er nachweislich
+        // ist. Vorher fiel genau das lautlos aus.
+        log.error('Zaehler nach erfolgreicher Anmeldung NICHT geloescht', { zaehler: emailGrund })
+      }
 
       const ipEntry = await getEntry(supabase, keyByIP)
       if (ipEntry) {
@@ -214,9 +295,12 @@ export const POST = withTracking(async function POST(req: NextRequest) {
           const halvedAttempts = Math.floor(ipEntry.attempts / 2)
           if (halvedAttempts <= 0) {
             // Komplett löschen bei <=1 verbleibender Markierung
-            await supabase.from('login_rate_limits').delete().eq('key', keyByIP)
+            const ipGrund = await deleteEntry(supabase, keyByIP)
+            if (ipGrund) {
+              log.error('IP-Zaehler nach erfolgreicher Anmeldung NICHT geloescht', { zaehler: ipGrund })
+            }
           } else {
-            await upsertEntry(
+            const halbGrund = await upsertEntry(
               supabase,
               keyByIP,
               halvedAttempts,
@@ -224,6 +308,9 @@ export const POST = withTracking(async function POST(req: NextRequest) {
               // Lock zurücksetzen, da halvedAttempts < 5 (Lock-Schwelle)
               now.toISOString()
             )
+            if (halbGrund) {
+              log.error('IP-Zaehler nach erfolgreicher Anmeldung NICHT halbiert', { zaehler: halbGrund })
+            }
           }
         }
       }
