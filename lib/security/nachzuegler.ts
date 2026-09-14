@@ -157,12 +157,38 @@ export async function sendeOffeneSicherheitsmeldungen(
     const zeilen = (data ?? []) as unknown as Zeile[]
     if (zeilen.length === 0) return ergebnis
 
+    // BEFUND (Block 91): die drei Riegel unten stehen auf verworfenen
+    // Lesefehlern. Jeder von ihnen faellt dann OFFEN aus:
+    //
+    //   a) `gemeldet` leer  → schon gemeldete Ereignisse werden erneut
+    //      gemeldet,
+    //   b) `inZustellspur` leer → dieser Lauf kollidiert mit dem
+    //      Wiederholungslauf, der denselben Vorgang schon hat,
+    //   c) `anwendungsZeilen` leer → die Trigger-Zeile wird zur ZWEITEN
+    //      Nachricht ueber dieselbe Anmeldung, und genau das schliesst
+    //      der lange Absatz bei Riegel c) aus.
+    //
+    // Die Hauptabfrage darueber prueft ihren Fehler; diese drei nicht.
+    // Ein Riegel, der bei eigener Stoerung durchlaesst, ist kein Riegel —
+    // und hier laesst er Post an Menschen durch. Deshalb: abbrechen,
+    // nicht mit halbem Riegel weiterlaufen. Der naechste Lauf holt die
+    // Ereignisse nach, sie stehen ja weiterhin da.
+    const riegelFehler = (name: string, fehler: { message?: string | null } | null): boolean => {
+      if (!fehler) return false
+      log.error(`Nachzuegler: ${name} nicht lesbar — Lauf abgebrochen, statt doppelt zu melden`, {
+        msg: fehler.message ?? undefined,
+      })
+      ergebnis.fehler++
+      return true
+    }
+
     // ── Riegel a) bereits gemeldet ──
-    const { data: nachweise } = await admin
+    const { data: nachweise, error: nachweiseFehler } = await admin
       .from('security_audit_log')
       .select('metadata')
       .eq('event_type', MELDE_NACHWEIS)
       .gte('created_at', seit)
+    if (riegelFehler('Meldenachweise', nachweiseFehler)) return ergebnis
     const gemeldet = new Set(
       (nachweise ?? [])
         .map(n => (n.metadata as Record<string, unknown> | null)?.bezug_ereignis)
@@ -170,11 +196,12 @@ export async function sendeOffeneSicherheitsmeldungen(
     )
 
     // ── Riegel b) schon in der Zustellspur (Wiederholungslauf zustaendig) ──
-    const { data: zustellungen } = await admin
+    const { data: zustellungen, error: zustellungenFehler } = await admin
       .from('notification_delivery_log')
       .select('vorgang_ref')
       .eq('vorgang_art', SICHERHEITSMELDUNG_ART)
       .gte('created_at', seit)
+    if (riegelFehler('Zustellspur', zustellungenFehler)) return ergebnis
     const inZustellspur = new Set(
       (zustellungen ?? [])
         .map(z => z.vorgang_ref as string | null)
@@ -204,12 +231,13 @@ export async function sendeOffeneSicherheitsmeldungen(
     const kontenImStapel = [...new Set(zeilen.map(z => z.user_id).filter((v): v is string => !!v))]
     const anwendungsZeilen: { user_id: string; event_type: string; created_at: string }[] = []
     if (kontenImStapel.length > 0) {
-      const { data: ausDerAnwendung } = await admin
+      const { data: ausDerAnwendung, error: anwendungFehler } = await admin
         .from('security_audit_log')
         .select('user_id, event_type, created_at')
         .in('user_id', kontenImStapel)
         .neq('device_info->>quelle', 'db_trigger')
         .gte('created_at', new Date(Date.parse(seit) - DOPPELFENSTER_SEKUNDEN * 1000).toISOString())
+      if (riegelFehler('Anwendungszeilen', anwendungFehler)) return ergebnis
       for (const a of ausDerAnwendung ?? []) {
         anwendungsZeilen.push(a as unknown as { user_id: string; event_type: string; created_at: string })
       }

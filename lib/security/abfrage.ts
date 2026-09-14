@@ -25,6 +25,9 @@ import {
   type Kategorie, type Schweregrad,
 } from './ereignisse'
 import { alarmZustaende, alarmKurzfassung, LEERER_ALARM, type Alarmzustand } from './alarmspur'
+import { logger } from '@/lib/logger'
+
+const log = logger.child('security:abfrage')
 import {
   provenienzFuerZeile, istEchteNutzeraktivitaet, istTest, quelleFuer,
   BEZEICHNUNG_PROVENIENZ, herkunftFilterAusdruck,
@@ -240,10 +243,14 @@ async function anreichern(admin: AdminClient, roh: RohZeile[]): Promise<SpurZeil
 
   const namen = new Map<string, string>()
   if (userIds.length > 0) {
-    const { data } = await admin
+    const { data, error } = await admin
       .from('profiles')
       .select('id, first_name, last_name')
       .in('id', userIds)
+    // Fail-soft wie im Absatz darueber — aber nicht spurlos (Block 91).
+    // Ohne Namen zeigt die Spur nur noch Kennungen, und niemand wuesste,
+    // warum.
+    if (error) log.error('Namen nicht lesbar — Spur zeigt nur Kennungen', { code: error.code })
     for (const p of data ?? []) {
       const name = [p.first_name, p.last_name].filter(Boolean).join(' ').trim()
       if (name) namen.set(p.id as string, name)
@@ -252,7 +259,8 @@ async function anreichern(admin: AdminClient, roh: RohZeile[]): Promise<SpurZeil
 
   const orgs = new Map<string, string>()
   if (orgIds.length > 0) {
-    const { data } = await admin.from('organizations').select('id, name').in('id', orgIds)
+    const { data, error } = await admin.from('organizations').select('id, name').in('id', orgIds)
+    if (error) log.error('Organisationsnamen nicht lesbar — Spur zeigt nur Kennungen', { code: error.code })
     for (const o of data ?? []) orgs.set(o.id as string, (o.name as string) ?? '')
   }
 

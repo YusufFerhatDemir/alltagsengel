@@ -43,6 +43,9 @@
 import 'server-only'
 import type { createAdminClient } from '@/lib/supabase/admin'
 import { SICHERHEITSMELDUNG_ART, MELDE_NACHWEIS } from './benachrichtigung'
+import { logger } from '@/lib/logger'
+
+const log = logger.child('security:alarmspur')
 
 type AdminClient = ReturnType<typeof createAdminClient>
 
@@ -143,11 +146,19 @@ export async function alarmZustaende(
   // Der Bezug steht in metadata->>bezug_ereignis. PostgREST kann darauf
   // filtern; `in.(…)` braucht die Werte in Klammern und ohne Leerzeichen.
   try {
-    const { data } = await admin
+    const { data, error } = await admin
       .from('security_audit_log')
       .select('id, created_at, metadata')
       .eq('event_type', MELDE_NACHWEIS)
       .in('metadata->>bezug_ereignis', ids)
+    // BEFUND (Block 91): der Fehler wurde verworfen, und das try/catch
+    // darum faengt ihn nicht — PostgREST wirft nicht. Die Fail-soft-
+    // Entscheidung im Kopf dieser Datei BLEIBT (eine Sicherheitsansicht
+    // ohne Alarmspalte ist besser als keine Liste), aber die Luecke war
+    // bisher spurlos: ohne Treffer zeigt die Zeile „nicht ausgeloest",
+    // und das ist eine Behauptung ueber einen Alarm, nicht ueber eine
+    // Abfrage. Jetzt steht sie wenigstens im Protokoll.
+    if (error) log.error('Versandnachweise nicht lesbar — Alarmspalte bleibt leer', { code: error.code })
 
     for (const zeile of data ?? []) {
       const meta = (zeile.metadata ?? {}) as Record<string, unknown>
@@ -169,12 +180,13 @@ export async function alarmZustaende(
 
   // ── 2 · Zustellversuche ─────────────────────────────────────────────
   try {
-    const { data } = await admin
+    const { data, error } = await admin
       .from('notification_delivery_log')
       .select('vorgang_ref, status, recipient, provider, provider_message_id, '
         + 'attempt_count, attempted_at, delivered_at, failed_at, sanitized_error, grund')
       .eq('vorgang_art', SICHERHEITSMELDUNG_ART)
       .in('vorgang_ref', ids)
+    if (error) log.error('Zustellversuche nicht lesbar — Zustellspalte bleibt leer', { code: error.code })
 
     for (const zeile of ((data ?? []) as unknown as ZustellRoh[])) {
       const bezug = text(zeile.vorgang_ref)
