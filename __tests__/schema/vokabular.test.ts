@@ -19,6 +19,8 @@
  * tot.
  */
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import {
   werteliste, schluessel, objektAb, ohneKommentare, pruefeQuelle,
 } from '@/lib/schema/vokabular'
@@ -161,11 +163,7 @@ describe('pruefeQuelle — die Zuordnung', () => {
 })
 
 describe('Die vier Befunde aus Block 37 — als Regression festgehalten', () => {
-  const quelle = (rel: string) => {
-    const { readFileSync } = require('node:fs') as typeof import('node:fs')
-    const path = require('node:path') as typeof import('node:path')
-    return readFileSync(path.resolve(__dirname, '../..', rel), 'utf-8')
-  }
+  const quelle = (rel: string) => readFileSync(resolve(__dirname, '../..', rel), 'utf-8')
 
   it('substitution_requests wird auf assigned gesetzt, nicht auf filled', () => {
     const s = ohneKommentare(quelle('app/admin/schedule/actions.ts'))
