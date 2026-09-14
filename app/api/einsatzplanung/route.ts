@@ -15,12 +15,38 @@ import { withTracking } from '@/lib/monitoring/tracker'
 import { holeRollenQuellenFuer, quellenDuerfen } from '@/lib/auth/rollen-quelle'
 const log = logger.child('einsatzplanung')
 
-async function requireStaff(supabase: Awaited<ReturnType<typeof createClient>>) {
+/**
+ * Tuersteher der Einsatzplanung.
+ *
+ * BEFUND (14.09.2026, Block 34): die Pruefung lautete fuer JEDES Verb
+ * `einsatz.lesen` — mit dem Kommentar „Einsatzplanung gehoert zum
+ * Einsatzgeschehen: admin/superadmin und pdl". Der Kommentar beschrieb
+ * eine Absicht, die der Code nicht umsetzte: `einsatz.lesen` tragen laut
+ * lib/auth/rollen.ts auch `qm` und `buchhaltung`.
+ *
+ * Beide konnten damit Einsaetze ANLEGEN und AENDERN, obwohl ihre
+ * Rollenbeschreibung das ausschliesst:
+ *
+ *   qm            „prueft, dokumentiert Befunde, aendert aber die
+ *                  geprueften Daten NICHT — sonst pruefte es die eigene
+ *                  Korrektur."
+ *   buchhaltung   braucht die Nachweise als Rechnungsgrundlage, also
+ *                  LESEND; Gesundheitsdaten und Personalakten: nein.
+ *
+ * Live war das nicht eingetreten (0 qm-, 0 buchhaltung-, 0 pdl-Konten am
+ * 14.09.2026) — die Luecke ist strukturell, nicht passiert.
+ *
+ * Seitdem nennt jeder Aufrufer die Berechtigung, die zu seinem Verb
+ * gehoert: GET liest, POST und PATCH schreiben.
+ */
+async function requireStaff(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  berechtigung: 'einsatz.lesen' | 'einsatz.schreiben' = 'einsatz.lesen',
+) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { ok: false as const, response: NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 }) }
   const quellen = await holeRollenQuellenFuer(supabase, user)
-  // Einsatzplanung gehoert zum Einsatzgeschehen: admin/superadmin und pdl.
-  if (!quellenDuerfen(quellen, 'einsatz.lesen')) {
+  if (!quellenDuerfen(quellen, berechtigung)) {
     return { ok: false as const, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
   }
   // `quellen` wandert mit: die force_override-Regel weiter unten ist eine
@@ -77,7 +103,7 @@ export const GET = withTracking(async function GET(req: NextRequest) {
 
 export const POST = withTracking(async function POST(req: NextRequest) {
   const supabase = await createClient()
-  const auth = await requireStaff(supabase)
+  const auth = await requireStaff(supabase, 'einsatz.schreiben')
   if (!auth.ok) return auth.response
 
   const body = await req.json()
@@ -370,7 +396,7 @@ export const POST = withTracking(async function POST(req: NextRequest) {
 
 export const PATCH = withTracking(async function PATCH(req: NextRequest) {
   const supabase = await createClient()
-  const auth = await requireStaff(supabase)
+  const auth = await requireStaff(supabase, 'einsatz.schreiben')
   if (!auth.ok) return auth.response
 
   const body = await req.json()
@@ -433,10 +459,17 @@ export const PATCH = withTracking(async function PATCH(req: NextRequest) {
     // Greift, sobald sich Mitarbeiter, Datum oder Uhrzeit ändern. Nicht
     // veränderte Werte kommen aus dem Bestand — sonst würde ein reiner
     // Datumswechsel gegen den alten Tag geprüft und liefe ins Leere.
-    if (updates.caregiver_id || updates.assignment_date || updates.weekday != null || updates.start_time || updates.end_time || updates.client_id) {
+    // `service_type` gehoert in diese Liste: ein Wechsel des Budgettopfs
+    // (z. B. von §36 oder privat auf `entlastung`) ist budgetrelevant,
+    // auch wenn sich sonst nichts aendert. Ohne ihn liefe genau der Weg
+    // an der Pruefung vorbei, den der Budgetblock weiter unten benennt.
+    if (updates.caregiver_id || updates.assignment_date || updates.weekday != null || updates.start_time || updates.end_time || updates.client_id || updates.service_type) {
       const { data: bestand } = await admin
         .from('assignments')
-        .select('client_id, caregiver_id, assignment_date, weekday, valid_from, valid_until, start_time, end_time, status')
+        // service_type traegt den Budgettopf: ein Wechsel von einem
+        // ungedeckelten (§36, privat) auf einen gedeckelten Topf ist eine
+        // budgetrelevante Aenderung und muss mitgelesen werden.
+        .select('client_id, caregiver_id, assignment_date, weekday, valid_from, valid_until, start_time, end_time, status, service_type')
         .eq('id', id)
         .eq('organization_id', organizationId)
         .maybeSingle()
@@ -516,6 +549,54 @@ export const PATCH = withTracking(async function PATCH(req: NextRequest) {
         }
         for (const k of konflikte.filter(k => k.art === 'klient')) {
           patchWarnungen.push(`Terminüberschneidung beim Klienten: ${k.meldung}`)
+        }
+      }
+
+      // ── Budget ────────────────────────────────────────────────────
+      //
+      // BEFUND (14.09.2026, Block 34): der PATCH-Zweig prueft
+      // Einsatzfreigabe, Klientenfreigabe und Abwesenheit — aber
+      // `pruefeBudget` kam hier ueberhaupt nicht vor. Der Riegel, den
+      // Block 33 im POST an `abrechnung.schreiben` gebunden hat, liess
+      // sich damit schlicht umgehen:
+      //
+      //   1. Einsatz fuer einen Klienten mit freiem Budget anlegen,
+      //      danach `client_id` auf einen erschoepften Klienten aendern.
+      //   2. `service_type` von einem ungedeckelten Topf (§36, privat)
+      //      auf `entlastung` ziehen.
+      //   3. `start_time`/`end_time` ausweiten — mehr Verbrauch, keine
+      //      Pruefung.
+      //
+      // Geprueft wird gegen Bestand + Aenderung zusammen, wie bei den
+      // Nachbarpruefungen: sonst liefe ein reiner Klientenwechsel gegen
+      // den alten Klienten.
+      const leistungsart = updates.service_type ?? bestand?.service_type ?? null
+      if (clientId) {
+        const patchIstVP = leistungsart === 'verhinderungspflege' || leistungsart === 'verhinderung'
+        const budgetCheck = await pruefeBudget(
+          admin, clientId, organizationId, patchIstVP ? 'verhinderungspflege' : undefined,
+        )
+
+        if (budgetCheck.blockiert) {
+          if (!force_override) {
+            return NextResponse.json({
+              error: `Budget-Blockierung: ${budgetCheck.warnung}`,
+              hinweis: 'Mit force_override: true kann die Änderung erzwungen werden — dafür wird abrechnung.schreiben benötigt.',
+            }, { status: 422 })
+          }
+          // Dieselbe Regel wie im POST (Block 33): den Deckel zu
+          // uebersteuern schiebt den Ueberschuss auf den Privatanteil des
+          // Klienten und ist damit eine Geldentscheidung, keine
+          // Personalentscheidung.
+          if (!quellenDuerfen(auth.quellen, 'abrechnung.schreiben')) {
+            return NextResponse.json({
+              error: 'Die Budget-Blockierung zu übersteuern erzeugt eine private Forderung und benötigt abrechnung.schreiben.',
+              budget_problem: budgetCheck.warnung,
+            }, { status: 403 })
+          }
+          patchWarnungen.push(`Budgetsperre übersteuert: ${budgetCheck.warnung ?? 'Budget erschöpft'}`)
+        } else if (budgetCheck.warnung) {
+          patchWarnungen.push(budgetCheck.warnung)
         }
       }
     }
