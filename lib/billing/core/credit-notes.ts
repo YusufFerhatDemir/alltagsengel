@@ -294,11 +294,23 @@ export async function discardCreditNote(
   const now = new Date().toISOString();
 
   if (correction.correction_invoice_id) {
-    const { data: creditInvoice } = await supabase
+    // BEFUND (Block 56, 14.09.2026): Der Lesefehler war verworfen. Fiel
+    // die Abfrage aus, war `creditInvoice` null, der ganze Block wurde
+    // uebersprungen — und die Gutschrift blieb AKTIV, waehrend die
+    // Korrektur darunter als verworfen galt. Eine Forderung des Kunden,
+    // die niemand mehr sieht.
+    const { data: creditInvoice, error: creditLeseFehler } = await supabase
       .from('invoices')
       .select('id, status, organization_id, frozen_at')
       .eq('id', correction.correction_invoice_id)
       .maybeSingle();
+
+    if (creditLeseFehler) {
+      throw new Error(
+        `Die zugehoerige Gutschrift-Rechnung ist nicht lesbar (${creditLeseFehler.message}). `
+        + 'Es wurde nichts verworfen.',
+      );
+    }
 
     if (creditInvoice) {
       if (creditInvoice.organization_id !== expectedOrgId) {
@@ -311,10 +323,29 @@ export async function discardCreditNote(
       if (isValidInvoiceStatus(status) && status !== 'storniert') {
         validateTransition(status, 'storniert');
       }
-      await supabase
+      // Fehler UND getroffene Zeilen — genau wie beim
+      // `invoice_corrections`-Update wenige Zeilen weiter unten. Bis
+      // Block 56 pruefte ausgerechnet der Schreibvorgang auf der
+      // GELD-Tabelle keines von beidem, und PostgREST meldet null
+      // getroffene Zeilen nicht als Fehler.
+      const { data: storniert, error: stornoFehler } = await supabase
         .from('invoices')
         .update({ status: 'storniert', deleted_at: now })
-        .eq('id', creditInvoice.id);
+        .eq('id', creditInvoice.id)
+        .select('id');
+
+      if (stornoFehler) {
+        throw new Error(
+          `Gutschrift-Rechnung ${creditInvoice.id} konnte nicht storniert werden: `
+          + stornoFehler.message,
+        );
+      }
+      if (!storniert || storniert.length === 0) {
+        throw new Error(
+          `Gutschrift-Rechnung ${creditInvoice.id} wurde NICHT storniert — keine Zeile `
+          + 'getroffen. Die Korrektur wurde deshalb ebenfalls nicht verworfen.',
+        );
+      }
     }
   }
 
