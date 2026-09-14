@@ -8,7 +8,11 @@ const NS = {
   qdt: 'urn:un:unece:uncefact:data:standard:QualifiedDataType:100',
 } as const
 
-const VAT_EXEMPTION_REASON = 'Steuerbefreit nach § 4 Nr. 16 UStG'
+// Der Hinweis steht seit Block 48 an EINER Stelle: bis dahin kannte ihn
+// nur dieser Erzeuger, und das PDF, das der Kunde bekommt, sagte gar
+// nichts. Ein Kunde, der beide Ausgaenge nebeneinanderlegt, soll nicht
+// zwei Formulierungen lesen.
+import { STEUERBEFREIUNG_HINWEIS as VAT_EXEMPTION_REASON } from '@/lib/rechnung/pflichtangaben'
 const VAT_EXEMPTION_CODE = 'vatex-eu-132-1g'
 
 export function generateCiiXml(data: XRechnungData, profile: 'xrechnung' | 'zugferd' = 'xrechnung'): string {

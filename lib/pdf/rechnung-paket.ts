@@ -35,6 +35,9 @@ import {
 } from '@/lib/pdf/briefkopf'
 import { logger } from '@/lib/logger'
 import { ladeUnterschriftsBild } from '@/lib/signaturen/unterschrift-bild'
+import {
+  STEUERZEILE, ausstellungsdatum, fehlendePflichtangaben,
+} from '@/lib/rechnung/pflichtangaben'
 
 const log = logger.child('rechnung-paket')
 
@@ -124,7 +127,7 @@ export async function erzeugeRechnungsPaket(
   // ── Rechnung + Klient + Positionen laden — org-fenced ──
   const { data: invoice, error: invErr } = await admin
     .from('invoices')
-    .select('id, invoice_number, invoice_number_formatted, client_id, period_start, period_end, total_amount, budget_amount, private_amount, status, correction_of, correction_type, client:clients(first_name, last_name, address, city, zip_code, insurance_name, insurance_number)')
+    .select('id, invoice_number, invoice_number_formatted, client_id, period_start, period_end, total_amount, budget_amount, private_amount, status, correction_of, correction_type, frozen_at, created_at, client:clients(first_name, last_name, address, city, zip_code, insurance_name, insurance_number)')
     .eq('id', invoiceId)
     .eq('organization_id', orgId)
     .single()
@@ -247,6 +250,42 @@ export async function erzeugeRechnungsPaket(
   type InvoiceClient = { first_name?: string; last_name?: string; address?: string; city?: string; zip_code?: string; insurance_name?: string; insurance_number?: string }
   const client = ((invoice as Record<string, unknown>).client || {}) as InvoiceClient
   const clientName = `${client.first_name || ''} ${client.last_name || ''}`.trim() || '—'
+  const clientAnschrift = `${client.address || ''}${client.zip_code ? ', ' + client.zip_code : ''} ${client.city || ''}`.trim() || '—'
+  const rechnungsdatum = ausstellungsdatum(invoice as { frozen_at?: string | null; created_at?: string | null })
+
+  // ── § 14 Abs. 4 UStG, BEVOR ein Blatt entsteht ───────────────────────
+  //
+  // Fail-closed und ausdruecklich VOR dem Zeichnen: ein bereits erzeugtes
+  // PDF laesst sich nicht mehr zurueckholen, und ein Beleg ohne
+  // Pflichtangabe ist gegenueber dem Kunden und in einer Pruefung
+  // unvollstaendig.
+  //
+  // Der haeufigste Fall ist die Steuernummer: sie steht in
+  // `organizations.settings.steuernummer` und war am 14.09.2026 NICHT
+  // gepflegt. Die Fusszeile setzte die Zeile dann still gar nicht — eine
+  // fehlende Pflichtangabe sah aus wie eine gestalterische Entscheidung.
+  // Lieber ein Abbruch mit einer Anweisung als ein Blatt, dem man das
+  // Fehlen nicht ansieht.
+  const fehlt = fehlendePflichtangaben({
+    unternehmerAnschrift: 'Briefkopf',   // steht fest in lib/pdf/briefkopf.ts
+    empfaengerName: clientName,
+    empfaengerAnschrift: clientAnschrift,
+    steuernummer: orgSteuer,
+    ausstellungsdatum: rechnungsdatum,
+    rechnungsnummer: invoiceNumber,
+    positionen: invoiceItems.length,
+    leistungszeitraum: invoice.period_start ? String(invoice.period_start) : null,
+    entgelt: invoice.total_amount as number | null,
+    steuerangabe: STEUERZEILE,
+  })
+  if (fehlt.length > 0) {
+    throw new RechnungsPaketError(
+      `Der Beleg wäre nach § 14 Abs. 4 UStG unvollständig — es fehlen: `
+      + fehlt.map(f => `Nr. ${f.nr} ${f.bezeichnung} (aus ${f.quelle})`).join('; ')
+      + '. Es wurde kein PDF erzeugt.',
+      422,
+    )
+  }
 
   // ── Seite 1 ff.: Belegübersicht ──
   {
@@ -298,6 +337,12 @@ export async function erzeugeRechnungsPaket(
       ['Pflegekasse:', client.insurance_name || '—'],
       ['Versicherungsnr.:', client.insurance_number || '—'],
       ['Zeitraum:', `${dateFmt(invoice.period_start)} – ${dateFmt(invoice.period_end)}`],
+      // § 14 Abs. 4 Nr. 3 UStG. Bis Block 48 stand hier nur der
+      // Leistungs-ZEITRAUM — das ist Nr. 6 und eine andere Angabe.
+      // `frozen_at` ist der Zeitpunkt der Ausstellung; `sent_at` waere
+      // falsch, es steht live auch auf Zeilen, die nie festgeschrieben
+      // wurden.
+      ['Rechnungsdatum:', dateFmt(rechnungsdatum)],
     ]
     if (originalNumber) infoLines.push(['Bezug Rechnung:', originalNumber])
     if (correctionReason) infoLines.push(['Grund:', correctionReason.slice(0, 60)])
@@ -352,6 +397,13 @@ export async function erzeugeRechnungsPaket(
     page.drawText(`davon Budget (§45b etc.): ${euroFmt(invoice.budget_amount)}`, { x: MARGIN, y, size: 10, font: fontRegular, color: rgb(0.35, 0.35, 0.35) })
     y -= 14
     page.drawText(`davon Privat: ${euroFmt(invoice.private_amount)}`, { x: MARGIN, y, size: 10, font: fontRegular, color: rgb(0.35, 0.35, 0.35) })
+    y -= 20
+    // § 14 Abs. 4 Nr. 8 UStG, zweite Alternative. Bis Block 48 stand auf
+    // diesem Blatt weder ein Steuersatz noch ein Befreiungshinweis —
+    // waehrend XRechnung, EDIFACT und der DATEV-Export die Befreiung seit
+    // Monaten ausweisen. Der Wortlaut kommt aus lib/rechnung/pflichtangaben.ts,
+    // damit alle vier Ausgaenge dasselbe sagen.
+    page.drawText(STEUERZEILE, { x: MARGIN, y, size: 9, font: fontRegular, color: rgb(0.35, 0.35, 0.35) })
 
     footer(page)
   }
